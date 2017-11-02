@@ -17,7 +17,7 @@ my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
 my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
 my $create_spreadsheet = CXGN::Trial::Download->new({
     bcs_schema => $schema,
-    trial_id => $trial_id,
+    trial_list => \@trial_ids,
     trait_list => \@trait_list,
     filename => $tempfile,
     format => "ExcelBasic",
@@ -48,13 +48,9 @@ sub download {
     my $self = shift;
 
     my $schema = $self->bcs_schema();
-    my $trial_id = $self->trial_id();
+    my @trial_ids = @{$self->trial_list()};
     my @trait_list = @{$self->trait_list()};
     my $spreadsheet_metadata = $self->file_metadata();
-
-    my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id} );
-    my $design_type = $trial->get_design_type();
-    print STDERR $design_type."\n";
 
     my $workbook = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $workbook->add_worksheet();
@@ -63,6 +59,8 @@ sub download {
     #
     my $bold = $workbook->add_format();
     $bold->set_bold();
+
+    my %treatment_project_hash = $self->treatment_project_hash() ? %{$self->treatment_project_hash()} : undef;
 
     my @predefined_columns;
     my $submitted_predefined_columns;
@@ -80,24 +78,40 @@ sub download {
     #print STDERR Dumper \@predefined_columns;
     my $predefined_columns_json = $json->encode(\@predefined_columns);
 
-    my $treatments = $self->treatment_project_ids() ? $self->treatment_project_ids() : undef;
-    my $treatment;
-    my $treatment_trial;
-    my $treatment_name = "";
-    if ($treatments){
-        $treatment = $_->[0];
-        $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
-        $treatment_name = $treatment_trial->get_name();
+    my @trial_names;
+    my @trial_design_types;
+    my @trial_descriptions;
+    my @trial_locations;
+    my @trial_treatment_names;
+    foreach (@trial_ids){
+        my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_} );
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_} );
+        my $design = $trial_layout->get_design();
+
+        my $treatments = $treatment_project_hash{$_};
+        my $treatment;
+        my $treatment_trial;
+        my $treatment_name = "";
+        if ($treatments){
+            $treatment = $_->[0];
+            $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
+            $treatment_name = $treatment_trial->get_name();
+        }
+        push @trial_names, $trial->get_name;
+        push @trial_design_types, $trial->get_design_type;
+        push @trial_descriptions, $trial->get_description;
+        push @trial_locations, $trial->get_location()->[1];
+        push @trial_treatment_names, $treatment_name;
     }
 
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
     $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
-    $ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
-    $ws->write(3, 2, 'Design Type'); $ws->write(3, 3, $design_type, $bold);
-    $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
-    $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
+    $ws->write(1, 0, 'Trial name(s)'); $ws->write(1, 1, join(",", @trial_names), $bold);
+    $ws->write(3, 2, 'Design Type(s)'); $ws->write(3, 3, join(",", @trial_design_types), $bold);
+    $ws->write(2, 0, 'Description(s)'); $ws->write(2, 1, join(",", @trial_descriptions), $bold);
+    $ws->write(3, 0, "Trial location(s)");  $ws->write(3, 1, join(",", @trial_locations), $bold);
     $ws->write(4, 0, "Predefined Columns");  $ws->write(4, 1, $predefined_columns_json, $bold);
-    $ws->write(4, 2, "Treatment"); $ws->write(4, 3, $treatment_name);
+    $ws->write(4, 2, "Treatment(s)"); $ws->write(4, 3, join(",", @trial_treatment_names));
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
@@ -122,9 +136,6 @@ sub download {
         for(my $n=0; $n<@column_headers; $n++) {
             $ws->write(6, $n, $column_headers[$n]);
         }
-
-        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
-        my $design = $trial_layout->get_design();
 
         if (! $design) {
             return "No design found for this trial.";
@@ -169,8 +180,6 @@ sub download {
         for(my $n=0; $n<scalar(@column_headers); $n++) {
             $ws->write(6, $n, $column_headers[$n]);
         }
-        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
-        my $design = $trial_layout->get_design();
 
         if (! $design) {
             return "No design found for this trial.";
@@ -244,8 +253,6 @@ sub download {
         for(my $n=0; $n<scalar(@column_headers); $n++) {
             $ws->write(6, $n, $column_headers[$n]);
         }
-        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
-        my $design = $trial_layout->get_design();
 
         if (! $design) {
             return "No design found for this trial.";
@@ -319,8 +326,6 @@ sub download {
         for(my $n=0; $n<scalar(@column_headers); $n++) {
             $ws->write(6, $n, $column_headers[$n]);
         }
-        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
-        my $design = $trial_layout->get_design();
 
         if (! $design) {
             return "No design found for this trial.";
