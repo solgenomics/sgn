@@ -350,7 +350,7 @@ sub generate_and_cache_layout {
       $design_info{"rep_number"}=$replicate_number_prop;
     }
     if ($range_number_prop) {
-      $design_info{"range_number"}=$replicate_number_prop;
+      $design_info{"range_number"}=$range_number_prop;
     }
     if ($is_a_control_prop) {
       $design_info{"is_a_control"}=$is_a_control_prop;
