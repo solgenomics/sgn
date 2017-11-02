@@ -97,13 +97,19 @@ jQuery(document).ready(function ($) {
     });
 
     $(document).on('focusout', '#select_seedlot_list_list_select', function() {
-        if ($('#select_seedlot_list_list_select').val()) {
+        if ($('#select_seedlot_list_list_select').val() != '') {
             seedlot_list_id = $('#select_seedlot_list_list_select').val();
             seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
             if(stock_list && seedlot_list){
                 verify_seedlot_list(stock_list, seedlot_list);
             } else {
                 alert('Please make sure to select an accession list above!');
+            }
+        } else {
+            seedlot_list = undefined;
+            seedlot_list_verified = 1;
+            if (stock_list){
+                verify_stock_list(stock_list);
             }
         }
     });
@@ -881,7 +887,7 @@ jQuery(document).ready(function ($) {
 
 	//add lists to the list select and list of checks select dropdowns.
     document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh');
-    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], '', 'refresh');
+    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh');
     document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh');
 
     //add lists to the list select and list of checks select dropdowns for CRBD.
@@ -967,7 +973,7 @@ jQuery(document).ready(function ($) {
         var html = "";
         var design_array = JSON.parse(design_json);
         for (var i=0; i<design_array.length; i++){
-            html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+"</th></tr></thead><tbody>";
+            html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
             var design_hash = JSON.parse(design_array[i]);
             for (var key in design_hash){
                 if (key != 'treatments'){
@@ -980,6 +986,18 @@ jQuery(document).ready(function ($) {
         html += "<br/><br/>";
         jQuery('#trial_design_add_treatment_select_html').html(html);
         jQuery('#trial_design_add_treatment_select').modal('show');
+    });
+
+    jQuery(document).on('change', 'input[name="add_trial_treatment_select_all"]', function(){
+        if(jQuery(this).is(":checked")){
+            jQuery('input[name="add_trial_treatment_input"]').each(function(){
+                jQuery(this).prop("checked", true);
+            });
+        } else {
+            jQuery('input[name="add_trial_treatment_input"]').each(function(){
+                jQuery(this).prop("checked", false);
+            });
+        }
     });
 
     jQuery('#new_trial_add_treatments_submit').click(function(){

@@ -102,12 +102,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $type_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
     my $xlabel_margin = 8;
     # convert mm into pixels
     #
-    if ($cass_print_format eq 'NCSU') {$left_margin_mm = 50, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
+    if ($cass_print_format eq 'NCSU') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq 'IITA-3') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $labels_per_row = 3; }
     if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
@@ -126,7 +127,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	     my $stock_file_contents = read_file($stock_names_file->{tempname});
 	     $stock_names = $stock_names ."\n".$stock_file_contents;
     } 
-
+    
     $stock_names =~ s/\r//g;
     my @names = split /\n/, $stock_names;
 
@@ -135,6 +136,32 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my ($row, $stockprop_name, $value, $fdata_block, $fdata_rep, $fdata_plot, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7, $row_col_number, $label_text_8, $fdata_plot_20A4, $fdata_rep_block);
 
+    ## sort plot list
+    my @stocks_sorted;
+    my $stock_rs = $schema->resultset("Stock::Stock")->search(
+        {
+            uniquename => {'-in' => \@names},
+            'stockprops.type_id' => $plot_number_cvterm_id
+        },
+        {
+            join => {'stockprops'},
+            '+select' => ['stockprops.value'],
+            '+as' => ['plot_number'],
+            'order_by' => { '-asc' => 'stockprops.value::INT' }
+        }
+    );
+    while ( my $r = $stock_rs->next()){
+        my $stock_name = $r->uniquename;
+        my $stock_id = $r->stock_id;
+        my $stock_type_id = $r->type_id;
+        my $plot_number = $r->get_column('plot_number');
+        push @stocks_sorted, $stock_name
+    }
+
+    if (scalar(@stocks_sorted) > 0){
+        @names = @stocks_sorted;
+    }
+    
     foreach my $name (@names) {
 
     	# skip empty lines
@@ -253,10 +280,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     
     ## for 10 labels per page
     my $label_height;
-    if ($cass_print_format eq 'NCSU'){
-        $label_height = 40;
-    }
-    elsif ($cass_print_format eq '32A4'){
+    if ($cass_print_format eq '32A4'){
         $label_height = 40;
         print "LABEL HEIGHT: $label_height\n";
     }
@@ -347,9 +371,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         my ($year_text, $location_text, $ypos, $label_boundary);
         if ($cass_print_format eq 'NCSU'){
             ($year_text,$location_text) = split ',', $added_text;
-            my $label_height_10_per_page = 72;
-     	    $label_boundary = $page_height - ($label_on_page * $label_height_10_per_page) - $top_margin;
-            $ypos = $label_boundary - int( ($label_height_10_per_page - $image->{height} * $scaley) /2);
+            my $xlabel_margin = 18;
+            $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
+            $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
+            $final_barcode_width = ($page_width - $right_margin - $left_margin + (2 * $xlabel_margin)) / $labels_per_row;
         }
         elsif ($cass_print_format eq '32A4'){
             my $label_height_8_per_page = 90;
@@ -512,13 +537,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
        }
      }
      
-     elsif ($cass_print_format eq 'NCSU' && $barcode_type eq "2D") {
+     elsif ($cass_print_format eq 'NCSU' && $barcode_type eq "2D") { 
          foreach my $label_count (1..$labels_per_row) {
-           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width - 50;
+           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width;
            my $yposition = $ypos -7;
            my $label_text = $found[$i]->[1];
            my $label_size =  7;
-           my $label_size_stock =  10;
+           my $label_size_stock =  12;
            my $yposition_8 = $ypos + 2;
            my $yposition_2 = $ypos - 10;
            my $yposition_3 = $ypos - 20;
@@ -526,18 +551,23 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            my $yposition_5 = $ypos - 40;
            my $yposition_6 = $ypos - 50;
            my $yposition_7 = $ypos - 60;
-           $label_text_6 = $found[$i]->[2];
-           $label_text_5 = $found[$i]->[11];
-           $label_text_4 = $found[$i]->[10];
-           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_8, $label_text_6);
-           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $year_text);
-           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
-           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text_5);
-           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $location_text);
-           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_6, $label_text);
-           
-           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
- 
+           if ($found[$i]->[5] eq 'accession'){
+               $label_text_6 = $found[$i]->[1];
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $parents);
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $year_text);
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $location_text);
+           }else{
+               $label_text_6 = $found[$i]->[2];
+               $label_text_5 = $found[$i]->[11];
+               $label_text_4 = $found[$i]->[10];
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $year_text);
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_4);
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_5);
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $location_text);
+               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_7, $parents);
+           }
+           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_2, $label_text_6);
+           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 90 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
          }
      }
      
