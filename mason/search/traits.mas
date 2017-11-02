@@ -43,7 +43,7 @@ jQuery(document).ready(function () {
           'targets':   0
         } ],
         'select': {
-          'style':    'os'
+          'style':    'multi'
         },
         'ajax': '/ajax/search/traits?trait_cv_name=<% $trait_cv_name %>',
         "order": [[ 1, "asc" ]]
