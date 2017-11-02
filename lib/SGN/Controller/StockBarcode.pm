@@ -110,7 +110,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     #
     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $right_margin_mm = 10; }
-    if ($cass_print_format eq 'IITA-3') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $right_margin_mm = 10, $labels_per_row = 3, $barcode_type = "2D"; }
+    if ($cass_print_format eq 'IITA-3') {$left_margin_mm = 130, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_row = 3, $barcode_type = "2D"; }
     if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq '20A4') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 2, $barcode_type = "2D", $page_format = "letter"; }
@@ -547,7 +547,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
          foreach my $label_count (1..$labels_per_row) {
           my $label_text = $found[$i]->[1];
           my $label_size =  7;
-          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 60;
+          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 80;
           my $label_count_15_xter_plot_name =  1-1;
           my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
           my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
@@ -570,14 +570,14 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   if ($parents eq ''){
                       $label_text_4 = "No pedigree for ".$found[$i]->[2];
                   }else{
-                      $label_text_4 = "pedigree: ".$parents;
+                      $label_text_4 = $parents;
                   }
               }
               elsif ($found[$i]->[5] eq 'accession'){
                   if ($parents eq ''){
                       $label_text_4 = "No pedigree for ".$found[$i]->[1];
                   }else{
-                      $label_text_4 = "pedigree: ".$parents;
+                      $label_text_4 = $parents;
                   }
                   $label_text_5 = $found[$i]->[7];
               }
@@ -587,7 +587,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   if ($parents eq ''){
                       $label_text_4 = "No pedigree for ".$found[$i]->[2];
                   }else{
-                      $label_text_4 = "pedigree: ".$parents;
+                      $label_text_4 = $parents;
                   }
               }
               else{
