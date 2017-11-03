@@ -33,6 +33,9 @@ chdir($fxtr_patch_path);
 my $db_patch_path = abs_path('../../../../db/');
 print STDERR "\nDIR: ".$db_patch_path."\n";
 
+my $cmd = "echo -ne \"$dbpass\n\" | psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
+my @installed = grep { !/^$/ } map { s/^\s+|\s+$//gr } `$cmd`;
+
 chdir($db_patch_path);
 my @dbfolders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
 chdir($fxtr_patch_path);
@@ -74,7 +77,7 @@ for (my $i = $dbindex; $i < (scalar @dbfolders); $i++) {
 }
 
 sub run_patches {
-    my @patches = map { s/.pm//r } (split "\n", `ls`);
+    my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
     for (my $j = 0; $j < (scalar @patches); $j++) {
         my $patch = $patches[$j];
         my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');

@@ -103,10 +103,6 @@ print STDERR "# Loading database fixture... $database_fixture_dump ... ";
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
-#run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} -d $dbname -e janedoe");
-return;
-
 print STDERR "Done.\n";
 
 print STDERR "# Creating sgn_fixture.conf file... ";
@@ -129,6 +125,9 @@ system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_po
 
 
 print STDERR "Done.\n";
+
+#run fixture and db patches.
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} -d $dbname -e janedoe");
 
 # start the test web server
 #

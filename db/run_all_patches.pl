@@ -34,12 +34,14 @@ my $db_patch_path = dirname(abs_path($0));
 chdir($db_patch_path);
 
 my @folders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
+my $cmd = "echo -ne \"$dbpass\n\" | psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
+my @installed = grep { !/^$/ } map { s/^\s+|\s+$//gr } `$cmd`;
 
 for (my $i = 0; $i < (scalar @folders); $i++) {
     if (($folders[$i]=~s/\/$//r)>=$startfrom){
         chdir($db_patch_path);
         chdir($folders[$i]);
-        my @patches = map { s/.pm//r } (split "\n", `ls`);
+        my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
         for (my $j = 0; $j < (scalar @patches); $j++) {
             my $patch = $patches[$j];
             my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');
