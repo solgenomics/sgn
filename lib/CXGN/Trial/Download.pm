@@ -218,6 +218,7 @@ has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
 has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 has 'search_type' => (isa => 'Str', is => 'rw');
 has 'treatment_project_ids' => (isa => 'ArrayRef[Int]|Undef', is => 'rw');
+has 'treatment_project_hash' => (isa => 'HashRef|Undef', is => 'rw');
 has 'selected_columns' => (isa => 'HashRef|Undef', is => 'rw');
 has 'selected_trait_names' => (isa => 'ArrayRef|Undef', is => 'rw');
 

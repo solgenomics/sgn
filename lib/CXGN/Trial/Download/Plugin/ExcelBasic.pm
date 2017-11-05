@@ -84,7 +84,8 @@ sub download {
     my @trial_locations;
     my @trial_treatment_names;
     foreach (@trial_ids){
-        my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_} );
+        my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_});
+        my $trial_name = $trial->get_name;
         my $treatment_id = $treatment_project_hash{$_};
         my $treatment_trial;
         my $treatment_name = "";
@@ -92,11 +93,11 @@ sub download {
             $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment_id});
             $treatment_name = $treatment_trial->get_name();
         }
-        push @trial_names, $trial->get_name;
-        push @trial_design_types, $trial->get_design_type;
-        push @trial_descriptions, $trial->get_description;
-        push @trial_locations, $trial->get_location()->[1];
-        push @trial_treatment_names, $treatment_name;
+        push @trial_names, $trial_name;
+        push @trial_design_types, $trial_name.": ".$trial->get_design_type;
+        push @trial_descriptions, $trial_name.": ".$trial->get_description;
+        push @trial_locations, $trial_name.": ".$trial->get_location()->[1];
+        push @trial_treatment_names, $trial_name.": ".$treatment_name;
     }
 
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
@@ -112,17 +113,18 @@ sub download {
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
 
     my $num_col_before_traits;
+    my @column_headers;
     if ($self->data_level eq 'plots') {
-        $num_col_before_traits = 6;
+        $num_col_before_traits = 7;
         @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
     } elsif ($self->data_level eq 'plants') {
-        $num_col_before_traits = 7;
+        $num_col_before_traits = 8;
         @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
     } elsif ($self->data_level eq 'subplots') {
-        $num_col_before_traits = 7;
+        $num_col_before_traits = 8;
         @column_headers = ("subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
     } elsif ($self->data_level eq 'plants_subplots') {
-        $num_col_before_traits = 8;
+        $num_col_before_traits = 9;
         @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
     }
 
