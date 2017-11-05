@@ -53,7 +53,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   print STDERR "phenotype download controller\n";
   my ($self, $c) = @_;
   if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
+    $c->stash->{rest} = {error => "You need to be logged in to download a phenotype spreadsheet." };
     return;
   }
 
