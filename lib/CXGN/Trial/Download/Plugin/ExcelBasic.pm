@@ -88,7 +88,7 @@ sub download {
         my $trial_name = $trial->get_name;
         my $treatment_id = $treatment_project_hash{$_};
         my $treatment_trial;
-        my $treatment_name = "";
+        my $treatment_name = "NONE";
         if ($treatment_id){
             $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment_id});
             $treatment_name = $treatment_trial->get_name();
