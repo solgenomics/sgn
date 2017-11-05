@@ -21,7 +21,7 @@ my $format = 'ExcelBasic';
 
 my $create_spreadsheet = CXGN::Trial::Download->new({
     bcs_schema => $schema,
-    trial_id => $trial_id,
+    trial_list => [$trial_id],
     trait_list => \@trait_list,
     filename => $tempfile,
     format => $format,
@@ -36,16 +36,16 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 9, "check number of columns in created pheno spreadsheet.");
+ok(scalar(@$columns) == 10, "check number of columns in created pheno spreadsheet.");
 
 #print STDERR Dumper @contents->[0]->[1];
 #print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
 is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
                         undef,
                         'Spreadsheet ID',
-                        'Trial name',
-                        'Description',
-                        'Trial location',
+                        'Trial name(s)',
+                        'Description(s)',
+                        'Trial location(s)',
                         'Predefined Columns',
                         undef,
                         'plot_name',
@@ -73,8 +73,8 @@ splice @$contents_col_2, 0, 2;
 #print STDERR Dumper $contents_col_2;
 is_deeply($contents_col_2, [
           'test_trial',
-          'test trial',
-          'test_location',
+          'test_trial: test trial',
+          'test_trial: test_location',
           '[]',
           undef,
           'accession_name',
@@ -102,8 +102,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
           'Spreadsheet format',
           'Operator',
           'Date',
-          'Design Type',
-          'Treatment',
+          'Design Type(s)',
+          'Treatment(s)',
           undef,
           'plot_number',
           '1',
@@ -130,8 +130,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
           'BasicExcel',
           'Enter operator here',
           'Enter date here',
-          'CRD',
-          undef,
+          'test_trial: CRD',
+          'test_trial: NONE',
           undef,
           'block_number',
           '1',
@@ -202,8 +202,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
           undef,
           undef,
           undef,
-          'dry matter content percentage|CO_334:0000092'
-        ], "check contents of seventh column in created pheno spreadsheet."
+          'treatment_name'
+        ], "check contents of 7column in created pheno spreadsheet."
 );
 
 #print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
@@ -215,8 +215,21 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
           undef,
           undef,
           undef,
+          'dry matter content percentage|CO_334:0000092'
+        ], "check contents of 8 column in created pheno spreadsheet."
+);
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
+is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
           'fresh root weight|CO_334:0000012'
-        ], "check contents of eighth column in created pheno spreadsheet."
+        ], "check contents of 9 column in created pheno spreadsheet."
 );
 
 done_testing();
