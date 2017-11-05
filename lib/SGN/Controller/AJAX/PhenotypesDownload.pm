@@ -52,6 +52,11 @@ sub create_phenotype_spreadsheet_GET : Args(0) {
 sub create_phenotype_spreadsheet_POST : Args(0) {
   print STDERR "phenotype download controller\n";
   my ($self, $c) = @_;
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
+    return;
+  }
+
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
   print STDERR Dumper \@trial_ids;

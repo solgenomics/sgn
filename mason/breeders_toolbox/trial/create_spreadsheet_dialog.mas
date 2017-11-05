@@ -176,10 +176,8 @@ function create_phenotype_spreadsheet() {
             jQuery('#working_modal').modal("hide");
             if (response.error) {
                 alert(response.error);
-                jQuery('#create_spreadsheet_dialog').modal("hide");
             } else {
                 //alert(response.filename);
-                jQuery('#create_spreadsheet_dialog').modal("hide");
                 jQuery('#working_modal').modal("hide");
                 window.location.href = "/download/"+response.filename;
             }
