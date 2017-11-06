@@ -554,11 +554,10 @@ sub save_experimental_design_POST : Args(0) {
     			});
           $folder1->associate_parent($folder_id);
         }
-
-        $c->stash->{rest} = {success => "1",};
-        return;
     }
 }
+$c->stash->{rest} = {success => "1",};
+return;
 }
 
 

@@ -374,7 +374,7 @@ CXGN.List.prototype = {
 		list_group_select_action_html += '';
 	    } else {
 		var selected = [];
-		jQuery("input:checkbox:checked").each(function() {
+		jQuery("input[name='list_select_checkbox']:checked").each(function() {
 		    selected.push(jQuery(this).attr('value'));
 		});
 
