@@ -49,7 +49,7 @@ __PACKAGE__->config(
        my $number_of_columns = 2; #zero index
        my $number_of_rows = 9; #zero index
        
-       my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch);
+       my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
        
        #decode json
        my $json = new JSON;
@@ -86,13 +86,12 @@ __PACKAGE__->config(
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
-      # print STDERR "File handle is $FH and filename is $filename\n";
        
        my $pdf = PDF::API2->new();
        my $page = $pdf->page();    
        $page->mediabox(611, 790.7);  # US letter dimension in mm * 2.83
-                
-        # loop through plot data, creating and saving labels to pdf
+       
+       #loop through plot data, creating and saving labels to pdf
        my $col_num = 0;
        my $row_num = 0;
        
@@ -158,10 +157,11 @@ __PACKAGE__->config(
        
                            my $gfx = $page->gfx;
                            my $image = $pdf->image_png($png_location);
-                           # add the image to the graphic object - x, y, width, height 
-                           my $height = $element{'height'} / $dots_to_pixels_conversion_factor ;
-                           my $width = $element{'width'} / $dots_to_pixels_conversion_factor ;
+
+                           my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
+                           my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                            my $elementy = $elementy - $height; # adjust for img position sarting at bottom
+                           
                            $gfx->image($image, $elementx, $elementy, $width, $height);
        
                        
@@ -178,13 +178,12 @@ __PACKAGE__->config(
                           
                           my $gfx = $page->gfx;
                           my $image = $pdf->image_jpeg($jpeg_location);
-                          # add the image to the graphic object - x, y, width, height  
-                          #print STDERR "Unadjusted element height is ".$element{'height'}."and width is ".$element{'width'}."\n";
+                        
                           my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                           my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                           my $elementy = $elementy - $height; # adjust for img position sarting at bottom
-                           print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
-                          #print STDERR "New elementy is $elementy\n";
+                          #print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
+
                           $gfx->image($image, $elementx, $elementy, $width, $height);
        
                      }
@@ -198,7 +197,7 @@ __PACKAGE__->config(
                        my $adjusted_size = $element{'size'} / $dots_to_pixels_conversion_factor; # scale to 72 pts per inch
                        $text->font($font, $adjusted_size);
                        my $midpoint= ($element{'height'} / $dots_to_pixels_conversion_factor ) / 2;
-                       my $elementy = $elementy - $midpoint; # adjust for position sarting at middle
+                       my $elementy = $elementy - $midpoint; # adjust for position starting at middle
                        #print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
                        $text->translate($elementx, $elementy);
                        $text->text($filled_value);
@@ -224,11 +223,7 @@ __PACKAGE__->config(
     
        # Save the PDF
        $pdf->saveas($FH);
-       #`touch /home/vagrant/cxgn/sgn/static/test_small.pdf`;
-    #    $pdf->saveas("/home/vagrant/cxgn/sgn//static/documents/tempfiles/labels/$filename");
-
        $c->stash->{rest} = { filename => $filename };
-    #    $c->stash->{rest} = { filename => "/static/documents/tempfiles/labels/$filename" };
 
    }
 

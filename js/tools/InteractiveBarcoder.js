@@ -521,23 +521,46 @@ console.log("SVG is "+source);
 
 function getLabelDetails(element, index) {
     
-    var transform = element.parentNode.getAttribute('transform');
-    var coords = transform.split(')')[0].substring(10, transform.length).split(','); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
+    //var transform = element.parentNode.getAttribute('transform');
+    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform'));
+    console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
+    var coords = transform_attributes.translate;  //transform.split(')')[0].substring(10, transform.length).split(','); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
+    
+    var scale = transform_attributes.scale || [1,1];
+    console.log("Scale is "+scale);
     //also extract scale to multiply by width and height
     console.log("X is "+coords[0]+" and y is "+coords[1]);
     var format = element.getAttribute("size").split('_'); //get size and type from size attribute
     var rect = element.getBBox();//getBoundingClientRect(); // get the bounding rectangle
-    console.log("Width is "+rect.width+" and height is "+rect.height);
+    var width = rect.width * scale[0]; //parseInt(scale[0]);
+    var height = rect.height * scale[1]; //parseInt(scale[1]);
+    console.log("Base width is "+rect.width+" and height is "+rect.height);
+    console.log("Adjusted width is "+width+" and height is "+height);
 
     return { 
         x: coords[0], 
         y: coords[1],
-        height: rect.height, //element.getAttribute("height"),
-        width: rect.width, //element.getAttribute("width"),
+        height: height, 
+        width: width,
         value: element.getAttribute("value"),
         type: format[0],
-        size: format[1]
+        size: format[1],
     };
+}
+
+function parseTransform (transform) {
+    var attribute_object = {};
+    var attributes = transform.split(')');
+    for (var i = 0; i < attributes.length; i++) {
+        console.log ("Attribute is "+attributes[i]);
+        var attribute = attributes[i];
+        var parts = attribute.split('(');
+        var name = parts.shift();
+        console.log ("Name is "+name+" and parts are "+parts+" and type of parts is "+typeof parts);
+        var values = parts.join(',');
+        attribute_object[name] = values.split(',');
+    }                                                            
+    return attribute_object;
 }
 
 $("#d3-pdf-button").on("click",function(event) {
