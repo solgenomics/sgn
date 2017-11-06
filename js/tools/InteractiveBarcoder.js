@@ -13,14 +13,40 @@ var barcode_types = [
     { name:"QR Code (2D) Size 10", type: "QR_10"}
 ];
 
-var label_sizes = [
-  // {name:'1" x 2 5/8"',width:189,height:72,value:30},
-  // {name:'1" x 4"',width:288,height:72,value:20},
-  // {name:'1 1/3" x 4"',width:288,height:96,value:14},
-  {name:'1" x 2 5/8"',width:533.4,height:203.2,value:30},
-  {name:'1" x 4"',width:812.8,height:203.2,value:20},
-  {name:'1 1/3" x 4"',width:812.8,height:270.93,value:14},
+var page_sizes = [
+  {name:'US Letter',width:533.4,height:203.2,value:30},
   {name:'Custom',value:'Custom'}
+];
+
+var label_sizes = [
+  {
+      name:'1" x 2 5/8" (3x10)',
+      width:533.4,
+      height:203.2,
+      value:30,
+      starting_x:13.68,
+      starting_y:754,
+      x_increment:198,
+      y_increment:-72,
+      number_of_columns:2,
+      number_of_rows:9
+  },
+  {
+      name:'1" x 4" (2X10)',
+      width:812.8,
+      height:203.2,
+      value:20
+  },
+  {
+      name:'1 1/3" x 4" (2x8)',
+      width:812.8,
+      height:270.93,
+      value:14
+  },
+  {
+      name:'Custom',
+      value:'Custom'
+  }
 ];
 
 var text_fields = [
@@ -193,7 +219,7 @@ function doSnap(state,selection){
   state.translate[0] += Math.abs(left_snap_d) < Math.abs(right_snap_d) ? left_snap_d: right_snap_d
   state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d: bottom_snap_d
 }
-doSnap.size = 12;
+doSnap.size = 7;
 
 $(document).ready(function($) {
 
@@ -224,7 +250,7 @@ $(document).ready(function($) {
       y:0,
       width:width,
       height:height,
-      fill:"#eee"
+      fill:"#FFF"
     })
     .on("click",clearSelection);
   
@@ -242,8 +268,8 @@ $(document).ready(function($) {
   }
   grid_slider.attr(grid_range_attrs);
   grid_number.attr(grid_range_attrs);
-  grid_number.property("value",12);
-  grid_slider.property("value",12);
+  grid_number.property("value",7);
+  grid_slider.property("value",7);
   grid_slider.on("input",function(){
     grid_number.property("value",this.value)
     updateGrid(_x.invert(this.value));
@@ -255,7 +281,7 @@ $(document).ready(function($) {
     grid_number.property("value",this.value)
     updateGrid(_x.invert(this.value));
   });
-  updateGrid(_x.invert(12));
+  updateGrid(_x.invert(7));
   
   // add select so users can resize draw area accorinding to label size
   var label_size_select = d3.select("#d3-label-size-select");
@@ -305,8 +331,8 @@ $(document).ready(function($) {
   };
     size_slider.attr(size_range);
     size_input.attr(size_range);
-    size_slider.property("value",12);
-    size_input.property("value",12);
+    size_slider.property("value",32);
+    size_input.property("value",32);
     size_slider.on("input",function(){
       size_input.property("value",this.value)
     });
@@ -521,21 +547,14 @@ console.log("SVG is "+source);
 
 function getLabelDetails(element, index) {
     
-    //var transform = element.parentNode.getAttribute('transform');
-    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform'));
-    console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
-    var coords = transform_attributes.translate;  //transform.split(')')[0].substring(10, transform.length).split(','); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
-    
+    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
+    //console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
+    var coords = transform_attributes.translate; 
     var scale = transform_attributes.scale || [1,1];
-    console.log("Scale is "+scale);
-    //also extract scale to multiply by width and height
-    console.log("X is "+coords[0]+" and y is "+coords[1]);
     var format = element.getAttribute("size").split('_'); //get size and type from size attribute
-    var rect = element.getBBox();//getBoundingClientRect(); // get the bounding rectangle
-    var width = rect.width * scale[0]; //parseInt(scale[0]);
-    var height = rect.height * scale[1]; //parseInt(scale[1]);
-    console.log("Base width is "+rect.width+" and height is "+rect.height);
-    console.log("Adjusted width is "+width+" and height is "+height);
+    var rect = element.getBBox();
+    var width = rect.width * scale[0]; 
+    var height = rect.height * scale[1];
 
     return { 
         x: coords[0], 
@@ -551,15 +570,15 @@ function getLabelDetails(element, index) {
 function parseTransform (transform) {
     var attribute_object = {};
     var attributes = transform.split(')');
+    
     for (var i = 0; i < attributes.length; i++) {
-        console.log ("Attribute is "+attributes[i]);
         var attribute = attributes[i];
         var parts = attribute.split('(');
         var name = parts.shift();
-        console.log ("Name is "+name+" and parts are "+parts+" and type of parts is "+typeof parts);
         var values = parts.join(',');
         attribute_object[name] = values.split(',');
-    }                                                            
+    }        
+                                                        
     return attribute_object;
 }
 

@@ -9,7 +9,7 @@
         <div class="col-md-6">
             <div class="well">
                 <div class="form-group row">
-                  <label class="col-md-2 col-form-label">Label Size</label>
+                  <label class="col-md-2 col-form-label">Page Size</label>
                   <div class="col-md-10">
                     <select id="d3-label-size-select" class="form-control"></select>
                     <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
@@ -20,6 +20,17 @@
                   </div>
                 </div>
                 <div class="form-group row">
+                  <label class="col-md-2 col-form-label">Label Size</label>
+                  <div class="col-md-10">
+                    <select id="d3-label-size-select" class="form-control"></select>
+                    <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
+                        <input class="form-control" placeholder="Width in mm" type="number" id="d3-label-custom-width">
+                        <input class="form-control" placeholder="Height in mm" type="number" id="d3-label-custom-height">
+                        <button class="btn btn-primary" id="d3-apply-custom-label-size">Apply</button>
+                    </div>
+                  </div>
+                </div>
+                <!-- <div class="form-group row">
                     <label class="col-md-2 col-form-label">Grid Size</label>
                      <div class="col-md-10 form-inline">
                         <input class="form-control" id="d3-grid-slider" type="range">&nbsp&nbsp
@@ -27,7 +38,7 @@
                         <input class="form-control" id="d3-snapping-check" type="checkbox" checked> Snap
 
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
         <div class="col-md-6">
@@ -132,16 +143,19 @@
         <div class="col-md-6">
             <div class="well">
                 <center>
-                    <label>Preview:</label>
-                    <button id="d3-preview-button" class="btn btn-primary">Preview</button>
+                <button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save</button>
+                    <!-- <label>Preview:</label>
+                    <button id="d3-preview-button" class="btn btn-primary">Preview</button> -->
                 </center>
             </div>
         </div>
         <div class="col-md-6">
             <div class="well">
-                <button id="d3-save-button" class="btn btn-primary">Save</button>
-                <a id="link" target="_blank" class="btn button btn-primary"> Download image</a>
+                <center>
+                <!-- <button id="d3-save-button" name="Saving is not yet implemented" class="btn btn-primary" disabled>Save</button> -->
+                <!-- <a id="link" target="_blank" class="btn button btn-primary"> Download image</a> -->
                 <button id="d3-pdf-button" class="btn btn-primary">Download pdf</button>
+            </center>
             </div>
         </div>
     </div>
