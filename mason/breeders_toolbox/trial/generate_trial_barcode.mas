@@ -121,6 +121,14 @@ $identifier => ''
                                        var right_margin = 10;
 
                                        }
+                                       else if (format == "IITA-3") {
+                                       var label_row = 20;
+                                       var label_cols = 3; 
+                                       var top_margin = 12;
+                                       var left_margin = 130;
+                                       var bottom_margin = 12;
+                                       var right_margin = 10;
+                                       }
                                        jQuery("#text_margin").empty();
                                        jQuery("#text_margin").val(text);
                                        jQuery("#label_rows").empty();
@@ -152,6 +160,7 @@ $identifier => ''
                                        <option value="32A4">32 label Size Sticker Paper</option>
                                        <option value="20A4">20 label Size Sticker Paper</option>
                                        <option value="NCSU">NCSU printing format</option>
+                                       <option value="IITA-3">IITA-3-barcode</option>
                                      </select>
                                  </div>
                                </div>
