@@ -116,9 +116,9 @@ You can add other information, such as synonyms, descendants, images, literature
 2.3 Trials Search
 -----------------
 
-Trials on the database can be searched based on trial name, description, breeding program, year, location, or trial type.
+Trials on the database can be searched based on trial name, description, breeding program, year, location, trial type, design, planting date, and harvest date.
 
-![]({{"assets/images/image315.png" | relative_url }})
+![]({{"assets/images/trial_search.png" | relative_url }})
 
 2.4 Trait Search
 -----------------
