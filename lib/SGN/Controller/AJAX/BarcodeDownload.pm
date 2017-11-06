@@ -43,20 +43,21 @@ __PACKAGE__->config(
        my $label_param_json = $c->req->param("label_json");
        
        my $starting_x = 13.68; # points for .19 inches at 72 pts per inch
-       my $starting_y = 750; # 842 - points for .5 inches at 72 pts per inch
+       my $starting_y = 754.7;  #750; # 842 - points for .5 inches at 72 pts per inch
        my $x_increment = 198; # points for 2.75 inches at 72 pts per inch
        my $y_increment = -72; # points for 1 inch at 72 pts per inch
        my $number_of_columns = 2; #zero index
        my $number_of_rows = 9; #zero index
-       my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 72 per inch
+       
+       my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch);
        
        #decode json
        my $json = new JSON;
        my $decoded_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_param_json);
        my @label_params = @{$decoded_params};
+       #print STDERR "Label params are @label_params\n";
        
-    #    print STDERR "Label params are @label_params\n";
-       
+       #get trial details
        my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
        if (!$trial_rs) {
            my $error = "Trial with id $trial_id does not exist. Can't create labels.";
@@ -85,34 +86,37 @@ __PACKAGE__->config(
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
+      # print STDERR "File handle is $FH and filename is $filename\n";
        
        my $pdf = PDF::API2->new();
-#        my $pdf = PDF::API2->new(
-#    width  => 595,    # A4 dimensions in point
-#    height => 842,    # 1 point = 1/72 inch
-# );
        my $page = $pdf->page();    
+       $page->mediabox(611, 790.7);  # US letter dimension in mm * 2.83
                 
         # loop through plot data, creating and saving labels to pdf
        my $col_num = 0;
        my $row_num = 0;
        
        foreach my $key (sort { $a <=> $b} keys %design) {
+           
            print STDERR "Design key is $key\n";
            my %design_info = %{$design{$key}};
-           my $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
-        #    print STDERR "Pedigree for ".$design_info{'accession_name'}." is $pedigree\n";
            
            for (my $i=0; $i < $labels_per_stock; $i++) {
                #print STDERR "Working on label num $i\n";     
                my $x = $starting_x + ($col_num * $x_increment);
                my $y = $starting_y + ($row_num * $y_increment);
+               my $pedigree;
 
               foreach my $element (@label_params) {
                   my %element = %$element;
-                  my $elementx = $x + ( $element{'x'} / $conversion_factor ); # / 2.83;
-                  my $elementy = $y - ( $element{'y'} / $conversion_factor ); # / 2.83;
-                  print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n";
+                  my $elementx = $x + ( $element{'x'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
+                  my $elementy = $y - ( $element{'y'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
+
+                  if ($element{'value'} eq '{$Pedigree_String}') {
+                      $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
+                  }
+                  
+                  print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n\n";
                   
                   my $label_template = Text::Template->new(
                       type => 'STRING',
@@ -155,9 +159,9 @@ __PACKAGE__->config(
                            my $gfx = $page->gfx;
                            my $image = $pdf->image_png($png_location);
                            # add the image to the graphic object - x, y, width, height 
-                           my $height = $element{'height'} /4.3;
-                           my $width = $element{'width'} /4.3;
-                           my $elementy = $elementy - $element{'height'} /4.68; # adjust for img position sarting at bottom
+                           my $height = $element{'height'} / $dots_to_pixels_conversion_factor ;
+                           my $width = $element{'width'} / $dots_to_pixels_conversion_factor ;
+                           my $elementy = $elementy - $height; # adjust for img position sarting at bottom
                            $gfx->image($image, $elementx, $elementy, $width, $height);
        
                        
@@ -176,22 +180,26 @@ __PACKAGE__->config(
                           my $image = $pdf->image_jpeg($jpeg_location);
                           # add the image to the graphic object - x, y, width, height  
                           #print STDERR "Unadjusted element height is ".$element{'height'}."and width is ".$element{'width'}."\n";
-                          my $height = $element{'height'} / $conversion_factor; # scale to 72 pts per inch
-                          my $width = $element{'width'} / $conversion_factor; # scale to 72 pts per inch
+                          my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
+                          my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                           my $elementy = $elementy - $height; # adjust for img position sarting at bottom
+                           print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
                           #print STDERR "New elementy is $elementy\n";
                           $gfx->image($image, $elementx, $elementy, $width, $height);
        
                      }
                   } 
-                  else { #text
+                  else {
                        # Add a built-in font to the PDF
                        my $font = $pdf->corefont($element{'type'});
        
                        # Add text to the page
                        my $text = $page->text();
-                       my $adjusted_size = $element{'size'} / 2.83 ;
+                       my $adjusted_size = $element{'size'} / $dots_to_pixels_conversion_factor; # scale to 72 pts per inch
                        $text->font($font, $adjusted_size);
+                       my $midpoint= ($element{'height'} / $dots_to_pixels_conversion_factor ) / 2;
+                       my $elementy = $elementy - $midpoint; # adjust for position sarting at middle
+                       #print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
                        $text->translate($elementx, $elementy);
                        $text->text($filled_value);
        
@@ -216,8 +224,11 @@ __PACKAGE__->config(
     
        # Save the PDF
        $pdf->saveas($FH);
+       #`touch /home/vagrant/cxgn/sgn/static/test_small.pdf`;
+    #    $pdf->saveas("/home/vagrant/cxgn/sgn//static/documents/tempfiles/labels/$filename");
 
        $c->stash->{rest} = { filename => $filename };
+    #    $c->stash->{rest} = { filename => "/static/documents/tempfiles/labels/$filename" };
 
    }
 
@@ -370,19 +381,19 @@ __PACKAGE__->config(
 # 
 # }
 # 
-# sub _parse_list_from_json {
-#   my $list_json = shift;
-#   my $json = new JSON;
-#   if ($list_json) {
-#     my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-#     #my $decoded_list = decode_json($list_json);
-#     my @array_of_list_items = @{$decoded_list};
-#     return \@array_of_list_items;
-#   }
-#   else {
-#     return;
-#   }
-# }
+sub _parse_list_from_json {
+  my $list_json = shift;
+  my $json = new JSON;
+  if ($list_json) {
+    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+    #my $decoded_list = decode_json($list_json);
+    my @array_of_list_items = @{$decoded_list};
+    return \@array_of_list_items;
+  }
+  else {
+    return;
+  }
+}
 
 #########
 1;

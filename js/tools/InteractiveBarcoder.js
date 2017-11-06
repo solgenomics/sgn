@@ -371,6 +371,7 @@ $('#d3-custom-field-input').change(function(){
     var text_content = d3.select("#d3-text-content").text();
     //$("#d3-text-field-input").find('option:selected').text(text_content);
     $("#d3-text-field-input").find('option:selected').val(text_content);
+    $("#d3-text-field-input").find('option:selected').text(text_content);
     // text_content.selectAll(".d3-text-placeholder").each(function(d,i){
     //   var th = d3.select(this)
     //   th.html("").text(th.attr("key"))
@@ -522,6 +523,7 @@ function getLabelDetails(element, index) {
     
     var transform = element.parentNode.getAttribute('transform');
     var coords = transform.split(')')[0].substring(10, transform.length).split(','); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
+    //also extract scale to multiply by width and height
     console.log("X is "+coords[0]+" and y is "+coords[1]);
     var format = element.getAttribute("size").split('_'); //get size and type from size attribute
     var rect = element.getBBox();//getBoundingClientRect(); // get the bounding rectangle
