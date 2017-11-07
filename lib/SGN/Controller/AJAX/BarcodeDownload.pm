@@ -39,22 +39,18 @@ __PACKAGE__->config(
        
        # retrieve params
        my $trial_id = $c->req->param("trial_id");
-       my $labels_per_stock = $c->req->param("num_labels");# || 1;
-       my $label_param_json = $c->req->param("label_json");
-       
-       my $starting_x = 13.68; # points for .19 inches at 72 pts per inch
-       my $starting_y = 754.7;  #750; # 842 - points for .5 inches at 72 pts per inch
-       my $x_increment = 198; # points for 2.75 inches at 72 pts per inch
-       my $y_increment = -72; # points for 1 inch at 72 pts per inch
-       my $number_of_columns = 2; #zero index
-       my $number_of_rows = 9; #zero index
-       
+       my $label_json = $c->req->param("label_json");
+       my $page_json = $c->req->param("page_json");
+       my $dl_token = $c->req->param("download_token") || "no_token";
+       my $dl_cookie = "download".$dl_token;
        my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
        
        #decode json
        my $json = new JSON;
-       my $decoded_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_param_json);
-       my @label_params = @{$decoded_params};
+       my $label_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_json);
+       my $page_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($page_json);
+       my @label_params = @{$label_params};
+       my %page_params = %{$page_params};
        #print STDERR "Label params are @label_params\n";
        
        #get trial details
@@ -89,7 +85,7 @@ __PACKAGE__->config(
        
        my $pdf = PDF::API2->new();
        my $page = $pdf->page();    
-       $page->mediabox(611, 790.7);  # US letter dimension in mm * 2.83
+       $page->mediabox($page_params{'width'}, $page_params{'height'});
        
        #loop through plot data, creating and saving labels to pdf
        my $col_num = 0;
@@ -100,10 +96,10 @@ __PACKAGE__->config(
            print STDERR "Design key is $key\n";
            my %design_info = %{$design{$key}};
            
-           for (my $i=0; $i < $labels_per_stock; $i++) {
+           for (my $i=0; $i < $page_params{'num_labels'}; $i++) {
                #print STDERR "Working on label num $i\n";     
-               my $x = $starting_x + ($col_num * $x_increment);
-               my $y = $starting_y + ($row_num * $y_increment);
+               my $x = $page_params{'starting_x'} + ($col_num * $page_params{'x_increment'});
+               my $y = $page_params{'starting_y'} + ($row_num * $page_params{'y_increment'});
                my $pedigree;
 
               foreach my $element (@label_params) {
@@ -206,14 +202,14 @@ __PACKAGE__->config(
                   
               }
                 
-               if ($col_num < $number_of_columns) { #next column
+               if ($col_num < $page_params{'number_of_columns'}) { #next column
                    $col_num++;
                } else { #new row, reset col num
                    $col_num = 0;
                    $row_num++;
                }
                
-               if ($row_num > $number_of_rows) { #new page, reset row and col num
+               if ($row_num > $page_params{'number_of_rows'}) { #new page, reset row and col num
                    $page = $pdf->page();
                    $col_num = 0;
                    $row_num = 0;
@@ -223,6 +219,10 @@ __PACKAGE__->config(
     
        # Save the PDF
        $pdf->saveas($FH);
+       $c->res->cookies->{$dl_cookie} = {
+         value => $dl_token,
+         expires => '+1m',
+       };
        $c->stash->{rest} = { filename => $filename };
 
    }

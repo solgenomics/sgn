@@ -1,7 +1,7 @@
 
 <& '/page/page_title.mas', title => "Interactive Barcoder" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder' ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min'  ] &>
 
 <div class="row">
     <div class="col-md-12">
@@ -11,11 +11,11 @@
                 <div class="form-group row">
                   <label class="col-md-2 col-form-label">Page Size</label>
                   <div class="col-md-10">
-                    <select id="d3-label-size-select" class="form-control"></select>
-                    <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
-                        <input class="form-control" placeholder="Width in mm" type="number" id="d3-label-custom-width">
-                        <input class="form-control" placeholder="Height in mm" type="number" id="d3-label-custom-height">
-                        <button class="btn btn-primary" id="d3-apply-custom-label-size">Apply</button>
+                    <select id="d3-page-size-select" class="form-control"></select>
+                    <div style="display:none" id="d3-page-custom-dimensions" class="form-inline">
+                        <input class="form-control" placeholder="Width in mm" type="number" id="d3-page-custom-width">
+                        <input class="form-control" placeholder="Height in mm" type="number" id="d3-page-custom-height">
+                        <!-- <button class="btn btn-primary" id="d3-apply-custom-page-size">Apply</button> -->
                     </div>
                   </div>
                 </div>
@@ -84,7 +84,7 @@
                     <select id="d3-text-field-input" class="form-control">
                     </select>&nbsp&nbsp
                     <select id="d3-text-font-input" class="form-control">
-                        <option value="">Pick a Font Type</option>
+                        <!-- <option value="">Pick a Font Type</option> -->
                         <option style="font-family:courier;" value="font-family:courier;">Courier</option>
                         <option style="font-family:courier;font-weight:bold;" value="font-family:courier;font-weight:bold;">Courier-Bold</option>
                         <option style="font-family:courier;font-style: oblique;" value="font-family:courier;font-style: oblique;">Courier-Oblique</option>
@@ -170,7 +170,7 @@
                 <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
                     <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;"></span>
                 </div>
-                <label>Add a Variable:</label><br>
+                <!-- <label>Add a Variable:</label><br>
                 <select id="d3-custom-field-input" class="form-control">
                     <option value="">Pick a Field</option>
                     <option value="{$Accession}">Accession</option>
@@ -182,7 +182,7 @@
                     <option value="{$Trial Name}">Trial Name</option>
                     <option value="{$Year}">Year</option>
                     <option value="{$Pedigree String}">Pedigree String</option>
-                </select>
+                </select> -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

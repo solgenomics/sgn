@@ -14,8 +14,8 @@ var barcode_types = [
 ];
 
 var page_sizes = [
-  {name:'US Letter',width:533.4,height:203.2,value:30},
-  {name:'Custom',value:'Custom'}
+  {name:'US Letter',width:611,height:790.7,value:30},
+ // {name:'Custom',value:'Custom'}
 ];
 
 var label_sizes = [
@@ -35,22 +35,40 @@ var label_sizes = [
       name:'1" x 4" (2X10)',
       width:812.8,
       height:203.2,
-      value:20
+      value:20,
+      starting_x:13.68,
+      starting_y:754,
+      x_increment:297,
+      y_increment:-72,
+      number_of_columns:1,
+      number_of_rows:9
   },
   {
-      name:'1 1/3" x 4" (2x8)',
+      name:'1 1/3" x 4" (2x7)',
       width:812.8,
       height:270.93,
-      value:14
+      value:14,
+      starting_x:13.68,
+      starting_y:754,
+      x_increment:297,
+      y_increment:-96,
+      number_of_columns:1,
+      number_of_rows:6
   },
-  {
-      name:'Custom',
-      value:'Custom'
-  }
+  // {
+    //   name:'Custom',
+    //   value:'Custom',
+    //   value:,
+    //   starting_x:,
+    //   starting_y:,
+    //   x_increment:,
+    //   y_increment:,
+    //   number_of_columns:,
+    //   number_of_rows:
+  // }
 ];
 
 var text_fields = [
-    { value: "", name: "Custom" },
     { value: "{$Accession}", name: "Accession" },
     { value: "{$Plot_Name}", name: "Plot Name" },
     { value: "{$Plot_Number}", name: "Plot #" },
@@ -60,6 +78,7 @@ var text_fields = [
     { value: "{$Trial_Name}", name: "Trial Name" },
     { value: "{$Year}", name: "Year" },
     { value: "{$Pedigree_String}", name: "Pedigree String" },
+    { value: "Custom", name: "Custom" },
 ];
 
 //set up drag behaviour
@@ -89,10 +108,10 @@ resizer_behaviour = d3.behavior.drag().on(
     var bb = getTransGroupBounds(target.node())
     var mx = d3.event.x;
     var my = d3.event.y;
-    if (d3.select("#d3-snapping-check").property("checked")){
+    // if (d3.select("#d3-snapping-check").property("checked")){
       mx = Math.round(mx/doSnap.size)*doSnap.size
       my = Math.round(my/doSnap.size)*doSnap.size
-    }
+    // }
     var xexpand = (mx - bb.x)/bb.width
     var yexpand = (my - bb.y)/bb.height
     expand = Math.max(xexpand,yexpand)
@@ -204,10 +223,54 @@ function getTransGroupBounds(node){
   return bb
 }
 
+function updateGrid(size){
+  //set snapping distance
+  doSnap.size = size;
+  //make x-lines
+  var width = document.getElementById("d3-label-area").viewBox.baseVal.width;//.getBoundingClientRect().width();
+  var height = document.getElementById("d3-label-area").viewBox.baseVal.height;//.getBoundingClientRect().height();
+  //console.log("width is "+width+" and height is "+height);
+  var x_lines = [];
+  for (var x = size; x < width; x+=size) {
+    x_lines.push(x);
+  }
+  var vert = d3.select(".d3-bg-grid-vert").selectAll("line")
+    .data(x_lines);
+  vert.exit().remove()
+  vert.enter().append('line')
+  vert.attr({
+    y1: 0,
+    y2: height,
+    stroke: "rgba(0,0,0,0.2)",
+    "stroke-width": 1
+  })
+  .attr("x1",function(d){return d})
+  .attr("x2",function(d){return d})
+  .on("click",clearSelection);
+  //make y-lines
+  var y_lines = [];
+  for (var y = size; y < height; y+=size) {
+    y_lines.push(y);
+  }
+  var horz = d3.select(".d3-bg-grid-horz").selectAll("line")
+    .data(y_lines);
+  horz.exit().remove()
+  horz.enter().append('line')
+  horz.attr({
+    x1: 0,
+    x2: width,
+    stroke: "rgba(0,0,0,0.2)",
+    "stroke-width": 1
+  })
+  .attr("y1",function(d){return d})
+  .attr("y2",function(d){return d})
+  .on("click",clearSelection);
+}
+
 function changeLabelSize(width,height,scale) {
     d3.select(".label-template").attr("viewBox", "0 0 "+width+" "+height);
-    var grid_size = d3.select("#d3-grid-number").node().value;
-    updateGrid(scale.invert(grid_size));
+    //var grid_size = 7; //d3.select("#d3-grid-number").node().value;
+    updateGrid(scale.invert(7));
 }
 
 function doSnap(state,selection){
@@ -292,6 +355,14 @@ $(document).ready(function($) {
     .text(function(d){return d.name})
     .attr("value",function(d,i){return i});
     
+    var page_size_select = d3.select("#d3-page-size-select");
+    
+    page_size_select.selectAll("option")
+      .data(page_sizes)
+      .enter().append("option")
+      .text(function(d){return d.name})
+      .attr("value",function(d,i){return i});
+    
     label_size_select.on("input",function(){ //adjust label size, or if custom show width and height inputs
         var index = d3.select(this).node().value;
         var val =  label_sizes[index].value;
@@ -347,6 +418,8 @@ $(document).ready(function($) {
       .text(function(d){return d.name})
       .attr("value",function(d){return d.value});
       
+      $("#d3-barcode-text-input option[value='Custom']").remove();
+      
       var barcode_type_select = d3.select("#d3-barcode-type-input");
       barcode_type_select.selectAll("option")
         .data(barcode_types)
@@ -359,21 +432,24 @@ $(document).ready(function($) {
   
   $('#d3-text-field-input').change(function(){
       console.log("Change noticed, text is "+$(this).find('option:selected').text());
-    if ($(this).find('option:selected').text() == 'Custom') {
+    if ($(this).find('option:selected').val() == 'Custom') {
           $('#customTextModal').modal('show');
       }
 });
 
-$('#d3-custom-field-input').change(function(){
-    console.log("Change noticed, text is "+$(this).find('option:selected').text());
-    $('#d3-text-content').append($(this).find('option:selected').val());
-});
+// $('#d3-custom-field-input').change(function(){
+//     console.log("Change noticed, text is "+$(this).find('option:selected').text());
+//     $('#d3-text-content').append($(this).find('option:selected').val());
+// });
   
   $("#d3-add-text").on("click",function() {
     var text_value = document.getElementById("d3-text-field-input").value;
     var text_select = document.getElementById("d3-text-field-input");//.getAttribute("value");
     var selected_text = text_select.options[text_select.selectedIndex];
     var text = selected_text.text;
+    if (text_value == 'Custom') {
+        text_value = text;
+    }
     var font_select = document.getElementById("d3-text-font-input");
     var selected_font = font_select.options[font_select.selectedIndex];
     var fontName = selected_font.text;
@@ -396,7 +472,7 @@ $('#d3-custom-field-input').change(function(){
     .on("click",function(){
     var text_content = d3.select("#d3-text-content").text();
     //$("#d3-text-field-input").find('option:selected').text(text_content);
-    $("#d3-text-field-input").find('option:selected').val(text_content);
+    // $("#d3-text-field-input").find('option:selected').val(text_content);
     $("#d3-text-field-input").find('option:selected').text(text_content);
     // text_content.selectAll(".d3-text-placeholder").each(function(d,i){
     //   var th = d3.select(this)
@@ -462,54 +538,12 @@ function addBarcode (barcode, index) {
 }
 
 function dragSnap(){
-  if (d3.select("#d3-snapping-check").property("checked")){
+  // if (d3.select("#d3-snapping-check").property("checked")){
     d3.select(this).call(doTransform,doSnap);
-  }
+  // }
 }
 
-function updateGrid(size){
-  //set snapping distance
-  doSnap.size = size;
-  //make x-lines
-  var width = document.getElementById("d3-label-area").viewBox.baseVal.width;//.getBoundingClientRect().width();
-  var height = document.getElementById("d3-label-area").viewBox.baseVal.height;//.getBoundingClientRect().height();
-  //console.log("width is "+width+" and height is "+height);
-  var x_lines = [];
-  for (var x = size; x < width; x+=size) {
-    x_lines.push(x);
-  }
-  var vert = d3.select(".d3-bg-grid-vert").selectAll("line")
-    .data(x_lines);
-  vert.exit().remove()
-  vert.enter().append('line')
-  vert.attr({
-    y1: 0,
-    y2: height,
-    stroke: "rgba(0,0,0,0.2)",
-    "stroke-width": 1
-  })
-  .attr("x1",function(d){return d})
-  .attr("x2",function(d){return d})
-  .on("click",clearSelection);
-  //make y-lines
-  var y_lines = [];
-  for (var y = size; y < height; y+=size) {
-    y_lines.push(y);
-  }
-  var horz = d3.select(".d3-bg-grid-horz").selectAll("line")
-    .data(y_lines);
-  horz.exit().remove()
-  horz.enter().append('line')
-  horz.attr({
-    x1: 0,
-    x2: width,
-    stroke: "rgba(0,0,0,0.2)",
-    "stroke-width": 1
-  })
-  .attr("y1",function(d){return d})
-  .attr("y2",function(d){return d})
-  .on("click",clearSelection);
-}
+
 
 $("#d3-save-button").on("click",function(event) {
   clearSelection();
@@ -582,8 +616,28 @@ function parseTransform (transform) {
     return attribute_object;
 }
 
+function manage_dl_with_cookie (token, ladda) {
+  var cookie = 'download'+token;
+  var fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
+    var cookieValue = jQuery.cookie(cookie);
+    //console.log("cookieValue="+cookieValue);
+    //var allCookies = document.cookie;
+    //console.log("allCookies="+allCookies);
+    if (cookieValue == token) {
+      window.clearInterval(fileDownloadCheckTimer);
+      jQuery.removeCookie(cookie); //clears this cookie value
+      ladda.stop();
+    }
+  }, 500);
+}
+
 $("#d3-pdf-button").on("click",function(event) {
     console.log("You clicked the download pdf button.");
+    
+    var ladda = Ladda.create(this);
+    ladda.start();
+    var token = new Date().getTime(); //use the current timestamp as the token name and value
+    manage_dl_with_cookie(token, ladda);
 
     var label_elements = document.getElementsByClassName('label-element');
     label_elements = Array.prototype.slice.call(label_elements); // convert to array
@@ -592,14 +646,28 @@ $("#d3-pdf-button").on("click",function(event) {
 
     //Get additional Params
     var trial_id = document.getElementById("trial_select").value;
-    var num_labels = document.getElementById("num_labels").value;
+    //var num_labels = document.getElementById("num_labels").value;
+    
+    var label_index = d3.select("#d3-label-size-select").node().value;
+    var page_params = {
+        starting_x: label_sizes[label_index].starting_x,
+        starting_y: label_sizes[label_index].starting_y,
+        x_increment: label_sizes[label_index].x_increment,
+        y_increment: label_sizes[label_index].y_increment,
+        number_of_columns: label_sizes[label_index].number_of_columns,
+        number_of_rows: label_sizes[label_index].number_of_rows,
+        width:611,   // US letter dimension in mm * 2.83
+        height:790.7,
+        num_labels: document.getElementById("num_labels").value    
+    }
+    var page_json =  JSON.stringify(page_params);
 
     //send to server to build pdf file
     jQuery.ajax( {
         url: '/barcode/download/pdf',
         timeout: 60000,
         method: 'POST',
-        data: {'trial_id': trial_id, 'num_labels': num_labels, 'label_json': label_json},
+        data: {'trial_id': trial_id, 'page_json': page_json, 'label_json': label_json, 'download_token': token},
         success: function(response) {
             if (response.error) {
             } else {
