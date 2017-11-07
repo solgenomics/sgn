@@ -115,17 +115,17 @@ sub download {
     my $num_col_before_traits;
     my @column_headers;
     if ($self->data_level eq 'plots') {
-        $num_col_before_traits = 7;
-        @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
+        $num_col_before_traits = 10;
+        @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants') {
-        $num_col_before_traits = 8;
-        @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
+        $num_col_before_traits = 11;
+        @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'subplots') {
-        $num_col_before_traits = 8;
-        @column_headers = ("subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
+        $num_col_before_traits = 11;
+        @column_headers = ("subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants_subplots') {
-        $num_col_before_traits = 9;
-        @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name");
+        $num_col_before_traits = 12;
+        @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
     }
 
     my $num_col_b = $num_col_before_traits;
@@ -140,11 +140,14 @@ sub download {
     my $line = 7;
     foreach (@trial_ids){
         my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_} );
+        my $trial_name = $trial->get_name;
+        my $planting_date = $trial->get_planting_date;
+        my $harvest_date = $trial->get_harvest_date;
         my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_} );
         my $design = $trial_layout->get_design();
 
         if (!$design) {
-            return "No design found for trial: ".$trial->get_name;
+            return "No design found for trial: ".$trial_name;
         }
         my %design = %{$design};
 
@@ -176,9 +179,12 @@ sub download {
                 $ws->write($line, 3, $design_info{block_number});
                 $ws->write($line, 4, $design_info{is_a_control});
                 $ws->write($line, 5, $design_info{rep_number});
+                $ws->write($line, 7, $planting_date);
+                $ws->write($line, 8, $harvest_date);
+                $ws->write($line, 9, $trial_name);
 
                 if (exists($treatment_plot_hash{$design_info{plot_name}})){
-                    $ws->write($line, $num_col_b-1, $selected_treatment_trial_name);
+                    $ws->write($line, 6, $selected_treatment_trial_name);
                 }
 
                 if (scalar(@predefined_columns) > 0) {
@@ -233,9 +239,12 @@ sub download {
                     $ws->write($line, 4, $design_info{block_number});
                     $ws->write($line, 5, $design_info{is_a_control});
                     $ws->write($line, 6, $design_info{rep_number});
+                    $ws->write($line, 8, $planting_date);
+                    $ws->write($line, 9, $harvest_date);
+                    $ws->write($line, 10, $trial_name);
 
                     if (exists($treatment_plant_hash{$_})){
-                        $ws->write($line, $num_col_b-1, $selected_treatment_trial_name);
+                        $ws->write($line, 7, $selected_treatment_trial_name);
                     }
 
                     if (scalar(@predefined_columns) > 0) {
@@ -291,9 +300,12 @@ sub download {
                     $ws->write($line, 4, $design_info{block_number});
                     $ws->write($line, 5, $design_info{is_a_control});
                     $ws->write($line, 6, $design_info{rep_number});
+                    $ws->write($line, 8, $planting_date);
+                    $ws->write($line, 9, $harvest_date);
+                    $ws->write($line, 10, $trial_name);
 
                     if (exists($treatment_subplot_hash{$_})){
-                        $ws->write($line, $num_col_b-1, $selected_treatment_trial_name);
+                        $ws->write($line, 7, $selected_treatment_trial_name);
                     }
 
                     if (scalar(@predefined_columns) > 0) {
@@ -337,9 +349,12 @@ sub download {
                         $ws->write($line, 5, $design_info{block_number});
                         $ws->write($line, 6, $design_info{is_a_control});
                         $ws->write($line, 7, $design_info{rep_number});
+                        $ws->write($line, 9, $planting_date);
+                        $ws->write($line, 10, $harvest_date);
+                        $ws->write($line, 11, $trial_name);
 
                         if (exists($treatment_plant_hash{$_})){
-                            $ws->write($line, $num_col_b-1, $selected_treatment_trial_name);
+                            $ws->write($line, 8, $selected_treatment_trial_name);
                         }
 
                         if (scalar(@predefined_columns) > 0) {
