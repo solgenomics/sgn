@@ -111,7 +111,7 @@ __PACKAGE__->config(
                       $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
                   }
                   
-                  print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n\n";
+                #   print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n\n";
                   
                   my $label_template = Text::Template->new(
                       type => 'STRING',
@@ -225,8 +225,9 @@ __PACKAGE__->config(
          expires => '+1m',
        };
        print STDERR "Returning with filename . . .\n";
-       $c->stash->{rest} = { filename => $filename };
        $c->stash->{filetype} = 'PDF';
+       $c->stash->{rest} = { filename => $filename };
+
 
    }
 
