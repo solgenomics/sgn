@@ -671,6 +671,7 @@ $("#d3-pdf-button").on("click",function(event) {
         success: function(response) {
             if (response.error) {
             } else {
+                console.log("downloading "+response.filename);
                 window.location.href = "/download/"+response.filename;
             }
         },

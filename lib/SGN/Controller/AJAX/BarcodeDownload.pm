@@ -217,13 +217,14 @@ __PACKAGE__->config(
            }
        }
     
-       # Save the PDF
+       print STDERR "Saving the PDF . . .\n";
        $pdf->saveas($FH);
        close($FH);
        $c->res->cookies->{$dl_cookie} = {
          value => $dl_token,
          expires => '+1m',
        };
+       print STDERR "Returning with filename . . .\n";
        $c->stash->{rest} = { filename => $filename };
        $c->stash->{filetype} = 'PDF';
 
