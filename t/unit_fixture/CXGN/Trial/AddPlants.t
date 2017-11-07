@@ -728,7 +728,7 @@ my @contents = ReadData ($tempfile);
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 10, "check number of col in created file.");
+ok(scalar(@$columns) == 13, "check number of col in created file.");
 
 #print STDERR Dumper @contents->[0]->[0];
 is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
@@ -890,7 +890,88 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
                           'treatment_name',
                         ], "check 7th col");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
 is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'planting_date',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04'
+        ], "check 8th col");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
+is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'harvest_date',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21'
+        ], "check 9th col");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
+is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'trial_name',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial'
+        ], "check 10th col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
                             undef,
                             undef,
                             undef,
@@ -899,9 +980,9 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
                             undef,
                             undef,
                             'dry matter content percentage|CO_334:0000092'
-                          ], "check 8th col");
+                          ], "check 11th col");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+is_deeply(@contents->[0]->[1]->{'cell'}->[12], [
                             undef,
                             undef,
                             undef,
@@ -910,7 +991,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
                             undef,
                             undef,
                             'fresh root weight|CO_334:0000012'
-                          ], "check 9th col");
+                          ], "check 12th col");
 
 
 my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
@@ -933,7 +1014,7 @@ my @contents = ReadData ($tempfile);
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 12, "check number of col in created file.");
+ok(scalar(@$columns) == 15, "check number of col in created file.");
 
 #print STDERR Dumper @contents->[0];
 is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
@@ -1200,16 +1281,16 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
                           '3'
                         ], "check col7");
 
-                        is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
-                                                  undef,
-                                                  undef,
-                                                  undef,
-                                                  undef,
-                                                  undef,
-                                                  undef,
-                                                  undef,
-                                                  'is_a_control'
-                                                ], "check col6");
+is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          'is_a_control'
+                        ], "check col6");
 
 is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
                       undef,
@@ -1222,7 +1303,133 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
                       'treatment_name',
                     ], "check col8");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
 is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'planting_date',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04'
+        ], "check col9");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
+is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'harvest_date',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21'
+        ], "check col10");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[11];
+is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'trial_name',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial'
+        ], "check col11");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[12], [
                           undef,
                           undef,
                           undef,
@@ -1261,9 +1468,9 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
                           '2 weeks',
                           '2 weeks',
                           '2 weeks'
-                        ], "check col9");
+                        ], "check col12");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+is_deeply(@contents->[0]->[1]->{'cell'}->[13], [
                           undef,
                           undef,
                           undef,
@@ -1272,9 +1479,9 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
                           undef,
                           undef,
                           'dry matter content percentage|CO_334:0000092'
-                        ], "check col10");
+                        ], "check col13");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
+is_deeply(@contents->[0]->[1]->{'cell'}->[14], [
                           undef,
                           undef,
                           undef,
@@ -1283,6 +1490,6 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
                           undef,
                           undef,
                           'fresh root weight|CO_334:0000012'
-                        ], "check col11");
+                        ], "check col14");
 
 done_testing();

@@ -36,7 +36,7 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 10, "check number of columns in created pheno spreadsheet.");
+ok(scalar(@$columns) == 13, "check number of columns in created pheno spreadsheet.");
 
 #print STDERR Dumper @contents->[0]->[1];
 #print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
@@ -215,8 +215,23 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
           undef,
           undef,
           undef,
-          'dry matter content percentage|CO_334:0000092'
-        ], "check contents of 8 column in created pheno spreadsheet."
+          'planting_date',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04'
+        ], "check contents of 8column in created pheno spreadsheet."
 );
 
 #print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
@@ -228,8 +243,77 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
           undef,
           undef,
           undef,
-          'fresh root weight|CO_334:0000012'
+          'harvest_date',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21'
         ], "check contents of 9 column in created pheno spreadsheet."
+);
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
+is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'trial_name',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial'
+        ], "check contents of 10 column in created pheno spreadsheet."
+);
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[11];
+is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'dry matter content percentage|CO_334:0000092'
+        ], "check contents of 11 column in created pheno spreadsheet."
+);
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[12];
+is_deeply(@contents->[0]->[1]->{'cell'}->[12], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'fresh root weight|CO_334:0000012'
+        ], "check contents of 12 column in created pheno spreadsheet."
 );
 
 done_testing();
