@@ -219,6 +219,7 @@ __PACKAGE__->config(
     
        # Save the PDF
        $pdf->saveas($FH);
+       close($FH);
        $c->res->cookies->{$dl_cookie} = {
          value => $dl_token,
          expires => '+1m',
