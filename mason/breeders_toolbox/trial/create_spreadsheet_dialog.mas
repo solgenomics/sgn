@@ -179,7 +179,7 @@ function show_spreadsheet_treatments(){
     console.log(selected_trial_names);
     var html = '';
     for (var i=0; i<selected_trial_ids.length; i++){
-        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Treatment For '+selected_trial_names[i]+': </label><div class="col-sm-9" ><div id="create_spreadsheet_treatment_'+selected_trial_ids[i]+'"></div></div></div>';
+        html = html + '<div class="form-group"><label class="col-sm-6 control-label">Treatment For '+selected_trial_names[i]+': </label><div class="col-sm-6" ><div id="create_spreadsheet_treatment_'+selected_trial_ids[i]+'"></div></div></div>';
     }
     jQuery('#create_spreadsheet_treatment_options').html(html);
     for (var i=0; i<selected_trial_ids.length; i++){
