@@ -21,6 +21,7 @@ use Try::Tiny;
 use JSON;
 use Barcode::Code128;
 use PDF::API2;
+use Tie::UrlEncoder; our(%urlencode);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -31,6 +32,12 @@ __PACKAGE__->config(
    );
 
    sub download_pdf_barcodes : Path('/barcode/download/pdf') : ActionClass('REST') { }
+   
+   sub download_pdf_barcodes_GET : Args(0) {
+       my $self = shift;
+       my $c = shift;
+       $c->forward('download_pdf_barcodes_POST');
+   }
 
    sub download_pdf_barcodes_POST : Args(0) {
        my $self = shift;
@@ -81,7 +88,11 @@ __PACKAGE__->config(
 
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
-       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
+       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf");
+       
+    #    my $dir = $c->tempfiles_subdir('/download');
+    #    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+    #    my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
        
        my $pdf = PDF::API2->new();
        my $page = $pdf->page();    
@@ -224,10 +235,9 @@ __PACKAGE__->config(
          value => $dl_token,
          expires => '+1m',
        };
-       print STDERR "Returning with filename . . .\n";
-       $c->stash->{filetype} = 'PDF';
-       $c->stash->{rest} = { filename => $filename };
-
+    #    print STDERR "Returning with filename . . .\n";
+    #    $c->stash->{filetype} = 'PDF';
+       $c->stash->{rest} = { filename => $urlencode{$filename} };
 
    }
 
