@@ -224,6 +224,7 @@ __PACKAGE__->config(
          expires => '+1m',
        };
        $c->stash->{rest} = { filename => $filename };
+       $c->stash->{filetype} = 'PDF';
 
    }
 
