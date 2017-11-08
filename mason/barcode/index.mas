@@ -204,7 +204,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           var left_margin = 10;
           var bottom_margin = 12;
           var right_margin = 10;
-          var text = 'year,location';          
+          var text = 'year,location'; 
           }
           else if (format == "20A4") {
           var label_row = 10;
@@ -219,7 +219,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           var label_cols = 3; 
           var top_margin = 13;
           var left_margin = 130;
-          var bottom_margin = 12;
+          var bottom_margin = 11;
           var right_margin = 10;
           }
           jQuery("#text_margin").empty();

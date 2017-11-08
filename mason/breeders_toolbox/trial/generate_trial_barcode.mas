@@ -129,7 +129,7 @@ $identifier => ''
                                        var label_cols = 3; 
                                        var top_margin = 13;
                                        var left_margin = 130;
-                                       var bottom_margin = 12;
+                                       var bottom_margin = 11;
                                        var right_margin = 10;
                                        }
                                        jQuery("#text_margin").empty();
