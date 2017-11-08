@@ -214,7 +214,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           else if (format == "IITA-3") {
           var label_row = 20;
           var label_cols = 3; 
-          var top_margin = 12;
+          var top_margin = 13;
           var left_margin = 130;
           var bottom_margin = 12;
           var right_margin = 10;
