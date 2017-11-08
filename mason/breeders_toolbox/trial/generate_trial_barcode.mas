@@ -107,7 +107,6 @@ $identifier => ''
                                        var bottom_margin = 12;
                                        var right_margin = 10;
                                        var text = 'year,location';
-                                       
                                        }
                                        else if (format == "20A4") {
                                        var label_row = 10;
@@ -116,7 +115,6 @@ $identifier => ''
                                        var left_margin = 10;
                                        var bottom_margin = 12;
                                        var right_margin = 10;
-
                                        }
                                        else if (format == "IITA-3") {
                                        var label_row = 20;
