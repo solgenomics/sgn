@@ -20,6 +20,7 @@ $breeding_program_id
 $breeding_program_name
 $location_id
 $location_name
+$main_production_site_url => undef
 $year => undef
 $trial_type => undef
 $trial_type_id => undef
@@ -217,7 +218,7 @@ my $start_time = time();
 
 % if ($hidap_enabled) {
 
- <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
+ <& /hidap/hidap_trial_link.mas, site => $main_production_site_url, trial_id => $trial_id &>
 
 % }
 

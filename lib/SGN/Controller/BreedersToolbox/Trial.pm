@@ -109,6 +109,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{site_project_name} = $c->config->{project_name};
     $c->stash->{sgn_session_id} = $c->req->cookie('sgn_session_id');
     $c->stash->{user_name} = $c->user->get_object->get_username;
+    $c->stash->{main_production_site_url} = $c->config->{main_production_site_url};
 
     if ($trial->get_folder) {
       $c->stash->{folder_id} = $trial->get_folder()->project_id();

@@ -1,4 +1,5 @@
 <%args>
+$site
 $trial_id
 </%args>
 
@@ -7,11 +8,11 @@ $trial_id
 
 <div class="row">
   <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Map&fbaInput=<% $trial_id %>" target="_blank">
+    <a href="https://apps.cipotato.org/shiny/projects/hidapsbase/?tab=Exploratory&site=<% $site %>&trial_ids=<% $trial_id %>" target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
-            Phenotype Plot Map
+            Exploratory Graphics
           </div>
           <div class="col-sm-3">
             <span class="glyphicon glyphicon-th"></span>
@@ -21,25 +22,10 @@ $trial_id
     </a>
   </div>
   <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Correlation&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
+<a href="https://apps.cipotato.org/shiny/projects/hidapsbase/?tab=Report&site=<% $site %>&trial_ids=<% $trial_id %>" target="_blank">      <div class="well">
         <div class="row">
           <div class="col-sm-9">
-            Phenotype Correlation
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-stats"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Report&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Analysis Report
+            Trial Report
           </div>
           <div class="col-sm-3">
             <span class="glyphicon glyphicon-book"></span>
