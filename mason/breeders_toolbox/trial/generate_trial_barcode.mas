@@ -132,6 +132,14 @@ $identifier => ''
                                        var bottom_margin = 11;
                                        var right_margin = 10;
                                        }
+                                       else if (format == "mobile") {
+                                       var label_row = 1;
+                                       var label_cols = 1; 
+                                       var top_margin = 13;
+                                       var left_margin = 100;
+                                       var bottom_margin = 12;
+                                       var right_margin = 10;
+                                       }
                                        jQuery("#text_margin").empty();
                                        jQuery("#text_margin").val(text);
                                        jQuery("#label_rows").empty();
