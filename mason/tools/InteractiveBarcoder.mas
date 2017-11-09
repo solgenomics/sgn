@@ -155,6 +155,7 @@
                 <!-- <button id="d3-save-button" name="Saving is not yet implemented" class="btn btn-primary" disabled>Save</button> -->
                 <!-- <a id="link" target="_blank" class="btn button btn-primary"> Download image</a> -->
                 <button id="d3-pdf-button" class="btn btn-primary">Download pdf</button>
+                <button id="d3-zpl-button" class="btn btn-primary">Download zpl</button>
             </center>
             </div>
         </div>

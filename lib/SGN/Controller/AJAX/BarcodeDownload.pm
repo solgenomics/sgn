@@ -241,6 +241,137 @@ __PACKAGE__->config(
 
    }
 
+   sub download_zpl_barcodes : Path('/barcode/download/zpl') : ActionClass('REST') { }
+   
+   sub download_zpl_barcodes_POST : Args(0) {
+       
+       # retrieve params
+       my $trial_id = $c->req->param("trial_id");
+       my $label_json = $c->req->param("label_json");
+       my $page_json = $c->req->param("page_json");
+       my $dl_token = $c->req->param("download_token") || "no_token";
+       my $dl_cookie = "download".$dl_token;
+       #my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
+       
+       #decode json
+       my $json = new JSON;
+       my $label_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_json);
+       my $page_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($page_json);
+       my @label_params = @{$label_params};
+       my %page_params = %{$page_params};
+       #print STDERR "Label params are @label_params\n";
+       
+       #get trial details
+       my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
+       if (!$trial_rs) {
+           my $error = "Trial with id $trial_id does not exist. Can't create labels.";
+           print STDERR $error . "\n";
+           $c->stash->{error} = $error;
+           $c->stash->{template} = '/barcode/stock_download_result.mas';
+           $c->detach;
+       }
+       my $trial_name = $trial_rs->first->name();
+       my ($trial_layout, %errors, @error_messages);
+       try {
+           $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+       };
+       if (!$trial_layout) {
+           my $error = "Trial $trial_name does not have a valid field design. Can't create labels.";
+           print STDERR $error . "\n";
+           $c->stash->{error} = $error;
+           $c->stash->{template} = '/barcode/stock_download_result.mas';
+           $c->detach;
+       }
+       my %design = %{$trial_layout->get_design()};
+       
+       my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
+       my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
+
+       # Create a blank PDF file
+       my $dir = $c->tempfiles_subdir('labels');
+       my ($ZPL, $zpl_filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".zpl");
+        
+   #      $c->req->param("zpl_template") || '^LH{ $X },{ $Y }
+   # ^FO5,10^AA,{ $FONT_SIZE }^FB320,5^FD{ $ACCESSION_NAME }^FS
+   # ^FO20,70^AA,28^FDPlot { $PLOT_NUMBER }, Rep { $REP_NUMBER }^AF4^FS
+   # ^FO22,70^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
+   # ^FO20,72^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
+   # ^FO20,105^AA,22^FD{ $TRIAL_NAME } { $YEAR }^FS
+   # ^FO10,140^AA,28^FB300,5^FD{ $CUSTOM_TEXT }^FS
+   # ^FO325,5^BQ,,{ $QR_SIZE }^FD   { $PLOT_NAME }^FS
+   # ';
+       my $zpl_template = Text::Template->new(
+           type => 'STRING',
+           source => page_params_to_zpl(%page_params),
+       );
+       
+     
+       my $col_num = 0;
+       my $row_num = 0;
+       foreach my $key (sort { $a <=> $b} keys %design) {
+           print STDERR "Design key is $key\n";
+           my %design_info = %{$design{$key}};
+           
+           my $plot_name = $design_info{'plot_name'};
+           my $accession_name = $design_info{'accession_name'};
+           
+           my $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
+           print STDERR "Pedigree for $accession_name is $pedigree\n";
+           
+           #Scale font size based on accession name
+           my $font_size = 42;
+           if (length($accession_name) > 18) {
+               $font_size = 21;
+           } elsif (length($accession_name) > 13) {
+               $font_size = 28;
+           } elsif (length($accession_name) > 10) {
+               $font_size = 35;
+           }
+           #Scale QR code size based on plot name
+           my $qr_size = 7;
+           if (length($plot_name) > 30) {
+               $qr_size = 5;
+           } elsif (length($plot_name) > 15) {
+               $qr_size = 6;
+           }
+           
+           my $label_zpl = $zpl_template->fill_in(
+                   hash => {
+                       'Accession' => $design_info{'accession_name'},
+                       'Plot_Name' => $design_info{'plot_name'},
+                       'Plot_Number' => $design_info{'plot_number'},
+                       'Rep_Number' => $design_info{'rep_number'},
+                       'Row_Number' => $design_info{'row_number'},
+                       'Col_Number' => $design_info{'col_number'},
+                       'Trial_Name' => $trial_name,
+                       'Year' => $year,  
+                       'Pedigree_String' => $pedigree,
+                       'Font_Size' => $font_size,
+                       'QR_Size' => $qr_size,
+                   },
+               );
+               print STDERR "ZPL is $label_zpl\n";
+               
+           
+           for (my $i=0; $i < $labels_per_stock; $i++) {
+               print STDERR "Working on label num $i\n";     
+               print $ZPL "^XA\n";
+               print $ZPL $label_zpl;
+               print $ZPL "^XZ\n";
+           }
+       }
+       close($ZPL);
+       
+       print STDERR "Saving the ZPL . . .\n";
+       close($ZPL);
+       $c->res->cookies->{$dl_cookie} = {
+         value => $dl_token,
+         expires => '+1m',
+       };
+       $c->stash->{rest} = { filename => $urlencode{$zpl_filename} };
+   
+   }
+   
 
 # sub download_zpl_barcodes : Path('/barcode/download/zpl') : ActionClass('REST') { }
 # 
