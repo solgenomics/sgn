@@ -92,7 +92,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $left_margin_mm = $c->req->param("left_margin");
     my $bottom_margin_mm = $c->req->param("bottom_margin");
     my $right_margin_mm = $c->req->param("right_margin");
-    ##my $plot = $c->req->param("plots");
     my $nursery = $c->req->param("nursery");
     my $added_text = $c->req->param("text_margin");
     my $barcode_type = $c->req->param("select_barcode_type");
@@ -109,12 +108,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     # convert mm into pixels
     #
     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
-    if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $right_margin_mm = 10; }
+    if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $right_margin_mm = 10, $barcode_type = "2D", $labels_per_row = 2; }
     if ($cass_print_format eq 'IITA-3') {$left_margin_mm = 130, $top_margin_mm = 13, $bottom_margin_mm =  11, $right_margin_mm = 10, $labels_per_row = 3, $barcode_type = "2D"; }
-    if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
+    if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $barcode_type = "2D", $labels_per_row = 2; }
     if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq '32_unique') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq '20A4') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 2, $barcode_type = "2D", $page_format = "letter"; }
+    if ($cass_print_format eq 'mobile') {$left_margin_mm = 100, $top_margin_mm = 13, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_row = 1, $barcode_type = "2D"; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -272,8 +272,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
-    if ($cass_print_format eq 'CASS') {$barcode_type = "2D", $labels_per_row = 2; }
-    if ($cass_print_format eq 'MUSA') {$barcode_type = "2D", $labels_per_row = 2; }
 
     my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
 
@@ -421,12 +419,18 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
             $final_barcode_width = ($page_width - $right_margin - $left_margin) / ($labels_per_row + 1);
         }
+        elsif ($cass_print_format eq 'mobile'){
+            my $label_height = 500;
+     	    $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
+            $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2) - 100;
+            $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
+        }
         else{
             $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
         	$ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
         }
 
-        if ($cass_print_format eq '32A4' || $cass_print_format eq '32_unique' || $cass_print_format eq 'NCSU' || $cass_print_format eq '20A4'){
+        if ($cass_print_format eq '32A4' || $cass_print_format eq '32_unique' || $cass_print_format eq 'NCSU' || $cass_print_format eq '20A4' || $cass_print_format eq 'mobile'){
         }
         else{
             $pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
@@ -779,6 +783,19 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                 $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_8, $added_text);
            }
            $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 200 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+         }
+     }
+     
+     elsif ($cass_print_format eq 'mobile' && $barcode_type eq "2D") {
+         foreach my $label_count (1..$labels_per_row) {
+           my $xposition = $left_margin - 30;
+           my $yposition = $ypos;
+           my $label_text = $found[$i]->[1];
+           my $label_size =  12;
+           my $yposition_8 = $ypos + 255;
+        
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_8, $label_text);
+           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin - 30, ypos=>$ypos + 340, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
          }
      }
      

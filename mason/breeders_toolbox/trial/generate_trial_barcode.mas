@@ -138,7 +138,7 @@ $identifier => ''
                                        var top_margin = 13;
                                        var left_margin = 100;
                                        var bottom_margin = 12;
-                                       var right_margin = 10;
+                                       var right_margin = 12;
                                        }
                                        jQuery("#text_margin").empty();
                                        jQuery("#text_margin").val(text);
