@@ -132,6 +132,14 @@ $identifier => ''
                                        var bottom_margin = 11;
                                        var right_margin = 10;
                                        }
+                                       else if (format == "mobile") {
+                                       var label_row = 1;
+                                       var label_cols = 1; 
+                                       var top_margin = 13;
+                                       var left_margin = 100;
+                                       var bottom_margin = 12;
+                                       var right_margin = 12;
+                                       }
                                        jQuery("#text_margin").empty();
                                        jQuery("#text_margin").val(text);
                                        jQuery("#label_rows").empty();
@@ -165,6 +173,7 @@ $identifier => ''
                                        <option value="20A4">20 label Size Sticker Paper</option>
                                        <option value="NCSU">NCSU printing format</option>
                                        <option value="IITA-3">IITA-3-barcode</option>
+                                       <option value="mobile">Mobile</option>
                                      </select>
                                  </div>
                                </div>
