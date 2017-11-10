@@ -375,17 +375,18 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             $c->stash->{rest} = {error => 'Must be a curator to overwrite values! Please contact us!'};
+            $c->detach;
         }
     }
 
     my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    $phenotype_metadata{'archived_file'} = '';
+    my $user_id = $c->user ? $c->user->get_object->get_sp_person_id : $c->req->param('user_id');
+    $phenotype_metadata{'archived_file'} = 'none';
     $phenotype_metadata{'archived_file_type'}="generated from plot from plant phenotypes";
-    $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
+    $phenotype_metadata{'operator'}=$user_id;
     $phenotype_metadata{'date'}="$timestamp";
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
     for (my $i=0; $i<scalar(@$data); $i++) {
         my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
