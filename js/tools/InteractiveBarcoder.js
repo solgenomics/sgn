@@ -56,9 +56,9 @@ var label_sizes = [
       number_of_rows:6
   },
   {
-      name:'1" x 2" (Zebra)',
+      name:'1 1/4" x 2" (Zebra)',
       width:406.4,
-      height:203.2,
+      height:254,
       value:0,
       starting_x:0,
       starting_y:0,

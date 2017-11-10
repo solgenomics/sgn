@@ -36,6 +36,7 @@ sub barcode_preview :Path('/barcode/preview') {
         $barcode_object->option("scale", $size);
         $barcode_object->option("font_align", "center");
         $barcode_object->option("padding", 5);
+        $barcode_object->option("show_text", 0);
         $barcode_object->barcode($content);
         my $barcode = $barcode_object->gd_image();
         

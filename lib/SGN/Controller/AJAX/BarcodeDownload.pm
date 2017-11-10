@@ -156,6 +156,7 @@ __PACKAGE__->config(
                           $barcode_object->option("scale", $element{'size'});
                           $barcode_object->option("font_align", "center");
                           $barcode_object->option("padding", 5);
+                          $barcode_object->option("show_text", 0);
                           $barcode_object->barcode($filled_value);
                           my $barcode = $barcode_object->gd_image();
                           
@@ -244,6 +245,9 @@ __PACKAGE__->config(
    sub download_zpl_barcodes : Path('/barcode/download/zpl') : ActionClass('REST') { }
    
    sub download_zpl_barcodes_POST : Args(0) {
+       my $self = shift;
+       my $c = shift;
+       my $schema = $c->dbic_schema('Bio::Chado::Schema');
        
        # retrieve params
        my $trial_id = $c->req->param("trial_id");
@@ -259,7 +263,7 @@ __PACKAGE__->config(
        my $page_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($page_json);
        my @label_params = @{$label_params};
        my %page_params = %{$page_params};
-       #print STDERR "Label params are @label_params\n";
+       print STDERR "Label params are @label_params\n";
        
        #get trial details
        my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
@@ -290,21 +294,14 @@ __PACKAGE__->config(
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
        my ($ZPL, $zpl_filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".zpl");
-        
-   #      $c->req->param("zpl_template") || '^LH{ $X },{ $Y }
-   # ^FO5,10^AA,{ $FONT_SIZE }^FB320,5^FD{ $ACCESSION_NAME }^FS
-   # ^FO20,70^AA,28^FDPlot { $PLOT_NUMBER }, Rep { $REP_NUMBER }^AF4^FS
-   # ^FO22,70^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
-   # ^FO20,72^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
-   # ^FO20,105^AA,22^FD{ $TRIAL_NAME } { $YEAR }^FS
-   # ^FO10,140^AA,28^FB300,5^FD{ $CUSTOM_TEXT }^FS
-   # ^FO325,5^BQ,,{ $QR_SIZE }^FD   { $PLOT_NAME }^FS
-   # ';
+
+       my $zpl_params = label_params_to_zpl(\@label_params);
+       print STDERR "ZPL params are $zpl_params";
+       
        my $zpl_template = Text::Template->new(
            type => 'STRING',
-           source => page_params_to_zpl(%page_params),
+           source => $zpl_params,
        );
-       
      
        my $col_num = 0;
        my $row_num = 0;
@@ -318,23 +315,6 @@ __PACKAGE__->config(
            my $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
            print STDERR "Pedigree for $accession_name is $pedigree\n";
            
-           #Scale font size based on accession name
-           my $font_size = 42;
-           if (length($accession_name) > 18) {
-               $font_size = 21;
-           } elsif (length($accession_name) > 13) {
-               $font_size = 28;
-           } elsif (length($accession_name) > 10) {
-               $font_size = 35;
-           }
-           #Scale QR code size based on plot name
-           my $qr_size = 7;
-           if (length($plot_name) > 30) {
-               $qr_size = 5;
-           } elsif (length($plot_name) > 15) {
-               $qr_size = 6;
-           }
-           
            my $label_zpl = $zpl_template->fill_in(
                    hash => {
                        'Accession' => $design_info{'accession_name'},
@@ -346,18 +326,13 @@ __PACKAGE__->config(
                        'Trial_Name' => $trial_name,
                        'Year' => $year,  
                        'Pedigree_String' => $pedigree,
-                       'Font_Size' => $font_size,
-                       'QR_Size' => $qr_size,
                    },
                );
-               print STDERR "ZPL is $label_zpl\n";
-               
+           print STDERR "Filled in ZPL is $label_zpl\n";
            
-           for (my $i=0; $i < $labels_per_stock; $i++) {
+           for (my $i=0; $i < $page_params{'num_labels'}; $i++) {
                print STDERR "Working on label num $i\n";     
-               print $ZPL "^XA\n";
                print $ZPL $label_zpl;
-               print $ZPL "^XZ\n";
            }
        }
        close($ZPL);
@@ -533,6 +508,27 @@ sub _parse_list_from_json {
   else {
     return;
   }
+}
+
+sub label_params_to_zpl {
+    my $label_params_ref = shift;
+    my @label_params = @{$label_params_ref};
+    my $zpl = "^XA^LL254^PW406";
+    foreach my $element (@label_params) {
+        my %element = %$element;
+        $zpl .= "^FO$element{'x'},$element{'y'}";
+        my $height = $element{'size'} * 25;
+        if ( $element{'type'} eq "128" ) {
+            $zpl .= "^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS";
+        } elsif ( $element{'type'} eq "QR" ) {
+            $zpl .= "^BQ,,$element{'size'}^FD   $element{'value'}^FS";
+        } else {
+            $zpl .= "^AA,$element{'size'}^FD$element{'value'}^FS";
+        }
+    }
+    $zpl .= "^XZ";
+    print STDERR "ZPL is $zpl\n";
+    return $zpl
 }
 
 #########
