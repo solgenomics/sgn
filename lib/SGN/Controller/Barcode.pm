@@ -111,7 +111,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    my $stock_id = shift;
    my $stock_name = shift;
    my $field_info = shift;
-   my $fieldbook_enabled = shift;
+   my $fieldbook_enabled = shift // "";
    my $text;
    if ($fieldbook_enabled eq "enable_fieldbook_2d_barcode"){
        $text = $stock_name;

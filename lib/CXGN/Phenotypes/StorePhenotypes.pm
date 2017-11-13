@@ -563,9 +563,13 @@ sub save_archived_file_metadata {
     my $archived_file = shift;
     my $archived_file_type = shift;
     my $experiment_ids = shift;
+    my $md5checksum;
 
-    my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_file);
+    if ($archived_file ne 'none'){
+        my $upload_file = CXGN::UploadFile->new();
+        my $md5 = $upload_file->get_md5($archived_file);
+        $md5checksum = $md5->hexdigest();
+    }
 
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
     $md_row->insert();
@@ -574,7 +578,7 @@ sub save_archived_file_metadata {
             basename => basename($archived_file),
             dirname => dirname($archived_file),
             filetype => $archived_file_type,
-            md5checksum => $md5->hexdigest(),
+            md5checksum => $md5checksum,
             metadata_id => $md_row->metadata_id(),
         });
     $file_row->insert();
