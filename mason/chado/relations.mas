@@ -5,7 +5,7 @@
   $list_component
 </%args>
 
-# This file is deprecated.
+%# This file is deprecated.
 
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>

@@ -17,6 +17,8 @@ use CXGN::BreederSearch;
 use Spreadsheet::Read;
 use CXGN::Trial::Download;
 use DateTime;
+use Test::WWW::Mechanize;
+use JSON;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -4629,5 +4631,224 @@ my $first_row = shift @data;
 my $sec_row = shift @data;
 #print STDERR Dumper \@data;
 is_deeply(\@data, $csv_response);
+
+
+my $mech = Test::WWW::Mechanize->new;
+my $response;
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/generate_plot_phenotypes', [ "trial_id"=> 137, "trait_name"=> "dry matter content percentage|CO_334:0000092", "method"=> "arithmetic_mean", "rounding"=>"round" ]);
+$response = decode_json $mech->content;
+#print STDERR Dumper $response;
+is_deeply($response->{info}, [
+                      [
+                        {
+                          'value_to_store' => '27',
+                          'plot_name' => 'test_trial21',
+                          'output' => '26.25',
+                          'plant_values' => '["10","11","42","42"]',
+                          'notes' => ''
+                        },
+                        {
+                          'output' => '28.75',
+                          'plot_name' => 'test_trial22',
+                          'notes' => '',
+                          'plant_values' => '["12","13","45","45"]',
+                          'value_to_store' => '29'
+                        },
+                        {
+                          'value_to_store' => '28',
+                          'plant_values' => '["14","15","41","41"]',
+                          'notes' => '',
+                          'plot_name' => 'test_trial23',
+                          'output' => '27.75'
+                        },
+                        {
+                          'value_to_store' => '17',
+                          'plot_name' => 'test_trial24',
+                          'output' => '16.5',
+                          'plant_values' => '["16","17"]',
+                          'notes' => ''
+                        },
+                        {
+                          'value_to_store' => '18',
+                          'notes' => '',
+                          'plant_values' => '["18"]',
+                          'plot_name' => 'test_trial25',
+                          'output' => '18'
+                        },
+                        {
+                          'value_to_store' => '21',
+                          'notes' => '',
+                          'plant_values' => '["20","21"]',
+                          'output' => '20.5',
+                          'plot_name' => 'test_trial26'
+                        },
+                        {
+                          'plot_name' => 'test_trial27',
+                          'output' => '22.5',
+                          'plant_values' => '["22","23"]',
+                          'notes' => '',
+                          'value_to_store' => '23'
+                        },
+                        {
+                          'value_to_store' => '13',
+                          'plot_name' => 'test_trial28',
+                          'output' => '12.5',
+                          'plant_values' => '["0","25"]',
+                          'notes' => ''
+                        },
+                        {
+                          'value_to_store' => '27',
+                          'notes' => '',
+                          'plant_values' => '["26","27"]',
+                          'output' => '26.5',
+                          'plot_name' => 'test_trial29'
+                        },
+                        {
+                          'notes' => '',
+                          'plant_values' => '["28","29"]',
+                          'plot_name' => 'test_trial210',
+                          'output' => '28.5',
+                          'value_to_store' => '29'
+                        },
+                        {
+                          'plant_values' => '["30","31"]',
+                          'notes' => '',
+                          'plot_name' => 'test_trial211',
+                          'output' => '30.5',
+                          'value_to_store' => '31'
+                        },
+                        {
+                          'value_to_store' => '33',
+                          'plant_values' => '["32","33"]',
+                          'notes' => '',
+                          'plot_name' => 'test_trial212',
+                          'output' => '32.5'
+                        },
+                        {
+                          'plant_values' => '["34","35"]',
+                          'notes' => '',
+                          'plot_name' => 'test_trial213',
+                          'output' => '34.5',
+                          'value_to_store' => '35'
+                        },
+                        {
+                          'plant_values' => '["36","37"]',
+                          'notes' => '',
+                          'plot_name' => 'test_trial214',
+                          'output' => '36.5',
+                          'value_to_store' => '37'
+                        },
+                        {
+                          'output' => '38.5',
+                          'plot_name' => 'test_trial215',
+                          'notes' => '',
+                          'plant_values' => '["38","39"]',
+                          'value_to_store' => '39'
+                        }
+                      ]
+                    ]);
+
+my $store_data = decode_json $response->{store_data};
+#print STDERR Dumper $store_data;
+is_deeply($store_data, [
+          {
+            'test_trial215' => {
+                                 'dry matter content percentage|CO_334:0000092' => [
+                                                                                     39,
+                                                                                     ''
+                                                                                   ]
+                               },
+            'test_trial214' => {
+                                 'dry matter content percentage|CO_334:0000092' => [
+                                                                                     37,
+                                                                                     ''
+                                                                                   ]
+                               },
+            'test_trial22' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    29,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial213' => {
+                                 'dry matter content percentage|CO_334:0000092' => [
+                                                                                     35,
+                                                                                     ''
+                                                                                   ]
+                               },
+            'test_trial25' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    18,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial23' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    28,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial211' => {
+                                 'dry matter content percentage|CO_334:0000092' => [
+                                                                                     31,
+                                                                                     ''
+                                                                                   ]
+                               },
+            'test_trial26' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    21,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial28' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    13,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial29' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    27,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial212' => {
+                                 'dry matter content percentage|CO_334:0000092' => [
+                                                                                     33,
+                                                                                     ''
+                                                                                   ]
+                               },
+            'test_trial24' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    17,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial21' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    27,
+                                                                                    ''
+                                                                                  ]
+                              },
+            'test_trial210' => {
+                                 'dry matter content percentage|CO_334:0000092' => [
+                                                                                     29,
+                                                                                     ''
+                                                                                   ]
+                               },
+            'test_trial27' => {
+                                'dry matter content percentage|CO_334:0000092' => [
+                                                                                    23,
+                                                                                    ''
+                                                                                  ]
+                              }
+          }
+        ]);
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/store_generated_plot_phenotypes', [ "overwrite_values"=> '', "store_data"=> $response->{store_data}, "store_plots"=> $response->{store_plots}, "store_traits"=>$response->{store_traits}, "user_id"=>41 ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {success=>1});
+
 
 done_testing();

@@ -440,7 +440,7 @@ sub save_experimental_design_POST : Args(0) {
   my @locations;
   my $trial_location;
   my $multi_location;
-  my $trial_locations = $c->req->param('locations');
+  my $trial_locations = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
   my $trial_type = $c->req->param('trial_type');
   my $breeding_program = $c->req->param('breeding_program_name');

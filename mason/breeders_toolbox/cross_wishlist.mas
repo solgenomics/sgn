@@ -214,6 +214,7 @@ jQuery(document).ready(function($) {
 
     });
 
+%  if ($c->config->{ona_form_id} ne 'NULL'){
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
         jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"] ));
@@ -222,6 +223,11 @@ jQuery(document).ready(function($) {
         var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
         draw_cross_grid(female_accessions, male_accessions);
     });
+%  } else {
+    jQuery("#create_cross_wishlist").click(function() {
+        alert('Cross wishlist is not enabled for this database. Please contact us.');
+    });
+%  }
 
     jQuery(document).on('change', '#female_accession_list_div_list_select', function(){
         var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
