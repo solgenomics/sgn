@@ -132,7 +132,7 @@ $identifier => ''
                                        var bottom_margin = 11;
                                        var right_margin = 10;
                                        }
-                                       else if (format == "mobile") {
+                                       else if (format == "crossing") {
                                        var label_row = 1;
                                        var label_cols = 1; 
                                        var top_margin = 13;
@@ -173,7 +173,7 @@ $identifier => ''
                                        <option value="20A4">20 label Size Sticker Paper</option>
                                        <option value="NCSU">NCSU printing format</option>
                                        <option value="IITA-3">IITA-3-barcode</option>
-                                       <option value="mobile">Mobile</option>
+                                       <option value="crossing">CROSS</option>
                                      </select>
                                  </div>
                                </div>
