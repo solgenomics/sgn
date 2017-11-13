@@ -13,8 +13,9 @@ var barcode_types = [
     { name:"QR Code (2D) Size 10", type: "QR_10"}
 ];
 
-var page_sizes = [
-  {name:'US Letter',width:611,height:790.7,value:30},
+var page_types = [
+  {name:'US Letter',width:611,height:790.7},
+  {name:'Zebra'},
  // {name:'Custom',value:'Custom'}
 ];
 
@@ -57,8 +58,8 @@ var label_sizes = [
   },
   {
       name:'1 1/4" x 2" (Zebra)',
-      width:406.4,
-      height:254,
+      width:400,
+      height:250,
       value:0,
       starting_x:0,
       starting_y:0,
@@ -80,18 +81,47 @@ var label_sizes = [
   // }
 ];
 
-var text_fields = [
-    { value: "{$Accession}", name: "Accession" },
-    { value: "{$Plot_Name}", name: "Plot Name" },
-    { value: "{$Plot_Number}", name: "Plot #" },
-    { value: "{$Rep_Number}", name: "Rep #" },
-    { value: "{$Row_Number}", name: "Row #" },
-    { value: "{$Col_Number}", name: "Col #" },
-    { value: "{$Trial_Name}", name: "Trial Name" },
-    { value: "{$Year}", name: "Year" },
-    { value: "{$Pedigree_String}", name: "Pedigree String" },
-    { value: "Custom", name: "Custom" },
+var pdf_fonts = [
+    { style: "font-family:courier;", value: "Courier"},
+    { style: "font-family:courier;font-weight:bold;", value: "Courier-Bold"},
+    { style: "font-family:courier;font-style: oblique;", value: "Courier-Oblique"},
+    { style: "font-family:courier;font-weight:bold;font-style: oblique;", value: "Courier-BoldOblique"},
+    { style: "font-family:helvetica;", value: "Helvetica"},
+    { style: "font-family:helvetica;font-weight:bold;", value: "Helvetica-Bold"},
+    { style: "font-family:helvetica;font-style: oblique;", value: "Helvetica-Oblique"},
+    { style: "font-family:helvetica;font-weight:bold;font-style: oblique;", value: "Helvetica-BoldOblique"},
+    { style: "font-family:times;", value: "Times"},
+    { style: "font-family:times;font-weight:bold;", value: "Times-Bold"},
+    { style: "font-family:times;font-style: oblique;", value: "Times-Oblique"},
+    { style: "font-family:times;font-weight:bold;font-style: oblique;", value: "Times-BoldOblique"} 
 ];
+
+var zebra_fonts = [
+    { style: "font-family:courier;", value: "AA"}
+];
+
+var zebra_font_sizes = [
+    { value: "9"},
+    { value: "18"},
+    { value: "27"},
+    { value: "36"},
+    { value: "45"},
+    { value: "54"},
+    { value: "63"}
+];
+
+// var text_fields = [
+//     { value: "{$Accession}", name: "Accession" },
+//     { value: "{$Plot_Name}", name: "Plot Name" },
+//     { value: "{$Plot_Number}", name: "Plot #" },
+//     { value: "{$Rep_Number}", name: "Rep #" },
+//     { value: "{$Row_Number}", name: "Row #" },
+//     { value: "{$Col_Number}", name: "Col #" },
+//     { value: "{$Trial_Name}", name: "Trial Name" },
+//     { value: "{$Year}", name: "Year" },
+//     { value: "{$Pedigree_String}", name: "Pedigree String" },
+//     { value: "Custom", name: "Custom" },
+// ];
 
 //set up drag behaviour
 var drag_behaviour = d3.behavior.drag().on(
@@ -367,10 +397,10 @@ $(document).ready(function($) {
     .text(function(d){return d.name})
     .attr("value",function(d,i){return i});
     
-    var page_size_select = d3.select("#d3-page-size-select");
+    var page_type_select = d3.select("#d3-page-type-select");
     
-    page_size_select.selectAll("option")
-      .data(page_sizes)
+    page_type_select.selectAll("option")
+      .data(page_types)
       .enter().append("option")
       .text(function(d){return d.name})
       .attr("value",function(d,i){return i});
@@ -397,57 +427,7 @@ $(document).ready(function($) {
           changeLabelSize(width,height,_x);
         });
 
-  //set up text and barcode select
-  var text_field_select = d3.select("#d3-text-field-input");
-  text_field_select.selectAll("option")
-    .data(text_fields)
-    .enter().append("option")
-    .text(function(d){return d.name})
-    .attr("value",function(d){return d.value});
-    
-    var size_slider = d3.select("#d3-text-size-slider");
-    var size_input= d3.select("#d3-text-size-input");
-    var size_range = {
-      min: 1,
-      max: 72,
-      step: 1
-  };
-    size_slider.attr(size_range);
-    size_input.attr(size_range);
-    size_slider.property("value",32);
-    size_input.property("value",32);
-    size_slider.on("input",function(){
-      size_input.property("value",this.value)
-    });
-    size_input.on("change",function(){
-      grid_slider.node().value = this.value;
-    });
-    
-    var barcode_text_select = d3.select("#d3-barcode-text-input");
-    barcode_text_select.selectAll("option")
-      .data(text_fields)
-      .enter().append("option")
-      .text(function(d){return d.name})
-      .attr("value",function(d){return d.value});
-      
-      $("#d3-barcode-text-input option[value='Custom']").remove();
-      
-      var barcode_type_select = d3.select("#d3-barcode-type-input");
-      barcode_type_select.selectAll("option")
-        .data(barcode_types)
-        .enter().append("option")
-        .text(function(d){return d.name})
-        .attr("type",function(d){return d.type})
-        .attr("size",function(d){return d.size});
 
-  //set up text options
-  
-  $('#d3-text-field-input').change(function(){
-      console.log("Change noticed, text is "+$(this).find('option:selected').text());
-    if ($(this).find('option:selected').val() == 'Custom') {
-          $('#customTextModal').modal('show');
-      }
-});
 
 // $('#d3-custom-field-input').change(function(){
 //     console.log("Change noticed, text is "+$(this).find('option:selected').text());
@@ -455,13 +435,15 @@ $(document).ready(function($) {
 // });
   
   $("#d3-add-text").on("click",function() {
-    var text_value = document.getElementById("d3-text-field-input").value;
-    var text_select = document.getElementById("d3-text-field-input");//.getAttribute("value");
-    var selected_text = text_select.options[text_select.selectedIndex];
-    var text = selected_text.text;
-    if (text_value == 'Custom') {
-        text_value = text;
+    var text_select = document.getElementById("d3-text-field-input");
+    var selected = text_select.options[text_select.selectedIndex];
+    var value = selected.text;
+    var text = text_select.value;
+
+    if (text == 'Custom') {
+        text = value;
     }
+
     var font_select = document.getElementById("d3-text-font-input");
     var selected_font = font_select.options[font_select.selectedIndex];
     var fontName = selected_font.text;
@@ -469,16 +451,19 @@ $(document).ready(function($) {
     var fontSize = document.getElementById("d3-text-size-input").value;//.getAttribute("value");  
     console.log("Text add includes text: "+text+"\nfontName: "+fontName+"\nfontSize: "+fontSize);
     fontSize = _x.invert(fontSize);
-    addText(text,text_value,style,fontName,fontSize);
+    addText(text,value,style,fontName,fontSize);
 });    
   
   $("#d3-add-barcode").on("click",function() {
-    var barcode = document.getElementById("d3-barcode-text-input").value;
+    var barcode_text_select = document.getElementById("d3-barcode-text-input");//.getAttribute("value");
+    var barcode_value = barcode_text_select.value;
+    var selected = barcode_text_select.options[barcode_text_select.selectedIndex];
+    var text = selected.text;    
     var type_select = document.getElementById("d3-barcode-type-input");
-    addBarcode(barcode, type_select.selectedIndex);
+    addBarcode(barcode_value, text, type_select.selectedIndex);
 });   
 
-  d3.select(".d3-add-custom-text")
+d3.select(".d3-add-custom-text")
     .style("margin-left","1em");
   d3.select("#d3-custom-text")
     .on("click",function(){
@@ -496,7 +481,43 @@ $(document).ready(function($) {
     // addText(text,fontSize)
 });
 
-function addText(text,text_value,style,fontName,fontSize){
+$(document).on("change", "#trial_select", function () {
+         
+         var trial_id = document.getElementById("trial_select").value;
+         console.log("trial selected has id "+trial_id);
+         
+         jQuery.ajax( {
+             url: '/barcode/download/retrieve_longest_fields',
+             timeout: 60000,
+             method: 'POST',
+             data: {'trial_id': trial_id},
+             success: function(response) {
+                 if (response.error) {
+                 } else {
+                     console.log("Got longest elements: "+JSON.stringify(response));
+                     var text_fields = [
+                         { value: response.Accession, name: "Accession" },
+                         { value: response.Plot_Name, name: "Plot_Name" },
+                         { value: response.Plot_Number, name: "Plot_Number" },
+                         { value: response.Rep_Number, name: "Rep_Number" },
+                         { value: response.Row_Number, name: "Row_Number" },
+                         { value: response.Col_Number, name: "Col_Number" },
+                         { value: response.Trial_Name, name: "Trial_Name" },
+                         { value: response.Year, name: "Year" },
+                         { value: response.Pedigree_String, name: "Pedigree_String" },
+                         { value: "Custom", name: "Custom" },
+                     ];
+                     createAdders(text_fields);
+                    
+                 }
+             },
+             error: function(request, status, err) {
+             
+             }
+         });
+}); 
+
+function addText(text,value,style,fontName,fontSize){
   svg = d3.select(".d3-draw-svg");
   var newTB = svg.append("g")
     .classed("text-box",true);
@@ -507,7 +528,7 @@ function addText(text,text_value,style,fontName,fontSize){
       "style":style,
       "dominant-baseline": "mathematical",
       text:text,
-      value:text_value,
+      value:value,
       size:fontName+"_"+fontSize,
       class:"label-element",
     })
@@ -519,7 +540,7 @@ function addText(text,text_value,style,fontName,fontSize){
     .on("mouseup", dragSnap);
 }
 
-function addBarcode (barcode, index) {
+function addBarcode (barcode_value, text, index) {
     // console.log("type is "+type);
     svg = d3.select(".d3-draw-svg");
     // var width = document.getElementById("d3-label-area").viewBox.baseVal.width;
@@ -542,10 +563,10 @@ function addBarcode (barcode, index) {
         // width:_x.invert(barcode_types[index].width),
         // height:_y.invert(barcode_types[index].height),
         class: "label-element",
-        value: barcode,
+        value: text,
         size: barcode_types[index].type
     })
-    .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode)+"&type="+encodeURIComponent(barcode_types[index].type));
+    .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode_value)+"&type="+encodeURIComponent(barcode_types[index].type));
     new_barcode.call(doTransform,doSnap);
 }
 
@@ -555,7 +576,55 @@ function dragSnap(){
   // }
 }
 
-
+$("d3-page-type-select").change(function(){
+    
+     // set up font and size options based on type.
+     var type = $(this).find('option:selected').text();
+     if (type == 'Zebra') {
+         var font_select = d3.select("#d3-text-font-input");
+         font_select.selectAll("option")
+           .data(zebra_fonts)
+           .enter().append("option")
+           .text(function(d){return d.value})
+           .attr("style",function(d){return d.style});
+           
+           var font_size_select = d3.select("#d3-text-size-input");
+           font_select.selectAll("option")
+             .data(zebra_font_sizes)
+             .enter().append("option")
+             .text(function(d){return d.value})
+             .attr("value",function(d){return d.value});
+            //hide silder 
+           $("#d3-text-size-slider").hide();
+     } else {
+         var font_select = d3.select("#d3-text-font-input");
+         font_select.selectAll("option")
+           .data(pdf_fonts)
+           .enter().append("option")
+           .text(function(d){return d.value})
+           .attr("style",function(d){return d.style});
+           
+           $("#d3-text-size-slider").show();
+           var size_slider = d3.select("#d3-text-size-slider");
+           var size_input= d3.select("#d3-text-size-input");
+           var size_range = {
+             min: 1,
+             max: 72,
+             step: 1
+         };
+           size_slider.attr(size_range);
+           size_input.attr(size_range);
+           size_slider.property("value",32);
+           size_input.property("value",32);
+           size_slider.on("input",function(){
+             size_input.property("value",this.value)
+           });
+           size_input.on("change",function(){
+             grid_slider.node().value = this.value;
+           });
+     }
+    
+});
 
 $("#d3-save-button").on("click",function(event) {
   clearSelection();
@@ -591,6 +660,60 @@ console.log("SVG is "+source);
   img.remove();
 });
 
+function createAdders(text_fields) {
+    //set up text and barcode select
+    var text_field_select = d3.select("#d3-text-field-input");
+    text_field_select.selectAll("option")
+      .data(text_fields)
+      .enter().append("option")
+      .text(function(d){return d.name})
+      .attr("value",function(d){return d.value});
+      
+    //   var size_slider = d3.select("#d3-text-size-slider");
+    //   var size_input= d3.select("#d3-text-size-input");
+    //   var size_range = {
+    //     min: 1,
+    //     max: 72,
+    //     step: 1
+    // };
+    //   size_slider.attr(size_range);
+    //   size_input.attr(size_range);
+    //   size_slider.property("value",32);
+    //   size_input.property("value",32);
+    //   size_slider.on("input",function(){
+    //     size_input.property("value",this.value)
+    //   });
+    //   size_input.on("change",function(){
+    //     grid_slider.node().value = this.value;
+    //   });
+      
+      var barcode_text_select = d3.select("#d3-barcode-text-input");
+      barcode_text_select.selectAll("option")
+        .data(text_fields)
+        .enter().append("option")
+        .text(function(d){return d.name})
+        .attr("value",function(d){return d.value});
+        
+        $("#d3-barcode-text-input option[value='Custom']").remove();
+        
+        var barcode_type_select = d3.select("#d3-barcode-type-input");
+        barcode_type_select.selectAll("option")
+          .data(barcode_types)
+          .enter().append("option")
+          .text(function(d){return d.name})
+          .attr("type",function(d){return d.type})
+          .attr("size",function(d){return d.size});
+
+    //set up text options
+
+    $('#d3-text-field-input').change(function(){
+        console.log("Change noticed, text is "+$(this).find('option:selected').text());
+      if ($(this).find('option:selected').val() == 'Custom') {
+            $('#customTextModal').modal('show');
+        }
+    });
+}
+
 function getLabelDetails(element, index) {
     
     var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
@@ -607,7 +730,7 @@ function getLabelDetails(element, index) {
         y: coords[1],
         height: height, 
         width: width,
-        value: element.getAttribute("value"),
+        value: '{$'+element.getAttribute("value")+'}',
         type: format[0],
         size: format[1],
     };

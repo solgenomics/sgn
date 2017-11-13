@@ -30,6 +30,81 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
+   
+   sub retrieve_longest_fields :Path('/barcode/download/retrieve_longest_fields') {
+       my $self = shift;
+       my $c = shift;
+       my $schema = $c->dbic_schema('Bio::Chado::Schema');
+       
+       my $uri     = URI::Encode->new( { encode_reserved => 0 } );
+       my $trial_id = $uri->decode($c->req->param("trial_id"));
+       
+       my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
+       if (!$trial_rs) {
+           my $error = "Trial with id $trial_id does not exist. Can't create labels.";
+           print STDERR $error . "\n";
+           $c->stash->{error} = $error;
+           $c->stash->{template} = '/barcode/stock_download_result.mas';
+           $c->detach;
+       }
+       my $trial_name = $trial_rs->first->name();
+       my ($trial_layout, %errors, @error_messages);
+       try {
+           $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+       };
+       if (!$trial_layout) {
+           my $error = "Trial $trial_name does not have a valid field design. Can't create labels.";
+           print STDERR $error . "\n";
+           $c->stash->{error} = $error;
+           $c->stash->{template} = '/barcode/stock_download_result.mas';
+           $c->detach;
+       }
+       my %design = %{$trial_layout->get_design()};
+       
+       my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
+       my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
+       
+       our ($longest_accession_name, $longest_plot_name, $longest_plot_number, $longest_rep_number, $longest_row_number, $longest_col_number, $longest_pedigree);
+       
+       foreach my $key (sort { $a <=> $b} keys %design) {
+           print STDERR "Design key is $key\n";
+           my %design_info = %{$design{$key}};
+           
+           $longest_accession_name = compare_length($longest_accession_name, $design_info{'accession_name'});
+           $longest_plot_name = compare_length($longest_plot_name, $design_info{'plot_name'});
+           $longest_plot_number = compare_length($longest_plot_number, $design_info{'plot_number'});
+           $longest_rep_number = compare_length($longest_rep_number, $design_info{'rep_number'});
+           $longest_row_number = compare_length($longest_row_number, $design_info{'row_number'});
+           $longest_col_number = compare_length($longest_col_number, $design_info{'col_number'});
+           my $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
+           $longest_pedigree = compare_length($longest_pedigree, $pedigree);
+       }
+       
+       print STDERR "Dumped data is: ". Dumper({
+            "Accession" => $longest_accession_name, 
+            "Plot_Name"=> $longest_plot_name,
+            "Plot_Number" => $longest_plot_number,
+            "Rep_Number" => $longest_rep_number,
+            "Row_Number" => $longest_row_number,
+            "Col_Number" => $longest_col_number,
+            "Trial_Name" => $trial_name, 
+            "Year" => $year,
+            "Pedigree_String" => $longest_pedigree
+        });
+       
+      $c->stash->{rest} = {
+           "Accession" => $longest_accession_name, 
+           "Plot_Name"=> $longest_plot_name,
+           "Plot_Number" => $longest_plot_number,
+           "Rep_Number" => $longest_rep_number,
+           "Row_Number" => $longest_row_number,
+           "Col_Number" => $longest_col_number,
+           "Trial_Name" => $trial_name, 
+           "Year" => $year,
+           "Pedigree_String" => $longest_pedigree
+       };
+
+   }
 
    sub download_pdf_barcodes : Path('/barcode/download/pdf') : ActionClass('REST') { }
    
@@ -513,22 +588,33 @@ sub _parse_list_from_json {
 sub label_params_to_zpl {
     my $label_params_ref = shift;
     my @label_params = @{$label_params_ref};
-    my $zpl = "^XA^LL254^PW406";
+    my $zpl = "^XA\n^LL254^PW406\n";
     foreach my $element (@label_params) {
         my %element = %$element;
         $zpl .= "^FO$element{'x'},$element{'y'}";
-        my $height = $element{'size'} * 25;
         if ( $element{'type'} eq "128" ) {
-            $zpl .= "^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS";
+            my $height = $element{'size'} * 25;
+            $zpl .= "^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS\n";
         } elsif ( $element{'type'} eq "QR" ) {
-            $zpl .= "^BQ,,$element{'size'}^FD   $element{'value'}^FS";
+            $zpl .= "^BQ,,$element{'size'}^FD   $element{'value'}^FS\n";
         } else {
-            $zpl .= "^AA,$element{'size'}^FD$element{'value'}^FS";
+            $zpl .= "^AA,$element{'size'}^FD$element{'value'}^FS\n";
         }
     }
-    $zpl .= "^XZ";
+    $zpl .= "^XZ\n";
     print STDERR "ZPL is $zpl\n";
     return $zpl
+}
+
+sub compare_length {
+    my $current_longest = shift;
+    my $new_string = shift;
+    
+    if (length($new_string) > length($current_longest)) {
+        return $new_string;
+    } else {
+        return $current_longest;
+    }
 }
 
 #########

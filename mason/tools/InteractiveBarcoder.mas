@@ -9,9 +9,9 @@
         <div class="col-md-6">
             <div class="well">
                 <div class="form-group row">
-                  <label class="col-md-2 col-form-label">Page Size</label>
+                  <label class="col-md-2 col-form-label">Page Type</label>
                   <div class="col-md-10">
-                    <select id="d3-page-size-select" class="form-control"></select>
+                    <select id="d3-page-type-select" class="form-control"></select>
                     <div style="display:none" id="d3-page-custom-dimensions" class="form-inline">
                         <input class="form-control" placeholder="Width in mm" type="number" id="d3-page-custom-width">
                         <input class="form-control" placeholder="Height in mm" type="number" id="d3-page-custom-height">
@@ -85,7 +85,7 @@
                     </select>&nbsp&nbsp
                     <select id="d3-text-font-input" class="form-control">
                         <!-- <option value="">Pick a Font Type</option> -->
-                        <option style="font-family:courier;" value="font-family:courier;">Courier</option>
+                        <!-- <option style="font-family:courier;" value="font-family:courier;">Courier</option>
                         <option style="font-family:courier;font-weight:bold;" value="font-family:courier;font-weight:bold;">Courier-Bold</option>
                         <option style="font-family:courier;font-style: oblique;" value="font-family:courier;font-style: oblique;">Courier-Oblique</option>
                         <option style="font-family:courier;font-weight:bold;font-style: oblique;" value="font-family:courier;font-weight:bold;font-style: oblique;">Courier-BoldOblique</option>
@@ -96,28 +96,13 @@
                         <option style="font-family:times;" value="Times">Times</option>
                         <option style="font-family:times;font-weight:bold;" value="Times-Bold">Times-Bold</option>
                         <option style="font-family:times;font-style: oblique;" value="Times-Oblique">Times-Oblique</option>
-                        <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option>
+                        <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option> -->
                     </select>&nbsp&nbsp
                     <input class="form-control" id="d3-text-size-slider" type="range">
                     <input class="form-control" id="d3-text-size-input" type="number">
-                    <!-- <select id="d3-text-size-input" class="form-control">
-                    <option value="">Pick a Font Size</option>
-                      <option value="7">7</option>
-                      <option value="14">14</option>
-                      <option value="21">21</option>
-                      <option value="28">28</option>
-                      <option value="35">35</option>
-                      <option value="42">42</option>
-                      <option value="49">49</option>
-                      <option value="56">56</option>
-                    </select>&nbsp&nbsp -->
                 <button class="btn btn-primary d3-add-text" id="d3-add-text">Add</button>
             </div>
             </div>
-        <!-- </div>
-    </div>
-    <div class="col-md-12">
-        <div class="well"> -->
         
         <div style="display:none" class="form-group row form-inline">
         <center>
@@ -144,16 +129,12 @@
             <div class="well">
                 <center>
                 <button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save</button>
-                    <!-- <label>Preview:</label>
-                    <button id="d3-preview-button" class="btn btn-primary">Preview</button> -->
                 </center>
             </div>
         </div>
         <div class="col-md-6">
             <div class="well">
                 <center>
-                <!-- <button id="d3-save-button" name="Saving is not yet implemented" class="btn btn-primary" disabled>Save</button> -->
-                <!-- <a id="link" target="_blank" class="btn button btn-primary"> Download image</a> -->
                 <button id="d3-pdf-button" class="btn btn-primary">Download pdf</button>&nbsp&nbsp
                 <button id="d3-zpl-button" class="btn btn-primary">Download zpl</button>
             </center>
@@ -171,19 +152,6 @@
                 <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
                     <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;"></span>
                 </div>
-                <!-- <label>Add a Variable:</label><br>
-                <select id="d3-custom-field-input" class="form-control">
-                    <option value="">Pick a Field</option>
-                    <option value="{$Accession}">Accession</option>
-                    <option value="{$Plot Name}">Plot Name</option>
-                    <option value="{$Plot #}">Plot #</option>
-                    <option value="{$Rep #}">Rep #</option>
-                    <option value="{$Row #}">Row #</option>
-                    <option value="{$Col #}">Col #</option>
-                    <option value="{$Trial Name}">Trial Name</option>
-                    <option value="{$Year}">Year</option>
-                    <option value="{$Pedigree String}">Pedigree String</option>
-                </select> -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
