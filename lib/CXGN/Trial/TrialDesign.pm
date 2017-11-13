@@ -247,11 +247,6 @@ sub _get_crd_design {
     if ($self->has_control_list_crbd()) {
       @control_list_crbd = @{$self->get_control_list_crbd()};
       %control_names_lookup = map { $_ => 1 } @control_list_crbd;
-      foreach $stock_name_iter (@stock_names) {
-        if (exists($control_names_lookup{$stock_name_iter})) {
-  	die "Names in stock list cannot be used also as controls\n";
-        }
-      }
     }
     if ($self->has_number_of_reps()) {
         $number_of_reps = $self->get_number_of_reps();
@@ -574,11 +569,6 @@ sub _get_rcbd_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
   }
   if ($self->has_number_of_blocks()) {
     $number_of_blocks = $self->get_number_of_blocks();
@@ -725,11 +715,6 @@ sub _get_alpha_lattice_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
   }
 
   if ($self->has_number_of_reps()) {
@@ -921,11 +906,6 @@ sub _get_lattice_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	       die "Names in stock list cannot be used also as controls\n";
-      }
-    }
   }
 
    if ($self->has_number_of_reps()) {
