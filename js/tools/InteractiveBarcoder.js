@@ -56,6 +56,7 @@ var label_sizes = [
       number_of_columns:1,
       number_of_rows:6
   },
+  
   {
       name:'1 1/4" x 2" (Zebra)',
       width:400,
@@ -68,6 +69,19 @@ var label_sizes = [
       number_of_columns:0,
       number_of_rows:0
   },
+  {
+       name:'2" x 2 5/8" (3x5)',
+       width:533.4,
+       height:406.4,
+       value:15,
+       starting_x:13.68,
+       starting_y:754,
+       x_increment:198,
+       y_increment:-144,
+       number_of_columns:2,
+       number_of_rows:4
+   },
+
   // {
     //   name:'Custom',
     //   value:'Custom',
