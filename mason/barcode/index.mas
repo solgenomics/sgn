@@ -225,10 +225,10 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           else if (format == "crossing") {
           var label_row = 1;
           var label_cols = 1; 
-          var top_margin = 13;
-          var left_margin = 100;
-          var bottom_margin = 12;
-          var right_margin = 12;
+          var top_margin = 5;
+          var left_margin = 2;
+          var bottom_margin = 0;
+          var right_margin = 0;
           }
           jQuery("#text_margin").empty();
           jQuery("#text_margin").val(text);
