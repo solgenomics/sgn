@@ -186,12 +186,12 @@ if (length(newCran) > 0) {
 
 newGitPaths <- c()
 if (!is.null(newGit)) {
+ 
   for (ng in newGit) {
     ngp <- grep(ng, githubPackPaths, value=TRUE)
-    ifelse(is.null(newGitPaths), newGitPaths <- ngp,  newGithPaths <- c(newGitPaths, ngp))   
+    ifelse(is.null(newGitPaths), newGitPaths <- ngp,  newGitPaths <- c(newGitPaths, ngp))   
   }
 }
-
 
 if (length(newGitPaths) > 0) {
     withr::with_libpaths(new=rLibsSgn,
