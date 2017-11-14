@@ -112,13 +112,19 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    my $stock_name = shift;
    my $field_info = shift;
    my $fieldbook_enabled = shift // "";
+   my $stock_type = shift;
+   print "STOCK TYPE!!!: $stock_type\n";
    my $text;
    if ($fieldbook_enabled eq "enable_fieldbook_2d_barcode"){
        $text = $stock_name;
    }
+   elsif ($stock_type eq 'crossing') {
+       $text = "stock name: ".$stock_name. "\n plot_id: ". $stock_id. "\n".$field_info;
+   }
    else {
        $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
    }
+   
 
 
    $c->tempfiles_subdir('barcode');
