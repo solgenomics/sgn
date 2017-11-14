@@ -322,7 +322,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq '32_unique') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq '20A4') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 2, $barcode_type = "2D", $page_format = "letter"; }
-    if ($cass_print_format eq 'mobile') {$left_margin_mm = 100, $top_margin_mm = 13, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_row = 1, $barcode_type = "2D"; }
+    if ($cass_print_format eq 'crossing') {$left_margin_mm = 2, $top_margin_mm = 5, $bottom_margin_mm =  0, $right_margin_mm = 0, $labels_per_row = 1, $labels_per_page = 1, $barcode_type = "2D"; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -464,8 +464,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $tract_type_id = 'plant';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
-
-      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
+      
+      if ($cass_print_format eq 'crossing'){
+          push @found, [ $stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
+      }else{
+          push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
+      }
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -549,7 +553,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
         if ($found[$i]->[5] eq 'plot'){
           $parents = $found[$i]->[4];
-           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
+          if ($cass_print_format eq 'crossing'){
+              $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode, $cass_print_format ]);
+          }
+          else{
+              $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
+          }
         }
         elsif ($found[$i]->[5] eq 'accession'){
             if ($found[$i]->[7] eq ''){
@@ -627,18 +636,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
             $final_barcode_width = ($page_width - $right_margin - $left_margin) / ($labels_per_row + 1);
         }
-        elsif ($cass_print_format eq 'mobile'){
-            my $label_height = 500;
-     	    $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
-            $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2) - 100;
-            $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
-        }
         else{
             $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
         	$ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
         }
 
-        if ($cass_print_format eq '32A4' || $cass_print_format eq '32_unique' || $cass_print_format eq 'NCSU' || $cass_print_format eq '20A4' || $cass_print_format eq 'mobile'){
+        if ($cass_print_format eq '32A4' || $cass_print_format eq '32_unique' || $cass_print_format eq 'NCSU' || $cass_print_format eq '20A4' || $cass_print_format eq 'crossing'){
         }
         else{
             $pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
@@ -994,16 +997,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
          }
      }
      
-     elsif ($cass_print_format eq 'mobile' && $barcode_type eq "2D") {
+     elsif ($cass_print_format eq 'crossing' && $barcode_type eq "2D") {
          foreach my $label_count (1..$labels_per_row) {
-           my $xposition = $left_margin - 30;
-           my $yposition = $ypos;
-           my $label_text = $found[$i]->[1];
-           my $label_size =  12;
-           my $yposition_8 = $ypos + 255;
-        
-           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_8, $label_text);
-           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin - 30, ypos=>$ypos + 340, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+             my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
+             my $yposition = $ypos -7;
+             my $label_text = $found[$i]->[1];
+             my $label_size =  20;
+             $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+             $pages[$page_nr-1]->string($font, $label_size, $xposition + 30, $yposition - 580, $label_text);
+         
          }
      }
      
