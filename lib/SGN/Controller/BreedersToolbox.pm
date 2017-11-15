@@ -225,6 +225,25 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 
 }
 
+sub manage_upload :Path("/breeders/upload") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+    my $breeding_programs = $projects->get_breeding_programs();
+    $c->stash->{locations} = $projects->get_all_locations();
+    $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{timestamp} = localtime;
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
+}
+
 sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     my $self =shift;
     my $c = shift;

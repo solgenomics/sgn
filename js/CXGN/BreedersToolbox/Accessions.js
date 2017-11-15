@@ -21,15 +21,15 @@ var accession_list_id;
 var validSpecies;
 var fuzzyResponse;
 
+function disable_ui() {
+    jQuery('#working_modal').modal("show");
+}
+
+function enable_ui() {
+    jQuery('#working_modal').modal("hide");
+}
+
 jQuery(document).ready(function ($) {
-
-    function disable_ui() {
-        $('#working_modal').modal("show");
-    }
-
-    function enable_ui() {
-        $('#working_modal').modal("hide");
-    }
 
     jQuery('#manage_accessions_populations_new').click(function(){
         jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"] ));
