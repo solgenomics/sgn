@@ -14,7 +14,7 @@ $user_id => undef
 
 <& /breeders_toolbox/cross_wishlist.mas &>
 <& /breeders_toolbox/add_cross_dialogs.mas, programs=>\@programs, locations=>\@locations, crossing_trials=>\@crossing_trials &>
-<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations, crossing_trials=>\@crossing_trials &>
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>

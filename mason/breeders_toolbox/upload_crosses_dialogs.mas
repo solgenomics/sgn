@@ -1,6 +1,6 @@
 <%args>
-@programs => ()
 @locations => ()
+@crossing_trials => ()
 </%args>
 
 <div class="modal fade" id="upload_crosses_dialog" name="upload_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesDialog">
@@ -22,18 +22,19 @@
     	    </p>
   	  </&>
 	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Breeding Program: </label>
-      	      <div class="col-sm-10">
-	        <select class="form-control" id="cross_upload_breeding_program" name="cross_upload_breeding_program">
-      		<%perl>
-        	  foreach my $program (@programs) {
-        	    print "<option value=".@$program[0].">".@$program[1]."</option>";
-        	  }
-      		</%perl>
-    		</select>
-              </div>
-	    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Crossing Trial: </label>
+            <div class="col-sm-10">
+                <select class="form-control" id="crossing_trial" name="crossing_trial">
+                    <option value="">Select Crossing Trial</option>
+                    <%perl>
+                        foreach my $crossing_trial (@crossing_trials) {
+                        print "<option value=".'"'.@$crossing_trial[0].'"'.">".@$crossing_trial[1]."</option>";
+                        }
+                    </%perl>
+                </select>
+            </div>
+    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Location: </label>
       	      <div class="col-sm-10">
@@ -54,22 +55,7 @@
 	    </div>
 	    <hr>
       <h3>Additional options:</h3>
-      <p>Group Crosses together in a new folder:</p>
-      <div class="form-group">
-            <label class="col-sm-2 control-label">Folder Name: </label>
-            <div class="col-sm-10">
-        <input class="form-control" type="text" id="upload_folder_name" name="upload_folder_name"/>
-            </div>
-      </div>
-      <p>Or add crosses to an existing folder:</p>
-      <div class="form-group">
-          <label class="col-sm-2 control-label">Folder: </label>
-          <div class="col-sm-10" >
-            <div id="cross_folder_select_div">
-              [Loading...]
-            </div>
-          </div>
-      </div>
+
 	    <p>Progeny naming: <i>If generating progeny, use cross name and:</i></p>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Prefix: </label>
