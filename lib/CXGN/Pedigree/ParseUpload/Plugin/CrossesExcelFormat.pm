@@ -37,8 +37,8 @@ sub _validate_with_plugin {
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
-  if (($col_max - $col_min)  < 4 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
-    push @errors, "Spreadsheet is missing header";
+  if (($col_max - $col_min)  < 3 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
+    push @errors, "Spreadsheet is missing header or required column";
     $self->_set_parse_errors(\@errors);
     return;
   }
