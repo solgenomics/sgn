@@ -253,7 +253,7 @@ sub add_cross_POST :Args(0) {
     my $folder_id = $c->req->param('folder_id');
     my $folder;
 
-    if ($folder_name && !$folder_id) {
+    if ($folder_name && (!$folder_id || $folder_id eq 'undefined') ) {
       eval {
         $folder = CXGN::Trial::Folder->create({
           bcs_schema => $chado_schema,
@@ -650,26 +650,26 @@ return 0;
   }
 
   #check that parents exist in the database
-  if (! $chado_schema->resultset("Stock::Stock")->find({name=>$maternal,})){
+  if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$maternal,})){
     $c->stash->{rest} = {error =>  "Female parent does not exist." };
     return 0;
   }
 
   if ($paternal) {
-    if (! $chado_schema->resultset("Stock::Stock")->find({name=>$paternal,})){
+    if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$paternal,})){
 $c->stash->{rest} = {error =>  "Male parent does not exist." };
 return 0;
     }
   }
 
   #check that cross name does not already exist
-  if ($chado_schema->resultset("Stock::Stock")->find({name=>$cross_name})){
+  if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
     $c->stash->{rest} = {error =>  "cross name already exists." };
     return 0;
   }
 
   #check that progeny do not already exist
-  if ($chado_schema->resultset("Stock::Stock")->find({name=>$cross_name.$prefix.'001'.$suffix,})){
+  if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name.$prefix.'001'.$suffix,})){
     $c->stash->{rest} = {error =>  "progeny already exist." };
     return 0;
   }
