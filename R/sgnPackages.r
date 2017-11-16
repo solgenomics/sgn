@@ -9,7 +9,7 @@
 #removing them manually.
 
 
-#Set the env variable R_LIBS_USER in your system (/etc/R/Renviron) to \"~/cxgn/R_libs\".
+#Set the env variable R_LIBS_USER in /etc/R/Renviron to '~/cxgn/R_libs' in your local system or to '/usr/local/share/website/R_libs' in the production servers. 
 #This will ensure deps you manually install in R will be in the same place as sgn R libraries
 #and avoid installation of the same R packages in multiple places.
 #It will also add packages in the \"~/cxgn/R_libs\" to the search path";
