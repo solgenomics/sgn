@@ -64,7 +64,7 @@ __PACKAGE__->config(
        my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
        
-       our ($longest_accession_name, $longest_plot_name, $longest_plot_number, $longest_rep_number, $longest_row_number, $longest_col_number, $longest_pedigree);
+       our ($longest_accession_name, $longest_plot_name, $longest_plot_number, $longest_rep_number, $longest_row_number, $longest_col_number, $longest_pedigree) = '';
        
        foreach my $key (sort { $a <=> $b} keys %design) {
            print STDERR "Design key is $key\n";

@@ -59,8 +59,8 @@ var label_sizes = [
   
   {
       name:'1 1/4" x 2" (Zebra)',
-      width:400,
-      height:250,
+      width:401.4,
+      height:245,
       value:0,
       starting_x:0,
       starting_y:0,
@@ -106,8 +106,8 @@ var pdf_fonts = [
     { style: "font-family:helvetica;font-weight:bold;font-style: oblique;", value: "Helvetica-BoldOblique"},
     { style: "font-family:times;", value: "Times"},
     { style: "font-family:times;font-weight:bold;", value: "Times-Bold"},
-    { style: "font-family:times;font-style: oblique;", value: "Times-Oblique"},
-    { style: "font-family:times;font-weight:bold;font-style: oblique;", value: "Times-BoldOblique"} 
+    { style: "font-family:times;font-style: oblique;", value: "Times-Italic"},
+    { style: "font-family:times;font-weight:bold;font-style: oblique;", value: "Times-BoldItalic"}
 ];
 
 var zebra_fonts = [
@@ -115,13 +115,13 @@ var zebra_fonts = [
 ];
 
 var zebra_font_sizes = [
-    { value: "9"},
-    { value: "18"},
-    { value: "27"},
-    { value: "36"},
-    { value: "45"},
-    { value: "54"},
-    { value: "63"}
+    { value: "10"},
+    { value: "20"},
+    { value: "30"},
+    { value: "39"},
+    { value: "49"},
+    { value: "58"},
+    { value: "66"}
 ];
 
 // var text_fields = [
@@ -342,6 +342,9 @@ doSnap.size = 7;
 
 $(document).ready(function($) {
 
+    d3.select("#d3-text-field-input").selectAll("option").remove();
+    d3.select("#d3-barcode-text-input").selectAll("option").remove();
+
   var width = 533.4; 
   var height = 203.2; 
 
@@ -441,7 +444,58 @@ $(document).ready(function($) {
           changeLabelSize(width,height,_x);
         });
 
-
+        $("#d3-page-type-select").change(function(){
+            console.log("Page type select changed!\n");
+             // set up font and size options based on type.
+             var type = $(this).find('option:selected').text();
+             console.log("Page type is: "+type);
+             var font_select = d3.select("#d3-text-font-input");
+             var size_slider = d3.select("#d3-text-size-slider");
+             
+             if (type == 'Zebra') {
+                 font_select.selectAll("option").remove();
+                  font_select.selectAll("option")
+                   .data(zebra_fonts)
+                   .enter().append("option")
+                   .text(function(d){return d.value})
+                   .attr("style",function(d){return d.style});
+                   $("#d3-text-size-input").replaceWith('<select id="d3-text-size-input" class="form-control">');
+                   d3.select("#d3-text-size-input").selectAll("option")
+                     .data(zebra_font_sizes)
+                     .enter().append("option")
+                     .text(function(d){return d.value})
+                     .attr("value",function(d){return d.value});
+                    //hide silder 
+                   $("#d3-text-size-slider").hide();
+             } else {
+                 font_select.selectAll("option").remove();
+                 font_select.selectAll("option")
+                   .data(pdf_fonts)
+                   .enter().append("option")
+                   .text(function(d){return d.value})
+                   .attr("style",function(d){return d.style});
+                   
+                   $("#d3-text-size-input").replaceWith('<input class="form-control" id="d3-text-size-input" type="number">');
+                   var size_input= d3.select("#d3-text-size-input");
+                  $("#d3-text-size-slider").show();
+                   var size_range = {
+                     min: 1,
+                     max: 72,
+                     step: 1
+                 };
+                   size_slider.attr(size_range);
+                   size_input.attr(size_range);
+                   size_slider.property("value",32);
+                   size_input.property("value",32);
+                   size_slider.on("input",function(){
+                     size_input.property("value",this.value)
+                   });
+                   size_input.on("change",function(){
+                     grid_slider.node().value = this.value;
+                   });
+             }
+            
+        });
 
 // $('#d3-custom-field-input').change(function(){
 //     console.log("Change noticed, text is "+$(this).find('option:selected').text());
@@ -450,29 +504,32 @@ $(document).ready(function($) {
   
   $("#d3-add-text").on("click",function() {
     var text_select = document.getElementById("d3-text-field-input");
-    var selected = text_select.options[text_select.selectedIndex];
-    var value = selected.text;
-    var text = text_select.value;
+    var selected_option = text_select.options[text_select.selectedIndex];
+    var value = selected_option.value;
+    var display_text = selected_option.text; 
 
-    if (text == 'Custom') {
-        text = value;
+    if (value != 'Custom') {
+        value = '{$'+selected_option.text+'}';
+        display_text = selected_option.value;
+    } else {
+        value = display_text;
     }
 
     var font_select = document.getElementById("d3-text-font-input");
     var selected_font = font_select.options[font_select.selectedIndex];
     var fontName = selected_font.text;
-    var style = selected_font.getAttribute("value");
+    var style = selected_font.getAttribute("style");
     var fontSize = document.getElementById("d3-text-size-input").value;//.getAttribute("value");  
-    console.log("Text add includes text: "+text+"\nfontName: "+fontName+"\nfontSize: "+fontSize);
+    console.log("addText args include text: "+display_text+"\nvalue: "+value+"\nstyle: "+style+"\nfontName: "+fontName+"\nfontSize: "+fontSize);
     fontSize = _x.invert(fontSize);
-    addText(text,value,style,fontName,fontSize);
+    addText(display_text,value,style,fontName,fontSize);
 });    
   
   $("#d3-add-barcode").on("click",function() {
     var barcode_text_select = document.getElementById("d3-barcode-text-input");//.getAttribute("value");
-    var barcode_value = barcode_text_select.value;
+    var text = barcode_text_select.value;
     var selected = barcode_text_select.options[barcode_text_select.selectedIndex];
-    var text = selected.text;    
+    var barcode_value = '{$'+selected.text+'}';  
     var type_select = document.getElementById("d3-barcode-type-input");
     addBarcode(barcode_value, text, type_select.selectedIndex);
 });   
@@ -499,6 +556,8 @@ $(document).on("change", "#trial_select", function () {
          
          var trial_id = document.getElementById("trial_select").value;
          console.log("trial selected has id "+trial_id);
+         d3.select("#d3-text-field-input").selectAll("option").remove();
+         d3.select("#d3-barcode-text-input").selectAll("option").remove();
          
          jQuery.ajax( {
              url: '/barcode/download/retrieve_longest_fields',
@@ -577,10 +636,10 @@ function addBarcode (barcode_value, text, index) {
         // width:_x.invert(barcode_types[index].width),
         // height:_y.invert(barcode_types[index].height),
         class: "label-element",
-        value: text,
+        value: barcode_value,
         size: barcode_types[index].type
     })
-    .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode_value)+"&type="+encodeURIComponent(barcode_types[index].type));
+    .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(text)+"&type="+encodeURIComponent(barcode_types[index].type));
     new_barcode.call(doTransform,doSnap);
 }
 
@@ -589,56 +648,6 @@ function dragSnap(){
     d3.select(this).call(doTransform,doSnap);
   // }
 }
-
-$("d3-page-type-select").change(function(){
-    
-     // set up font and size options based on type.
-     var type = $(this).find('option:selected').text();
-     if (type == 'Zebra') {
-         var font_select = d3.select("#d3-text-font-input");
-         font_select.selectAll("option")
-           .data(zebra_fonts)
-           .enter().append("option")
-           .text(function(d){return d.value})
-           .attr("style",function(d){return d.style});
-           
-           var font_size_select = d3.select("#d3-text-size-input");
-           font_select.selectAll("option")
-             .data(zebra_font_sizes)
-             .enter().append("option")
-             .text(function(d){return d.value})
-             .attr("value",function(d){return d.value});
-            //hide silder 
-           $("#d3-text-size-slider").hide();
-     } else {
-         var font_select = d3.select("#d3-text-font-input");
-         font_select.selectAll("option")
-           .data(pdf_fonts)
-           .enter().append("option")
-           .text(function(d){return d.value})
-           .attr("style",function(d){return d.style});
-           
-           $("#d3-text-size-slider").show();
-           var size_slider = d3.select("#d3-text-size-slider");
-           var size_input= d3.select("#d3-text-size-input");
-           var size_range = {
-             min: 1,
-             max: 72,
-             step: 1
-         };
-           size_slider.attr(size_range);
-           size_input.attr(size_range);
-           size_slider.property("value",32);
-           size_input.property("value",32);
-           size_slider.on("input",function(){
-             size_input.property("value",this.value)
-           });
-           size_input.on("change",function(){
-             grid_slider.node().value = this.value;
-           });
-     }
-    
-});
 
 $("#d3-save-button").on("click",function(event) {
   clearSelection();
@@ -744,7 +753,7 @@ function getLabelDetails(element, index) {
         y: coords[1],
         height: height, 
         width: width,
-        value: '{$'+element.getAttribute("value")+'}',
+        value: element.getAttribute("value"),
         type: format[0],
         size: format[1],
     };
