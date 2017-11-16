@@ -25,7 +25,7 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">Crossing Trial: </label>
             <div class="col-sm-10">
-                <select class="form-control" id="crossing_trial" name="crossing_trial">
+                <select class="form-control" id="cross_upload_crossing_trial" name="cross_upload_crossing_trial">
                     <option value="">Select Crossing Trial</option>
                     <%perl>
                         foreach my $crossing_trial (@crossing_trials) {

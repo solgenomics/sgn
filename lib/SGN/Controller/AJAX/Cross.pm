@@ -64,13 +64,11 @@ sub upload_cross_file_POST : Args(0) {
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my $dbh = $c->dbc->dbh;
-  my $breeding_program_id = $c->req->param('cross_upload_breeding_program');
+  my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
   my $location = $c->req->param('cross_upload_location');
   my $upload = $c->req->upload('crosses_upload_file');
   my $prefix = $c->req->param('upload_prefix');
   my $suffix = $c->req->param('upload_suffix');
-  my $folder_name = $c->req->param('upload_folder_name');
-  my $folder_id = $c->req->param('upload_folder_id');
   my $parser;
   my $parsed_data;
   my $upload_original_name = $upload->filename();
@@ -94,21 +92,6 @@ sub upload_cross_file_POST : Args(0) {
     $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
     return;
   }
-
-  if ($folder_name) {
-    my $folder = CXGN::Trial::Folder->create({
-      bcs_schema => $chado_schema,
-	    parent_folder_id => '',
-	    name => $folder_name,
-	    breeding_program_id => $breeding_program_id,
-        folder_for_crosses => 1
-    });
-    $folder_id = $folder->folder_id();
-  }
-
-  my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-  my $program = $breeding_program->name();
-  #print STDERR "Breeding program name = $program\n";
 
   $user_id = $c->user()->get_object()->get_sp_person_id();
 
@@ -170,10 +153,9 @@ sub upload_cross_file_POST : Args(0) {
 	   metadata_schema => $metadata_schema,
 	   dbh => $dbh,
 	   location => $location,
-	   program => $program,
+     crossing_trial_id => $crossing_trial_id,
 	   crosses =>  $parsed_data->{crosses},
-	   owner_name => $owner_name,
-     parent_folder_id => $folder_id
+	   owner_name => $owner_name
 	  });
 
   #validate the crosses
@@ -253,35 +235,6 @@ sub add_cross_POST :Args(0) {
     my $female_plot = $c->req->param('female_plot') || 0;
     my $male_plot = $c->req->param('male_plot') || 0;
     #print STDERR "Female Plot=".Dumper($female_plot)."\n";
-    #my $breeding_program_id = $c->req->param('breeding_program_id');
-    #my $folder_name = $c->req->param('folder_name');
-    #my $folder_id = $c->req->param('folder_id');
-    #my $folder;
-
-  #  my $crossing_trial_ref = $chado_schema->resultset("Project::Project")->find( { project_id => $crossing_trial_id });
-  #  my $crossing_trial = $crossing_trial_ref->name();
-
-    #if ($folder_name && !$folder_id) {
-    #  eval {
-    #    $folder = CXGN::Trial::Folder->create({
-    #      bcs_schema => $chado_schema,
-    #      parent_folder_id => '',
-    #      name => $folder_name,
-    #      breeding_program_id => $breeding_program_id,
-    #      folder_for_crosses =>1
-    #    });
-    #  };
-
-    #  if ($@) {
-    #    $c->stash->{rest} = {error => $@ };
-    #    return;
-    #  }
-
-    #  $folder_id = $folder->folder_id();
-    #}
-
-    #my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-    #my $program = $breeding_program->name();
 
     if (!$c->user()) {
   print STDERR "User not logged in... not adding a cross.\n";
@@ -1431,8 +1384,6 @@ sub add_crossingtrial_POST :Args(0) {
       $folder_id = $folder->folder_id();
     }
 
-  #  my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-  #  my $program = $breeding_program->name();
 
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($location);

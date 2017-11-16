@@ -102,14 +102,6 @@ jQuery(document).ready(function($) {
             $("#cross_type_dialog").modal("show");
         });
 
-    //    get_select_box('folders', 'add_cross_folder_select_div', {
-    //        'name': 'add_cross_folder_id',
-    //        'id': 'add_cross_folder_id',
-    //        'folder_for_crosses' : true,
-    //        'empty': 1,
-    //          'breeding_program_id': jQuery('#program').val()
-    //    });
-
         var lo = new CXGN.List();
         $('#polycross_accession_list').html(lo.listSelect('polycross_accessions', ['accessions'], 'select'));
         $('#reciprocal_accession_list').html(lo.listSelect('reciprocal_accessions', ['accessions'], 'select'));
@@ -135,10 +127,6 @@ jQuery(document).ready(function($) {
             $("#maternal_accessions").toggle($("#cross_type").val() == "multicross");
             $("#paternal_accessions").toggle($("#cross_type").val() == "multicross");
         });
-
-    //    $("#field_trial").change(function() {
-    //        $("#get_plots").toggle($("#field_trial").val());
-    //    });
 
         $('input[id*="_parent"]').autocomplete({
             source: '/ajax/stock/accession_autocomplete'
@@ -201,38 +189,13 @@ jQuery(document).ready(function($) {
                 return;
             }
 
-
-    //    var breeding_program_id = $("#program").val();
-    //    if (!breeding_program_id) {
-    //        alert("A breeding program is required");
-    //        return;
-    //    }
-
         var visibleToRole = $("#visible_to_role").val();
         var location = $("#location").val();
         var female_plot = $("#female_plot").val();
         var male_plot = $("#male_plot").val();
 
-    //    var folder_name = $("#add_cross_folder_name").val();
-    //    var folder_id;
-    //    if (folder_name) {  // get id if folder with this name already exisits
-    //        folder_id = $('#add_cross_folder_id option').filter(function () { return $(this).html() == folder_name; }).val();
-    //    }
-    //    else {
-    //        folder_id = $("#add_cross_folder_id").val();
-    //    }
         add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot);
 
-    });
-
-    $('#cross_upload_breeding_program').change(function(){
-        get_select_box('folders', 'cross_folder_select_div', {
-            'name': 'upload_folder_id',
-            'id': 'upload_folder_id',
-            'folder_for_crosses': true,
-            'empty': 1,
-            'breeding_program_id': jQuery('#cross_upload_breeding_program').val()
-        });
     });
 
     $("#upload_crosses_link").click(function() {
@@ -241,17 +204,17 @@ jQuery(document).ready(function($) {
             $("#cross_upload_spreadsheet_info_dialog").modal("show");
         });
 
-        get_select_box('folders', 'cross_folder_select_div', {
-            'name': 'upload_folder_id',
-            'id': 'upload_folder_id',
-            'folder_for_crosses': true,
-            'empty': 1,
-            'breeding_program_id': jQuery('#cross_upload_breeding_program').val()
-        });
         $("#upload_crosses_dialog").modal("show");
     });
 
     $("#upload_crosses_submit").click(function() {
+
+      var crossing_trial_id = $("#cross_upload_crossing_trial").val();
+          if (!crossing_trial_id) {
+              alert("A crossing trial is required");
+              return;
+          }
+
         $("#upload_crosses_dialog").modal("hide");
         upload_crosses_file();
     });
