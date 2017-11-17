@@ -44,6 +44,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
+use CXGN::Trial::TrialLayout;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -134,6 +135,8 @@ sub search {
     my $rep_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
     my $block_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
     my $plot_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $row_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
     my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
     my $design_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
     my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
@@ -146,6 +149,33 @@ sub search {
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
+
+    my $design_layout_sql = '';
+    my $design_layout_select = '';
+    my %design_layout_hash;
+    my $using_layout_hash;
+    if ($self->trial_list && scalar(@{$self->trial_list})>0) {
+        $using_layout_hash = 1;
+        foreach (@{$self->trial_list}){
+            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_});
+            my $tl = $trial_layout->get_design();
+            while(my($key,$val) = each %$tl){
+                $design_layout_hash{$val->{plot_id}} = $val;
+                if($val->{plant_ids}){
+                    foreach my $p (@{$val->{plant_ids}}){
+                        $design_layout_hash{$p} = $val;
+                    }
+                }
+            }
+        }
+    } else {
+        $design_layout_sql = " LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
+        LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+        LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+        LEFT JOIN stockprop AS row_number ON (plot.stock_id=plot_number.stock_id AND row_number.type_id = $row_number_type_id)
+        LEFT JOIN stockprop AS col_number ON (plot.stock_id=plot_number.stock_id AND col_number.type_id = $col_number_type_id) ";
+        $design_layout_select = " ,rep.value, block_number.value, plot_number.value, row_number.value, col_number.value";
+    }
 
     my %columns = (
       accession_id=> 'accession.stock_id',
@@ -165,9 +195,7 @@ sub search {
       from_clause=> " FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
       JOIN cvterm as plot_type ON (plot_type.cvterm_id = plot.type_id)
       JOIN stock as accession ON (object_id=accession.stock_id AND accession.type_id = $accession_type_id)
-      LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
-      LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-      LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+      $design_layout_sql
       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
       JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
@@ -182,12 +210,11 @@ sub search {
       LEFT JOIN projectprop as location ON (project.project_id=location.project_id AND location.type_id = $project_location_type_id)",
     );
 
-    my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.",
-          rep.value, block_number.value, plot_number.value, ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", phenotype.phenotype_id, count(phenotype.phenotype_id) OVER() AS full_count";
+    my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.", ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", phenotype.phenotype_id, count(phenotype.phenotype_id) OVER() AS full_count ".$design_layout_select;
 
     my $from_clause = $columns{'from_clause'};
 
-    my $order_clause = " ORDER BY 2,7,19 DESC";
+    my $order_clause = " ORDER BY 2,7,16 DESC";
 
     my @where_clause;
 
@@ -289,7 +316,7 @@ sub search {
     $h->execute();
     my $result = [];
 
-    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name, $phenotype_id, $full_count) = $h->fetchrow_array()) {
+    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name, $phenotype_id, $full_count, $rep_select, $block_number_select, $plot_number_select, $row_number_select, $col_number_select) = $h->fetchrow_array()) {
         my $timestamp_value;
         if ($include_timestamp) {
             if ($phenotype_uniquename){
@@ -302,9 +329,27 @@ sub search {
                 }
             }
         }
+        my $rep;
+        my $block_number;
+        my $plot_number;
+        my $row_number;
+        my $col_number;
+        if ($using_layout_hash){
+            $rep = $design_layout_hash{$plot_id}->{rep_number};
+            $block_number = $design_layout_hash{$plot_id}->{block_number};
+            $plot_number = $design_layout_hash{$plot_id}->{plot_number};
+            $row_number = $design_layout_hash{$plot_id}->{row_number};
+            $col_number = $design_layout_hash{$plot_id}->{col_number};
+        } else {
+            $rep = $rep_select;
+            $block_number = $block_number_select;
+            $plot_number = $plot_number_select;
+            $row_number = $row_number_select;
+            $col_number = $col_number_select;
+        }
         my $synonyms = $synonym_hash_lookup{$stock_name};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
-        push @$result, [ $year, $project_name, $stock_name, $location_name, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
+        push @$result, [ $year, $project_name, $stock_name, $location_name, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
     }
 
     print STDERR "Search End:".localtime."\n";

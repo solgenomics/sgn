@@ -169,7 +169,7 @@ sub get_phenotype_matrix {
 	my %seen_plots;
 	foreach my $d (@$data) {
 
-		my ($year, $project_name, $stock_name, $location, $cvterm, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id) = @$d;
+		my ($year, $project_name, $stock_name, $location, $cvterm, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id) = @$d;
 
 		if ($cvterm){
 			if (!exists($seen_plots{$plot_id})) {
@@ -184,7 +184,7 @@ sub get_phenotype_matrix {
 				$plot_data{$plot_id}->{$cvterm} = $value;
 			}
 			my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-			$plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number];
+			$plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number,$row_number,$col_number];
 			$traits{$cvterm}++;
 		}
 	}
@@ -192,7 +192,7 @@ sub get_phenotype_matrix {
 	#print STDERR Dumper \%traits;
 
 	my @info = ();
-	my @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber' );
+	my @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber' );
 
 	# generate header line
 	#
