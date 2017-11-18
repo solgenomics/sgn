@@ -155,6 +155,7 @@ sub get_phenotype_matrix {
             plant_list=>$self->plant_list,
             subplot_list=>$self->subplot_list,
             include_timestamp=>$self->include_timestamp,
+            include_row_and_column_numbers=>$self->include_row_and_column_numbers,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
