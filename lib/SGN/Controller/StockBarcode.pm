@@ -24,11 +24,12 @@ sub barcode_preview :Path('/barcode/preview') {
     my $c = shift;
     my $uri     = URI::Encode->new( { encode_reserved => 0 } );
     my $content =  $uri->decode($c->req->param("content"));
-    my $format = $uri->decode($c->req->param("type"));
-    my ($type, $size) = split '_', $format;
+    my $type = $uri->decode($c->req->param("type"));
+    my $size = $uri->decode($c->req->param("size"));
+
     print STDERR "Content is $content and type is $type and size is $size\n";
     
-    if ($type eq '128') {
+    if ($type eq 'Code128') {
     
         print STDERR "Creating barcode 128\n";
     

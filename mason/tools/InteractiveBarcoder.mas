@@ -1,147 +1,120 @@
 
-<& '/page/page_title.mas', title => "Interactive Barcoder" &>
+<& '/page/page_title.mas', title => "Interactive Label Maker" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min'  ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min', 'CXGN.BreederSearch',  ] &>
 
 <div class="row">
-    <div class="col-md-12">
-        
-        <div class="col-md-6">
-            <div class="well">
-                <div class="form-group row">
-                  <label class="col-md-2 col-form-label">Page Type</label>
-                  <div class="col-md-10">
-                    <select id="d3-page-type-select" class="form-control"></select>
-                    <div style="display:none" id="d3-page-custom-dimensions" class="form-inline">
-                        <input class="form-control" placeholder="Width in mm" type="number" id="d3-page-custom-width">
-                        <input class="form-control" placeholder="Height in mm" type="number" id="d3-page-custom-height">
-                        <!-- <button class="btn btn-primary" id="d3-apply-custom-page-size">Apply</button> -->
-                    </div>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-md-2 col-form-label">Label Size</label>
-                  <div class="col-md-10">
-                    <select id="d3-label-size-select" class="form-control"></select>
-                    <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
-                        <input class="form-control" placeholder="Width in mm" type="number" id="d3-label-custom-width">
-                        <input class="form-control" placeholder="Height in mm" type="number" id="d3-label-custom-height">
-                        <button class="btn btn-primary" id="d3-apply-custom-label-size">Apply</button>
-                    </div>
-                  </div>
-                </div>
-                <!-- <div class="form-group row">
-                    <label class="col-md-2 col-form-label">Grid Size</label>
-                     <div class="col-md-10 form-inline">
-                        <input class="form-control" id="d3-grid-slider" type="range">&nbsp&nbsp
-                        <input class="form-control" id="d3-grid-number" type="number">&nbsp&nbsp
-                        <input class="form-control" id="d3-snapping-check" type="checkbox" checked> Snap
-
-                    </div>
-                </div> -->
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="well">
-                <div class="form-group row">
-                    <label class="col-md-2 col-form-label">Trial:</label>
-                    <div id="trial_select_div" class="col-md-10"></div>
-                </div>
-
-                <div class="form-group row">
-                    <label class="col-md-2 col-form-label">Labels per Plot:</label>
-                     <div class="col-md-10">
-                    <select class="form-control" id="num_labels" name="num_labels">
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                    </select>
-                </div>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-
-    <div class="col-md-12">
-        <div class="well" style="padding:0;">
-            <div class="d3-draw-area"></div>
-        </div>
-    </div>
-
-    <div class="col-md-12">
-        <div class="well">
-            <center>
-            <!-- <div style="display:none" class="form-group row form-inline">
-            <center>
-                <label>Preview:</label>&nbsp&nbsp
-                <p id="text_preview" style="font-family:courier;font-weight:bold;font-style: oblique;">Text Preview</p>
-            </center>
-        </div> -->
-            <div class="form-group row">
-                <label class="col-md-2 col-form-label">Add Text</label>
-                <div class="col-md-10 form-inline">
-                    <select id="d3-text-field-input" class="form-control">
-                    </select>&nbsp&nbsp
-                    <select id="d3-text-font-input" class="form-control">
-                        <!-- <option value="">Pick a Font Type</option> -->
-                        <!-- <option style="font-family:courier;" value="font-family:courier;">Courier</option>
-                        <option style="font-family:courier;font-weight:bold;" value="font-family:courier;font-weight:bold;">Courier-Bold</option>
-                        <option style="font-family:courier;font-style: oblique;" value="font-family:courier;font-style: oblique;">Courier-Oblique</option>
-                        <option style="font-family:courier;font-weight:bold;font-style: oblique;" value="font-family:courier;font-weight:bold;font-style: oblique;">Courier-BoldOblique</option>
-                        <option style="font-family:helvetica;" value="Helvetica">Helvetica</option>
-                        <option style="font-family:helvetica;font-weight:bold;" value="Helvetica-Bold">Helvetica-Bold</option>
-                        <option style="font-family:helvetica;font-style: oblique;" value="Helvetica-Oblique">Helvetica-Oblique</option>
-                        <option style="font-family:helvetica;font-weight:bold;font-style: oblique;" value="Helvetica-BoldOblique">Helvetica-BoldOblique</option>
-                        <option style="font-family:times;" value="Times">Times</option>
-                        <option style="font-family:times;font-weight:bold;" value="Times-Bold">Times-Bold</option>
-                        <option style="font-family:times;font-style: oblique;" value="Times-Oblique">Times-Oblique</option>
-                        <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option> -->
-                    </select>&nbsp&nbsp
-                    <input class="form-control" id="d3-text-size-slider" type="range">
-                    <input class="form-control" id="d3-text-size-input" type="number">
-                <button class="btn btn-primary d3-add-text" id="d3-add-text">Add</button>
-            </div>
-            </div>
-        
-        <div style="display:none" class="form-group row form-inline">
-        <center>
-            <label>Preview:</label>&nbsp&nbsp
-            <p id="text_preview" style="font-family:courier;font-weight:bold;font-style: oblique;">Text Preview</p>
-        </center>
-    </div>
-        <div class="form-group row">
-            <label class="col-md-2 col-form-label">Add Barcode</label>
-            <div class="col-md-10 form-inline">
-                <select id="d3-barcode-text-input" class="form-control">
-                </select>&nbsp&nbsp
-                <select id="d3-barcode-type-input" class="form-control">
-                </select>&nbsp&nbsp
-            <button class="btn btn-primary d3-add-barcode" id="d3-add-barcode">Add</button>
-        </div>
-        </div>
-        </center>
-        </div>
-    </div>
     
+    <div class="well col-md-12">
+        <div class="form-group row">
+            <div class="col-md-12 form-inline">
+                <label class="col-md-2 col-form-label">Data Source:</label>
+                <div class="col-md-5">
+                    <select class="form-control" autofocus="autofocus" id="trial_select"></select>
+                </div>
+                <div class="col-md-1">
+                    <center><i>or</i></center>&nbsp
+                </div>
+                <div class="col-md-4">
+                    <input type="file" class="form-control-file" id="label_input_file" aria-describedby="fileHelp">
+                    <small id="fileHelp" class="form-text text-muted">.xls format only, columns must have unique names</small>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-md-12 form-inline">
+                <label class="col-md-2 col-form-label">Format:</label>
+                <div class="col-md-3">
+                    <select class="form-control" id="d3-page-type-select" ></select>
+                </div>
+                <div style="display:none" id="d3-page-custom-dimensions" class="form-inline">
+                    <input class="form-control" placeholder="Width in mm" type="number" id="d3-page-custom-width">
+                    <input class="form-control" placeholder="Height in mm" type="number" id="d3-page-custom-height">
+                </div>
+                <div class="col-md-7">
+                    <select class="form-control" id="d3-label-size-select"></select>
+                </div>
+                <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
+                    <input class="form-control" placeholder="Width in mm" type="number" id="d3-label-custom-width">
+                    <input class="form-control" placeholder="Height in mm" type="number" id="d3-label-custom-height">
+                    <button class="btn btn-primary" id="d3-apply-custom-label-size">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="col-md-12">
-        <div class="col-md-6">
-            <div class="well">
+        <div class="col-md-2"></div>
+        <div class="col-md-8" id="d3-draw-area" style="display:none"></div>
+        <div class="col-md-2"></div>    
+    </div>
+
+    <div id="d3-adders" class="well col-md-12" style="display:none">
+        <div class="col-md-12 form-inline">
+            <center>
+                <label>Add to Label</label>
+            </center>
+        </div>
+        <div class="col-md-12 form-inline">
+            <div class="col-md-3" id="d3-add-field-div">
                 <center>
-                <button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save</button>
+                    <label>Field:</label></br>
+                    <select id="d3-add-field-input" class="form-control"></select>&nbsp&nbsp
+                </center>
+            </div>
+            <div class="col-md-3" id="d3-add-type-div">
+                <center>
+                    <label>Type:</label></br>
+                    <select id="d3-add-type-input" class="form-control"></select>&nbsp&nbsp
+                </center>
+            </div>
+            <div class="col-md-3" id="d3-add-font-div">
+                <center>
+                    <label>Font:</label></br>
+                    <select id="d3-add-font-input" class="form-control"></select>&nbsp&nbsp
+                </center>
+            </div>
+            <div class="col-md-3" id="d3-add-size-div">
+                <center>
+                    <label>Size:</label></br>
+                    <input class="form-control" id="d3-add-size-slider" type="range"></input>
+                    <input class="form-control" id="d3-add-size-input" type="number"></input>
                 </center>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="well">
-                <center>
-                <button id="d3-pdf-button" class="btn btn-primary">Download pdf</button>&nbsp&nbsp
-                <button id="d3-zpl-button" class="btn btn-primary">Download zpl</button>
+    </br>
+        <div class="col-md-12 form-inline">
+            <center>
+                <button class="btn btn-primary d3-add" id="d3-add">Add</button>
             </center>
-            </div>
         </div>
     </div>
-</div>
+    
+    <div id="d3-download" class="well col-md-12" style="display:none">
+        <div class="col-md-3">
+            <center>
+                <label>Sort by:</label>
+                <select class="form-control" id="sort_by" name="sort_by"></select>
+            </center>
+        </div>
+        <div class="col-md-3">
+            <center>
+                <label>Copies of each label:</label>
+                <select class="form-control" id="num_labels" name="num_labels">
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option>
+                </select>
+            </center>
+        </div>
+        <div class="col-md-6">
+            <center>
+                <br><button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save design</button>&nbsp&nbsp&nbsp&nbsp
+                <button id="d3-pdf-button" class="btn btn-primary" style="display:none">Download pdf</button>&nbsp&nbsp
+                <button id="d3-zpl-button" class="btn btn-primary" style="display:none">Download zpl file</button>
+            </center>
+        </div>
+    </div>
 </div>
 
 <!-- Modal -->
@@ -156,6 +129,24 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button id="d3-custom-text" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="customNumberModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <!-- <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
+                    <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;"></span>
+                </div> -->
+                <input id="starting_number" type="number" placeholder="Starting number"></input>
+                <input id="increment_number" type="number" placeholder="Increment number"></input>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="d3-custom-number" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
             </div>
         </div>
     </div>
