@@ -5,6 +5,7 @@ $expression_atlas_url
 $site_project_name
 $sgn_session_id
 $user_name
+$main_production_site_url
 </%args>
 
 <div class="well">
@@ -157,7 +158,7 @@ jQuery(document).ready(function() {
 
             new jQuery.ajax({
                 type: 'GET',
-                url: "<% $expression_atlas_url %>/expression_viewer/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(combined_trial_ids)+"&trait_id_list="+JSON.stringify(combined_trait_ids)+"&accession_id_list="+JSON.stringify(combined_accession_ids)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type+"&<% $sgn_session_id %>&user_name=<% $user_name %>",
+                url: "<% $expression_atlas_url %>/expression_viewer/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(combined_trial_ids)+"&trait_id_list="+JSON.stringify(combined_trait_ids)+"&accession_id_list="+JSON.stringify(combined_accession_ids)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type+"&<% $sgn_session_id %>&user_name=<% $user_name %>&main_production_site_url=<% $main_production_site_url %>",
                 beforeSend: function() {
                     jQuery('#working_modal').modal('show');
                 },
