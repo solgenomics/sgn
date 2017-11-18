@@ -260,7 +260,7 @@ sub search {
             }
         }
         my $synonyms = $synonym_hash_lookup{$stock_name};
-        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
+        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, '', '', $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
     }
 
     print STDERR "Search End:".localtime."\n";
