@@ -103,6 +103,12 @@ has 'include_timestamp' => (
     default => 0
 );
 
+has 'include_row_and_column_numbers' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'trait_contains' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw'
@@ -169,12 +175,19 @@ sub search {
             }
         }
     } else {
-        $design_layout_sql = " LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
-        LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-        LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-        LEFT JOIN stockprop AS row_number ON (plot.stock_id=plot_number.stock_id AND row_number.type_id = $row_number_type_id)
-        LEFT JOIN stockprop AS col_number ON (plot.stock_id=plot_number.stock_id AND col_number.type_id = $col_number_type_id) ";
-        $design_layout_select = " ,rep.value, block_number.value, plot_number.value, row_number.value, col_number.value";
+        if ($self->include_row_and_column_numbers){
+            $design_layout_sql = " LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
+            LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+            LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+            LEFT JOIN stockprop AS row_number ON (plot.stock_id=plot_number.stock_id AND row_number.type_id = $row_number_type_id)
+            LEFT JOIN stockprop AS col_number ON (plot.stock_id=plot_number.stock_id AND col_number.type_id = $col_number_type_id) ";
+            $design_layout_select = " ,rep.value, block_number.value, plot_number.value, row_number.value, col_number.value";
+        } else {
+            $design_layout_sql = " LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
+            LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+            LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id) ";
+            $design_layout_select = " ,rep.value, block_number.value, plot_number.value";
+        }
     }
 
     my %columns = (
