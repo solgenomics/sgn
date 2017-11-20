@@ -278,6 +278,8 @@ var drag_behaviour = d3.behavior.drag().on(
     });
 
 $(document).ready(function($) {
+    
+    initializeDrawArea();
 
     get_select_box('trials', 'trial_select', {
         'name': 'trial_select_html',
@@ -393,10 +395,8 @@ $(document).ready(function($) {
         
         if (val == 'Custom') {
             document.getElementById("d3-label-custom-dimensions").style.display = "inline";
-            initializeDrawArea();
         } else {
             document.getElementById("d3-label-custom-dimensions").style.display = "none";
-            initializeDrawArea();
             
             var page_type = d3.select("#d3-page-type-select").node().value;
             var label_sizes = page_formats[page_type].label_sizes;
@@ -583,65 +583,6 @@ $(document).ready(function($) {
             }
         });
     });
-
-    // $("#d3-zpl-button").on("click", function(event) {
-    //     console.log("You clicked the download pdf button.");
-    // 
-    //     var ladda = Ladda.create(this);
-    //     ladda.start();
-    //     var token = new Date().getTime(); //use the current timestamp as the token name and value
-    //     manage_dl_with_cookie(token, ladda);
-    // 
-    //     var label_elements = document.getElementsByClassName('label-element');
-    //     label_elements = Array.prototype.slice.call(label_elements); // convert to array
-    //     var element_objects = label_elements.map(getLabelDetails);
-    //     var label_json = JSON.stringify(element_objects);
-    // 
-    //     //Get additional Params
-    //     var trial_id = document.getElementById("trial_select").value;
-    //     //var num_labels = document.getElementById("num_labels").value;
-    // 
-    //     var page_type = d3.select("#d3-page-type-select").node().value;
-    //     var label_sizes = page_formats[page_type].label_sizes;
-    // 
-    //     var label_type = d3.select("#d3-label-size-select").node().value;
-    //     var page_params = {
-    //         starting_x: label_sizes[label_type].starting_x,
-    //         starting_y: label_sizes[label_type].starting_y,
-    //         x_increment: label_sizes[label_type].x_increment,
-    //         y_increment: label_sizes[label_type].y_increment,
-    //         number_of_columns: label_sizes[label_type].number_of_columns,
-    //         number_of_rows: label_sizes[label_type].number_of_rows,
-    //         width: page_formats[page_type].width,
-    //         height: page_formats[page_type].height,
-    //         num_labels: document.getElementById("num_labels").value
-    //     }
-    //     
-    //     var page_json = JSON.stringify(page_params);
-    // 
-    //     //send to server to build zpl file
-    //     jQuery.ajax({
-    //         url: '/barcode/download/zpl',
-    //         timeout: 60000,
-    //         method: 'POST',
-    //         data: {
-    //             'trial_id': trial_id,
-    //             'page_json': page_json,
-    //             'label_json': label_json,
-    //             'download_token': token
-    //         },
-    //         success: function(response) {
-    //             if (response.error) {} else {
-    //                 console.log("downloading " + response.filename);
-    //                 window.location.href = "/download/" + response.filename;
-    //             }
-    //         },
-    //         error: function(request, status, err) {
-    // 
-    //         }
-    //     });
-    // });
-
 });
 
 
