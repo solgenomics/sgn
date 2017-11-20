@@ -350,6 +350,7 @@ $(document).ready(function($) {
                     
                     createAdders(add_fields);
                     
+                    document.getElementById("d3-format").style.display = "inline";
                     var page_type_select = d3.select("#d3-page-type-select");
                     page_type_select.selectAll("option")
                         .data(Object.keys(page_formats))
@@ -402,7 +403,7 @@ $(document).ready(function($) {
             var width = label_sizes[val].width;
             var height = label_sizes[val].height;
             changeLabelSize(width, height);
-            document.getElementById("d3-draw-area").style.display = "inline";
+            document.getElementById("d3-draw-div").style.display = "inline";
             document.getElementById("d3-adders").style.display = "inline";
         }
 
@@ -414,8 +415,9 @@ $(document).ready(function($) {
         height = document.getElementById("d3-label-custom-height").value;
         height = height * 8;
         changeLabelSize(width, height);
-        document.getElementById("d3-draw-area").style.display = "inline";
+        document.getElementById("d3-draw-div").style.display = "inline";
         document.getElementById("d3-adders").style.display = "inline";
+        $('#d3-add-field-input').focus();
     });
 
     // $('#d3-custom-field-input').change(function(){
@@ -515,20 +517,20 @@ $(document).ready(function($) {
 
         var style;
         var font;
-        if (type == "Text") {
+        if (document.getElementById("d3-add-font-div").style.display == "inline") {
             var font_select = document.getElementById("d3-add-font-input");
             var selected_font_option = font_select.options[font_select.selectedIndex];
-            style = selected_font_option.getAttribute("style");
+            style = selected_font_option.getAttribute("style")
             font = selected_font_option.getAttribute("value");
         }
         var size = document.getElementById("d3-add-size-input").value;
         console.log("addToLabel args include text: " + display_text + "\nfield: " + field + "\ntype: " + type + "\nsize: " + size + "\nstyle: " + style + "\nfont: " + font);
-        // size = _x.invert(size);
         addToLabel(display_text, field, type, size, style, font);
     });
     
-    $("#d3-pdf-button").on("click", function(event) {
-        console.log("You clicked the download pdf button.");
+    $("#d3-pdf-button, #d3-zpl-button").on("click", function(event) {
+        var download_type = $(this).val();
+        console.log("You clicked the download "+download_type+" button.");
 
         var ladda = Ladda.create(this);
         ladda.start();
@@ -542,9 +544,6 @@ $(document).ready(function($) {
 
         //Get additional Params
         var trial_id = document.getElementById("trial_select").value;
-        //var num_labels = document.getElementById("num_labels").value;
-
-            
         var page_type = d3.select("#d3-page-type-select").node().value;
         var label_sizes = page_formats[page_type].label_sizes;
 
@@ -564,7 +563,7 @@ $(document).ready(function($) {
 
         //send to server to build pdf file
         jQuery.ajax({
-            url: '/barcode/download/pdf',
+            url: '/barcode/download/'+download_type,
             timeout: 60000,
             method: 'POST',
             data: {
@@ -585,63 +584,63 @@ $(document).ready(function($) {
         });
     });
 
-    $("#d3-zpl-button").on("click", function(event) {
-        console.log("You clicked the download pdf button.");
-
-        var ladda = Ladda.create(this);
-        ladda.start();
-        var token = new Date().getTime(); //use the current timestamp as the token name and value
-        manage_dl_with_cookie(token, ladda);
-
-        var label_elements = document.getElementsByClassName('label-element');
-        label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        var element_objects = label_elements.map(getLabelDetails);
-        var label_json = JSON.stringify(element_objects);
-
-        //Get additional Params
-        var trial_id = document.getElementById("trial_select").value;
-        //var num_labels = document.getElementById("num_labels").value;
-
-        var page_type = d3.select("#d3-page-type-select").node().value;
-        var label_sizes = page_formats[page_type].label_sizes;
-
-        var label_type = d3.select("#d3-label-size-select").node().value;
-        var page_params = {
-            starting_x: label_sizes[label_type].starting_x,
-            starting_y: label_sizes[label_type].starting_y,
-            x_increment: label_sizes[label_type].x_increment,
-            y_increment: label_sizes[label_type].y_increment,
-            number_of_columns: label_sizes[label_type].number_of_columns,
-            number_of_rows: label_sizes[label_type].number_of_rows,
-            width: page_formats[page_type].width,
-            height: page_formats[page_type].height,
-            num_labels: document.getElementById("num_labels").value
-        }
-        
-        var page_json = JSON.stringify(page_params);
-
-        //send to server to build zpl file
-        jQuery.ajax({
-            url: '/barcode/download/zpl',
-            timeout: 60000,
-            method: 'POST',
-            data: {
-                'trial_id': trial_id,
-                'page_json': page_json,
-                'label_json': label_json,
-                'download_token': token
-            },
-            success: function(response) {
-                if (response.error) {} else {
-                    console.log("downloading " + response.filename);
-                    window.location.href = "/download/" + response.filename;
-                }
-            },
-            error: function(request, status, err) {
-
-            }
-        });
-    });
+    // $("#d3-zpl-button").on("click", function(event) {
+    //     console.log("You clicked the download pdf button.");
+    // 
+    //     var ladda = Ladda.create(this);
+    //     ladda.start();
+    //     var token = new Date().getTime(); //use the current timestamp as the token name and value
+    //     manage_dl_with_cookie(token, ladda);
+    // 
+    //     var label_elements = document.getElementsByClassName('label-element');
+    //     label_elements = Array.prototype.slice.call(label_elements); // convert to array
+    //     var element_objects = label_elements.map(getLabelDetails);
+    //     var label_json = JSON.stringify(element_objects);
+    // 
+    //     //Get additional Params
+    //     var trial_id = document.getElementById("trial_select").value;
+    //     //var num_labels = document.getElementById("num_labels").value;
+    // 
+    //     var page_type = d3.select("#d3-page-type-select").node().value;
+    //     var label_sizes = page_formats[page_type].label_sizes;
+    // 
+    //     var label_type = d3.select("#d3-label-size-select").node().value;
+    //     var page_params = {
+    //         starting_x: label_sizes[label_type].starting_x,
+    //         starting_y: label_sizes[label_type].starting_y,
+    //         x_increment: label_sizes[label_type].x_increment,
+    //         y_increment: label_sizes[label_type].y_increment,
+    //         number_of_columns: label_sizes[label_type].number_of_columns,
+    //         number_of_rows: label_sizes[label_type].number_of_rows,
+    //         width: page_formats[page_type].width,
+    //         height: page_formats[page_type].height,
+    //         num_labels: document.getElementById("num_labels").value
+    //     }
+    //     
+    //     var page_json = JSON.stringify(page_params);
+    // 
+    //     //send to server to build zpl file
+    //     jQuery.ajax({
+    //         url: '/barcode/download/zpl',
+    //         timeout: 60000,
+    //         method: 'POST',
+    //         data: {
+    //             'trial_id': trial_id,
+    //             'page_json': page_json,
+    //             'label_json': label_json,
+    //             'download_token': token
+    //         },
+    //         success: function(response) {
+    //             if (response.error) {} else {
+    //                 console.log("downloading " + response.filename);
+    //                 window.location.href = "/download/" + response.filename;
+    //             }
+    //         },
+    //         error: function(request, status, err) {
+    // 
+    //         }
+    //     });
+    // });
 
 });
 
@@ -670,7 +669,8 @@ function initializeDrawArea() {
         .attr({
             x: 0,
             y: 0,
-            fill: "#FFF"
+            fill: "#FFF",
+            border:"1px solid black;"
         })
         .on("click", clearSelection);
 

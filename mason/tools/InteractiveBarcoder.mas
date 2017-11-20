@@ -12,16 +12,16 @@
                 <div class="col-md-5">
                     <select class="form-control" autofocus="autofocus" id="trial_select"></select>
                 </div>
-                <div class="col-md-1">
+                <!-- <div class="col-md-1">
                     <center><i>or</i></center>&nbsp
                 </div>
                 <div class="col-md-4">
                     <input type="file" class="form-control-file" id="label_input_file" aria-describedby="fileHelp">
                     <small id="fileHelp" class="form-text text-muted">.xls format only, columns must have unique names</small>
-                </div>
+                </div> -->
             </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row" id="d3-format" style="display:none">
             <div class="col-md-12 form-inline">
                 <label class="col-md-2 col-form-label">Format:</label>
                 <div class="col-md-3">
@@ -43,9 +43,9 @@
         </div>
     </div>
 
-    <div class="col-md-12">
+    <div class="col-md-12" id="d3-draw-div" style="display:none;margin-bottom:20px;">
         <div class="col-md-2"></div>
-        <div class="col-md-8" id="d3-draw-area" style="display:none"></div>
+        <div class="col-md-8" id="d3-draw-area"></div>
         <div class="col-md-2"></div>    
     </div>
 
@@ -110,8 +110,8 @@
         <div class="col-md-6">
             <center>
                 <br><button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save design</button>&nbsp&nbsp&nbsp&nbsp
-                <button id="d3-pdf-button" class="btn btn-primary" style="display:none">Download pdf</button>&nbsp&nbsp
-                <button id="d3-zpl-button" class="btn btn-primary" style="display:none">Download zpl file</button>
+                <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none">Download pdf</button>&nbsp&nbsp
+                <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none">Download zpl file</button>
             </center>
         </div>
     </div>
