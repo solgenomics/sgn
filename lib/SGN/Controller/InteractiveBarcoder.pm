@@ -9,6 +9,7 @@ sub interactive_barcoder_main :Path('/tools/InteractiveBarcoder') Args(0) {
     my $self = shift;
     my $c = shift;
     
+    $c->assets->include('/static/css/textTemplater.css');
     $c->stash->{template} = '/tools/InteractiveBarcoder.mas';
 }
 

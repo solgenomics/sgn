@@ -286,6 +286,15 @@ $(document).ready(function($) {
         'id': 'trial_select_html',
         'empty': 1
     });
+    
+    var fields = ["Accession","Plot_Name","Plot_Number","Rep_Number","Row_Number","Col_Number","Trial_Name","Year","Pedigree_String"];
+    
+    var builder = textTemplater.builder("#d3-custom-templater", fields);
+    
+    $(document).on("change", "#d3-custom-content", function() {
+        var tstring = builder.getTemplate();
+        $("#d3-custom-content").val(tstring);
+    });
 
     $(document).on("change", "#trial_select", function() {
 
@@ -343,12 +352,9 @@ $(document).ready(function($) {
                         value: response.Pedigree_String,
                         name: "Pedigree_String"
                     }, {
-                        value: "Custom Text",
-                        name: "Custom Text"
-                    }, {
-                        value: "Custom Number",
-                        name: "Custom Number"
-                    }, ];
+                        value: "Custom",
+                        name: "Custom"
+                    },];
                     
                     createAdders(add_fields);
                     
@@ -428,19 +434,19 @@ $(document).ready(function($) {
 
     $('#d3-add-field-input').change(function() {
         console.log("Change noticed, text is " + $(this).find('option:selected').text());
-        if ($(this).find('option:selected').val() == 'Custom Text') {
-            $('#customTextModal').modal('show');
+        if ($(this).find('option:selected').val() == 'Custom') {
+            $('#customFieldModal').modal('show');
         }
     });
 
     d3.select(".d3-add-custom-text")
         .style("margin-left", "1em");
-    d3.select("#d3-custom-text")
+    d3.select("#d3-custom-field")
         .on("click", function() {
-            var text_content = d3.select("#d3-text-content").text();
+            var custom_content = d3.select("#d3-custom-content").text();
             //$("#d3-text-field-input").find('option:selected').text(text_content);
             // $("#d3-text-field-input").find('option:selected').val(text_content);
-            $("#d3-add-field-input").find('option:selected').text(text_content);
+            $("#d3-add-field-input").find('option:selected').text(custom_content);
             // text_content.selectAll(".d3-text-placeholder").each(function(d,i){
             //   var th = d3.select(this)
             //   th.html("").text(th.attr("key"))
@@ -509,7 +515,7 @@ $(document).ready(function($) {
         var field = selected_option.text;
         var type = document.getElementById("d3-add-type-input").value;
         // 
-        if (field != ('Custom Text') || ('Custom Number')) {
+        if (field != 'Custom') {
             field = '{$' + selected_option.text + '}';
         } else {
             field = display_text;

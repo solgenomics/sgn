@@ -1,7 +1,7 @@
 
 <& '/page/page_title.mas', title => "Interactive Label Maker" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min', 'CXGN.BreederSearch',  ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min', 'CXGN.BreederSearch', 'textTemplater', ] &>
 
 <div class="row">
     
@@ -118,35 +118,24 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="customTextModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
-                <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
-                    <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;"></span>
-                </div>
+                    <div class="row">
+               <div class="col-md-12">
+                   <span id="d3-custom-templater"</span>
+               </div>
+           </div>
+                    <div class="row">
+               <div class="col-md-12">
+                   <input type="text" class="form-control" name="" id="d3-custom-content" value="" size="30">
+               </div>
+           </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button id="d3-custom-text" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="customNumberModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-                <!-- <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
-                    <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;"></span>
-                </div> -->
-                <input id="starting_number" type="number" placeholder="Starting number"></input>
-                <input id="increment_number" type="number" placeholder="Increment number"></input>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button id="d3-custom-number" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+                <button id="d3-custom-field" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
             </div>
         </div>
     </div>
