@@ -89,6 +89,17 @@ page_formats["Zebra printer file"] = {
         }
 };
 
+page_formats["Custom"] = {
+    label_sizes: {
+            'Select a label size': {
+            },
+            'Custom' : {
+                width: 0,
+                height: 0,
+            }
+        }
+};
+
 var label_options = {};
 label_options["Select add type"] = {};
 label_options["PDF Text"] = {
@@ -287,9 +298,15 @@ $(document).ready(function($) {
         'empty': 1
     });
     
+    $('#trial_select').focus();
+    
     var fields = ["Accession","Plot_Name","Plot_Number","Rep_Number","Row_Number","Col_Number","Trial_Name","Year","Pedigree_String"];
     
     var builder = textTemplater.builder("#d3-custom-templater", fields);
+    
+    $("#edit_print_settings").on("click", function() { 
+        $('#editPrintSettingsModal').modal('show');
+    });
     
     $(document).on("change", "#d3-custom-content", function() {
         var tstring = builder.getTemplate();
@@ -358,7 +375,7 @@ $(document).ready(function($) {
                     
                     createAdders(add_fields);
                     
-                    document.getElementById("d3-format").style.display = "inline";
+                    document.getElementById("d3-page-format").style.display = "inline";
                     var page_type_select = d3.select("#d3-page-type-select");
                     page_type_select.selectAll("option")
                         .data(Object.keys(page_formats))
@@ -382,6 +399,12 @@ $(document).ready(function($) {
         
         switchPageDependentOptions(page_type); // show correct download and text options
         
+        if (page_type == 'Custom') {
+            document.getElementById("d3-page-custom-dimensions-div").style.display = "inline";
+        } else {
+            document.getElementById("d3-page-custom-dimensions-div").style.display = "none";
+        }
+            
         // load label size and label field options based on page type
         var label_sizes = page_formats[page_type].label_sizes;
         d3.select("#d3-label-size-select").selectAll("option").remove();
@@ -391,18 +414,18 @@ $(document).ready(function($) {
             .text(function(d) {
                 return d
             })   
-            
+        document.getElementById("d3-label-format").style.display = "inline";
         $('#d3-label-size-select').focus();
     });
 
     // Resize draw area according to selected label size
     $('#d3-label-size-select').change(function() {
-        var val = $(this).find('option:selected').val()
+        var val = $(this).find('option:selected').val();
         
         if (val == 'Custom') {
-            document.getElementById("d3-label-custom-dimensions").style.display = "inline";
+            document.getElementById("d3-label-custom-dimensions-div").style.display = "inline";
         } else {
-            document.getElementById("d3-label-custom-dimensions").style.display = "none";
+            document.getElementById("d3-label-custom-dimensions-div").style.display = "none";
             
             var page_type = d3.select("#d3-page-type-select").node().value;
             var label_sizes = page_formats[page_type].label_sizes;
@@ -415,11 +438,17 @@ $(document).ready(function($) {
 
     });
 
-    d3.select("#d3-apply-custom-label-size").on("click", function() { //apply custom label size
+    d3.select("#d3-apply-custom-label-size").on("click", function() { 
+        
+        //save and apply custom label size
+        var page_type = d3.select("#d3-page-type-select").node().value;
+        var custom_label = page_formats[page_type].label_sizes['Custom'];
         width = document.getElementById("d3-label-custom-width").value;
         width = width * 8;
         height = document.getElementById("d3-label-custom-height").value;
         height = height * 8;
+        custom_label.width = width;
+        custom_label.height = height;
         changeLabelSize(width, height);
         document.getElementById("d3-draw-div").style.display = "inline";
         document.getElementById("d3-adders").style.display = "inline";
@@ -461,6 +490,7 @@ $(document).ready(function($) {
         var value = label_options[type].value;
         var sizes = label_options[type].sizes;
         if (type == "PDF Text") {
+            
             // set up font select
             var fonts = label_options[type].fonts;
             d3.select("#d3-add-font-input").selectAll("option").remove();
@@ -477,6 +507,7 @@ $(document).ready(function($) {
                     return d.value
                 });
             document.getElementById("d3-add-font-div").style.display = "inline";
+            
             // set up size input and slider
             $("#d3-add-size-input").replaceWith('<input type="number" id="d3-add-size-input" class="form-control"></input>');
             var size_input = d3.select("#d3-add-size-input");
@@ -561,8 +592,8 @@ $(document).ready(function($) {
             y_increment: label_sizes[label_type].y_increment,
             number_of_columns: label_sizes[label_type].number_of_columns,
             number_of_rows: label_sizes[label_type].number_of_rows,
-            width: page_formats[page_type].width, //611, // US letter dimension in mm * 2.83
-            height: page_formats[page_type].height, //790.7,
+            width: page_formats[page_type].width || document.getElementById("d3-page-custom-width").value,
+            height: page_formats[page_type].height || document.getElementById("d3-page-custom-height").value,
             num_labels: document.getElementById("num_labels").value
         }
         var page_json = JSON.stringify(page_params);
@@ -819,9 +850,7 @@ function addToLabel(display_text, field, type, size, style, font) {
     svg = d3.select(".d3-draw-svg");
 
     switch (type) {
-
         case "Text":
-
             var newTB = svg.append("g")
                 .classed("text-box", true);
             var newText = newTB

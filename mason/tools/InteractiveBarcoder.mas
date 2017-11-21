@@ -6,11 +6,12 @@
 <div class="row">
     
     <div class="well col-md-12">
-        <div class="form-group row">
             <div class="col-md-12 form-inline">
                 <label class="col-md-2 col-form-label">Data Source:</label>
-                <div class="col-md-5">
-                    <select class="form-control" autofocus="autofocus" id="trial_select"></select>
+                <div class="col-md-8">
+                    <select class="form-control" id="trial_select"></select>
+                </div>
+                <div class="col-md-2">
                 </div>
                 <!-- <div class="col-md-1">
                     <center><i>or</i></center>&nbsp
@@ -20,27 +21,59 @@
                     <small id="fileHelp" class="form-text text-muted">.xls format only, columns must have unique names</small>
                 </div> -->
             </div>
-        </div>
-        <div class="form-group row" id="d3-format" style="display:none">
-            <div class="col-md-12 form-inline">
-                <label class="col-md-2 col-form-label">Format:</label>
+        </br>
+            <div class="col-md-12 form-inline" id="d3-page-format" style="display:none">
+                <div class="col-md-2">
+                    </br>
+                    <label>Page Format:</label>
+                </div>
                 <div class="col-md-3">
+                    </br>
                     <select class="form-control" id="d3-page-type-select" ></select>
                 </div>
-                <div style="display:none" id="d3-page-custom-dimensions" class="form-inline">
-                    <input class="form-control" placeholder="Width in mm" type="number" id="d3-page-custom-width">
-                    <input class="form-control" placeholder="Height in mm" type="number" id="d3-page-custom-height">
-                </div>
-                <div class="col-md-7">
-                    <select class="form-control" id="d3-label-size-select"></select>
-                </div>
-                <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
-                    <input class="form-control" placeholder="Width in mm" type="number" id="d3-label-custom-width">
-                    <input class="form-control" placeholder="Height in mm" type="number" id="d3-label-custom-height">
-                    <button class="btn btn-primary" id="d3-apply-custom-label-size">Apply</button>
+                <div id="d3-page-custom-dimensions-div" style="display:none">
+                    <div class="col-md-3">
+                        <center>
+                            <label>Page Width:</label></br>
+                            <input class="form-control" placeholder="Page Width in mm" type="number" id="d3-page-custom-width" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-3">
+                        <center>
+                            <label>Page Height:</label></br>
+                            <input class="form-control" placeholder="Page Height in mm" type="number" id="d3-page-custom-height" style="max-width: 100%;">
+                        </center>
+                    </div>
                 </div>
             </div>
-        </div>
+            <div class="col-md-12 form-inline" id="d3-label-format" style="display:none">
+                <div class="col-md-2">
+                    </br>
+                    <label>Label Format:</label>
+                </div>
+                <div class="col-md-3">
+                    </br>
+                    <select class="form-control" id="d3-label-size-select"></select>
+                </div>
+                <div id="d3-label-custom-dimensions-div" style="display:none">
+                    <div class="col-md-3">
+                        <center>
+                            <label>Label Width:</label></br>
+                            <input class="form-control" placeholder="Label Width in mm" type="number" id="d3-label-custom-width" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-3">
+                        <center>
+                            <label>Label Height:</label></br>
+                            <input class="form-control" placeholder="Label Height in mm" type="number" id="d3-label-custom-height" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1">
+                    </br>
+                        <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
+                    </div>
+                </div>
+            </div>
     </div>
 
     <div class="col-md-12" id="d3-draw-div" style="display:none;margin-bottom:20px;">
@@ -91,13 +124,13 @@
     </div>
     
     <div id="d3-download" class="well col-md-12" style="display:none">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <center>
                 <label>Sort by:</label>
                 <select class="form-control" id="sort_by" name="sort_by"></select>
             </center>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <center>
                 <label>Copies of each label:</label>
                 <select class="form-control" id="num_labels" name="num_labels">
@@ -106,6 +139,9 @@
                     <option value="3">Three</option>
                 </select>
             </center>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary" id="edit_print_settings">Edit Print Settings</button>
         </div>
         <div class="col-md-6">
             <center>
@@ -118,7 +154,7 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="customFieldModal" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
@@ -136,6 +172,47 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button id="d3-custom-field" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editPrintSettingsModal" tabindex="-1" role="dialog" aria-labelledby="editPrintSettingsModal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="col-md-10 form-inline" id="">
+                    <div class="col-md-5">
+                        <center>
+                            <label>Top Margin:</label></br>
+                            <input class="form-control" placeholder="Top Margin in mm" type="number" id="d3-top-margin" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <label>Left Margin:</label></br>
+                            <input class="form-control" placeholder="Left Margin in mm" type="number" id="d3-left-margin" style="max-width: 100%;">
+                        </center>
+                    </div>
+                </div>
+                <div class="col-md-10 form-inline" id="">
+                    <div class="col-md-5">
+                        <center>
+                            <label>Column Offset:</label></br>
+                            <input class="form-control" placeholder="Column Offset in mm" type="number" id="d3-column-offset" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <label>Row Offset:</label></br>
+                            <input class="form-control" placeholder="Row Offset in mm" type="number" id="d3-row-offset" style="max-width: 100%;">
+                        </center>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="d3-edit-print-settings" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
             </div>
         </div>
     </div>
