@@ -181,33 +181,64 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
-                <div class="col-md-10 form-inline" id="">
+                <div class="col-md-12 form-inline" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10">
+                        <center>
+                            <label>Print Settings:</label>
+                        </br>
+                        <img src="/static/img/print_setting_options.png" class="img-responsive" alt="printer settings" height="196" width="480" style="border: 1px solid black;">
+                    </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12 form-inline" id="">
+                    <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
-                            <label>Top Margin:</label></br>
+                            </br><label>Top Margin:</label></br>
                             <input class="form-control" placeholder="Top Margin in mm" type="number" id="d3-top-margin" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
-                            <label>Left Margin:</label></br>
+                            </br><label>Left Margin:</label></br>
                             <input class="form-control" placeholder="Left Margin in mm" type="number" id="d3-left-margin" style="max-width: 100%;">
                         </center>
                     </div>
+                    <div class="col-md-1"></div>
                 </div>
-                <div class="col-md-10 form-inline" id="">
+                <div class="col-md-12 form-inline" id="">
+                    <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
-                            <label>Column Offset:</label></br>
-                            <input class="form-control" placeholder="Column Offset in mm" type="number" id="d3-column-offset" style="max-width: 100%;">
+                            <label>Horizontal Gap:</label></br>
+                            <input class="form-control" placeholder="Horizontal Gap in mm" type="number" id="d3-horizontal-gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
-                            <label>Row Offset:</label></br>
-                            <input class="form-control" placeholder="Row Offset in mm" type="number" id="d3-row-offset" style="max-width: 100%;">
+                            <label>Vertical Gap:</label></br>
+                            <input class="form-control" placeholder="Vertical Gap in mm" type="number" id="d3-vertical-gap" style="max-width: 100%;">
                         </center>
                     </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12 form-inline" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                            </br><label>Number of Columns:</label></br>
+                            <input class="form-control" placeholder="Num labels across" type="number" id="d3-column-number" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            </br><label>Number of Rows:</label></br>
+                            <input class="form-control" placeholder="Num labels down" type="number" id="d3-row-number" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
                 </div>
             </div>
             <div class="modal-footer">

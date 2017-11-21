@@ -435,6 +435,8 @@ $(document).ready(function($) {
             document.getElementById("d3-draw-div").style.display = "inline";
             document.getElementById("d3-adders").style.display = "inline";
         }
+        
+        // set print settings in modal
 
     });
 
