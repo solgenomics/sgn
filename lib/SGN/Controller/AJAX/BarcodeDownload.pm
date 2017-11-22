@@ -164,13 +164,12 @@ __PACKAGE__->config(
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf");
-       
-    #    my $dir = $c->tempfiles_subdir('/download');
-    #    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
-    #    my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
-       
-       my $pdf = PDF::API2->new();
+
+       my $pdf  = PDF::API2->new(-file => $FH);
+
        my $page = $pdf->page();    
+       my $text = $page->text();
+       my $gfx = $page->gfx();
        $page->mediabox($page_params{'width'}, $page_params{'height'});
        
        #loop through plot data, creating and saving labels to pdf
@@ -237,8 +236,7 @@ __PACKAGE__->config(
                           
                           print PNG $barcode->png();
                           close(PNG);
-       
-                           my $gfx = $page->gfx;
+
                            my $image = $pdf->image_png($png_location);
 
                            my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
@@ -258,8 +256,7 @@ __PACKAGE__->config(
                                $filled_value,
                                $element{'size'}
                           );
-                          
-                          my $gfx = $page->gfx;
+
                           my $image = $pdf->image_jpeg($jpeg_location);
                         
                           my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
@@ -276,7 +273,6 @@ __PACKAGE__->config(
                        my $font = $pdf->corefont($element{'type'});
        
                        # Add text to the page
-                       my $text = $page->text();
                        my $adjusted_size = $element{'size'} / $dots_to_pixels_conversion_factor; # scale to 72 pts per inch
                        $text->font($font, $adjusted_size);
                        my $midpoint= ($element{'height'} / $dots_to_pixels_conversion_factor ) / 2;
@@ -296,8 +292,13 @@ __PACKAGE__->config(
                    $row_num++;
                }
                
-               if ($row_num > $page_params{'number_of_rows'}) { #new page, reset row and col num
+               if ($row_num > $page_params{'number_of_rows'}) {
+                   #flush the page to save memory on big PDFs
+                   $pdf->finishobjects($page, $gfx, $text);   
+                   #create new page and reset row and col num
                    $page = $pdf->page();
+                   $text = $page->text();
+                   $gfx = $page->gfx();
                    $col_num = 0;
                    $row_num = 0;
                }
@@ -305,14 +306,13 @@ __PACKAGE__->config(
        }
     
        print STDERR "Saving the PDF . . .\n";
-       $pdf->saveas($FH);
+       $pdf->save();
        close($FH);
+       print STDERR "Returning with filename . . .\n";
        $c->res->cookies->{$dl_cookie} = {
          value => $dl_token,
          expires => '+1m',
        };
-    #    print STDERR "Returning with filename . . .\n";
-    #    $c->stash->{filetype} = 'PDF';
        $c->stash->{rest} = { filename => $urlencode{$filename} };
 
    }
