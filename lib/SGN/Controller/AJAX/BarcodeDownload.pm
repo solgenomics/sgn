@@ -163,14 +163,16 @@ __PACKAGE__->config(
 
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
-       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf");
+       my $file_prefix = $trial_name;
+       $file_prefix =~s/[^a-zA-Z0-9-_]//g;
+       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".pdf");
 
        my $pdf  = PDF::API2->new(-file => $FH);
 
        my $page = $pdf->page();    
        my $text = $page->text();
        my $gfx = $page->gfx();
-       $page->mediabox($page_params{'width'}, $page_params{'height'});
+       $page->mediabox($page_params{'page_width'}, $page_params{'page_height'});
        
        #loop through plot data, creating and saving labels to pdf
        my $col_num = 0;
@@ -242,7 +244,7 @@ __PACKAGE__->config(
                            my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                            my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                            my $elementy = $elementy - $height; # adjust for img position sarting at bottom
-                           
+                           print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                            $gfx->image($image, $elementx, $elementy, $width, $height);
        
                        
@@ -263,7 +265,7 @@ __PACKAGE__->config(
                           my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                           my $elementy = $elementy - $height; # adjust for img position sarting at bottom
                           #print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
-
+                           print STDERR 'adding QR Code params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                           $gfx->image($image, $elementx, $elementy, $width, $height);
        
                      }
@@ -280,6 +282,7 @@ __PACKAGE__->config(
                        #print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
                        $text->translate($elementx, $elementy);
                        $text->text($filled_value);
+                        print STDERR 'Added text params $font, $adjusted_size, $elementx, $elementy, $filled_value with: '."$font, $adjusted_size, $elementx, $elementy, $filled_value\n";
        
                   }
                   

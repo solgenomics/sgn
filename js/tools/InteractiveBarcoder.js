@@ -2,74 +2,80 @@
 var page_formats = {};
 page_formats["Select a page format"] = {};
 page_formats["US Letter PDF"] = {
-    width: 611,
-    height: 790.7,
+    page_width: 611,
+    page_height: 790.7,
     label_sizes: {
             'Select a label size': {
             },
             '1" x 2 5/8" (3x10)': {
-                width: 533.4,
-                height: 203.2,
-                starting_x: 13.68,
-                starting_y: 754,
-                x_increment: 198,
-                y_increment: -72,
-                number_of_columns: 2,
-                number_of_rows: 9
+                label_width: 533.4,
+                label_height: 203.2,
+                left_margin: 13.68,
+                top_margin: 36.7,
+                horizontal_gap: 10,
+                vertical_gap: 0,
+                number_of_columns: 3,
+                number_of_rows: 10
             },
             '1" x 4" (2X10)': {
-                width: 812.8,
-                height: 203.2,
-                starting_x: 13.68,
-                starting_y: 754,
-                x_increment: 297,
-                y_increment: -72,
-                number_of_columns: 1,
-                number_of_rows: 9
+                label_width: 812.8,
+                label_height: 203.2,
+                left_margin: 13.68,
+                top_margin: 36.7,
+                horizontal_gap: 10,
+                vertical_gap: 0,
+                number_of_columns: 2,
+                number_of_rows: 10
             },
             '1 1/3" x 4" (2x7)': {
-                width: 812.8,
-                height: 270.93,
-                starting_x: 13.68,
-                starting_y: 754,
-                x_increment: 297,
-                y_increment: -96,
-                number_of_columns: 1,
-                number_of_rows: 6
+                label_width: 812.8,
+                label_height: 270.93,
+                left_margin: 13.68,
+                top_margin: 36.7,
+                horizontal_gap: 10,
+                vertical_gap: 0,
+                number_of_columns: 2,
+                number_of_rows: 7
             },
             '2" x 2 5/8" (3x5)': {
-                width: 533.4,
-                height: 406.4,
-                starting_x: 13.68,
-                starting_y: 754,
-                x_increment: 198,
-                y_increment: -144,
-                number_of_columns: 2,
-                number_of_rows: 4
+                label_width: 533.4,
+                label_height: 406.4,
+                left_margin: 13.68,
+                top_margin: 36.7,
+                horizontal_gap: 10,
+                vertical_gap: 0,
+                number_of_columns: 3,
+                number_of_rows: 5
             },
             'Custom': {
-                width: 0,
-                height: 0,
-                starting_x:0,
-                starting_y:0,
-                x_increment:0,
-                y_increment:0,
-                number_of_columns:0,
-                number_of_rows:0
+                label_width: 0,
+                label_height: 0,
+                left_margin: 13.68,
+                top_margin: 36.7,
+                horizontal_gap:0,
+                vertical_gap:0,
+                number_of_columns:1,
+                number_of_rows:1
             }
         }
 };
 
 
 page_formats["A4 PDF"] = {
-    width: 595.3,
-    height: 841.9,
+    page_width: 595.3,
+    page_height: 841.9,
     label_sizes: {
             'Select a label size': {
             },
             'Custom' : {
-                width: 0,
-                height: 0,
+                label_width: 0,
+                label_height: 0,
+                left_margin: 0,
+                top_margin: 0,
+                horizontal_gap:0,
+                vertical_gap:0,
+                number_of_columns:1,
+                number_of_rows:1
             }
         }
 };
@@ -79,12 +85,18 @@ page_formats["Zebra printer file"] = {
             'Select a label size': {
             },
             '1 1/4" x 2"': {
-                width: 401.4,
-                height: 245,
+                label_width: 401.4,
+                label_height: 245,
             },
             'Custom' : {
-                width: 0,
-                height: 0,
+                label_width: 0,
+                label_height: 0,
+                left_margin: 0,
+                top_margin: 0,
+                horizontal_gap:0,
+                vertical_gap:0,
+                number_of_columns:1,
+                number_of_rows:1
             }
         }
 };
@@ -94,8 +106,14 @@ page_formats["Custom"] = {
             'Select a label size': {
             },
             'Custom' : {
-                width: 0,
-                height: 0,
+                label_width: 0,
+                label_height: 0,
+                left_margin: 0,
+                top_margin: 0,
+                horizontal_gap:0,
+                vertical_gap:0,
+                number_of_columns:1,
+                number_of_rows:1
             }
         }
 };
@@ -429,14 +447,20 @@ $(document).ready(function($) {
             
             var page_type = d3.select("#d3-page-type-select").node().value;
             var label_sizes = page_formats[page_type].label_sizes;
-            var width = label_sizes[val].width;
-            var height = label_sizes[val].height;
+            var width = label_sizes[val].label_width;
+            var height = label_sizes[val].label_height;
             changeLabelSize(width, height);
             document.getElementById("d3-draw-div").style.display = "inline";
             document.getElementById("d3-adders").style.display = "inline";
         }
         
         // set print settings in modal
+        document.getElementById("d3-top-margin").value = label_sizes[val].top_margin;
+        document.getElementById("d3-left-margin").value = label_sizes[val].left_margin;
+        document.getElementById("d3-horizontal-gap").value = label_sizes[val].horizontal_gap;
+        document.getElementById("d3-vertical-gap").value = label_sizes[val].vertical_gap;
+        document.getElementById("d3-column-number").value = label_sizes[val].number_of_columns;
+        document.getElementById("d3-row-number").value = label_sizes[val].number_of_rows;
 
     });
 
@@ -449,8 +473,8 @@ $(document).ready(function($) {
         width = width * 8;
         height = document.getElementById("d3-label-custom-height").value;
         height = height * 8;
-        custom_label.width = width;
-        custom_label.height = height;
+        custom_label.label_width = width;
+        custom_label.label_height = height;
         changeLabelSize(width, height);
         document.getElementById("d3-draw-div").style.display = "inline";
         document.getElementById("d3-adders").style.display = "inline";
@@ -541,6 +565,17 @@ $(document).ready(function($) {
     
     });
 
+    $("#d3-edit-print-settings").on("click", function() {
+        var page_type = d3.select("#d3-page-type-select").node().value;
+        var label_type = d3.select("#d3-label-size-select").node().value;
+        page_formats[page_type].label_sizes[label_type].top_margin = document.getElementById("d3-top-margin").value;
+        page_formats[page_type].label_sizes[label_type].left_margin = document.getElementById("d3-left-margin").value;
+        page_formats[page_type].label_sizes[label_type].horizontal_gap = document.getElementById("d3-horizontal-gap").value;
+        page_formats[page_type].label_sizes[label_type].vertical_gap = document.getElementById("d3-vertical-gap").value;
+        page_formats[page_type].label_sizes[label_type].number_of_columns = document.getElementById("d3-column-number").value;
+        page_formats[page_type].label_sizes[label_type].number_of_rows = document.getElementById("d3-row-number").value;
+    });
+
     $("#d3-add").on("click", function() {
         var field_select = document.getElementById("d3-add-field-input");
         var selected_option = field_select.options[field_select.selectedIndex];
@@ -588,14 +623,14 @@ $(document).ready(function($) {
 
         var label_type = d3.select("#d3-label-size-select").node().value;
         var page_params = {
-            starting_x: label_sizes[label_type].starting_x,
-            starting_y: label_sizes[label_type].starting_y,
-            x_increment: label_sizes[label_type].x_increment,
-            y_increment: label_sizes[label_type].y_increment,
-            number_of_columns: label_sizes[label_type].number_of_columns,
-            number_of_rows: label_sizes[label_type].number_of_rows,
-            width: page_formats[page_type].width || document.getElementById("d3-page-custom-width").value,
-            height: page_formats[page_type].height || document.getElementById("d3-page-custom-height").value,
+            starting_x: label_sizes[label_type].left_margin,
+            starting_y: page_formats[page_type].page_height - label_sizes[label_type].top_margin,
+            x_increment: (label_sizes[label_type].label_width/2.83)  + label_sizes[label_type].horizontal_gap,
+            y_increment: - ((label_sizes[label_type].label_height/2.83) + label_sizes[label_type].vertical_gap), // adjusted for pdf caretesian coords
+            number_of_columns: label_sizes[label_type].number_of_columns - 1, // for 0 indexing
+            number_of_rows: label_sizes[label_type].number_of_rows -1, // for 0 indexing
+            page_width: page_formats[page_type].page_width || document.getElementById("d3-page-custom-width").value,
+            page_height: page_formats[page_type].page_height || document.getElementById("d3-page-custom-height").value,
             num_labels: document.getElementById("num_labels").value
         }
         var page_json = JSON.stringify(page_params);
@@ -603,7 +638,7 @@ $(document).ready(function($) {
         //send to server to build pdf file
         jQuery.ajax({
             url: '/barcode/download/'+download_type,
-            timeout: 60000,
+            timeout: 300000,
             method: 'POST',
             data: {
                 'trial_id': trial_id,
@@ -880,8 +915,8 @@ function addToLabel(display_text, field, type, size, style, font) {
             var page_type = d3.select("#d3-page-type-select").node().value;
             var label = d3.select("#d3-label-size-select").node().value;
             var label_sizes = page_formats[page_type].label_sizes;
-            var width = label_sizes[label].width;
-            var height = label_sizes[label].height;
+            var width = label_sizes[label].label_width;
+            var height = label_sizes[label].label_height;
             var new_barcode = svg.append("g")
                 .classed("barcode", true)
                 .classed("draggable", true)
