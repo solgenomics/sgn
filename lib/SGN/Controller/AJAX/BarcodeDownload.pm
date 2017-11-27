@@ -219,9 +219,9 @@ __PACKAGE__->config(
                        },
                    );
                   
-                  if ( $element{'type'} eq "128" || $element{'type'} eq "QR" ) {
+                  if ( $element{'type'} eq "Code128" || $element{'type'} eq "QR" ) {
        
-                       if ( $element{'type'} eq "128" ) {
+                       if ( $element{'type'} eq "Code128" ) {
        
                           my $barcode_object = Barcode::Code128->new();
                           $c->tempfiles_subdir('barcode');
