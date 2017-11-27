@@ -186,12 +186,12 @@ $has_pedigree
       url: '/ajax/pedigrees/get_full',
       dataType: "json",
       type: 'GET',
-      data: 'stock_id='+stock_id,
+      data: 'stock_id=<% $stock_id %>',
       error: function(response) {
           alert("An error occurred while fetching the pedigree.\n"+response);
       },
       success: function(response) { 
-        console.log(response);
+        console.log("run",response);
       }, 
     });
 </script>
