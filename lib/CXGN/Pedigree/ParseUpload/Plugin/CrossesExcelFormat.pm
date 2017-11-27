@@ -48,6 +48,8 @@ sub _validate_with_plugin {
   my $cross_type_head;
   my $female_parent_head;
   my $male_parent_head;
+  my $female_plot_head;
+  my $male_plot_head;
 
   if ($worksheet->get_cell(0,0)) {
     $cross_name_head  = $worksheet->get_cell(0,0)->value();
@@ -61,11 +63,17 @@ sub _validate_with_plugin {
   if ($worksheet->get_cell(0,3)) {
     $male_parent_head  = $worksheet->get_cell(0,3)->value();
   }
+  if ($worksheet->get_cell(0,4)) {
+    $female_plot_head  = $worksheet->get_cell(0,4)->value();
+  }
+  if ($worksheet->get_cell(0,5)) {
+    $male_plot_head  = $worksheet->get_cell(0,5)->value();
+  }
 
   my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
   my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
 
-  for my $column ( 4 .. $col_max ) {
+  for my $column ( 6 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
     my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
     if ($matching_cross_property_row->first) {
@@ -95,6 +103,8 @@ sub _validate_with_plugin {
     my $cross_type;
     my $female_parent;
     my $male_parent;
+    my $female_plot_name;
+    my $male_plot_name;
     my $cross_stock;
 
     if ($worksheet->get_cell($row,0)) {
@@ -113,8 +123,14 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,3)) {
       $male_parent =  $worksheet->get_cell($row,3)->value();
     }
+    if ($worksheet->get_cell($row,4)) {
+      $female_plot_name =  $worksheet->get_cell($row,4)->value();
+    }
+    if ($worksheet->get_cell($row,5)) {
+      $male_plot_name =  $worksheet->get_cell($row,5)->value();
+    }
 
-    for my $column ( 4 .. $col_max ) {
+    for my $column ( 6 .. $col_max ) {
       if ($worksheet->get_cell($row,$column)) {
         my $info_value = $worksheet->get_cell($row,$column)->value();
         my $info_type = $worksheet->get_cell(0,$column)->value();
@@ -208,7 +224,7 @@ sub _parse_with_plugin {
   my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
   my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
 
-  for my $column ( 4 .. $col_max ) {
+  for my $column ( 6 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
     my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
     if ($matching_cross_property_row->first) {
@@ -222,6 +238,8 @@ sub _parse_with_plugin {
     my $cross_type;
     my $female_parent;
     my $male_parent;
+    my $female_plot;
+    my $male_plot;
     my $cross_stock;
 
     if ($worksheet->get_cell($row,0)) {
@@ -242,8 +260,14 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,3)) {
       $male_parent =  $worksheet->get_cell($row,3)->value();
     }
+    if ($worksheet->get_cell($row,4)) {
+      $female_plot =  $worksheet->get_cell($row,4)->value();
+    }
+    if ($worksheet->get_cell($row,5)) {
+      $male_plot =  $worksheet->get_cell($row,5)->value();
+    }
 
-    for my $column ( 4 .. $col_max ) {
+    for my $column ( 6 .. $col_max ) {
       if ($worksheet->get_cell($row,$column)) {
         my $column_property = $properties_columns{$column};
         $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
@@ -262,6 +286,14 @@ sub _parse_with_plugin {
     if ($male_parent) {
       my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
       $pedigree->set_male_parent($male_parent_individual);
+    }
+    if ($female_plot) {
+      my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $female_plot);
+      $pedigree->set_female_plot($female_plot_individual);
+    }
+    if ($male_plot) {
+      my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $male_plot);
+      $pedigree->set_male_plot($male_plot_individual);
     }
 
     push @pedigrees, $pedigree;

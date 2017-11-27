@@ -56,8 +56,6 @@ has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_cros
 has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
-has 'female_plot' => (isa => 'Int|Undef', is => 'rw', predicate => 'has_female_parentplot',);
-has 'male_plot' => (isa => 'Int|Undef', is => 'rw', predicate => 'has_male_plot',);
 
 sub add_crosses {
   my $self = shift;
@@ -69,8 +67,6 @@ sub add_crosses {
   my $transaction_error;
   my @added_stock_ids;
   my $crossing_trial_id;
-  my $female_plot;
-  my $male_plot;
 
   #lookup user by name
   my $owner_name = $self->get_owner_name();
@@ -124,6 +120,8 @@ sub add_crosses {
 	  my $cross_type = $pedigree->get_cross_type();
 	  my $cross_name = $pedigree->get_name();
     my $crossing_trial_id;
+    my $female_plot_name;
+    my $male_plot_name;
     my $female_plot;
     my $male_plot;
 
@@ -140,6 +138,16 @@ sub add_crosses {
 	      $male_parent = $self->_get_accession($male_parent_name);
 	  }
 
+    if ($pedigree->has_female_plot()) {
+	      $female_plot_name = $pedigree->get_female_plot()->get_name();
+	      $female_plot = $self->_get_plot($female_plot_name);
+	  }
+
+    if ($pedigree->has_male_plot()) {
+	      $male_plot_name = $pedigree->get_male_plot()->get_name();
+	      $male_plot = $self->_get_plot($male_plot_name);
+	  }
+
 	  #organism of cross experiment will be the same as the female parent
 	  if ($female_parent) {
 	      $organism_id = $female_parent->organism_id();
@@ -154,21 +162,21 @@ sub add_crosses {
 		  type_id => $cross_experiment_type_cvterm->cvterm_id(),
 	      } );
 
-      #create a stock of type cross
-      $cross_stock = $chado_schema->resultset("Stock::Stock")->find_or_create(
-	  { organism_id => $organism_id,
-	    name       => $cross_name,
-	    uniquename => $cross_name,
-	    type_id => $cross_stock_type_cvterm->cvterm_id,
-	  } );
+    #create a stock of type cross
+    $cross_stock = $chado_schema->resultset("Stock::Stock")->find_or_create(
+	     { organism_id => $organism_id,
+	       name       => $cross_name,
+	       uniquename => $cross_name,
+	       type_id => $cross_stock_type_cvterm->cvterm_id,
+	      } );
 
       #add stock_id of cross to an array so that the owner can be associated in the phenome schema after the transaction on the chado schema completes
       push (@added_stock_ids,  $cross_stock->stock_id());
 
 
       #link parents to the stock of type cross
-      if ($female_parent) {
-	  $cross_stock
+    if ($female_parent) {
+	$cross_stock
 	      ->find_or_create_related('stock_relationship_objects', {
 		  type_id => $female_parent_cvterm->cvterm_id(),
 		  object_id => $cross_stock->stock_id(),
@@ -196,25 +204,22 @@ sub add_crosses {
       }
 
     #link cross to female_plot
-    $female_plot = $self->get_female_plot() || 0;
-        if ($female_plot) {
-            $cross_stock->find_or_create_related('stock_relationship_objects', {
-                type_id => $female_plot_of_cvterm->cvterm_id(),
-                object_id => $cross_stock->stock_id(),
-                subject_id => $female_plot,
-            } );
-        }
+    if ($female_plot) {
+        $cross_stock->find_or_create_related('stock_relationship_objects', {
+            type_id => $female_plot_of_cvterm->cvterm_id(),
+            object_id => $cross_stock->stock_id(),
+            subject_id => $female_plot->stock_id(),
+        } );
+    }
 
     #link cross to male_plot
-    $male_plot = $self->get_male_plot() || 0;
-        if ($male_plot) {
-            $cross_stock
-                ->find_or_create_related('stock_relationship_objects', {
-                    type_id => $male_plot_of_cvterm->cvterm_id(),
-                    object_id => $cross_stock->stock_id(),
-                    subject_id => $male_plot,
-                 } );
-        }
+    if ($male_plot) {
+        $cross_stock->find_or_create_related('stock_relationship_objects', {
+            type_id => $male_plot_of_cvterm->cvterm_id(),
+            object_id => $cross_stock->stock_id(),
+            subject_id => $male_plot->stock_id(),
+        } );
+    }
 
     #link the stock of type cross to the experiment
     $experiment->find_or_create_related('nd_experiment_stocks' , {
@@ -222,9 +227,9 @@ sub add_crosses {
 	      type_id  =>  $cross_experiment_type_cvterm->cvterm_id(),
 		});
 
-      #link the experiment to the project
+    #link the experiment to the project
     $experiment->find_or_create_related('nd_experiment_projects', {
-	     project_id => $self->get_crossing_trial_id,
+	      project_id => $self->get_crossing_trial_id,
 		} );
 
     }
@@ -368,6 +373,26 @@ sub _get_accession {
 
   return $stock;
 }
+
+sub _get_plot {
+  my $self = shift;
+  my $plot_name = shift;
+  my $chado_schema = $self->get_chado_schema();
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+  my $stock;
+  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type');
+
+  $stock_lookup->set_stock_name($plot_name);
+  $stock = $stock_lookup->get_stock_exact();
+
+  if (!$stock) {
+    print STDERR "Name in pedigree is not a plot\n";
+    return;
+  }
+
+  return $stock;
+}
+
 
 #######
 1;
