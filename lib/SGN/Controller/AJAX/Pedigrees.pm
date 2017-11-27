@@ -288,13 +288,15 @@ sub get_relationships : Path('/ajax/pedigrees/get_relationships') : ActionClass(
 sub get_relationships_GET {
     my $self = shift;
     my $c = shift;
-    my @stock_ids = $c->req->params->{stock_id};
+    my $stock_ids = [];
+    my $s_ids = $c->req->params->{stock_id};
+    push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
     my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
     my $nodes = [];
-    while (@stock_ids){
-        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, (shift @stock_ids));
+    while (@{$stock_ids}){
+        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, (shift @{$stock_ids}));
     }
     $c->stash->{rest} = $nodes;
 }

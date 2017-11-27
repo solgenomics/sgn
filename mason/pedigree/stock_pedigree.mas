@@ -157,13 +157,13 @@ $has_pedigree
 
 
 
-% if (!$has_pedigree) { return; }
+<!-- # % if (!$has_pedigree) { return; } -->
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
 
 
 <center>
-<div name="stock_pedigree" style="max-width:700px;max-height:400px;overflow:auto">
+<!-- <div name="stock_pedigree" style="max-width:700px;max-height:400px;overflow:auto">
 
 
 <object target="_top" 
@@ -178,21 +178,330 @@ $has_pedigree
 	data="/pedigree/svg/<% $stock_id %>?<% rand() %>" type="image/svg+xml">
 </object>
 
-</div>
+
+</div> -->
+<svg class="pdgtree-canv" style="border:solid thin black;width:100%;height:80vh;"></svg>
 </center>
 
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min', 'd3.d3-pedigree-tree' ] &>
 <script type="text/javascript">
-    jQuery.ajax({
-      url: '/ajax/pedigrees/get_full',
-      dataType: "json",
-      type: 'GET',
-      data: 'stock_id=<% $stock_id %>',
-      error: function(response) {
-          alert("An error occurred while fetching the pedigree.\n"+response);
-      },
-      success: function(response) { 
-        console.log("run",response);
-      }, 
+;
+(function(){
+    
+    var loaded_nodes = {};
+    d3.json('/ajax/pedigrees/get_full?stock_id=<% $stock_id %>',function(nodes){
+        console.log(nodes);
+        nodes.forEach(function(node){
+            loaded_nodes[node.id] = node;
+        })
+        jQuery(document).ready(function(){
+            main(nodes);
+        });
     });
+    function load_nodes(to_load,callback){
+        if (to_load.length<1) return;
+        var req_url = "/ajax/pedigrees/get_relationships?stock_id=";
+        req_url+=to_load.join("&stock_id=");
+        console.log(req_url);
+        d3.json(req_url,function(loaded){
+            var nodes = loaded.filter(function(node){
+                if (!loaded_nodes.hasOwnProperty(node.id)){
+                    loaded_nodes[node.id] = node;
+                    return true;
+                }
+                return false;
+            });
+            callback(nodes);
+        });
+    };
+    
+    function main(start_nodes) {  
+        var tree = d3.pedigreeTree()
+          .levelWidth(200)
+          .levelMidpoint(50)
+          .nodePadding(220)
+          .nodeWidth(10)
+          .linkPadding(25)
+          .vertical(true)
+          .parentsOrdered(true)
+          .parents(function(node){
+            return [loaded_nodes[node.parents.mother],loaded_nodes[node.parents.father]].filter(Boolean);
+          })
+          .id(function(node){
+            return node.id;
+          })
+          .groupChildless(false)
+          .iterations(10)
+          .data(start_nodes);
+        drawTree(tree(),".pdgtree-canv");
+    }
+    
+    function drawTree(layout,svg_selector,trans){
+        
+        //set default change-transtion to no duration
+        trans = trans || d3.transition().duration(0);
+        
+        //make wrapper(pdg)
+        // console.log(layout);
+        var canv = d3.select(svg_selector);
+        var cbbox = canv.node().getBoundingClientRect();
+        var canvw = cbbox.width, 
+            canvh = cbbox.height;
+        var pdg = canv.select('.pedigreeTree');
+        if (pdg.empty()){
+          pdg = canv.append('g').classed('pedigreeTree',true);
+        }
+      
+        //make background
+        var bg = pdg.select('.pdg-bg');
+        if (bg.empty()){
+          bg = pdg.append('rect')
+            .classed('pdg-bg',true)
+            .attr("x",-canvw*500)
+            .attr("y",-canvh*500)
+            .attr('width',canvw*1000)
+            .attr('height',canvh*1000)
+            .attr('fill',"white")
+            .attr('stroke','none');
+        }
+        
+        console.log(layout.x,layout.y);
+        //make scaled content/zoom groups
+        var padding = 50;
+        var pdgtree_width = d3.max([500,layout.x[1]-layout.x[0]]);
+        var pdgtree_height = d3.max([500,layout.y[1]-layout.y[0]]);
+        var centeringx = d3.max([0,(500 - (layout.x[1]-layout.x[0]))/2]);
+        var centeringy = d3.max([0,(500 - (layout.y[1]-layout.y[0]))/2]);
+        var scale = get_fit_scale(canvw,canvh,pdgtree_width,pdgtree_height,padding);
+        var offsetx = (canvw-(pdgtree_width)*scale)/2 + centeringx*scale;
+        var offsety = (canvh-(pdgtree_height)*scale)/2 + centeringy*scale;
+        
+        var content = pdg.select('.pdg-content');
+        if (content.empty()){
+          var zoom = d3.zoom();
+          var zoom_group = pdg.append('g').classed('pdg-zoom',true).data([zoom]);
+          
+          content = zoom_group.append('g').classed('pdg-content',true);
+          content.datum({'zoom':zoom})
+          zoom.on("zoom",function(){
+            zoom_group.attr('transform',d3.event.transform);
+          });
+          bg.style("cursor", "all-scroll").call(zoom).call(zoom.transform, d3.zoomIdentity);
+          bg.on("dblclick.zoom",function(){
+            zoom.transform(bg.transition(),d3.zoomIdentity);
+            return false;
+          });
+          
+          content.attr('transform',
+              d3.zoomIdentity
+                .translate(offsetx,offsety)
+                .scale(scale)
+            );
+        }
+        content.datum().zoom.scaleExtent([0.5,d3.max([pdgtree_height,pdgtree_width])/200])
+        content.transition(trans)
+          .attr('transform',
+            d3.zoomIdentity
+              .translate(offsetx,offsety)
+              .scale(scale)
+          );
+        
+        
+        //set up draw layers
+        var linkLayer = content.select('.link-layer');
+        if(linkLayer.empty()){
+            linkLayer = content.append('g').classed('link-layer',true);
+        }
+        var nodeLayer = content.select('.node-layer');
+        if(nodeLayer.empty()){
+            nodeLayer = content.append('g').classed('node-layer',true);
+        }
+        
+        //link curve generators
+        var stepline = d3.line().curve(d3.curveStepAfter);
+        var curveline = d3.line().curve(d3.curveBasis);
+        var build_curve = function(d){
+          if (d.type=="parent->mid") return curveline(d.path);
+          if (d.type=="mid->child") return stepline(d.path);
+        };
+        
+        //draw nodes
+        var nodes = nodeLayer.selectAll('.node')
+          .data(layout.nodes,function(d){return d.id;});
+        var newNodes = nodes.enter().append('g')
+          .classed('node',true)
+          .attr('transform',function(d){
+            var begin = d;
+            if(d3.event && d3.event.type=="click"){
+              begin = d3.select(d3.event.target).datum();
+            }
+            return 'translate('+begin.x+','+begin.y+')'
+          });
+        newNodes.append('rect')
+          .attr('fill',function(d){
+            return d.type=='node'?'grey':'none';
+          })
+          .attr('stroke',function(d){
+            return d.type=='node'?'none':'green';
+          })
+          .attr('stroke-width',function(d){
+            return d.type=='node'?'0':'2';
+          })
+          .attr("width",200)
+          .attr("height",20)
+          .attr("y",0)
+          .attr("rx",10)
+          .attr("ry",10)
+          .attr("x",-100);
+        newNodes.append('text')
+          .attr('y',15)
+          .attr('text-anchor',"middle")
+          .text(function(d){
+            return d.type=='node'?d.id:'Expand children...';
+          })
+          .attr('fill',function(d){
+            return d.type=='node'?'white':'black';
+          });
+        var handles = newNodes.filter(function(d){
+            return d.type=="node";
+        }).append('g').classed("handles",true);
+        var child_handle = handles.append("g").classed("child-handle",true)
+        child_handle.append("path")
+          .attr("fill","none")
+          .attr("stroke","purple")
+          .attr("stroke-width",2)
+          .attr("d",curveline([[0,20],[0,40]]));
+        child_handle.append("circle")
+          .attr("fill","purple")
+          .attr("stroke","purple")
+          .attr("cy",45)
+          .attr("r",10);
+        child_handle.append('text')
+          .attr('y',51)
+          .attr("font-size","24px")
+          .attr("font-weight","bold")
+          .attr('text-anchor',"middle")
+          .text("+")
+          .attr('fill',"white");
+        child_handle.on("click",function(d){
+            var to_load = d.value.children.mother_of.concat(d.value.children.father_of).filter(Boolean).map(String);
+            load_nodes(to_load,function(nodes){
+                layout.pdgtree.add(nodes);
+                drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700));
+            });
+        });
+        var parent_handle = handles.append("g").classed("parent-handle",true)
+        parent_handle.append("path")
+          .attr("fill","none")
+          .attr("stroke","green")
+          .attr("stroke-width",2)
+          .attr("d",curveline([[0,0],[0,-20]]));
+        parent_handle.append("circle")
+          .attr("fill","green")
+          .attr("stroke","green")
+          .attr("cy",-25)
+          .attr("r",10);
+        parent_handle.append('text')
+          .attr('y',-19)
+          .attr("font-size","24px")
+          .attr("font-weight","bold")
+          .attr('text-anchor',"middle")
+          .text("+")
+          .attr('fill',"white");
+        parent_handle.on("click",function(d){
+            var to_load = [d.value.parents.mother,d.value.parents.father].filter(Boolean).map(String);
+            load_nodes(to_load,function(nodes){
+                layout.pdgtree.add(nodes);
+                drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700));
+            });
+        });
+        var allNodes = newNodes.merge(nodes);
+        allNodes.each(function(d){
+            if (d.type=="node"){
+                var parents_unloaded = [d.value.parents.mother,d.value.parents.father]
+                    .filter(function(node_id){
+                        return !!node_id && !loaded_nodes.hasOwnProperty(node_id);
+                    });
+                var children_unloaded = d.value.children.mother_of.concat(d.value.children.father_of)
+                    .filter(function(node_id){
+                        return !!node_id && !loaded_nodes.hasOwnProperty(node_id);
+                    });
+                if (parents_unloaded.length<1){
+                    d3.select(this).selectAll(".parent-handle").remove();
+                }
+                if (children_unloaded.length<1){
+                    d3.select(this).selectAll(".child-handle").remove();
+                }
+            }
+        });
+        allNodes.transition(trans).attr('transform',function(d){
+          return 'translate('+d.x+','+d.y+')'
+        });
+        allNodes.filter(function(d){return d.type=="node-group"})
+          .style("cursor", "pointer")
+          .on("click",function(d){
+            layout.pdgtree.excludeFromGrouping(d.value.slice(0,10).map(function(d){return d.id;}));
+            drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700).ease(d3.easeLinear));
+          })
+          .select("circle")
+          .attr('fill',"white")
+          .attr('stroke',"black");
+        var oldNodes = nodes.exit().remove();
+
+        
+        //link colors
+        var link_color = function(d){
+          if (d.type=="mid->child") return 'green';
+          if (d.type=="parent->mid"){
+            //if its the first parent, red. Otherwise, blue.
+            console.log(d);
+            var representative = d.sinks[0].type=="node-group"?
+                    d.sinks[0].value[0].value 
+                    : d.sinks[0].value;
+            if (representative.parents.mother == d.source.id){
+                return "red";
+            } 
+            else {
+                return "blue";
+            }
+          }
+          return 'gray';
+        }
+        
+        //make links
+        var links = linkLayer.selectAll('.link')
+          .data(layout.links,function(d){return d.id;});
+        var newLinks = links.enter().append('g')
+          .classed('link',true);
+        newLinks.append('path')
+          .attr('d',function(d){
+            var begin = (d.sink || d.source);
+            if(d3.event && d3.event.type=="click"){
+              begin = d3.select(d3.event.target).datum();
+            }
+            return curveline([[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y]]);
+          })
+          .attr('fill','none')
+          .attr('stroke',link_color)
+          .attr('stroke-width','2');
+        var allLinks = newLinks.merge(links);
+        allLinks.transition(trans).select('path').attr('d',build_curve);
+        var oldNodes = links.exit().remove();
+    }
+      
+      
+      
+      
+      
+    function get_fit_scale(w1,h1,w2,h2,pad){
+        w1 -= pad*2;
+        h1 -= pad*2;  
+        if (w1/w2<h1/h2){
+            return w1/w2;
+        } else {
+            return h1/h2;
+        }
+    }
+})();
 </script>
   
