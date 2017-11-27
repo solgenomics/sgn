@@ -259,5 +259,12 @@ sub _get_pedigrees_from_file {
     return \@pedigrees;
 }
 
+sub get_full_pedigree : Path('/ajax/pedigrees/get_full') Args(0)  {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->req->param('stock_id');
+    print STDERR "!!!!!!!!!!!!!!!!!RUNNING!!!!!!!!!!!!!!!!!!!!"
+}
+
 
 1; 
