@@ -18,6 +18,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     plot_list=>$plot_list,
     plant_list=>$plant_list,
     include_timestamp=>$include_timestamp,
+    include_row_and_column_numbers=>0,
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
     phenotype_max_value=>$phenotype_max_value,
