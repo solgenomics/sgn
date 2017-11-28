@@ -232,7 +232,6 @@ sub _get_crd_design {
     my $number_of_stocks;
     my @control_list_crbd;
     my %control_names_lookup;
-    my $stock_name_iter;
     my $fieldmap_row_number;
     my @fieldmap_row_numbers;
     my $fieldmap_col_number;
@@ -247,6 +246,7 @@ sub _get_crd_design {
     if ($self->has_control_list_crbd()) {
       @control_list_crbd = @{$self->get_control_list_crbd()};
       %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+      $self->_check_controls_and_accessions_lists;
     }
     if ($self->has_number_of_reps()) {
         $number_of_reps = $self->get_number_of_reps();
@@ -554,7 +554,6 @@ sub _get_rcbd_design {
   my @converted_plot_numbers;
   my @control_list_crbd;
   my %control_names_lookup;
-  my $stock_name_iter;
   my $fieldmap_row_number;
   my @fieldmap_row_numbers;
   my $fieldmap_col_number;
@@ -569,6 +568,7 @@ sub _get_rcbd_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    $self->_check_controls_and_accessions_lists;
   }
   if ($self->has_number_of_blocks()) {
     $number_of_blocks = $self->get_number_of_blocks();
@@ -701,7 +701,6 @@ sub _get_alpha_lattice_design {
   my @converted_plot_numbers;
   my @control_list_crbd;
   my %control_names_lookup;
-  my $stock_name_iter;
   my $fieldmap_row_number;
   my @fieldmap_row_numbers;
   my $fieldmap_col_number;
@@ -715,6 +714,7 @@ sub _get_alpha_lattice_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    $self->_check_controls_and_accessions_lists;
   }
 
   if ($self->has_number_of_reps()) {
@@ -884,7 +884,6 @@ sub _get_lattice_design {
   my @converted_plot_numbers;
   my @control_list_crbd;
   my %control_names_lookup;
-  my $stock_name_iter;
   my $fieldmap_row_number;
   my @fieldmap_row_numbers;
   my $fieldmap_col_number;
@@ -906,6 +905,7 @@ sub _get_lattice_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    $self->_check_controls_and_accessions_lists;
   }
 
    if ($self->has_number_of_reps()) {
@@ -1048,7 +1048,6 @@ sub _get_augmented_design {
   my @block_numbers;
   my @converted_plot_numbers;
   my %control_names_lookup;
-  my $stock_name_iter;
 
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
@@ -1059,11 +1058,7 @@ sub _get_augmented_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -1162,7 +1157,6 @@ sub _get_madii_design {
     my @block_numbers;
     my @converted_plot_numbers;
     my %control_names_lookup;
-    my $stock_name_iter;
     my @row_numbers;
     my @check_names;
     my @col_numbers;
@@ -1182,11 +1176,7 @@ sub _get_madii_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -1400,7 +1390,6 @@ sub _get_madiii_design {
     my @block_numbers;
     my @converted_plot_numbers;
     my %control_names_lookup;
-    my $stock_name_iter;
     my @row_numbers;
     my @check_names;
 
@@ -1418,11 +1407,7 @@ sub _get_madiii_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -1646,7 +1631,6 @@ sub _get_madiv_design {
     my @block_numbers;
     my @converted_plot_numbers;
     my %control_names_lookup;
-    my $stock_name_iter;
     my @row_numbers;
     my @check_names;
 
@@ -1664,11 +1648,7 @@ sub _get_madiv_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -2003,7 +1983,6 @@ sub _get_splitplot_design {
     my @rep_numbers;
     my @converted_plot_numbers;
     my $number_of_stocks;
-    my $stock_name_iter;
     my $fieldmap_row_number;
     my @fieldmap_row_numbers;
     my $fieldmap_col_number;
@@ -2209,6 +2188,18 @@ sub _get_splitplot_design {
     $splitplot_design{'treatments'} = \%treatment_subplot_hash;
     #print STDERR Dumper \%splitplot_design;
     return \%splitplot_design;
+}
+
+sub _check_controls_and_accessions_lists {
+    my $self = shift;
+    my @stock_list = @{$self->get_stock_list()};
+    my @control_list_crbd = @{$self->get_control_list_crbd()};
+    my %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    foreach my $stock_name_iter (@stock_list) {
+        if (exists($control_names_lookup{$stock_name_iter})) {
+            die "Names in accessions list cannot be used also as controls. Please use separate lists for your controls and your accessions.\n";
+        }
+    }
 }
 
 1;
