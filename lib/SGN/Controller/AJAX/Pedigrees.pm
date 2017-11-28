@@ -306,10 +306,12 @@ sub _get_relationships {
     my $mother_cvterm = shift;
     my $father_cvterm = shift;
     my $stock_id = shift;
+    my $name = $schema->resultset("Stock::Stock")->find({stock_id=>$stock_id})->uniquename();
     my $parents = _get_pedigree_parents($schema, $mother_cvterm, $father_cvterm, $stock_id);
     my $children = _get_pedigree_children($schema, $mother_cvterm, $father_cvterm, $stock_id);
     return {
         id => $stock_id,
+        name=>$name,
         parents=> $parents,
         children=> $children
     };

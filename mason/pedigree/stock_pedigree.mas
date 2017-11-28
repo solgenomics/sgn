@@ -162,6 +162,23 @@ $has_pedigree
 <& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
 
 
+<div>
+    <span style="white-space:nowrap;">
+        <svg style="display:inline-block;" width="20px" height="16px">
+            <rect x="0" y="8" width="20" height="7" fill="red"/>
+        </svg> Female Parent
+    </span>&nbsp;&nbsp;
+    <span style="white-space:nowrap;">
+        <svg style="display:inline-block;" width="20px" height="16px">
+            <rect x="0" y="8" width="20" height="7" fill="blue"/>
+        </svg> Male Parent
+    </span>&nbsp;&nbsp;
+    <span style="white-space:nowrap;">
+        <span class="glyphicon glyphicon-circle-arrow-right" style="color:purple;" aria-hidden="true">
+        </span> Expand Pedigree
+    </span>
+    
+</div>
 <center>
 <!-- <div name="stock_pedigree" style="max-width:700px;max-height:400px;overflow:auto">
 
@@ -187,9 +204,9 @@ $has_pedigree
 <script type="text/javascript">
 ;
 (function(){
-    
+    var STOCK_ID = "<% $stock_id %>";
     var loaded_nodes = {};
-    d3.json('/ajax/pedigrees/get_full?stock_id=<% $stock_id %>',function(nodes){
+    d3.json('/ajax/pedigrees/get_full?stock_id='+STOCK_ID,function(nodes){
         console.log(nodes);
         nodes.forEach(function(node){
             loaded_nodes[node.id] = node;
@@ -230,7 +247,7 @@ $has_pedigree
           .id(function(node){
             return node.id;
           })
-          .groupChildless(false)
+          .groupChildless(true)
           .iterations(10)
           .data(start_nodes);
         drawTree(tree(),".pdgtree-canv");
@@ -265,7 +282,7 @@ $has_pedigree
             .attr('stroke','none');
         }
         
-        console.log(layout.x,layout.y);
+        // console.log(layout.x,layout.y);
         //make scaled content/zoom groups
         var padding = 50;
         var pdgtree_width = d3.max([500,layout.x[1]-layout.x[0]]);
@@ -337,80 +354,114 @@ $has_pedigree
             }
             return 'translate('+begin.x+','+begin.y+')'
           });
-        newNodes.append('rect')
+        var nodeNodes = newNodes.filter(function(d){
+            return d.type=="node";
+        });
+        var groupNodes = newNodes.filter(function(d){
+            return d.type=="node-group";
+        });
+        groupNodes.append("circle")
+          .attr("fill","purple")
+          .attr("stroke","purple")
+          .attr("cy",0)
+          .attr("r",10);
+        groupNodes.append('text')
+          .attr('y',6.5)
+          .attr("font-size","14px")
+          .attr("font-weight","bold")
+          .attr('text-anchor',"middle")
+          .attr('class', 'glyphicon')
+          .html("&#xe092;")
+          .attr('fill',"white");
+        nodeNodes.append('rect')
           .attr('fill',function(d){
-            return d.type=='node'?'grey':'none';
+            if (d.id==STOCK_ID){
+              return "pink";
+            }
+            return d.type=='node'?'white':'purple';
           })
           .attr('stroke',function(d){
-            return d.type=='node'?'none':'green';
+            return d.type=='node'?'grey':'purple';
           })
-          .attr('stroke-width',function(d){
-            return d.type=='node'?'0':'2';
-          })
+          .attr('stroke-width',2)
           .attr("width",200)
           .attr("height",20)
           .attr("y",0)
           .attr("rx",10)
           .attr("ry",10)
           .attr("x",-100);
-        newNodes.append('text')
+        nodeNodes.append('text')
           .attr('y',15)
           .attr('text-anchor',"middle")
-          .text(function(d){
-            return d.type=='node'?d.id:'Expand children...';
+          .html(function(d){
+            return d.type=='node'?d.value.name:'Expand...';
           })
           .attr('fill',function(d){
-            return d.type=='node'?'white':'black';
+            return d.type=='node'?'black':'white';
           });
-        var handles = newNodes.filter(function(d){
-            return d.type=="node";
-        }).append('g').classed("handles",true);
-        var child_handle = handles.append("g").classed("child-handle",true)
-        child_handle.append("path")
+        nodeNodes.each(function(d){
+            var nn = d3.select(this);
+            var ctl = nn.select('text').node().getComputedTextLength();
+            var w = ctl+20;
+            nn.select('rect')
+                .attr("width",w)
+                .attr("x",-w/2);
+        });
+        var expanders = nodeNodes.append('g').classed("expanders",true);
+        var child_expander = expanders.append("g").classed("child-expander",true)
+        child_expander.append("path")
           .attr("fill","none")
           .attr("stroke","purple")
-          .attr("stroke-width",2)
+          .attr("stroke-width",4)
           .attr("d",curveline([[0,20],[0,40]]));
-        child_handle.append("circle")
+        child_expander.append("circle")
           .attr("fill","purple")
           .attr("stroke","purple")
           .attr("cy",45)
           .attr("r",10);
-        child_handle.append('text')
-          .attr('y',51)
-          .attr("font-size","24px")
+        child_expander.append('text')
+          .attr('y',52)
+          .attr('x',-0.5)
+          .attr("font-size","14px")
           .attr("font-weight","bold")
           .attr('text-anchor',"middle")
-          .text("+")
+          .attr('class', 'glyphicon')
+          .html("&#xe094;")
           .attr('fill',"white");
-        child_handle.on("click",function(d){
+        child_expander.on("click",function(d){
+            var end_blink = load_blink(d3.select(this).select("circle").node());
             var to_load = d.value.children.mother_of.concat(d.value.children.father_of).filter(Boolean).map(String);
             load_nodes(to_load,function(nodes){
+                end_blink();
                 layout.pdgtree.add(nodes);
                 drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700));
             });
         });
-        var parent_handle = handles.append("g").classed("parent-handle",true)
-        parent_handle.append("path")
+        var parent_expander = expanders.append("g").classed("parent-expander",true)
+        parent_expander.append("path")
           .attr("fill","none")
-          .attr("stroke","green")
-          .attr("stroke-width",2)
-          .attr("d",curveline([[0,0],[0,-20]]));
-        parent_handle.append("circle")
-          .attr("fill","green")
-          .attr("stroke","green")
-          .attr("cy",-25)
+          .attr("stroke","purple")
+          .attr("stroke-width",4)
+          .attr("d",curveline([[0,0],[0,-40]]));
+        parent_expander.append("circle")
+          .attr("fill","purple")
+          .attr("stroke","purple")
+          .attr("cy",-45)
           .attr("r",10);
-        parent_handle.append('text')
-          .attr('y',-19)
-          .attr("font-size","24px")
+        parent_expander.append('text')
+          .attr('y',-39)
+          .attr('x',-0.5)
+          .attr("font-size","14px")
           .attr("font-weight","bold")
           .attr('text-anchor',"middle")
-          .text("+")
+          .attr('class', 'glyphicon')
+          .html("&#xe093;")
           .attr('fill',"white");
-        parent_handle.on("click",function(d){
+        parent_expander.on("click",function(d){
+            var end_blink = load_blink(d3.select(this).select("circle").node());
             var to_load = [d.value.parents.mother,d.value.parents.father].filter(Boolean).map(String);
             load_nodes(to_load,function(nodes){
+                end_blink();
                 layout.pdgtree.add(nodes);
                 drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700));
             });
@@ -427,10 +478,10 @@ $has_pedigree
                         return !!node_id && !loaded_nodes.hasOwnProperty(node_id);
                     });
                 if (parents_unloaded.length<1){
-                    d3.select(this).selectAll(".parent-handle").remove();
+                    d3.select(this).selectAll(".parent-expander").remove();
                 }
                 if (children_unloaded.length<1){
-                    d3.select(this).selectAll(".child-handle").remove();
+                    d3.select(this).selectAll(".child-expander").remove();
                 }
             }
         });
@@ -442,19 +493,16 @@ $has_pedigree
           .on("click",function(d){
             layout.pdgtree.excludeFromGrouping(d.value.slice(0,10).map(function(d){return d.id;}));
             drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700).ease(d3.easeLinear));
-          })
-          .select("circle")
-          .attr('fill',"white")
-          .attr('stroke',"black");
+        });
         var oldNodes = nodes.exit().remove();
 
         
         //link colors
         var link_color = function(d){
-          if (d.type=="mid->child") return 'green';
+          if (d.type=="mid->child") return 'purple';
           if (d.type=="parent->mid"){
             //if its the first parent, red. Otherwise, blue.
-            console.log(d);
+            // console.log(d);
             var representative = d.sinks[0].type=="node-group"?
                     d.sinks[0].value[0].value 
                     : d.sinks[0].value;
@@ -483,13 +531,34 @@ $has_pedigree
           })
           .attr('fill','none')
           .attr('stroke',link_color)
-          .attr('stroke-width','2');
+          .attr('opacity',function(d){
+            if (d.type=="parent->mid") return 0.7;
+            return 0.999;
+          })
+          .attr('stroke-width',4);
         var allLinks = newLinks.merge(links);
         allLinks.transition(trans).select('path').attr('d',build_curve);
         var oldNodes = links.exit().remove();
     }
       
-      
+    function load_blink(node){
+        var stop = false;
+        var original_fill = d3.select(node).style("fill");
+        function blink(){
+            if (!stop) d3.select(node)
+                .transition()
+                .duration(300)
+                .style("fill", "white")
+                .transition()
+                .duration(300)
+                .style("fill", original_fill)
+                .on("end", blink);
+        }
+        blink();
+        return function(){
+            stop = true;
+        }
+    }
       
       
       
