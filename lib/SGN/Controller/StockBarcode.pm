@@ -1167,9 +1167,9 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     $row = $stockprop_hash{$stock_id}->{'replicate'};
     $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
-    my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+    my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock.type_id=? and stock_relationship.subject_id =?;");
 
-    $h_acc->execute($stock_id);
+    $h_acc->execute($accession_cvterm_id,$stock_id);
     ($accession_name, $accession_id) = $h_acc->fetchrow_array;
 
     $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
