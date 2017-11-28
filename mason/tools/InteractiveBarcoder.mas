@@ -85,7 +85,7 @@
     <div id="d3-adders" class="well col-md-12" style="display:none">
         <div class="col-md-12 form-inline">
             <center>
-                <label>Add to Label</label>
+                <h4>Design Options</h4>
             </center>
         </div>
         <div class="col-md-12 form-inline">
@@ -124,41 +124,31 @@
     </div>
     
     <div id="d3-download" class="well col-md-12" style="display:none">
-        <div class="col-md-2">
+        <div class="col-md-12 form-inline">
             <center>
-                <label>Sort by:</label>
-                <select class="form-control" id="sort_order" name="sort_by">
-                    <option value="accession_name">Accession Name</option>
-                    <option value="plot_name">Plot Name</option>
-                    <option value="plot_number">Plot Number</option>
-                    <option value="rep_number">Rep Number</option>
-                    <option value="row_number">Row Number</option>
-                    <option value="column_number">Column Number</option>
-                </select>
+                <h4>Download Options</h4>
             </center>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-4">
             <center>
-                <label>Copies of each label:</label>
-                <select class="form-control" id="num_labels" name="num_labels">
-                    <option value="1">One</option>
-                    <option value="2">Two</option>
-                    <option value="3">Three</option>
-                </select>
+                <button class="btn btn-primary" id="edit_print_settings">Edit Additional Settings</button>
             </center>
         </div>
-        <div class="col-md-2">
-            <button class="btn btn-primary" id="edit_print_settings">Edit Print Settings</button>
-        </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <center>
-                <br><button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save design</button>&nbsp&nbsp&nbsp&nbsp
-                <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none">Download pdf</button>&nbsp&nbsp
+                <button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save design</button>
+            </center>
+        </div>
+        <div class="col-md-4">
+            <center>
+                <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none">Download pdf</button>
                 <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none">Download zpl file</button>
             </center>
         </div>
     </div>
 </div>
+
+
 
 <!-- Modal -->
 <div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="customFieldModal" aria-hidden="true">
@@ -183,6 +173,8 @@
         </div>
     </div>
 </div>
+
+
 
 <div class="modal fade" id="editPrintSettingsModal" tabindex="-1" role="dialog" aria-labelledby="editPrintSettingsModal" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -243,6 +235,33 @@
                         <center>
                             </br><label>Number of Rows:</label></br>
                             <input class="form-control" placeholder="Num labels down" type="number" id="d3-row-number" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12 form-inline" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                        </br><label>Sort Labels by:</label>
+                            <select class="form-control" id="sort_order" name="sort_by">
+                                <option value="accession_name">Accession Name</option>
+                                <option value="plot_name">Plot Name</option>
+                                <option value="plot_number" selected>Plot Number</option>
+                                <option value="rep_number">Rep Number</option>
+                                <option value="row_number">Row Number</option>
+                                <option value="column_number">Column Number</option>
+                            </select></br>
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            </br><label>Copies of each label:</label>
+                            <select class="form-control" id="num_labels" name="num_labels">
+                                <option value="1" selected>One</option>
+                                <option value="2">Two</option>
+                                <option value="3">Three</option>
+                            </select></br>
                         </center>
                     </div>
                     <div class="col-md-1"></div>
