@@ -335,22 +335,22 @@ is_deeply($columns, [
           ],
           [
             undef,
-            'block_number',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1'
+            'accession_name',
+            'test_accession4',
+            'test_accession5',
+            'test_accession3',
+            'test_accession3',
+            'test_accession1',
+            'test_accession4',
+            'test_accession5',
+            'test_accession1',
+            'test_accession2',
+            'test_accession3',
+            'test_accession1',
+            'test_accession5',
+            'test_accession2',
+            'test_accession4',
+            'test_accession2'
           ],
           [
             undef,
@@ -370,6 +370,29 @@ is_deeply($columns, [
             '13',
             '14',
             '15'
+          ],
+          [
+            undef,
+            'block_number',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1'
+          ],
+          [
+            undef,
+            'is_a_control'
           ],
           [
             undef,
@@ -397,29 +420,6 @@ is_deeply($columns, [
           [
             undef,
             'col_number'
-          ],
-          [
-            undef,
-            'accession_name',
-            'test_accession4',
-            'test_accession5',
-            'test_accession3',
-            'test_accession3',
-            'test_accession1',
-            'test_accession4',
-            'test_accession5',
-            'test_accession1',
-            'test_accession2',
-            'test_accession3',
-            'test_accession1',
-            'test_accession5',
-            'test_accession2',
-            'test_accession4',
-            'test_accession2'
-          ],
-          [
-            undef,
-            'is_a_control'
           ]
         ], "check fieldbook creation of plots after plants created");
 
@@ -455,8 +455,9 @@ my $columns = @contents->[0]->[1]->{'cell'};
 ok(scalar(@$columns) == 11, "check number of col in created file.");
 
 #print STDERR Dumper $columns;
-
-is_deeply($columns->[1], [
+is_deeply( $columns, [
+          [],
+          [
             undef,
             'plant_name',
             'test_trial21_plant_1',
@@ -489,9 +490,8 @@ is_deeply($columns->[1], [
             'test_trial214_plant_2',
             'test_trial215_plant_1',
             'test_trial215_plant_2'
-          ], "check contents of first col");
-
-is_deeply($columns->[2], [
+          ],
+          [
             undef,
             'plot_name',
             'test_trial21',
@@ -524,159 +524,8 @@ is_deeply($columns->[2], [
             'test_trial214',
             'test_trial215',
             'test_trial215'
-          ], "check 2nd col");
-
-is_deeply($columns->[3], [
-            undef,
-            'block_number',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1'
-          ], "check contents of second col");
-
-is_deeply($columns->[4],[
-            undef,
-            'plant_number',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2',
-            '1',
-            '2'
-          ], "check contents of third col");
-
-is_deeply($columns->[5], [
-            undef,
-            'plot_number',
-            '1',
-            '1',
-            '2',
-            '2',
-            '3',
-            '3',
-            '4',
-            '4',
-            '5',
-            '5',
-            '6',
-            '6',
-            '7',
-            '7',
-            '8',
-            '8',
-            '9',
-            '9',
-            '10',
-            '10',
-            '11',
-            '11',
-            '12',
-            '12',
-            '13',
-            '13',
-            '14',
-            '14',
-            '15',
-            '15'
-          ], "check contents of fourth col");
-
-is_deeply($columns->[6], [
-            undef,
-            'rep_number',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '2',
-            '2',
-            '1',
-            '1',
-            '2',
-            '2',
-            '2',
-            '2',
-            '2',
-            '2',
-            '1',
-            '1',
-            '3',
-            '3',
-            '3',
-            '3',
-            '3',
-            '3',
-            '2',
-            '2',
-            '3',
-            '3',
-            '3',
-            '3'
-          ], "check contents of fifth col");
-
-is_deeply($columns->[7], [
-            undef,
-            'row_number'
-          ], "check contents");
-
-is_deeply($columns->[8], [
-          undef,
-          'col_number'
-        ], "check contents");
-    
-is_deeply($columns->[9],[
+          ],
+          [
             undef,
             'accession_name',
             'test_accession4',
@@ -709,12 +558,156 @@ is_deeply($columns->[9],[
             'test_accession4',
             'test_accession2',
             'test_accession2'
-          ], "check contents of sixth col");
-
-is_deeply($columns->[10],[
+          ],
+          [
+            undef,
+            'plot_number',
+            '1',
+            '1',
+            '2',
+            '2',
+            '3',
+            '3',
+            '4',
+            '4',
+            '5',
+            '5',
+            '6',
+            '6',
+            '7',
+            '7',
+            '8',
+            '8',
+            '9',
+            '9',
+            '10',
+            '10',
+            '11',
+            '11',
+            '12',
+            '12',
+            '13',
+            '13',
+            '14',
+            '14',
+            '15',
+            '15'
+          ],
+          [
+            undef,
+            'block_number',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1'
+          ],
+          [
             undef,
             'is_a_control'
-          ], "check contents of 7th col");
+          ],
+          [
+            undef,
+            'rep_number',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '2',
+            '2',
+            '1',
+            '1',
+            '2',
+            '2',
+            '2',
+            '2',
+            '2',
+            '2',
+            '1',
+            '1',
+            '3',
+            '3',
+            '3',
+            '3',
+            '3',
+            '3',
+            '2',
+            '2',
+            '3',
+            '3',
+            '3',
+            '3'
+          ],
+          [
+            undef,
+            'row_number'
+          ],
+          [
+            undef,
+            'col_number'
+          ],
+          [
+            undef,
+            'plant_number',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2',
+            '1',
+            '2'
+          ]
+        ], 'test file contents');
 
 
 my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");

@@ -171,8 +171,15 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
             var top_margin = 12;
             var left_margin = 17;
             var bottom_margin = 12;
+            var right_margin = 10;            
+          }
+          if (format == "32_unique") {
+            var label_row = 10;
+            var label_cols = 4; 
+            var top_margin = 12;
+            var left_margin = 17;
+            var bottom_margin = 12;
             var right_margin = 10;
-            
           }
           else if (format == "CASS") {
           var label_row = 10;
@@ -181,7 +188,6 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           var left_margin = 112;
           var bottom_margin = 13;
           var right_margin = 20;
-
           }
           else if (format == "MUSA") {
           var label_row = 10;
@@ -190,7 +196,6 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           var left_margin = 112;
           var bottom_margin = 13;
           var right_margin = 20;
-
           }
           else if (format == "NCSU") {
           var label_row = 10;
@@ -199,8 +204,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           var left_margin = 10;
           var bottom_margin = 12;
           var right_margin = 10;
-          var text = 'year,location';
-          
+          var text = 'year,location'; 
           }
           else if (format == "20A4") {
           var label_row = 10;
@@ -209,7 +213,22 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           var left_margin = 10;
           var bottom_margin = 12;
           var right_margin = 10;
-
+          }
+          else if (format == "IITA-3") {
+          var label_row = 20;
+          var label_cols = 3; 
+          var top_margin = 13;
+          var left_margin = 130;
+          var bottom_margin = 11;
+          var right_margin = 10;
+          }
+          else if (format == "crossing") {
+          var label_row = 1;
+          var label_cols = 1; 
+          var top_margin = 5;
+          var left_margin = 2;
+          var bottom_margin = 0;
+          var right_margin = 0;
           }
           jQuery("#text_margin").empty();
           jQuery("#text_margin").val(text);
@@ -261,8 +280,11 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           <option value="CASS">CASS printing format</option>
           <option value="MUSA">MUSA printing format</option>
           <option value="32A4">32 label Size Sticker Paper</option>
+          <option value="32_unique">32 Unique label Size Sticker Paper</option>
           <option value="20A4">20 label Size Sticker Paper</option>
           <option value="NCSU">NCSU printing format</option>
+          <option value="IITA-3">IITA-3-barcode</option>
+          <option value="crossing">CROSS</option>
         </select>
     </div>
   </div>
