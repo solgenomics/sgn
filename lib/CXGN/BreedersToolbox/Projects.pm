@@ -71,7 +71,8 @@ sub get_breeding_program_by_name {
   my $program_name = shift;
   my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-  my $rs = $self->schema->resultset('Project::Project')->find( { 'name'=>$program_name, 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+  my $prs = $self->schema->resultset('Project::Project')->search( { 'name'=>$program_name, 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+  my $rs = $prs->first;
 
   if (!$rs) {
     return;
