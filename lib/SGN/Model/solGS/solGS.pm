@@ -819,7 +819,7 @@ sub structure_genotype_data {
    
     my @stocks;
     my $duplicate_stock;   
-    my $cnt;
+    my $cnt = 0;
    
     foreach my $dg (@$dataref)
     {
@@ -840,7 +840,7 @@ sub structure_genotype_data {
 	    my $geno_hash = $dg->{genotype_hash}; 
 	    
 	    $geno_data .= $stock . "\t";
-	    $geno_data .= $self->_create_genotype_row($geno_hash);
+	    $geno_data .= $self->_create_genotype_row($headers, $geno_hash);
 	    $geno_data .= "\n";
 	}
     }
@@ -1131,33 +1131,23 @@ sub _get_dataset_markers {
 sub _create_genotype_dataset_headers {
     my ($self, $markers) = @_; 
 
-    my $headers;
-    foreach my $marker (@$markers) 
-    {
-	$headers .= $marker;
-	$headers .= "\t" unless $marker eq @$markers[-1];
-    }
- 
+    my $headers = join("\t", @$markers);
+   
     return $headers;  
 }
 
 
 sub _create_genotype_row {
-    my ($self, $genotype_hash) = @_; 
+    my ($self, $headers, $genotype_hash) = @_; 
 
-    my @markers      = keys %$genotype_hash;
-    my $marker_count = scalar(@markers);
- 
+    my @markers = split("\t", $headers);
+
     my $geno_values;
     foreach my $marker (@markers) 
     {   
 	no warnings 'uninitialized';
-
-        my $genotype =  $genotype_hash->{$marker};
-	$genotype =  $genotype_hash->{$marker};
 	
-	$geno_values .= $genotype;
-        #$geno_values .= $self->round_allele_dosage_values($genotype);       
+	$geno_values .= $genotype_hash->{$marker};
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }
 
