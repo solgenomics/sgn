@@ -70,13 +70,15 @@ The cross this seedlot is associated with. Not yet implemented.
 
 =cut
 
-has 'cross' => (
-    isa => 'CXGN::Cross',
+has 'crosses' => (
+    isa => 'ArrayRef[ArrayRef]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_crosses',
 );
 
-has 'cross_stock_id' =>   (
-    isa => 'Int',
+has 'cross_stock_ids' =>   (
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -95,7 +97,7 @@ has 'accessions' => (
 );
 
 has 'accession_stock_ids' => (
-    isa => 'ArrayRef[Int]',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -405,7 +407,6 @@ sub BUILD {
         $self->seedlot_id($self->stock_id);
         $self->name($self->uniquename());
         $self->seedlot_id($self->stock_id());
-        #$self->cross($self->_retrieve_cross());
     }
     #print STDERR Dumper $self->seedlot_id;
 }
@@ -417,25 +418,34 @@ sub _build_transactions {
     $self->transactions($transactions);
 }
 
-sub _store_cross {
+sub _store_seedlot_crosses {
     my $self = shift;
+    foreach my $a (@{$self->cross_stock_ids()}) {
+        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
+        if ($self->organism_id){
+            if ($self->organism_id != $organism_id){
+                return "Accessions must all be the same organism, so that a population can group the seed lots.\n";
+            }
+        }
+        $self->organism_id($organism_id);
+    }
 
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+    foreach my $a (@{$self->cross_stock_ids()}) {
+        my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
 
-
-
+        if ($already_exists) {
+            print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
+            next;
+        }
+        my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
+            object_id => $self->seedlot_id(),
+            subject_id => $a,
+            type_id => $type_id,
+        });
+    }
 }
 
-sub _retrieve_cross {
-    my $self = shift;
-
-}
-
-sub _remove_cross {
-    my $self = shift;
-
-
-
-}
 
 sub _store_seedlot_location {
     my $self = shift;
@@ -477,6 +487,9 @@ sub _store_seedlot_relationships {
 
     eval {
         $error = $self->_store_seedlot_accessions();
+        if (!$error){
+            $error = $self->_store_seedlot_crosses();
+        }
         if (!$error){
             my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
             my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({
@@ -521,6 +534,40 @@ sub _store_seedlot_accessions {
         });
     }
 }
+
+sub _update_cross_stock_ids {
+    my $self = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'type_id'=>$type_id});
+    while (my $r=$acc_rs->next){
+        $r->delete();
+    }
+    my $error = $self->_store_seedlot_crosses();
+    return $error;
+}
+
+sub _retrieve_crosses {
+    my $self = shift;
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
+
+    my @cross_ids;
+    while (my $row = $rs->next()) {
+        push @cross_ids, $row->subject_id();
+    }
+
+    $self->cross_stock_ids(\@cross_ids);
+
+    $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@cross_ids }});
+    my @names;
+    while (my $s = $rs->next()) {
+        push @names, [ $s->stock_id(), $s->uniquename() ];
+    }
+    $self->crosses(\@names);
+}
+
 
 sub _update_seedlot_breeding_program {
     my $self = shift;
@@ -679,9 +726,28 @@ sub store {
                     }
                 }
                 if ($accessions_have_changed && scalar(@$transactions)>1){
-                    $error = "This seedlot ".$self->uniquename." has been used in transactions, so the accessions cannot be changed now!";
+                    $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (accessions) cannot be changed now!";
                 } else {
                     $error = $self->_update_accession_stock_ids();
+                }
+                if ($error){
+                    die $error;
+                }
+            }
+            if($self->cross_stock_ids){
+                my $input_cross_ids = $self->cross_stock_ids;
+                my $transactions = $self->transactions();
+                my %stored_crosses = map {$_->[0] => 1} @{$self->crosses};
+                my $crosses_have_changed;
+                foreach (@$input_cross_ids){
+                    if (!exists($stored_crosses{$_})){
+                        $crosses_have_changed = 1;
+                    }
+                }
+                if ($crosses_have_changed && scalar(@$transactions)>1){
+                    $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (crosses) cannot be changed now!";
+                } else {
+                    $error = $self->_update_cross_stock_ids();
                 }
                 if ($error){
                     die $error;
