@@ -107,6 +107,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
     $c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
     $c->stash->{expression_atlas_url} = $c->config->{expression_atlas_url};
+    $c->stash->{main_production_site_url} = $c->config->{main_production_site_url};
     $c->stash->{site_project_name} = $c->config->{project_name};
     $c->stash->{sgn_session_id} = $c->req->cookie('sgn_session_id');
     $c->stash->{user_name} = $c->user->get_object->get_username;
