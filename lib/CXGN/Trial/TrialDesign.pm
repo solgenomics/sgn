@@ -365,7 +365,9 @@ sub _get_crd_design {
 
         $plot_info{'stock_name'} = $stock_names[$i];
         $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        if ($plot_info{'seedlot_name'}){
+            $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        }
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
@@ -525,7 +527,9 @@ sub _get_p_rep_design {
            }
        }
        $plot_info{'seedlot_name'} = $seedlot_hash{$plot_info{'stock_name'}}->[0];
-       $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+       if ($plot_info{'seedlot_name'}){
+           $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+       }
        $plot_info{'block_number'} = $block_numbers[$i];
        $plot_info{'plot_name'} = $converted_plot_numbers[$i];
        $plot_info{'row_number'} = $row_numbers[$i];
@@ -666,7 +670,9 @@ sub _get_rcbd_design {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $block_numbers[$i];
@@ -852,7 +858,9 @@ sub _get_alpha_lattice_design {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
@@ -1016,7 +1024,9 @@ sub _get_lattice_design {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
@@ -1126,7 +1136,9 @@ sub _get_augmented_design {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
@@ -1342,7 +1354,9 @@ sub _get_madii_design {
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1583,7 +1597,9 @@ sub _get_madiii_design {
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1824,7 +1840,9 @@ sub _get_madiv_design {
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1942,7 +1960,9 @@ sub _get_greenhouse_design {
         my %plot_info;
         $plot_info{'stock_name'} = $accession_list[$i];
         $plot_info{'seedlot_name'} = $seedlot_hash{$accession_list[$i]}->[0];
-        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        if ($plot_info{'seedlot_name'}){
+            $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        }
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = 1;
         $plot_info{'plot_name'} = $plot_numbers[$i];
@@ -2147,7 +2167,9 @@ sub _get_splitplot_design {
 
         $plot_info{'stock_name'} = $stock_names[$i];
         $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
-        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        if ($plot_info{'seedlot_name'}){
+            $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        }
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
@@ -2197,7 +2219,7 @@ sub _check_controls_and_accessions_lists {
     my %control_names_lookup = map { $_ => 1 } @control_list_crbd;
     foreach my $stock_name_iter (@stock_list) {
         if (exists($control_names_lookup{$stock_name_iter})) {
-            die "Names in accessions list cannot be used also as controls. Please use separate lists for your controls and your accessions.\n";
+            #die "Names in accessions list cannot be used also as controls. Please use separate lists for your controls and your accessions. The following accession is in both lists and is a problem: $stock_name_iter\n";
         }
     }
 }
