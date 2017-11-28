@@ -669,8 +669,16 @@ sub store {
 
         } else { #Updating seedlot
             if($self->accession_stock_ids){
+                my $input_accession_ids = $self->accession_stock_ids;
                 my $transactions = $self->transactions();
-                if (scalar(@$transactions)>1){
+                my %stored_accessions = map {$_->[0] => 1} @{$self->accessions};
+                my $accessions_have_changed;
+                foreach (@$input_accession_ids){
+                    if (!exists($stored_accessions{$_})){
+                        $accessions_have_changed = 1;
+                    }
+                }
+                if ($accessions_have_changed && scalar(@$transactions)>1){
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the accessions cannot be changed now!";
                 } else {
                     $error = $self->_update_accession_stock_ids();
