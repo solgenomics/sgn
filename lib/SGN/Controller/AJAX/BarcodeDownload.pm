@@ -21,6 +21,7 @@ use Try::Tiny;
 use JSON;
 use Barcode::Code128;
 use PDF::API2;
+use Sort::Versions;
 use Tie::UrlEncoder; our(%urlencode);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -178,7 +179,10 @@ __PACKAGE__->config(
        my $col_num = 0;
        my $row_num = 0;
        
-       foreach my $key (sort { $a <=> $b} keys %design) {
+       my $sort_order = $page_params{'sort_order'};
+       # print STDERR "Sort order is $sort_order\n";
+       # sort with method that can handle numbers and strings
+       foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
            
            print STDERR "Design key is $key\n";
            my %design_info = %{$design{$key}};

@@ -127,7 +127,14 @@
         <div class="col-md-2">
             <center>
                 <label>Sort by:</label>
-                <select class="form-control" id="sort_by" name="sort_by"></select>
+                <select class="form-control" id="sort_order" name="sort_by">
+                    <option value="accession_name">Accession Name</option>
+                    <option value="plot_name">Plot Name</option>
+                    <option value="plot_number">Plot Number</option>
+                    <option value="rep_number">Rep Number</option>
+                    <option value="row_number">Row Number</option>
+                    <option value="column_number">Column Number</option>
+                </select>
             </center>
         </div>
         <div class="col-md-2">

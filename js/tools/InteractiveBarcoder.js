@@ -318,15 +318,13 @@ $(document).ready(function($) {
     
     $('#trial_select').focus();
     
-    var fields = ["Accession","Plot_Name","Plot_Number","Rep_Number","Row_Number","Col_Number","Trial_Name","Year","Pedigree_String"];
-    
-    var builder = textTemplater.builder("#d3-custom-templater", fields);
+    // var builder = textTemplater.builder("#d3-custom-templater", fields);
     
     $("#edit_print_settings").on("click", function() { 
         $('#editPrintSettingsModal').modal('show');
     });
     
-    $(document).on("change", "#d3-custom-content", function() {
+    $(document).on("change", "#d3-custom-templater", function() {
         var tstring = builder.getTemplate();
         $("#d3-custom-content").val(tstring);
     });
@@ -392,6 +390,9 @@ $(document).ready(function($) {
                     },];
                     
                     createAdders(add_fields);
+                    
+                    var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
+                    var builder = textTemplater.builder("#d3-custom-templater", fields);
                     
                     document.getElementById("d3-page-format").style.display = "inline";
                     var page_type_select = d3.select("#d3-page-type-select");
@@ -631,6 +632,7 @@ $(document).ready(function($) {
             number_of_rows: label_sizes[label_type].number_of_rows -1, // for 0 indexing
             page_width: page_formats[page_type].page_width || document.getElementById("d3-page-custom-width").value,
             page_height: page_formats[page_type].page_height || document.getElementById("d3-page-custom-height").value,
+            sort_order: document.getElementById("sort_order").value,
             num_labels: document.getElementById("num_labels").value
         }
         var page_json = JSON.stringify(page_params);
