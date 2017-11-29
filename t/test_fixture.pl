@@ -172,8 +172,6 @@ else {
     }
 }
 
-print STDERR "\n Got here \n";
-
 my $prove_pid = fork;
 unless( $prove_pid ) {
 

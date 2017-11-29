@@ -1,6 +1,20 @@
 #!/usr/bin/env perl
 
-#`./run_fixture_and_db_patches.pl -u postgres -p postgres -h localhost -d fixture -e janedoe -s 00085 -t`
+=head1 Usage
+
+Usage: ./run_fixture_and_db_patches.pl -u <dbuser> -p <dbpassword> -h <dbhost> -d <dbname> -e <editinguser> [-s <startfrom>] [--test]
+
+-u, --user=         database login username   
+-p, --pass=         database login pasword    
+-h, --host=         database host
+-d, --db=           database name
+-e, --editinguser=  user to write as patch executor
+-s, --startfrom=0   start patches from folder # (Default: 0)
+-t, --test          Do not make permanent changes.      
+
+e.g. `./run_fixture_and_db_patches.pl -u postgres -p postgres -h localhost -d fixture -e janedoe -s 00085 -t`
+
+=cut
 
 use strict;
 use warnings;
