@@ -232,8 +232,8 @@ sub add_cross_POST :Args(0) {
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
-    my $female_plot = $c->req->param('female_plot') || 0;
-    my $male_plot = $c->req->param('male_plot') || 0;
+    my $female_plot_id = $c->req->param('female_plot');
+    my $male_plot_id = $c->req->param('male_plot');
     #print STDERR "Female Plot=".Dumper($female_plot)."\n";
 
     if (!$c->user()) {
@@ -262,7 +262,7 @@ sub add_cross_POST :Args(0) {
           my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
           print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
           my $success = $self->
-          ($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot, $male_plot, $maternal, $paternal);
+          ($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
           if (!$success) {
             return;
           }
@@ -280,7 +280,7 @@ sub add_cross_POST :Args(0) {
               next;
             }
             my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot, $male_plot, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
             if (!$success) {
               return;
             }
@@ -295,7 +295,7 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $paternal = $paternal_parents[$i];
             my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot, $male_plot, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
             if (!$success) {
               return;
             }
@@ -304,7 +304,7 @@ sub add_cross_POST :Args(0) {
       else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot, $male_plot, $maternal, $paternal);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
         if (!$success) {
           return;
         }
@@ -570,8 +570,10 @@ sub add_individual_cross {
   my $cross_name = shift;
   my $cross_type = shift;
   my $crossing_trial_id = shift;
-  my $female_plot = shift;
-  my $male_plot = shift;
+  my $female_plot_id = shift;
+  my $female_plot;
+  my $male_plot_id = shift;
+  my $male_plot;
   my $maternal = shift;
   my $paternal = shift;
   my $owner_name = $c->user()->get_object()->get_username();
@@ -590,6 +592,17 @@ sub add_individual_cross {
   my $visible_to_role = $c->req->param('visible_to_role');
 
   print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
+
+  if ($female_plot_id){
+      my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
+      $female_plot = $female_plot_rs->name();
+  }
+
+  if ($male_plot_id){
+      my $male_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $male_plot_id});
+      $male_plot = $male_plot_rs->name();
+  }
+
 
   #check that progeny number is an integer less than maximum allowed
   my $maximum_progeny_number = 999; #higher numbers break cross name convention
@@ -647,6 +660,16 @@ return 0;
     $cross_to_add->set_male_parent($male_individual);
   }
 
+  if ($female_plot) {
+    my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $female_plot);
+    $cross_to_add->set_female_plot($female_plot_individual);
+  }
+
+  if ($male_plot) {
+    my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $male_plot);
+    $cross_to_add->set_male_plot($male_plot_individual);
+  }
+
 
   $cross_to_add->set_cross_type($cross_type);
   $cross_to_add->set_name($cross_name);
@@ -661,8 +684,8 @@ my $cross_add = CXGN::Pedigree::AddCrosses
   dbh => $dbh,
   location => $location,
   crossing_trial_id => $crossing_trial_id,
-  female_plot => $female_plot,
-  male_plot => $male_plot,
+  #female_plot => $female_plot,
+  #male_plot => $male_plot,
   crosses =>  \@array_of_pedigree_objects,
   owner_name => $owner_name,
     });
