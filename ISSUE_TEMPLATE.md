@@ -8,7 +8,7 @@ Expected Behavior <!-- Describe the desired or expected behavour here. -->
 For Bugs:
 ---------
 
-### Enviroment 
+### Environment 
 <!-- Where did you encounter the error. -->
 
 #### Steps to Reproduce
