@@ -194,6 +194,8 @@ sub get_layout_output {
                 push @treatment_units_array, $treatment_units;
             }
         }
+    } elsif ($self->data_level eq 'plate') {
+        @possible_cols = ('plot_number','plot_name','accession_name','pedigree','genus','species','trial_name','genotyping_project_name','genotyping_user_id','location_name');
     }
 
     my @header;
@@ -461,6 +463,30 @@ sub get_layout_output {
                 }
                 $subplot_num++;
             }
+        } elsif ($self->data_level eq 'plate') {
+            my @line;
+            foreach (@possible_cols){
+                if ($selected_cols{$_}){
+                    if ($_ eq 'location_name'){
+                        push @line, $location_name;
+                    } elsif ($_ eq 'trial_name'){
+                        push @line, $trial_name;
+                    } elsif ($_ eq 'pedigree'){
+                        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                        push @line, $accession->get_pedigree_string('Parents');
+                    } elsif ($_ eq 'genus'){
+                        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                        push @line, $accession->genus;
+                    } elsif ($_ eq 'species'){
+                        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                        push @line, $accession->species;
+                    } else {
+                        push @line, $design_info{$_};
+                    }
+                }
+            }
+
+            push @output, \@line;
         }
     }
     print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
