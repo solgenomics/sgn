@@ -362,6 +362,8 @@ sub update_plot_phenotype_POST : Args(0) {
   $data{$plot_name}->{$trait} = [$trait_value,$timestamp];
 
   my %phenotype_metadata;
+  $phenotype_metadata{'archived_file'} = 'none';
+  $phenotype_metadata{'archived_file_type'}="direct phenotyping";
   $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
   $phenotype_metadata{'date'}="$timestamp";
   my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;

@@ -5,6 +5,7 @@ $expression_atlas_url
 $site_project_name
 $sgn_session_id
 $user_name
+$main_production_site_url
 </%args>
 
 <div class="well">
@@ -64,11 +65,14 @@ $user_name
                     <label class="col-sm-3 control-label">Export Options: </label>
                     <div class="col-sm-9" >
                         <select class="form-control" id="expression_atlas_export_type">
+                            <option value="6">3 Dimensions are: Traits, Row Number, Col Number</option>
+%  if ($site_project_name eq 'CASS'){
                             <option value="1">3 Dimensions are: Metabolites, Accessions + Plant Age + Sampling Time of Day, Tissues</option>
                             <option value="2">2 Dimensions are: Metabolites + Tissues and Agronomic Traits, Accessions + Plant Age</option>
                             <option value="3">2 Dimensions are: Metabolites + Tissues (Week 16) and Agronomic Traits (Week 16), Accessions</option>
                             <option value="4">2 Dimensions are: Metabolites + Tissues (Week 16) and Agronomic Traits (Week 52), Accessions</option>
                             <option value="5">2 Dimensions are: Metabolites + Tissues (Week 16) and Agronomic Traits (Week 52), Accessions (EXCLUDING TMEB419)</option>
+%  }
                         </select>
                     </div>
                 </div>
@@ -154,7 +158,7 @@ jQuery(document).ready(function() {
 
             new jQuery.ajax({
                 type: 'GET',
-                url: "<% $expression_atlas_url %>/expression_viewer/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(combined_trial_ids)+"&trait_id_list="+JSON.stringify(combined_trait_ids)+"&accession_id_list="+JSON.stringify(combined_accession_ids)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type+"&<% $sgn_session_id %>&user_name=<% $user_name %>",
+                url: "<% $expression_atlas_url %>/expression_viewer/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(combined_trial_ids)+"&trait_id_list="+JSON.stringify(combined_trait_ids)+"&accession_id_list="+JSON.stringify(combined_accession_ids)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type+"&<% $sgn_session_id %>&user_name=<% $user_name %>&main_production_site_url=<% $main_production_site_url %>",
                 beforeSend: function() {
                     jQuery('#working_modal').modal('show');
                 },
