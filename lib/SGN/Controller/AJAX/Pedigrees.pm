@@ -259,6 +259,19 @@ sub _get_pedigrees_from_file {
     return \@pedigrees;
 }
 
+###################
+#
+=item get_full_pedigree
+
+Usage:
+    GET "/ajax/pedigrees/get_full?stock_id=<STOCK_ID>";
+
+Responds with JSON array containing pedigree relationship objects for the 
+accession identified by STOCK_ID and all of its parents (recursively).
+
+=cut
+#
+###################
 sub get_full_pedigree : Path('/ajax/pedigrees/get_full') : ActionClass('REST') { }
 sub get_full_pedigree_GET {
     my $self = shift;
@@ -270,7 +283,6 @@ sub get_full_pedigree_GET {
     my @queue = ($stock_id);
     my $nodes = [];
     while (@queue){
-        print STDERR Dumper(@queue);
         my $node = pop @queue;
         my $relationships = _get_relationships($schema, $mother_cvterm, $father_cvterm, $node);
         if ($relationships->{parents}->{mother}){
@@ -284,6 +296,19 @@ sub get_full_pedigree_GET {
     $c->stash->{rest} = $nodes;
 }
 
+###################
+#
+=item get_relationships
+
+Usage:
+    GET "/ajax/pedigrees/get_relationships?stock_id=<STOCK_ID>[&stock_id=<STOCK_ID>...]";
+
+Responds with JSON array containing pedigree relationship objects for the 
+accessions identified by the provided STOCK_IDs.
+
+=cut
+#
+###################
 sub get_relationships : Path('/ajax/pedigrees/get_relationships') : ActionClass('REST') { }
 sub get_relationships_GET {
     my $self = shift;
@@ -342,6 +367,7 @@ sub _get_pedigree_parents {
     }
     return $parents;
 }
+
 sub _get_pedigree_children {
     my $schema = shift;
     my $mother_cvterm = shift;
@@ -369,6 +395,11 @@ sub _get_pedigree_children {
     }
     return $children;
 }
+
+# sub _trait_overlay {
+#     my $schema = shift;
+#     my $node_list = shift;
+# }
 
 
 1; 
