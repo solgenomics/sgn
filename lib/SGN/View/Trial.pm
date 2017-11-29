@@ -92,6 +92,9 @@ sub design_layout_view {
     }
 
     foreach my $key (sort { $a <=> $b} keys %design) {
+        if ($key eq 'treatments'){
+            next;
+        }
         my $plot_name = $design{$key}->{plot_name} || '';
         my $stock_name = $design{$key}->{stock_name} || '';
         my $seedlot_name = $design{$key}->{seedlot_name} || '';
