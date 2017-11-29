@@ -320,7 +320,7 @@ $(document).ready(function($) {
     $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved_design', 'refresh'));
     $('#design_list_list_select').change(
       function() {
-        load_design();
+        load_design(this.value);
     });
     
     $('#d3-save-button').click(function() {
@@ -337,10 +337,12 @@ $(document).ready(function($) {
         console.log("Label params are" + JSON.stringify(label_params));
         //label_params = JSON.stringify(label_params);
 
-        var data = page_params.slice(1, -1).split(",").join("\n");
+        var data = page_params.slice(1, -1).split(",").join("\n").replace(/"/g, '');
         console.log("label_param length is: "+label_params.length)
         for (i=0; i < label_params.length; i++) {
-            data += "\nelement"+i+": "+JSON.stringify(label_params[i]);
+            var params = JSON.stringify(label_params[i]);
+            params.replace(/"/g, '');
+            data += "\nelement"+i+": "+params;
         }
 
         list_id = lo.newList(new_name);
@@ -1089,8 +1091,33 @@ function retrievePageParams() {
     
 }
 
-function load_design() {
+function load_design (list_id) {
     //parse JSON
+    console.log("Loading design from list with ID "+list_id);
+    var lo = new CXGN.List();
+    var list_data = lo.getListData(list_id);
+    var elements = list_data.elements;
+    var hash = {};
+    elements.map(function(value){
+        console.log("Value is "+value);
+        var parts = value.pop().split(':');
+        hash[parts[0]] = parts[1];
+    });
+    console.log(JSON.stringify(hash));
+    
+    for (var key in hash) {
+        if (key.match(/element/)) {
+            //add to label
+        } else {
+            document.getElementById(key).value = hash[key];
+        }
+    console.log("List has been loaded!\n");
+    }
+    
+    // for (i = 0; i < elements.length; i++) {
+    //         element = elements[i];
+    //         var parts = element.split(':');
+    //         var field 
     //set params
     //create elements
     
