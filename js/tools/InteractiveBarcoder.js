@@ -7,7 +7,7 @@ page_formats["US Letter PDF"] = {
     label_sizes: {
             'Select a label size': {
             },
-            '1" x 2 5/8" (3x10)': {
+            '1" x 2 5/8"': {
                 label_width: 533.4,
                 label_height: 203.2,
                 left_margin: 13.68,
@@ -17,7 +17,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 3,
                 number_of_rows: 10
             },
-            '1" x 4" (2X10)': {
+            '1" x 4"': {
                 label_width: 812.8,
                 label_height: 203.2,
                 left_margin: 13.68,
@@ -27,7 +27,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 2,
                 number_of_rows: 10
             },
-            '1 1/3" x 4" (2x7)': {
+            '1 1/3" x 4"': {
                 label_width: 812.8,
                 label_height: 270.93,
                 left_margin: 13.68,
@@ -37,7 +37,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 2,
                 number_of_rows: 7
             },
-            '2" x 2 5/8" (3x5)': {
+            '2" x 2 5/8"': {
                 label_width: 533.4,
                 label_height: 406.4,
                 left_margin: 13.68,
@@ -603,7 +603,11 @@ $(document).ready(function($) {
         addToLabel(display_text, field, type, size, style, font);
     });
     
-    $("#d3-pdf-button, #d3-zpl-button").on("click", function(event) {
+    $("#d3-save-button").on("click", function() {
+        
+    });
+    
+    $("#d3-pdf-button, #d3-zpl-button").on("click", function() {
         var download_type = $(this).val();
         console.log("You clicked the download "+download_type+" button.");
 
@@ -614,8 +618,8 @@ $(document).ready(function($) {
 
         var label_elements = document.getElementsByClassName('label-element');
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        var element_objects = label_elements.map(getLabelDetails);
-        var label_json = JSON.stringify(element_objects);
+        //var element_objects = label_elements.map(getLabelDetails);
+        //var label_json = JSON.stringify(element_objects);
 
         //Get additional Params
         var trial_id = document.getElementById("trial_select").value;
@@ -623,19 +627,25 @@ $(document).ready(function($) {
         var label_sizes = page_formats[page_type].label_sizes;
 
         var label_type = d3.select("#d3-label-size-select").node().value;
-        var page_params = {
+        var design_params = {
+            page_type: d3.select("#d3-page-type-select").node().value,
+            page_width: page_formats[page_type].page_width || document.getElementById("d3-page-custom-width").value,
+            page_height: page_formats[page_type].page_height || document.getElementById("d3-page-custom-height").value,
             starting_x: label_sizes[label_type].left_margin,
             starting_y: page_formats[page_type].page_height - label_sizes[label_type].top_margin,
             x_increment: (label_sizes[label_type].label_width/2.83)  + label_sizes[label_type].horizontal_gap,
             y_increment: - ((label_sizes[label_type].label_height/2.83) + label_sizes[label_type].vertical_gap), // adjusted for pdf caretesian coords
             number_of_columns: label_sizes[label_type].number_of_columns - 1, // for 0 indexing
             number_of_rows: label_sizes[label_type].number_of_rows -1, // for 0 indexing
-            page_width: page_formats[page_type].page_width || document.getElementById("d3-page-custom-width").value,
-            page_height: page_formats[page_type].page_height || document.getElementById("d3-page-custom-height").value,
+            copies_per_plot: document.getElementById("num_labels").value,
             sort_order: document.getElementById("sort_order").value,
-            num_labels: document.getElementById("num_labels").value
+            label_type: d3.select("#d3-label-size-select").node().value,
+            label_width: label_sizes[label_type].label_width,
+            label_height: label_sizes[label_type].label_height,
+            label_elements: label_elements.map(getLabelDetails)
         }
-        var page_json = JSON.stringify(page_params);
+        var design_json = JSON.stringify(design_params);
+        console.log("Design json is: \n"+design_json);
 
         //send to server to build pdf file
         jQuery.ajax({
@@ -644,8 +654,7 @@ $(document).ready(function($) {
             method: 'POST',
             data: {
                 'trial_id': trial_id,
-                'page_json': page_json,
-                'label_json': label_json,
+                'design_json': design_json,
                 'download_token': token
             },
             success: function(response) {

@@ -122,18 +122,16 @@ __PACKAGE__->config(
        
        # retrieve params
        my $trial_id = $c->req->param("trial_id");
-       my $label_json = $c->req->param("label_json");
-       my $page_json = $c->req->param("page_json");
+       my $design_json = $c->req->param("design_json");
        my $dl_token = $c->req->param("download_token") || "no_token";
        my $dl_cookie = "download".$dl_token;
        my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
        
        #decode json
        my $json = new JSON;
-       my $label_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_json);
-       my $page_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($page_json);
-       my @label_params = @{$label_params};
-       my %page_params = %{$page_params};
+       my $design_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+       my %design_params = %{$design_params};
+       my @label_params = @{$design_params{'label_elements'}};
        #print STDERR "Label params are @label_params\n";
        
        #get trial details
@@ -173,13 +171,13 @@ __PACKAGE__->config(
        my $page = $pdf->page();    
        my $text = $page->text();
        my $gfx = $page->gfx();
-       $page->mediabox($page_params{'page_width'}, $page_params{'page_height'});
+       $page->mediabox($design_params{'page_width'}, $design_params{'page_height'});
        
        #loop through plot data, creating and saving labels to pdf
        my $col_num = 0;
        my $row_num = 0;
        
-       my $sort_order = $page_params{'sort_order'};
+       my $sort_order = $design_params{'sort_order'};
        # print STDERR "Sort order is $sort_order\n";
        # sort with method that can handle numbers and strings
        foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
@@ -187,14 +185,15 @@ __PACKAGE__->config(
            print STDERR "Design key is $key\n";
            my %design_info = %{$design{$key}};
            
-           for (my $i=0; $i < $page_params{'num_labels'}; $i++) {
+           for (my $i=0; $i < $design_params{'copies_per_plot'}; $i++) {
                #print STDERR "Working on label num $i\n";     
-               my $x = $page_params{'starting_x'} + ($col_num * $page_params{'x_increment'});
-               my $y = $page_params{'starting_y'} + ($row_num * $page_params{'y_increment'});
+               my $x = $design_params{'starting_x'} + ($col_num * $design_params{'x_increment'});
+               my $y = $design_params{'starting_y'} + ($row_num * $design_params{'y_increment'});
                my $pedigree;
 
               foreach my $element (@label_params) {
-                  my %element = %$element;
+                  print STDERR "Element Dumper\n" . Dumper($element);
+                  my %element = %{$element};
                   my $elementx = $x + ( $element{'x'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
                   my $elementy = $y - ( $element{'y'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
 
@@ -292,14 +291,14 @@ __PACKAGE__->config(
                   
               }
                 
-               if ($col_num < $page_params{'number_of_columns'}) { #next column
+               if ($col_num < $design_params{'number_of_columns'}) { #next column
                    $col_num++;
                } else { #new row, reset col num
                    $col_num = 0;
                    $row_num++;
                }
                
-               if ($row_num > $page_params{'number_of_rows'}) {
+               if ($row_num > $design_params{'number_of_rows'}) {
                    #flush the page to save memory on big PDFs
                    $pdf->finishobjects($page, $gfx, $text);   
                    #create new page and reset row and col num
@@ -333,18 +332,17 @@ __PACKAGE__->config(
        
        # retrieve params
        my $trial_id = $c->req->param("trial_id");
-       my $label_json = $c->req->param("label_json");
-       my $page_json = $c->req->param("page_json");
+       my $design_json = $c->req->param("design_json");
        my $dl_token = $c->req->param("download_token") || "no_token";
        my $dl_cookie = "download".$dl_token;
        #my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
        
        #decode json
        my $json = new JSON;
-       my $label_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_json);
-       my $page_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($page_json);
-       my @label_params = @{$label_params};
-       my %page_params = %{$page_params};
+       my $design_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+       
+       my %design_params = %{$design_params};
+       my @label_params = @{$design_params{'label_elements'}};
        print STDERR "Label params are @label_params\n";
        
        #get trial details
@@ -412,7 +410,7 @@ __PACKAGE__->config(
                );
            print STDERR "Filled in ZPL is $label_zpl\n";
            
-           for (my $i=0; $i < $page_params{'num_labels'}; $i++) {
+           for (my $i=0; $i < $design_params{'copies_per_plot'}; $i++) {
                print STDERR "Working on label num $i\n";     
                print $ZPL $label_zpl;
            }
@@ -462,7 +460,7 @@ __PACKAGE__->config(
 #     
 #     # retrieve variable params
 #     my $trial_id = $c->req->param("trial_id");
-#     my $labels_per_stock = $c->req->param("num_labels");# || 1;
+#     my $labels_per_stock = $c->req->param("copies_per_plot");# || 1;
 #     print STDERR "trial id is $trial_id\n num labels is $labels_per_stock\n zpl is $zpl\n";
 #     #my $order_by = $c->req->param("custom_text") || 'plot_number';
 #     
