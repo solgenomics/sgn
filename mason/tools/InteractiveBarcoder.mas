@@ -21,7 +21,17 @@
                     <small id="fileHelp" class="form-text text-muted">.xls format only, columns must have unique names</small>
                 </div> -->
             </div>
-        </br>
+        </br></br></br>
+            <div class="col-md-12 form-inline" id="d3-load-design" style="display:none">
+                <div class="col-md-2">
+                    
+                    <label>Load a Saved Design:</label>
+                </div>
+                <div class="col-md-8" id="design_list">
+                </div>
+                <div class="col-md-2">
+                </div>
+            </div>
             <div class="col-md-12 form-inline" id="d3-page-format" style="display:none">
                 <div class="col-md-2">
                     </br>
@@ -135,9 +145,16 @@
             </center>
         </div>
         <div class="col-md-4">
-            <center>
-                <button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary" disabled>Save design</button>
-            </center>
+            <label>Save label design:</label>
+              <div class="input-group">
+                <input type='text' id='save_design_name' class='form-control' placeholder='Enter a name'></input>
+                <span class="input-group-btn">
+                  <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
+                </span>
+              </div>
+            <!-- <center>
+                <button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary">Save design</button>
+            </center> -->
         </div>
         <div class="col-md-4">
             <center>

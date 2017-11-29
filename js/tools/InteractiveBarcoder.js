@@ -316,6 +316,46 @@ $(document).ready(function($) {
         'empty': 1
     });
     
+    var lo = new CXGN.List();
+    $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved_design', 'refresh'));
+    $('#design_list_list_select').change(
+      function() {
+        load_design();
+    });
+    
+    $('#d3-save-button').click(function() {
+        var lo = new CXGN.List();
+        var new_name = $('#save_design_name').val();
+        console.log("Saving label design to list named " + new_name);
+        var page_params = retrievePageParams();
+        page_params = JSON.stringify(page_params);
+        console.log("Page params are" + JSON.stringify(page_params));
+        
+        var label_elements = document.getElementsByClassName('label-element');
+        label_elements = Array.prototype.slice.call(label_elements); // convert to array
+        label_params = label_elements.map(getLabelDetails);
+        console.log("Label params are" + JSON.stringify(label_params));
+        //label_params = JSON.stringify(label_params);
+
+        var data = page_params.slice(1, -1).split(",").join("\n");
+        console.log("label_param length is: "+label_params.length)
+        for (i=0; i < label_params.length; i++) {
+            data += "\nelement"+i+": "+JSON.stringify(label_params[i]);
+        }
+
+        list_id = lo.newList(new_name);
+        if (list_id > 0) {
+            var elementsAdded = lo.addToList(list_id, data);
+            lo.setListType(list_id, 'dataset');
+        }
+        if (elementsAdded) {
+            alert("Saved label design with name " + new_name);
+        }
+
+    });
+
+    
+    
     $('#trial_select').focus();
     
     // var builder = textTemplater.builder("#d3-custom-templater", fields);
@@ -393,8 +433,10 @@ $(document).ready(function($) {
                     
                     var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
                     var builder = textTemplater.builder("#d3-custom-templater", fields);
-                    
+
                     document.getElementById("d3-page-format").style.display = "inline";
+                    document.getElementById("d3-load-design").style.display = "inline";
+                    
                     var page_type_select = d3.select("#d3-page-type-select");
                     page_type_select.selectAll("option")
                         .data(Object.keys(page_formats))
@@ -616,35 +658,13 @@ $(document).ready(function($) {
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         manage_dl_with_cookie(token, ladda);
 
+        var trial_id = document.getElementById("trial_select").value;
+        var design = retrievePageParams();
         var label_elements = document.getElementsByClassName('label-element');
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        //var element_objects = label_elements.map(getLabelDetails);
-        //var label_json = JSON.stringify(element_objects);
+        design.label_elements = label_elements.map(getLabelDetails)
 
-        //Get additional Params
-        var trial_id = document.getElementById("trial_select").value;
-        var page_type = d3.select("#d3-page-type-select").node().value;
-        var label_sizes = page_formats[page_type].label_sizes;
-
-        var label_type = d3.select("#d3-label-size-select").node().value;
-        var design_params = {
-            page_type: d3.select("#d3-page-type-select").node().value,
-            page_width: page_formats[page_type].page_width || document.getElementById("d3-page-custom-width").value,
-            page_height: page_formats[page_type].page_height || document.getElementById("d3-page-custom-height").value,
-            starting_x: label_sizes[label_type].left_margin,
-            starting_y: page_formats[page_type].page_height - label_sizes[label_type].top_margin,
-            x_increment: (label_sizes[label_type].label_width/2.83)  + label_sizes[label_type].horizontal_gap,
-            y_increment: - ((label_sizes[label_type].label_height/2.83) + label_sizes[label_type].vertical_gap), // adjusted for pdf caretesian coords
-            number_of_columns: label_sizes[label_type].number_of_columns - 1, // for 0 indexing
-            number_of_rows: label_sizes[label_type].number_of_rows -1, // for 0 indexing
-            copies_per_plot: document.getElementById("num_labels").value,
-            sort_order: document.getElementById("sort_order").value,
-            label_type: d3.select("#d3-label-size-select").node().value,
-            label_width: label_sizes[label_type].label_width,
-            label_height: label_sizes[label_type].label_height,
-            label_elements: label_elements.map(getLabelDetails)
-        }
-        var design_json = JSON.stringify(design_params);
+        var design_json = JSON.stringify(design);
         console.log("Design json is: \n"+design_json);
 
         //send to server to build pdf file
@@ -1041,4 +1061,37 @@ function manage_dl_with_cookie(token, ladda) {
             ladda.stop();
         }
     }, 500);
+}
+
+function retrievePageParams() {
+
+    var page_type = d3.select("#d3-page-type-select").node().value;
+    var label_type = d3.select("#d3-label-size-select").node().value;
+    var label_sizes = page_formats[page_type].label_sizes;
+    
+    var page_params = {
+        page_type: d3.select("#d3-page-type-select").node().value,
+        page_width: page_formats[page_type].page_width || document.getElementById("d3-page-custom-width").value,
+        page_height: page_formats[page_type].page_height || document.getElementById("d3-page-custom-height").value,
+        starting_x: label_sizes[label_type].left_margin,
+        starting_y: page_formats[page_type].page_height - label_sizes[label_type].top_margin,
+        x_increment: (label_sizes[label_type].label_width/2.83)  + label_sizes[label_type].horizontal_gap,
+        y_increment: - ((label_sizes[label_type].label_height/2.83) + label_sizes[label_type].vertical_gap), // adjusted for pdf caretesian coords
+        number_of_columns: label_sizes[label_type].number_of_columns - 1, // for 0 indexing
+        number_of_rows: label_sizes[label_type].number_of_rows -1, // for 0 indexing
+        copies_per_plot: document.getElementById("num_labels").value,
+        sort_order: document.getElementById("sort_order").value,
+        label_type: d3.select("#d3-label-size-select").node().value,
+        label_width: label_sizes[label_type].label_width,
+        label_height: label_sizes[label_type].label_height,
+    }
+    return page_params;
+    
+}
+
+function load_design() {
+    //parse JSON
+    //set params
+    //create elements
+    
 }
