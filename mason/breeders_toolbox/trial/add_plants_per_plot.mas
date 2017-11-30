@@ -186,6 +186,7 @@ jQuery(document).ready(function() {
             }
             if (response.success) {
                 alert("File uploaded successfully");
+                window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
         }
     });
