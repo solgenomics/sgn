@@ -316,7 +316,6 @@ sub get_relationships_POST {
     my $c = shift;
     my $stock_ids = [];
     my $s_ids = $c->req->body_params->{stock_id};
-    print STDERR Dumper $s_ids;
     push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
