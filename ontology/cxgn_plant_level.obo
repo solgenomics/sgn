@@ -1,0 +1,51 @@
+format-version: 1.0
+data-version: 1
+date: 05:23:2016 03:00
+saved-by: sgn
+default-namespace: cxgn_plant_level_ontology
+remark: none
+ontology: cxgn_plant_level
+
+[Term]
+id: PLANT_LEVEL:0000000
+name: Plant_level
+
+[Term]
+id: PLANT_LEVEL:0000001
+name: generation
+def: "Categorical plant generations." []
+is_a: PLANT_LEVEL:0000000
+
+[Term]
+id: PLANT_LEVEL:0000002
+name: cycle 1
+synonym: "C1" EXACT []
+def: "First cycle." []
+is_a: PLANT_LEVEL:0000001
+
+[Term]
+id: PLANT_LEVEL:0000003
+name: cycle 2
+synonym: "C2" EXACT []
+def: "Second cycle." []
+is_a: PLANT_LEVEL:0000001
+
+[Term]
+id: PLANT_LEVEL:0000004
+name: cycle 3
+synonym: "C3" EXACT []
+def: "Third cycle." []
+is_a: PLANT_LEVEL:0000001
+
+[Term]
+id: PLANT_LEVEL:0000005
+name: Leaf level
+def: "Categorical leaf levels." []
+is_a: PLANT_LEVEL:0000000
+
+[Term]
+id: PLANT_LEVEL:0000006
+name: leaf rank 1
+synonym: "L1" EXACT []
+def: "First leaf." []
+is_a: PLANT_LEVEL:0000005
