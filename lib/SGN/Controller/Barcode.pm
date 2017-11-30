@@ -119,7 +119,8 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
        $text = $stock_name;
    }
    elsif ($stock_type eq 'crossing') {
-       $text = "stock name: ".$stock_name. "\n plot_id: ". $stock_id. "\n".$field_info;
+       $text = $stock_id;
+       #$text = "stock name: ".$stock_name. "\n plot_id: ". $stock_id. "\n".$field_info;
    }
    else {
        $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
