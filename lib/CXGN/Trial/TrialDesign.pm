@@ -2214,8 +2214,8 @@ sub _get_splitplot_design {
 
 sub _check_controls_and_accessions_lists {
     my $self = shift;
-    my @stock_list = @{$self->get_stock_list()};
-    my @control_list_crbd = @{$self->get_control_list_crbd()};
+    my @stock_list = $self->get_stock_list() ? @{$self->get_stock_list()} : ();
+    my @control_list_crbd = $self->get_control_list_crbd() ? @{$self->get_control_list_crbd()} : ();
     my %control_names_lookup = map { $_ => 1 } @control_list_crbd;
     foreach my $stock_name_iter (@stock_list) {
         if (exists($control_names_lookup{$stock_name_iter})) {
