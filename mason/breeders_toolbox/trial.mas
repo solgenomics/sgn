@@ -310,7 +310,7 @@ my $start_time = time();
 </&>
 
 <& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
-<&| /page/info_section.mas, id => "trial_treatments", title=>"Treatments",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_detail_page_add_treatment'>Add Treatment</a>]" &>
+<&| /page/info_section.mas, id => "trial_treatments", title=>"Field Management Factors",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_detail_page_add_treatment'>Add Management Factor</a>]" &>
 
 <& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id &>
 
