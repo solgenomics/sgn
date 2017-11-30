@@ -296,6 +296,7 @@ my $start_time = time();
 
 % if (!$has_plant_entries) {
    <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
+   <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries</button>
    <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 % } else {
