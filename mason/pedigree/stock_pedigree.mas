@@ -212,18 +212,23 @@ $stock_id
     });
     function load_nodes(to_load,callback){
         if (to_load.length<1) return;
-        var req_url = "/ajax/pedigrees/get_relationships?stock_id=";
-        req_url+=to_load.join("&stock_id=");
-        d3.json(req_url,function(loaded){
-            var nodes = loaded.filter(function(node){
-                if (!loaded_nodes.hasOwnProperty(node.id)){
-                    loaded_nodes[node.id] = node;
-                    return true;
-                }
-                return false;
+        var req_url = "/ajax/pedigrees/get_relationships";
+        var body = "stock_id="+to_load.join("&stock_id=");
+        d3.request(req_url)
+            .mimeType("application/json")
+            .header("X-Requested-With", "XMLHttpRequest")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .response(function(xhr){return JSON.parse(xhr.responseText);})
+            .post(body,function(loaded){
+                var nodes = loaded.filter(function(node){
+                    if (!loaded_nodes.hasOwnProperty(node.id)){
+                        loaded_nodes[node.id] = node;
+                        return true;
+                    }
+                    return false;
+                });
+                callback(nodes);
             });
-            callback(nodes);
-        });
     };
     
     function main(start_nodes) {  

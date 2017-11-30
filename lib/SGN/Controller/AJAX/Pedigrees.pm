@@ -301,7 +301,8 @@ sub get_full_pedigree_GET {
 =item get_relationships
 
 Usage:
-    GET "/ajax/pedigrees/get_relationships?stock_id=<STOCK_ID>[&stock_id=<STOCK_ID>...]";
+    POST "/ajax/pedigrees/get_relationships";
+    BODY "stock_id=<STOCK_ID>[&stock_id=<STOCK_ID>...]"
 
 Responds with JSON array containing pedigree relationship objects for the 
 accessions identified by the provided STOCK_IDs.
@@ -310,11 +311,12 @@ accessions identified by the provided STOCK_IDs.
 #
 ###################
 sub get_relationships : Path('/ajax/pedigrees/get_relationships') : ActionClass('REST') { }
-sub get_relationships_GET {
+sub get_relationships_POST {
     my $self = shift;
     my $c = shift;
     my $stock_ids = [];
-    my $s_ids = $c->req->params->{stock_id};
+    my $s_ids = $c->req->body_params->{stock_id};
+    print STDERR Dumper $s_ids;
     push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
