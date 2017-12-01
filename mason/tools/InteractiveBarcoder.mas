@@ -6,6 +6,11 @@
 <div class="row">
     
     <div class="well col-md-12">
+        <div class="col-md-12 form-inline">
+            <center>
+                <h4>Format Options</h4>
+            </center>
+        </div>
             <div class="col-md-12 form-inline">
                 <label class="col-md-2 col-form-label">Data Source:</label>
                 <div class="col-md-8">
@@ -95,7 +100,7 @@
     <div id="d3-adders" class="well col-md-12" style="display:none">
         <div class="col-md-12 form-inline">
             <center>
-                <h4>Design Options</h4>
+                <h4>Add Label Elements</h4>
             </center>
         </div>
         <div class="col-md-12 form-inline">
@@ -141,7 +146,15 @@
         </div>
         <div class="col-md-4">
             <center>
+            </br>
                 <button class="btn btn-primary" id="edit_print_settings">Edit Additional Settings</button>
+            </center>
+        </div>
+        <div class="col-md-4">
+            <center>
+                </br>
+                <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none">Download pdf</button>
+                <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none">Download zpl file</button>
             </center>
         </div>
         <div class="col-md-4">
@@ -152,15 +165,6 @@
                   <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
                 </span>
               </div>
-            <!-- <center>
-                <button id="d3-save-button" title="Saving designs is not implemented yet" class="btn btn-primary">Save design</button>
-            </center> -->
-        </div>
-        <div class="col-md-4">
-            <center>
-                <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none">Download pdf</button>
-                <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none">Download zpl file</button>
-            </center>
         </div>
     </div>
 </div>
@@ -201,7 +205,7 @@
                     <div class="col-md-1"></div>
                     <div class="col-md-10">
                         <center>
-                            <label>Print Settings:</label>
+                            <label>Additional Settings:</label>
                         </br>
                         <img src="/static/img/print_setting_options.png" class="img-responsive" alt="printer settings" height="196" width="480" style="border: 1px solid black;">
                     </center>

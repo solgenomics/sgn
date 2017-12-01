@@ -921,75 +921,66 @@ function switchLabelDependentOptions(label) {
     }
 }
 
-function addToLabel(field, type, size, font, x, y, width, height) {
-    // addToLabel(value.value value.type, value.size, value.x, value.y, value.width, value.height)
-    svg = d3.select(".d3-draw-svg");
+function addToLabel(field, type, size, font, x, y, scale) {
     
-    //get display text and values
+    svg = d3.select(".d3-draw-svg");
+
+    //get label dimensions and display text
+    var page = d3.select("#page_format").node().value;
+    var label = d3.select("#label_format").node().value;
+    var label_sizes = page_formats[page].label_sizes;
+    var label_width = label_sizes[label].label_width;
+    var label_height = label_sizes[label].label_height;
     var field_data = add_fields[field];
     
-    console.log("Params are:\nField: "+field+"\nType: "+type+"\nSize: "+size+"\nFont: "+font);
-    console.log("Field data is "+JSON.stringify(field_data));
+    var element_x = (typeof x === 'undefined') ? ( label_width / 4) : x;
+    var element_y = (typeof y === 'undefined') ? ( label_height / 2) : y;
+    var element_scale = (typeof scale === 'undefined') ? 1 : scale;
+
+    console.log("X is: "+element_x+" and y is: "+element_y+" and scale is "+element_scale);
+    
+    var new_element = svg.append("g")
+        .classed("draggable", true)
+        .classed("selectable", true)
+        .call(draggable)
+        .call(doTransform, function(state, selection) {
+            state.translate[0] = element_x
+            state.translate[1] = element_y
+            state.scale = element_scale
+        });
 
     switch (type) {
         case "Code128 (1D)":
         case "QRCode (2D)":
-            var page = d3.select("#page_format").node().value;
-            var label = d3.select("#label_format").node().value;
-            var label_sizes = page_formats[page].label_sizes;
-            var label_width = label_sizes[label].label_width;
-            var label_height = label_sizes[label].label_height;
-            var new_barcode = svg.append("g")
-                .classed("barcode", true)
-                .classed("draggable", true)
-                .classed("selectable", true)
-                .call(draggable)
-                .call(selectable, true)
-                .call(doTransform, function(state, selection) {
-                    state.translate[0] += ( label_width / 2) - (100 / 2)
-                    state.translate[1] += ( label_height / 2) - (100 / 2)
-                })
-                .on("mouseup", dragSnap)
-                .append("svg:image")
-                .attr({
-                    x: x || 0,
-                    y: y || 0,
-                    class: "label-element",
-                    value: field,
-                    size: size,
-                    type: type,
-                    font: ''
-                })
-                .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(field_data.label_text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
-            new_barcode.call(doTransform, doSnap);
+            new_element.classed("barcode", true)
+            .call(selectable, true)
+            .append("svg:image")
+            .attr({
+                "class": "label-element",
+                "value": field,
+                "size": size,
+                "type": type
+            })
+            .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(field_data.label_text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
+            new_element.call(doTransform, doSnap);
             break;
             
         default:
-            // get style
-            var style = label_options[type].fonts[font] || "font-family:courier;";
-            var newTB = svg.append("g")
-                .classed("text-box", true);
-            var newText = newTB
-                .append("text")
-                .attr({
-                    "font-size": size,
-                    "size": size,
-                    "type": type,
-                    "font": font,
-                    "style": style,
-                    "dominant-baseline": "mathematical",
-                    // text: field_data.label_text,
-                    value: field,
-                    class: "label-element",
-                })
-                .text(field_data.label_text);
-            newTB.classed("draggable", true)
-                .classed("selectable", true)
-                .call(draggable)
-                .call(selectable, false)
-                .on("mouseup", dragSnap);
+            new_element.classed("text-box", true)
+            .call(selectable, false)
+            .append("text")
+            .attr({
+                "class": "label-element",
+                "value": field,
+                "size": size,
+                "type": type,
+                "font-size": size,
+                "font": font,
+                "style": label_options[type].fonts[font] || "font-family:courier;",
+                "dominant-baseline": "mathematical",
+            })
+            .text(field_data.label_text)
             break;
-
     }
 
     var label_elements = document.getElementsByClassName('label-element');
@@ -1034,9 +1025,9 @@ function createAdders(add_fields) {
 function getLabelDetails(element, index) {
 
     var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
-    //console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
+    console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
     var coords = transform_attributes.translate;
-    var scale = transform_attributes.scale || [1, 1];
+    var scale = transform_attributes.scale[0] || 1;
     var rect = element.getBBox();
     var width = rect.width * scale[0];
     var height = rect.height * scale[1];
@@ -1046,6 +1037,7 @@ function getLabelDetails(element, index) {
         y: coords[1],
         height: height,
         width: width,
+        scale: scale,
         value: element.getAttribute("value"),
         type: element.getAttribute("type"),
         font: element.getAttribute("font"),
@@ -1055,6 +1047,7 @@ function getLabelDetails(element, index) {
 
 function parseTransform(transform) {
     var attribute_object = {};
+    console.log("transform is: "+JSON.stringify(transform));
     var attributes = transform.split(')');
 
     for (var i = 0; i < attributes.length; i++) {
@@ -1112,27 +1105,24 @@ function retrievePageParams() {
 function load_design (list_id) {
     //parse JSON
     console.log("Loading design from list with ID "+list_id);
+    
+    // clear existing draw area
+    initializeDrawArea();
     var lo = new CXGN.List();
     var list_data = lo.getListData(list_id);
     var elements = list_data.elements;
-    // console.log("type of elements is: "+typeof elements);
-    // for (var key in elements) {
-    //     console.log("Key is: "+key+"\n and value is: "+elements[key]);
-    // }
-    // console.log("Elements stringified is: "+JSON.stringify(elements));
-    // var obj = JSON.parse(JSON.stringify(elements));
+    
     for (var key in elements) {
         var array = elements[key];
         var pair = array.pop().split(/:(.+)/); // split on first :
         var property = pair[0].replace(/\"/g, '');
         var value = pair[1].replace(/\"/g, '');
-        // console.log("Property is "+property+" and value is "+value);
+        
         if (property.match(/element/)) {
             value = '{"'+ value.slice(2, -1).split(':').join('":"').split(',').join('","') + '"}';
-            console.log("Element is "+property+" and params are "+value);
             value = JSON.parse(value);
-            console.log("x and y are "+value.x+","+value.y);
-            addToLabel(value.value, value.type, value.size, value.font, value.x, value.y, value.width, value.height);
+            console.log("scale is "+value.scale);
+            addToLabel(value.value, value.type, value.size, value.font, value.x, value.y, value.scale);
         } else {
             if (property == 'page_format') {
                 switchPageDependentOptions(value);
@@ -1140,12 +1130,8 @@ function load_design (list_id) {
             document.getElementById(property).value = value;
         }
     }
-    // var page = d3.select("#page_format").node().value;
-    // switchPageDependentOptions(page);
     var label = d3.select("#label_format").node().value;
     switchLabelDependentOptions(label);
-    // document.getElementById("d3-draw-div").style.display = "inline";
-    // document.getElementById("d3-adders").style.display = "inline";
     console.log("List has been loaded!\n");
 
 }
