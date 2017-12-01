@@ -174,12 +174,12 @@ __PACKAGE__->config(
        $page->mediabox($design_params{'page_width'}, $design_params{'page_height'});
        
        #loop through plot data, creating and saving labels to pdf
-       my $col_num = 0;
-       my $row_num = 0;
+       my $col_num = 1;
+       my $row_num = 1;
        
        my $sort_order = $design_params{'sort_order'};
        # print STDERR "Sort order is $sort_order\n";
-       # sort with method that can handle numbers and strings
+       # primary sort on selected design field using a method that can handle numbers and strings. Secondary /default sort by plot num
        foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
            
            print STDERR "Design key is $key\n";
@@ -187,8 +187,8 @@ __PACKAGE__->config(
            
            for (my $i=0; $i < $design_params{'copies_per_plot'}; $i++) {
                #print STDERR "Working on label num $i\n";     
-               my $x = $design_params{'starting_x'} + ($col_num * $design_params{'x_increment'});
-               my $y = $design_params{'starting_y'} + ($row_num * $design_params{'y_increment'});
+               my $x = $design_params{'left_margin'} + ($design_params{'label_width'} + $design_params{'horizontal_gap'}) * ($col_num-1);
+               my $y = $design_params{'page_height'} - $design_params{'top_margin'} - ($design_params{'label_height'} + $design_params{'vertical_gap'}) * ($row_num-1);
                my $pedigree;
 
               foreach my $element (@label_params) {
@@ -275,7 +275,7 @@ __PACKAGE__->config(
                   } 
                   else {
                        # Add a built-in font to the PDF
-                       my $font = $pdf->corefont($element{'type'});
+                       my $font = $pdf->corefont($element{'font'});
        
                        # Add text to the page
                        my $adjusted_size = $element{'size'} / $dots_to_pixels_conversion_factor; # scale to 72 pts per inch
@@ -436,7 +436,7 @@ __PACKAGE__->config(
 #     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 #     
 #     # Zebra design params, hard coded to 3x10 labels for now
-#     my $starting_x = 20;
+#     my $left_margin = 20;
 #     my $starting_y = 60;
 #     my $x_increment = 590;
 #     my $y_increment = 213;
@@ -526,7 +526,7 @@ __PACKAGE__->config(
 #         
 #         for (my $i=0; $i < $labels_per_stock; $i++) {
 #             print STDERR "Working on label num $i\n";     
-#             my $x = $starting_x + ($col_num * $x_increment);
+#             my $x = $left_margin + ($col_num * $x_increment);
 #             my $y = $starting_y + ($row_num * $y_increment);
 #             
 #             my $label_zpl = $zpl_template->fill_in(

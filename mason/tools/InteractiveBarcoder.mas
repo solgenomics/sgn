@@ -50,13 +50,13 @@
                     <div class="col-md-3">
                         <center>
                             <label>Page Width:</label></br>
-                            <input class="form-control" placeholder="Page Width in mm" type="number" id="page_width" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Page Width in pixels (72/inch)" type="number" id="page_width" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-3">
                         <center>
                             <label>Page Height:</label></br>
-                            <input class="form-control" placeholder="Page Height in mm" type="number" id="page_height" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Page Height in pixels (72/inch)" type="number" id="page_height" style="max-width: 100%;">
                         </center>
                     </div>
                 </div>
@@ -74,13 +74,13 @@
                     <div class="col-md-3">
                         <center>
                             <label>Label Width:</label></br>
-                            <input class="form-control" placeholder="Label Width in mm" type="number" id="label_width" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Label Width in pixels (72/inch)" type="number" id="label_width" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-3">
                         <center>
                             <label>Label Height:</label></br>
-                            <input class="form-control" placeholder="Label Height in mm" type="number" id="label_height" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Label Height in pixels (72/inch)" type="number" id="label_height" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1">
@@ -104,7 +104,7 @@
             </center>
         </div>
         <div class="col-md-12 form-inline">
-            <div class="col-md-3" id="d3-add-field-div">
+            <div class="col-md-2" id="d3-add-field-div">
                 <center>
                     <label>Field:</label></br>
                     <select id="d3-add-field-input" class="form-control"></select>&nbsp&nbsp
@@ -116,12 +116,6 @@
                     <select id="d3-add-type-input" class="form-control"></select>&nbsp&nbsp
                 </center>
             </div>
-            <div class="col-md-3" id="d3-add-font-div">
-                <center>
-                    <label>Font:</label></br>
-                    <select id="d3-add-font-input" class="form-control"></select>&nbsp&nbsp
-                </center>
-            </div>
             <div class="col-md-3" id="d3-add-size-div">
                 <center>
                     <label>Size:</label></br>
@@ -129,12 +123,18 @@
                     <input class="form-control" id="d3-add-size-input" type="number"></input>
                 </center>
             </div>
-        </div>
-    </br>
-        <div class="col-md-12 form-inline">
-            <center>
-                <button class="btn btn-primary d3-add" id="d3-add">Add</button>
-            </center>
+            <div class="col-md-3" id="d3-add-font-div">
+                <center>
+                    <label>Font:</label></br>
+                    <select id="d3-add-font-input" class="form-control"></select>&nbsp&nbsp
+                </center>
+            </div>
+            <div class="col-md-1">
+                <center>
+                    </br>
+                    <button class="btn btn-primary d3-add" id="d3-add">Add</button>
+                </center>
+            </div>
         </div>
     </div>
     
@@ -147,7 +147,7 @@
         <div class="col-md-4">
             <center>
             </br>
-                <button class="btn btn-primary" id="edit_print_settings">Edit Additional Settings</button>
+                <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
             </center>
         </div>
         <div class="col-md-4">
@@ -197,7 +197,7 @@
 
 
 
-<div class="modal fade" id="editPrintSettingsModal" tabindex="-1" role="dialog" aria-labelledby="editPrintSettingsModal" aria-hidden="true">
+<div class="modal fade" id="editAdditionalSettingsModal" tabindex="-1" role="dialog" aria-labelledby="editAdditionalSettingsModal" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
@@ -217,13 +217,13 @@
                     <div class="col-md-5">
                         <center>
                             </br><label>Top Margin:</label></br>
-                            <input class="form-control" placeholder="Top Margin in mm" type="number" id="top_margin" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Top Margin in pixels (72/inch)" type="number" id="top_margin" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             </br><label>Left Margin:</label></br>
-                            <input class="form-control" placeholder="Left Margin in mm" type="number" id="left_margin" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Left Margin in pixels (72/inch)" type="number" id="left_margin" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -233,13 +233,13 @@
                     <div class="col-md-5">
                         <center>
                             <label>Horizontal Gap:</label></br>
-                            <input class="form-control" placeholder="Horizontal Gap in mm" type="number" id="horizontal_gap" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Horizontal Gap in pixels (72/inch)" type="number" id="horizontal_gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             <label>Vertical Gap:</label></br>
-                            <input class="form-control" placeholder="Vertical Gap in mm" type="number" id="vertical_gap" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Vertical Gap in pixels (72/inch)" type="number" id="vertical_gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -290,7 +290,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button id="d3-edit-print-settings" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
+                <button id="d3-edit-additional-settings" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
             </div>
         </div>
     </div>
