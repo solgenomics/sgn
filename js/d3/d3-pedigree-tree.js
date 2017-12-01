@@ -340,7 +340,6 @@
         // }
         //var offset_level = counts[sink_level];
         var offset_level = Math.abs((y2-y1) / nodePadding);
-        console.log(offset_level);
         var start = x2-(x2-x1)*(1-sink_ratio);
         var end = x1+(x2-x1)*(source_ratio);
         var width = (end-start);
@@ -366,7 +365,6 @@
             return child.level-1;
           });
         }
-        console.log(node.level);
       });
     }
     
@@ -425,88 +423,89 @@
           };
           for (var m = levels.length-1; m > -1 ; m--) {
             sortlevel(levels[m])
+            var level = levels[m]
+            // sort the nodes in each level by grouping them into their sibling groups
+            // sorting them first by average sortval of the sib group
+            // then sorting grouped nodes to the bottom
+            // then sorting by their individual scores.
+            var sib_group_scores = d3Collection.nest().key(function(node){return node.sib_group_id})
+              .entries(level).reduce(function(scores,group){
+                scores[group.key] = d3Array.mean(group.values,function(node){return node.sort_ypos});
+                return scores;
+              },{});
+            level.sort(function(a,b){
+              return _array_sort(
+                [sib_group_scores[a.sib_group_id],a.sib_group_id,a.type=="node-group"?1:0,a.sort_ypos,a.id],
+                [sib_group_scores[b.sib_group_id],b.sib_group_id,b.type=="node-group"?1:0,b.sort_ypos,b.id]
+              );
+            });
+            
+            //now determine the best arrangement side-toside in the level for the nodes
+            //based on wether each node is a link or not, determine padding and center for each node
+            var padding = function(anode,bnode){
+              if ((typeof anode == 'undefined') || (typeof bnode == 'undefined')){
+                return 0;
+              } else if (anode.type!=bnode.type){
+                return nodePadding/2.0;
+              } else if (anode.type=="link-intermediate") {
+                return linkPadding/2.0;
+              } else {
+                return nodePadding/2.0;
+              }
+            }
+            var total_pos = 0;
+            //build segments by determining padding require between adjacent nodes
+            var segments = [];
+            for (var i = 0; i < level.length; i++) {
+              var nextSeg = {
+                'lpad':padding(level[i-1],level[i]),
+                'rpad':padding(level[i],level[i+1]),
+                'ideal':level[i].sort_ypos
+              };
+              nextSeg.pos = total_pos+nextSeg.lpad;
+              total_pos = nextSeg.pos+nextSeg.rpad;
+              segments.push(nextSeg);
+            }
+            //two passes (leftwards and rightwards)
+            // push nodes *wards if doing so decreases avgerage distance
+            // to the ideal point (if there were no collisions) for each node
+            for (var i = 0; i < segments.length; i++) {
+              var partial = segments.slice(i);
+              var push_ideal = partial[0].ideal-partial[0].pos;
+              if (push_ideal < 0) continue;
+              var push_average = d3Array.mean(partial,function(seg){return seg.ideal-seg.pos});
+              if (push_average>0){
+                var push = d3Array.min([push_ideal,push_average]);
+                partial.forEach(function(seg){
+                  seg.pos+=push;
+                });
+              }
+            }
+            for (var i = 0; i < segments.length; i++) {
+              var rev = segments.slice(0);
+              rev.reverse();
+              var partial = rev.slice(i);
+              var push_ideal = partial[0].ideal-partial[0].pos;
+              if (push_ideal > 0) continue;
+              var push_average = d3Array.mean(partial,function(seg){return seg.ideal-seg.pos});
+              if (push_average < 0){
+                var push = d3Array.max([push_ideal,push_average]);
+                partial.forEach(function(seg){
+                  seg.pos+=push;
+                });
+              }
+            }
+            
+            //move nodes to position
+            level.forEach(function(node,i){
+              node.sort_ypos = segments[i].pos;
+            });
+          
           }
         }
         
         //group by sibling group and lay out the tree
-        levels.forEach(function(level){
-          // sort the nodes in each level by grouping them into their sibling groups
-          // sorting them first by average sortval of the sib group
-          // then sorting grouped nodes to the bottom
-          // then sorting by their individual scores.
-          var sib_group_scores = d3Collection.nest().key(function(node){return node.sib_group_id})
-            .entries(level).reduce(function(scores,group){
-              scores[group.key] = d3Array.mean(group.values,function(node){return node.sort_ypos});
-              return scores;
-            },{});
-          level.sort(function(a,b){
-            return _array_sort(
-              [sib_group_scores[a.sib_group_id],a.sib_group_id,a.type=="node-group"?1:0,a.sort_ypos,a.id],
-              [sib_group_scores[b.sib_group_id],b.sib_group_id,b.type=="node-group"?1:0,b.sort_ypos,b.id]
-            );
-          });
-          
-          //now determine the best arrangement side-toside in the level for the nodes
-          //based on wether each node is a link or not, determine padding and center for each node
-          var padding = function(anode,bnode){
-            if ((typeof anode == 'undefined') || (typeof bnode == 'undefined')){
-              return 0;
-            } else if (anode.type!=bnode.type){
-              return nodePadding/2.0;
-            } else if (anode.type=="link-intermediate") {
-              return linkPadding/2.0;
-            } else {
-              return nodePadding/2.0;
-            }
-          }
-          var total_pos = 0;
-          //build segments by determining padding require between adjacent nodes
-          var segments = [];
-          for (var i = 0; i < level.length; i++) {
-            var nextSeg = {
-              'lpad':padding(level[i-1],level[i]),
-              'rpad':padding(level[i],level[i+1]),
-              'ideal':level[i].sort_ypos
-            };
-            nextSeg.pos = total_pos+nextSeg.lpad;
-            total_pos = nextSeg.pos+nextSeg.rpad;
-            segments.push(nextSeg);
-          }
-          //two passes (leftwards and rightwards)
-          // push nodes *wards if doing so decreases avgerage distance
-          // to the ideal point (if there were no collisions) for each node
-          for (var i = 0; i < segments.length; i++) {
-            var partial = segments.slice(i);
-            var push_ideal = partial[0].ideal-partial[0].pos;
-            if (push_ideal < 0) continue;
-            var push_average = d3Array.mean(partial,function(seg){return seg.ideal-seg.pos});
-            if (push_average>0){
-              var push = d3Array.min([push_ideal,push_average]);
-              partial.forEach(function(seg){
-                seg.pos+=push;
-              });
-            }
-          }
-          for (var i = 0; i < segments.length; i++) {
-            var rev = segments.slice(0);
-            rev.reverse();
-            var partial = rev.slice(i);
-            var push_ideal = partial[0].ideal-partial[0].pos;
-            if (push_ideal > 0) continue;
-            var push_average = d3Array.mean(partial,function(seg){return seg.ideal-seg.pos});
-            if (push_average < 0){
-              var push = d3Array.max([push_ideal,push_average]);
-              partial.forEach(function(seg){
-                seg.pos+=push;
-              });
-            }
-          }
-          
-          //move nodes to position
-          level.forEach(function(node,i){
-            node.sort_ypos = segments[i].pos;
-          });
-        });
+        levels.forEach(function(level){});
       }
       return levels;
     }
