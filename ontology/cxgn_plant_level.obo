@@ -242,15 +242,15 @@ is_a: PLANT_LEVEL:0000005
 [Term]
 id: PLANT_LEVEL:0000034
 name: leaf rank 29
-synonym: "LFRK24" EXACT []
-def: "Twenty fourth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK29" EXACT []
+def: "Twenty ninth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000035
 name: leaf rank 30
 synonym: "LFRK30" EXACT []
-def: "Twenty fourth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+def: "Thirtiest standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
