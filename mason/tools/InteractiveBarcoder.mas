@@ -39,19 +39,19 @@
                 </div>
                 <div class="col-md-3">
                     </br>
-                    <select class="form-control" id="d3-page-type-select" ></select>
+                    <select class="form-control" id="page_format" ></select>
                 </div>
                 <div id="d3-page-custom-dimensions-div" style="display:none">
                     <div class="col-md-3">
                         <center>
                             <label>Page Width:</label></br>
-                            <input class="form-control" placeholder="Page Width in mm" type="number" id="d3-page-custom-width" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Page Width in mm" type="number" id="page_width" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-3">
                         <center>
                             <label>Page Height:</label></br>
-                            <input class="form-control" placeholder="Page Height in mm" type="number" id="d3-page-custom-height" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Page Height in mm" type="number" id="page_height" style="max-width: 100%;">
                         </center>
                     </div>
                 </div>
@@ -63,19 +63,19 @@
                 </div>
                 <div class="col-md-3">
                     </br>
-                    <select class="form-control" id="d3-label-size-select"></select>
+                    <select class="form-control" id="label_format"></select>
                 </div>
                 <div id="d3-label-custom-dimensions-div" style="display:none">
                     <div class="col-md-3">
                         <center>
                             <label>Label Width:</label></br>
-                            <input class="form-control" placeholder="Label Width in mm" type="number" id="d3-label-custom-width" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Label Width in mm" type="number" id="label_width" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-3">
                         <center>
                             <label>Label Height:</label></br>
-                            <input class="form-control" placeholder="Label Height in mm" type="number" id="d3-label-custom-height" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Label Height in mm" type="number" id="label_height" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1">
@@ -213,13 +213,13 @@
                     <div class="col-md-5">
                         <center>
                             </br><label>Top Margin:</label></br>
-                            <input class="form-control" placeholder="Top Margin in mm" type="number" id="d3-top-margin" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Top Margin in mm" type="number" id="top_margin" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             </br><label>Left Margin:</label></br>
-                            <input class="form-control" placeholder="Left Margin in mm" type="number" id="d3-left-margin" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Left Margin in mm" type="number" id="left_margin" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -229,13 +229,13 @@
                     <div class="col-md-5">
                         <center>
                             <label>Horizontal Gap:</label></br>
-                            <input class="form-control" placeholder="Horizontal Gap in mm" type="number" id="d3-horizontal-gap" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Horizontal Gap in mm" type="number" id="horizontal_gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             <label>Vertical Gap:</label></br>
-                            <input class="form-control" placeholder="Vertical Gap in mm" type="number" id="d3-vertical-gap" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Vertical Gap in mm" type="number" id="vertical_gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -245,13 +245,13 @@
                     <div class="col-md-5">
                         <center>
                             </br><label>Number of Columns:</label></br>
-                            <input class="form-control" placeholder="Num labels across" type="number" id="d3-column-number" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Num labels across" type="number" id="number_of_columns" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             </br><label>Number of Rows:</label></br>
-                            <input class="form-control" placeholder="Num labels down" type="number" id="d3-row-number" style="max-width: 100%;">
+                            <input class="form-control" placeholder="Num labels down" type="number" id="number_of_rows" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -274,7 +274,7 @@
                     <div class="col-md-5">
                         <center>
                             </br><label>Copies of each label:</label>
-                            <select class="form-control" id="num_labels" name="num_labels">
+                            <select class="form-control" id="copies_per_plot" name="copies_per_plot">
                                 <option value="1" selected>One</option>
                                 <option value="2">Two</option>
                                 <option value="3">Three</option>

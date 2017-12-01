@@ -7,7 +7,7 @@ page_formats["US Letter PDF"] = {
     label_sizes: {
             'Select a label size': {
             },
-            '1" x 2 5/8"': {
+            '1 x 2 5/8': {
                 label_width: 533.4,
                 label_height: 203.2,
                 left_margin: 13.68,
@@ -17,7 +17,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 3,
                 number_of_rows: 10
             },
-            '1" x 4"': {
+            '1 x 4': {
                 label_width: 812.8,
                 label_height: 203.2,
                 left_margin: 13.68,
@@ -27,7 +27,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 2,
                 number_of_rows: 10
             },
-            '1 1/3" x 4"': {
+            '1 1/3 x 4': {
                 label_width: 812.8,
                 label_height: 270.93,
                 left_margin: 13.68,
@@ -37,7 +37,7 @@ page_formats["US Letter PDF"] = {
                 number_of_columns: 2,
                 number_of_rows: 7
             },
-            '2" x 2 5/8"': {
+            '2 x 2 5/8': {
                 label_width: 533.4,
                 label_height: 406.4,
                 left_margin: 13.68,
@@ -84,7 +84,7 @@ page_formats["Zebra printer file"] = {
     label_sizes: {
             'Select a label size': {
             },
-            '1 1/4" x 2"': {
+            '1 1/4 x 2': {
                 label_width: 401.4,
                 label_height: 245,
             },
@@ -120,58 +120,31 @@ page_formats["Custom"] = {
 
 var label_options = {};
 label_options["Select add type"] = {};
-label_options["PDF Text"] = {
-    value: "Text",
+label_options["PDFText"] = {
     sizes: {
         min: 1,
         max: 72,
         step: 1,
         value: 32
     },
-    fonts: [{
-        style: "",
-        value: "Select a font"
-    }, {
-        style: "font-family:courier;",
-        value: "Courier"
-    }, {
-        style: "font-family:courier;font-weight:bold;",
-        value: "Courier-Bold"
-    }, {
-        style: "font-family:courier;font-style: oblique;",
-        value: "Courier-Oblique"
-    }, {
-        style: "font-family:courier;font-weight:bold;font-style: oblique;",
-        value: "Courier-BoldOblique"
-    }, {
-        style: "font-family:helvetica;",
-        value: "Helvetica"
-    }, {
-        style: "font-family:helvetica;font-weight:bold;",
-        value: "Helvetica-Bold"
-    }, {
-        style: "font-family:helvetica;font-style: oblique;",
-        value: "Helvetica-Oblique"
-    }, {
-        style: "font-family:helvetica;font-weight:bold;font-style: oblique;",
-        value: "Helvetica-BoldOblique"
-    }, {
-        style: "font-family:times;",
-        value: "Times"
-    }, {
-        style: "font-family:times;font-weight:bold;",
-        value: "Times-Bold"
-    }, {
-        style: "font-family:times;font-style: italic;",
-        value: "Times-Italic"
-    }, {
-        style: "font-family:times;font-weight:bold;font-style: italic;",
-        value: "Times-BoldItalic"
-    }]
+    fonts: {
+        "Select a font": "",
+        "Courier": "font-family:courier;",
+        "Courier-Bold": "font-family:courier;font-weight:bold;",
+        "Courier-Oblique": "font-family:courier;font-style: oblique;",
+        "Courier-BoldOblique": "font-family:courier;font-weight:bold;font-style: oblique;",
+        "Helvetica": "font-family:helvetica;",
+        "Helvetica-Bold": "font-family:helvetica;font-weight:bold;",
+        "Helvetica-Oblique": "font-family:helvetica;font-style: oblique;",
+        "Helvetica-BoldOblique": "font-family:helvetica;font-weight:bold;font-style: oblique;",
+        "Times": "font-family:times;",
+        "Times": "font-family:times;font-weight:bold;",
+        "Times-Italic": "font-family:times;font-style: italic;",
+        "Times-BoldItalic": "font-family:times;font-weight:bold;font-style: italic;"
+    }
 };
 
-label_options["Zebra Text"] = {
-    value: "Text",
+label_options["ZebraText"] = {
     sizes: [{
         name: "Select a size",
         value: ""
@@ -199,8 +172,7 @@ label_options["Zebra Text"] = {
     }]
 };
 
-label_options["1D Barcode"] = {
-    value: "Code128",
+label_options["Code128 (1D)"] = {
     sizes: [{
         name: "Select a size",
         value: ""
@@ -219,8 +191,7 @@ label_options["1D Barcode"] = {
     }]
 };
 
-label_options["2D Barcode"] = {
-    value: "QR",
+label_options["QRCode (2D)"] = {
     sizes: [{
         name: "Select a size",
         value: ""
@@ -247,6 +218,8 @@ label_options["2D Barcode"] = {
         value: "10"
     }]
 };
+
+var add_fields = {};
 
 resizer_behaviour = d3.behavior.drag().on(
     "drag",
@@ -328,21 +301,25 @@ $(document).ready(function($) {
         var new_name = $('#save_design_name').val();
         console.log("Saving label design to list named " + new_name);
         var page_params = retrievePageParams();
+        
+        
+        
         page_params = JSON.stringify(page_params);
-        console.log("Page params are" + JSON.stringify(page_params));
+        // console.log("Page params are" + page_params.toString());
         
         var label_elements = document.getElementsByClassName('label-element');
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
         label_params = label_elements.map(getLabelDetails);
-        console.log("Label params are" + JSON.stringify(label_params));
+        // console.log("Label params are" + JSON.stringify(label_params));
         //label_params = JSON.stringify(label_params);
 
-        var data = page_params.slice(1, -1).split(",").join("\n").replace(/"/g, '');
+        var data = page_params.slice(1, -1).split(",").join("\n"); //.replace(/\"/g, '');
         console.log("label_param length is: "+label_params.length)
         for (i=0; i < label_params.length; i++) {
-            var params = JSON.stringify(label_params[i]);
-            params.replace(/"/g, '');
-            data += "\nelement"+i+": "+params;
+            // var params =label_params[i];
+            // console.log("Current param is: "+params.toString());
+            // params.split(",").join("\n").replace(/\"/g, '').split("\n").join(",");//.replace(/"/g, '');
+            data += '\n"element'+i+'": '+JSON.stringify(label_params[i]);
         }
 
         list_id = lo.newList(new_name);
@@ -396,40 +373,50 @@ $(document).ready(function($) {
                     alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
                 } else {
                     console.log("Got longest elements: " + JSON.stringify(response));
-                    var add_fields = [{
-                        name: "Select a field",
-                        value: ""
-                    }, {
-                        value: response.Accession,
-                        name: "Accession"
-                    }, {
-                        value: response.Plot_Name,
-                        name: "Plot_Name"
-                    }, {
-                        value: response.Plot_Number,
-                        name: "Plot_Number"
-                    }, {
-                        value: response.Rep_Number,
-                        name: "Rep_Number"
-                    }, {
-                        value: response.Row_Number,
-                        name: "Row_Number"
-                    }, {
-                        value: response.Col_Number,
-                        name: "Col_Number"
-                    }, {
-                        value: response.Trial_Name,
-                        name: "Trial_Name"
-                    }, {
-                        value: response.Year,
-                        name: "Year"
-                    }, {
-                        value: response.Pedigree_String,
-                        name: "Pedigree_String"
-                    }, {
-                        value: "Custom",
-                        name: "Custom"
-                    },];
+                    add_fields = {
+                        "Select a field": {
+                            select_text: "Select a field",
+                        },
+                        "{$Accession}": {
+                            label_text: response.Accession,
+                            select_text: "Accession",
+                        },
+                        "{$Plot_Name}": {
+                            label_text: response.Plot_Name,
+                            select_text: "Plot_Name",
+                        },
+                        "{$Plot_Number}": {
+                            label_text: response.Plot_Number,
+                            select_text: "Plot_Number",
+                        },
+                        "{$Rep_Number}": {
+                            label_text: response.Rep_Number,
+                            select_text: "Rep_Number",
+                        },
+                        "{$Row_Number}": {
+                            label_text: response.Row_Number,
+                            select_text: "Row_Number",
+                        },
+                        "{$Col_Number}": {
+                            label_text: response.Col_Number,
+                            select_text: "Col_Number",
+                        },
+                        "{$Trial_Name}": {
+                            label_text: response.Trial_Name,
+                            select_text: "Trial_Name",
+                        },
+                        "{$Year}": {
+                            label_text: response.Year,
+                            select_text: "Year",
+                        },
+                        "{$Pedigree_String}": {
+                            label_text: response.Pedigree_String,
+                            select_text: "Pedigree_String",
+                        },
+                        "Custom": {
+                            select_text: "Custom",
+                        },
+                    };
                     
                     createAdders(add_fields);
                     
@@ -439,14 +426,14 @@ $(document).ready(function($) {
                     document.getElementById("d3-page-format").style.display = "inline";
                     document.getElementById("d3-load-design").style.display = "inline";
                     
-                    var page_type_select = d3.select("#d3-page-type-select");
-                    page_type_select.selectAll("option")
+                    var page_format_select = d3.select("#page_format");
+                    page_format_select.selectAll("option")
                         .data(Object.keys(page_formats))
                         .enter().append("option")
                         .text(function(d) {
                             return d
                         });
-                    $('#d3-page-type-select').focus();
+                    $('#page_format').focus();
                 }
             },
             error: function(request, status, err) {
@@ -455,65 +442,67 @@ $(document).ready(function($) {
         });
     });
 
-    var page_type_select = d3.select("#d3-page-type-select");
-    page_type_select.on("input", function() {
+    var page_format_select = d3.select("#page_format");
+    page_format_select.on("input", function() {
         
-        var page_type = d3.select(this).node().value;
+        var page = d3.select(this).node().value;
         
-        switchPageDependentOptions(page_type); // show correct download and text options
+        switchPageDependentOptions(page); // show correct download and text options
         
-        if (page_type == 'Custom') {
-            document.getElementById("d3-page-custom-dimensions-div").style.display = "inline";
-        } else {
-            document.getElementById("d3-page-custom-dimensions-div").style.display = "none";
-        }
-            
-        // load label size and label field options based on page type
-        var label_sizes = page_formats[page_type].label_sizes;
-        d3.select("#d3-label-size-select").selectAll("option").remove();
-        d3.select("#d3-label-size-select").selectAll("option")
-            .data(Object.keys(label_sizes))
-            .enter().append("option")
-            .text(function(d) {
-                return d
-            })   
-        document.getElementById("d3-label-format").style.display = "inline";
-        $('#d3-label-size-select').focus();
+        // if (page == 'Custom') {
+        //     document.getElementById("d3-page-custom-dimensions-div").style.display = "inline";
+        // } else {
+        //     document.getElementById("d3-page-custom-dimensions-div").style.display = "none";
+        // }
+        //     
+        // // load label size and label field options based on page type
+        // var label_sizes = page_formats[page].label_sizes;
+        // d3.select("#label_format").selectAll("option").remove();
+        // d3.select("#label_format").selectAll("option")
+        //     .data(Object.keys(label_sizes))
+        //     .enter().append("option")
+        //     .text(function(d) {
+        //         return d
+        //     })   
+        // document.getElementById("d3-label-format").style.display = "inline";
+        $('#label_format').focus();
     });
 
     // Resize draw area according to selected label size
-    $('#d3-label-size-select').change(function() {
-        var val = $(this).find('option:selected').val();
+    $('#label_format').change(function() {
+        var label = $(this).find('option:selected').val();
+        switchLabelDependentOptions(label);
+        // if (label == 'Custom') {
+        //     document.getElementById("d3-label-custom-dimensions-div").style.display = "inline";
+        // } else {
+        //     document.getElementById("d3-label-custom-dimensions-div").style.display = "none";
+        //     
+        //     var page = d3.select("#page_format").node().value;
+        //     var label_sizes = page_formats[page].label_sizes;
+        //     var width = label_sizes[val].label_width;
+        //     var height = label_sizes[val].label_height;
+        //     changeLabelSize(width, height);
+        //     document.getElementById("d3-draw-div").style.display = "inline";
+        //     document.getElementById("d3-adders").style.display = "inline";
+        // }
         
-        if (val == 'Custom') {
-            document.getElementById("d3-label-custom-dimensions-div").style.display = "inline";
-        } else {
-            document.getElementById("d3-label-custom-dimensions-div").style.display = "none";
-            
-            var page_type = d3.select("#d3-page-type-select").node().value;
-            var label_sizes = page_formats[page_type].label_sizes;
-            var width = label_sizes[val].label_width;
-            var height = label_sizes[val].label_height;
-            changeLabelSize(width, height);
-            document.getElementById("d3-draw-div").style.display = "inline";
-            document.getElementById("d3-adders").style.display = "inline";
-        }
-        
-        // set print settings in modal
-        document.getElementById("d3-top-margin").value = label_sizes[val].top_margin;
-        document.getElementById("d3-left-margin").value = label_sizes[val].left_margin;
-        document.getElementById("d3-horizontal-gap").value = label_sizes[val].horizontal_gap;
-        document.getElementById("d3-vertical-gap").value = label_sizes[val].vertical_gap;
-        document.getElementById("d3-column-number").value = label_sizes[val].number_of_columns;
-        document.getElementById("d3-row-number").value = label_sizes[val].number_of_rows;
+        // add default print settings in modal
+        var page = d3.select("#page_format").node().value;
+        var label_sizes = page_formats[page].label_sizes;
+        document.getElementById("top_margin").value = label_sizes[label].top_margin;
+        document.getElementById("left_margin").value = label_sizes[label].left_margin;
+        document.getElementById("horizontal_gap").value = label_sizes[label].horizontal_gap;
+        document.getElementById("vertical_gap").value = label_sizes[label].vertical_gap;
+        document.getElementById("number_of_columns").value = label_sizes[label].number_of_columns;
+        document.getElementById("number_of_rows").value = label_sizes[label].number_of_rows;
 
     });
 
     d3.select("#d3-apply-custom-label-size").on("click", function() { 
         
         //save and apply custom label size
-        var page_type = d3.select("#d3-page-type-select").node().value;
-        var custom_label = page_formats[page_type].label_sizes['Custom'];
+        var page = d3.select("#page_format").node().value;
+        var custom_label = page_formats[page].label_sizes['Custom'];
         width = document.getElementById("d3-label-custom-width").value;
         width = width * 8;
         height = document.getElementById("d3-label-custom-height").value;
@@ -534,7 +523,7 @@ $(document).ready(function($) {
 
     $('#d3-add-field-input').change(function() {
         console.log("Change noticed, text is " + $(this).find('option:selected').text());
-        if ($(this).find('option:selected').val() == 'Custom') {
+        if ( this.value == 'Custom') {
             $('#customFieldModal').modal('show');
         }
     });
@@ -557,25 +546,24 @@ $(document).ready(function($) {
             // addText(text,fontSize)
         });
     $('#d3-add-type-input').change(function() {
-        var type = $(this).find('option:selected').text();
-        var value = label_options[type].value;
+        var type = this.value;
         var sizes = label_options[type].sizes;
-        if (type == "PDF Text") {
+        if (type == "PDFText") {
             
             // set up font select
             var fonts = label_options[type].fonts;
             d3.select("#d3-add-font-input").selectAll("option").remove();
             d3.select("#d3-add-font-input").selectAll("option")
-                .data(fonts)
+                .data(Object.keys(fonts))
                 .enter().append("option")
                 .text(function(d) {
-                    return d.value
+                    return d
                 })
                 .attr("style", function(d) {
-                    return d.style
+                    return fonts[d]
                 })
                 .attr("value", function(d) {
-                    return d.value
+                    return d
                 });
             document.getElementById("d3-add-font-div").style.display = "inline";
             
@@ -611,40 +599,24 @@ $(document).ready(function($) {
     });
 
     $("#d3-edit-print-settings").on("click", function() {
-        var page_type = d3.select("#d3-page-type-select").node().value;
-        var label_type = d3.select("#d3-label-size-select").node().value;
-        page_formats[page_type].label_sizes[label_type].top_margin = document.getElementById("d3-top-margin").value;
-        page_formats[page_type].label_sizes[label_type].left_margin = document.getElementById("d3-left-margin").value;
-        page_formats[page_type].label_sizes[label_type].horizontal_gap = document.getElementById("d3-horizontal-gap").value;
-        page_formats[page_type].label_sizes[label_type].vertical_gap = document.getElementById("d3-vertical-gap").value;
-        page_formats[page_type].label_sizes[label_type].number_of_columns = document.getElementById("d3-column-number").value;
-        page_formats[page_type].label_sizes[label_type].number_of_rows = document.getElementById("d3-row-number").value;
+        var page = d3.select("#page_format").node().value;
+        var label = d3.select("#label_format").node().value;
+        page_formats[page].label_sizes[label].top_margin = document.getElementById("d3-top-margin").value;
+        page_formats[page].label_sizes[label].left_margin = document.getElementById("d3-left-margin").value;
+        page_formats[page].label_sizes[label].horizontal_gap = document.getElementById("d3-horizontal-gap").value;
+        page_formats[page].label_sizes[label].vertical_gap = document.getElementById("d3-vertical-gap").value;
+        page_formats[page].label_sizes[label].number_of_columns = document.getElementById("number_of_columns").value;
+        page_formats[page].label_sizes[label].number_of_rows = document.getElementById("number_of_rows").value;
     });
 
     $("#d3-add").on("click", function() {
-        var field_select = document.getElementById("d3-add-field-input");
-        var selected_option = field_select.options[field_select.selectedIndex];
-        var display_text = selected_option.value;
-        var field = selected_option.text;
-        var type = document.getElementById("d3-add-type-input").value;
-        // 
-        if (field != 'Custom') {
-            field = '{$' + selected_option.text + '}';
-        } else {
-            field = display_text;
-        }
 
-        var style;
-        var font;
-        if (document.getElementById("d3-add-font-div").style.display == "inline") {
-            var font_select = document.getElementById("d3-add-font-input");
-            var selected_font_option = font_select.options[font_select.selectedIndex];
-            style = selected_font_option.getAttribute("style")
-            font = selected_font_option.getAttribute("value");
-        }
+        var field = document.getElementById("d3-add-field-input").value;
+        var type = document.getElementById("d3-add-type-input").value;
         var size = document.getElementById("d3-add-size-input").value;
-        console.log("addToLabel args include text: " + display_text + "\nfield: " + field + "\ntype: " + type + "\nsize: " + size + "\nstyle: " + style + "\nfont: " + font);
-        addToLabel(display_text, field, type, size, style, font);
+        var font = document.getElementById("d3-add-font-input").value;
+        addToLabel(field, type, size, font);
+    
     });
     
     $("#d3-save-button").on("click", function() {
@@ -886,9 +858,9 @@ function doSnap(state, selection) {
     state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d : bottom_snap_d
 }
 
-function switchPageDependentOptions(page_type) {
-     console.log("Page type is: " + page_type);
-    if (page_type == 'Zebra printer file') { // disable PDF text option and pdf download
+function switchPageDependentOptions(page) {
+     console.log("Page type is: " + page);
+    if (page == 'Zebra printer file') { // disable PDF text option and pdf download
         d3.select("#d3-add-type-input").selectAll("option")
         .each(function(d) {
             console.log("d is: "+JSON.stringify(d));
@@ -914,42 +886,59 @@ function switchPageDependentOptions(page_type) {
         document.getElementById("d3-zpl-button").style.display = "none";
         document.getElementById("d3-pdf-button").style.display = "inline";
     }
+    
+    if (page == 'Custom') {
+        document.getElementById("d3-page-custom-dimensions-div").style.display = "inline";
+    } else {
+        document.getElementById("d3-page-custom-dimensions-div").style.display = "none";
+    }
+        
+    // load label size and label field options based on page type
+    var label_sizes = page_formats[page].label_sizes;
+    d3.select("#label_format").selectAll("option").remove();
+    d3.select("#label_format").selectAll("option")
+        .data(Object.keys(label_sizes))
+        .enter().append("option")
+        .text(function(d) {
+            return d
+        })   
+    document.getElementById("d3-label-format").style.display = "inline";
 }
 
-function addToLabel(display_text, field, type, size, style, font) {
+function switchLabelDependentOptions(label) {
+    if (label == 'Custom') {
+        document.getElementById("d3-label-custom-dimensions-div").style.display = "inline";
+    } else {
+        document.getElementById("d3-label-custom-dimensions-div").style.display = "none";
+        
+        var page = d3.select("#page_format").node().value;
+        var label_sizes = page_formats[page].label_sizes;
+        var width = label_sizes[label].label_width;
+        var height = label_sizes[label].label_height;
+        changeLabelSize(width, height);
+        document.getElementById("d3-draw-div").style.display = "inline";
+        document.getElementById("d3-adders").style.display = "inline";
+    }
+}
+
+function addToLabel(field, type, size, font, x, y, width, height) {
+    // addToLabel(value.value value.type, value.size, value.x, value.y, value.width, value.height)
     svg = d3.select(".d3-draw-svg");
+    
+    //get display text and values
+    var field_data = add_fields[field];
+    
+    console.log("Params are:\nField: "+field+"\nType: "+type+"\nSize: "+size+"\nFont: "+font);
+    console.log("Field data is "+JSON.stringify(field_data));
 
     switch (type) {
-        case "Text":
-            var newTB = svg.append("g")
-                .classed("text-box", true);
-            var newText = newTB
-                .append("text")
-                .attr({
-                    "font-size": size,
-                    "size": size,
-                    "type": font,
-                    "style": style || "font-family:courier;",
-                    "dominant-baseline": "mathematical",
-                    text: display_text,
-                    value: field,
-                    class: "label-element",
-                })
-                .text(display_text);
-            newTB.classed("draggable", true)
-                .classed("selectable", true)
-                .call(draggable)
-                .call(selectable, false)
-                .on("mouseup", dragSnap);
-            break;
-
-        case "Code128":
-        case "QR":
-            var page_type = d3.select("#d3-page-type-select").node().value;
-            var label = d3.select("#d3-label-size-select").node().value;
-            var label_sizes = page_formats[page_type].label_sizes;
-            var width = label_sizes[label].label_width;
-            var height = label_sizes[label].label_height;
+        case "Code128 (1D)":
+        case "QRCode (2D)":
+            var page = d3.select("#page_format").node().value;
+            var label = d3.select("#label_format").node().value;
+            var label_sizes = page_formats[page].label_sizes;
+            var label_width = label_sizes[label].label_width;
+            var label_height = label_sizes[label].label_height;
             var new_barcode = svg.append("g")
                 .classed("barcode", true)
                 .classed("draggable", true)
@@ -957,22 +946,50 @@ function addToLabel(display_text, field, type, size, style, font) {
                 .call(draggable)
                 .call(selectable, true)
                 .call(doTransform, function(state, selection) {
-                    state.translate[0] += ( width / 2) - (100 / 2)
-                    state.translate[1] += ( height / 2) - (100 / 2)
+                    state.translate[0] += ( label_width / 2) - (100 / 2)
+                    state.translate[1] += ( label_height / 2) - (100 / 2)
                 })
                 .on("mouseup", dragSnap)
                 .append("svg:image")
                 .attr({
-                    x: 0,
-                    y: 0,
+                    x: x || 0,
+                    y: y || 0,
                     class: "label-element",
                     value: field,
                     size: size,
-                    type: type
+                    type: type,
+                    font: ''
                 })
-                .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(display_text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
+                .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(field_data.label_text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
             new_barcode.call(doTransform, doSnap);
             break;
+            
+        default:
+            // get style
+            var style = label_options[type].fonts[font] || "font-family:courier;";
+            var newTB = svg.append("g")
+                .classed("text-box", true);
+            var newText = newTB
+                .append("text")
+                .attr({
+                    "font-size": size,
+                    "size": size,
+                    "type": type,
+                    "font": font,
+                    "style": style,
+                    "dominant-baseline": "mathematical",
+                    // text: field_data.label_text,
+                    value: field,
+                    class: "label-element",
+                })
+                .text(field_data.label_text);
+            newTB.classed("draggable", true)
+                .classed("selectable", true)
+                .call(draggable)
+                .call(selectable, false)
+                .on("mouseup", dragSnap);
+            break;
+
     }
 
     var label_elements = document.getElementsByClassName('label-element');
@@ -997,19 +1014,19 @@ function createAdders(add_fields) {
             return d
         })
         .attr("value", function(d) {
-            return label_options[d].value
+            return d
         });
         
     //load field options
     d3.select("#d3-add-field-input").selectAll("option").remove();
     d3.select("#d3-add-field-input").selectAll("option")
-        .data(add_fields)
+        .data(Object.keys(add_fields))
         .enter().append("option")
         .text(function(d) {
-            return d.name
+            return add_fields[d].select_text
         })
         .attr("value", function(d) {
-            return d.value
+            return d
         });
 
 }
@@ -1031,6 +1048,7 @@ function getLabelDetails(element, index) {
         width: width,
         value: element.getAttribute("value"),
         type: element.getAttribute("type"),
+        font: element.getAttribute("font"),
         size: element.getAttribute("size")
     };
 }
@@ -1067,25 +1085,25 @@ function manage_dl_with_cookie(token, ladda) {
 
 function retrievePageParams() {
 
-    var page_type = d3.select("#d3-page-type-select").node().value;
-    var label_type = d3.select("#d3-label-size-select").node().value;
-    var label_sizes = page_formats[page_type].label_sizes;
+    var page = d3.select("#page_format").node().value;
+    var label = d3.select("#label_format").node().value;
+    var label_sizes = page_formats[page].label_sizes;
     
     var page_params = {
-        page_type: d3.select("#d3-page-type-select").node().value,
-        page_width: page_formats[page_type].page_width || document.getElementById("d3-page-custom-width").value,
-        page_height: page_formats[page_type].page_height || document.getElementById("d3-page-custom-height").value,
-        starting_x: label_sizes[label_type].left_margin,
-        starting_y: page_formats[page_type].page_height - label_sizes[label_type].top_margin,
-        x_increment: (label_sizes[label_type].label_width/2.83)  + label_sizes[label_type].horizontal_gap,
-        y_increment: - ((label_sizes[label_type].label_height/2.83) + label_sizes[label_type].vertical_gap), // adjusted for pdf caretesian coords
-        number_of_columns: label_sizes[label_type].number_of_columns - 1, // for 0 indexing
-        number_of_rows: label_sizes[label_type].number_of_rows -1, // for 0 indexing
-        copies_per_plot: document.getElementById("num_labels").value,
+        page_format: page,
+        page_width: page_formats[page].page_width || document.getElementById("page_width").value,
+        page_height: page_formats[page].page_height || document.getElementById("page_height").value,
+        left_margin: label_sizes[label].left_margin,
+        top_margin: label_sizes[label].top_margin,
+        horizontal_gap: label_sizes[label].horizontal_gap,
+        vertical_gap: label_sizes[label].vertical_gap,
+        number_of_columns: label_sizes[label].number_of_columns,
+        number_of_rows: label_sizes[label].number_of_rows,
+        copies_per_plot: document.getElementById("copies_per_plot").value,
         sort_order: document.getElementById("sort_order").value,
-        label_type: d3.select("#d3-label-size-select").node().value,
-        label_width: label_sizes[label_type].label_width,
-        label_height: label_sizes[label_type].label_height,
+        label_format: label,
+        label_width: label_sizes[label].label_width,
+        label_height: label_sizes[label].label_height,
     }
     return page_params;
     
@@ -1097,28 +1115,37 @@ function load_design (list_id) {
     var lo = new CXGN.List();
     var list_data = lo.getListData(list_id);
     var elements = list_data.elements;
-    var hash = {};
-    elements.map(function(value){
-        console.log("Value is "+value);
-        var parts = value.pop().split(':');
-        hash[parts[0]] = parts[1];
-    });
-    console.log(JSON.stringify(hash));
-    
-    for (var key in hash) {
-        if (key.match(/element/)) {
-            //add to label
+    // console.log("type of elements is: "+typeof elements);
+    // for (var key in elements) {
+    //     console.log("Key is: "+key+"\n and value is: "+elements[key]);
+    // }
+    // console.log("Elements stringified is: "+JSON.stringify(elements));
+    // var obj = JSON.parse(JSON.stringify(elements));
+    for (var key in elements) {
+        var array = elements[key];
+        var pair = array.pop().split(/:(.+)/); // split on first :
+        var property = pair[0].replace(/\"/g, '');
+        var value = pair[1].replace(/\"/g, '');
+        // console.log("Property is "+property+" and value is "+value);
+        if (property.match(/element/)) {
+            value = '{"'+ value.slice(2, -1).split(':').join('":"').split(',').join('","') + '"}';
+            console.log("Element is "+property+" and params are "+value);
+            value = JSON.parse(value);
+            console.log("x and y are "+value.x+","+value.y);
+            addToLabel(value.value, value.type, value.size, value.font, value.x, value.y, value.width, value.height);
         } else {
-            document.getElementById(key).value = hash[key];
+            if (property == 'page_format') {
+                switchPageDependentOptions(value);
+            }
+            document.getElementById(property).value = value;
         }
-    console.log("List has been loaded!\n");
     }
-    
-    // for (i = 0; i < elements.length; i++) {
-    //         element = elements[i];
-    //         var parts = element.split(':');
-    //         var field 
-    //set params
-    //create elements
-    
+    // var page = d3.select("#page_format").node().value;
+    // switchPageDependentOptions(page);
+    var label = d3.select("#label_format").node().value;
+    switchLabelDependentOptions(label);
+    // document.getElementById("d3-draw-div").style.display = "inline";
+    // document.getElementById("d3-adders").style.display = "inline";
+    console.log("List has been loaded!\n");
+
 }

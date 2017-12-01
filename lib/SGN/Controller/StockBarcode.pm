@@ -29,7 +29,7 @@ sub barcode_preview :Path('/barcode/preview') {
 
     print STDERR "Content is $content and type is $type and size is $size\n";
     
-    if ($type eq 'Code128') {
+    if ($type eq 'Code128 (1D)') {
     
         print STDERR "Creating barcode 128\n";
     
@@ -44,7 +44,7 @@ sub barcode_preview :Path('/barcode/preview') {
         $c->res->headers->content_type('image/png');
         $c->res->body($barcode->png());
 
-    } elsif ($type eq 'QR') {
+    } elsif ($type eq 'QRCode (2D)') {
         
         print STDERR "Creating QR Code\n";
     
