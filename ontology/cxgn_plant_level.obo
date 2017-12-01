@@ -468,10 +468,3 @@ name: hand rank 30
 synonym: "HDRK30" EXACT []
 def: "Record the thirtieth rank hand " []
 is_a: PLANT_LEVEL:0000036
-
-[Term]
-id: PLANT_LEVEL:0000037
-name: hand rank 1
-synonym: "HDRK01" EXACT []
-def: "Record the first a hand " []
-is_a: PLANT_LEVEL:0000005
