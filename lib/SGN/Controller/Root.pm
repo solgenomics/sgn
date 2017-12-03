@@ -39,7 +39,7 @@ sub index :Path :Args(0) {
         my @file_array;
         my %file_info;
         my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes')";
+        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping')";
         my $h = $schema->storage()->dbh()->prepare($q);
         $h->execute();
 
