@@ -152,6 +152,34 @@ $preferred_species => ""
                     variety (variety can be defined as a group of individuals or plants having similar traits that can be reproduced "true to type" from generation to generation)
                     <br />
                     donor (the accession_name of the donor accession)
+                    <br />
+                    donor_institute (the institute of the donor accession)
+                    <br />
+                    donor_PUI (the permanent unique identifier of the donor accession)
+                    <br />
+                    country_of_origin (the country of origin)
+                    <br />
+                    state (the state of origin)
+                    <br />
+                    institute_code (the institute code of origin)
+                    <br />
+                    institute_name (the institute name of origin)
+                    <br />
+                    biological_status_of_accession_code (code indicating the state of accession)
+                    <br />
+                    notes (free text for notes)
+                    <br />
+                    accession_number (accession number for accession from germplasm bank)
+                    <br />
+                    PUI (permanent unique identifier of the accession)
+                    <br />
+                    seed_source (origin of seed source)
+                    <br />
+                    type_of_germplasm_storage_code (code indicating the type of germplasm storage)
+                    <br />
+                    acquisition_date (date of acquisition YYYYMMDD)
+                    <br />
+                    transgenic (indicates if accession is transgenic. Please indicate 1 if transgenic and empty if otherwise.)
                 </div>
             </div>
             <div class="modal-footer">
