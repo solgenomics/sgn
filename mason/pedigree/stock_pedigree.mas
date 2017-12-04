@@ -247,7 +247,7 @@ $stock_id
             return node.id;
           })
           .groupChildless(true)
-          .iterations(10)
+          .iterations(20)
           .data(start_nodes)
           .excludeFromGrouping([STOCK_ID]);
         drawTree(tree(),".pdgtree-canv");
@@ -325,7 +325,9 @@ $stock_id
         //set up draw layers
         var linkLayer = content.select('.link-layer');
         if(linkLayer.empty()){
-            linkLayer = content.append('g').classed('link-layer',true);
+            linkLayer = content.append('g').classed('link-layer',true)
+                .attr("shape-rendering","geometricPrecision")
+                .attr("image-rendering","optimizeQuality");
         }
         var nodeLayer = content.select('.node-layer');
         if(nodeLayer.empty()){
@@ -400,6 +402,7 @@ $stock_id
           .attr('fill',"white");
         child_expander.on("click",function(d){
           d3.select(this).on('click',null);
+          highlightEdges(null);
           var end_blink = load_blink(d3.select(this).select("circle").node());
           var to_load = d.value.children.mother_of.concat(d.value.children.father_of).filter(Boolean).map(String);
           load_nodes(to_load,function(nodes){
@@ -432,6 +435,7 @@ $stock_id
           .attr('fill',"white");
         parent_expander.on("click",function(d){
           d3.select(this).on('click',null);
+          highlightEdges(null);
           var end_blink = load_blink(d3.select(this).select("circle").node());
           var to_load = [d.value.parents.mother,d.value.parents.father].filter(Boolean).map(String);
           load_nodes(to_load,function(nodes){
@@ -485,6 +489,33 @@ $stock_id
                 .attr("width",w+20)
                 .attr("x",-(w+20)/2);
         });
+        
+        //set up link highlighting
+        function handleMouseOver(d){
+            highlightEdges(d);
+        }
+        function handleMouseOut(d){
+            highlightEdges(null);
+        }
+        function highlightEdges(d){
+            console.log("high",d);
+            var sink_targets = d!==null?[d].concat(d.children):[];
+            linkLayer.selectAll('.link-highlight')
+                .select('.link-path-highlight')
+                .attr("stroke","none")
+                .filter(function(l_d){
+                    if (l_d.sink && sink_targets.indexOf(l_d.sink)!=-1) return true;
+                    if (l_d.sinks && l_d.sinks.indexOf(d)!=-1) return true;
+                    if (l_d.source && l_d.source===d) return true;
+                    if (l_d.sources && l_d.sources.indexOf(d)!=-1) return true;
+                    return false
+                }).each(function(l_d){console.log(l_d);})
+                .attr("stroke","yellow");
+        }
+        highlightEdges.timeout = null;
+        newNodes.on("mouseover", handleMouseOver)
+                .on("mouseout", handleMouseOut);
+                
         var allNodes = newNodes.merge(nodes);
         //remove expander handles for nodes without unloaded relatives.
         allNodes.each(function(d){
@@ -511,11 +542,11 @@ $stock_id
         allNodes.filter(function(d){return d.type=="node-group"})
           .style("cursor", "pointer")
           .on("click",function(d){
+            highlightEdges(null);
             layout.pdgtree.excludeFromGrouping(d.value.slice(0,10).map(function(d){return d.id;}));
             drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700).ease(d3.easeLinear));
         });
         var oldNodes = nodes.exit().remove();
-
         
         //link colors
         var link_color = function(d){
@@ -540,24 +571,42 @@ $stock_id
           .data(layout.links,function(d){return d.id;});
         var newLinks = links.enter().append('g')
           .classed('link',true);
-        newLinks.append('path')
-          .attr('d',function(d){
-            var begin = (d.sink || d.source);
-            if(d3.event && d3.event.type=="click"){
-              begin = d3.select(d3.event.target).datum();
-            }
-            return curveline([[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y]]);
-          })
-          .attr('fill','none')
-          .attr('stroke',link_color)
-          .attr('opacity',function(d){
-            if (d.type=="parent->mid") return 0.7;
-            return 0.999;
-          })
-          .attr('stroke-width',4);
+        newLinks.append('path').classed("link-path-main",true)
+            .attr('d',function(d){
+                var begin = (d.sink || d.source);
+                if(d3.event && d3.event.type=="click"){
+                    begin = d3.select(d3.event.target).datum();
+                }
+                return curveline([[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y]]);
+            })
+            .attr('fill','none')
+            .attr('stroke',link_color)
+            .attr('opacity',0.8)
+            .attr('stroke-width',4);
         var allLinks = newLinks.merge(links);
-        allLinks.transition(trans).select('path').attr('d',build_curve);
+        allLinks.transition(trans).select('.link-path-main').attr('d',build_curve);
         var oldNodes = links.exit().remove();
+        
+        //make link highlights
+        var highlights = linkLayer.selectAll('.link-highlight')
+          .data(layout.links,function(d){return d.id+"-highlight";});
+        var newHigh = highlights.enter().append('g')
+          .classed('link-highlight',true);
+        newHigh.append('path').classed("link-path-highlight",true)
+            .attr('d',function(d){
+                var begin = (d.sink || d.source);
+                if(d3.event && d3.event.type=="click"){
+                    begin = d3.select(d3.event.target).datum();
+                }
+                return curveline([[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y]]);
+            })
+            .attr('fill','none')
+            .attr('stroke',"none")
+            .attr('opacity',1)
+            .attr('stroke-width',12);
+        var allHigh = newHigh.merge(highlights);
+        allHigh.lower().transition(trans).select('.link-path-highlight').attr('d',build_curve);
+        var oldNodes = highlights.exit().remove();
     }
       
     function load_blink(node){
@@ -581,8 +630,6 @@ $stock_id
             stop = true;
         }
     }
-      
-      
       
     function get_fit_scale(w1,h1,w2,h2,pad){
         w1 -= pad*2;
