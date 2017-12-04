@@ -208,7 +208,7 @@ resizer_behaviour = d3.behavior.drag().on(
         var target = d;
         var bb = getTransGroupBounds(target.node())
         var mx = d3.event.x;
-        var my = d3.event.y;Additional
+        var my = d3.event.y;
         // if (d3.select("#d3-snapping-check").property("checked")){
         mx = Math.round(mx / doSnap.size) * doSnap.size
         my = Math.round(my / doSnap.size) * doSnap.size
@@ -396,8 +396,8 @@ $(document).ready(function($) {
                     var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
                     var builder = textTemplater.builder("#d3-custom-templater", fields);
 
-                    // document.getElementById("d3-page-format").style.display = "inline";
-                    document.getElementById("d3-load-design").style.display = "inline";
+                    // document.getElementById("d3-page-format").style.visibility = "visible";
+                    // document.getElementById("d3-load-design").style.visibility = "visible";
                     
                     var page_format_select = d3.select("#page_format");
                     page_format_select.selectAll("option")
@@ -438,8 +438,8 @@ $(document).ready(function($) {
         custom_label.label_height = document.getElementById("label_height").value;
         changeLabelSize(custom_label.label_width, custom_label.label_height);
         
-        document.getElementById("d3-draw-div").style.display = "inline";
-        document.getElementById("d3-adders").style.display = "inline";
+        document.getElementById("d3-draw-div").style.visibility = "visible";
+        // document.getElementById("d3-adders").style.visibility = "visible";
         $('#d3-add-field-input').focus();
     });
 
@@ -494,7 +494,7 @@ $(document).ready(function($) {
                 .attr("value", function(d) {
                     return d
                 });
-            document.getElementById("d3-add-font-div").style.display = "inline";
+            document.getElementById("d3-add-font-div").style.visibility = "visible";
             
             // set up size input and slider
             $("#d3-add-size-input").replaceWith('<input type="number" id="d3-add-size-input" class="form-control"></input>');
@@ -511,7 +511,7 @@ $(document).ready(function($) {
             $("#d3-add-size-slider").show();
             
         } else {
-            document.getElementById("d3-add-font-div").style.display = "none";
+            document.getElementById("d3-add-font-div").style.visibility = "hidden";
             $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
             d3.select("#d3-add-size-input").selectAll("option")
                 .data(sizes)
@@ -706,7 +706,7 @@ function clearSelection() {
     var label_elements = document.getElementsByClassName('label-element');
     label_elements = Array.prototype.slice.call(label_elements);
     if (label_elements.length < 1) {
-        document.getElementById("d3-download").style.display = "none";
+        // document.getElementById("d3-download").style.visibility = "hidden";
     }
 }
 
@@ -813,7 +813,8 @@ function switchPageDependentOptions(page) {
     }
     
     if (page == 'Custom') {
-        document.getElementById("d3-page-custom-dimensions-div").style.display = "inline";
+        document.getElementById("d3-custom-dimensions-div").style.display = "inline";
+        document.getElementById("d3-page-custom-dimensions-div").style.visibility = "visible";
         $('#page_width').on("change", function() {
             page_formats[page].page_width = this.value;
         });
@@ -822,7 +823,7 @@ function switchPageDependentOptions(page) {
             page_formats[page].page_height = this.value;
         });
     } else {
-        document.getElementById("d3-page-custom-dimensions-div").style.display = "none";
+        document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
     }
         
     // load label size and label field options based on page type
@@ -834,20 +835,21 @@ function switchPageDependentOptions(page) {
         .text(function(d) {
             return d
         })   
-    document.getElementById("d3-label-format").style.display = "inline";
+    // document.getElementById("d3-label-format").style.visibility = "visible";
 }
 
 function switchLabelDependentOptions(label) {
     var page = d3.select("#page_format").node().value;
     var label_sizes = page_formats[page].label_sizes;
     if (label == 'Custom') {
-        document.getElementById("d3-label-custom-dimensions-div").style.display = "inline";
+        document.getElementById("d3-custom-dimensions-div").style.display = "inline";
+        document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
         $('#label_width').focus();
     } else {
-        document.getElementById("d3-label-custom-dimensions-div").style.display = "none";
+        document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
-        document.getElementById("d3-draw-div").style.display = "inline";
-        document.getElementById("d3-adders").style.display = "inline";
+        // document.getElementById("d3-draw-div").style.visibility = "visible";
+        // document.getElementById("d3-adders").style.visibility = "visible";
         $('#d3-add-field-input').focus();
     }
     document.getElementById("top_margin").value = label_sizes[label].top_margin;
@@ -929,7 +931,7 @@ function addToLabel(field, type, size, font, x, y, scale) {
     var label_elements = document.getElementsByClassName('label-element');
     label_elements = Array.prototype.slice.call(label_elements);
     if (label_elements.length > 0) {
-        document.getElementById("d3-download").style.display = "inline";
+        // document.getElementById("d3-download").style.visibility = "visible";
     }
 
 }
@@ -1100,8 +1102,8 @@ function load_design (list_id) {
         page_formats[page].label_sizes['Custom'].label_width = params['label_width'];
         page_formats[page].label_sizes['Custom'].label_height = params['label_height'];
         changeLabelSize(params['label_width'], params['label_height']);
-        document.getElementById("d3-draw-div").style.display = "inline";
-        document.getElementById("d3-adders").style.display = "inline";
+        document.getElementById("d3-draw-div").style.visibility = "visible";
+        // document.getElementById("d3-adders").style.visibility = "visible";
     }
     
     saveAdditionalOptions(
