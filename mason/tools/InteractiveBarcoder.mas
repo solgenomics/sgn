@@ -7,88 +7,89 @@
     
     <div class="well col-md-12">
         <div class="col-md-12 form-inline">
-            <center>
-                <h4>Format Options</h4>
-            </center>
+            <div class="col-md-2">
+                <label><b>Data Source:</b></label>
+            </div>
+            <div class="col-md-4">
+                <select class="form-control" id="source_select">
+                    <option>Field Trial</option>
+                    <option disabled>Spreadsheet</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <select class="form-control" id="trial_select"></select>
+            </div>
+            <!-- <div class="col-md-1">
+                <center><i>or</i></center>&nbsp
+            </div>
+            <div class="col-md-4">
+                <input type="file" class="form-control-file" id="label_input_file" aria-describedby="fileHelp">
+                <small id="fileHelp" class="form-text text-muted">.xls format only, columns must have unique names</small>
+            </div> -->
         </div>
-            <div class="col-md-12 form-inline">
-                <label class="col-md-2 col-form-label">Data Source:</label>
-                <div class="col-md-8">
-                    <select class="form-control" id="trial_select"></select>
-                </div>
-                <div class="col-md-2">
-                </div>
-                <!-- <div class="col-md-1">
-                    <center><i>or</i></center>&nbsp
-                </div>
-                <div class="col-md-4">
-                    <input type="file" class="form-control-file" id="label_input_file" aria-describedby="fileHelp">
-                    <small id="fileHelp" class="form-text text-muted">.xls format only, columns must have unique names</small>
-                </div> -->
+        </br></br><hr style="border-color:inherit;"></br>
+        <div class="col-md-12 form-inline" id="d3-load-design" style="display:none">
+            <div class="col-md-2">                    
+                <label>Format:</label>
             </div>
-        </br></br></br>
-            <div class="col-md-12 form-inline" id="d3-load-design" style="display:none">
-                <div class="col-md-2">
-                    
-                    <label>Load a Saved Design:</label>
-                </div>
-                <div class="col-md-8" id="design_list">
-                </div>
-                <div class="col-md-2">
-                </div>
+            <div class="col-md-3">
+                <select class="form-control" id="page_format" ></select>
             </div>
-            <div class="col-md-12 form-inline" id="d3-page-format" style="display:none">
-                <div class="col-md-2">
-                    </br>
-                    <label>Page Format:</label>
+            <div class="col-md-1"><center><i>or</i></center></div>
+            <div class="col-md-6" id="design_list">
+            </div>
+
+        </div>
+        <div class="col-md-12 form-inline" id="d3-page-custom-dimensions-div" style="display:none">                    
+            </br>
+            <div class="col-md-2"></div>
+            <div class="col-md-3">
+                </br>
+                <center><b>Dimensions:</b><br>(72 pixels/inch)</center>
+            </div>
+            <div class="col-md-3">
+                <center>
+                    <label>Page Width:</label></br>
+                    <input class="form-control" placeholder="Page Width in pixels (72/inch)" type="number" id="page_width" style="max-width: 100%;">
+                </center>
+            </div>
+            <div class="col-md-3">
+                <center>
+                    <label>Page Height:</label></br>
+                    <input class="form-control" placeholder="Page Height in pixels (72/inch)" type="number" id="page_height" style="max-width: 100%;">
+                </center>
+            </div>
+            <div class="col-md-1"></div>
+        </div>
+        <div class="col-md-12 form-inline" id="d3-label-format" style="display:none">
+            </br>
+            <div class="col-md-2">
+                </br>
+                <label>Label Format:</label>
+            </div>
+            <div class="col-md-3">
+                </br>
+                <select class="form-control" id="label_format"></select>
+            </div>
+            <div id="d3-label-custom-dimensions-div" style="display:none">
+                <div class="col-md-3">
+                    <center>
+                        <label>Label Width:</label></br>
+                        <input class="form-control" placeholder="Label Width in pixels (72/inch)" type="number" id="label_width" style="max-width: 100%;">
+                    </center>
                 </div>
                 <div class="col-md-3">
-                    </br>
-                    <select class="form-control" id="page_format" ></select>
+                    <center>
+                        <label>Label Height:</label></br>
+                        <input class="form-control" placeholder="Label Height in pixels (72/inch)" type="number" id="label_height" style="max-width: 100%;">
+                    </center>
                 </div>
-                <div id="d3-page-custom-dimensions-div" style="display:none">
-                    <div class="col-md-3">
-                        <center>
-                            <label>Page Width:</label></br>
-                            <input class="form-control" placeholder="Page Width in pixels (72/inch)" type="number" id="page_width" style="max-width: 100%;">
-                        </center>
-                    </div>
-                    <div class="col-md-3">
-                        <center>
-                            <label>Page Height:</label></br>
-                            <input class="form-control" placeholder="Page Height in pixels (72/inch)" type="number" id="page_height" style="max-width: 100%;">
-                        </center>
-                    </div>
+                <div class="col-md-1">
+                </br>
+                    <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
                 </div>
             </div>
-            <div class="col-md-12 form-inline" id="d3-label-format" style="display:none">
-                <div class="col-md-2">
-                    </br>
-                    <label>Label Format:</label>
-                </div>
-                <div class="col-md-3">
-                    </br>
-                    <select class="form-control" id="label_format"></select>
-                </div>
-                <div id="d3-label-custom-dimensions-div" style="display:none">
-                    <div class="col-md-3">
-                        <center>
-                            <label>Label Width:</label></br>
-                            <input class="form-control" placeholder="Label Width in pixels (72/inch)" type="number" id="label_width" style="max-width: 100%;">
-                        </center>
-                    </div>
-                    <div class="col-md-3">
-                        <center>
-                            <label>Label Height:</label></br>
-                            <input class="form-control" placeholder="Label Height in pixels (72/inch)" type="number" id="label_height" style="max-width: 100%;">
-                        </center>
-                    </div>
-                    <div class="col-md-1">
-                    </br>
-                        <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
-                    </div>
-                </div>
-            </div>
+        </div>
     </div>
 
     <div class="col-md-12" id="d3-draw-div" style="display:none;margin-bottom:20px;">
@@ -295,5 +296,3 @@
         </div>
     </div>
 </div>
-
-<div id="savingplace"></div>

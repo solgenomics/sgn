@@ -1,5 +1,6 @@
 
 var page_formats = {};
+page_formats["Select a page type"] = {};
 page_formats["US Letter PDF"] = {
     page_width: 611,
     page_height: 790.7,
@@ -269,12 +270,16 @@ $(document).ready(function($) {
         'empty': 1
     });
     
-    var lo = new CXGN.List();
-    $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved_design', 'refresh'));
-    $('#design_list_list_select').change(
-      function() {
-        load_design(this.value);
-    });
+    if (!isLoggedIn()) {
+        $('#design_list').html('<select class="form-control" disabled><option>Login to load designs</option></select>');
+    } else {
+        var lo = new CXGN.List();
+        $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved design', 'refresh'));
+        $('#design_list_list_select').change(
+          function() {
+            load_design(this.value);
+        });
+    }
     
     $('#d3-save-button').click(function() {
         var lo = new CXGN.List();
@@ -391,7 +396,7 @@ $(document).ready(function($) {
                     var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
                     var builder = textTemplater.builder("#d3-custom-templater", fields);
 
-                    document.getElementById("d3-page-format").style.display = "inline";
+                    // document.getElementById("d3-page-format").style.display = "inline";
                     document.getElementById("d3-load-design").style.display = "inline";
                     
                     var page_format_select = d3.select("#page_format");
@@ -582,7 +587,6 @@ $(document).ready(function($) {
         });
     });
 });
-
 
 function changeLabelSize(width, height) {
     var width = width * 2.83 //convert from pixels to dots (72/inch to 8/mm)
@@ -933,12 +937,19 @@ function addToLabel(field, type, size, font, x, y, scale) {
 function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows) {
     var page = d3.select("#page_format").node().value;
     var label = d3.select("#label_format").node().value;
+    console.log("page is "+page+" and label is "+label);
     page_formats[page].label_sizes[label].top_margin = top_margin;
     page_formats[page].label_sizes[label].left_margin = left_margin;
     page_formats[page].label_sizes[label].horizontal_gap = horizontal_gap;
     page_formats[page].label_sizes[label].vertical_gap = vertical_gap;
     page_formats[page].label_sizes[label].number_of_columns = number_of_columns;
     page_formats[page].label_sizes[label].number_of_rows = number_of_rows;
+    document.getElementById("top_margin").value = top_margin; 
+    document.getElementById("left_margin").value = left_margin;
+    document.getElementById("horizontal_gap").value = horizontal_gap; 
+    document.getElementById("vertical_gap").value = vertical_gap;
+    document.getElementById("number_of_columns").value = number_of_columns;
+    document.getElementById("number_of_rows").value = number_of_rows;
 }
 
 function dragSnap() {

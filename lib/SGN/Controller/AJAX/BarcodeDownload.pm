@@ -192,7 +192,7 @@ __PACKAGE__->config(
                my $pedigree;
 
               foreach my $element (@label_params) {
-                  print STDERR "Element Dumper\n" . Dumper($element);
+                  #print STDERR "Element Dumper\n" . Dumper($element);
                   my %element = %{$element};
                   my $elementx = $x + ( $element{'x'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
                   my $elementy = $y - ( $element{'y'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
@@ -201,7 +201,7 @@ __PACKAGE__->config(
                       $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
                   }
                   
-                #   print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n\n";
+                   print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n\n";
                   
                   my $label_template = Text::Template->new(
                       type => 'STRING',
@@ -268,7 +268,7 @@ __PACKAGE__->config(
                           my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                           my $elementy = $elementy - $height; # adjust for img position sarting at bottom
                           #print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
-                           print STDERR 'adding QR Code params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
+                           #print STDERR 'adding QR Code params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                           $gfx->image($image, $elementx, $elementy, $width, $height);
        
                      }
@@ -285,7 +285,7 @@ __PACKAGE__->config(
                        #print STDERR "Element ".$element{'type'}."_".$element{'size'}." new y is $elementy\n";
                        $text->translate($elementx, $elementy);
                        $text->text($filled_value);
-                        print STDERR 'Added text params $font, $adjusted_size, $elementx, $elementy, $filled_value with: '."$font, $adjusted_size, $elementx, $elementy, $filled_value\n";
+                        #print STDERR 'Added text params $font, $adjusted_size, $elementx, $elementy, $filled_value with: '."$font, $adjusted_size, $elementx, $elementy, $filled_value\n";
        
                   }
                   
@@ -294,7 +294,7 @@ __PACKAGE__->config(
                if ($col_num < $design_params{'number_of_columns'}) { #next column
                    $col_num++;
                } else { #new row, reset col num
-                   $col_num = 0;
+                   $col_num = 1;
                    $row_num++;
                }
                
@@ -305,8 +305,8 @@ __PACKAGE__->config(
                    $page = $pdf->page();
                    $text = $page->text();
                    $gfx = $page->gfx();
-                   $col_num = 0;
-                   $row_num = 0;
+                   $page->mediabox($design_params{'page_width'}, $design_params{'page_height'});
+                   $row_num = 1;
                }
            }
        }
