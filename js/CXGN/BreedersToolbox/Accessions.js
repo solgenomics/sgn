@@ -318,8 +318,13 @@ jQuery(document).ready(function ($) {
     });
 
     $('#new_accessions_submit').click(function () {
-        accession_list_id = $('#list_div_list_select').val();
-        verify_accession_list(accession_list_id);
+        var selected_tab = jQuery('#add_new_accessions_tab_select .active').text()
+        if (selected_tab == 'Using Lists'){
+            accession_list_id = $('#list_div_list_select').val();
+            verify_accession_list(accession_list_id);
+        } else if (selected_tab == 'Uploading a File'){
+            parse_upload_accession_file();
+        }
         $('#add_accessions_dialog').modal("hide");
     });
 
@@ -537,3 +542,36 @@ function process_fuzzy_options(accession_list_id) {
     });
 }
 
+function parse_upload_accession_file(){
+    var uploadFile = jQuery("#new_accessions_upload_file").val();
+    jQuery('#upload_new_accessions_form').attr("action", "/ajax/accessions/verify_accessions_file");
+    if (uploadFile === '') {
+        alert("Please select a file");
+        return;
+    }
+    jQuery("#upload_new_accessions_form").submit();
+
+    jQuery('#upload_new_accessions_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedSeedlotFile = jQuery("#new_accessions_upload_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedSeedlotFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                alert("File parsed successfully");
+            }
+        }
+    });
+}
