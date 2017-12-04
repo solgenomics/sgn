@@ -779,7 +779,9 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
                 }]
             };
             my $geno_json_string = encode_json $geo_json;
-            print STDERR $geno_json_string."\n";
+            #print STDERR $geno_json_string."\n";
+            my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
+            $previous_plot_gps_rs->delete_all();
             $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
         }
         my $layout = CXGN::Trial::TrialLayout->new({

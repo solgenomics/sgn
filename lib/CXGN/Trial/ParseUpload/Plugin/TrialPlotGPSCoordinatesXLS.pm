@@ -252,53 +252,53 @@ sub _validate_with_plugin {
             $seen_plot_names{$plot_name}=$row_name;
         }
 
-        if (!looks_like_number($UTM31N_bottom_left_x)){
+        if ($UTM31N_bottom_left_x && !looks_like_number($UTM31N_bottom_left_x)){
             push @error_messages, "Cell B$row_name: UTM31N_bottom_left_x must be a number.";
         }
-        if (!looks_like_number($UTM31N_bottom_left_y)){
+        if ($UTM31N_bottom_left_y && !looks_like_number($UTM31N_bottom_left_y)){
             push @error_messages, "Cell C$row_name: UTM31N_bottom_left_y must be a number.";
         }
-        if (!looks_like_number($UTM31N_bottom_right_x)){
+        if ($UTM31N_bottom_right_x && !looks_like_number($UTM31N_bottom_right_x)){
             push @error_messages, "Cell D$row_name: UTM31N_bottom_right_x must be a number.";
         }
-        if (!looks_like_number($UTM31N_bottom_right_y)){
+        if ($UTM31N_bottom_right_y && !looks_like_number($UTM31N_bottom_right_y)){
             push @error_messages, "Cell E$row_name: UTM31N_bottom_right_y must be a number.";
         }
-        if (!looks_like_number($UTM31N_top_right_x)){
+        if ($UTM31N_top_right_x && !looks_like_number($UTM31N_top_right_x)){
             push @error_messages, "Cell F$row_name: UTM31N_top_right_x must be a number.";
         }
-        if (!looks_like_number($UTM31N_top_right_y)){
+        if ($UTM31N_top_right_y && !looks_like_number($UTM31N_top_right_y)){
             push @error_messages, "Cell G$row_name: UTM31N_top_right_y must be a number.";
         }
-        if (!looks_like_number($UTM31N_top_left_x)){
+        if ($UTM31N_top_left_x && !looks_like_number($UTM31N_top_left_x)){
             push @error_messages, "Cell H$row_name: UTM31N_top_left_x must be a number.";
         }
-        if (!looks_like_number($UTM31N_top_left_y)){
+        if ($UTM31N_top_left_y && !looks_like_number($UTM31N_top_left_y)){
             push @error_messages, "Cell I$row_name: UTM31N_top_left_y must be a number.";
         }
 
-        if (!looks_like_number($WGS84_bottom_left_x)){
+        if ($WGS84_bottom_left_x && !looks_like_number($WGS84_bottom_left_x)){
             push @error_messages, "Cell J$row_name: WGS84_bottom_left_x must be a number.";
         }
-        if (!looks_like_number($WGS84_bottom_left_y)){
+        if ($WGS84_bottom_left_y && !looks_like_number($WGS84_bottom_left_y)){
             push @error_messages, "Cell K$row_name: WGS84_bottom_left_y must be a number.";
         }
-        if (!looks_like_number($WGS84_bottom_right_x)){
+        if ($WGS84_bottom_right_x && !looks_like_number($WGS84_bottom_right_x)){
             push @error_messages, "Cell L$row_name: WGS84_bottom_right_x must be a number.";
         }
-        if (!looks_like_number($WGS84_bottom_right_y)){
+        if ($WGS84_bottom_right_y && !looks_like_number($WGS84_bottom_right_y)){
             push @error_messages, "Cell M$row_name: WGS84_bottom_right_y must be a number.";
         }
-        if (!looks_like_number($WGS84_top_right_x)){
+        if ($WGS84_top_right_x && !looks_like_number($WGS84_top_right_x)){
             push @error_messages, "Cell N$row_name: WGS84_top_right_x must be a number.";
         }
-        if (!looks_like_number($WGS84_top_right_y)){
+        if ($WGS84_top_right_y && !looks_like_number($WGS84_top_right_y)){
             push @error_messages, "Cell O$row_name: WGS84_top_right_y must be a number.";
         }
-        if (!looks_like_number($WGS84_top_left_x)){
+        if ($WGS84_top_left_x && !looks_like_number($WGS84_top_left_x)){
             push @error_messages, "Cell P$row_name: WGS84_top_left_x must be a number.";
         }
-        if (!looks_like_number($WGS84_top_left_y)){
+        if ($WGS84_top_left_y && !looks_like_number($WGS84_top_left_y)){
             push @error_messages, "Cell Q$row_name: WGS84_top_left_y must be a number.";
         }
 
@@ -432,7 +432,7 @@ sub _parse_with_plugin {
         }
 
         #skip blank lines
-        if (!$plot_name) {
+        if (!$plot_name && !$UTM31N_bottom_left_x && !$UTM31N_bottom_left_y && !$UTM31N_bottom_right_x && !$UTM31N_bottom_right_y && !$UTM31N_top_right_x && !$UTM31N_top_right_y && !$UTM31N_top_left_x && !$UTM31N_top_left_y && !$WGS84_bottom_left_x && !$WGS84_bottom_left_y && !$WGS84_bottom_right_x && !$WGS84_bottom_right_y && !$WGS84_top_right_x && !$WGS84_top_right_y && !$WGS84_top_left_x && !$WGS84_top_left_y) {
             next;
         }
 

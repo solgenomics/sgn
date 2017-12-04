@@ -143,7 +143,7 @@ sub get_layout_output {
         return \%errors;
     }
 
-    print STDERR Dumper $tl;
+    #print STDERR Dumper $tl;
 
     my %selected_cols = %{$self->selected_columns};
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
