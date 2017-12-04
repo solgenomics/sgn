@@ -1,10 +1,11 @@
 
 var page_formats = {};
-page_formats["Select a page type"] = {};
+page_formats["Select a page format"] = {};
 page_formats["US Letter PDF"] = {
     page_width: 611,
     page_height: 790.7,
     label_sizes: {
+            'Select a label format' : {},
             '1" x 2 5/8"': {
                 label_width: 189,
                 label_height: 72,
@@ -63,6 +64,7 @@ page_formats["A4 PDF"] = {
     page_width: 595.3,
     page_height: 841.9,
     label_sizes: {
+            'Select a label format' : {},
             'Custom' : {
                 label_width: 0,
                 label_height: 0,
@@ -78,6 +80,7 @@ page_formats["A4 PDF"] = {
 
 page_formats["Zebra printer file"] = {
     label_sizes: {
+            'Select a label format' : {},
             '1 1/4" x 2"': {
                 label_width: 144,
                 label_height: 90,
@@ -97,6 +100,7 @@ page_formats["Zebra printer file"] = {
 
 page_formats["Custom"] = {
     label_sizes: {
+            'Select a label format' : {},
             'Custom' : {
                 label_width: 0,
                 label_height: 0,
@@ -112,9 +116,10 @@ page_formats["Custom"] = {
 
 var label_options = {};
 label_options["PDFText"] = {
+    name: "Text",
     sizes: {
         min: 1,
-        max: 72,
+        max: 144,
         step: 1,
         value: 32
     },
@@ -135,69 +140,39 @@ label_options["PDFText"] = {
 };
 
 label_options["ZebraText"] = {
-    sizes: [{
-        name: "10",
-        value: "10"
-    }, {
-        name: "20",
-        value: "20"
-    }, {
-        name: "30",
-        value: "30"
-    }, {
-        name: "39",
-        value: "39"
-    }, {
-        name: "49",
-        value: "49"
-    }, {
-        name: "58",
-        value: "58"
-    }, {
-        name: "66",
-        value: "66"
-    }]
+    name: "Text",
+    sizes: {
+        "10": 10,
+        "20": 20,
+        "30": 30,
+        "39": 39,
+        "49": 49,
+        "58": 58,
+        "66": 66
+    }
 };
 
-label_options["Code128 (1D)"] = {
-    sizes: [{
-        name: "1",
-        value: "1"
-    }, {
-        name: "2",
-        value: "2"
-    }, {
-        name: "3",
-        value: "3"
-    }, {
-        name: "4",
-        value: "4"
-    }]
+label_options["Code128"] = {
+    name: "1D Barcode (Code128)",
+    sizes: {
+        "One": 1,
+        "Two": 2,
+        "Three": 3,
+        "Four": 4
+    }
 };
 
-label_options["QRCode (2D)"] = {
-    sizes: [{
-        name: "4",
-        value: "4"
-    }, {
-        name: "5",
-        value: "5"
-    }, {
-        name: "6",
-        value: "6"
-    }, {
-        name: "7",
-        value: "7"
-    }, {
-        name: "8",
-        value: "8"
-    }, {
-        name: "9",
-        value: "9"
-    }, {
-        name: "10",
-        value: "10"
-    }]
+label_options["QRCode"] = {
+    name: "2D Barcode (QRCode)",
+    sizes: {
+        "Four": 4,
+        "Five": 5,
+        "Six": 6,
+        "Seven": 7,
+        "Eight": 8,
+        "Nine": 9,
+        "Ten": 10
+    }
 };
 
 var add_fields = {};
@@ -395,9 +370,6 @@ $(document).ready(function($) {
                     
                     var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
                     var builder = textTemplater.builder("#d3-custom-templater", fields);
-
-                    // document.getElementById("d3-page-format").style.visibility = "visible";
-                    // document.getElementById("d3-load-design").style.visibility = "visible";
                     
                     var page_format_select = d3.select("#page_format");
                     page_format_select.selectAll("option")
@@ -511,16 +483,17 @@ $(document).ready(function($) {
             $("#d3-add-size-slider").show();
             
         } else {
+            $("#d3-add-font-input").val('');
             document.getElementById("d3-add-font-div").style.visibility = "hidden";
             $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
             d3.select("#d3-add-size-input").selectAll("option")
-                .data(sizes)
+                .data(Object.keys(sizes))
                 .enter().append("option")
                 .text(function(d) {
-                    return d.name
+                    return d
                 })
                 .attr("value", function(d) {
-                    return d.value
+                    return sizes[d]
                 });
             $("#d3-add-size-slider").hide();
         }
@@ -535,7 +508,9 @@ $(document).ready(function($) {
             document.getElementById("horizontal_gap").value, 
             document.getElementById("vertical_gap").value,
             document.getElementById("number_of_columns").value, 
-            document.getElementById("number_of_rows").value
+            document.getElementById("number_of_rows").value,
+            document.getElementById("sort_order").value, 
+            document.getElementById("copies_per_plot").value
         );
     });
 
@@ -605,7 +580,8 @@ function initializeDrawArea() {
         .append('svg')
         .classed("label-template", true)
         .attr({
-            id: "d3-label-area"
+            id: "d3-label-area",
+            viewBox: "0 0 480 204"
         }).classed("d3-draw-svg", true);
 
     //set up background
@@ -614,6 +590,8 @@ function initializeDrawArea() {
         .attr({
             x: 0,
             y: 0,
+            width: 480,
+            height: 204,
             fill: "#FFF",
             border:"1px solid black;"
         })
@@ -785,29 +763,53 @@ function doSnap(state, selection) {
 
 function switchPageDependentOptions(page) {
      console.log("Page type is: " + page);
+     
+     // load label size and label field options based on page type
+     var label_sizes = page_formats[page].label_sizes;
+     d3.select("#label_format").selectAll("option").remove();
+     d3.select("#label_format").selectAll("option")
+         .data(Object.keys(label_sizes))
+         .enter().append("option")
+         .text(function(d) {
+             return d
+         });
+    
+         d3.select("#d3-add-type-input").selectAll("option").remove();
+         d3.select("#d3-add-type-input").selectAll("option")
+             .data(Object.keys(label_options))
+             .enter().append("option")
+             .text(function(d) {
+                 return label_options[d].name
+             })
+             .attr("value", function(d) {
+                 return d
+             });
+     
     if (page == 'Zebra printer file') { // disable PDF text option and pdf download
-        d3.select("#d3-add-type-input").selectAll("option")
-        .each(function(d) {
-            console.log("d is: "+JSON.stringify(d));
-            if (d === "PDF Text") {
-              d3.select(this).property("disabled", true)
-            }
-            if (d === "Zebra Text") {
-              d3.select(this).property("disabled", false)
-            }
-        });
+        // d3.select("#d3-add-type-input").selectAll("option")
+        // .each(function(d) {
+        //     console.log("d is: "+JSON.stringify(d));
+        //     if (d === "PDF Text") {
+        //       d3.select(this).property("disabled", true)
+        //     }
+        //     if (d === "Zebra Text") {
+        //       d3.select(this).property("disabled", false)
+        //     }
+        // });
+        $("#d3-add-type-input option[value='PDFText']").remove();
         document.getElementById("d3-pdf-button").style.display = "none";
         document.getElementById("d3-zpl-button").style.display = "inline";
     } else { // disable Zebra text option and zpl download
-        d3.select("#d3-add-type-input").selectAll("option")
-        .each(function(d) {
-            if (d === "Zebra Text") {
-              d3.select(this).property("disabled", true)
-            }
-            if (d === "PDF Text") {
-              d3.select(this).property("disabled", false)
-            }
-        });
+        // d3.select("#d3-add-type-input").selectAll("option")
+        // .each(function(d) {
+        //     if (d === "Zebra Text") {
+        //       d3.select(this).property("disabled", true)
+        //     }
+        //     if (d === "PDF Text") {
+        //       d3.select(this).property("disabled", false)
+        //     }
+        // });
+        $("#d3-add-type-input option[value='ZebraText']").remove();
         document.getElementById("d3-zpl-button").style.display = "none";
         document.getElementById("d3-pdf-button").style.display = "inline";
     }
@@ -815,6 +817,10 @@ function switchPageDependentOptions(page) {
     if (page == 'Custom') {
         document.getElementById("d3-custom-dimensions-div").style.display = "inline";
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "visible";
+        document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
+        document.getElementById("label_format").value = 'Custom';
+        $('#page_width').focus();
+        
         $('#page_width').on("change", function() {
             page_formats[page].page_width = this.value;
         });
@@ -822,20 +828,14 @@ function switchPageDependentOptions(page) {
         $('#page-height').on("change", function() {
             page_formats[page].page_height = this.value;
         });
+    } else if (document.getElementById("label_format").value != 'Custom') {
+        document.getElementById("d3-custom-dimensions-div").style.display = "none";
+        document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
+        document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
     } else {
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
     }
-        
-    // load label size and label field options based on page type
-    var label_sizes = page_formats[page].label_sizes;
-    d3.select("#label_format").selectAll("option").remove();
-    d3.select("#label_format").selectAll("option")
-        .data(Object.keys(label_sizes))
-        .enter().append("option")
-        .text(function(d) {
-            return d
-        })   
-    // document.getElementById("d3-label-format").style.visibility = "visible";
+           
 }
 
 function switchLabelDependentOptions(label) {
@@ -846,6 +846,7 @@ function switchLabelDependentOptions(label) {
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
         $('#label_width').focus();
     } else {
+        document.getElementById("d3-custom-dimensions-div").style.display = "none";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
         // document.getElementById("d3-draw-div").style.visibility = "visible";
@@ -920,7 +921,7 @@ function addToLabel(field, type, size, font, x, y, scale) {
                 "type": type,
                 "font-size": size,
                 "font": font,
-                "style": label_options[type].fonts[font] || "font-family:courier;",
+                "style": (typeof font == 'undefined') ? label_options[type].fonts[font] : "font-family:courier;",
                 "dominant-baseline": "mathematical",
             })
             .text(field_data.label_text)
@@ -936,7 +937,7 @@ function addToLabel(field, type, size, font, x, y, scale) {
 
 }
 
-function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows) {
+function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, sort_order, copies_per_plot) {
     var page = d3.select("#page_format").node().value;
     var label = d3.select("#label_format").node().value;
     console.log("page is "+page+" and label is "+label);
@@ -946,12 +947,16 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     page_formats[page].label_sizes[label].vertical_gap = vertical_gap;
     page_formats[page].label_sizes[label].number_of_columns = number_of_columns;
     page_formats[page].label_sizes[label].number_of_rows = number_of_rows;
+    page_formats[page].label_sizes[label].sort_order = sort_order;
+    page_formats[page].label_sizes[label].copies_per_plot = copies_per_plot;
     document.getElementById("top_margin").value = top_margin; 
     document.getElementById("left_margin").value = left_margin;
     document.getElementById("horizontal_gap").value = horizontal_gap; 
     document.getElementById("vertical_gap").value = vertical_gap;
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
+    document.getElementById("sort_order").value = sort_order;
+    document.getElementById("copies_per_plot").value = copies_per_plot;
 }
 
 function dragSnap() {
@@ -965,7 +970,7 @@ function createAdders(add_fields) {
         .data(Object.keys(label_options))
         .enter().append("option")
         .text(function(d) {
-            return d
+            return label_options[d].name
         })
         .attr("value", function(d) {
             return d
@@ -1112,7 +1117,9 @@ function load_design (list_id) {
         params['horizontal_gap'],
         params['vertical_gap'],
         params['number_of_columns'],
-        params['number_of_rows']
+        params['number_of_rows'],
+        params['sort_order'],
+        params['copies_per_plot']
     );
     
     console.log("List has been loaded!\n");
