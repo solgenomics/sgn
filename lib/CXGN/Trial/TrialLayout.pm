@@ -30,7 +30,8 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
         "num_seed_per_plot" => 12,
         "seed_transaction_operator" => "janedoe",
         "plant_names" => ["plant1", "plant2"],
-        "plant_ids" => [3456, 3457]
+        "plant_ids" => [3456, 3457],
+        "plot_geo_json" => {}
     }
  }
  
@@ -290,6 +291,7 @@ sub generate_and_cache_layout {
   my $is_a_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'is a control', 'stock_property' )->cvterm_id();
   my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'row_number', 'stock_property' )->cvterm_id();
   my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'col_number', 'stock_property' )->cvterm_id();
+  my $plot_geo_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot_geo_json', 'stock_property' )->cvterm_id();
   my $json = JSON->new();
 
   @plots = @{$plots_ref};
@@ -319,6 +321,7 @@ sub generate_and_cache_layout {
     my $is_a_control_prop = $stockprop_hash{$is_a_control_cvterm_id} ? join ',', @{$stockprop_hash{$is_a_control_cvterm_id}} : undef;
     my $row_number_prop = $stockprop_hash{$row_number_cvterm_id} ? join ',', @{$stockprop_hash{$row_number_cvterm_id}} : undef;
     my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
+    my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {}, {order_by=>"object.stock_id"});
 	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object', {}, {order_by=>"object.stock_id"});
@@ -351,6 +354,9 @@ sub generate_and_cache_layout {
     }
     if ($range_number_prop) {
       $design_info{"range_number"}=$range_number_prop;
+    }
+    if ($plot_geo_json_prop) {
+      $design_info{"plot_geo_json"} = decode_json $plot_geo_json_prop;
     }
     if ($is_a_control_prop) {
       $design_info{"is_a_control"}=$is_a_control_prop;
