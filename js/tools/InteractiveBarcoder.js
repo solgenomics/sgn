@@ -292,7 +292,7 @@ $(document).ready(function($) {
         for (i=0; i < label_params.length; i++) { // add numbered element key for each set of label params
             data += '\n"element'+i+'": '+JSON.stringify(label_params[i]);
         }
-
+        console.log("Data for list is: "+data);
         list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded = lo.addToList(list_id, data);
@@ -868,8 +868,8 @@ function addToLabel(field, type, size, font, x, y, scale) {
         x =  label_width / 4;
         y = label_height / 2;
     }
-    scale = (typeof scale === 'undefined') ? 1 : scale;
-    //console.log("X is: "+x+" and y is: "+y+" and scale is "+scale);
+    scale = (typeof scale === 'undefined') ? [1,1] : scale;
+    console.log("X is: "+x+" and y is: "+y+" and scale is "+scale);
     
     //get display text
     var field_data = add_fields[field];
@@ -987,7 +987,7 @@ function getLabelDetails(element, index) {
         y: coords[1],
         height: height,
         width: width,
-        scale: scale[0],
+        scale: scale,
         value: element.getAttribute("value"),
         type: element.getAttribute("type"),
         font: element.getAttribute("font"),
@@ -1065,15 +1065,6 @@ function load_design (list_id) {
     var fixed_elements = Object.values(elements).map(function(e){ return e.pop(); });
     var params = JSON.parse("{"+fixed_elements.join(',')+"}");
 
-    saveAdditionalOptions(
-        params['top_margin'],
-        params['left_margin'],
-        params['horizontal_gap'],
-        params['vertical_gap'],
-        params['number_of_columns'],
-        params['number_of_rows']
-    );
-
     for (var key in params) {        
         if (key.match(/element/)) {
             value = params[key];
@@ -1101,6 +1092,16 @@ function load_design (list_id) {
         document.getElementById("d3-draw-div").style.display = "inline";
         document.getElementById("d3-adders").style.display = "inline";
     }
+    
+    saveAdditionalOptions(
+        params['top_margin'],
+        params['left_margin'],
+        params['horizontal_gap'],
+        params['vertical_gap'],
+        params['number_of_columns'],
+        params['number_of_rows']
+    );
+    
     console.log("List has been loaded!\n");
 
 }
