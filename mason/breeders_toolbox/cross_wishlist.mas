@@ -86,7 +86,7 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Previous Cross Wishlists</button>
+                <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
                 <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
@@ -110,7 +110,7 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Create Cross Wishlist</button>
+                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Push Cross Wishlist for ODK Use</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -214,6 +214,7 @@ jQuery(document).ready(function($) {
 
     });
 
+%  if ($c->config->{ona_form_id} ne 'NULL'){
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
         jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"] ));
@@ -222,6 +223,11 @@ jQuery(document).ready(function($) {
         var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
         draw_cross_grid(female_accessions, male_accessions);
     });
+%  } else {
+    jQuery("#create_cross_wishlist").click(function() {
+        alert('Cross wishlist is not enabled for this database. Please contact us.');
+    });
+%  }
 
     jQuery(document).on('change', '#female_accession_list_div_list_select', function(){
         var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());

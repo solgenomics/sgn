@@ -163,7 +163,7 @@ sub get_layout_output {
 
     my @possible_cols = ();
     if ($self->data_level eq 'plots') {
-        @possible_cols = ('plot_name','block_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
+        @possible_cols = ('plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plots() : [];
@@ -171,7 +171,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'plants') {
-        @possible_cols = ('plant_name','plot_name','block_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
+        @possible_cols = ('plant_name','plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','plant_number','pedigree','location_name','trial_name','year','synonyms','tier');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plants() : [];
@@ -179,7 +179,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'subplots') {
-        @possible_cols = ('subplot_name','plot_name','block_number','subplot_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
+        @possible_cols = ('subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_subplots() : [];
@@ -187,7 +187,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'plants_subplots') {
-        @possible_cols = ('plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
+        @possible_cols = ('plant_name','subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plants() : [];
