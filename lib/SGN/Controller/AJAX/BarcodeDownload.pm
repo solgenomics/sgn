@@ -222,9 +222,9 @@ __PACKAGE__->config(
                        },
                    );
                   
-                  if ( $element{'type'} eq "Code128 (1D)" || $element{'type'} eq "QRCode (2D)" ) {
+                  if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
        
-                       if ( $element{'type'} eq "Code128 (1D)" ) {
+                       if ( $element{'type'} eq "Code128" ) {
        
                           my $barcode_object = Barcode::Code128->new();
                           $c->tempfiles_subdir('barcode');
@@ -597,10 +597,10 @@ sub label_params_to_zpl {
     foreach my $element (@label_params) {
         my %element = %$element;
         $zpl .= "^FO$element{'x'},$element{'y'}";
-        if ( $element{'type'} eq "Code128 (1D)" ) {
+        if ( $element{'type'} eq "Code128" ) {
             my $height = $element{'size'} * 25;
             $zpl .= "^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS\n";
-        } elsif ( $element{'type'} eq "QRCode (2D)" ) {
+        } elsif ( $element{'type'} eq "QRCode" ) {
             $zpl .= "^BQ,,$element{'size'}^FD   $element{'value'}^FS\n";
         } else {
             $zpl .= "^AA,$element{'size'}^FD$element{'value'}^FS\n";

@@ -115,6 +115,7 @@ page_formats["Custom"] = {
 };
 
 var label_options = {};
+label_options["Select an element type"] = { name: "Select an element type" };
 label_options["PDFText"] = {
     name: "Text",
     sizes: {
@@ -246,7 +247,7 @@ $(document).ready(function($) {
     });
     
     if (!isLoggedIn()) {
-        $('#design_list').html('<select class="form-control" disabled><option>Login to load designs</option></select>');
+        $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
     } else {
         var lo = new CXGN.List();
         $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved design', 'refresh'));
@@ -390,14 +391,31 @@ $(document).ready(function($) {
     var page_format_select = d3.select("#page_format");
     page_format_select.on("input", function() {
         var page = d3.select(this).node().value;
-        switchPageDependentOptions(page); // show correct download and text options
-        $('#label_format').focus();
+        if (!page || page == 'Select a page format') {
+            var intro_elements = document.getElementsByClassName("d3-intro-text");
+            for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
+            var label_elements = document.getElementsByClassName("label-element");
+            for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
+            
+            // disable add to label, remove label format options
+            d3.select("#label_format").selectAll("option").remove();
+            document.getElementById("d3-add").disabled = true;
+        } else {
+            switchPageDependentOptions(page); // show correct download and text options
+            $('#label_format').focus();
+        }
     });
 
     $('#label_format').change(function() {
         var label = $(this).find('option:selected').val();
-        switchLabelDependentOptions(label);
-
+        if (!label || label == 'Select a label format') {
+            var intro_elements = document.getElementsByClassName("d3-intro-text");
+            for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
+            var label_elements = document.getElementsByClassName("label-element");
+            for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
+        } else {
+            switchLabelDependentOptions(label);
+        }
     });
 
     d3.select("#d3-apply-custom-label-size").on("click", function() { 
@@ -409,10 +427,11 @@ $(document).ready(function($) {
         custom_label.label_width = document.getElementById("label_width").value;
         custom_label.label_height = document.getElementById("label_height").value;
         changeLabelSize(custom_label.label_width, custom_label.label_height);
-        
-        document.getElementById("d3-draw-div").style.visibility = "visible";
-        // document.getElementById("d3-adders").style.visibility = "visible";
-        $('#d3-add-field-input').focus();
+        var intro_elements = document.getElementsByClassName("d3-intro-text");
+        for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
+        var label_elements = document.getElementsByClassName("label-element");
+        for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "inline"; }
+        $('#d3-add-type-input').focus();
     });
 
     // $('#d3-custom-field-input').change(function(){
@@ -422,21 +441,28 @@ $(document).ready(function($) {
 
 
     $('#d3-add-field-input').change(function() {
-        console.log("Change noticed, text is " + $(this).find('option:selected').text());
-        if ( this.value == 'Custom') {
-            $('#customFieldModal').modal('show');
-        }
-        $('#d3-add-type-input').focus();
+        $("#d3-add-size-input").focus();
+    });
+    
+    $("#d3-custom-field").on("click", function() {
+        $('#customFieldModal').modal('show');
+        $('#customFieldModal').data('bs.modal').handleUpdate()
     });
 
-    d3.select(".d3-add-custom-text")
-        .style("margin-left", "1em");
-    d3.select("#d3-custom-field")
+    // d3.select(".d3-add-custom-text")
+    //     .style("margin-left", "1em");
+    d3.select("#d3-custom-field-save")
         .on("click", function() {
-            var custom_content = d3.select("#d3-custom-content").text();
+            var custom_value = d3.select("#d3-custom-content").text();
+            var custom_text = d3.select("#d3-custom-content").text();
             //$("#d3-text-field-input").find('option:selected').text(text_content);
             // $("#d3-text-field-input").find('option:selected').val(text_content);
-            $("#d3-add-field-input").find('option:selected').text(custom_content);
+            $("#d3-add-field-input").append($('<option>', {
+                value: custom_value,
+                text: custom_text,
+                selected: "selected"
+            }));
+            // $("#d3-add-field-input").find('option:selected').text(custom_content);
             // text_content.selectAll(".d3-text-placeholder").each(function(d,i){
             //   var th = d3.select(this)
             //   th.html("").text(th.attr("key"))
@@ -447,57 +473,13 @@ $(document).ready(function($) {
             // addText(text,fontSize)
         });
     $('#d3-add-type-input').change(function() {
-        var type = this.value;
-        var sizes = label_options[type].sizes;
-        if (type == "PDFText") {
-            
-            // set up font select
-            var fonts = label_options[type].fonts;
-            d3.select("#d3-add-font-input").selectAll("option").remove();
-            d3.select("#d3-add-font-input").selectAll("option")
-                .data(Object.keys(fonts))
-                .enter().append("option")
-                .text(function(d) {
-                    return d
-                })
-                .attr("style", function(d) {
-                    return fonts[d]
-                })
-                .attr("value", function(d) {
-                    return d
-                });
-            document.getElementById("d3-add-font-div").style.visibility = "visible";
-            
-            // set up size input and slider
-            $("#d3-add-size-input").replaceWith('<input type="number" id="d3-add-size-input" class="form-control"></input>');
-            var size_input = d3.select("#d3-add-size-input");
-            var size_slider = d3.select("#d3-add-size-slider");
-            size_input.attr(sizes);
-            size_slider.attr(sizes);
-            size_slider.on("input", function() {
-                size_input.property("value", this.value)
-            });
-            size_input.on("change", function() {
-                grid_slider.node().value = this.value;
-            });
-            $("#d3-add-size-slider").show();
-            
+        if (!this.value || this.value == 'Select an element type') {
+            document.getElementById("d3-add").disabled = true;
         } else {
-            $("#d3-add-font-input").val('');
-            document.getElementById("d3-add-font-div").style.visibility = "hidden";
-            $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
-            d3.select("#d3-add-size-input").selectAll("option")
-                .data(Object.keys(sizes))
-                .enter().append("option")
-                .text(function(d) {
-                    return d
-                })
-                .attr("value", function(d) {
-                    return sizes[d]
-                });
-            $("#d3-add-size-slider").hide();
+            switchTypeDependentOptions(this.value);
+            $("#d3-add-field-input").focus();
+            document.getElementById("d3-add").disabled = false;
         }
-        $("#d3-add-size-input").focus();
     
     });
 
@@ -581,21 +563,44 @@ function initializeDrawArea() {
         .classed("label-template", true)
         .attr({
             id: "d3-label-area",
-            viewBox: "0 0 480 204"
+            viewBox: "0 0 510 204"
         }).classed("d3-draw-svg", true);
 
     //set up background
-    svg.append('rect')
+    var rect = svg.append('rect')
         .classed("d3-bg", true)
         .attr({
             x: 0,
             y: 0,
-            width: 480,
+            width: 510,
             height: 204,
             fill: "#FFF",
-            border:"1px solid black;"
+            stroke: "#D3D3D3",
+            "stroke-width": "2px"
         })
         .on("click", clearSelection);
+        svg.append('text')
+        .classed("d3-intro-text", true)
+        .attr({
+            "x": "50%",
+            "y": "38%",
+            "font-size": 30,
+            //"style": "font-family:courier;font-weight:bold;",
+            "text-anchor": "middle",
+            "alignment-baseline": "central",
+        })
+        .text('Label Design Area')
+        svg.append('text')
+        .classed("d3-intro-text", true)
+        .attr({
+            "x": "50%",
+            "y": "55%",
+            "font-size": 16,
+            "style": "font-style: oblique;",
+            "text-anchor": "middle",
+            "alignment-baseline": "central",
+        })
+        .text('Set source, page, and label formats above to start designing.');
 
     //set up grid
     var grid = svg.append("g").classed("d3-bg-grid", true);
@@ -786,29 +791,12 @@ function switchPageDependentOptions(page) {
              });
      
     if (page == 'Zebra printer file') { // disable PDF text option and pdf download
-        // d3.select("#d3-add-type-input").selectAll("option")
-        // .each(function(d) {
-        //     console.log("d is: "+JSON.stringify(d));
-        //     if (d === "PDF Text") {
-        //       d3.select(this).property("disabled", true)
-        //     }
-        //     if (d === "Zebra Text") {
-        //       d3.select(this).property("disabled", false)
-        //     }
-        // });
         $("#d3-add-type-input option[value='PDFText']").remove();
+        switchTypeDependentOptions('ZebraText');
         document.getElementById("d3-pdf-button").style.display = "none";
         document.getElementById("d3-zpl-button").style.display = "inline";
     } else { // disable Zebra text option and zpl download
-        // d3.select("#d3-add-type-input").selectAll("option")
-        // .each(function(d) {
-        //     if (d === "Zebra Text") {
-        //       d3.select(this).property("disabled", true)
-        //     }
-        //     if (d === "PDF Text") {
-        //       d3.select(this).property("disabled", false)
-        //     }
-        // });
+        switchTypeDependentOptions('PDFText');
         $("#d3-add-type-input option[value='ZebraText']").remove();
         document.getElementById("d3-zpl-button").style.display = "none";
         document.getElementById("d3-pdf-button").style.display = "inline";
@@ -839,8 +827,10 @@ function switchPageDependentOptions(page) {
 }
 
 function switchLabelDependentOptions(label) {
+    
     var page = d3.select("#page_format").node().value;
     var label_sizes = page_formats[page].label_sizes;
+    
     if (label == 'Custom') {
         document.getElementById("d3-custom-dimensions-div").style.display = "inline";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
@@ -851,7 +841,12 @@ function switchLabelDependentOptions(label) {
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
         // document.getElementById("d3-draw-div").style.visibility = "visible";
         // document.getElementById("d3-adders").style.visibility = "visible";
-        $('#d3-add-field-input').focus();
+        
+        $('#d3-add-type-input').focus();
+        var intro_elements = document.getElementsByClassName("d3-intro-text");
+        for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
+        var label_elements = document.getElementsByClassName("label-element");
+        for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "inline"; }
     }
     document.getElementById("top_margin").value = label_sizes[label].top_margin;
     document.getElementById("left_margin").value = label_sizes[label].left_margin;
@@ -861,8 +856,61 @@ function switchLabelDependentOptions(label) {
     document.getElementById("number_of_rows").value = label_sizes[label].number_of_rows;
 }
 
-function addToLabel(field, type, size, font, x, y, scale) {
+function switchTypeDependentOptions(type){
     
+    var sizes = label_options[type].sizes;
+    if (type == "PDFText") {
+        
+        // set up font select
+        var fonts = label_options[type].fonts;
+        d3.select("#d3-add-font-input").selectAll("option").remove();
+        d3.select("#d3-add-font-input").selectAll("option")
+            .data(Object.keys(fonts))
+            .enter().append("option")
+            .text(function(d) {
+                return d
+            })
+            .attr("style", function(d) {
+                return fonts[d]
+            })
+            .attr("value", function(d) {
+                return d
+            });
+        document.getElementById("d3-add-font-div").style.visibility = "visible";
+        
+        // set up size input and slider
+        $("#d3-add-size-input").replaceWith('<input type="number" id="d3-add-size-input" class="form-control"></input>');
+        var size_input = d3.select("#d3-add-size-input");
+        var size_slider = d3.select("#d3-add-size-slider");
+        size_input.attr(sizes);
+        size_slider.attr(sizes);
+        size_slider.on("input", function() {
+            size_input.property("value", this.value)
+        });
+        size_input.on("change", function() {
+            grid_slider.node().value = this.value;
+        });
+        $("#d3-add-size-slider").show();
+        
+    } else {
+        $("#d3-add-font-input").val('');
+        document.getElementById("d3-add-font-div").style.visibility = "hidden";
+        $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
+        d3.select("#d3-add-size-input").selectAll("option")
+            .data(Object.keys(sizes))
+            .enter().append("option")
+            .text(function(d) {
+                return d
+            })
+            .attr("value", function(d) {
+                return sizes[d]
+            });
+        $("#d3-add-size-slider").hide();
+    }
+}
+
+function addToLabel(field, type, size, font, x, y, scale) {
+    // console.log("Field is: "+field+" and type is: "+type+" and size is "+size);
     svg = d3.select(".d3-draw-svg");
     
     //get x,y coords and scale 
@@ -876,7 +924,7 @@ function addToLabel(field, type, size, font, x, y, scale) {
         y = label_height / 2;
     }
     scale = (typeof scale === 'undefined') ? [1,1] : scale;
-    console.log("X is: "+x+" and y is: "+y+" and scale is "+scale);
+    // console.log("type of parsed X is: "+typeof parseInt(x)+" and parsed x is"+parseInt(x)+" and type of y is: "+typeof y+" and scale is "+scale);
     
     //get display text
     var field_data = add_fields[field];
@@ -887,14 +935,13 @@ function addToLabel(field, type, size, font, x, y, scale) {
         .classed("selectable", true)
         .call(draggable)
         .call(doTransform, function(state, selection) {
-            state.translate[0] = x
-            state.translate[1] = y
+            state.translate = [x,y]
             state.scale = scale
-        });
+        }, doSnap);
 
     switch (type) {
-        case "Code128 (1D)":
-        case "QRCode (2D)":
+        case "Code128":
+        case "QRCode":
         //add barcode specific attributes
             new_element.classed("barcode", true)
             .call(selectable, true)
@@ -906,7 +953,7 @@ function addToLabel(field, type, size, font, x, y, scale) {
                 "type": type
             })
             .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(field_data.label_text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
-            new_element.call(doTransform, doSnap);
+            //new_element.call(doTransform, doSnap);
             break;
             
         default:
@@ -1082,10 +1129,12 @@ function load_design (list_id) {
     //parse into javascript object
     var fixed_elements = Object.values(elements).map(function(e){ return e.pop(); });
     var params = JSON.parse("{"+fixed_elements.join(',')+"}");
+    // console.log("Params: are: "+params);
 
     for (var key in params) {        
         if (key.match(/element/)) {
             value = params[key];
+            // console.log("X is: "+value.x+" and y is: "+value.y);
             addToLabel(value.value, value.type, value.size, value.font, value.x, value.y, value.scale);
         } 
     }

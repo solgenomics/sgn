@@ -15,10 +15,13 @@
             <div class="col-md-2">
                 <label><b>Data Source:</b></label>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <select class="form-control" id="trial_select"></select>
             </div>
-            <div class="col-md-5" id="design_list">
+            <div class="col-md-2">
+                <label><b>Load Design?</b></label>
+            </div>
+            <div class="col-md-4" id="design_list">
             </div>
             <!-- <div class="col-md-1">
                 <center><i>or</i></center>&nbsp
@@ -48,13 +51,13 @@
                     <div class="col-md-6">
                         <center>
                             <label>Page Width:</label><br>
-                            <input class="form-control" placeholder="Width in pixels" type="number" id="page_width" style="max-width: 100%;">
+                            <input class="form-control" placeholder="In pixels" type="number" id="page_width" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-6">
                         <center>
                             <label>Page Height:</label><br>
-                            <input class="form-control" placeholder="Height in pixels" type="number" id="page_height" style="max-width: 100%;">
+                            <input class="form-control" placeholder="In pixels" type="number" id="page_height" style="max-width: 100%;">
                         </center>
                     </div>
                 </div>
@@ -65,13 +68,13 @@
                     <div class="col-md-5">
                         <center>
                             <label>Label Width:</label><br>
-                            <input class="form-control" placeholder="Width in pixels" type="number" id="label_width" style="max-width: 100%;">
+                            <input class="form-control" placeholder="In pixels" type="number" id="label_width" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             <label>Label Height:</label><br>
-                            <input class="form-control" placeholder="Height in pixels" type="number" id="label_height" style="max-width: 100%;">
+                            <input class="form-control" placeholder="In pixels" type="number" id="label_height" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-2">
@@ -106,7 +109,8 @@
             <div class="col-md-2" id="d3-add-field-div">
                 <center>
                     <label>Field:</label><br>
-                    <select id="d3-add-field-input" class="form-control"></select>&nbsp&nbsp
+                    <select id="d3-add-field-input" class="form-control"></select>
+                    <button class="btn btn-primary" id="d3-custom-field">Custom Field</button>
                 </center>
             </div>
             <div class="col-md-3" id="d3-add-size-div">
@@ -171,21 +175,25 @@
 <div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="customFieldModal" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-body">
-                    <div class="row">
-               <div class="col-md-12">
-                   <span id="d3-custom-templater"</span>
-               </div>
-           </div>
-                    <div class="row">
-               <div class="col-md-12">
-                   <input type="text" class="form-control" name="" id="d3-custom-content" value="" size="30">
-               </div>
-           </div>
+            <div class="modal-body" style="height: 30vh;">
+                <label>Select fields:</label>
+                <div class="row">
+                    <div class="col-md-12">
+                        <span id="d3-custom-templater"</span>
+                    </div>
+                </div>
+                <br><br>
+                <label>Example Text:</label>
+                <div class="row">
+                    <div class="col-md-12">
+                        <input type="text" class="form-control" name="" id="d3-custom-content" value="" size="30">
+                    </div>
+                </div>
+                <br>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button id="d3-custom-field" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+                <button id="d3-custom-field-save" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
             </div>
         </div>
     </div>
