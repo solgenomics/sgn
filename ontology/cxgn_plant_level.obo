@@ -468,3 +468,17 @@ name: hand rank 30
 synonym: "HDRK30" EXACT []
 def: "Record the thirtieth rank hand " []
 is_a: PLANT_LEVEL:0000036
+
+[Term]
+id: PLANT_LEVEL:0000067
+name: most distal hand rank
+synonym: "DistHDRK01" EXACT []
+def: "Record the most distal hand rand " []
+is_a: PLANT_LEVEL:0000036
+
+[Term]
+id: PLANT_LEVEL:0000068
+name: 2nd distal hand rank
+synonym: "DistHDRK02" EXACT []
+def: "Record the second most distal hand rand " []
+is_a: PLANT_LEVEL:0000036
