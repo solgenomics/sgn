@@ -39,69 +39,69 @@ is_a: PLANT_LEVEL:0000001
 
 [Term]
 id: PLANT_LEVEL:0000005
-name: Leaf level
+name: leaf level
 def: "Categorical leaf levels." []
 is_a: PLANT_LEVEL:0000000
 
 [Term]
 id: PLANT_LEVEL:0000006
-name: leaf rank 1
+name: leaf rank 01
 synonym: "LFRK01" EXACT []
 def: "First standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000007
-name: leaf rank 2
+name: leaf rank 02
 synonym: "LFRK02" EXACT []
 def: "Second standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000008
-name: leaf rank 3
+name: leaf rank 03
 synonym: "LFRK03" EXACT []
 def: "Third standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000009
-name: leaf rank 4
+name: leaf rank 04
 synonym: "LFRK04" EXACT []
 def: "Fourth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000010
-name: leaf rank 5
+name: leaf rank 05
 synonym: "LFRK05" EXACT []
 def: "Fifth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000011
-name: leaf rank 6
+name: leaf rank 06
 synonym: "LFRK06" EXACT []
 def: "Sixth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000012
-name: leaf rank 7
+name: leaf rank 07
 synonym: "LFRK07" EXACT []
 def: "Seventh standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000013
-name: leaf rank 8
+name: leaf rank 08
 synonym: "LFRK08" EXACT []
 def: "First standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000014
-name: leaf rank 9
+name: leaf rank 09
 synonym: "LFRK09" EXACT []
 def: "Ninth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
 is_a: PLANT_LEVEL:0000005
@@ -255,69 +255,69 @@ is_a: PLANT_LEVEL:0000005
 
 [Term]
 id: PLANT_LEVEL:0000036
-name: Hand rank
+name: hand rank
 def: "Record the rank (order) of a hand in the bunch, starting with the hand at the proximal end (closest to the pseudostem) of the bunch as "1" and continuing to the hand at the most distal end (closest to the male bud)." []
 is_a: PLANT_LEVEL:0000000
 
 [Term]
 id: PLANT_LEVEL:0000037
-name: hand rank 1
+name: hand rank 01
 synonym: "HDRK01" EXACT []
 def: "Record the first rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000038
-name: hand rank 2
+name: hand rank 02
 synonym: "HDRK02" EXACT []
 def: "Record the second rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000039
-name: hand rank 3
+name: hand rank 03
 synonym: "HDRK03" EXACT []
 def: "Record the third rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000040
-name: hand rank 4
+name: hand rank 04
 synonym: "HDRK04" EXACT []
 def: "Record the fourth rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000041
-name: hand rank 5
+name: hand rank 05
 synonym: "HDRK05" EXACT []
 def: "Record the fifth rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000042
-name: hand rank 6
+name: hand rank 06
 synonym: "HDRK06" EXACT []
 def: "Record the sixth rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000043
-name: hand rank 7
+name: hand rank 07
 synonym: "HDRK07" EXACT []
 def: "Record the seventh rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000044
-name: hand rank 8
+name: hand rank 08
 synonym: "HDRK08" EXACT []
 def: "Record the height rank hand " []
 is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000045
-name: hand rank 9
+name: hand rank 09
 synonym: "HDRK09" EXACT []
 def: "Record the ninth rank hand " []
 is_a: PLANT_LEVEL:0000005
@@ -471,7 +471,7 @@ is_a: PLANT_LEVEL:0000036
 
 [Term]
 id: PLANT_LEVEL:0000067
-name: most distal hand rank
+name: 1st most distal hand rank
 synonym: "DistHDRK01" EXACT []
 def: "Record the most distal hand rand " []
 is_a: PLANT_LEVEL:0000036
