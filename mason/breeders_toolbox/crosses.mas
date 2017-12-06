@@ -247,7 +247,7 @@ jQuery(document).ready(function($) {
                 window.open('/folder/'+node.id);
                 event.stopPropagation();
             } else if (node.type == 'cross') {
-                window.open('/cross/'+node.id);
+                window.open('/breeders_toolbox/trial/'+node.id);
                 event.stopPropagation();
             }
         }
