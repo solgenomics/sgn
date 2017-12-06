@@ -221,6 +221,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    if ($data_level eq 'plate'){
+        $selected_cols = {'plot_number'=>1, 'plot_name'=>1, 'accession_name'=>1, 'genotyping_project_name'=>1, 'genotyping_user_id'=>1, 'location_name'=>1, 'genus'=>1, 'species'=>1, 'trial_name'=>1, 'pedigree'=>1};
+    }
     my $selected_trait_list_id = $c->req->param('trait_list_id');
     my @selected_trait_names;
     my @trait_list;
