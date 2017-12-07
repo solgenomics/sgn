@@ -67,7 +67,7 @@ my $start_time = time();
 <br/>
 
 
-<& /page/page_title.mas, title=>"Treatment detail for ".$trial_name &>
+<& /page/page_title.mas, title=>"Field Management Factor: ".$trial_name &>
 
 <&| /page/info_section.mas, title=>"Trial details",  collapsible => 1 &>
 
@@ -76,7 +76,7 @@ my $start_time = time();
 <table class="table table-hover" >
 
 <tr>
-<td><b>Treatment Name</b></td>
+<td><b>Field Management Factor Name</b></td>
 <td>
 <div id="trial_name">
 % if ($trial_name) {

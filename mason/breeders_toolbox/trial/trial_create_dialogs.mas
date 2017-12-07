@@ -418,7 +418,7 @@ $breeding_programs
 </div>
 
 <div class="modal fade" id="trial_design_confirm" name="trial_design_confirm" tabindex="-1" role="dialog" aria-labelledby="addTrialConfirmDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -434,7 +434,7 @@ $breeding_programs
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatments to Design</button>
+                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Field Management Factor(s) to Design</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm (Saves Trial In Database)</button>
             </div>
