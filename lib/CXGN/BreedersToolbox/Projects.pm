@@ -118,7 +118,7 @@ sub get_trials_by_breeding_program {
     my $cross_trials;
     my $genotyping_trials;
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
-    my $cross_cvterm_id = $self->get_cross_cvterm_id();
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
 
     my %projects_that_are_crosses;
@@ -137,7 +137,7 @@ sub get_trials_by_breeding_program {
 	$project_description{$id} = $desc;
       }
       if ($prop) {
-	if ($prop == $cross_cvterm_id) {
+	if ($prop == $crossing_trial_cvterm_id) {
 	  $projects_that_are_crosses{$id} = 1;
 	  $project_year{$id} = '';
 	  #print STDERR Dumper "Cross Trial: ".$name;

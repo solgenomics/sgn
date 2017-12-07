@@ -25,22 +25,9 @@ jQuery(document).ready(function($) {
 
         get_select_box('years', 'add_project_year', {'auto_generate':1});
 
-        get_select_box('folders', 'crossingtrial_folder_select_div', {
-            'name': 'crossingtrial_folder_id',
-            'id': 'crossingtrial_folder_id',
-            'folder_for_crosses' : 1,
-            'empty': 1
-        });
-
         $("#create_crossingtrial_dialog").modal("show");
 
       });
-
-
-      $("#folder_checkbox").change(function() {
-          $("#crossingtrial_folder_section").toggle(this.checked); // show if it is checked, otherwise hide
-      });
-
 
       $('#create_crossingtrial_submit').click(function() {
 
@@ -74,27 +61,19 @@ jQuery(document).ready(function($) {
               return;
           }
 
-          var crossingtrial_folder_name = $("#crossingtrial_folder_name").val();
-          var crossingtrial_folder_id;
-          if (crossingtrial_folder_name) {  // get id if folder with this name already exisits
-              crossingtrial_folder_id = $('#crossingtrial_folder_id option').filter(function () { return $(this).html() == crossingtrial_folder_name; }).val();
-          }
-          else {
-              crossingtrial_folder_id = $("#crossingtrial_folder_id").val();
-          }
-          add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description, crossingtrial_folder_name, crossingtrial_folder_id);
+          add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description);
 
       });
 
-    $('#program').change(function(){
-        get_select_box('folders', 'add_cross_folder_select_div', {
-            'name': 'add_cross_folder_id',
-            'id': 'add_cross_folder_id',
-            'folder_for_crosses' : true,
-            'empty': 1,
-            'breeding_program_id': jQuery('#program').val()
-        });
-    });
+  //  $('#program').change(function(){
+  //      get_select_box('folders', 'add_cross_folder_select_div', {
+  //          'name': 'add_cross_folder_id',
+  //          'id': 'add_cross_folder_id',
+  //          'folder_for_crosses' : true,
+  //          'empty': 1,
+  //          'breeding_program_id': jQuery('#program').val()
+  //      });
+  //  });
 
     $("#create_cross_link").click(function() {
 
@@ -424,8 +403,6 @@ jQuery(document).ready(function($) {
               'crossingtrial_location': crossingtrial_location,
               'year': year,
               'project_description': project_description,
-              'crossingtrial_folder_name=': crossingtrial_folder_name,
-              'crossingtrial_folder_id': crossingtrial_folder_id,
             },
           beforeSend: function() {
               jQuery("#create_crossingtrial_dialog").modal("hide");
