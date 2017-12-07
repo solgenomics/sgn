@@ -261,15 +261,16 @@ sub run : Path('/tools/blast/run') Args(0) {
         {
           temp_base => $blast_tmp_output,
           queue => $c->config->{'web_cluster_queue'},
-          working_dir => $blast_tmp_output,
+          #working_dir => $blast_tmp_output,
         
           # temp_base => $c->config->{'cluster_shared_tempdir'},
-          # queue => $c->config->{'web_cluster_queue'},
+          #queue => $c->config->{'web_cluster_queue'},
           # working_dir => $c->config->{'cluster_shared_tempdir'},
 
-  		    # don't block and wait if the cluster looks full
-  		    max_cluster_jobs => 1_000_000_000,
-  	    }
+	  # don't block and wait if the cluster looks full
+	  backend => $c->config->{'backend'},
+	  max_cluster_jobs => 1_000_000_000,
+	}
   	  );
    
       print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
