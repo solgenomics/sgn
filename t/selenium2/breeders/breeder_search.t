@@ -121,13 +121,18 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
-    $t->driver->move_to( element => "paste_list_select");
+    my $paste_list_select =  $t->find_element_ok("paste_list_list_select", "id", "paste test acc list");
 
     sleep(1);
 
-    $t->find_element_ok("paste_list_select", "id", "paste test acc list")->send_keys('test_list');
+    $t->driver->move_to( element => $paste_list_select);
 
-    sleep(2);
+    sleep(1);
+
+
+    $paste_list_select->send_keys('test_list');
+
+    sleep(1);
 
     $t->find_element_ok("c1_data", "id", "select pasted test accession")->send_keys('test_accession1');
 
@@ -137,30 +142,54 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("c1_data_list_select", "id", "select acc_list")->send_keys('acc_list');
 
-    $t->find_element_ok("c1_data_button", "id", "add c1_data to acc_list")->click();
+    my $c1_data_button = $t->find_element_ok("c1_data_button", "id", "add c1_data to acc_list");
+
+    $t->driver->move_to( element => $c1_data_button);
+    
+    sleep(1);
+
+    $c1_data_button->click();
 
     sleep(1);
 
     $t->driver->accept_alert();
 
-    $t->driver()->move_to( element => "paste_list_refresh");
+    # reload page to scroll up again - selenium has problems with 
+    # the menu bar on the website.
+    #
+    $t->get_ok('/breeders/search'); 
+
+    my $refresh_lists = $t->find_element_ok("paste_list_list_refresh", "id", "refresh lists");
 
     sleep(1);
 
-    my $refresh_lists = $t->find_element_ok("paste_list_refresh", "id", " refresh lists");
-    sleep(1);
+    $t->driver()->move_to( element => $refresh_lists, yoffset => -50);
+
+    sleep(3);
+
     $refresh_lists->click();
 
     sleep(1);
     
-    $t->driver()->move_to( element => "paste_list_select");
+    my $paste_list_list_select = $t->find_element_ok("paste_list_list_select", "id", "paste test acc list");
+    
+    sleep(1);
+    
+    $t->driver()->move_to( element => $paste_list_list_select);
+    
     sleep(1);
 
-    $t->find_element_ok("paste_list_select", "id", "paste test acc list")->send_keys('acc_list');
+    my $paste_list_list_select = $t->find_element_ok("paste_list_list_select", "id", "paste test acc list");
 
-    sleep(5);
+    sleep(1);
+
+    $paste_list_list_select->send_keys('acc_list');
+
+    sleep(1);
 
     $t->find_element_ok("c1_data", "id", "select pasted test accession")->send_keys('test_accession1');
+
+    sleep(1);
 
     $t->find_element_ok("c1_data", "id", "select pasted list accession")->send_keys('UG120001');
 
