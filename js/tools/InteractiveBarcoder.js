@@ -237,7 +237,7 @@ var drag_behaviour = d3.behavior.drag().on(
     });
 
 $(document).ready(function($) {
-    
+
     initializeDrawArea();
 
     get_select_box('trials', 'trial_select', {
@@ -245,7 +245,7 @@ $(document).ready(function($) {
         'id': 'trial_select_html',
         'empty': 1
     });
-    
+
     if (!isLoggedIn()) {
         $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
     } else {
@@ -256,7 +256,7 @@ $(document).ready(function($) {
             load_design(this.value);
         });
     }
-    
+
     $('#d3-save-button').click(function() {
         var lo = new CXGN.List();
         var new_name = $('#save_design_name').val();
@@ -264,7 +264,7 @@ $(document).ready(function($) {
         var page_params = retrievePageParams();
         page_params = JSON.stringify(page_params);
         var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
-        
+
         var label_elements = document.getElementsByClassName('label-element');
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
         label_params = label_elements.map(getLabelDetails);
@@ -285,20 +285,20 @@ $(document).ready(function($) {
 
     });
 
-    
-    
+
+
     $('#trial_select').focus();
-    
+
     // var builder = textTemplater.builder("#d3-custom-templater", fields);
-    
-    $("#edit_additional_settings").on("click", function() { 
+
+    $("#edit_additional_settings").on("click", function() {
         $('#editAdditionalSettingsModal').modal('show');
     });
-    
-    $('#d3-custom-templater').on("change", function() {
-        var tstring = builder.getTemplate();
-        $("#d3-custom-content").val(tstring);
-    });
+
+    // $('#d3-custom-templater').on("change", function() {
+    //     var tstring = builder.getTemplate();
+    //     $("#d3-custom-content").val(tstring);
+    // });
 
     $(document).on("change", "#trial_select", function() {
 
@@ -325,53 +325,55 @@ $(document).ready(function($) {
                     alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
                 } else {
                     console.log("Got longest elements: " + JSON.stringify(response));
-                    add_fields = {
-                        "{$Accession}": {
-                            label_text: response.Accession,
-                            select_text: "Accession",
-                        },
-                        "{$Plot_Name}": {
-                            label_text: response.Plot_Name,
-                            select_text: "Plot_Name",
-                        },
-                        "{$Plot_Number}": {
-                            label_text: response.Plot_Number,
-                            select_text: "Plot_Number",
-                        },
-                        "{$Rep_Number}": {
-                            label_text: response.Rep_Number,
-                            select_text: "Rep_Number",
-                        },
-                        "{$Row_Number}": {
-                            label_text: response.Row_Number,
-                            select_text: "Row_Number",
-                        },
-                        "{$Col_Number}": {
-                            label_text: response.Col_Number,
-                            select_text: "Col_Number",
-                        },
-                        "{$Trial_Name}": {
-                            label_text: response.Trial_Name,
-                            select_text: "Trial_Name",
-                        },
-                        "{$Year}": {
-                            label_text: response.Year,
-                            select_text: "Year",
-                        },
-                        "{$Pedigree_String}": {
-                            label_text: response.Pedigree_String,
-                            select_text: "Pedigree_String",
-                        },
-                        "Custom": {
-                            select_text: "Custom",
-                        },
-                    };
-                    
+                    add_fields = response;
+                    // {
+                    //     "{$Accession}": {
+                    //         label_text: response.Accession,
+                    //         select_text: "Accession",
+                    //     },
+                    //     "{$Plot_Name}": {
+                    //         label_text: response.Plot_Name,
+                    //         select_text: "Plot_Name",
+                    //     },
+                    //     "{$Plot_Number}": {
+                    //         label_text: response.Plot_Number,
+                    //         select_text: "Plot_Number",
+                    //     },
+                    //     "{$Rep_Number}": {
+                    //         label_text: response.Rep_Number,
+                    //         select_text: "Rep_Number",
+                    //     },
+                    //     "{$Row_Number}": {
+                    //         label_text: response.Row_Number,
+                    //         select_text: "Row_Number",
+                    //     },
+                    //     "{$Col_Number}": {
+                    //         label_text: response.Col_Number,
+                    //         select_text: "Col_Number",
+                    //     },
+                    //     "{$Trial_Name}": {
+                    //         label_text: response.Trial_Name,
+                    //         select_text: "Trial_Name",
+                    //     },
+                    //     "{$Year}": {
+                    //         label_text: response.Year,
+                    //         select_text: "Year",
+                    //     },
+                    //     "{$Pedigree_String}": {
+                    //         label_text: response.Pedigree_String,
+                    //         select_text: "Pedigree_String",
+                    //     },
+                    //     "Custom": {
+                    //         select_text: "Custom",
+                    //     },
+                    // };
+
                     createAdders(add_fields);
-                    
-                    var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
-                    var builder = textTemplater.builder("#d3-custom-templater", fields);
-                    
+                    initializeCustomModal(add_fields);
+
+                    // var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
+                    // var builder = textTemplater.builder("#d3-custom-templater", fields);
+
                     var page_format_select = d3.select("#page_format");
                     page_format_select.selectAll("option")
                         .data(Object.keys(page_formats))
@@ -396,7 +398,7 @@ $(document).ready(function($) {
             for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
             var label_elements = document.getElementsByClassName("label-element");
             for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
-            
+
             // disable add to label, remove label format options
             d3.select("#label_format").selectAll("option").remove();
             document.getElementById("d3-add").disabled = true;
@@ -418,8 +420,8 @@ $(document).ready(function($) {
         }
     });
 
-    d3.select("#d3-apply-custom-label-size").on("click", function() { 
-        
+    d3.select("#d3-apply-custom-label-size").on("click", function() {
+
         //save and apply custom label size
         var page = d3.select("#page_format").node().value;
         var custom_label = page_formats[page].label_sizes['Custom'];
@@ -443,7 +445,7 @@ $(document).ready(function($) {
     $('#d3-add-field-input').change(function() {
         $("#d3-add-size-input").focus();
     });
-    
+
     $("#d3-custom-field").on("click", function() {
         $('#customFieldModal').modal('show');
         $('#customFieldModal').data('bs.modal').handleUpdate()
@@ -451,27 +453,18 @@ $(document).ready(function($) {
 
     // d3.select(".d3-add-custom-text")
     //     .style("margin-left", "1em");
+
     d3.select("#d3-custom-field-save")
         .on("click", function() {
-            var custom_value = d3.select("#d3-custom-content").text();
-            var custom_text = d3.select("#d3-custom-content").text();
-            //$("#d3-text-field-input").find('option:selected').text(text_content);
-            // $("#d3-text-field-input").find('option:selected').val(text_content);
+            var custom_text = $("#d3-custom-input").val();
+            var custom_value = $("#d3-custom-content").text();
             $("#d3-add-field-input").append($('<option>', {
                 value: custom_value,
                 text: custom_text,
                 selected: "selected"
             }));
-            // $("#d3-add-field-input").find('option:selected').text(custom_content);
-            // text_content.selectAll(".d3-text-placeholder").each(function(d,i){
-            //   var th = d3.select(this)
-            //   th.html("").text(th.attr("key"))
-            //   
-            // });
-            // var text = text_content.text();
-            // var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
-            // addText(text,fontSize)
         });
+
     $('#d3-add-type-input').change(function() {
         if (!this.value || this.value == 'Select an element type') {
             document.getElementById("d3-add").disabled = true;
@@ -480,30 +473,31 @@ $(document).ready(function($) {
             $("#d3-add-field-input").focus();
             document.getElementById("d3-add").disabled = false;
         }
-    
+
     });
 
     $("#d3-edit-additional-settings").on("click", function() {
         saveAdditionalOptions(
-            document.getElementById("top_margin").value, 
+            document.getElementById("top_margin").value,
             document.getElementById("left_margin").value,
-            document.getElementById("horizontal_gap").value, 
+            document.getElementById("horizontal_gap").value,
             document.getElementById("vertical_gap").value,
-            document.getElementById("number_of_columns").value, 
+            document.getElementById("number_of_columns").value,
             document.getElementById("number_of_rows").value,
-            document.getElementById("sort_order").value, 
+            document.getElementById("sort_order").value,
             document.getElementById("copies_per_plot").value
         );
     });
 
     $("#d3-add").on("click", function() {
-        var field = document.getElementById("d3-add-field-input").value;
+        var field = $('#d3-add-field-input').find('option:selected').text();
+        var text = document.getElementById("d3-add-field-input").value;
         var type = document.getElementById("d3-add-type-input").value;
         var size = document.getElementById("d3-add-size-input").value;
         var font = document.getElementById("d3-add-font-input").value;
-        addToLabel(field, type, size, font);
+        addToLabel(field, text, type, size, font);
     });
-    
+
     $("#d3-pdf-button, #d3-zpl-button").on("click", function() {
         var download_type = $(this).val();
         console.log("You clicked the download "+download_type+" button.");
@@ -768,7 +762,7 @@ function doSnap(state, selection) {
 
 function switchPageDependentOptions(page) {
      console.log("Page type is: " + page);
-     
+
      // load label size and label field options based on page type
      var label_sizes = page_formats[page].label_sizes;
      d3.select("#label_format").selectAll("option").remove();
@@ -778,7 +772,7 @@ function switchPageDependentOptions(page) {
          .text(function(d) {
              return d
          });
-    
+
          d3.select("#d3-add-type-input").selectAll("option").remove();
          d3.select("#d3-add-type-input").selectAll("option")
              .data(Object.keys(label_options))
@@ -789,7 +783,7 @@ function switchPageDependentOptions(page) {
              .attr("value", function(d) {
                  return d
              });
-     
+
     if (page == 'Zebra printer file') { // disable PDF text option and pdf download
         $("#d3-add-type-input option[value='PDFText']").remove();
         switchTypeDependentOptions('ZebraText');
@@ -801,18 +795,18 @@ function switchPageDependentOptions(page) {
         document.getElementById("d3-zpl-button").style.display = "none";
         document.getElementById("d3-pdf-button").style.display = "inline";
     }
-    
+
     if (page == 'Custom') {
         document.getElementById("d3-custom-dimensions-div").style.display = "inline";
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "visible";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
         document.getElementById("label_format").value = 'Custom';
         $('#page_width').focus();
-        
+
         $('#page_width').on("change", function() {
             page_formats[page].page_width = this.value;
         });
-        
+
         $('#page-height').on("change", function() {
             page_formats[page].page_height = this.value;
         });
@@ -823,14 +817,14 @@ function switchPageDependentOptions(page) {
     } else {
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
     }
-           
+
 }
 
 function switchLabelDependentOptions(label) {
-    
+
     var page = d3.select("#page_format").node().value;
     var label_sizes = page_formats[page].label_sizes;
-    
+
     if (label == 'Custom') {
         document.getElementById("d3-custom-dimensions-div").style.display = "inline";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
@@ -841,7 +835,7 @@ function switchLabelDependentOptions(label) {
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
         // document.getElementById("d3-draw-div").style.visibility = "visible";
         // document.getElementById("d3-adders").style.visibility = "visible";
-        
+
         $('#d3-add-type-input').focus();
         var intro_elements = document.getElementsByClassName("d3-intro-text");
         for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
@@ -857,10 +851,10 @@ function switchLabelDependentOptions(label) {
 }
 
 function switchTypeDependentOptions(type){
-    
+
     var sizes = label_options[type].sizes;
     if (type == "PDFText") {
-        
+
         // set up font select
         var fonts = label_options[type].fonts;
         d3.select("#d3-add-font-input").selectAll("option").remove();
@@ -877,7 +871,7 @@ function switchTypeDependentOptions(type){
                 return d
             });
         document.getElementById("d3-add-font-div").style.visibility = "visible";
-        
+
         // set up size input and slider
         $("#d3-add-size-input").replaceWith('<input type="number" id="d3-add-size-input" class="form-control"></input>');
         var size_input = d3.select("#d3-add-size-input");
@@ -888,10 +882,10 @@ function switchTypeDependentOptions(type){
             size_input.property("value", this.value)
         });
         size_input.on("change", function() {
-            grid_slider.node().value = this.value;
+            size_slider.node().value = this.value;
         });
         $("#d3-add-size-slider").show();
-        
+
     } else {
         $("#d3-add-font-input").val('');
         document.getElementById("d3-add-font-div").style.visibility = "hidden";
@@ -909,11 +903,11 @@ function switchTypeDependentOptions(type){
     }
 }
 
-function addToLabel(field, type, size, font, x, y, scale) {
-    // console.log("Field is: "+field+" and type is: "+type+" and size is "+size);
+function addToLabel(field, text, type, size, font, x, y, scale) {
+     console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is "+size);
     svg = d3.select(".d3-draw-svg");
-    
-    //get x,y coords and scale 
+
+    //get x,y coords and scale
     if ((typeof x || typeof y ) === 'undefined') {
         var page = d3.select("#page_format").node().value;
         var label = d3.select("#label_format").node().value;
@@ -924,11 +918,11 @@ function addToLabel(field, type, size, font, x, y, scale) {
         y = label_height / 2;
     }
     scale = (typeof scale === 'undefined') ? [1,1] : scale;
-    // console.log("type of parsed X is: "+typeof parseInt(x)+" and parsed x is"+parseInt(x)+" and type of y is: "+typeof y+" and scale is "+scale);
-    
+    console.log(" X is: "+x+" and y is: "+y);
+
     //get display text
-    var field_data = add_fields[field];
-    
+    // var field_data = add_fields[field];
+
     //set up new element
     var new_element = svg.append("g")
         .classed("draggable", true)
@@ -952,10 +946,10 @@ function addToLabel(field, type, size, font, x, y, scale) {
                 "size": size,
                 "type": type
             })
-            .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(field_data.label_text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
+            .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
             //new_element.call(doTransform, doSnap);
             break;
-            
+
         default:
         //add text specific attributes
             new_element.classed("text-box", true)
@@ -971,7 +965,7 @@ function addToLabel(field, type, size, font, x, y, scale) {
                 "style": (typeof font == 'undefined') ? label_options[type].fonts[font] : "font-family:courier;",
                 "dominant-baseline": "mathematical",
             })
-            .text(field_data.label_text)
+            .text(text)
             break;
     }
 
@@ -996,9 +990,9 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     page_formats[page].label_sizes[label].number_of_rows = number_of_rows;
     page_formats[page].label_sizes[label].sort_order = sort_order;
     page_formats[page].label_sizes[label].copies_per_plot = copies_per_plot;
-    document.getElementById("top_margin").value = top_margin; 
+    document.getElementById("top_margin").value = top_margin;
     document.getElementById("left_margin").value = left_margin;
-    document.getElementById("horizontal_gap").value = horizontal_gap; 
+    document.getElementById("horizontal_gap").value = horizontal_gap;
     document.getElementById("vertical_gap").value = vertical_gap;
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
@@ -1022,17 +1016,17 @@ function createAdders(add_fields) {
         .attr("value", function(d) {
             return d
         });
-        
+
     //load field options
     d3.select("#d3-add-field-input").selectAll("option").remove();
     d3.select("#d3-add-field-input").selectAll("option")
         .data(Object.keys(add_fields))
         .enter().append("option")
         .text(function(d) {
-            return add_fields[d].select_text
+            return d
         })
         .attr("value", function(d) {
-            return d
+            return add_fields[d]
         });
 
 }
@@ -1096,7 +1090,7 @@ function retrievePageParams() {
     var page = d3.select("#page_format").node().value;
     var label = d3.select("#label_format").node().value;
     var label_sizes = page_formats[page].label_sizes;
-    
+
     var page_params = {
         page_format: page,
         page_width: page_formats[page].page_width || document.getElementById("page_width").value,
@@ -1114,31 +1108,70 @@ function retrievePageParams() {
         label_height: label_sizes[label].label_height,
     }
     return page_params;
-    
+
+}
+
+function initializeCustomModal(add_fields) {
+    //load field options
+    console.log("adding fields"+add_fields);
+    d3.select("#d3-custom-add-field-input").selectAll("option").remove();
+    d3.select("#d3-custom-add-field-input").selectAll("option")
+        .data(Object.keys(add_fields))
+        .enter().append("option")
+        .text(function(d) {
+            return d
+        })
+        .attr("value", function(d) {
+            return add_fields[d]
+        });
+
+    $('#d3-custom-add-field-input').on("change", function() {
+
+        var value = $(this).find('option:selected').text();
+        console.log("Value is "+value);
+        // var field_data = add_fields[value];
+        var custom_field = $("#d3-custom-input").val() + value;
+        $("#d3-custom-input").val(custom_field);
+
+        //convert custom content to example string
+        var result = custom_field.replace(/\{\$(.*?)\}/g, function(match, token) {
+            console.log("token is "+token);
+            return add_fields["{$"+token+"}"];
+        });
+        console.log("Result is "+result);
+        $("#d3-custom-content").text(result);
+    });
+
+    $("#d3-add-number").on("click", function() {
+
+    });
+
 }
 
 function load_design (list_id) {
     // console.log("Loading design from list with ID "+list_id);
     // clear existing draw area
     initializeDrawArea();
-    
+
     var lo = new CXGN.List();
     var list_data = lo.getListData(list_id);
     var elements = list_data.elements;
-    
+
     //parse into javascript object
     var fixed_elements = Object.values(elements).map(function(e){ return e.pop(); });
     var params = JSON.parse("{"+fixed_elements.join(',')+"}");
     // console.log("Params: are: "+params);
 
-    for (var key in params) {        
+    for (var key in params) {
         if (key.match(/element/)) {
             value = params[key];
             // console.log("X is: "+value.x+" and y is: "+value.y);
-            addToLabel(value.value, value.type, value.size, value.font, value.x, value.y, value.scale);
-        } 
+            var text = add_fields[value.value];
+            console.log("text is "+text);
+            addToLabel(value.value, text, value.type, value.size, value.font, value.x, value.y, value.scale);
+        }
     }
-    
+
     var page = params['page_format'];
     document.getElementById('page_format').value = page;
     switchPageDependentOptions(page);
@@ -1146,7 +1179,7 @@ function load_design (list_id) {
         document.getElementById("page_width").value = params['page_width'];
         document.getElementById("page_height").value = params['page_height'];
     }
-    
+
     var label = params['label_format'];
     document.getElementById('label_format').value = label;
     switchLabelDependentOptions(label);
@@ -1159,7 +1192,7 @@ function load_design (list_id) {
         document.getElementById("d3-draw-div").style.visibility = "visible";
         // document.getElementById("d3-adders").style.visibility = "visible";
     }
-    
+
     saveAdditionalOptions(
         params['top_margin'],
         params['left_margin'],
@@ -1170,7 +1203,7 @@ function load_design (list_id) {
         params['sort_order'],
         params['copies_per_plot']
     );
-    
+
     console.log("List has been loaded!\n");
 
 }

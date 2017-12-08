@@ -32,13 +32,13 @@
             </div> -->
         </div>
         <div class="col-md-12 form-inline" style="margin-bottom:20px;">
-            <div class="col-md-2">                    
+            <div class="col-md-2">
                 <label>Page Format:</label>
             </div>
             <div class="col-md-4">
                 <select class="form-control" id="page_format" ></select>
             </div>
-            <div class="col-md-2">                    
+            <div class="col-md-2">
                 <label>Label Format:</label>
             </div>
             <div class="col-md-4">
@@ -90,7 +90,7 @@
     <div class="col-md-12" id="d3-draw-div" style="margin-bottom:20px;">
         <div class="col-md-2"></div>
         <div class="col-md-8" id="d3-draw-area"></div>
-        <div class="col-md-2"></div>    
+        <div class="col-md-2"></div>
     </div>
 
     <div class="well col-md-12">
@@ -170,26 +170,40 @@
 
 
 
-
+<!-- style="height: 50vh;" -->
 <!-- Modal -->
 <div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="customFieldModal" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <div class="modal-body" style="height: 30vh;">
-                <label>Select fields:</label>
+            <div class="modal-body">
+                <label>Enter Text:</label>
                 <div class="row">
                     <div class="col-md-12">
-                        <span id="d3-custom-templater"</span>
+                        <input type="text" class="form-control" id="d3-custom-input">
                     </div>
                 </div>
                 <br><br>
-                <label>Example Text:</label>
+                <center><label>Preview:</label></center>
                 <div class="row">
                     <div class="col-md-12">
-                        <input type="text" class="form-control" name="" id="d3-custom-content" value="" size="30">
+                        <p class="form-control" id="d3-custom-content"></p>
                     </div>
                 </div>
                 <br>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Add Field Variable:</label><br>
+                        <select id="d3-custom-add-field-input" class="form-control"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <center>
+                            <label>Add Custom Number:</label><br>
+                            <input type="number" class="form-control" id="start_number" placeholder="Start Number">
+                            <input type="number" class="form-control" id="increment_number" placeholder="Increment Number">
+                            <button class="btn btn-primary" id="d3-add-number">Add</button>
+                        </center>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
