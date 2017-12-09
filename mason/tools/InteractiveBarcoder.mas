@@ -176,24 +176,23 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
-                <label>Enter Text:</label>
                 <div class="row">
-                    <div class="col-md-12">
-                        <input type="text" class="form-control" id="d3-custom-input">
+                    <center><label>Custom_Field:</label></center>
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6">
+                        <center>
+                            <input type="text" class="form-control" id="d3-custom-input" placeholder="Type here">
+                        </center>
                     </div>
-                </div>
-                <br><br>
-                <center><label>Preview:</label></center>
-                <div class="row">
-                    <div class="col-md-12">
-                        <p class="form-control" id="d3-custom-content"></p>
-                    </div>
+                    <div class="col-md-3"></div>
                 </div>
                 <br>
                 <div class="row">
                     <div class="col-md-6">
-                        <label>Add Field Variable:</label><br>
-                        <select id="d3-custom-add-field-input" class="form-control"></select>
+                        <center>
+                            <label>Add Variable:</label><br>
+                            <select id="d3-custom-add-field-input" class="form-control"></select>
+                        </center>
                     </div>
                     <div class="col-md-6">
                         <center>
@@ -203,6 +202,15 @@
                             <button class="btn btn-primary" id="d3-add-number">Add</button>
                         </center>
                     </div>
+                </div>
+                <br>
+                <div class="row">
+                    <center><button class="btn btn-primary" id="d3-custom-preview">See Preview</button></center><br><br>
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6">
+                        <center><p id="d3-custom-content"></p></center>
+                    </div>
+                    <div class="col-md-3"></div>
                 </div>
             </div>
             <div class="modal-footer">

@@ -448,7 +448,7 @@ $(document).ready(function($) {
 
     $("#d3-custom-field").on("click", function() {
         $('#customFieldModal').modal('show');
-        $('#customFieldModal').data('bs.modal').handleUpdate()
+        $('#d3-custom-input').focus();
     });
 
     // d3.select(".d3-add-custom-text")
@@ -1134,16 +1134,30 @@ function initializeCustomModal(add_fields) {
         $("#d3-custom-input").val(custom_field);
 
         //convert custom content to example string
+        // var result = custom_field.replace(/\{\$(.*?)\}/g, function(match, token) {
+        //     console.log("token is "+token);
+        //     return add_fields["{$"+token+"}"];
+        // });
+        // console.log("Result is "+result);
+        // $("#d3-custom-content").text(result);
+    });
+
+    $("#d3-custom-preview").on("click", function() {
+        var value = $(this).find('option:selected').text();
+        var custom_field = $("#d3-custom-input").val() + value;
+        //convert custom content to example string
         var result = custom_field.replace(/\{\$(.*?)\}/g, function(match, token) {
             console.log("token is "+token);
             return add_fields["{$"+token+"}"];
         });
-        console.log("Result is "+result);
         $("#d3-custom-content").text(result);
     });
 
     $("#d3-add-number").on("click", function() {
-
+        var custom_num = "{$Number:" + $('#start_number').val() +":"+ $('#increment_number').val()+"}";
+        add_fields[custom_num] = $('#start_number').val();
+        var custom_field = $("#d3-custom-input").val() + custom_num;
+        $("#d3-custom-input").val(custom_field);
     });
 
 }
