@@ -1180,7 +1180,17 @@ function load_design (list_id) {
         if (key.match(/element/)) {
             value = params[key];
             // console.log("X is: "+value.x+" and y is: "+value.y);
-            var text = add_fields[value.value];
+            var placeholder = value.value;
+            var field;
+            var text = placeholder.replace(/\{\$(.*?)\}/g, function(match, token) {
+                console.log("token is "+token);
+                if (token.match(/Number:/)) {
+                    var parts = token.split(':');
+                    return parts[1];
+                } else {
+                    return add_fields["{$"+token+"}"];
+                }
+            });
             console.log("text is "+text);
             addToLabel(value.value, text, value.type, value.size, value.font, value.x, value.y, value.scale);
         }

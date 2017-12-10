@@ -126,6 +126,7 @@ __PACKAGE__->config(
        my $dl_token = $c->req->param("download_token") || "no_token";
        my $dl_cookie = "download".$dl_token;
        my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
+       my %value_hash;
 
        #decode json
        my $json = new JSON;
@@ -144,6 +145,7 @@ __PACKAGE__->config(
            $c->detach;
        }
        my $trial_name = $trial_rs->first->name();
+
        my ($trial_layout, %errors, @error_messages);
        try {
            $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
@@ -180,47 +182,63 @@ __PACKAGE__->config(
        my $sort_order = $design_params{'sort_order'};
        # print STDERR "Sort order is $sort_order\n";
        # primary sort on selected design field using a method that can handle numbers and strings. Secondary /default sort by plot num
+       my $key_number = 0;
        foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
 
            print STDERR "Design key is $key\n";
            my %design_info = %{$design{$key}};
 
+           print STDERR "Value hash: " . Dumper(%value_hash);
+
            for (my $i=0; $i < $design_params{'copies_per_plot'}; $i++) {
                #print STDERR "Working on label num $i\n";
                my $x = $design_params{'left_margin'} + ($design_params{'label_width'} + $design_params{'horizontal_gap'}) * ($col_num-1);
                my $y = $design_params{'page_height'} - $design_params{'top_margin'} - ($design_params{'label_height'} + $design_params{'vertical_gap'}) * ($row_num-1);
-               my $pedigree;
 
               foreach my $element (@label_params) {
                   #print STDERR "Element Dumper\n" . Dumper($element);
                   my %element = %{$element};
                   my $elementx = $x + ( $element{'x'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
-                  my $elementy = $y - ( $element{'y'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
-
+                  my $elementy = $y - ( $element{'y'} / $dots_to_pixels_conversion_factor  ); # / 2.83;\
+                  my $pedigree = '';
                   if ($element{'value'} eq '{$Pedigree_String}') {
                       $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
                   }
 
-                   print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n\n";
+                  my $proc_value = $element{'value'};
+                  $proc_value =~ s/(\{\$Number.*\})/proc_num($1)/ge;
+                  print STDERR "Proc value is $proc_value\n";
 
-                  my $label_template = Text::Template->new(
-                      type => 'STRING',
-                      source => $element{'value'},
-                  );
+                sub proc_num {
+                    my ($num) = @_;
+                    our ($placeholder, $start_num, $increment) = split ':', $num;
+                    my $length = length($start_num);
+                    $increment =~ s/\}//;
+                    print STDERR "Increment is $increment\n";
+                    my $custom_num =  $start_num + ($increment * $key_number);
+                    return sprintf("%0${length}d", $custom_num);
+                }
 
-               my $filled_value = $label_template->fill_in(
-                       hash => {
-                           'Accession' => $design_info{'accession_name'},
-                           'Plot_Name' => $design_info{'plot_name'},
-                           'Plot_Number' => $design_info{'plot_number'},
-                           'Rep_Number' => $design_info{'rep_number'},
-                           'Row_Number' => $design_info{'row_number'},
-                           'Col_Number' => $design_info{'col_number'},
-                           'Trial_Name' => $trial_name,
-                           'Year' => $year,
-                           'Pedigree_String' => $pedigree,
-                       },
-                   );
+                my $label_template = Text::Template->new(
+                    type => 'STRING',
+                    source => $proc_value,
+                );
+
+                my $filled_value = $label_template->fill_in(
+                     hash => {
+                         'Accession' => $design_info{'accession_name'},
+                         'Plot_Name' => $design_info{'plot_name'},
+                         'Plot_Number' => $design_info{'plot_number'},
+                         'Rep_Number' => $design_info{'rep_number'},
+                         'Row_Number' => $design_info{'row_number'},
+                         'Col_Number' => $design_info{'col_number'},
+                         'Trial_Name' => $trial_name,
+                         'Year' => $year,
+                         'Pedigree_String' => $pedigree
+                     },
+                 );
+
+                  print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
 
                   if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
@@ -309,6 +327,7 @@ __PACKAGE__->config(
                    $row_num = 1;
                }
            }
+        $key_number++;
        }
 
        print STDERR "Saving the PDF . . .\n";
