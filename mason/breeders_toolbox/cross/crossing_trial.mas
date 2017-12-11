@@ -54,7 +54,7 @@ my $start_time = time();
 <br/>
 
 
-<& /page/page_title.mas, title=>"Crossing Trial Details for ".$trial_name &>
+<& /page/page_title.mas, title=>"Details for ".$trial_name &>
 
 <&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '[<a id="edit_details">Edit Crossing Trial Details</a>]'&>
 

@@ -312,25 +312,7 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data:{
-              'cross_name': crossName,
-              'cross_type': crossType,
-              'maternal': maternal,
-              'paternal': paternal,
-              'maternal_parents': maternal_parents,
-              'paternal_parents': paternal_parents,
-              'progeny_number': progenyNumber,
-              'flower_number': flowerNumber,
-              'fruit_number': fruitNumber,
-              'seed_number': seedNumber,
-              'prefix': prefix,
-              'suffix': suffix,
-              'visible_to_role': visibleToRole,
-              'location': location,
-              'crossing_trial_id': crossing_trial_id,
-              'female_plot': female_plot,
-              'male_plot': male_plot,
-            },
+            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&location=' + location + '&female_plot=' + female_plot + '&male_plot=' + male_plot,
             beforeSend: function() {
                 jQuery("#create_cross").modal("hide");
                 jQuery("#working_modal").modal("show");
