@@ -248,6 +248,7 @@ $(document).ready(function($) {
 
     if (!isLoggedIn()) {
         $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
+        $('#save_design_div').html('<input class="form-control" placeholder="Login to save designs" disabled></input>');
     } else {
         var lo = new CXGN.List();
         $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved design', 'refresh'));
@@ -255,6 +256,9 @@ $(document).ready(function($) {
           function() {
             load_design(this.value);
         });
+
+        var save_html = '<input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input><span class="input-group-btn"><button class="btn btn-default" id="d3-save-button" type="button">Save</button></span>';
+        $('#save_design_div').html(save_html);
     }
 
     $('#d3-save-button').click(function() {
