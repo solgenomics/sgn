@@ -255,29 +255,25 @@ $(document).ready(function($) {
         $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
         $('#save_design_div').html('<input class="form-control" placeholder="Login to save designs" disabled></input>');
     } else {
-        var lo = new CXGN.List();
-        $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved design', 'refresh'));
-        $('#design_list_list_select').change(
-          function() {
-            disable_ui();
-            load_design(this.value);
-            enable_ui();
-        });
-
+        $('#design_list').html('<select class="form-control" disabled><option>First select a data source</option></select>');
         var save_html = '<input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input><span class="input-group-btn"><button class="btn btn-default" id="d3-save-button" type="button">Save</button></span>';
         $('#save_design_div').html(save_html);
     }
 
     $('#d3-save-button').click(function() {
-        var lo = new CXGN.List();
-        var new_name = $('#save_design_name').val();
-        console.log("Saving label design to list named " + new_name);
-        var page_params = retrievePageParams();
-        page_params = JSON.stringify(page_params);
-        var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
 
         var label_elements = document.getElementsByClassName('label-element');
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
+        if (label_elements.length < 1) {
+            alert("No elements in the design. Please add design elements before saving");
+            return;
+        }
+
+        var lo = new CXGN.List();
+        var new_name = $('#save_design_name').val();
+        //console.log("Saving label design to list named " + new_name);
+        page_params = JSON.stringify(retrievePageParams());
+        var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
         label_params = label_elements.map(getLabelDetails);
 
         //console.log("label_param length is: "+label_params.length)
@@ -341,7 +337,20 @@ $(document).ready(function($) {
                         .text(function(d) {
                             return d
                         });
-                    // $('#page_format').focus();
+
+                    if (!isLoggedIn()) {
+                        $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
+                    } else {
+                        var lo = new CXGN.List();
+                        $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved design', 'refresh'));
+                        $('#design_list_list_select').change(
+                          function() {
+                            disable_ui();
+                            load_design(this.value);
+                            enable_ui();
+                        });
+                    }
+
                 }
             },
             error: function(request, status, err) {
@@ -358,8 +367,6 @@ $(document).ready(function($) {
             for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
             var label_elements = document.getElementsByClassName("label-element");
             for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
-
-            // disable add to label, remove label format options
             d3.select("#label_format").selectAll("option").remove();
         } else {
             switchPageDependentOptions(page); // show correct download and text options
@@ -455,8 +462,15 @@ $(document).ready(function($) {
     });
 
     $("#d3-pdf-button, #d3-zpl-button").on("click", function() {
+
+        var label_elements = document.getElementsByClassName('label-element');
+        label_elements = Array.prototype.slice.call(label_elements); // convert to array
+        if (label_elements.length < 1) {
+            alert("No elements in the design. Please add design elements before downloading");
+            return;
+        }
         var download_type = $(this).val();
-        console.log("You clicked the download "+download_type+" button.");
+        //console.log("You clicked the download "+download_type+" button.");
 
         var ladda = Ladda.create(this);
         ladda.start();
@@ -465,8 +479,6 @@ $(document).ready(function($) {
 
         var trial_id = document.getElementById("trial_select").value;
         var design = retrievePageParams();
-        var label_elements = document.getElementsByClassName('label-element');
-        label_elements = Array.prototype.slice.call(label_elements); // convert to array
         design.label_elements = label_elements.map(getLabelDetails)
 
         var design_json = JSON.stringify(design);
@@ -636,11 +648,6 @@ function doTransform(selection, transformFunc) {
 
 function clearSelection() {
     d3.select(".selection-tools").remove();
-    var label_elements = document.getElementsByClassName('label-element');
-    label_elements = Array.prototype.slice.call(label_elements);
-    if (label_elements.length < 1) {
-        // document.getElementById("d3-download").style.visibility = "hidden";
-    }
 }
 
 function getTransGroupBounds(node) {
@@ -880,9 +887,6 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
     scale = (typeof scale === 'undefined') ? [1,1] : scale;
     console.log(" X is: "+x+" and y is: "+y);
 
-    //get display text
-    // var field_data = add_fields[field];
-
     //set up new element
     var new_element = svg.append("g")
         .classed("draggable", true)
@@ -896,19 +900,27 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
     switch (type) {
         case "Code128":
         case "QRCode":
-            disable_ui();
+
             //add barcode specific attributes
+            disable_ui();
             new_element.classed("barcode", true)
-            .call(selectable, true)
-            .append("svg:image")
-            .attr({
-                "class": "label-element",
-                "value": field,
-                "size": size,
-                "type": type
-            })
-            .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
-            //new_element.call(doTransform, doSnap);
+            .call(selectable, true);
+            var img = new Image();
+            img.src = "/barcode/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size);
+            img.onload = function() {
+                var width = this.width;
+                var height = this.height;
+                new_element.append("svg:image")
+                .attr({
+                    "class": "label-element",
+                    "value": field,
+                    "size": size,
+                    "type": type,
+                    "height": height,
+                    "width": width,
+                    "href": "/barcode/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size),
+                });
+            }
             enable_ui();
             break;
 
@@ -930,14 +942,6 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
             .text(text)
             break;
     }
-
-    // turn download option on once there is at least one design element
-    var label_elements = document.getElementsByClassName('label-element');
-    label_elements = Array.prototype.slice.call(label_elements);
-    if (label_elements.length > 0) {
-        // document.getElementById("d3-download").style.visibility = "visible";
-    }
-
 }
 
 function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, sort_order, copies_per_plot) {
@@ -1135,9 +1139,8 @@ function load_design (list_id) {
 
     for (var key in params) {
         if (key.match(/element/)) {
-            value = params[key].value;
-            // var placeholder = value.value;
-            // var field;
+            var element_obj = params[key];
+            var value = element_obj.value;
             var text = value.replace(/\{\$(.*?)\}/g, function(match, token) {
                 console.log("token is "+token);
                 if (token.match(/Number:/)) {
@@ -1148,7 +1151,7 @@ function load_design (list_id) {
                 }
             });
             console.log("text is "+text);
-            addToLabel(value, text, value.type, value.size, value.font, value.x, value.y, value.scale);
+            addToLabel(value, text, element_obj.type, element_obj.size, element_obj.font, element_obj.x, element_obj.y, element_obj.scale);
         }
     }
 
