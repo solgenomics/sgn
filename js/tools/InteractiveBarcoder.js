@@ -259,7 +259,9 @@ $(document).ready(function($) {
         $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved design', 'refresh'));
         $('#design_list_list_select').change(
           function() {
+            disable_ui();
             load_design(this.value);
+            enable_ui();
         });
 
         var save_html = '<input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input><span class="input-group-btn"><button class="btn btn-default" id="d3-save-button" type="button">Save</button></span>';
@@ -359,7 +361,6 @@ $(document).ready(function($) {
 
             // disable add to label, remove label format options
             d3.select("#label_format").selectAll("option").remove();
-            document.getElementById("d3-add").disabled = true;
         } else {
             switchPageDependentOptions(page); // show correct download and text options
         }
@@ -415,11 +416,10 @@ $(document).ready(function($) {
 
     $('#d3-add-type-input').change(function() {
         if (!this.value || this.value == 'Select an element type') {
-            document.getElementById("d3-add").disabled = true;
+            return;
         } else {
             switchTypeDependentOptions(this.value);
             $("#d3-add-field-input").focus();
-            document.getElementById("d3-add").disabled = false;
         }
 
     });
@@ -438,9 +438,17 @@ $(document).ready(function($) {
     });
 
     $("#d3-add").on("click", function() {
-        var field = $('#d3-add-field-input').find('option:selected').text();
-        var text = document.getElementById("d3-add-field-input").value;
         var type = document.getElementById("d3-add-type-input").value;
+        if (!type || type == 'Select an element type') {
+            alert("A valid type must be selected.");
+            return;
+        }
+        var field = $('#d3-add-field-input').find('option:selected').text();
+        if (!field || field == 'Select a field') {
+            alert("A valid field must be selected.");
+            return;
+        }
+        var text = document.getElementById("d3-add-field-input").value;
         var size = document.getElementById("d3-add-size-input").value;
         var font = document.getElementById("d3-add-font-input").value;
         addToLabel(field, text, type, size, font);
@@ -888,7 +896,8 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
     switch (type) {
         case "Code128":
         case "QRCode":
-        //add barcode specific attributes
+            disable_ui();
+            //add barcode specific attributes
             new_element.classed("barcode", true)
             .call(selectable, true)
             .append("svg:image")
@@ -900,6 +909,7 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
             })
             .attr("xlink:href", "/barcode/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size));
             //new_element.call(doTransform, doSnap);
+            enable_ui();
             break;
 
         default:
