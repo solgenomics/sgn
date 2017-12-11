@@ -6,12 +6,12 @@
 <div class="row">
 
     <div class="well col-md-12">
-        <div class="col-md-12 form-inline">
+        <div class="col-md-12">
             <center>
                 <h4>Format:</h4>
             </center>
         </div>
-        <div class="col-md-12 form-inline" style="margin-bottom:20px;">
+        <div class="col-md-12" style="margin-bottom:20px;">
             <div class="col-md-2">
                 <label><b>Data Source:</b></label>
             </div>
@@ -32,7 +32,7 @@
                 <small id="fileHelp" class="form-text text-muted">.xls format only, columns must have unique names</small>
             </div> -->
         </div>
-        <div class="col-md-12 form-inline" style="margin-bottom:20px;">
+        <div class="col-md-12" style="margin-bottom:20px;">
             <div class="col-md-2">
                 <label>Page Format:</label>
             </div>
@@ -46,9 +46,9 @@
                 <select class="form-control" id="label_format"></select>
             </div>
         </div>
-        <div class="col-md-12 form-inline" id="d3-custom-dimensions-div" style="display:none;">
+        <div class="col-md-12" id="d3-custom-dimensions-div" style="display:none;">
             <div class="col-md-6" id="d3-page-custom-dimensions-div" style="visibility:hidden">
-                <div class="col-md-12 form-inline">
+                <div class="col-md-12">
                     <div class="col-md-6">
                         <center>
                             <label>Page Width:</label><br>
@@ -65,7 +65,7 @@
                 <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
             </div>
             <div class="col-md-6" id="d3-label-custom-dimensions-div" style="visibility:hidden">
-                <div class="col-md-12 form-inline">
+                <div class="col-md-12">
                     <div class="col-md-5">
                         <center>
                             <label>Label Width:</label><br>
@@ -95,12 +95,12 @@
     </div>
 
     <div class="well col-md-12" id="d3-add-and-download-div" style="display:none;">
-        <div class="col-md-12 form-inline">
+        <div class="col-md-12">
             <center>
                 <h4>Add Elements:</h4>
             </center>
         </div>
-        <div class="col-md-12 form-inline"  style="margin-bottom:20px;">
+        <div class="col-md-12"  style="margin-bottom:20px;">
             <div class="col-md-3" id="d3-add-type-div">
                 <center>
                     <label>Type:</label><br>
@@ -110,7 +110,7 @@
             <div class="col-md-3" id="d3-add-field-div">
                 <center>
                     <label>Field:</label><br>
-                    <select id="d3-add-field-input" class="form-control"></select><br><br>
+                    <select id="d3-add-field-input" class="form-control"></select><br>
                     <button class="btn btn-primary" id="d3-custom-field">Add Custom Field</button>
                 </center>
                 &nbsp&nbsp
@@ -136,12 +136,12 @@
             </div>
         </div>
 
-        <div class="col-md-12 form-inline">
+        <div class="col-md-12">
             <center>
                 <h4>Options:</h4>
             </center>
         </div>
-        <div class="col-md-12 form-inline">
+        <div class="col-md-12">
             <div class="col-md-4">
                 <center>
                 <br>
@@ -178,7 +178,7 @@
                     <div class="col-md-3"></div>
                     <div class="col-md-6">
                         <center>
-                            <input type="text" class="form-control" id="d3-custom-input" placeholder="Type here">
+                            <input type="text" class="form-control" id="d3-custom-input" placeholder="Type here" autofocus>
                         </center>
                     </div>
                     <div class="col-md-3"></div>
@@ -224,7 +224,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
-                <div class="col-md-12 form-inline" id="">
+                <div class="col-md-12" id="">
                     <div class="col-md-1"></div>
                     <div class="col-md-10">
                         <center>
@@ -235,7 +235,7 @@
                     </div>
                     <div class="col-md-1"></div>
                 </div>
-                <div class="col-md-12 form-inline" id="">
+                <div class="col-md-12" id="">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
@@ -251,7 +251,7 @@
                     </div>
                     <div class="col-md-1"></div>
                 </div>
-                <div class="col-md-12 form-inline" id="">
+                <div class="col-md-12" id="">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
@@ -267,7 +267,7 @@
                     </div>
                     <div class="col-md-1"></div>
                 </div>
-                <div class="col-md-12 form-inline" id="">
+                <div class="col-md-12" id="">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>

@@ -122,7 +122,7 @@ label_options["PDFText"] = {
         min: 1,
         max: 144,
         step: 1,
-        value: 32
+        value: 32,
     },
     fonts: {
         "Courier": "font-family:courier;",
@@ -246,6 +246,11 @@ $(document).ready(function($) {
         'empty': 1
     });
 
+    // Every time a modal is shown, if it has an autofocus element, focus on it.
+    $('.modal').on('shown.bs.modal', function() {
+        $(this).find('[autofocus]').focus();
+    });
+
     if (!isLoggedIn()) {
         $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
         $('#save_design_div').html('<input class="form-control" placeholder="Login to save designs" disabled></input>');
@@ -322,6 +327,7 @@ $(document).ready(function($) {
                 } else {
                     console.log("Got longest elements: " + JSON.stringify(response));
                     add_fields = response;
+                    add_fields["Select a field"] = {};
 
                     createAdders(add_fields);
                     initializeCustomModal(add_fields);
@@ -394,7 +400,6 @@ $(document).ready(function($) {
 
     $("#d3-custom-field").on("click", function() {
         $('#customFieldModal').modal('show');
-        $('#d3-custom-input').focus();
     });
 
     d3.select("#d3-custom-field-save")
@@ -838,7 +843,7 @@ function switchTypeDependentOptions(type){
         document.getElementById("d3-add-font-div").style.visibility = "hidden";
         $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
         d3.select("#d3-add-size-input").selectAll("option")
-            .data(Object.keys(sizes).sort())
+            .data(Object.keys(sizes))
             .enter().append("option")
             .text(function(d) {
                 return d
@@ -851,7 +856,7 @@ function switchTypeDependentOptions(type){
 }
 
 function addToLabel(field, text, type, size, font, x, y, scale) {
-     console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is "+size);
+     console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
     svg = d3.select(".d3-draw-svg");
 
     //get x,y coords and scale
@@ -909,7 +914,7 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
                 "type": type,
                 "font-size": size,
                 "font": font,
-                "style": (typeof font == 'undefined') ? label_options[type].fonts[font] : "font-family:courier;",
+                "style": (typeof font == 'undefined') ? "font-family:courier;" : label_options[type].fonts[font],
                 "dominant-baseline": "mathematical",
             })
             .text(text)
@@ -1075,18 +1080,13 @@ function initializeCustomModal(add_fields) {
     $('#d3-custom-add-field-input').on("change", function() {
 
         var value = $(this).find('option:selected').text();
-        console.log("Value is "+value);
-        // var field_data = add_fields[value];
-        var custom_field = $("#d3-custom-input").val() + value;
-        $("#d3-custom-input").val(custom_field);
+        if (!value || value == 'Select a field') {
+            return;
+        } else {
+            var custom_field = $("#d3-custom-input").val() + value;
+            $("#d3-custom-input").val(custom_field);
+        }
 
-        //convert custom content to example string
-        // var result = custom_field.replace(/\{\$(.*?)\}/g, function(match, token) {
-        //     console.log("token is "+token);
-        //     return add_fields["{$"+token+"}"];
-        // });
-        // console.log("Result is "+result);
-        // $("#d3-custom-content").text(result);
     });
 
     $("#d3-custom-preview").on("click", function() {
