@@ -285,20 +285,11 @@ $(document).ready(function($) {
 
     });
 
-
-
     $('#trial_select').focus();
-
-    // var builder = textTemplater.builder("#d3-custom-templater", fields);
 
     $("#edit_additional_settings").on("click", function() {
         $('#editAdditionalSettingsModal').modal('show');
     });
-
-    // $('#d3-custom-templater').on("change", function() {
-    //     var tstring = builder.getTemplate();
-    //     $("#d3-custom-content").val(tstring);
-    // });
 
     $(document).on("change", "#trial_select", function() {
 
@@ -319,6 +310,7 @@ $(document).ready(function($) {
             },
             complete: function() {
                 enable_ui();
+                $('#page_format').focus();
             },
             success: function(response) {
                 if (response.error) {
@@ -326,53 +318,9 @@ $(document).ready(function($) {
                 } else {
                     console.log("Got longest elements: " + JSON.stringify(response));
                     add_fields = response;
-                    // {
-                    //     "{$Accession}": {
-                    //         label_text: response.Accession,
-                    //         select_text: "Accession",
-                    //     },
-                    //     "{$Plot_Name}": {
-                    //         label_text: response.Plot_Name,
-                    //         select_text: "Plot_Name",
-                    //     },
-                    //     "{$Plot_Number}": {
-                    //         label_text: response.Plot_Number,
-                    //         select_text: "Plot_Number",
-                    //     },
-                    //     "{$Rep_Number}": {
-                    //         label_text: response.Rep_Number,
-                    //         select_text: "Rep_Number",
-                    //     },
-                    //     "{$Row_Number}": {
-                    //         label_text: response.Row_Number,
-                    //         select_text: "Row_Number",
-                    //     },
-                    //     "{$Col_Number}": {
-                    //         label_text: response.Col_Number,
-                    //         select_text: "Col_Number",
-                    //     },
-                    //     "{$Trial_Name}": {
-                    //         label_text: response.Trial_Name,
-                    //         select_text: "Trial_Name",
-                    //     },
-                    //     "{$Year}": {
-                    //         label_text: response.Year,
-                    //         select_text: "Year",
-                    //     },
-                    //     "{$Pedigree_String}": {
-                    //         label_text: response.Pedigree_String,
-                    //         select_text: "Pedigree_String",
-                    //     },
-                    //     "Custom": {
-                    //         select_text: "Custom",
-                    //     },
-                    // };
 
                     createAdders(add_fields);
                     initializeCustomModal(add_fields);
-
-                    // var fields = [response.Accession, response.Plot_Name, response.Plot_Number, response.Rep_Number, response.Row_Number, response.Col_Number, response.Trial_Name, response.Year,response.Pedigree_String];
-                    // var builder = textTemplater.builder("#d3-custom-templater", fields);
 
                     var page_format_select = d3.select("#page_format");
                     page_format_select.selectAll("option")
@@ -381,7 +329,7 @@ $(document).ready(function($) {
                         .text(function(d) {
                             return d
                         });
-                    $('#page_format').focus();
+                    // $('#page_format').focus();
                 }
             },
             error: function(request, status, err) {
@@ -404,7 +352,6 @@ $(document).ready(function($) {
             document.getElementById("d3-add").disabled = true;
         } else {
             switchPageDependentOptions(page); // show correct download and text options
-            $('#label_format').focus();
         }
     });
 
@@ -429,18 +376,13 @@ $(document).ready(function($) {
         custom_label.label_width = document.getElementById("label_width").value;
         custom_label.label_height = document.getElementById("label_height").value;
         changeLabelSize(custom_label.label_width, custom_label.label_height);
+        $("#d3-add-and-download-div").removeAttr('style');
         var intro_elements = document.getElementsByClassName("d3-intro-text");
         for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
         var label_elements = document.getElementsByClassName("label-element");
         for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "inline"; }
         $('#d3-add-type-input').focus();
     });
-
-    // $('#d3-custom-field-input').change(function(){
-    //     console.log("Change noticed, text is "+$(this).find('option:selected').text());
-    //     $('#d3-text-content').append($(this).find('option:selected').val());
-    // });
-
 
     $('#d3-add-field-input').change(function() {
         $("#d3-add-size-input").focus();
@@ -450,9 +392,6 @@ $(document).ready(function($) {
         $('#customFieldModal').modal('show');
         $('#d3-custom-input').focus();
     });
-
-    // d3.select(".d3-add-custom-text")
-    //     .style("margin-left", "1em");
 
     d3.select("#d3-custom-field-save")
         .on("click", function() {
@@ -810,12 +749,15 @@ function switchPageDependentOptions(page) {
         $('#page-height').on("change", function() {
             page_formats[page].page_height = this.value;
         });
-    } else if (document.getElementById("label_format").value != 'Custom') {
+    } else {
+        document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
+        $('#label_format').focus();
+    }
+
+    if ( page != 'Custom' && document.getElementById("label_format").value != 'Custom') {
         document.getElementById("d3-custom-dimensions-div").style.display = "none";
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
-    } else {
-        document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
     }
 
 }
@@ -833,6 +775,7 @@ function switchLabelDependentOptions(label) {
         document.getElementById("d3-custom-dimensions-div").style.display = "none";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
+        $("#d3-add-and-download-div").removeAttr('style');
         // document.getElementById("d3-draw-div").style.visibility = "visible";
         // document.getElementById("d3-adders").style.visibility = "visible";
 
@@ -859,7 +802,7 @@ function switchTypeDependentOptions(type){
         var fonts = label_options[type].fonts;
         d3.select("#d3-add-font-input").selectAll("option").remove();
         d3.select("#d3-add-font-input").selectAll("option")
-            .data(Object.keys(fonts))
+            .data(Object.keys(fonts).sort())
             .enter().append("option")
             .text(function(d) {
                 return d
@@ -891,7 +834,7 @@ function switchTypeDependentOptions(type){
         document.getElementById("d3-add-font-div").style.visibility = "hidden";
         $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
         d3.select("#d3-add-size-input").selectAll("option")
-            .data(Object.keys(sizes))
+            .data(Object.keys(sizes).sort())
             .enter().append("option")
             .text(function(d) {
                 return d
@@ -1020,7 +963,7 @@ function createAdders(add_fields) {
     //load field options
     d3.select("#d3-add-field-input").selectAll("option").remove();
     d3.select("#d3-add-field-input").selectAll("option")
-        .data(Object.keys(add_fields))
+        .data(Object.keys(add_fields).sort())
         .enter().append("option")
         .text(function(d) {
             return d
@@ -1116,7 +1059,7 @@ function initializeCustomModal(add_fields) {
     console.log("adding fields"+add_fields);
     d3.select("#d3-custom-add-field-input").selectAll("option").remove();
     d3.select("#d3-custom-add-field-input").selectAll("option")
-        .data(Object.keys(add_fields))
+        .data(Object.keys(add_fields).sort())
         .enter().append("option")
         .text(function(d) {
             return d
@@ -1178,11 +1121,10 @@ function load_design (list_id) {
 
     for (var key in params) {
         if (key.match(/element/)) {
-            value = params[key];
-            // console.log("X is: "+value.x+" and y is: "+value.y);
-            var placeholder = value.value;
-            var field;
-            var text = placeholder.replace(/\{\$(.*?)\}/g, function(match, token) {
+            value = params[key].value;
+            // var placeholder = value.value;
+            // var field;
+            var text = value.replace(/\{\$(.*?)\}/g, function(match, token) {
                 console.log("token is "+token);
                 if (token.match(/Number:/)) {
                     var parts = token.split(':');
@@ -1192,7 +1134,7 @@ function load_design (list_id) {
                 }
             });
             console.log("text is "+text);
-            addToLabel(value.value, text, value.type, value.size, value.font, value.x, value.y, value.scale);
+            addToLabel(value, text, value.type, value.size, value.font, value.x, value.y, value.scale);
         }
     }
 
@@ -1213,8 +1155,7 @@ function load_design (list_id) {
         page_formats[page].label_sizes['Custom'].label_width = params['label_width'];
         page_formats[page].label_sizes['Custom'].label_height = params['label_height'];
         changeLabelSize(params['label_width'], params['label_height']);
-        document.getElementById("d3-draw-div").style.visibility = "visible";
-        // document.getElementById("d3-adders").style.visibility = "visible";
+        $("#d3-add-and-download-div").removeAttr('style');
     }
 
     saveAdditionalOptions(

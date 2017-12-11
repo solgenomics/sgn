@@ -1,7 +1,7 @@
 
 
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min', 'CXGN.BreederSearch', 'textTemplater', ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min', 'CXGN.BreederSearch' ] &>
 
 <div class="row">
 
@@ -23,6 +23,7 @@
             </div>
             <div class="col-md-4" id="design_list">
             </div>
+            <!-- FOR ADDING SPREADSHEETS AS A DATASOURCE, NOT IMPLEMENTED YET -->
             <!-- <div class="col-md-1">
                 <center><i>or</i></center>&nbsp
             </div>
@@ -93,7 +94,7 @@
         <div class="col-md-2"></div>
     </div>
 
-    <div class="well col-md-12">
+    <div class="well col-md-12" id="d3-add-and-download-div" style="display:none;">
         <div class="col-md-12 form-inline">
             <center>
                 <h4>Add Elements:</h4>
@@ -106,24 +107,25 @@
                     <select id="d3-add-type-input" class="form-control"></select>&nbsp&nbsp
                 </center>
             </div>
-            <div class="col-md-2" id="d3-add-field-div">
+            <div class="col-md-3" id="d3-add-field-div">
                 <center>
                     <label>Field:</label><br>
-                    <select id="d3-add-field-input" class="form-control"></select>
-                    <button class="btn btn-primary" id="d3-custom-field">Custom Field</button>
+                    <select id="d3-add-field-input" class="form-control"></select><br><br>
+                    <button class="btn btn-primary" id="d3-custom-field">Add Custom Field</button>
                 </center>
+                &nbsp&nbsp
             </div>
-            <div class="col-md-3" id="d3-add-size-div">
+            <div class="col-md-2" id="d3-add-size-div">
                 <center>
                     <label>Size:</label><br>
-                    <input class="form-control" id="d3-add-size-slider" type="range"></input>
                     <input class="form-control" id="d3-add-size-input" type="number"></input>
+                    <input class="form-control" id="d3-add-size-slider" type="range"></input>
                 </center>
             </div>
             <div class="col-md-3" id="d3-add-font-div">
                 <center>
                     <label>Font:</label><br>
-                    <select id="d3-add-font-input" class="form-control"></select>&nbsp&nbsp
+                    <select id="d3-add-font-input" class="form-control"></select>&nbsp
                 </center>
             </div>
             <div class="col-md-1">
@@ -133,7 +135,7 @@
                 </center>
             </div>
         </div>
-        <!-- <br><hr style="width:100%;border-color:inherit;"><br> -->
+
         <div class="col-md-12 form-inline">
             <center>
                 <h4>Options:</h4>
@@ -152,6 +154,8 @@
                     <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none;">Download pdf</button>
                     <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none;">Download zpl file</button>
                 </center>
+                &nbsp
+                &nbsp
             </div>
             <div class="col-md-4">
                 <center>
@@ -170,8 +174,6 @@
 
 
 
-<!-- style="height: 50vh;" -->
-<!-- Modal -->
 <div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="customFieldModal" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
