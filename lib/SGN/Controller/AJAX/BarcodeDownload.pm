@@ -17,7 +17,6 @@ use CXGN::Stock;
 use Data::Dumper;
 use CXGN::Stock;
 use SGN::Model::Cvterm;
-use Text::Template;
 use Try::Tiny;
 use JSON;
 use Barcode::Code128;
@@ -189,8 +188,9 @@ __PACKAGE__->config(
 
            print STDERR "Design key is $key\n";
            my %design_info = %{$design{$key}};
-
-           print STDERR "Value hash: " . Dumper(%value_hash);
+           $design_info{'trial_name'} = $trial_name;
+           $design_info{'year'} = $year;
+           print STDERR "Design info: " . Dumper(%design_info);
 
            for (my $i=0; $i < $design_params{'copies_per_plot'}; $i++) {
                #print STDERR "Working on label num $i\n";
@@ -202,43 +202,13 @@ __PACKAGE__->config(
                   my %element = %{$element};
                   my $elementx = $x + ( $element{'x'} / $dots_to_pixels_conversion_factor  ); # / 2.83;
                   my $elementy = $y - ( $element{'y'} / $dots_to_pixels_conversion_factor  ); # / 2.83;\
-                  my $pedigree = '';
+
                   if ($element{'value'} eq '{$Pedigree_String}') {
-                      $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
+                      $design_info{'pedigree_string'} = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
                   }
 
-                  my $proc_value = $element{'value'};
-                  $proc_value =~ s/(\{\$Number.*\})/proc_num($1)/ge;
-                  print STDERR "Proc value is $proc_value\n";
-
-                sub proc_num {
-                    my ($num) = @_;
-                    our ($placeholder, $start_num, $increment) = split ':', $num;
-                    my $length = length($start_num);
-                    $increment =~ s/\}//;
-                    print STDERR "Increment is $increment\nKey Number is $key_number\n";
-                    my $custom_num =  $start_num + ($increment * $key_number);
-                    return sprintf("%0${length}d", $custom_num);
-                }
-
-                my $label_template = Text::Template->new(
-                    type => 'STRING',
-                    source => $proc_value,
-                );
-
-                my $filled_value = $label_template->fill_in(
-                     hash => {
-                         'Accession' => $design_info{'accession_name'},
-                         'Plot_Name' => $design_info{'plot_name'},
-                         'Plot_Number' => $design_info{'plot_number'},
-                         'Rep_Number' => $design_info{'rep_number'},
-                         'Row_Number' => $design_info{'row_number'},
-                         'Col_Number' => $design_info{'col_number'},
-                         'Trial_Name' => $trial_name,
-                         'Year' => $year,
-                         'Pedigree_String' => $pedigree
-                     },
-                 );
+                  my $filled_value = $element{'value'};
+                  $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
 
                   print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
 
@@ -632,16 +602,33 @@ sub label_params_to_zpl {
     return $zpl
 }
 
-sub compare_length {
-    my $current_longest = shift;
-    my $new_string = shift;
-
-    if (length($new_string) > length($current_longest)) {
-        return $new_string;
+sub process_field {
+    my $field = shift;
+    my $key_number = shift;
+    my $design_info = shift;
+    my %design_info = %{$design_info};
+    print STDERR "Field is $field\n";
+    if ($field =~ m/Number:/) {
+        our ($placeholder, $start_num, $increment) = split ':', $field;
+        my $length = length($start_num);
+        #print STDERR "Increment is $increment\nKey Number is $key_number\n";
+        my $custom_num =  $start_num + ($increment * $key_number);
+        return sprintf("%0${length}d", $custom_num);
     } else {
-        return $current_longest;
+        return $design_info{$field};
     }
 }
+
+# sub compare_length {
+#     my $current_longest = shift;
+#     my $new_string = shift;
+#
+#     if (length($new_string) > length($current_longest)) {
+#         return $new_string;
+#     } else {
+#         return $current_longest;
+#     }
+# }
 
 #########
 1;

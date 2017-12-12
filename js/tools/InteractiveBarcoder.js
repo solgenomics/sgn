@@ -455,6 +455,10 @@ $(document).ready(function($) {
             alert("A valid field must be selected.");
             return;
         }
+        // check if add_fields[field] is defined. If so, add {}s
+        if (add_fields[field]) {
+            field = "{"+field+"}";
+        }
         var text = document.getElementById("d3-add-field-input").value;
         var size = document.getElementById("d3-add-size-input").value;
         var font = document.getElementById("d3-add-font-input").value;
@@ -1097,7 +1101,7 @@ function initializeCustomModal(add_fields) {
         if (!value || value == 'Select a field') {
             return;
         } else {
-            var custom_field = $("#d3-custom-input").val() + value;
+            var custom_field = $("#d3-custom-input").val() + "{" + value + "}";
             $("#d3-custom-input").val(custom_field);
         }
 
@@ -1107,17 +1111,26 @@ function initializeCustomModal(add_fields) {
         var value = $(this).find('option:selected').text();
         var custom_field = $("#d3-custom-input").val() + value;
         //convert custom content to example string
-        var result = custom_field.replace(/\{\$(.*?)\}/g, function(match, token) {
+        // var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
+        //     console.log("token is "+token);
+        //     return add_fields[token];
+        // });
+        var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
             console.log("token is "+token);
-            return add_fields["{$"+token+"}"];
+            if (token.match(/Number:/)) {
+                var parts = token.split(':');
+                return parts[1];
+            } else {
+                return add_fields[token];
+            }
         });
         $("#d3-custom-content").text(result);
     });
 
     $("#d3-add-number").on("click", function() {
-        var custom_num = "{$Number:" + $('#start_number').val() +":"+ $('#increment_number').val()+"}";
-        add_fields[custom_num] = $('#start_number').val();
-        var custom_field = $("#d3-custom-input").val() + custom_num;
+        // var custom_num = "Number:" + $('#start_number').val() +":"+ $('#increment_number').val();
+        // add_fields[custom_num] = $('#start_number').val();
+        var custom_field = $("#d3-custom-input").val() + "{Number:" + $('#start_number').val() +":"+ $('#increment_number').val()+"}";
         $("#d3-custom-input").val(custom_field);
     });
 
@@ -1141,13 +1154,13 @@ function load_design (list_id) {
         if (key.match(/element/)) {
             var element_obj = params[key];
             var value = element_obj.value;
-            var text = value.replace(/\{\$(.*?)\}/g, function(match, token) {
+            var text = value.replace(/\{(.*?)\}/g, function(match, token) {
                 console.log("token is "+token);
                 if (token.match(/Number:/)) {
                     var parts = token.split(':');
                     return parts[1];
                 } else {
-                    return add_fields["{$"+token+"}"];
+                    return add_fields[token];
                 }
             });
             console.log("text is "+text);
