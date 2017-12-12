@@ -13,6 +13,7 @@ use Moose;
 use File::Slurp;
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
+use CXGN::Stock;
 use Data::Dumper;
 use CXGN::Stock;
 use SGN::Model::Cvterm;
@@ -67,44 +68,45 @@ __PACKAGE__->config(
 
        our ($longest_accession_name, $longest_plot_name, $longest_plot_number, $longest_rep_number, $longest_row_number, $longest_col_number, $longest_pedigree) = '';
 
-       foreach my $key (sort { $a <=> $b} keys %design) {
-           print STDERR "Design key is $key\n";
-           my %design_info = %{$design{$key}};
+       my %longest_hash;
+       $longest_hash{'trial_name'} = $trial_name;
+       $longest_hash{'year'} = $year;
 
-           $longest_accession_name = compare_length($longest_accession_name, $design_info{'accession_name'});
-           $longest_plot_name = compare_length($longest_plot_name, $design_info{'plot_name'});
-           $longest_plot_number = compare_length($longest_plot_number, $design_info{'plot_number'});
-           $longest_rep_number = compare_length($longest_rep_number, $design_info{'rep_number'});
-           $longest_row_number = compare_length($longest_row_number, $design_info{'row_number'});
-           $longest_col_number = compare_length($longest_col_number, $design_info{'col_number'});
-           my $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
-           $longest_pedigree = compare_length($longest_pedigree, $pedigree);
-       }
+       my $random_plot = $design{(keys %design)[rand keys %design]};
+       my @keys = keys %{$random_plot};
+       foreach my $sort_order (@keys) {
+           print STDERR " Searching for longest $sort_order\n";
+           foreach my $key ( sort { length($design{$b}{$sort_order}) <=> length($design{$a}{$sort_order}) or  $a <=> $b } keys %design) {
+                print STDERR "Longest $sort_order is: ".$design{$key}{$sort_order}."\n";
+                my $longest = $design{$key}{$sort_order};
+                unless (ref($longest) || length($longest) < 1) {
+                    $longest_hash{$sort_order} = $design{$key}{$sort_order};
+                }
+                last;
+            }
+        }
 
-       print STDERR "Dumped data is: ". Dumper({
-            "Accession" => $longest_accession_name,
-            "Plot_Name"=> $longest_plot_name,
-            "Plot_Number" => $longest_plot_number,
-            "Rep_Number" => $longest_rep_number,
-            "Row_Number" => $longest_row_number,
-            "Col_Number" => $longest_col_number,
-            "Trial_Name" => $trial_name,
-            "Year" => $year,
-            "Pedigree_String" => $longest_pedigree
-        });
+        my %accession_id_hash;
+        foreach my $key (keys %design) {
+            $accession_id_hash{$design{$key}{'accession_id'}} = $design{$key}{'accession_name'};
+        }
 
-      $c->stash->{rest} = {
-           '{$Accession}' => $longest_accession_name,
-           '{$Plot_Name}'=> $longest_plot_name,
-           '{$Plot_Number}' => $longest_plot_number,
-           '{$Rep_Number}' => $longest_rep_number,
-           '{$Row_Number}' => $longest_row_number,
-           '{$Column_Number}' => $longest_col_number,
-           '{$Trial_Name}' => $trial_name,
-           '{$Year}' => $year,
-           '{$Pedigree_String}' => $longest_pedigree
-       };
+        my @accession_ids = keys %accession_id_hash;
+        my $stock = CXGN::Stock->new ( schema => $schema);
+        my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
+        my %string_lengths;
+        foreach my $row (@$pedigree_rows) {
+            my @parts = split "\t", $row;
+            my $string = join ('/', $parts[1] ? $parts[1] : 'NA', $parts[2] ? $parts[2] : 'NA');
+            $string_lengths{length($string)} = $string;
+        }
 
+        foreach my $key (sort { $b <=> $a } keys %string_lengths) {
+            $longest_hash{'pedigree_string'} = $string_lengths{$key};
+            last;
+        }
+        #print STDERR "Dumped data is: ".Dumper(%longest_hash);
+        $c->stash->{rest} = \%longest_hash;
    }
 
    sub download_pdf_barcodes : Path('/barcode/download/pdf') : ActionClass('REST') { }
@@ -214,7 +216,7 @@ __PACKAGE__->config(
                     our ($placeholder, $start_num, $increment) = split ':', $num;
                     my $length = length($start_num);
                     $increment =~ s/\}//;
-                    print STDERR "Increment is $increment\n";
+                    print STDERR "Increment is $increment\nKey Number is $key_number\n";
                     my $custom_num =  $start_num + ($increment * $key_number);
                     return sprintf("%0${length}d", $custom_num);
                 }
