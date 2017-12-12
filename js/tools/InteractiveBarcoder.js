@@ -274,6 +274,7 @@ $(document).ready(function($) {
         var new_name = $('#save_design_name').val();
         //console.log("Saving label design to list named " + new_name);
         page_params = JSON.stringify(retrievePageParams());
+        if (!page_params) {return;}
         var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
         label_params = label_elements.map(getLabelDetails);
 
@@ -487,17 +488,21 @@ $(document).ready(function($) {
             return;
         }
         var download_type = $(this).val();
-        //console.log("You clicked the download "+download_type+" button.");
+
+        var trial_id = document.getElementById("trial_select").value;
+        if (!trial_id || trial_id == 'Please select a trial') {
+            alert("No trial selected. Please select a trial before downloading");
+            return;
+        }
+        var design = retrievePageParams();
+        if (!design) {return;}
 
         var ladda = Ladda.create(this);
         ladda.start();
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         manage_dl_with_cookie(token, ladda);
 
-        var trial_id = document.getElementById("trial_select").value;
-        var design = retrievePageParams();
         design.label_elements = label_elements.map(getLabelDetails)
-
         var design_json = JSON.stringify(design);
         console.log("Design json is: \n"+design_json);
 
@@ -1099,7 +1104,15 @@ function manage_dl_with_cookie(token, ladda) {
 function retrievePageParams() {
 
     var page = d3.select("#page_format").node().value;
+    if (!page || page == 'Select a page format') {
+        alert("No page format select. Please select a page format");
+        return;
+    }
     var label = d3.select("#label_format").node().value;
+    if (!label || label == 'Select a label format') {
+        alert("No label format select. Please select a label format");
+        return;
+    }
     var label_sizes = page_formats[page].label_sizes;
 
     var page_params = {
