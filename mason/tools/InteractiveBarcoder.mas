@@ -1,7 +1,7 @@
 
 
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'spin_min', 'ladda_min', 'CXGN.BreederSearch' ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'CXGN.BreederSearch',] &>
 
 <div class="row">
 

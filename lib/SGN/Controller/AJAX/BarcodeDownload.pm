@@ -124,8 +124,8 @@ __PACKAGE__->config(
        # retrieve params
        my $trial_id = $c->req->param("trial_id");
        my $design_json = $c->req->param("design_json");
-       my $dl_token = $c->req->param("download_token") || "no_token";
-       my $dl_cookie = "download".$dl_token;
+    #    my $dl_token = $c->req->param("download_token") || "no_token";
+    #    my $ = "download".$dl_token;
        my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
        my %value_hash;
 
@@ -306,10 +306,10 @@ __PACKAGE__->config(
        $pdf->save();
        close($FH);
        print STDERR "Returning with filename . . .\n";
-       $c->res->cookies->{$dl_cookie} = {
-         value => $dl_token,
-         expires => '+1m',
-       };
+    #    $c->res->cookies->{$} = {
+    #      value => $dl_token,
+    #      expires => '+1m',
+    #    };
        $c->stash->{rest} = { filename => $urlencode{$filename} };
 
    }

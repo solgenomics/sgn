@@ -282,7 +282,7 @@ $(document).ready(function($) {
         for (i=0; i < label_params.length; i++) { // add numbered element key for each set of label params
             data += '\n"element'+i+'": '+JSON.stringify(label_params[i]);
         }
-        console.log("Data for list is: "+data);
+        //console.log("Data for list is: "+data);
         list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded = lo.addToList(list_id, data);
@@ -303,7 +303,7 @@ $(document).ready(function($) {
     $(document).on("change", "#trial_select", function() {
 
         var trial_id = document.getElementById("trial_select").value;
-        console.log("trial selected has id " + trial_id);
+        //console.log("trial selected has id " + trial_id);
 
         jQuery.ajax({
             url: '/barcode/download/retrieve_longest_fields',
@@ -323,7 +323,7 @@ $(document).ready(function($) {
                 if (response.error) {
                     alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
                 } else {
-                    console.log("Got longest elements: " + JSON.stringify(response));
+                    //console.log("Got longest elements: " + JSON.stringify(response));
                     add_fields = response;
                     add_fields["Select a field"] = {};
 
@@ -419,7 +419,7 @@ $(document).ready(function($) {
         .on("click", function() {
             var custom_text = $("#d3-custom-input").val();
             var custom_value = custom_text.replace(/\{(.*?)\}/g, function(match, token) {
-                console.log("token is "+token);
+                //console.log("token is "+token);
                 if (token.match(/Number:/)) {
                     var parts = token.split(':');
                     return parts[1];
@@ -496,15 +496,9 @@ $(document).ready(function($) {
         }
         var design = retrievePageParams();
         if (!design) {return;}
-
-        var ladda = Ladda.create(this);
-        ladda.start();
-        var token = new Date().getTime(); //use the current timestamp as the token name and value
-        manage_dl_with_cookie(token, ladda);
-
         design.label_elements = label_elements.map(getLabelDetails)
         var design_json = JSON.stringify(design);
-        console.log("Design json is: \n"+design_json);
+        //console.log("Design json is: \n"+design_json);
 
         //send to server to build pdf file
         jQuery.ajax({
@@ -514,16 +508,22 @@ $(document).ready(function($) {
             data: {
                 'trial_id': trial_id,
                 'design_json': design_json,
-                'download_token': token
+                // 'download_token': token
+            },
+            beforeSend: function() {
+                disable_ui();
+            },
+            complete: function() {
+                enable_ui();
             },
             success: function(response) {
                 if (response.error) {} else {
-                    console.log("downloading " + response.filename);
+                    //console.log("downloading " + response.filename);
                     window.location.href = "/download/" + response.filename;
                 }
             },
             error: function(request, status, err) {
-
+                alert("Error. Unable to download labels.");
             }
         });
     });
@@ -746,7 +746,7 @@ function doSnap(state, selection) {
 }
 
 function switchPageDependentOptions(page) {
-     console.log("Page type is: " + page);
+     //console.log("Page type is: " + page);
 
      // load label size and label field options based on page type
      var label_sizes = page_formats[page].label_sizes;
@@ -1084,21 +1084,6 @@ function parseTransform(transform) {
     }
 
     return attribute_object;
-}
-
-function manage_dl_with_cookie(token, ladda) {
-    var cookie = 'download' + token;
-    var fileDownloadCheckTimer = window.setInterval(function() { //checks for response cookie to keep working modal enabled until file is ready for download
-        var cookieValue = jQuery.cookie(cookie);
-        //console.log("cookieValue="+cookieValue);
-        //var allCookies = document.cookie;
-        //console.log("allCookies="+allCookies);
-        if (cookieValue == token) {
-            window.clearInterval(fileDownloadCheckTimer);
-            jQuery.removeCookie(cookie); //clears this cookie value
-            ladda.stop();
-        }
-    }, 500);
 }
 
 function retrievePageParams() {
