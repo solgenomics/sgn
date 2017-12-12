@@ -117,31 +117,17 @@ page_formats["Custom"] = {
 var label_options = {};
 label_options["Select an element type"] = { name: "Select an element type" };
 label_options["PDFText"] = {
-    name: "Text",
+    name: "Text (PDF)",
     sizes: {
         min: 1,
         max: 144,
         step: 1,
         value: 32,
     },
-    fonts: {
-        "Courier": "font-family:courier;",
-        "Courier-Bold": "font-family:courier;font-weight:bold;",
-        "Courier-Oblique": "font-family:courier;font-style: oblique;",
-        "Courier-BoldOblique": "font-family:courier;font-weight:bold;font-style: oblique;",
-        "Helvetica": "font-family:helvetica;",
-        "Helvetica-Bold": "font-family:helvetica;font-weight:bold;",
-        "Helvetica-Oblique": "font-family:helvetica;font-style: oblique;",
-        "Helvetica-BoldOblique": "font-family:helvetica;font-weight:bold;font-style: oblique;",
-        "Times": "font-family:times;",
-        "Times": "font-family:times;font-weight:bold;",
-        "Times-Italic": "font-family:times;font-style: italic;",
-        "Times-BoldItalic": "font-family:times;font-weight:bold;font-style: italic;"
-    }
 };
 
 label_options["ZebraText"] = {
-    name: "Text",
+    name: "Text (Zebra)",
     sizes: {
         "10": 10,
         "20": 20,
@@ -175,6 +161,21 @@ label_options["QRCode"] = {
         "Ten": 10
     }
 };
+
+font_styles = {
+    "Courier": "font-family:courier;",
+    "Courier-Bold": "font-family:courier;font-weight:bold;",
+    "Courier-Oblique": "font-family:courier;font-style: oblique;",
+    "Courier-BoldOblique": "font-family:courier;font-weight:bold;font-style: oblique;",
+    "Helvetica": "font-family:helvetica;",
+    "Helvetica-Bold": "font-family:helvetica;font-weight:bold;",
+    "Helvetica-Oblique": "font-family:helvetica;font-style: oblique;",
+    "Helvetica-BoldOblique": "font-family:helvetica;font-weight:bold;font-style: oblique;",
+    "Times": "font-family:times;",
+    "Times": "font-family:times;font-weight:bold;",
+    "Times-Italic": "font-family:times;font-style: italic;",
+    "Times-BoldItalic": "font-family:times;font-weight:bold;font-style: italic;"
+}
 
 var add_fields = {};
 
@@ -302,8 +303,6 @@ $(document).ready(function($) {
 
         var trial_id = document.getElementById("trial_select").value;
         console.log("trial selected has id " + trial_id);
-        d3.select("#d3-text-field-input").selectAll("option").remove();
-        d3.select("#d3-barcode-text-input").selectAll("option").remove();
 
         jQuery.ajax({
             url: '/barcode/download/retrieve_longest_fields',
@@ -330,13 +329,17 @@ $(document).ready(function($) {
                     createAdders(add_fields);
                     initializeCustomModal(add_fields);
 
-                    var page_format_select = d3.select("#page_format");
-                    page_format_select.selectAll("option")
+                    if ( d3.select("#page_format").node().value ) {
+                        switchPageDependentOptions( d3.select("#page_format").node().value );
+                    } else {
+                        var page_format_select = d3.select("#page_format");
+                        page_format_select.selectAll("option")
                         .data(Object.keys(page_formats))
                         .enter().append("option")
                         .text(function(d) {
                             return d
                         });
+                    }
 
                     if (!isLoggedIn()) {
                         $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
@@ -407,13 +410,23 @@ $(document).ready(function($) {
     });
 
     $("#d3-custom-field").on("click", function() {
+        $("#d3-custom-input").val('');
         $('#customFieldModal').modal('show');
     });
 
     d3.select("#d3-custom-field-save")
         .on("click", function() {
             var custom_text = $("#d3-custom-input").val();
-            var custom_value = $("#d3-custom-content").text();
+            var custom_value = custom_text.replace(/\{(.*?)\}/g, function(match, token) {
+                console.log("token is "+token);
+                if (token.match(/Number:/)) {
+                    var parts = token.split(':');
+                    return parts[1];
+                } else {
+                    return add_fields[token];
+                }
+            });
+
             $("#d3-add-field-input").append($('<option>', {
                 value: custom_value,
                 text: custom_text,
@@ -751,16 +764,42 @@ function switchPageDependentOptions(page) {
                  return d
              });
 
-    if (page == 'Zebra printer file') { // disable PDF text option and pdf download
+    if (page == 'Zebra printer file') { // disable PDF text option and pdf download, clear pdf text elements
         $("#d3-add-type-input option[value='PDFText']").remove();
         switchTypeDependentOptions('ZebraText');
         document.getElementById("d3-pdf-button").style.display = "none";
         document.getElementById("d3-zpl-button").style.display = "inline";
-    } else { // disable Zebra text option and zpl download
+        document.getElementById("d3-add-font-input").value = "Courier"; // default for Zebra
+
+        var label_elements = document.getElementsByClassName("label-element");
+        label_elements = Array.prototype.slice.call(label_elements); // convert to array
+        //console.log("working through "+label_elements.length+" label elements\n");
+        for (var i=0; i<label_elements.length; i++) {
+            var element = label_elements[i];
+            //console.log("Element type is: "+element.getAttribute("type"));
+            if (element.getAttribute("type") == "PDFText") {
+                //console.log("Removing element with value: "+element.getAttribute("value"));
+                element.parentNode.removeChild(element);
+            }
+        }
+
+    } else { // disable Zebra text option and zpl download, clear zpl text elements
         switchTypeDependentOptions('PDFText');
         $("#d3-add-type-input option[value='ZebraText']").remove();
         document.getElementById("d3-zpl-button").style.display = "none";
         document.getElementById("d3-pdf-button").style.display = "inline";
+
+        var label_elements = document.getElementsByClassName("label-element");
+        label_elements = Array.prototype.slice.call(label_elements); // convert to array
+        //console.log("working through "+label_elements.length+" label elements\n");
+        for (var i=0; i<label_elements.length; i++) {
+            var element = label_elements[i];
+            //console.log("Element type is: "+element.getAttribute("type"));
+            if (element.getAttribute("type") == "ZebraText") {
+                //console.log("Removing element with value: "+element.getAttribute("value"));
+                element.parentNode.removeChild(element);
+            }
+        }
     }
 
     if (page == 'Custom') {
@@ -827,16 +866,16 @@ function switchTypeDependentOptions(type){
     if (type == "PDFText") {
 
         // set up font select
-        var fonts = label_options[type].fonts;
+        //var fonts = label_options[type].fonts;
         d3.select("#d3-add-font-input").selectAll("option").remove();
         d3.select("#d3-add-font-input").selectAll("option")
-            .data(Object.keys(fonts).sort())
+            .data(Object.keys(font_styles).sort())
             .enter().append("option")
             .text(function(d) {
                 return d
             })
             .attr("style", function(d) {
-                return fonts[d]
+                return font_styles[d]
             })
             .attr("value", function(d) {
                 return d
@@ -858,7 +897,7 @@ function switchTypeDependentOptions(type){
         $("#d3-add-size-slider").show();
 
     } else {
-        $("#d3-add-font-input").val('');
+        //$("#d3-add-font-input").val('');
         document.getElementById("d3-add-font-div").style.visibility = "hidden";
         $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
         d3.select("#d3-add-size-input").selectAll("option")
@@ -875,7 +914,7 @@ function switchTypeDependentOptions(type){
 }
 
 function addToLabel(field, text, type, size, font, x, y, scale) {
-     console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
+     //console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
     svg = d3.select(".d3-draw-svg");
 
     //get x,y coords and scale
@@ -889,7 +928,7 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
         y = label_height / 2;
     }
     scale = (typeof scale === 'undefined') ? [1,1] : scale;
-    console.log(" X is: "+x+" and y is: "+y);
+    //console.log(" X is: "+x+" and y is: "+y);
 
     //set up new element
     var new_element = svg.append("g")
@@ -940,7 +979,7 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
                 "type": type,
                 "font-size": size,
                 "font": font,
-                "style": (typeof font == 'undefined') ? "font-family:courier;" : label_options[type].fonts[font],
+                "style": font_styles[font], //(typeof font == 'undefined') ? "font-family:courier;" : label_options[type].fonts[font]
                 "dominant-baseline": "mathematical",
             })
             .text(text)
@@ -951,7 +990,7 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
 function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, sort_order, copies_per_plot) {
     var page = d3.select("#page_format").node().value;
     var label = d3.select("#label_format").node().value;
-    console.log("page is "+page+" and label is "+label);
+    //console.log("page is "+page+" and label is "+label);
     page_formats[page].label_sizes[label].top_margin = top_margin;
     page_formats[page].label_sizes[label].left_margin = left_margin;
     page_formats[page].label_sizes[label].horizontal_gap = horizontal_gap;
@@ -986,6 +1025,8 @@ function createAdders(add_fields) {
         .attr("value", function(d) {
             return d
         });
+
+        // remove text option if page format defined
 
     //load field options
     d3.select("#d3-add-field-input").selectAll("option").remove();
@@ -1083,7 +1124,7 @@ function retrievePageParams() {
 
 function initializeCustomModal(add_fields) {
     //load field options
-    console.log("adding fields"+add_fields);
+    //console.log("adding fields"+add_fields);
     d3.select("#d3-custom-add-field-input").selectAll("option").remove();
     d3.select("#d3-custom-add-field-input").selectAll("option")
         .data(Object.keys(add_fields).sort())
@@ -1110,13 +1151,9 @@ function initializeCustomModal(add_fields) {
     $("#d3-custom-preview").on("click", function() {
         var value = $(this).find('option:selected').text();
         var custom_field = $("#d3-custom-input").val() + value;
-        //convert custom content to example string
-        // var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
-        //     console.log("token is "+token);
-        //     return add_fields[token];
-        // });
+
         var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
-            console.log("token is "+token);
+            //console.log("token is "+token);
             if (token.match(/Number:/)) {
                 var parts = token.split(':');
                 return parts[1];
@@ -1128,8 +1165,6 @@ function initializeCustomModal(add_fields) {
     });
 
     $("#d3-add-number").on("click", function() {
-        // var custom_num = "Number:" + $('#start_number').val() +":"+ $('#increment_number').val();
-        // add_fields[custom_num] = $('#start_number').val();
         var custom_field = $("#d3-custom-input").val() + "{Number:" + $('#start_number').val() +":"+ $('#increment_number').val()+"}";
         $("#d3-custom-input").val(custom_field);
     });
@@ -1155,7 +1190,7 @@ function load_design (list_id) {
             var element_obj = params[key];
             var value = element_obj.value;
             var text = value.replace(/\{(.*?)\}/g, function(match, token) {
-                console.log("token is "+token);
+                //console.log("token is "+token);
                 if (token.match(/Number:/)) {
                     var parts = token.split(':');
                     return parts[1];
@@ -1163,7 +1198,6 @@ function load_design (list_id) {
                     return add_fields[token];
                 }
             });
-            console.log("text is "+text);
             addToLabel(value, text, element_obj.type, element_obj.size, element_obj.font, element_obj.x, element_obj.y, element_obj.scale);
         }
     }
