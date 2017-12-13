@@ -64,14 +64,6 @@ $trial_id
                         <tbody>
                             <tr>
                                 <td>plot_name</td>
-                                <td>UTM31N_bottom_left_x</td>
-                                <td>UTM31N_bottom_left_y</td>
-                                <td>UTM31N_bottom_right_x</td>
-                                <td>UTM31N_bottom_right_y</td>
-                                <td>UTM31N_top_right_x</td>
-                                <td>UTM31N_top_right_y</td>
-                                <td>UTM31N_top_left_x</td>
-                                <td>UTM31N_top_left_y</td>
                                 <td>WGS84_bottom_left_x</td>
                                 <td>WGS84_bottom_left_y</td>
                                 <td>WGS84_bottom_right_x</td>
@@ -87,22 +79,6 @@ $trial_id
                     <b>Required fields:</b>
                     <br/>
                     plot_name (must exist in the database)
-                    <br />
-                    UTM31N_bottom_left_x (UTM31N longitude x coordinate of bottom left corner of plot)
-                    <br />
-                    UTM31N_bottom_left_y (UTM31N latitude y coordinate of bottom left corner of plot)
-                    <br />
-                    UTM31N_bottom_right_x (UTM31N longitude x coordinate of bottom right corner of plot)
-                    <br />
-                    UTM31N_bottom_right_y (UTM31N latitude y coordinate of bottom right corner of plot)
-                    <br />
-                    UTM31N_top_right_x (UTM31N longitude x coordinate of top right corner of plot)
-                    <br />
-                    UTM31N_top_right_y (UTM31N latitude y coordinate of top right corner of plot)
-                    <br />
-                    UTM31N_top_left_x (UTM31N longitude x coordinate of top left corner of plot)
-                    <br />
-                    UTM31N_top_left_y (UTM31N latitude y coordinate of top left corner of plot)
                     <br />
                     WGS84_bottom_left_x (WGS84 longitude coordinate of bottom left corner of plot)
                     <br />

@@ -741,42 +741,22 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         while (my $plot=$plots_rs->next){
             my $coords = $plot_stock_ids_hash{$plot->stock_id};
             my $geo_json = {
-                "type"=> "FeatureCollection",
-                "features"=> [{
-                    "type"=> "Feature",
-                    "geometry"=> {
-                        "type"=> "Polygon",
-                        "coordinates"=> [
-                            [
-                                [$coords->{UTM31N_bottom_left_x}, $coords->{UTM31N_bottom_left_y}],
-                                [$coords->{UTM31N_bottom_right_x}, $coords->{UTM31N_bottom_right_y}],
-                                [$coords->{UTM31N_top_right_x}, $coords->{UTM31N_top_right_y}],
-                                [$coords->{UTM31N_top_left_x}, $coords->{UTM31N_top_left_y}],
-                                [$coords->{UTM31N_bottom_left_x}, $coords->{UTM31N_bottom_left_y}],
-                            ]
+                "type"=> "Feature",
+                "geometry"=> {
+                    "type"=> "Polygon",
+                    "coordinates"=> [
+                        [
+                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                            [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
+                            [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
+                            [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
+                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
                         ]
-                    },
-                    "properties"=> {
-                        "format"=> "UTM31N",
-                    }
-                },{
-                    "type"=> "Feature",
-                    "geometry"=> {
-                        "type"=> "Polygon",
-                        "coordinates"=> [
-                            [
-                                [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
-                                [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
-                                [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
-                                [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
-                                [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
-                            ]
-                        ]
-                    },
-                    "properties"=> {
-                        "format"=> "WGS84",
-                    }
-                }]
+                    ]
+                },
+                "properties"=> {
+                    "format"=> "WGS84",
+                }
             };
             my $geno_json_string = encode_json $geo_json;
             #print STDERR $geno_json_string."\n";
