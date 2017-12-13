@@ -73,11 +73,12 @@ sub search {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level,
             trial_list=>\@study_ids_array,
-			trait_list=>\@trait_ids_array,
+            trait_list=>\@trait_ids_array,
             include_timestamp=>1,
-	        year_list=>\@years_array,
-	        location_list=>\@location_ids_array,
-	        accession_list=>\@accession_ids_array,
+            year_list=>\@years_array,
+            location_list=>\@location_ids_array,
+            accession_list=>\@accession_ids_array,
+            include_row_and_column_numbers=>1
         }
     );
     my $data = $phenotypes_search->search();
