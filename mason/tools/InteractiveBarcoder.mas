@@ -289,12 +289,12 @@
                         <center>
                         <br><label>Sort Labels by:</label>
                             <select class="form-control" id="sort_order" name="sort_by">
-                                <option value="accession_name">Accession Name</option>
-                                <option value="plot_name">Plot Name</option>
-                                <option value="plot_number" selected>Plot Number</option>
-                                <option value="rep_number">Rep Number</option>
-                                <option value="row_number">Row Number</option>
-                                <option value="column_number">Column Number</option>
+                                <option value="accession_name">accession_name</option>
+                                <option value="plot_name">plot_name</option>
+                                <option value="plot_number" selected>plot_number</option>
+                                <option value="rep_number">rep_number</option>
+                                <option value="row_number">row_number</option>
+                                <option value="column_number">column_number</option>
                             </select><br>
                         </center>
                     </div>

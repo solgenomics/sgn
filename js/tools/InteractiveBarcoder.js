@@ -172,7 +172,7 @@ font_styles = {
     "Helvetica-Oblique": "font-family:helvetica;font-style: oblique;",
     "Helvetica-BoldOblique": "font-family:helvetica;font-weight:bold;font-style: oblique;",
     "Times": "font-family:times;",
-    "Times": "font-family:times;font-weight:bold;",
+    "Times-Bold": "font-family:times;font-weight:bold;",
     "Times-Italic": "font-family:times;font-style: italic;",
     "Times-BoldItalic": "font-family:times;font-weight:bold;font-style: italic;"
 }
@@ -286,7 +286,7 @@ $(document).ready(function($) {
         list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded = lo.addToList(list_id, data);
-            lo.setListType(list_id, 'dataset');
+            lo.setListType(list_id, 'label_design');
         }
         if (elementsAdded) {
             alert("Saved label design with name " + new_name);
@@ -346,7 +346,7 @@ $(document).ready(function($) {
                         $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
                     } else {
                         var lo = new CXGN.List();
-                        $('#design_list').html(lo.listSelect('design_list', ['dataset'], 'Select a saved design', 'refresh'));
+                        $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh'));
                         $('#design_list_list_select').change(
                           function() {
                             disable_ui();
