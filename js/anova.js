@@ -27,20 +27,48 @@ jQuery(document).ready(function () {
     jQuery(document).on("click", "#run_anova", function() {        
    
 	var traitId    =  jQuery("#anova_selected_trait_id").val();
+	
+	if (traitId) {
 
-	queryPhenoData(traitId);
+	    queryPhenoData(traitId);
    
-	jQuery("#run_anova").hide();
+	    jQuery("#run_anova").hide();
 
-	showMessage("Running anova analysis...");
+	    showMessage("Running anova analysis...");
+	} else {
+	    var msg = 'You need to select a trait first.'
+	    anovaAlert(msg);
+	}
                
     });
 
 });
 
+
+function anovaAlert(msg) {
+
+    	jQuery('<div />')
+	.html(msg)
+	    .dialog({
+		modal  : true,
+		title  : 'Alert',
+		buttons: {
+		    OK: {
+			click: function () {
+			    jQuery(this).dialog('close');		
+			},
+			class: 'btn btn-success',
+			text : 'OK',
+		    },
+		}			
+	    });	    
+    
+
+}
+
 function queryPhenoData(traitId) {
    var trialId    =  jQuery("#trial_id").val();
-    alert(trialId)
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -72,31 +100,52 @@ function showMessage (msg) {
 
 
 function runAnovaAnalysis(traits) {
-
+ 
     var trialId    =  jQuery("#trial_id").val(); 
-    traits = JSON.stringify(traits);
    
-    jQuery.ajax({
-        type: 'POST',
-        dataType: 'json',
-	data: {'trial_id': trialId, 'traits': [traits]},
-        url: '/anova/analysis/',      
-        success: function(response) {
-	   
-            if (response) {
-		jQuery("#anova_canvas").append(response.anova_html_table).show();		
-                jQuery("#anova_message").empty();
-		jQuery("#run_anova").show();
-            } else {
-		showMessage("There is no anova output for this dataset."); 		
-		jQuery("#run_anova").show();
-            }
-        },
-        error: function(response) {                          
-            showMessage("Error occured running the anova analysis.");	    	
+    var captions       = jQuery('#anova_table table').find('caption').text();		
+    var analyzedTraits = captions.replace(/ANOVA result:/g, ' '); 
+
+    for (var i = 0; i < traits.length; i++) {
+	var traitAbbr = traits[i].trait_abbr;
+
+	if (analyzedTraits.match(traitAbbr) == null) {
+	    var anovaTraits = JSON.stringify(traits);
+
+	    jQuery.ajax({
+		type: 'POST',
+		dataType: 'json',
+		data: {'trial_id': trialId, 'traits': [anovaTraits]},
+		url: '/anova/analysis/',      
+		success: function(response) {
+		    
+		    if (response) {		
+			var anovaTable = response.anova_html_table;			
+		   	
+			jQuery("#anova_table").append('<div style="margin-top: 20px">' + anovaTable + '</div>').show();
+			
+			jQuery("#anova_message").empty();
+			
+			jQuery("#run_anova").show();
+		    } else {
+			showMessage("There is no anova output for this dataset."); 		
+			jQuery("#run_anova").show();
+		    }
+
+		    clearTraitSelection();
+		},
+		error: function(response) {                          
+		    showMessage("Error occured running the anova analysis.");	    	
+		    jQuery("#run_anova").show();
+		    clearTraitSelection();
+		}                
+	    });
+	} else {
+	    jQuery("#anova_message").empty();
 	    jQuery("#run_anova").show();
-        }                
-    });
+	    clearTraitSelection();
+	}
+    }
 
 }
 
@@ -138,16 +187,14 @@ function formatAnovaTraits(traits) {
     }
    
     var  traitsList =  '<dl id="anova_selected_trait" class="anova_dropdown">'
-        + '<dt> <a href="#"><span>Choose a trait</span></a></dt>'
+        + '<dt> <a href="#"><span>Select a trait</span></a></dt>'
         + '<dd>'
         + '<ul>'
         + traitsList
 	+ '</ul></dd></dl>'; 
-
    
     jQuery("#anova_select_a_trait_div").empty().append(traitsList).show();
-     
-  
+      
     jQuery(".anova_dropdown dt a").click(function() {
         jQuery(".anova_dropdown dd ul").toggle();
     });
@@ -186,3 +233,9 @@ function formatAnovaTraits(traits) {
 }
 
 
+function clearTraitSelection () {
+
+    jQuery("#anova_selected_trait_name").val('');
+    jQuery("#anova_selected_trait_id").val('');
+
+}
