@@ -24,7 +24,6 @@ my $create_spreadsheet = CXGN::Trial::Download->new({
     data_level => $data_level,
     sample_number => $sample_number,
     predefined_columns => $predefined_columns,
-    treatment_project_id => $treatment_project_id
 });
 $create_spreadsheet->download();
 $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
@@ -60,8 +59,6 @@ sub download {
     my $bold = $workbook->add_format();
     $bold->set_bold();
 
-    my %treatment_project_hash = $self->treatment_project_hash() ? %{$self->treatment_project_hash()} : undef;
-
     my @predefined_columns;
     my $submitted_predefined_columns;
     my $json = JSON->new();
@@ -82,22 +79,13 @@ sub download {
     my @trial_design_types;
     my @trial_descriptions;
     my @trial_locations;
-    my @trial_treatment_names;
     foreach (@trial_ids){
         my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_});
         my $trial_name = $trial->get_name;
-        my $treatment_id = $treatment_project_hash{$_};
-        my $treatment_trial;
-        my $treatment_name = "NONE";
-        if ($treatment_id){
-            $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment_id});
-            $treatment_name = $treatment_trial->get_name();
-        }
         push @trial_names, $trial_name;
         push @trial_design_types, $trial_name.": ".$trial->get_design_type;
         push @trial_descriptions, $trial_name.": ".$trial->get_description;
         push @trial_locations, $trial_name.": ".$trial->get_location()->[1];
-        push @trial_treatment_names, $trial_name.": ".$treatment_name;
     }
 
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
@@ -107,7 +95,6 @@ sub download {
     $ws->write(2, 0, 'Description(s)'); $ws->write(2, 1, join(",", @trial_descriptions), $bold);
     $ws->write(3, 0, "Trial location(s)");  $ws->write(3, 1, join(",", @trial_locations), $bold);
     $ws->write(4, 0, "Predefined Columns");  $ws->write(4, 1, $predefined_columns_json, $bold);
-    $ws->write(4, 2, "Treatment(s)"); $ws->write(4, 3, join(",", @trial_treatment_names));
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
@@ -115,17 +102,17 @@ sub download {
     my $num_col_before_traits;
     my @column_headers;
     if ($self->data_level eq 'plots') {
-        $num_col_before_traits = 10;
-        @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
+        $num_col_before_traits = 9;
+        @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants') {
-        $num_col_before_traits = 11;
-        @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
+        $num_col_before_traits = 10;
+        @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'subplots') {
-        $num_col_before_traits = 11;
-        @column_headers = ("subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
+        $num_col_before_traits = 10;
+        @column_headers = ("subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants_subplots') {
-        $num_col_before_traits = 12;
-        @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "treatment_name", "planting_date", "harvest_date", "trial_name");
+        $num_col_before_traits = 11;
+        @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     }
 
     my $num_col_b = $num_col_before_traits;
@@ -151,23 +138,7 @@ sub download {
         }
         my %design = %{$design};
 
-        my $treatment_id = $treatment_project_hash{$_};
-        my $selected_treatment_trial_name = "";
-        my $treatment_trial;
-        if ($treatment_id){
-            $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment_id});
-        }
-
         if ($self->data_level eq 'plots') {
-
-            my %treatment_plot_hash;
-            if ($treatment_trial){
-                my $treatment_plots = $treatment_trial->get_plots();
-                $selected_treatment_trial_name = $treatment_trial->get_name();
-                foreach (@$treatment_plots){
-                    $treatment_plot_hash{$_->[1]}++;
-                }
-            }
 
             my @ordered_plots = sort { $a <=> $b} keys(%design);
             for(my $n=0; $n<@ordered_plots; $n++) {
@@ -179,13 +150,9 @@ sub download {
                 $ws->write($line, 3, $design_info{block_number});
                 $ws->write($line, 4, $design_info{is_a_control});
                 $ws->write($line, 5, $design_info{rep_number});
-                $ws->write($line, 7, $planting_date);
-                $ws->write($line, 8, $harvest_date);
-                $ws->write($line, 9, $trial_name);
-
-                if (exists($treatment_plot_hash{$design_info{plot_name}})){
-                    $ws->write($line, 6, $selected_treatment_trial_name);
-                }
+                $ws->write($line, 6, $planting_date);
+                $ws->write($line, 7, $harvest_date);
+                $ws->write($line, 8, $trial_name);
 
                 if (scalar(@predefined_columns) > 0) {
                     my $pre_col_ind = $num_col_b;
@@ -202,15 +169,6 @@ sub download {
                 $line++;
             }
         } elsif ($self->data_level eq 'plants') {
-
-            my %treatment_plant_hash;
-            if($treatment_trial){
-                my $treatment_plants = $treatment_trial->get_plants();
-                $selected_treatment_trial_name = $treatment_trial->get_name();
-                foreach (@$treatment_plants){
-                    $treatment_plant_hash{$_->[1]}++;
-                }
-            }
 
             my @ordered_plots = sort { $a <=> $b} keys(%design);
             for(my $n=0; $n<@ordered_plots; $n++) {
@@ -239,13 +197,9 @@ sub download {
                     $ws->write($line, 4, $design_info{block_number});
                     $ws->write($line, 5, $design_info{is_a_control});
                     $ws->write($line, 6, $design_info{rep_number});
-                    $ws->write($line, 8, $planting_date);
-                    $ws->write($line, 9, $harvest_date);
-                    $ws->write($line, 10, $trial_name);
-
-                    if (exists($treatment_plant_hash{$_})){
-                        $ws->write($line, 7, $selected_treatment_trial_name);
-                    }
+                    $ws->write($line, 7, $planting_date);
+                    $ws->write($line, 8, $harvest_date);
+                    $ws->write($line, 9, $trial_name);
 
                     if (scalar(@predefined_columns) > 0) {
                         my $pre_col_ind = $num_col_b;
@@ -263,15 +217,6 @@ sub download {
                 }
             }
         } elsif ($self->data_level eq 'subplots') {
-
-            my %treatment_subplot_hash;
-            if($treatment_trial){
-                my $treatment_subplots = $treatment_trial->get_subplots();
-                $selected_treatment_trial_name = $treatment_trial->get_name();
-                foreach (@$treatment_subplots){
-                    $treatment_subplot_hash{$_->[1]}++;
-                }
-            }
 
             my @ordered_plots = sort { $a <=> $b} keys(%design);
             for(my $n=0; $n<@ordered_plots; $n++) {
@@ -300,13 +245,9 @@ sub download {
                     $ws->write($line, 4, $design_info{block_number});
                     $ws->write($line, 5, $design_info{is_a_control});
                     $ws->write($line, 6, $design_info{rep_number});
-                    $ws->write($line, 8, $planting_date);
-                    $ws->write($line, 9, $harvest_date);
-                    $ws->write($line, 10, $trial_name);
-
-                    if (exists($treatment_subplot_hash{$_})){
-                        $ws->write($line, 7, $selected_treatment_trial_name);
-                    }
+                    $ws->write($line, 7, $planting_date);
+                    $ws->write($line, 8, $harvest_date);
+                    $ws->write($line, 9, $trial_name);
 
                     if (scalar(@predefined_columns) > 0) {
                         my $pre_col_ind = $num_col_b;
@@ -324,14 +265,6 @@ sub download {
                 }
             }
         } elsif ($self->data_level eq 'plants_subplots') {
-            my %treatment_plant_hash;
-            if($treatment_trial){
-                my $treatment_plants = $treatment_trial->get_plants();
-                $selected_treatment_trial_name = $treatment_trial->get_name();
-                foreach (@$treatment_plants){
-                    $treatment_plant_hash{$_->[1]}++;
-                }
-            }
 
             my @ordered_plots = sort { $a <=> $b} keys(%design);
             for(my $n=0; $n<@ordered_plots; $n++) {
@@ -349,13 +282,9 @@ sub download {
                         $ws->write($line, 5, $design_info{block_number});
                         $ws->write($line, 6, $design_info{is_a_control});
                         $ws->write($line, 7, $design_info{rep_number});
-                        $ws->write($line, 9, $planting_date);
-                        $ws->write($line, 10, $harvest_date);
-                        $ws->write($line, 11, $trial_name);
-
-                        if (exists($treatment_plant_hash{$_})){
-                            $ws->write($line, 8, $selected_treatment_trial_name);
-                        }
+                        $ws->write($line, 8, $planting_date);
+                        $ws->write($line, 9, $harvest_date);
+                        $ws->write($line, 10, $trial_name);
 
                         if (scalar(@predefined_columns) > 0) {
                             my $pre_col_ind = $num_col_b;
