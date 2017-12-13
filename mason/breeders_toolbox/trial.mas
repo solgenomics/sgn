@@ -274,7 +274,8 @@ my $start_time = time();
 
 </&>
 
-<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+<& /breeders_toolbox/trial/upload_plot_gps_dialogs.mas, trial_id => $trial_id &>
+<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_upload_plot_gps_button' >Upload GPS Coordinates</a>]" &>
 
 <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
 
