@@ -78,7 +78,7 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell(0,7)) {
         $WGS84_top_left_x_head  = $worksheet->get_cell(0,7)->value();
     }
-    if ($worksheet->get_cell(0,8) {
+    if ($worksheet->get_cell(0,8)) {
         $WGS84_top_left_y_head  = $worksheet->get_cell(0,8)->value();
     }
 
