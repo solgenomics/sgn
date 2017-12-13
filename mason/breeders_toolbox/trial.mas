@@ -440,6 +440,10 @@ my $start_time = time();
    trial_id => $trial_id
 &>
 
+<& /anova.mas,
+   trial_id => $trial_id
+&>
+
   <!-- Population structure analysis -- PCA -->
 <& /solgs/model/pca.mas,
    trial_id => $trial_id
