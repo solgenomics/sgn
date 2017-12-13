@@ -1052,7 +1052,7 @@ function getLabelDetails(element, index) {
     var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
     //console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
     var coords = transform_attributes.translate;
-    var scale = transform_attributes.scale || [1,1];
+    var scale = transform_attributes.scale || new Array(1,1);
     var rect = element.getBBox();
     var width = rect.width * scale[0];
     var height = rect.height * scale[1];
@@ -1065,7 +1065,7 @@ function getLabelDetails(element, index) {
         scale: scale,
         value: element.getAttribute("value"),
         type: element.getAttribute("type"),
-        font: element.getAttribute("font"),
+        font: element.getAttribute("font") || 'Courier',
         size: element.getAttribute("size")
     };
 }
