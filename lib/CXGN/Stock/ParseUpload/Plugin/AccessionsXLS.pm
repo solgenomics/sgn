@@ -307,14 +307,17 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,0)) {
             $accession_name = $worksheet->get_cell($row,0)->value();
         }
-        if ($accession_name){
-            $seen_accession_names{$accession_name}++;
-        }
         if ($worksheet->get_cell($row,1)) {
             $species_name = $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,5)) {
             $synonyms_string = $worksheet->get_cell($row,5)->value();
+        }
+        if ($accession_name){
+            $seen_accession_names{$accession_name}++;
+        }
+        if ($species_name){
+            $seen_species_names{$species_name}++;
         }
         if ($synonyms_string && $synonyms_string ne '' ) {
             my @synonym_names = split ',', $synonyms_string;
@@ -323,29 +326,117 @@ sub _parse_with_plugin {
             }
         }
     }
-    my @plots = keys %seen_plot_names;
+    my @accessions = keys %seen_accession_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@plots }
+        'uniquename' => { -in => \@accessions }
     });
-    my %plot_lookup;
+    my %accession_lookup;
     while (my $r=$rs->next){
-        $plot_lookup{$r->uniquename} = $r->stock_id;
+        $accession_lookup{$r->uniquename} = $r->stock_id;
     }
 
     for my $row ( 1 .. $row_max ) {
-        my $plot_name;
-        my $plant_name;
+        my $accession_name;
+        my $species_name;
+        my $population_name;
+        my $organization_name;
+        my $location_code;
+        my $synonyms_string;
+        my $ploidy_level;
+        my $genome_structure;
+        my $variety;
+        my $donor;
+        my $donor_institute;
+        my $donor_PUI;
+        my $country_of_origin;
+        my $state;
+        my $institute_code;
+        my $institute_name;
+        my $biological_status_of_accession_code;
+        my $notes;
+        my $accession_number;
+        my $PUI_head;
+        my $seed_source;
+        my $type_of_germplasm_storage_code;
+        my $acquisition_date;
+        my $transgenic;
 
         if ($worksheet->get_cell($row,0)) {
-            $plot_name = $worksheet->get_cell($row,0)->value();
+            $accession_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $plant_name = $worksheet->get_cell($row,1)->value();
+            $species_name = $worksheet->get_cell($row,1)->value();
+        }
+        if ($worksheet->get_cell($row,2)) {
+            $population_name = $worksheet->get_cell($row,2)->value();
+        }
+        if ($worksheet->get_cell($row,3)) {
+            $organization_name = $worksheet->get_cell($row,3)->value();
+        }
+        if ($worksheet->get_cell($row,4)) {
+            $location_code = $worksheet->get_cell($row,4)->value();
+        }
+        if ($worksheet->get_cell($row,5)) {
+            $synonyms_string = $worksheet->get_cell($row,5)->value();
+        }
+        if ($worksheet->get_cell($row,6)) {
+            $ploidy_level = $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $genome_structure = $worksheet->get_cell($row,7)->value();
+        }
+        if ($worksheet->get_cell($row,8)) {
+            $variety = $worksheet->get_cell($row,8)->value();
+        }
+        if ($worksheet->get_cell($row,9)) {
+            $donor = $worksheet->get_cell($row,9)->value();
+        }
+        if ($worksheet->get_cell($row,10)) {
+            $donor_institute = $worksheet->get_cell($row,10)->value();
+        }
+        if ($worksheet->get_cell($row,11)) {
+            $donor_PUI = $worksheet->get_cell($row,11)->value();
+        }
+        if ($worksheet->get_cell($row,12)) {
+            $country_of_origin = $worksheet->get_cell($row,12)->value();
+        }
+        if ($worksheet->get_cell($row,13)) {
+            $state = $worksheet->get_cell($row,13)->value();
+        }
+        if ($worksheet->get_cell($row,14)) {
+            $institute_code = $worksheet->get_cell($row,14)->value();
+        }
+        if ($worksheet->get_cell($row,15)) {
+            $institute_name = $worksheet->get_cell($row,15)->value();
+        }
+        if ($worksheet->get_cell($row,16)) {
+            $biological_status_of_accession_code = $worksheet->get_cell($row,16)->value();
+        }
+        if ($worksheet->get_cell($row,17)) {
+            $notes = $worksheet->get_cell($row,17)->value();
+        }
+        if ($worksheet->get_cell($row,18)) {
+            $accession_number = $worksheet->get_cell($row,18)->value();
+        }
+        if ($worksheet->get_cell($row,19)) {
+            $PUI_head = $worksheet->get_cell($row,19)->value();
+        }
+        if ($worksheet->get_cell($row,20)) {
+            $seed_source = $worksheet->get_cell($row,20)->value();
+        }
+        if ($worksheet->get_cell($row,21)) {
+            $type_of_germplasm_storage_code = $worksheet->get_cell($row,21)->value();
+        }
+        if ($worksheet->get_cell($row,22)) {
+            $acquisition_date = $worksheet->get_cell($row,22)->value();
+        }
+        if ($worksheet->get_cell($row,23)) {
+            $transgenic = $worksheet->get_cell($row,23)->value();
         }
 
         #skip blank lines
-        if (!$plot_name && !$plant_name) {
+        if (!$accession_name && !$species_name) {
             next;
         }
 

@@ -208,7 +208,7 @@ sub verify_accessions_file_POST : Args(0) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $uploaded_file = $c->req->upload('new_accessions_upload_file');
+    my $upload = $c->req->upload('new_accessions_upload_file');
     my $subdirectory = "accessions_spreadsheet_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -261,8 +261,6 @@ sub verify_accessions_file_POST : Args(0) {
             $plot_plant_hash{$val->{plot_stock_id}}->{plot_name} = $val->{plot_name};
             push @{$plot_plant_hash{$val->{plot_stock_id}}->{plant_names}}, $val->{plant_name};
         }
-        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments);
 
         my $layout = CXGN::Trial::TrialLayout->new({
             schema => $schema,
