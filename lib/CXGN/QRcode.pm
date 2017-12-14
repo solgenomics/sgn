@@ -5,25 +5,53 @@ use GD;
 
 use Imager::QRCode;
 
-sub get_barcode_file {
-  my $self = shift;
-  my $file = shift;
-  my $text = shift;
-  my $size = shift || 3;
+has 'text' => (
+    isa => 'Str',
+	is => 'rw',
+    required => 1,
+);
 
-  my $qrcode = Imager::QRCode->new(
-        size          => $size,
-        margin        => 0,
-        version       => 0,
-        level         => 'L',
+has 'size' => (
+	isa => 'Maybe[Int]',
+	is => 'rw',
+    default => 3,
+);
+
+has 'margin' => (
+	isa => 'Maybe[Int]',
+	is => 'rw',
+    default => 5,
+);
+
+has 'version' => (
+	isa => 'Maybe[Int]',
+	is => 'rw',
+    default => 1,
+);
+
+has 'level' => (
+	isa => 'Maybe[Str]',
+	is => 'rw',
+    default => 'M',
+);
+
+sub get_barcode_file {
+    my $self = shift;
+    my $file = shift;
+
+    my $qrcode = Imager::QRCode->new(
+        size          => $self->size,
+        margin        => $self->margin,
+        version       => $self->version,
+        level         => $self->level,
         casesensitive => 1,
         lightcolor    => Imager::Color->new(255, 255, 255),
         darkcolor     => Imager::Color->new(0, 0, 0),
     );
-  my $barcode = $qrcode->plot($text);
-  $barcode->write(file => $file);
+    my $barcode = $qrcode->plot( $self->text );
+    $barcode->write(file => $file);
 
-  return $file;
+    return $file;
 
 }
 

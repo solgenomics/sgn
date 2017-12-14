@@ -125,18 +125,15 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    else {
        $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
    }
-   
+
 
 
    $c->tempfiles_subdir('barcode');
    my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-   my $barcode_generator = CXGN::QRcode->new();
-   my $barcode_file = $barcode_generator->get_barcode_file(
-         $file_location,
-         $text,
-    );
-    
+   my $barcode_generator = CXGN::QRcode->new( text => $text );
+   my $barcode_file = $barcode_generator->get_barcode_file($file_location);
+
    close($barcode_file);
    return $barcode_file;
  }
@@ -153,11 +150,8 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
     $c->tempfiles_subdir('barcode');
     my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-    my $barcode_generator = CXGN::QRcode->new();
-    my $barcode_file = $barcode_generator->get_barcode_file(
-          $file_location,
-          $text,
-     );
+    my $barcode_generator = CXGN::QRcode->new( text => $text );
+    my $barcode_file = $barcode_generator->get_barcode_file($file_location);
 
     return $barcode_file;
   }
@@ -176,11 +170,8 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
       $c->tempfiles_subdir('barcode');
       my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-       my $barcode_generator = CXGN::QRcode->new();
-       my $barcode_file = $barcode_generator->get_barcode_file(
-             $file_location,
-             $text,
-        );
+      my $barcode_generator = CXGN::QRcode->new( text => $text );
+      my $barcode_file = $barcode_generator->get_barcode_file($file_location);
 
        $c->res->headers->content_type('image/jpg');
        $c->res->body($barcode_file);

@@ -29,6 +29,8 @@ $identifier => ''
 
                     <div class="well well-sm">
                         <div class="row">
+                          <div class="col-md-1 col-lg-1">
+                          </div>
                           <div class="col-md-10 col-lg-10">
 
                             <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/pdf" >
@@ -177,54 +179,34 @@ $identifier => ''
                                </div>
 
                                 <div class="form-group form-group-sm">
-                                  <label class="col-sm-4 control-label">Label Format: </label>
+                                  <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
                                   <div class="col-sm-8">
-                                      <select class="form-control" id="format" name="format">
-                                        <option value="default">QR Code. 1 inch by 2.625 (default)</option>
-                                        <option value="custom">Custom format</option>
-                                      </select>
+                                    <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
                                   </div>
+                                  </div>
+                                  <!-- <div class="form-group form-group-sm">
+                                    <label class="col-sm-4 control-label">Print Field Information For Plots: </label>
+                                    <div class="col-sm-8">
+                                        <input type="checkbox" name="plots" value="plots" />
+                                    </div>
                                 </div>
-                                
                                 <div class="form-group form-group-sm">
-                                  <label class="col-sm-4 control-label">Number of Labels per Stock: </label>
-                                  <div class="col-sm-8">
-                                      <select class="form-control" id="num_labels" name="num_labels">
-                                        <option value="1">One</option>
-                                        <option value="2">Two</option>
-                                        <option value="3">Three</option>
-                                      </select>
-                                  </div>
-                                </div>
-                                
-                                <div class="form-group form-group-sm">
-                                  <label class="col-sm-4 control-label">Pedigree?</label>
-                                  <div class="col-sm-8">
-                                    <input id="include_pedigree" name="include_pedigree" type="checkbox" value="true">Include pedigree</label>
-                                  </div>
-                                </div>
-                                
-                                <div class="form-group form-group-sm">
-                                  <label class="col-sm-4 control-label">Custom Text: </label>
-                                  <div class="col-sm-8">
-                                    <textarea class="form-control" id="custom_text" name="custom_text" ></textarea>
-                                  </div>
-                                </div>
-                                
-                                <div class="form-group form-group-sm">
-                                  <label class="col-sm-4 control-label">Order by: </label>
-                                  <div class="col-sm-8">
-                                      <select class="form-control" id="order_by" name="order_by">
-                                        <option value="plot_number">Plot number</option>
-                                        <option value="plot_name">Plot name</option>
-                                      </select>
-                                  </div>
-                                </div>
->
+                                    <label class="col-sm-4 control-label">Print Parents For Nurseries: </label>
+                                    <div class="col-sm-8">
+                                        <input type="checkbox" name="nursery" value="nursery" />
+                                    </div>
+                                </div> -->
                             </div>
                         </div>
-                    </div>
-                </div>
+                        <div class="col-md-1 col-lg-1">
+                        </div>
+                      </div>
+
+                    </p>
+
+                            <& /barcode/printer_settings.mas &>
+                        </center>
+             </div>
             </div>
             <div class="modal-footer">
 

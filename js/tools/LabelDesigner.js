@@ -970,7 +970,7 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
                     "type": type,
                     "height": height,
                     "width": width,
-                    "href": "/barcode/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size),
+                    "href": "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size),
                 });
             }
             enable_ui();

@@ -53,12 +53,14 @@ sub barcode_preview :Path('/tools/label_designer/preview') {
         $c->tempfiles_subdir('barcode');
         my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-        my $barcode_generator = CXGN::QRcode->new();
-        my $barcode_file = $barcode_generator->get_barcode_file(
-              $file_location,
-              $content,
-              $size
-         );
+        my $barcode_generator = CXGN::QRcode->new(
+            text => $content,
+            size => $size,
+            margin => 0,
+            version => 0,
+            level => 'L'
+        );
+        my $barcode_file = $barcode_generator->get_barcode_file($file_location);
 
          my $qrcode_path = $c->path_to($uri);
 

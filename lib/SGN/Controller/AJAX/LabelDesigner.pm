@@ -195,8 +195,14 @@ __PACKAGE__->config(
                           } else { #QRCode
 
                               my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
-                              my $barcode_generator = CXGN::QRcode->new();
-                              my $barcode_file = $barcode_generator->get_barcode_file( $jpeg_location, $filled_value, $element{'size'} );
+                              my $barcode_generator = CXGN::QRcode->new(
+                                  text => $filled_value,
+                                  size => $element{'size'},
+                                  margin => 0,
+                                  version => 0,
+                                  level => 'L'
+                              );
+                              my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
 
                                my $image = $pdf->image_jpeg($jpeg_location);
                                my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
