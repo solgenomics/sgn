@@ -306,7 +306,7 @@ $(document).ready(function($) {
         //console.log("trial selected has id " + trial_id);
 
         jQuery.ajax({
-            url: '/barcode/download/retrieve_longest_fields',
+            url: '/tools/label_designer/retrieve_longest_fields',
             timeout: 60000,
             method: 'POST',
             data: {
@@ -502,13 +502,13 @@ $(document).ready(function($) {
 
         //send to server to build pdf file
         jQuery.ajax({
-            url: '/barcode/download/'+download_type,
+            url: '/tools/label_designer/download',
             timeout: 300000,
             method: 'POST',
             data: {
+                'type': download_type,
                 'trial_id': trial_id,
-                'design_json': design_json,
-                // 'download_token': token
+                'design_json': design_json
             },
             beforeSend: function() {
                 disable_ui();
@@ -517,12 +517,16 @@ $(document).ready(function($) {
                 enable_ui();
             },
             success: function(response) {
-                if (response.error) {} else {
-                    //console.log("downloading " + response.filename);
+                if (response.error) {
+                    enable_ui();
+                    alert(response.error);
+                } else {
+                    enable_ui();
                     window.location.href = "/download/" + response.filename;
                 }
             },
             error: function(request, status, err) {
+                enable_ui();
                 alert("Error. Unable to download labels.");
             }
         });
@@ -954,7 +958,7 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
             new_element.classed("barcode", true)
             .call(selectable, true);
             var img = new Image();
-            img.src = "/barcode/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size);
+            img.src = "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size);
             img.onload = function() {
                 var width = this.width;
                 var height = this.height;

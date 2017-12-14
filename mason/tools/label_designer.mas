@@ -1,7 +1,7 @@
 
 
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.InteractiveBarcoder', 'CXGN.BreederSearch',] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.LabelDesigner', 'CXGN.BreederSearch',] &>
 
 <div class="row">
 
@@ -111,7 +111,7 @@
                 <center>
                     <label>Field:</label><br>
                     <select id="d3-add-field-input" class="form-control"></select><br>
-                    <button class="btn btn-primary" id="d3-custom-field">Add Custom Field</button>
+                    <button class="btn btn-primary" id="d3-custom-field">Create Custom Field</button>
                 </center>
                 &nbsp&nbsp
             </div>
