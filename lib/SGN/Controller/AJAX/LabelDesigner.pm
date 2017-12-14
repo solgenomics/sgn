@@ -1,12 +1,3 @@
-
-=head1 NAME
-
-=head1 DESCRIPTION
-
-=head1 AUTHOR
-
-=cut
-
 package SGN::Controller::AJAX::LabelDesigner;
 
 use Moose;
@@ -145,6 +136,7 @@ __PACKAGE__->config(
 
        if ($type eq 'pdf') {
            # Create pdf
+           print STDERR "Creating the PDF . . .\n";
            my $pdf  = PDF::API2->new(-file => $FH);
            my $page = $pdf->page();
            my $text = $page->text();
@@ -154,12 +146,12 @@ __PACKAGE__->config(
            # loop through plot data in design hash
            foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
 
-                print STDERR "Design key is $key\n";
+                #print STDERR "Design key is $key\n";
                 my %design_info = %{$design{$key}};
                 $design_info{'trial_name'} = $trial_name;
                 $design_info{'year'} = $year;
                 $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
-                print STDERR "Design info: " . Dumper(%design_info);
+                #print STDERR "Design info: " . Dumper(%design_info);
 
                 for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
                     #print STDERR "Working on label num $i\n";
@@ -175,7 +167,7 @@ __PACKAGE__->config(
                        my $filled_value = $element{'value'};
                        $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
                        #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
-
+                       print STDERR "Writing to the PDF . . .\n";
                        if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
                             if ( $element{'type'} eq "Code128" ) {
@@ -196,7 +188,7 @@ __PACKAGE__->config(
                                 my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                                 my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                                 my $elementy = $elementy - $height; # adjust for img position sarting at bottom
-                                print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
+                                #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                                 $gfx->image($image, $elementx, $elementy, $width, $height);
 
 
