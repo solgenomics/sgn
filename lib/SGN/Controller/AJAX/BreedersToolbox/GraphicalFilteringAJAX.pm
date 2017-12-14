@@ -79,7 +79,7 @@ sub common_traits_by_trial_list_GET : Args(0) {
    my $queryref = {
       'plots' => {
          'trials' => 0,
-         'traits' => 0
+         'traits' => 1
       }
    };
    my $plots_results_ref = $breedersearch->metadata_query(@criteria, $dataref, $queryref);
@@ -89,7 +89,7 @@ sub common_traits_by_trial_list_GET : Args(0) {
 
    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
       bcs_schema=> $schema,
-      search_type => "MaterializedView",
+      search_type => "Native",
       data_level => "plot",
       trait_list=> \@trait_list,
       plot_list=>  \@plot_list
@@ -148,7 +148,7 @@ sub common_traits_by_plot_list_GET : Args(0) {
 
    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
       bcs_schema=> $schema,
-      search_type => "MaterializedView",
+      search_type => "Native",
       data_level => "plot",
       trait_list=> \@trait_list,
       plot_list=>  \@plot_list
@@ -202,7 +202,7 @@ sub common_traits_by_trials_GET : Args(0) {
    my $queryref = {
       'plots' => {
          'trials' => 0,
-         'traits' => 0
+         'traits' => 1
       }
    };
    my $plots_results_ref = $breedersearch->metadata_query(@criteria, $dataref, $queryref);
@@ -212,7 +212,7 @@ sub common_traits_by_trials_GET : Args(0) {
 
    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
       bcs_schema=> $schema,
-      search_type => "MaterializedView",
+      search_type => "Native",
       data_level => "plot",
       trait_list=> \@trait_list,
       plot_list=>  \@plot_list
