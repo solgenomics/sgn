@@ -122,6 +122,7 @@ stock_property	organization				00052
 stock_property	plant_index_number				00054
 stock_property	subplot_index_number				00084
 stock_property	plot number				00052
+stock_property	plot_geo_json	GeoJSON string for GPS coords polygon of plots.	12/03/2017	nm529	00088
 stock_property	range				00052
 stock_property	replicate				00052
 stock_property	row_number				00052
