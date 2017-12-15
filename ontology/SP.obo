@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:09:2017 13:43
+date: 15:12:2017 17:18
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3682,7 +3682,7 @@ creation_date: 2017-09-12T12:57:55Z
 [Term]
 id: SP:0000412
 name: petal
-is_a: SP:0000008 ! flower morphology
+relationship: part_of SP:0000008 ! flower morphology
 created_by: naama
 creation_date: 2017-09-12T12:58:14Z
 
@@ -3737,7 +3737,7 @@ creation_date: 2017-09-12T13:04:04Z
 [Term]
 id: SP:0000419
 name: anther
-is_a: SP:0000008 ! flower morphology
+relationship: part_of SP:0000443 ! stamen
 created_by: naama
 creation_date: 2017-09-12T13:35:52Z
 
@@ -3757,7 +3757,7 @@ creation_date: 2017-09-12T13:36:21Z
 
 [Term]
 id: SP:0000422
-name: anther length
+name: anther length measurement in cm
 def: "Length of the anthers in cm." [SGN:EVDK]
 relationship: variable_of SP:0000419 ! anther
 created_by: naama
@@ -3892,6 +3892,54 @@ def: "Number of secondary leaflets per leaf. Counting\nin fully opened leaves wh
 relationship: variable_of SP:0000436 ! leaflets number
 created_by: naama
 creation_date: 2017-09-22T13:41:28Z
+
+[Term]
+id: SP:0000439
+name: leaf habit
+def: "Traits related to leaf habit." []
+is_a: SP:0000108 ! leaf
+created_by: naama
+creation_date: 2017-12-14T15:53:18Z
+
+[Term]
+id: SP:0000440
+name: leaf habit visual rating 1-9 scale
+def: "Description of the way the leaves are held naturally.  Recorded at complete developmental stage of the plant. Visual rating 1-9 score  (1:semi-erect, 3:semi-horizontal, 5:horizontal, 7:horizontal-drooping, 9:drooping)." [SGN:NM]
+relationship: variable_of SP:0000439 ! leaf habit
+created_by: naama
+creation_date: 2017-12-14T15:55:33Z
+
+[Term]
+id: SP:0000441
+name: stem anthocyanin content
+def: "Anthocyanin content in the stem of mature plants." []
+relationship: part_of SP:0000343 ! hypocotyl
+relationship: variable_of SP:0000016 ! anthocyanin content
+created_by: naama
+creation_date: 2017-12-15T15:43:57Z
+
+[Term]
+id: SP:0000442
+name: petals curvature observation 1-7 scale
+def: "The common position of the petals of fully opened flowers. 1-7 score (3:low, 5:intermediate, 7:strong)." [SGN:NM]
+relationship: variable_of SP:0000412 ! petal
+created_by: naama
+creation_date: 2017-12-15T16:58:22Z
+
+[Term]
+id: SP:0000443
+name: stamen
+relationship: part_of SP:0000008 ! flower morphology
+created_by: naama
+creation_date: 2017-12-15T17:14:56Z
+
+[Term]
+id: SP:0000444
+name: stamen color observation 3-7 scale
+def: "Stamen color of fully opened flowers. 3-7 scale (3:yellow, 5:pale orange, 7:orange)." [SGN:NM]
+relationship: variable_of SP:0000443 ! stamen
+created_by: naama
+creation_date: 2017-12-15T17:16:28Z
 
 [Term]
 id: SP:0000706
