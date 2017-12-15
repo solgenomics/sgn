@@ -15,8 +15,12 @@
             <div class="col-md-2">
                 <label><b>Data Source:</b></label>
             </div>
-            <div class="col-md-4">
-                <select class="form-control" id="trial_select"></select>
+            <div class="col-md-4" id="data_source">
+                <select class="form-control" id="data_source_select">
+                    <option value="">Select a data source</option>
+                    <option value="trial">Trial</option>
+                    <option value="plot_list">Plot List</option>
+                </select>
             </div>
             <div class="col-md-2">
                 <label><b>Load Design?</b></label>
@@ -290,8 +294,9 @@
                         <br><label>Sort Labels by:</label>
                             <select class="form-control" id="sort_order" name="sort_by">
                                 <option value="accession_name">accession_name</option>
+                                <option value="list_order" selected>list_order</option>
                                 <option value="plot_name">plot_name</option>
-                                <option value="plot_number" selected>plot_number</option>
+                                <option value="plot_number">plot_number</option>
                                 <option value="rep_number">rep_number</option>
                                 <option value="row_number">row_number</option>
                                 <option value="column_number">column_number</option>

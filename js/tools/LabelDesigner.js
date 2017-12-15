@@ -240,12 +240,7 @@ var drag_behaviour = d3.behavior.drag().on(
 $(document).ready(function($) {
 
     initializeDrawArea();
-
-    get_select_box('trials', 'trial_select', {
-        'name': 'trial_select_html',
-        'id': 'trial_select_html',
-        'empty': 1
-    });
+    $('#data_source_select').focus();
 
     // Every time a modal is shown, if it has an autofocus element, focus on it.
     $('.modal').on('shown.bs.modal', function() {
@@ -272,17 +267,17 @@ $(document).ready(function($) {
 
         var lo = new CXGN.List();
         var new_name = $('#save_design_name').val();
-        //console.log("Saving label design to list named " + new_name);
+
         page_params = JSON.stringify(retrievePageParams());
+
         if (!page_params) {return;}
         var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
         label_params = label_elements.map(getLabelDetails);
 
-        //console.log("label_param length is: "+label_params.length)
         for (i=0; i < label_params.length; i++) { // add numbered element key for each set of label params
             data += '\n"element'+i+'": '+JSON.stringify(label_params[i]);
         }
-        //console.log("Data for list is: "+data);
+
         list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded = lo.addToList(list_id, data);
@@ -294,15 +289,32 @@ $(document).ready(function($) {
 
     });
 
-    $('#trial_select').focus();
+    $("#data_source_select").change(function() {
+
+        if (this.value == 'trial') {
+            get_select_box('trials', 'data_source', {
+                'name': 'data_list_select',
+                'id': 'trial_select',
+                'empty': 1
+            });
+
+            $('#trial_select').focus();
+        } else if (this.value == 'plot_list') {
+            var lo = new CXGN.List();
+            $('#data_source').html(lo.listSelect('data', ['plots'], 'Select a plot list', 'refresh'));
+            $('#data_list_select').focus();
+        }
+
+    });
 
     $("#edit_additional_settings").on("click", function() {
         $('#editAdditionalSettingsModal').modal('show');
     });
 
-    $(document).on("change", "#trial_select", function() {
-
-        var trial_id = document.getElementById("trial_select").value;
+    $(document).on("change", "#trial_select, #data_list_select", function() {
+        // var type = this.id;
+        // var value = this.value;
+        //var trial_id = document.getElementById("trial_select").value;
         //console.log("trial selected has id " + trial_id);
 
         jQuery.ajax({
@@ -310,7 +322,9 @@ $(document).ready(function($) {
             timeout: 60000,
             method: 'POST',
             data: {
-                'trial_id': trial_id
+                data_type: this.id,
+                value: this.value
+                // 'trial_id': trial_id
             },
             beforeSend: function() {
                 disable_ui();
@@ -489,11 +503,15 @@ $(document).ready(function($) {
         }
         var download_type = $(this).val();
 
-        var trial_id = document.getElementById("trial_select").value;
-        if (!trial_id || trial_id == 'Please select a trial') {
-            alert("No trial selected. Please select a trial before downloading");
+        var data_type = document.getElementsByName("data_list_select")[0].id;//document.getElementsByName("acc")[0].value $('[name="data_list_select"]').id;
+        var value = document.getElementsByName("data_list_select")[0].value;  //$('[name="data_list_select"] option:selected').value;
+        console.log("Id is "+data_type+" and value is "+value);
+        // var trial_id = document.getElementById("trial_select").value;
+        if (!value || value == 'Please select a trial' || value == 'Select a plot list') {
+            alert("No data source selected. Please select a data source before downloading");
             return;
         }
+
         var design = retrievePageParams();
         if (!design) {return;}
         design.label_elements = label_elements.map(getLabelDetails)
@@ -506,8 +524,9 @@ $(document).ready(function($) {
             timeout: 300000,
             method: 'POST',
             data: {
-                'type': download_type,
-                'trial_id': trial_id,
+                'download_type': download_type,
+                'data_type' : data_type,
+                'value': value,
                 'design_json': design_json
             },
             beforeSend: function() {

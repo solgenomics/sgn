@@ -2,13 +2,14 @@ package SGN::Controller::AJAX::LabelDesigner;
 
 use Moose;
 use CXGN::Stock;
+use CXGN::List::Transform;
 use Data::Dumper;
 use Try::Tiny;
 use JSON;
 use Barcode::Code128;
 use PDF::API2;
 use Sort::Versions;
-use Tie::UrlEncoder; our(%urlencode);
+# use Tie::UrlEncoder; our(%urlencode);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -22,24 +23,29 @@ __PACKAGE__->config(
        my $self = shift;
        my $c = shift;
        my $schema = $c->dbic_schema('Bio::Chado::Schema');
-       my $uri     = URI::Encode->new( { encode_reserved => 0 } );
-       my $trial_id = $uri->decode($c->req->param("trial_id"));
+    #    my $uri     = URI::Encode->new( { encode_reserved => 0 } );
+    #    my $trial_id = $uri->decode($c->req->param("trial_id"));
+    #    my $type = $uri->decode($c->req->param("type"));
+    #    my $value = $uri->decode($c->req->param("value"));
+           my $data_type = $c->req->param("data_type");
+    my $value = $c->req->param("value");
        my %longest_hash;
 
-       # get trial details
+       my ($trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
+
        my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
        if (!$trial_name) {
            $c->stash->{rest} = { error => "Trial with id $trial_id does not exist. Can't create labels." };
            return;
        }
-       $longest_hash{'trial_name'} = $trial_name;
 
-       my $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
        my %design = %{$design};
        if (!%design) {
            $c->stash->{rest} = { error => "Trial $trial_name does not have a valid field design. Can't create labels." };
            return;
        }
+       $longest_hash{'trial_name'} = $trial_name;
 
        my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
@@ -87,8 +93,10 @@ __PACKAGE__->config(
        my $self = shift;
        my $c = shift;
        my $schema = $c->dbic_schema('Bio::Chado::Schema');
-       my $type = $c->req->param("type");
-       my $trial_id = $c->req->param("trial_id");
+       my $download_type = $c->req->param("download_type");
+    #    my $trial_id = $c->req->param("trial_id");
+       my $data_type = $c->req->param("data_type");
+       my $value = $c->req->param("value");
        my $design_json = $c->req->param("design_json");
        my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
@@ -96,14 +104,13 @@ __PACKAGE__->config(
        my $json = new JSON;
        my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
 
-       # get trial details
-       my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
-       if (!$trial_name) {
-           $c->stash->{rest} = { error => "Trial with id $trial_id does not exist. Can't create labels." };
-           return;
-       }
-
-       my $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
+       my ($trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+    #    my $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
+        my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
+        if (!$trial_name) {
+            $c->stash->{rest} = { error => "Trial with id $trial_id does not exist. Can't create labels." };
+            return;
+        }
        my %design = %{$design};
        if (!$design) {
            $c->stash->{rest} = { error => "Trial $trial_name does not have a valid field design. Can't create labels." };
@@ -126,7 +133,7 @@ __PACKAGE__->config(
        my $dir = $c->tempfiles_subdir('labels');
        my $file_prefix = $trial_name;
        $file_prefix =~ s/[^a-zA-Z0-9-_]//g;
-       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$type");
+       my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$download_type");
 
        # initialize loop variables
        my $col_num = 1;
@@ -134,7 +141,7 @@ __PACKAGE__->config(
        my $key_number = 0;
        my $sort_order = $design_params->{'sort_order'};
 
-       if ($type eq 'pdf') {
+       if ($download_type eq 'pdf') {
            # Create pdf
            print STDERR "Creating the PDF . . .\n";
            my $pdf  = PDF::API2->new(-file => $FH);
@@ -247,7 +254,7 @@ __PACKAGE__->config(
            print STDERR "Saving the PDF . . .\n";
            $pdf->save();
 
-       } elsif ($type eq 'zpl') {
+       } elsif ($download_type eq 'zpl') {
            # do zpl conversion
            my $label_params = label_params_to_zpl($label_params, $design_params->{'label_width'}, $design_params->{'label_height'});
 
@@ -271,7 +278,8 @@ __PACKAGE__->config(
 
        close($FH);
        print STDERR "Returning with filename . . .\n";
-       $c->stash->{rest} = { filename => $urlencode{$filename} };
+    #    $c->stash->{rest} = { filename => $urlencode{$filename} };
+        $c->stash->{rest} = { filename => $filename };
 
    }
 
@@ -337,11 +345,53 @@ sub get_all_pedigrees {
     my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
     my %pedigree_strings;
     foreach my $row (@$pedigree_rows) {
-        my ($progeny, $female_parent, $male_parent, $type) = split "\t", $row;
+        my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
         my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
         $pedigree_strings{$progeny} = $string;
     }
     return \%pedigree_strings;
+}
+
+sub get_plot_data {
+    my $c = shift;
+    my $schema = shift;
+    my $data_type = shift;
+    my $value = shift;
+    my ($trial_id, $design);
+    print STDERR "Data type is $data_type and value is $value\n";
+    if ($data_type eq 'data_list_select') {
+        # get items from list, get trial id from plot id. Or, get plot dta one by one
+        my $plot_data = SGN::Controller::AJAX::List->retrieve_list($c, $value);
+        my @plot_list = map { $_->[1] } @$plot_data;
+        my $t = CXGN::List::Transform->new();
+        my $acc_t = $t->can_transform("plots", "plot_ids");
+        my $plot_id_hash = $t->transform($schema, $acc_t, \@plot_list);
+        my @plot_ids = @{$plot_id_hash->{transform}};
+
+
+        $trial_id = $schema->resultset("NaturalDiversity::NdExperimentStock")->search( { stock_id => $plot_ids[0] } )->search_related('nd_experiment')->search_related('nd_experiment_projects')->first->project_id();
+
+        my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
+        print STDERR "Full Design is: ".Dumper($full_design);
+        # reduce design hash, removing plots that aren't in list
+        my %full_design = %{$full_design};
+
+        foreach my $i (0 .. $#plot_ids) {
+            foreach my $key (keys %full_design) {
+                if ($full_design{$key}->{'plot_id'} eq $plot_ids[$i]) {
+                    print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
+                    $design->{$key} = $full_design{$key};
+                    $design->{$key}->{'list_order'} = $i;
+                }
+            }
+        }
+
+    } elsif ($data_type eq 'trial_select') {
+        $trial_id = $value;
+        $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
+    }
+
+    return ($trial_id, $design);
 }
 
 
