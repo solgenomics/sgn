@@ -63,7 +63,6 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my $format = $c->req->param('format') || "ExcelBasic";
   my $data_level = $c->req->param('data_level') || "plots";
   my $sample_number = $c->req->param('sample_number');
-  my $treatment_project_hash = decode_json $c->req->param('treatment_project_hash');
   if ($sample_number eq '') {$sample_number = undef};
   my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];
 
@@ -102,7 +101,6 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
       data_level => $data_level,
       sample_number => $sample_number,
       predefined_columns => $predefined_columns,
-      treatment_project_hash => $treatment_project_hash
       });
 
      $create_spreadsheet->download();

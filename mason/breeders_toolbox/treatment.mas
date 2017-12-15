@@ -155,44 +155,6 @@ my $start_time = time();
 
 </&>
 
-<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
-
-
-<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Phenotype Data</a>]" &>
-
-<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
-
-</&>
-
-
-<&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
-
-<div class="well well-sm">
-
-  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0 &>
-
-  <table class="table table-bordered files_datatables" alt="">
-  <thead>
-    <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
-  </thead>
-  <tbody>
-% foreach my $f (@$trial_phenotype_files) {
-    <tr>
-      <td><% $f->[4] %></td>
-      <td><% $f->[1] %></td>
-      <td><a href="/solpeople/profile/<% $f->[2] %>"><% $f->[3] %></a></td>
-      <td><% $f->[6] %></td>
-      <td><a href="/breeders/phenotyping/view/<% $f->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->[0] %>">Download</a></td>
-    </tr>
-% }
-  </tbody>
-  </table>
-
-  </&><!-- closes uploaded file section -->
-
-</div><!-- closes well -->
-
-</&><!-- closes entire phenotyping file section -->
 
 % my $data_agreement_link = "Add/edit data agreement";
 % if ($user_can_modify) { $data_agreement_link = '[<a id="add_data_agreement">Add/edit data agreement</a>]'; }
