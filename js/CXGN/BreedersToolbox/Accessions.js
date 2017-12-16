@@ -524,7 +524,7 @@ function review_verification_results(verifyResponse, accession_list_id){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
             jQuery('#review_fuzzy_matches_dialog').modal('hide');
-            if (verifyResponse.absent.length > 0){
+            if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 jQuery('#review_absent_dialog').modal('show');
             } else {
                 alert('All accessions in your list are now saved in the database. 3');

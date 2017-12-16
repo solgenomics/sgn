@@ -196,6 +196,15 @@ sub _parse_with_plugin {
         }
     }
 
+    my @accession_list = keys %seen_accession_names;
+    my @synonyms_list = keys %seen_synonyms;
+    my @organism_list = keys %seen_species_names;
+    my %accession_lookup;
+    my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-in=>\@accession_list}});
+    while(my $r=$accessions_in_db_rs->next){
+        $accession_lookup{$r->uniquename} = $r->stock_id;
+    }
+
     my %col_name_map;
     for my $i (5..$col_max){
         my $stockprops_head;
@@ -263,7 +272,7 @@ sub _parse_with_plugin {
         }
         if ($stockprops_head eq 'seed_source(s)'){
             $stockprop_cvterm_name = 'seed source';
-            $internal_ref_name = 'seedSource';
+            $internal_ref_name = 'germplasmSeedSource';
         }
         if ($stockprops_head eq 'type_of_germplasm_storage_code(s)'){
             $stockprop_cvterm_name = 'type of germplasm storage code';
@@ -307,6 +316,11 @@ sub _parse_with_plugin {
             next;
         }
 
+        my $stock_id;
+        if(exists($accession_lookup{$accession_name})){
+            $stock_id = $accession_lookup{$accession_name};
+        }
+
         my %row_info = (
             germplasmName => $accession_name,
             defaultDisplayName => $accession_name,
@@ -315,6 +329,10 @@ sub _parse_with_plugin {
             organizationName => $organization_name,
             synonyms => \@synonyms
         );
+        #For "updating" existing accessions by adding properties.
+        if ($stock_id){
+            $row_info{stock_id} = $stock_id;
+        }
 
         for my $i (5..$col_max){
             my $stockprops_value;
@@ -344,9 +362,6 @@ sub _parse_with_plugin {
     my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
     my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
     my $max_distance = 0.2;
-    my @accession_list = keys %seen_accession_names;
-    my @synonyms_list = keys %seen_synonyms;
-    my @organism_list = keys %seen_species_names;
     my $found_accessions;
     my $fuzzy_accessions;
     my $absent_accessions;

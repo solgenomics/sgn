@@ -362,6 +362,7 @@ sub add_accession_list_POST : Args(0) {
                     type_id=>$type_id,
                     species=>$_->{species},
                     #genus=>$_->{genus},
+                    stock_id=>$_->{stock_id}, #For adding properties to an accessions
                     name=>$_->{defaultDisplayName},
                     uniquename=>$_->{germplasmName},
                     organization_name=>$_->{organizationName},
@@ -382,7 +383,14 @@ sub add_accession_list_POST : Args(0) {
                     #subtaxa=>$_->{subtaxa},
                     #subtaxaAuthority=>$_->{subtaxaAuthority},
                     donors=>$_->{donors},
-                    acquisitionDate=>$_->{acquisitionDate}
+                    acquisitionDate=>$_->{acquisitionDate},
+                    transgenic=>$_->{transgenic},
+                    notes=>$_->{notes},
+                    state=>$_->{state},
+                    variety=>$_->{variety},
+                    genomeStructure=>$_->{genomeStructure},
+                    ploidyLevel=>$_->{ploidyLevel},
+                    locationCode=>$_->{locationCode}
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;

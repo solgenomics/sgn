@@ -172,13 +172,6 @@ has 'genomeStructure' => (
     builder  => '_retrieve_genome_structure',
 );
 
-has 'seedSource' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-    lazy     => 1,
-    builder  => '_retrieve_seed_source',
-);
-
 has 'transgenic' => (
     isa => 'Maybe[Str]',
     is => 'rw',
@@ -294,11 +287,6 @@ sub _retrieve_ploidy_level {
 sub _retrieve_genome_structure {
     my $self = shift;
     $self->genomeStructure($self->_retrieve_stockprop('genome_structure'));
-}
-
-sub _retrieve_seed_source {
-    my $self = shift;
-    $self->seedSource($self->_retrieve_stockprop('seed source'));
 }
 
 sub _retrieve_transgenic {

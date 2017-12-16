@@ -860,7 +860,10 @@ sub _store_stockprop {
     my $type = shift;
     my $value = shift;
     my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
-    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+    my @arr = split ',', $value;
+    foreach (@arr){
+        my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $_});
+    }
 }
 
 sub _update_stockprop {
