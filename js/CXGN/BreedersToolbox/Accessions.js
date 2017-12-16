@@ -20,6 +20,10 @@ var accessionList;
 var accession_list_id;
 var validSpecies;
 var fuzzyResponse;
+var fullParsedData;
+var infoToAdd;
+var accessionListFound;
+var speciesNames;
 
 function disable_ui() {
     jQuery('#working_modal').modal("show");
@@ -225,17 +229,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
-        var full_info = []
-        for(var i=0; i<accessionsToAdd.length; i++){
-            full_info.push({
-                'species':speciesName,
-                'defaultDisplayName':accessionsToAdd[i],
-                'germplasmName':accessionsToAdd[i],
-                'organizationName':organizationName,
-                'populationName':populationName,
-            });
-        }
+    function add_accessions(full_info, species_names) {
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -243,7 +237,7 @@ jQuery(document).ready(function ($) {
             timeout: 36000000,
             data: {
                 'full_info': JSON.stringify(full_info),
-                'allowed_organisms': JSON.stringify([speciesName]),
+                'allowed_organisms': JSON.stringify(species_names),
             },
             beforeSend: function(){
                 disable_ui();
@@ -297,22 +291,34 @@ jQuery(document).ready(function ($) {
     });
 
     $('#review_absent_accessions_submit').click(function () {
-        var speciesName = $("#species_name_input").val();
-        var populationName = $("#population_name_input").val();
-        var organizationName = $("#organization_name_input").val();
-        var accessionsToAdd = accessionList;
-        if (!speciesName) {
-            alert("Species name required");
-            return;
+        if (fullParsedData == undefined){
+            var speciesName = $("#species_name_input").val();
+            var populationName = $("#population_name_input").val();
+            var organizationName = $("#organization_name_input").val();
+            var accessionsToAdd = accessionList;
+            if (!speciesName) {
+                alert("Species name required");
+                return;
+            }
+            if (!populationName) {
+                populationName = '';
+            }
+            if (!accessionsToAdd || accessionsToAdd.length == 0) {
+                alert("No accessions to add");
+                return;
+            }
+            for(var i=0; i<accessionsToAdd.length; i++){
+                infoToAdd.push({
+                    'species':speciesName,
+                    'defaultDisplayName':accessionsToAdd[i],
+                    'germplasmName':accessionsToAdd[i],
+                    'organizationName':organizationName,
+                    'populationName':populationName,
+                });
+                speciesNames.push(speciesName);
+            }
         }
-        if (!populationName) {
-            populationName = '';
-        }
-        if (!accessionsToAdd || accessionsToAdd.length == 0) {
-            alert("No accessions to add");
-            return;
-        }
-        add_accessions(accessionsToAdd, speciesName, populationName, organizationName);
+        add_accessions(infoToAdd, speciesNames);
         $('#review_absent_dialog').modal("hide");
         //window.location.href='/breeders/accessions';
     });
@@ -321,19 +327,58 @@ jQuery(document).ready(function ($) {
         var selected_tab = jQuery('#add_new_accessions_tab_select .active').text()
         if (selected_tab == 'Using Lists'){
             accession_list_id = $('#list_div_list_select').val();
+            fullParsedData = undefined;
+            jQuery('#add_accessions_using_list_inputs').show();
             verify_accession_list(accession_list_id);
         } else if (selected_tab == 'Uploading a File'){
-            parse_upload_accession_file();
+            var uploadFile = jQuery("#new_accessions_upload_file").val();
+            jQuery('#upload_new_accessions_form').attr("action", "/ajax/accessions/verify_accessions_file");
+            if (uploadFile === '') {
+                alert("Please select a file");
+                return;
+            }
+            jQuery('#add_accessions_using_list_inputs').hide();
+            jQuery("#upload_new_accessions_form").submit();
         }
         $('#add_accessions_dialog').modal("hide");
     });
 
+    jQuery('#upload_new_accessions_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedSeedlotFile = jQuery("#new_accessions_upload_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedSeedlotFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error_string) {
+                fullParsedData = undefined;
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                fullParsedData = response.full_data;
+                review_verification_results(response, response.list_id);
+            }
+        }
+    });
+
     $('#add_accessions_link').click(function () {
         var list = new CXGN.List();
-        var accessionList;
-        var accession_list_id;
-        var validSpecies;
-        var fuzzyResponse;
+        accessionList;
+        accession_list_id;
+        validSpecies;
+        fuzzyResponse;
+        fullParsedData;
+        infoToAdd;
+        accessionListFound;
+        speciesNames;
         $('#add_accessions_dialog').modal("show");
         $('#review_found_matches_dialog').modal("hide");
         $('#review_fuzzy_matches_dialog').modal("hide");
@@ -408,6 +453,10 @@ function verify_accession_list(accession_list_id) {
 function review_verification_results(verifyResponse, accession_list_id){
     var i;
     var j;
+    accessionListFound = {};
+    accessionList = [];
+    infoToAdd = [];
+    speciesNames = [];
     //console.log(verifyResponse);
     //console.log(accession_list_id);
 
@@ -420,6 +469,7 @@ function review_verification_results(verifyResponse, accession_list_id){
                 +'</td><td>'
                 +verifyResponse.found[i].unique_name
                 +'</td></tr>';
+            accessionListFound[verifyResponse.found[i].unique_name] = 1;
         }
         found_html = found_html +'</tbody></table>';
 
@@ -456,6 +506,13 @@ function review_verification_results(verifyResponse, accession_list_id){
             verifyResponse.absent.push(verifyResponse.fuzzy[i].name);
         }
         accessionList = verifyResponse.absent;
+    }
+
+    if (verifyResponse.full_data){
+        for(var key in verifyResponse.full_data){
+            infoToAdd.push(verifyResponse.full_data[key]);
+            speciesNames.push(verifyResponse.full_data[key]['species'])
+        }
     }
 
     if (verifyResponse.absent.length > 0 && verifyResponse.fuzzy.length == 0) {
@@ -528,8 +585,24 @@ function process_fuzzy_options(accession_list_id) {
         },
         success: function (response) {
             //console.log(response);
+            infoToAdd = [];
+            speciesNames = [];
             accessionList = response.names_to_add;
             if (accessionList.length > 0){
+
+                if (fullParsedData != null){
+                    for (var i=0; i<accessionList.length; i++){
+                        var accession_name = accessionList[i];
+                        infoToAdd.push(fullParsedData[accession_name]);
+                        speciesNames.push(fullParsedData[accession_name]['species']);
+                    }
+                    for (var i=0; i<accessionListFound.length; i++){
+                        var accession_name = accessionListFound[i];
+                        infoToAdd.push(fullParsedData[accession_name]);
+                        speciesNames.push(fullParsedData[accession_name]['species']);
+                    }
+                }
+
                 populate_review_absent_dialog(accessionList);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
@@ -542,36 +615,3 @@ function process_fuzzy_options(accession_list_id) {
     });
 }
 
-function parse_upload_accession_file(){
-    var uploadFile = jQuery("#new_accessions_upload_file").val();
-    jQuery('#upload_new_accessions_form').attr("action", "/ajax/accessions/verify_accessions_file");
-    if (uploadFile === '') {
-        alert("Please select a file");
-        return;
-    }
-    jQuery("#upload_new_accessions_form").submit();
-
-    jQuery('#upload_new_accessions_form').iframePostForm({
-        json: true,
-        post: function () {
-            var uploadedSeedlotFile = jQuery("#new_accessions_upload_file").val();
-            jQuery('#working_modal').modal("show");
-            if (uploadedSeedlotFile === '') {
-                jQuery('#working_modal').modal("hide");
-                alert("No file selected");
-            }
-        },
-        complete: function (response) {
-            console.log(response);
-            jQuery('#working_modal').modal("hide");
-
-            if (response.error_string) {
-                alert(response.error_string);
-                return;
-            }
-            if (response.success) {
-                alert("File parsed successfully");
-            }
-        }
-    });
-}

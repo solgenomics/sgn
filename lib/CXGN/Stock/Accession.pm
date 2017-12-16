@@ -151,6 +151,41 @@ has 'notes' => (
     builder  => '_retrieve_notes',
 );
 
+has 'locationCode' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_location_code',
+);
+
+has 'ploidyLevel' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_ploidy_level',
+);
+
+has 'genomeStructure' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_genome_structure',
+);
+
+has 'seedSource' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_seed_source',
+);
+
+has 'transgenic' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_transgenic',
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -230,7 +265,12 @@ sub _retrieve_donors {
     my @donor_array;
     if (scalar(@donor_accessions)>0 && scalar(@donor_institutes)>0 && scalar(@donor_puis)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
         for (0 .. scalar(@donor_accessions)-1){
-            push @donor_array, { 'donorGermplasmName'=>$donor_accessions[$_], 'donorAccessionNumber'=>$donor_accessions[$_], 'donorInstituteCode'=>$donor_institutes[$_], 'germplasmPUI'=>$donor_puis[$_] };
+            push @donor_array, {
+                'donorGermplasmName'=>$donor_accessions[$_],
+                'donorAccessionNumber'=>$donor_accessions[$_],
+                'donorInstituteCode'=>$donor_institutes[$_],
+                'germplasmPUI'=>$donor_puis[$_]
+            };
         }
     }
     $self->donors(\@donor_array);
@@ -239,6 +279,31 @@ sub _retrieve_donors {
 sub _retrieve_notes {
     my $self = shift;
     $self->notes($self->_retrieve_stockprop('notes'));
+}
+
+sub _retrieve_location_code {
+    my $self = shift;
+    $self->locationCode($self->_retrieve_stockprop('location_code'));
+}
+
+sub _retrieve_ploidy_level {
+    my $self = shift;
+    $self->ploidyLevel($self->_retrieve_stockprop('ploidy_level'));
+}
+
+sub _retrieve_genome_structure {
+    my $self = shift;
+    $self->genomeStructure($self->_retrieve_stockprop('genome_structure'));
+}
+
+sub _retrieve_seed_source {
+    my $self = shift;
+    $self->seedSource($self->_retrieve_stockprop('seed source'));
+}
+
+sub _retrieve_transgenic {
+    my $self = shift;
+    $self->transgenic($self->_retrieve_stockprop('transgenic'));
 }
 
 =head2 store()

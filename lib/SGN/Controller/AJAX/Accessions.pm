@@ -28,6 +28,7 @@ use CXGN::Chado::Stock;
 use CXGN::List;
 use Data::Dumper;
 use Try::Tiny;
+use CXGN::Stock::ParseUpload;
 #use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -232,7 +233,9 @@ sub verify_accessions_file_POST : Args(0) {
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props);
     $parser->load_plugin('AccessionsXLS');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
@@ -251,33 +254,33 @@ sub verify_accessions_file_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
         $c->detach();
     }
 
-    my $upload_plants_txn = sub {
-        my %plot_plant_hash;
-        while (my ($key, $val) = each(%$parsed_data)){
-            $plot_plant_hash{$val->{plot_stock_id}}->{plot_name} = $val->{plot_name};
-            push @{$plot_plant_hash{$val->{plot_stock_id}}->{plant_names}}, $val->{plant_name};
-        }
-
-        my $layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $c->stash->{trial_id}
-        });
-        $layout->generate_and_cache_layout();
-    };
-    eval {
-        $schema->txn_do($upload_plants_txn);
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
-        $c->detach();
+    my $full_data = $parsed_data->{parsed_data};
+    my @accession_names;
+    my %full_accessions;
+    while (my ($k,$val) = each %$full_data){
+        push @accession_names, $val->{germplasmName};
+        $full_accessions{$val->{germplasmName}} = $val;
     }
+    my $new_list_id = CXGN::List::create_list($c->dbc->dbh, "AccessionsIn".$upload_original_name.$timestamp, 'Autocreated when upload accessions from file '.$upload_original_name.$timestamp, $user_id);
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $new_list_id } );
+    $list->add_bulk(\@accession_names);
+    $list->type('accessions');
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = {
+        success => "1",
+        list_id => $new_list_id,
+        full_data => \%full_accessions,
+        absent => $parsed_data->{absent_accessions},
+        fuzzy => $parsed_data->{fuzzy_accessions},
+        found => $parsed_data->{found_accessions},
+        absent_organisms => $parsed_data->{absent_organisms},
+        fuzzy_organisms => $parsed_data->{fuzzy_organisms},
+        found_organisms => $parsed_data->{found_organisms}
+    };
 }
 
 sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionClass('REST') { }
@@ -421,6 +424,7 @@ sub add_accession_list_POST : Args(0) {
     };
     return;
 }
+
 sub possible_seedlots : Path('/ajax/accessions/possible_seedlots') : ActionClass('REST') { }
 sub possible_seedlots_POST : Args(0) {
   my ($self, $c) = @_;

@@ -20,6 +20,12 @@ has 'filename' => (
 		   required => 1,
 		  );
 
+has 'editable_stock_props' => (
+    is => 'ro',
+    isa => 'ArrayRef',
+    required => 1,
+);
+
 has 'parse_errors' => (
 		       is => 'ro',
 		       isa => 'HashRef',

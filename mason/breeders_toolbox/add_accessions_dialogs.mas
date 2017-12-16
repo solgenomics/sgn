@@ -1,5 +1,6 @@
 <%args>
 $preferred_species => ""
+$editable_stock_props => {}
 </%args>
 
 <div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
@@ -103,83 +104,155 @@ $preferred_species => ""
                                 <td>accession_name</td>
                                 <td>species_name</td>
                                 <td>population_name</td>
-                                <td>organization_names</td>
-                                <td>location_code</td>
-                                <td>synonyms</td>
-                                <td>ploidy_level</td>
-                                <td>genome_structure</td>
-                                <td>variety</td>
-                                <td>donor</td>
-                                <td>donor_institute</td>
-                                <td>donor_PUI</td>
-                                <td>country_of_origin</td>
-                                <td>state</td>
-                                <td>institute_code</td>
-                                <td>institute_name</td>
-                                <td>biological_status_of_accession_code</td>
-                                <td>notes</td>
-                                <td>accession_number</td>
-                                <td>PUI</td>
-                                <td>seed_source</td>
-                                <td>type_of_germplasm_storage_code</td>
-                                <td>acquisition_date</td>
+                                <td>organization_name(s)</td>
+                                <td>synonym(s)</td>
+% if (exists($editable_stock_props->{'location_code'})){
+                                <td>location_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'ploidy_level'})){
+                                <td>ploidy_level(s)</td>
+% }
+% if (exists($editable_stock_props->{'genome_structure'})){
+                                <td>genome_structure(s)</td>
+% }
+% if (exists($editable_stock_props->{'variety'})){
+                                <td>variety(s)</td>
+% }
+% if (exists($editable_stock_props->{'donor'})){
+                                <td>donor(s)</td>
+% }
+% if (exists($editable_stock_props->{'donor institute'})){
+                                <td>donor_institute(s)</td>
+% }
+% if (exists($editable_stock_props->{'donor PUI'})){
+                                <td>donor_PUI(s)</td>
+% }
+% if (exists($editable_stock_props->{'country of origin'})){
+                                <td>country_of_origin(s)</td>
+% }
+% if (exists($editable_stock_props->{'state'})){
+                                <td>state(s)</td>
+% }
+% if (exists($editable_stock_props->{'institute code'})){
+                                <td>institute_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'institute name'})){
+                                <td>institute_name(s)</td>
+% }
+% if (exists($editable_stock_props->{'biological status of accession code'})){
+                                <td>biological_status_of_accession_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'notes'})){
+                                <td>notes(s)</td>
+% }
+% if (exists($editable_stock_props->{'accession number'})){
+                                <td>accession_number(s)</td>
+% }
+% if (exists($editable_stock_props->{'PUI'})){
+                                <td>PUI(s)</td>
+% }
+% if (exists($editable_stock_props->{'seed source'})){
+                                <td>seed_source(s)</td>
+% }
+% if (exists($editable_stock_props->{'type of germplasm storage code'})){
+                                <td>type_of_germplasm_storage_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'acquisition date'})){
+                                <td>acquisition_date(s)</td>
+% }
+% if (exists($editable_stock_props->{'transgenic'})){
                                 <td>transgenic</td>
+% }
+% if (exists($editable_stock_props->{'NIL_introgression_parent'})){
+                                <td>NIL_introgression_parent(s)</td>
+% }
+% if (exists($editable_stock_props->{'NIL_backcross_parent'})){
+                                <td>NIL_backcross_parent(s)</td>
+% }
+% if (exists($editable_stock_props->{'NIL_introgression_map_version'})){
+                                <td>NIL_introgression_map_version(s)</td>
+% }
+% if (exists($editable_stock_props->{'NIL_introgression_chromosome'})){
+                                <td>NIL_introgression_chromosome(s)</td>
+% }
+% if (exists($editable_stock_props->{'NIL_introgression_start_position_bp'})){
+                                <td>NIL_introgression_start_position_bp(s)</td>
+% }
+% if (exists($editable_stock_props->{'NIL_introgression_end_position_bp'})){
+                                <td>NIL_introgression_end_position_bp(s)</td>
+% }
                             </tr>
                         </tbody>
                     </table>
 
                     <b>Required fields:</b>
-                    <br/>
-                    accession_name (must be unique)
-                    <br />
-                    species_name (must exist in the database)
-                    <br/>
-                    <br/>
+                    <ul>
+                    <li>accession_name (must be unique)</li>
+                    <li>species_name (must exist in the database)</li>
+                    </ul>
                     <b>Optional fields:</b>
-                    <br />
-                    population_name (a population is a grouping of accessions. if the population already exists in the database, the accession will be added into it, otherwise, the new population will be created.)
-                    <br />
-                    organization_names (the name(s) of the organization(s) which use this accession. multiple organizations can be given with comma separation (e.g. NARO,IITA))
-                    <br />
-                    location_code ()
-                    <br />
-                    synonyms (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. multiple synonyms can be given with comma separation (e.g. accession_synonym1,accession_synonym001))
-                    <br />
-                    ploidy_level (a number indicating the ploidy (e.g. 2 for diploid, 3 for triploid), numeric)
-                    <br />
-                    genome_structure ()
-                    <br />
-                    variety (variety can be defined as a group of individuals or plants having similar traits that can be reproduced "true to type" from generation to generation)
-                    <br />
-                    donor (the accession_name of the donor accession)
-                    <br />
-                    donor_institute (the institute of the donor accession)
-                    <br />
-                    donor_PUI (the permanent unique identifier of the donor accession)
-                    <br />
-                    country_of_origin (the country of origin)
-                    <br />
-                    state (the state of origin)
-                    <br />
-                    institute_code (the institute code of origin)
-                    <br />
-                    institute_name (the institute name of origin)
-                    <br />
-                    biological_status_of_accession_code (code indicating the state of accession)
-                    <br />
-                    notes (free text for notes)
-                    <br />
-                    accession_number (accession number for accession from germplasm bank)
-                    <br />
-                    PUI (permanent unique identifier of the accession)
-                    <br />
-                    seed_source (origin of seed source)
-                    <br />
-                    type_of_germplasm_storage_code (code indicating the type of germplasm storage)
-                    <br />
-                    acquisition_date (date of acquisition YYYYMMDD)
-                    <br />
-                    transgenic (indicates if accession is transgenic. Please indicate 1 if transgenic and empty if otherwise.)
+                    <ul>
+                    <li>population_name (a population is a grouping of accessions. if the population already exists in the database, the accession will be added into it, otherwise, the new population will be created.)</li>
+                    <li>organization_names (the name(s) of the organization(s) which use this accession. multiple organizations can be given with comma separation (e.g. NARO,IITA))</li>
+                    <li>synonyms (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. multiple synonyms can be given with comma separation (e.g. accession_synonym1,accession_synonym001))</li>
+% if (exists($editable_stock_props->{'location_code'})){
+                    <li>location_code(s) (location code(s) for the accession. many can be uploaded at once in comma separated list)</li>
+% }
+% if (exists($editable_stock_props->{'ploidy_level'})){
+                    <li>ploidy_level(s) (a number indicating the ploidy (e.g. 2 for diploid, 3 for triploid), numeric. many values can be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'genome_structure'})){
+                    <li>genome_structure(s) (genome structure(s) for accession. many can be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'variety'})){
+                    <li>variety(s) (variety can be defined as a group of individuals or plants having similar traits that can be reproduced "true to type" from generation to generation. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'donor'})){
+                    <li>donor(s) (the accession_name of the donor accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'donor institute'})){
+                    <li>donor_institute(s) (the institute of the donor accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'donor PUI'})){
+                    <li>donor_PUI(s) (the permanent unique identifier of the donor accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'country of origin'})){
+                    <li>country_of_origin(s) (the country of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'state'})){
+                    <li>state(s) (the state of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'institute code'})){
+                    <li>institute_code(s) (the institute code of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'institute name'})){
+                    <li>institute_name(s) (the institute name of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'biological status of accession code'})){
+                    <li>biological_status_of_accession_code(s) (code indicating the state of accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'notes'})){
+                    <li>notes(s) (free text for notes. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'accession number'})){
+                    <li>accession_number(s) (accession number for accession from germplasm bank. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'PUI'})){
+                    <li>PUI(s) (permanent unique identifier of the accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'seed source'})){
+                    <li>seed_source(s) (origin of seed source. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'type of germplasm storage code'})){
+                    <li>type_of_germplasm_storage_code(s) (code indicating the type of germplasm storage. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'acquisition date'})){
+                    <li>acquisition_date(s) (date(s) of acquisition YYYYMMDD for accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'transgenic'})){
+                    <li>transgenic (indicates if accession is transgenic. Please indicate 1 if transgenic and empty if otherwise.)</li>
+% }
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -198,19 +271,21 @@ $preferred_species => ""
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <label for="species_name_input">Species name for added accessions</label>
-  	  <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
-  	  <br><br>
-    	  <label for="population_name_input">Population name for added accessions (optional)</label>
-  	  <input class="form-control" type="text" id="population_name_input"></input>
-  	  <br><br>
-          <label for="organization_name_input">Organization name for added accessions (optional)</label>
-      <input class="form-control" type="text" id="organization_name_input"></input>
-      <br><br>
-  	  <b>The following accessions will be added to the database:</b>
-  	  <div id="count_of_absent_accessions"></div>
-  	  <br>
-  	  <div id="view_absent"></div>
+            <div id="add_accessions_using_list_inputs" style="display:none">
+                <label for="species_name_input">Species name for added accessions</label>
+                <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
+                <br><br>
+                <label for="population_name_input">Population name for added accessions (optional)</label>
+                <input class="form-control" type="text" id="population_name_input"></input>
+                <br><br>
+                <label for="organization_name_input">Organization name for added accessions (optional)</label>
+                <input class="form-control" type="text" id="organization_name_input"></input>
+                <br><br>
+            </div>
+            <b>The following accessions will be added to the database:</b>
+            <div id="count_of_absent_accessions"></div>
+            <br>
+            <div id="view_absent"></div>
         </div>
       </div>
       <div class="modal-footer">
