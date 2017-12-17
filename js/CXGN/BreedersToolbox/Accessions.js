@@ -328,7 +328,6 @@ jQuery(document).ready(function ($) {
         if (selected_tab == 'Using Lists'){
             accession_list_id = $('#list_div_list_select').val();
             fullParsedData = undefined;
-            jQuery('#add_accessions_using_list_inputs').show();
             verify_accession_list(accession_list_id);
         } else if (selected_tab == 'Uploading a File'){
             var uploadFile = jQuery("#new_accessions_upload_file").val();
@@ -337,7 +336,6 @@ jQuery(document).ready(function ($) {
                 alert("Please select a file");
                 return;
             }
-            jQuery('#add_accessions_using_list_inputs').hide();
             jQuery("#upload_new_accessions_form").submit();
         }
         $('#add_accessions_dialog').modal("hide");
@@ -515,17 +513,13 @@ function review_verification_results(verifyResponse, accession_list_id){
         }
     }
 
-    if ((verifyResponse.absent.length > 0 && verifyResponse.fuzzy.length == 0) || infoToAdd.length>0) {
-        populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
-    }
-
     jQuery('#review_found_matches_hide').click(function(){
         if (verifyResponse.fuzzy.length > 0){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
             jQuery('#review_fuzzy_matches_dialog').modal('hide');
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
-                jQuery('#review_absent_dialog').modal('show');
+                populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
                 alert('All accessions in your list are now saved in the database. 3');
             }
@@ -540,6 +534,7 @@ function review_verification_results(verifyResponse, accession_list_id){
 
 function populate_review_absent_dialog(absent, infoToAdd){
     console.log(infoToAdd);
+    console.log(absent);
 
     jQuery('#count_of_absent_accessions').html("Total number to be added("+absent.length+")");
     var absent_html = '';
@@ -586,7 +581,11 @@ function populate_review_absent_dialog(absent, infoToAdd){
         jQuery('#view_infoToAdd').html(infoToAdd_html);
         jQuery('#infoToAdd_updated_table').DataTable({});
         jQuery('#infoToAdd_new_table').DataTable({});
+        jQuery('#add_accessions_using_list_inputs').hide();
+    } else {
+        jQuery('#add_accessions_using_list_inputs').show();
     }
+    jQuery('#review_absent_dialog').modal('show');
 }
 
 function process_fuzzy_options(accession_list_id) {
