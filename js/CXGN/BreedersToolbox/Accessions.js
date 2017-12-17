@@ -462,7 +462,7 @@ function review_verification_results(verifyResponse, accession_list_id){
 
     if (verifyResponse.found) {
         jQuery('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
-        var found_html = '<table class="table" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
+        var found_html = '<table class="table table-bordered" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.found.length; i++){
             found_html = found_html
                 +'<tr><td>'+verifyResponse.found[i].matched_string
@@ -515,8 +515,8 @@ function review_verification_results(verifyResponse, accession_list_id){
         }
     }
 
-    if (verifyResponse.absent.length > 0 && verifyResponse.fuzzy.length == 0) {
-        populate_review_absent_dialog(verifyResponse.absent);
+    if ((verifyResponse.absent.length > 0 && verifyResponse.fuzzy.length == 0) || infoToAdd.length>0) {
+        populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
     }
 
     jQuery('#review_found_matches_hide').click(function(){
@@ -538,7 +538,9 @@ function review_verification_results(verifyResponse, accession_list_id){
 
 }
 
-function populate_review_absent_dialog(absent){
+function populate_review_absent_dialog(absent, infoToAdd){
+    console.log(infoToAdd);
+
     jQuery('#count_of_absent_accessions').html("Total number to be added("+absent.length+")");
     var absent_html = '';
     jQuery("#species_name_input").autocomplete({
@@ -551,6 +553,40 @@ function populate_review_absent_dialog(absent){
         +'</div>';
     }
     jQuery('#view_absent').html(absent_html);
+
+    if (infoToAdd.length>0){
+        var infoToAdd_html = '<div class="well"><b>The following new accessions will be added:</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        for( i=0; i < infoToAdd.length; i++){
+            if (!('stock_id' in infoToAdd[i])){
+                infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</trd';
+                var infoToAdd_properties_html = '';
+                for (key in infoToAdd[i]){
+                    if (key != 'uniquename'){
+                        infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                    }
+                }
+                infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
+            }
+        }
+        infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
+        infoToAdd_html = infoToAdd_html + '<div class="well"><b>The following accessions will be updated:</b><br/><br/><table id="infoToAdd_updated_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
+        for( i=0; i < infoToAdd.length; i++){
+            if ('stock_id' in infoToAdd[i]){
+                infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
+                var infoToAdd_properties_html = '';
+                for (key in infoToAdd[i]){
+                    if (key != 'uniquename'){
+                        infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                    }
+                }
+                infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
+            }
+        }
+        infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
+        jQuery('#view_infoToAdd').html(infoToAdd_html);
+        jQuery('#infoToAdd_updated_table').DataTable({});
+        jQuery('#infoToAdd_new_table').DataTable({});
+    }
 }
 
 function process_fuzzy_options(accession_list_id) {
@@ -603,7 +639,7 @@ function process_fuzzy_options(accession_list_id) {
                     }
                 }
 
-                populate_review_absent_dialog(accessionList);
+                populate_review_absent_dialog(accessionList, infoToAdd);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
                 alert('All accessions in your list are now saved in the database. 2');

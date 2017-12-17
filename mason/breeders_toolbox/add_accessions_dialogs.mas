@@ -263,7 +263,7 @@ $editable_stock_props => {}
 </div>
 
 <div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -281,11 +281,12 @@ $editable_stock_props => {}
                 <label for="organization_name_input">Organization name for added accessions (optional)</label>
                 <input class="form-control" type="text" id="organization_name_input"></input>
                 <br><br>
+                <b>The following accessions are new and will be added to the database:</b>
+                <div id="count_of_absent_accessions"></div>
+                <br>
+                <div id="view_absent"></div>
             </div>
-            <b>The following accessions will be added to the database:</b>
-            <div id="count_of_absent_accessions"></div>
-            <br>
-            <div id="view_absent"></div>
+            <div id="view_infoToAdd"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -297,7 +298,7 @@ $editable_stock_props => {}
 </div>
 
 <div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -319,7 +320,7 @@ $editable_stock_props => {}
 </div>
 
 <div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
