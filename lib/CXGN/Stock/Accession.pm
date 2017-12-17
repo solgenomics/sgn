@@ -179,6 +179,48 @@ has 'transgenic' => (
     builder  => '_retrieve_transgenic',
 );
 
+has 'introgression_parent' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_introgression_parent',
+);
+
+has 'introgression_backcross_parent' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_introgression_backcross_parent',
+);
+
+has 'introgression_map_version' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_introgression_map_version',
+);
+
+has 'introgression_chromosome' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_introgression_chromosome',
+);
+
+has 'introgression_start_position_bp' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_introgression_start_position_bp',
+);
+
+has 'introgression_end_position_bp' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_introgression_end_position_bp',
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -294,6 +336,36 @@ sub _retrieve_transgenic {
     $self->transgenic($self->_retrieve_stockprop('transgenic'));
 }
 
+sub _retrieve_introgression_parent {
+    my $self = shift;
+    $self->introgression_parent($self->_retrieve_stockprop('introgression_parent'));
+}
+
+sub _retrieve_introgression_backcross_parent {
+    my $self = shift;
+    $self->introgression_backcross_parent($self->_retrieve_stockprop('introgression_backcross_parent'));
+}
+
+sub _retrieve_introgression_map_version {
+    my $self = shift;
+    $self->introgression_map_version($self->_retrieve_stockprop('introgression_map_version'));
+}
+
+sub _retrieve_introgression_chromosome {
+    my $self = shift;
+    $self->introgression_chromosome($self->_retrieve_stockprop('introgression_chromosome'));
+}
+
+sub _retrieve_introgression_start_position_bp {
+    my $self = shift;
+    $self->introgression_start_position_bp($self->_retrieve_stockprop('introgression_start_position_bp'));
+}
+
+sub _retrieve_introgression_end_position_bp {
+    my $self = shift;
+    $self->introgression_end_position_bp($self->_retrieve_stockprop('introgression_end_position_bp'));
+}
+
 =head2 store()
 
  Usage:        my $stock_id = $accession->store();
@@ -357,6 +429,45 @@ sub store {
     }
     if($self->pedigree){
         print STDERR "CXGN::Stock::Accession->store does not store pedigree info yet!\n";
+    }
+    if ($self->variety){
+        $self->_store_stockprop('variety', $self->variety);
+    }
+    if ($self->state){
+        $self->_store_stockprop('state', $self->state);
+    }
+    if ($self->notes){
+        $self->_store_stockprop('notes', $self->notes);
+    }
+    if ($self->locationCode){
+        $self->_store_stockprop('location_code', $self->locationCode);
+    }
+    if ($self->ploidyLevel){
+        $self->_store_stockprop('ploidy_level', $self->ploidyLevel);
+    }
+    if ($self->genomeStructure){
+        $self->_store_stockprop('genome_structure', $self->genomeStructure);
+    }
+    if ($self->transgenic){
+        $self->_store_stockprop('transgenic', $self->transgenic);
+    }
+    if ($self->introgression_parent){
+        $self->_store_stockprop('introgression_parent', $self->introgression_parent);
+    }
+    if ($self->introgression_backcross_parent){
+        $self->_store_stockprop('introgression_backcross_parent', $self->introgression_backcross_parent);
+    }
+    if ($self->introgression_map_version){
+        $self->_store_stockprop('introgression_map_version', $self->introgression_map_version);
+    }
+    if ($self->introgression_chromosome){
+        $self->_store_stockprop('introgression_chromosome', $self->introgression_chromosome);
+    }
+    if ($self->introgression_start_position_bp){
+        $self->_store_stockprop('introgression_start_position_bp', $self->introgression_start_position_bp);
+    }
+    if ($self->introgression_end_position_bp){
+        $self->_store_stockprop('introgression_end_position_bp', $self->introgression_end_position_bp);
     }
 
     print STDERR "Saving returned ID $id.\n";

@@ -28,7 +28,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddStockGeoJsonCvterm;
+package AddAccessionStockpropCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -63,6 +63,12 @@ sub patch {
         'stock_property' => [
             'genome_structure',
             'ploidy_level',
+            'introgression_parent',
+            'introgression_backcross_parent',
+            'introgression_map_version',
+            'introgression_chromosome',
+            'introgression_start_position_bp',
+            'introgression_end_position_bp',
         ]
     };
 

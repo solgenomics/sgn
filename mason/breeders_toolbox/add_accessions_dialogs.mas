@@ -163,23 +163,23 @@ $editable_stock_props => {}
 % if (exists($editable_stock_props->{'transgenic'})){
                                 <td>transgenic</td>
 % }
-% if (exists($editable_stock_props->{'NIL_introgression_parent'})){
-                                <td>NIL_introgression_parent(s)</td>
+% if (exists($editable_stock_props->{'introgression_parent'})){
+                                <td>introgression_parent</td>
 % }
-% if (exists($editable_stock_props->{'NIL_backcross_parent'})){
-                                <td>NIL_backcross_parent(s)</td>
+% if (exists($editable_stock_props->{'introgression_backcross_parent'})){
+                                <td>introgression_backcross_parent</td>
 % }
-% if (exists($editable_stock_props->{'NIL_introgression_map_version'})){
-                                <td>NIL_introgression_map_version(s)</td>
+% if (exists($editable_stock_props->{'introgression_map_version'})){
+                                <td>introgression_map_version</td>
 % }
-% if (exists($editable_stock_props->{'NIL_introgression_chromosome'})){
-                                <td>NIL_introgression_chromosome(s)</td>
+% if (exists($editable_stock_props->{'introgression_chromosome'})){
+                                <td>introgression_chromosome</td>
 % }
-% if (exists($editable_stock_props->{'NIL_introgression_start_position_bp'})){
-                                <td>NIL_introgression_start_position_bp(s)</td>
+% if (exists($editable_stock_props->{'introgression_start_position_bp'})){
+                                <td>introgression_start_position_bp</td>
 % }
-% if (exists($editable_stock_props->{'NIL_introgression_end_position_bp'})){
-                                <td>NIL_introgression_end_position_bp(s)</td>
+% if (exists($editable_stock_props->{'introgression_end_position_bp'})){
+                                <td>introgression_end_position_bp</td>
 % }
                             </tr>
                         </tbody>
@@ -251,6 +251,24 @@ $editable_stock_props => {}
 % }
 % if (exists($editable_stock_props->{'transgenic'})){
                     <li>transgenic (indicates if accession is transgenic. Please indicate 1 if transgenic and empty if otherwise.)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_parent'})){
+                    <li>introgression_parent (if the accession you are adding has an introgression that originated from one of the parents, you can specify the parent here)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_backcross_parent'})){
+                    <li>introgression_backcross_parent (the backcross parent for introducing an introgression into the accession being added)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_map_version'})){
+                    <li>introgression_map_version (the map version for identifying the start and stop position of the introgression. e.g. AGPv2)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_chromosome'})){
+                    <li>introgression_chromosome (the chromosome number that the introgression is on.)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_start_position_bp'})){
+                    <li>introgression_start_position_bp (the start position of the introgression in base pairs)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_end_position_bp'})){
+                    <li>introgression_start_position_bp (the end position of the introgression in base pairs)</li>
 % }
                     </ul>
                 </div>

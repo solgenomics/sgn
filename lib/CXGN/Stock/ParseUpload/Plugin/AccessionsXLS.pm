@@ -66,7 +66,7 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell(0,4)) {
         $synonyms_head  = $worksheet->get_cell(0,4)->value();
     }
-    my @allowed_stockprops_head = ('location_code(s)','ploidy_level(s)','genome_structure(s)','variety(s)','donor(s)','donor_institute(s)','donor_PUI(s)','country_of_origin(s)','state(s)','institute_code(s)','institute_name(s)','biological_status_of_accession_code(s)','notes(s)','accession_number(s)','PUI(s)','seed_source(s)','type_of_germplasm_storage_code(s)','acquisition_date(s)','transgenic');
+    my @allowed_stockprops_head = ('location_code(s)','ploidy_level(s)','genome_structure(s)','variety(s)','donor(s)','donor_institute(s)','donor_PUI(s)','country_of_origin(s)','state(s)','institute_code(s)','institute_name(s)','biological_status_of_accession_code(s)','notes(s)','accession_number(s)','PUI(s)','seed_source(s)','type_of_germplasm_storage_code(s)','acquisition_date(s)','transgenic','introgression_parent','introgression_backcross_parent','introgression_map_version','introgression_chromosome','introgression_start_position_bp','introgression_end_position_bp');
     my %allowed_stockprops_head = map { $_ => 1 } @allowed_stockprops_head;
     for my $i (5..$col_max){
         my $stockprops_head;
@@ -285,6 +285,30 @@ sub _parse_with_plugin {
         if ($stockprops_head eq 'transgenic(s)'){
             $stockprop_cvterm_name = 'transgenic';
             $internal_ref_name = 'transgenic';
+        }
+        if ($stockprops_head eq 'introgression_parent'){
+            $stockprop_cvterm_name = 'introgression_parent';
+            $internal_ref_name = 'introgression_parent';
+        }
+        if ($stockprops_head eq 'introgression_backcross_parent'){
+            $stockprop_cvterm_name = 'introgression_backcross_parent';
+            $internal_ref_name = 'introgression_backcross_parent';
+        }
+        if ($stockprops_head eq 'introgression_map_version'){
+            $stockprop_cvterm_name = 'introgression_map_version';
+            $internal_ref_name = 'introgression_map_version';
+        }
+        if ($stockprops_head eq 'introgression_chromosome'){
+            $stockprop_cvterm_name = 'introgression_chromosome';
+            $internal_ref_name = 'introgression_chromosome';
+        }
+        if ($stockprops_head eq 'introgression_start_position_bp'){
+            $stockprop_cvterm_name = 'introgression_start_position_bp';
+            $internal_ref_name = 'introgression_start_position_bp';
+        }
+        if ($stockprops_head eq 'introgression_end_position_bp'){
+            $stockprop_cvterm_name = 'introgression_end_position_bp';
+            $internal_ref_name = 'introgression_end_position_bp';
         }
         $col_name_map{$i} = [$stockprop_cvterm_name, $internal_ref_name];
     }
