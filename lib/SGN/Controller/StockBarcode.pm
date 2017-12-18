@@ -1135,14 +1135,20 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
 
   my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];
 
-  my $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
-
+  #my $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
+  my $label_height = 40;
+  
+  
   my @pages;
   foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) {
      print STDERR "Generating page $page...\n";
      push @pages, $base_page->new_page();
   }
 
+  my $row_y_label_count = 1;
+  my $labels_on_page = 0;
+  my $row_count = 0;
+  my $ypos;
   for (my $i=0; $i<@found; $i++) {
     my $label_count = $i + 1;
     my $page_nr = $self->label_to_page($labels_per_page, $label_count);
@@ -1166,25 +1172,54 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
 
     if ($scalex < $scaley) { $scaley = $scalex; }
     else { $scalex = $scaley; }
+    my ($label_boundary, $xlabel_margin);
+    
+    #elsif ($cass_print_format eq '32_unique'){
+        my $label_height_8_per_page = 45;
+        if ($labels_on_page == 64){
+            $row_count = 0;
+            $labels_on_page = 0;
+        }
+        if ($row_y_label_count == 1 || $row_y_label_count > $labels_per_row){
+            $label_boundary = $page_height - ($row_count * $label_height_8_per_page) - $top_margin;
+            $ypos = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
+            $row_count++;
+        }
+        if ($row_y_label_count > $labels_per_row){
+            $row_y_label_count = 1;
+        }
+        print STDERR $row_y_label_count." ".$row_count." ".$ypos." ".$labels_on_page."\n";
+        $row_y_label_count++;
+        $labels_on_page++;
+        $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
+    #}
+    
 
-    my $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
+    #my $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
 
-    my $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
+    #my $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
 
     my $font = $pdf->font('BaseFont' => 'Times-Roman');
-    foreach my $label_count (1..$labels_per_row) {
-        $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
-    }
-
     my $label_text = $found[$i]->[1];
-
-    my $label_count_15_xter_plot_name =  1-1;
-    my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 118.63;
-    my $yposition = $ypos - 30;
-
-    print "My X Position: $xposition and Y Position: $ypos\n";
-    my $label_size =  11;
+    my $label_size =  10;
+    my $xposition = $left_margin + ($row_y_label_count -2) * $final_barcode_width;
+    my $yposition = $ypos -7;
+    #foreach my $label_count (1..$labels_per_row) {
+    
     $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 50 + ($row_y_label_count -2) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+    #$pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+    #}
+
+    
+
+    #my $label_count_15_xter_plot_name =  1-1;
+    #my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 118.63;
+    #my $yposition = $ypos - 30;
+
+    #print "My X Position: $xposition and Y Position: $ypos\n";
+    #my $label_size =  11;
+    
 }
 
   $pdf->close();
