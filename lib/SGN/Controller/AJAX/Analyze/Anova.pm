@@ -229,7 +229,7 @@ sub prep_download_files {
   my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'anova');
   my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
    
-  mkpath ([$anova_tmp_dir], 0, 0755);  
+  mkpath ([$base_tmp_dir], 0, 0755);  
 
   $self->anova_table_file($c);
   my $anova_txt_file  = $c->stash->{anova_table_txt_file};
