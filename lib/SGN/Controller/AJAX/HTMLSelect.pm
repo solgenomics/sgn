@@ -215,6 +215,8 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $size = $c->req->param("size");
     my $empty = $c->req->param("empty") || "";
     my $multiple = $c->req->param("multiple") || 0;
+    my $live_search = $c->req->param("live_search") || 0;
+
     my @trials;
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
@@ -228,6 +230,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
+      live_search => $live_search,
       name => $name,
       id => $id,
       size => $size,

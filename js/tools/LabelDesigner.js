@@ -292,13 +292,13 @@ $(document).ready(function($) {
     $("#data_source_select").change(function() {
 
         if (this.value == 'trial') {
-            get_select_box('trials', 'data_source', {
-                'name': 'data_list_select',
-                'id': 'trial_select',
-                'empty': 1
-            });
-
-            $('#trial_select').focus();
+            get_select_box('trials', 'data_source',
+                {
+                    name: 'data_list_select',
+                    id: 'trial_select',
+                    live_search: 1,
+                    empty: 1
+                });
         } else if (this.value == 'plot_list') {
             var lo = new CXGN.List();
             $('#data_source').html(lo.listSelect('data', ['plots'], 'Select a plot list', 'refresh'));
@@ -312,10 +312,6 @@ $(document).ready(function($) {
     });
 
     $(document).on("change", "#trial_select, #data_list_select", function() {
-        // var type = this.id;
-        // var value = this.value;
-        //var trial_id = document.getElementById("trial_select").value;
-        //console.log("trial selected has id " + trial_id);
 
         jQuery.ajax({
             url: '/tools/label_designer/retrieve_longest_fields',
@@ -324,7 +320,6 @@ $(document).ready(function($) {
             data: {
                 data_type: this.id,
                 value: this.value
-                // 'trial_id': trial_id
             },
             beforeSend: function() {
                 disable_ui();
@@ -344,7 +339,7 @@ $(document).ready(function($) {
                     createAdders(add_fields);
                     initializeCustomModal(add_fields);
 
-                    if ( d3.select("#page_format").node().value ) {
+                    if ( d3.select("#page_format").node().value && d3.select("#page_format").node().value != 'Select a page format') {
                         switchPageDependentOptions( d3.select("#page_format").node().value );
                     } else {
                         var page_format_select = d3.select("#page_format");
