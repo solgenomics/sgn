@@ -62,7 +62,7 @@ $acronym
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Traits"
+      title       => "Train model"
 &>
        
 <& population/select_traits.mas, 
@@ -75,6 +75,9 @@ $acronym
 
 </&>
 
+<& /anova.mas,
+ pop_id => $pop_id,
+&>
        
 <& population/correlation.mas, 
      pop_id  => $pop_id,
