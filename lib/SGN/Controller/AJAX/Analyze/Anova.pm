@@ -18,7 +18,11 @@ use namespace::autoclean;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Trial;
-
+use File::Copy;
+use File::Basename;
+use File::Spec::Functions;
+use File::Path qw / mkpath  /;
+use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -36,6 +40,7 @@ sub anova_traits_list :Path('/anova/traits/list/') Args(0) {
     my ($self, $c) = @_;
    
     my $trial_id = $c->req->param('trial_id');
+    
     $c->stash->{trial_id} = $trial_id;
     $self->anova_traits($c);
     
@@ -193,15 +198,21 @@ sub check_anova_output {
     my ($self, $c) = @_;
     
     $self->anova_table_file($c);
-    my $txt_file  = $c->stash->{anova_table_txt_file};
     my $html_file = $c->stash->{anova_table_html_file};
+   
+    if (-s $html_file) {
 
-    if (-s $html_file || -s $txt_file) {
 	my $html_table = read_file($html_file);
-	my $txt_table  = read_file($txt_file);
 
+	$self->prep_download_files($c);
+	my $anova_table_file = $c->stash->{download_anova};
+	my $model_file = $c->stash->{download_model};
+	my $means_file = $c->stash->{download_means};
+       
 	$c->stash->{rest}{anova_html_table} = $html_table;
-	$c->stash->{rest}{anova_txt_table}  = $txt_table;
+	$c->stash->{rest}{anova_table_file} = $anova_table_file;
+	$c->stash->{rest}{anova_model_file} = $model_file;
+	$c->stash->{rest}{adj_means_file}   = $means_file;
 
 	return 1;
 
@@ -209,6 +220,49 @@ sub check_anova_output {
 	return 0;
     }
     
+}
+
+
+sub prep_download_files {
+  my ($self, $c) = @_; 
+  
+  my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'anova');
+  my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+   
+  mkpath ([$anova_tmp_dir], 0, 0755);  
+
+  $self->anova_table_file($c);
+  my $anova_txt_file  = $c->stash->{anova_table_txt_file};
+  my $anova_html_file = $c->stash->{anova_table_html_file};
+
+  $self->anova_model_file($c);
+  my $model_file = $c->stash->{anova_model_file};
+
+  $self->adj_means_file($c);    
+  my $means_file = $c->stash->{adj_means_file};
+  
+  copy($anova_txt_file, $base_tmp_dir)  
+            or die "could not copy $anova_txt_file to $base_tmp_dir";
+
+  copy($model_file, $base_tmp_dir)  
+            or die "could not copy $model_file to $base_tmp_dir";
+  
+  copy($means_file, $base_tmp_dir)  
+            or die "could not copy $means_file to $base_tmp_dir";
+
+  $anova_txt_file = fileparse($anova_txt_file);
+  $anova_txt_file = catfile($tmp_dir, $anova_txt_file);
+
+  $model_file = fileparse($model_file);
+  $model_file = catfile($tmp_dir, $model_file);
+
+  $means_file = fileparse($means_file);
+  $means_file = catfile($tmp_dir, $means_file);
+  
+  $c->stash->{download_anova} = $anova_txt_file;
+  $c->stash->{download_model} = $model_file;
+  $c->stash->{download_means} = $means_file;
+
 }
 
 
@@ -267,6 +321,7 @@ sub anova_pheno_file {
     my ($self, $c) = @_;
     
     $c->stash->{pop_id} = $c->stash->{trial_id};
+
     $c->controller('solGS::solGS')->phenotype_file($c);
    
 }
