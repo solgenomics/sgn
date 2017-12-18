@@ -405,6 +405,11 @@ jQuery(document).ready(function ($) {
         //window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
     });
 
+    jQuery('#review_absent_dialog').on('shown.bs.modal', function (e) {
+        jQuery('#infoToAdd_updated_table').DataTable({});
+        jQuery('#infoToAdd_new_table').DataTable({});
+    });
+
 });
 
 function openWindowWithPost(fuzzyResponse) {
@@ -585,11 +590,6 @@ function populate_review_absent_dialog(absent, infoToAdd){
         jQuery('#add_accessions_using_list_inputs').show();
     }
 
-    jQuery('#review_absent_dialog').on('shown.bs.modal', function (e) {
-        jQuery('#infoToAdd_updated_table').DataTable({});
-        jQuery('#infoToAdd_new_table').DataTable({});
-    })
-
     jQuery('#review_absent_dialog').modal('show');
 }
 
@@ -633,11 +633,6 @@ function process_fuzzy_options(accession_list_id) {
                 if (fullParsedData != null){
                     for (var i=0; i<accessionList.length; i++){
                         var accession_name = accessionList[i];
-                        infoToAdd.push(fullParsedData[accession_name]);
-                        speciesNames.push(fullParsedData[accession_name]['species']);
-                    }
-                    for (var i=0; i<accessionListFound.length; i++){
-                        var accession_name = accessionListFound[i];
                         infoToAdd.push(fullParsedData[accession_name]);
                         speciesNames.push(fullParsedData[accession_name]['species']);
                     }

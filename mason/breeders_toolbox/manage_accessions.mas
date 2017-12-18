@@ -8,10 +8,12 @@ $editable_stock_props => {}
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
 
+
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
 <div class="container-fluid">
 
+<div class="well">
 <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Accessions Or Upload Accession Info</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
@@ -25,16 +27,21 @@ $editable_stock_props => {}
 </div>
 
 </&>
+</div><!-- closes well -->
 
+<div class="well">
 <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
 
 <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
 
 </&>
+</div><!-- closes well -->
 
+<div class="well">
 <&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<a id='manage_accessions_populations_new'>[Create Population]</a>"&>
 <div class="panel-group" id="accordion"></div>
 </&>
+</div><!-- closes well -->
 
 </div>
 

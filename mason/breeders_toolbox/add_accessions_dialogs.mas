@@ -346,7 +346,7 @@ $editable_stock_props => {}
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <b>The following accessions already exist and cannot be added:</b>
+    	  <b>The following accessions already exist in the database:</b>
   	  <div id="count_of_found_accessions"></div>
   	  <br/>
   	  <div id="view_found_matches"></div>
