@@ -143,6 +143,8 @@ sub get_layout_output {
         return \%errors;
     }
 
+    #print STDERR Dumper $tl;
+
     my %selected_cols = %{$self->selected_columns};
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my @selected_trait_names = $self->selected_trait_names() ? @{$self->selected_trait_names} : ();
@@ -163,7 +165,7 @@ sub get_layout_output {
 
     my @possible_cols = ();
     if ($self->data_level eq 'plots') {
-        @possible_cols = ('plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plots() : [];
@@ -171,7 +173,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'plants') {
-        @possible_cols = ('plant_name','plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','plant_number','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('plant_name','plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plants() : [];
@@ -179,7 +181,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'subplots') {
-        @possible_cols = ('subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_subplots() : [];
@@ -187,7 +189,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'plants_subplots') {
-        @possible_cols = ('plant_name','subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('plant_name','subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plants() : [];
@@ -207,7 +209,7 @@ sub get_layout_output {
     my @treatment_stock_hashes;
     if($treatments){
         foreach (@treatment_names){
-            push @header, "Treatment:".$_;
+            push @header, "ManagementFactor:".$_;
         }
         foreach my $u (@treatment_units_array){
             my %treatment_stock_hash;
@@ -234,6 +236,8 @@ sub get_layout_output {
                 if ($selected_cols{$_}){
                     if ($_ eq 'location_name'){
                         push @line, $location_name;
+                    } elsif ($_ eq 'plot_geo_json'){
+                        push @line, $design_info{"plot_geo_json"} ? encode_json $design_info{"plot_geo_json"} : '';
                     } elsif ($_ eq 'trial_name'){
                         push @line, $trial_name;
                     } elsif ($_ eq 'year'){
@@ -295,6 +299,8 @@ sub get_layout_output {
                             push @line, $plant_num;
                         } elsif ($c eq 'location_name'){
                             push @line, $location_name;
+                        } elsif ($c eq 'plot_geo_json'){
+                            push @line, $design_info{"plot_geo_json"} ? encode_json $design_info{"plot_geo_json"} : '';
                         } elsif ($c eq 'trial_name'){
                             push @line, $trial_name;
                         } elsif ($c eq 'year'){
@@ -356,6 +362,8 @@ sub get_layout_output {
                             push @line, $subplot_num;
                         } elsif ($c eq 'location_name'){
                             push @line, $location_name;
+                        } elsif ($c eq 'plot_geo_json'){
+                            push @line, $design_info{"plot_geo_json"} ? encode_json $design_info{"plot_geo_json"} : '';
                         } elsif ($c eq 'trial_name'){
                             push @line, $trial_name;
                         } elsif ($c eq 'year'){
@@ -424,6 +432,8 @@ sub get_layout_output {
                                 push @line, $plant_num;
                             } elsif ($c eq 'location_name'){
                                 push @line, $location_name;
+                            } elsif ($c eq 'plot_geo_json'){
+                                push @line, $design_info{"plot_geo_json"} ? encode_json $design_info{"plot_geo_json"} : '';
                             } elsif ($c eq 'trial_name'){
                                 push @line, $trial_name;
                             } elsif ($c eq 'year'){
