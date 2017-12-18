@@ -14,7 +14,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$trial_id
+$trial_id => undef,
+$pop_id => undef,
 $trait_id  => undef
 
 </%args>
@@ -44,7 +45,7 @@ $trait_id  => undef
   </div>
 
  
-  <input type="hidden" id="trial_id" value="<% $trial_id %>" />  
+  <input type="hidden" id="trial_id" value="<% $trial_id %>" />   
 
   <div id="anova_table"></div>
 
