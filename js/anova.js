@@ -9,7 +9,7 @@ jQuery(document).ready( function() {
   
     var url = document.URL;
  
-    if (url.match(/\/breeders_toolbox\/trial|breeders\/trial/)) {
+    if (url.match(/\/breeders_toolbox\/trial|breeders\/trial|\/solgs\/population\//)) {
 	    allowAnova();  
 	} 
 
@@ -67,7 +67,8 @@ function anovaAlert(msg) {
 }
 
 function queryPhenoData(traitId) {
-   var trialId    =  jQuery("#trial_id").val();
+
+    var trialId = getTrialId();
    
     jQuery.ajax({
         type: 'POST',
@@ -101,7 +102,7 @@ function showMessage (msg) {
 
 function runAnovaAnalysis(traits) {
  
-    var trialId    =  jQuery("#trial_id").val(); 
+    var trialId = getTrialId();
    
     var captions       = jQuery('#anova_table table').find('caption').text();		
     var analyzedTraits = captions.replace(/ANOVA result:/g, ' '); 
@@ -123,6 +124,23 @@ function runAnovaAnalysis(traits) {
 			var anovaTable = response.anova_html_table;			
 		   	
 			jQuery("#anova_table").append('<div style="margin-top: 20px">' + anovaTable + '</div>').show();
+		
+			var anovaFile = response.anova_table_file;
+			var modelFile = response.anova_model_file;
+			var meansFile = response.adj_means_file;
+
+			var fileNameAnova = anovaFile.split('/').pop();
+			var fileNameModel = modelFile.split('/').pop();
+			var fileNameMeans = meansFile.split('/').pop();
+		
+			
+			anovaFile = "<a href=\"" + anovaFile +  "\" download=" + fileNameAnova + ">[Anova table]</a>";
+			modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">[Model Summary]</a>";
+			meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">[Adjusted Means]</a>";
+		
+			jQuery("#anova_table")
+			    .append('<br /> <strong>Download:</strong> ' + anovaFile + ' | ' + modelFile + ' | ' + meansFile)
+			    .show();
 			
 			jQuery("#anova_message").empty();
 			
@@ -150,9 +168,10 @@ function runAnovaAnalysis(traits) {
 }
 
 
+
 function listAnovaTraits ()  {
 
-    var trialId    =  jQuery("#trial_id").val();
+    var trialId = getTrialId();
 
      jQuery.ajax({
         type: 'POST',
@@ -237,5 +256,19 @@ function clearTraitSelection () {
 
     jQuery("#anova_selected_trait_name").val('');
     jQuery("#anova_selected_trait_id").val('');
+
+}
+
+
+function getTrialId () {
+    
+    var trialId    =  jQuery("#trial_id").val();
+
+    if (!trialId) {
+
+	trialId = jQuery("#population_id").val();
+    }
+
+    return trialId;
 
 }
