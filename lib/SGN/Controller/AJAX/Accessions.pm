@@ -390,7 +390,13 @@ sub add_accession_list_POST : Args(0) {
                     variety=>$_->{variety},
                     genomeStructure=>$_->{genomeStructure},
                     ploidyLevel=>$_->{ploidyLevel},
-                    locationCode=>$_->{locationCode}
+                    locationCode=>$_->{locationCode},
+                    introgression_parent=>$_->{introgression_parent},
+                    introgression_backcross_parent=>$_->{introgression_backcross_parent},
+                    introgression_map_version=>$_->{introgression_map_version},
+                    introgression_chromosome=>$_->{introgression_chromosome},
+                    introgression_start_position_bp=>$_->{introgression_start_position_bp},
+                    introgression_end_position_bp=>$_->{introgression_end_position_bp}
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;

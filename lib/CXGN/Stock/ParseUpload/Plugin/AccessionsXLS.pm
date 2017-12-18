@@ -389,9 +389,9 @@ sub _parse_with_plugin {
     my $found_accessions;
     my $fuzzy_accessions;
     my $absent_accessions;
-    my $found_synonyms;
-    my $fuzzy_synonyms;
-    my $absent_synonyms;
+    my $found_synonyms = [];
+    my $fuzzy_synonyms = [];
+    my $absent_synonyms = [];
     my $found_organisms;
     my $fuzzy_organisms;
     my $absent_organisms;

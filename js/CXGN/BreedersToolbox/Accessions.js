@@ -548,12 +548,13 @@ function populate_review_absent_dialog(absent, infoToAdd){
         +'</div>';
     }
     jQuery('#view_absent').html(absent_html);
+    jQuery('#view_infoToAdd').html('');
 
     if (infoToAdd.length>0){
         var infoToAdd_html = '<div class="well"><b>The following new accessions will be added:</b><br/><br/><table id="infoToAdd_new_table" class="table table-bordered table-hover"><thead><tr><th>uniquename</th><th>properties</th></tr></thead><tbody>';
         for( i=0; i < infoToAdd.length; i++){
             if (!('stock_id' in infoToAdd[i])){
-                infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</trd';
+                infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
                 var infoToAdd_properties_html = '';
                 for (key in infoToAdd[i]){
                     if (key != 'uniquename'){
@@ -579,12 +580,16 @@ function populate_review_absent_dialog(absent, infoToAdd){
         }
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
         jQuery('#view_infoToAdd').html(infoToAdd_html);
-        jQuery('#infoToAdd_updated_table').DataTable({});
-        jQuery('#infoToAdd_new_table').DataTable({});
         jQuery('#add_accessions_using_list_inputs').hide();
     } else {
         jQuery('#add_accessions_using_list_inputs').show();
     }
+
+    jQuery('#review_absent_dialog').on('shown.bs.modal', function (e) {
+        jQuery('#infoToAdd_updated_table').DataTable({});
+        jQuery('#infoToAdd_new_table').DataTable({});
+    })
+
     jQuery('#review_absent_dialog').modal('show');
 }
 
