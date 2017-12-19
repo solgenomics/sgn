@@ -80,6 +80,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
 	  filename => $file_path,
 	  format => $format,
       data_level => $data_level,
+      trial_download_logfile=>$c->config->{trial_download_logfile},
       });
 
   my $spreadsheet_response = $create_spreadsheet->download();

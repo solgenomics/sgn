@@ -101,6 +101,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
       data_level => $data_level,
       sample_number => $sample_number,
       predefined_columns => $predefined_columns,
+      trial_download_logfile=>$c->config->{trial_download_logfile},
       });
 
      $create_spreadsheet->download();

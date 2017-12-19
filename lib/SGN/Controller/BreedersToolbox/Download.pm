@@ -360,7 +360,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
         search_type=>$search_type,
-        has_header=>$has_header
+        has_header=>$has_header,
+        trial_download_logfile=>$c->config->{trial_download_logfile},
     });
 
     my $error = $download->download();

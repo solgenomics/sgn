@@ -99,7 +99,7 @@ $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 
 -------------------------------------------------------------------------------
 
-For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
+For downloading a trial's layout (as used from SGN::Controller::BreedersToolbox::Trial->trial_download):
 
 A trial's layout can optionally include treatment and phenotype summary
 information, mapping to treatment_project_ids and trait_list, selected_trait_names.

@@ -47,6 +47,8 @@ sub verify {
 sub download {
     my $self = shift;
 
+    $self->trial_download_log($self->trial_id, "trial datacollector phenotype collector xls");
+
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
     my @trait_list = @{$self->trait_list()};

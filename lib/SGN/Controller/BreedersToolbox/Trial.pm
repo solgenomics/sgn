@@ -282,6 +282,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
         selected_trait_names => \@selected_trait_names,
+        trial_download_logfile=>$c->config->{trial_download_logfile},
     });
 
     my $error = $download->download();

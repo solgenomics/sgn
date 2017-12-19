@@ -51,6 +51,9 @@ sub download {
     my @trait_list = @{$self->trait_list()};
     my $spreadsheet_metadata = $self->file_metadata();
 
+    my $trial_id_string = split ',', @trial_ids;
+    $self->trial_download_log($trial_id_string, "trial phenotype collecter spreadsheet xls");
+
     my $workbook = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $workbook->add_worksheet();
 

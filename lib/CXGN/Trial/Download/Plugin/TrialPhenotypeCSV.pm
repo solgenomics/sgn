@@ -90,7 +90,8 @@ sub download {
     my $phenotype_max_value = $self->phenotype_max_value();
     my $search_type = $self->search_type();
 
-    $self->trial_download_log($trial_id, "trial phenotypes");
+    my $trial_id_string = split ',', @$trial_list;
+    $self->trial_download_log($trial_id_string, "trial phenotypes csv");
 
     my $factory_type;
     if ($search_type eq 'complete'){

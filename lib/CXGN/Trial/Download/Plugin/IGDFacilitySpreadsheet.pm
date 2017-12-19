@@ -43,7 +43,8 @@ sub verify {
 
 sub download { 
     my $self = shift;
-    
+    $self->trial_download_log($self->trial_id, "igd layout xls");
+
     my $trial_id = $self->trial_id();
 
     my $t = CXGN::Trial->new( { bcs_schema => $self->bcs_schema(), trial_id => $trial_id });

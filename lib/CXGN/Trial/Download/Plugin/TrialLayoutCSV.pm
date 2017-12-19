@@ -57,12 +57,8 @@ sub validate {
 
 sub download { 
     my $self = shift;
-    
-    my $trial_layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->trial_id() });
-    my $design = $trial_layout->get_design();
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $self->trial_id() });
-    my $treatments = $trial->get_treatments();
+    $self->trial_download_log($self->trial_id, "trial layout csv");
 
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
 

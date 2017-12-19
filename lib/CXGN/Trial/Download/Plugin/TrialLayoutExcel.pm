@@ -60,6 +60,8 @@ sub verify {
 sub download { 
     my $self = shift;
 
+    $self->trial_download_log($self->trial_id, "trial layout excel");
+
     print STDERR "DATALEVEL ".$self->data_level."\n";
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
