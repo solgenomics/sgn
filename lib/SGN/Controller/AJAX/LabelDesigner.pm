@@ -194,7 +194,8 @@ __PACKAGE__->config(
                                 my $image = $pdf->image_png($png_location);
                                 my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                                 my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
-                                my $elementy = $elementy - $height; # adjust for img position sarting at bottom
+                                my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                my $elementx = $elementx - ($width/2);
                                 #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                                 $gfx->image($image, $elementx, $elementy, $width, $height);
 
@@ -214,7 +215,8 @@ __PACKAGE__->config(
                                my $image = $pdf->image_jpeg($jpeg_location);
                                my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
                                my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
-                               my $elementy = $elementy - $height; # adjust for img position sarting at bottom
+                               my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                               my $elementx = $elementx - ($width/2);
                                $gfx->image($image, $elementx, $elementy, $width, $height);
 
                           }
@@ -225,10 +227,10 @@ __PACKAGE__->config(
                             # Add text to the page
                             my $adjusted_size = $element{'size'} / $dots_to_pixels_conversion_factor; # scale to 72 pts per inch
                             $text->font($font, $adjusted_size);
-                            my $midpoint= ($element{'height'} / $dots_to_pixels_conversion_factor ) / 2;
-                            my $elementy = $elementy - $midpoint; # adjust for position starting at middle
+                            my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
+                            my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
                             $text->translate($elementx, $elementy);
-                            $text->text($filled_value);
+                            $text->text_center($filled_value);
                        }
                    }
 

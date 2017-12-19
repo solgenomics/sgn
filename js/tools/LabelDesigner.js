@@ -937,31 +937,27 @@ function switchTypeDependentOptions(type){
 }
 
 function addToLabel(field, text, type, size, font, x, y, scale) {
-     //console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
+     console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
     svg = d3.select(".d3-draw-svg");
 
     //get x,y coords and scale
     if ((typeof x || typeof y ) === 'undefined') {
-        var page = d3.select("#page_format").node().value;
-        var label = d3.select("#label_format").node().value;
-        var label_sizes = page_formats[page].label_sizes;
-        var label_width = label_sizes[label].label_width;
-        var label_height = label_sizes[label].label_height;
-        x =  label_width / 4;
-        y = label_height / 2;
+        // var page = d3.select("#page_format").node().value;
+        // var label = d3.select("#label_format").node().value;
+        // var label_sizes = page_formats[page].label_sizes;
+        // var label_width = label_sizes[label].label_width;
+        // var label_height = label_sizes[label].label_height;
+        x = document.getElementById("d3-label-area").viewBox.baseVal.width/2;
+        y = document.getElementById("d3-label-area").viewBox.baseVal.height/2;
     }
     scale = (typeof scale === 'undefined') ? [1,1] : scale;
-    //console.log(" X is: "+x+" and y is: "+y);
+    console.log(" X is: "+x+" and y is: "+y);
 
     //set up new element
     var new_element = svg.append("g")
         .classed("draggable", true)
         .classed("selectable", true)
         .call(draggable)
-        .call(doTransform, function(state, selection) {
-            state.translate = [x,y]
-            state.scale = scale
-        }, doSnap);
 
     switch (type) {
         case "Code128":
@@ -976,7 +972,14 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
             img.onload = function() {
                 var width = this.width;
                 var height = this.height;
-                new_element.append("svg:image")
+                x = x - (width /2);
+                y = y - (height /2);
+                console.log("Final x is "+x+" and final y is "+y);
+                new_element.call(doTransform, function(state, selection) {
+                    state.translate = [x,y]
+                    state.scale = scale
+                }, doSnap)
+                .append("svg:image")
                 .attr({
                     "class": "label-element",
                     "value": field,
@@ -986,14 +989,17 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
                     "width": width,
                     "href": "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size),
                 });
+                enable_ui();
             }
-            enable_ui();
             break;
 
         default:
         //add text specific attributes
             new_element.classed("text-box", true)
             .call(selectable, false)
+            .call(doTransform, function(state, selection) {
+                state.translate = [x,y]
+            })
             .append("text")
             .attr({
                 "class": "label-element",
@@ -1003,7 +1009,9 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
                 "font-size": size,
                 "font": font,
                 "style": font_styles[font], //(typeof font == 'undefined') ? "font-family:courier;" : label_options[type].fonts[font]
-                "dominant-baseline": "mathematical",
+                //"dominant-baseline": "mathematical",
+                "text-anchor": "middle",
+                "alignment-baseline": "middle",
             })
             .text(text)
             break;
@@ -1068,16 +1076,30 @@ function createAdders(add_fields) {
 function getLabelDetails(element, index) {
 
     var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
-    //console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
+    console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
     var coords = transform_attributes.translate;
     var scale = transform_attributes.scale || new Array(1,1);
     var rect = element.getBBox();
     var width = rect.width * scale[0];
     var height = rect.height * scale[1];
+    console.log("Height is: "+height+" and width is: "+width);
+    var type = element.getAttribute("type");
+    var x;
+    var y;
+    if (type.match(/Text/)) {
+        x = parseInt(coords[0])
+        y = parseInt(coords[1])
+    } else {
+        x = parseInt(coords[0]) + (width/2);
+        y = parseInt(coords[1]) + (height/2);
+    }
+    // var center_x = parseInt(coords[0]) + (width/2);
+    // var center_y = parseInt(coords[1]) + (height/2);
+    // console.log("Center x is: "+center_x+" and center y is: "+center_y);
 
     return {
-        x: coords[0],
-        y: coords[1],
+        x: x,
+        y: y,
         height: height,
         width: width,
         scale: scale,
