@@ -2482,8 +2482,8 @@ sub format_selection_pops {
               my $name = $row->name;
               my $desc = $row->description;
             
-              unless ($name =~ /test/ || $desc =~ /test/)   
-              {
+             # unless ($name =~ /test/ || $desc =~ /test/)   
+             # {
                   my $id_pop_name->{id}    = $prediction_pop_id;
                   $id_pop_name->{name}     = $name;
                   $id_pop_name->{pop_type} = 'selection';
@@ -2506,7 +2506,7 @@ sub format_selection_pops {
                   my $download_prediction = $c->stash->{download_prediction};
 
                   push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
-              }
+             # }
           }
         }
     }

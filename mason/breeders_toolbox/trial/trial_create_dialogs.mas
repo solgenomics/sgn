@@ -131,7 +131,7 @@ $breeding_programs
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section" style="display: none" >
-                                    <label class="col-sm-7 control-label">List of checks to include (optional): </label>
+                                    <label class="col-sm-7 control-label">List of checks to include. Checks list should be separate from accessions list. (optional): </label>
                                     <div class="col-sm-5" id="crbd_list_of_checks_section" >
                                     </div>
                                 </div>
@@ -252,25 +252,25 @@ $breeding_programs
 
                                 <div id="create_trial_with_treatment_section" style="display: none">
                                     <div class="form-group form-group-sm" >
-                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <label class="col-sm-7 control-label">Subplot 1 Treatment Name: </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="create_trial_with_treatment_name_input1" name="create_trial_with_treatment_name_input1" type="text" value="Control" placeholder="Required Treatment 1"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
-                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <label class="col-sm-7 control-label">Subplot 2 Treatment Name: </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Optional Treatment 2"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
-                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <label class="col-sm-7 control-label">Subplot 3 Treatment Name: </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="create_trial_with_treatment_name_input3" name="create_trial_with_treatment_name_input3" type="text" placeholder="Optional Treatment 3"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
-                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <label class="col-sm-7 control-label">Subplot 4 Treatment Name: </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
                                         </div>
@@ -418,7 +418,7 @@ $breeding_programs
 </div>
 
 <div class="modal fade" id="trial_design_confirm" name="trial_design_confirm" tabindex="-1" role="dialog" aria-labelledby="addTrialConfirmDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -434,7 +434,7 @@ $breeding_programs
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatments to Design</button>
+                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Field Management Factor(s) to Design</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm (Saves Trial In Database)</button>
             </div>

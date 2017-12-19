@@ -290,9 +290,9 @@ sub verify_seedlot_stock_lists {
             }
         }
     }
-    if(scalar(keys %seedlot_hash) != scalar(@stock_names)){
-        $error .= "Error: The seedlot list you select must include seedlots for all the accessions you have selected. ";
-    }
+    #if(scalar(keys %seedlot_hash) != scalar(@stock_names)){
+    #    $error .= "Error: The seedlot list you select must include seedlots for all the accessions you have selected. ";
+    #}
     if ($error){
         $return{error} = $error;
     } else {

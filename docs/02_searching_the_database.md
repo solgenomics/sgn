@@ -109,11 +109,11 @@ You can also use “Search Accessions and Plots” page to add new stocks by cli
 
 ![]({{"assets/images/image86.png" | relative_url }})
 
-Clicking on the “Submit New Stock” link will redirect you to the “Create a New Stock” form. To submit new stock, you must login and have an account that has submitter privilege. To change your account status from “user” to “submitter”, you must contact CassavaBase. To learn how to change your account status, click here.
+Clicking on the “Submit New Stock” link will redirect you to the “Create a New Stock” form. To submit new stock, you must login and have an account that has submitter privilege. To change your account status from “user” to “submitter”, you must contact the database curators. To learn how to change your account status, click here.
 
 ![]({{"assets/images/image284.png" | relative_url }})
 
-The organism field is an autocomplete field for the organism. Start typing, and the matching organisms in the database will be shown in the drop-down list. For cassava, select Manihot esculenta. The stock name should be a standard name given to the stock at a national facility. The unique name is usually the same as the stock name. After completing the form, click on “Store” button to finish the process.
+The organism field is an autocomplete field for the organism. Start typing, and the matching organisms in the database will be shown in the drop-down list. (_i.e._ For cassava, select Manihot esculenta.) The stock name should be a standard name given to the stock at a national facility. The unique name is usually the same as the stock name. After completing the form, click on “Store” button to finish the process.
 
 ### Other information
 

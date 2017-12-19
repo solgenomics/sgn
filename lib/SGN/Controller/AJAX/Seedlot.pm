@@ -185,6 +185,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->detach();
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $uniquename = $c->req->param("seedlot_name");
     my $location_code = $c->req->param("seedlot_location");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
@@ -200,6 +201,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     if ($c->user) {
         $operator = $c->user->get_object->get_username;
     }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     print STDERR "Creating new Seedlot $uniquename\n";
     my $seedlot_id;
@@ -228,6 +230,11 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->store();
 
         $sl->set_current_count_property();
+
+        $phenome_schema->resultset("StockOwner")->find_or_create({
+            stock_id     => $seedlot_id,
+            sp_person_id =>  $user_id,
+        });
     };
 
     if ($@) { 
@@ -272,6 +279,7 @@ sub upload_seedlots_POST : Args(0) {
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $breeding_program_id = $c->req->param("upload_seedlot_breeding_program_id");
     my $location = $c->req->param("upload_seedlot_location");
     my $population = $c->req->param("upload_seedlot_population_name");
@@ -322,7 +330,7 @@ sub upload_seedlots_POST : Args(0) {
         $c->detach();
     }
 
-
+    my @added_stocks;
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
@@ -349,12 +357,20 @@ sub upload_seedlots_POST : Args(0) {
             $transaction->store();
 
             $sl->set_current_count_property();
+            push @added_stocks, $seedlot_id;
         }
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
         print STDERR "An error condition occurred, was not able to upload seedlots. ($@).\n";
         $c->detach();
+    }
+
+    foreach my $stock_id (@added_stocks) {
+        $phenome_schema->resultset("StockOwner")->find_or_create({
+            stock_id     => $stock_id,
+            sp_person_id =>  $user_id,
+        });
     }
 
     $c->stash->{rest} = { success => 1 };
