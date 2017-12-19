@@ -165,7 +165,7 @@ window.onload = function initialize() {
 	//alert(JSON.stringify(category_order));
 	var params =  "accessions="+JSON.stringify(accessions)+"&trials="+JSON.stringify(trials)+"&plots="+JSON.stringify(plots)+"&years="+JSON.stringify(years)+"&locations="+JSON.stringify(locations)+"&traits="+JSON.stringify(traits)+"&breeding_programs="+JSON.stringify(breeding_programs)+"&genotyping_protocols="+JSON.stringify(genotyping_protocols)+"&trial_types="+JSON.stringify(trial_types)+"&trial_designs="+JSON.stringify(trial_designs)+"&plants="+JSON.stringify(plants)+"&name="+name+"&description="+description+"&category_order="+JSON.stringify(category_order);
 
-	if (name === '' || name === undefined) { 
+	if (name === '' || name === undefined) {
 	    alert('Please enter a name for the selection.');
 	    return;
 	}
@@ -427,16 +427,6 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
 	jQuery('#'+querytype_id).bootstrapToggle('off');
   jQuery('#'+list_menu_id).replaceWith(replacement);
     }
-}
-
-function create_dataset_start(message) {
-    var obj = new CXGN.Dataset();
-    var datasethtml = obj.datasetSelect('paste', message, 'refresh');
-    jQuery('#paste_dataset').html(datasethtml);
-    jQuery('#paste_dataset_select').change(
-      function() {
-        pasteDataset();
-    });
 }
 
 function create_list_start(message) {
