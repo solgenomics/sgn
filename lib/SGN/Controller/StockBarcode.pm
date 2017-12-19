@@ -1165,7 +1165,8 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
 
     # note: pdf coord system zero is lower left corner
     #
-    my $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
+    my $xlabel_margin = 9;
+    my $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
 
     my $scalex = $final_barcode_width / $image->{width};
     my $scaley = $label_height / $image->{height};
@@ -1173,17 +1174,17 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
     if ($scalex < $scaley) { $scaley = $scalex; }
     else { $scalex = $scaley; }
     my $label_boundary; 
-    my $xlabel_margin = 8;
+    
     
     #elsif ($cass_print_format eq '32_unique'){
-        my $label_height_8_per_page = 45;
+        my $label_height_16_per_page = 46;
         if ($labels_on_page == 64){
             $row_count = 0;
             $labels_on_page = 0;
         }
         if ($row_y_label_count == 1 || $row_y_label_count > $labels_per_row){
-            $label_boundary = $page_height - ($row_count * $label_height_8_per_page) - $top_margin;
-            $ypos = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
+            $label_boundary = $page_height - ($row_count * $label_height_16_per_page) - $top_margin;
+            $ypos = $label_boundary - int( (90 - $image->{height} * $scaley) /2);
             $row_count++;
         }
         if ($row_y_label_count > $labels_per_row){
@@ -1192,7 +1193,7 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
         print STDERR $row_y_label_count." ".$row_count." ".$ypos." ".$labels_on_page."\n";
         $row_y_label_count++;
         $labels_on_page++;
-        $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
+        #$final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
     #}
     
 
@@ -1208,7 +1209,7 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
     #foreach my $label_count (1..$labels_per_row) {
     
     $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
-    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 80 + ($row_y_label_count -2) * $final_barcode_width, ypos=>$ypos + 13, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 78 + ($row_y_label_count -2) * $final_barcode_width, ypos=>$ypos + 25, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
     #$pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
     #}
 
