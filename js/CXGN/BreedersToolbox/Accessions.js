@@ -636,6 +636,11 @@ function process_fuzzy_options(accession_list_id) {
                         infoToAdd.push(fullParsedData[accession_name]);
                         speciesNames.push(fullParsedData[accession_name]['species']);
                     }
+                    for (var i=0; i<accessionListFound.length; i++){
+                        var accession_name = accessionListFound[i];
+                        infoToAdd.push(fullParsedData[accession_name]);
+                        speciesNames.push(fullParsedData[accession_name]['species']);
+                    }
                 }
 
                 populate_review_absent_dialog(accessionList, infoToAdd);
