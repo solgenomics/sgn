@@ -370,10 +370,7 @@ $(document).ready(function($) {
     page_format_select.on("input", function() {
         var page = d3.select(this).node().value;
         if (!page || page == 'Select a page format') {
-            var intro_elements = document.getElementsByClassName("d3-intro-text");
-            for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
-            var label_elements = document.getElementsByClassName("label-element");
-            for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
+            disable_draw_area();
             d3.select("#label_format").selectAll("option").remove();
         } else {
             switchPageDependentOptions(page); // show correct download and text options
@@ -383,10 +380,7 @@ $(document).ready(function($) {
     $('#label_format').change(function() {
         var label = $(this).find('option:selected').val();
         if (!label || label == 'Select a label format') {
-            var intro_elements = document.getElementsByClassName("d3-intro-text");
-            for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
-            var label_elements = document.getElementsByClassName("label-element");
-            for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
+            disable_draw_area();
         } else {
             switchLabelDependentOptions(label);
         }
@@ -402,10 +396,7 @@ $(document).ready(function($) {
         custom_label.label_height = document.getElementById("label_height").value;
         changeLabelSize(custom_label.label_width, custom_label.label_height);
         $("#d3-add-and-download-div").removeAttr('style');
-        var intro_elements = document.getElementsByClassName("d3-intro-text");
-        for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
-        var label_elements = document.getElementsByClassName("label-element");
-        for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "inline"; }
+        enable_draw_area();
         $('#d3-add-type-input').focus();
     });
 
@@ -860,14 +851,8 @@ function switchLabelDependentOptions(label) {
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
         $("#d3-add-and-download-div").removeAttr('style');
-        // document.getElementById("d3-draw-div").style.visibility = "visible";
-        // document.getElementById("d3-adders").style.visibility = "visible";
-
         $('#d3-add-type-input').focus();
-        var intro_elements = document.getElementsByClassName("d3-intro-text");
-        for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
-        var label_elements = document.getElementsByClassName("label-element");
-        for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "inline"; }
+        enable_draw_area();
     }
     document.getElementById("top_margin").value = label_sizes[label].top_margin;
     document.getElementById("left_margin").value = label_sizes[label].left_margin;
@@ -1195,6 +1180,20 @@ function initializeCustomModal(add_fields) {
 
 }
 
+function enable_draw_area() {
+    var intro_elements = document.getElementsByClassName("d3-intro-text");
+    for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
+    var label_elements = document.getElementsByClassName("label-element");
+    for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "inline"; }
+}
+
+function disable_draw_area() {
+    var intro_elements = document.getElementsByClassName("d3-intro-text");
+    for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
+    var label_elements = document.getElementsByClassName("label-element");
+    for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
+}
+
 function load_design (list_id) {
     // console.log("Loading design from list with ID "+list_id);
     // clear existing draw area
@@ -1244,6 +1243,7 @@ function load_design (list_id) {
         page_formats[page].label_sizes['Custom'].label_height = params['label_height'];
         changeLabelSize(params['label_width'], params['label_height']);
         $("#d3-add-and-download-div").removeAttr('style');
+        enable_draw_area();
     }
 
     saveAdditionalOptions(
