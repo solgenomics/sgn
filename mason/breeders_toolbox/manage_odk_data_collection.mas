@@ -1,9 +1,9 @@
 
 <%args>
-odk_crossing_data_service_name => undef
-odk_crossing_data_service_url => undef
-odk_phenotyping_data_service_name => undef
-odk_phenotyping_data_service_url => undef
+$odk_crossing_data_service_name => undef
+$odk_crossing_data_service_url => undef
+$odk_phenotyping_data_service_name => undef
+$odk_phenotyping_data_service_url => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ ] &>
