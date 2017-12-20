@@ -240,7 +240,7 @@ var drag_behaviour = d3.behavior.drag().on(
 $(document).ready(function($) {
 
     initializeDrawArea();
-    $('#data_source_select').focus();
+    $('#source_select').focus();
 
     // Every time a modal is shown, if it has an autofocus element, focus on it.
     $('.modal').on('shown.bs.modal', function() {
@@ -297,36 +297,19 @@ $(document).ready(function($) {
             live_search: 1,
         });
 
-    // $("#data_source_select").change(function() {
-    //
-    //     if (this.value == 'trial') {
-    //         get_select_box('trials', 'data_source',
-    //             {
-    //                 name: 'data_list_select',
-    //                 id: 'trial_select',
-    //                 live_search: 1,
-    //                 empty: 1
-    //             });
-    //     } else if (this.value == 'plot_list') {
-    //         var lo = new CXGN.List();
-    //         $('#data_source').html(lo.listSelect('data', ['plots'], 'Select a plot list', 'refresh'));
-    //         $('#data_list_select').focus();
-    //     }
-    //
-    // });
-
     $("#edit_additional_settings").on("click", function() {
         $('#editAdditionalSettingsModal').modal('show');
     });
 
-    $(document).on("change", "#trial_select, #data_list_select", function() {
+    $(document).on("change", "#source_select", function() {
+        var data_type = $('#source_select :selected').parent().attr('label');
 
         jQuery.ajax({
             url: '/tools/label_designer/retrieve_longest_fields',
             timeout: 60000,
             method: 'POST',
             data: {
-                data_type: this.id,
+                data_type: data_type,
                 value: this.value
             },
             beforeSend: function() {
@@ -505,10 +488,10 @@ $(document).ready(function($) {
             return;
         }
         var download_type = $(this).val();
-
-        var data_type = document.getElementsByName("data_list_select")[0].id;//document.getElementsByName("acc")[0].value $('[name="data_list_select"]').id;
-        var value = document.getElementsByName("data_list_select")[0].value;  //$('[name="data_list_select"] option:selected').value;
-        console.log("Id is "+data_type+" and value is "+value);
+        var data_type = $('#source_select :selected').parent().attr('label');
+        //var data_type = document.getElementsByName("data_list_select")[0].id;//document.getElementsByName("acc")[0].value $('[name="data_list_select"]').id;
+        var value = $("#source_select").val();  //$('[name="data_list_select"] option:selected').value;
+        //console.log("Id is "+data_type+" and value is "+value);
         // var trial_id = document.getElementById("trial_select").value;
         if (!value || value == 'Please select a trial' || value == 'Select a plot list') {
             alert("No data source selected. Please select a data source before downloading");

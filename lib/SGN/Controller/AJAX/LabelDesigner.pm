@@ -20,17 +20,13 @@ __PACKAGE__->config(
    );
 
    sub retrieve_longest_fields :Path('/tools/label_designer/retrieve_longest_fields') {
-       my $self = shift;
-       my $c = shift;
-       my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    #    my $uri     = URI::Encode->new( { encode_reserved => 0 } );
-    #    my $trial_id = $uri->decode($c->req->param("trial_id"));
-    #    my $type = $uri->decode($c->req->param("type"));
-    #    my $value = $uri->decode($c->req->param("value"));
-           my $data_type = $c->req->param("data_type");
-    my $value = $c->req->param("value");
-       my %longest_hash;
-
+        my $self = shift;
+        my $c = shift;
+        my $schema = $c->dbic_schema('Bio::Chado::Schema');
+        my $data_type = $c->req->param("data_type");
+        my $value = $c->req->param("value");
+        my %longest_hash;
+        print STDERR "Data type is $data_type and id is $value\n";
        my ($trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
        print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
 
@@ -361,7 +357,7 @@ sub get_plot_data {
     my $value = shift;
     my ($trial_id, $design);
     print STDERR "Data type is $data_type and value is $value\n";
-    if ($data_type eq 'data_list_select') {
+    if ($data_type =~ m/Plot List/) {
         # get items from list, get trial id from plot id. Or, get plot dta one by one
         my $plot_data = SGN::Controller::AJAX::List->retrieve_list($c, $value);
         my @plot_list = map { $_->[1] } @$plot_data;
@@ -388,7 +384,7 @@ sub get_plot_data {
             }
         }
 
-    } elsif ($data_type eq 'trial_select') {
+    } elsif ($data_type =~ m/Trial/) {
         $trial_id = $value;
         $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
     }

@@ -15,11 +15,6 @@
                 <label><b>Data Source:</b></label>
             </div>
             <div class="col-md-4" id="data_source">
-                <!-- <select class="form-control" id="data_source_select">
-                    <option value="">Select a data source</option>
-                    <option value="trial">Trial</option>
-                    <option value="plot_list">Plot List</option>
-                </select> -->
             </div>
             <div class="col-md-2">
                 <label><b>Load Design?</b></label>
