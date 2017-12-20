@@ -1165,7 +1165,7 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
 
     # note: pdf coord system zero is lower left corner
     #
-    my $xlabel_margin = 9;
+    my $xlabel_margin = 3.5;
     my $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
 
     my $scalex = $final_barcode_width / $image->{width};
@@ -1177,7 +1177,7 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
     
     
     #elsif ($cass_print_format eq '32_unique'){
-        my $label_height_16_per_page = 46;
+        my $label_height_16_per_page = 45;
         if ($labels_on_page == 64){
             $row_count = 0;
             $labels_on_page = 0;
@@ -1204,12 +1204,12 @@ sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
     my $font = $pdf->font('BaseFont' => 'Times-Roman');
     my $label_text = $found[$i]->[1];
     my $label_size =  10;
-    my $xposition = $left_margin + ($row_y_label_count -2) * $final_barcode_width;
-    my $yposition = $ypos -7;
+    my $xposition = $left_margin + 5 + ($row_y_label_count -2) * $final_barcode_width;
+    my $yposition = $ypos;
     #foreach my $label_count (1..$labels_per_row) {
     
     $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
-    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 78 + ($row_y_label_count -2) * $final_barcode_width, ypos=>$ypos + 25, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 89 + ($row_y_label_count -2) * $final_barcode_width, ypos=>$ypos + 20.5, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
     #$pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
     #}
 
