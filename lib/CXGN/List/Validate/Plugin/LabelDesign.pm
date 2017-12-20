@@ -40,7 +40,6 @@ sub validate {
         "y" => \&check_is_numeric,
         "height" => \&check_is_numeric,
         "width" => \&check_is_numeric,
-        "scale" => \&check_scale,
         "value" => \&check_field,
         "type" => \&check_type,
         "font" => \&check_font,
@@ -50,12 +49,10 @@ sub validate {
     my $JSON = "{". join(",", @$list) . "}";
     my $obj_ref;
     try {
-        print STDERR "Trying now . . .\n";
         $obj_ref = JSON::Any->decode($JSON);
     } catch {
         push @problems, "\nInvalid JSON in list items\n";
         push @problems, "$_\n";
-        print STDERR "Returning with error . . .\n";
     };
 
     if ( scalar @problems ) {
@@ -70,12 +67,21 @@ sub validate {
             my %elem_hash = %{$value};
             foreach my $elem_key (keys %elem_hash) {
                 my $elem_value = $elem_hash{$elem_key};
-                print STDERR "Elem Key is $elem_key and Elem value is $elem_value\n";
-                $element_check{$elem_key}($elem_value) ? print STDERR "Check returned: ".$element_check{$elem_key}($elem_value)."\n" : push @problems, $elem_key . ":" . $elem_value;
+                if (exists $element_check{$elem_key}) {
+                    $element_check{$elem_key}($elem_value) ? print STDERR "Check returned: ".$element_check{$elem_key}($elem_value)."\n" : push @problems, $elem_key . ":" . $elem_value;
+                }
+                else {
+                    push @problems, "\n$elem_key : $elem_value";
+                }
             }
         } else {
-             print STDERR "Key is $key and value is $value\n";
-             $page_param_check{$key}($value) ? print STDERR "Check returned: ".$page_param_check{$key}($value) : push @problems, $key . ":" . $value;
+             #print STDERR "Key is $key and value is $value\n";
+             if (exists $page_param_check{$key}) {
+                 $page_param_check{$key}($value) ? print STDERR "Check returned: ".$page_param_check{$key}($value) : push @problems, $key . ":" . $value;
+             }
+             else {
+                 push @problems, "\n$key : $value";
+             }
         }
     }
 
@@ -121,18 +127,9 @@ sub check_sort_order {
         "rep_number" => 1,
         "row_number" => 1,
         "column_number" => 1,
+        "list_order" => 1
     );
     return $valid_orders{$order};
-}
-
-sub check_scale {
-    my $scale = shift;
-    my @scale = @{$scale};
-    my $x = $scale[0];
-    my $y = $scale[1];
-    print STDERR "X is $x and Y is $y\n";
-    looks_like_number($x) ? 1 : return 0;
-    looks_like_number($y) ? return 1 : return 0;
 }
 
 sub check_field {

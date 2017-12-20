@@ -303,6 +303,9 @@ $(document).ready(function($) {
 
     $(document).on("change", "#source_select", function() {
         var data_type = $('#source_select :selected').parent().attr('label');
+        if (data_type.match(/List/)) {
+            $('#sort_order').val('list_order');
+        }
 
         jQuery.ajax({
             url: '/tools/label_designer/retrieve_longest_fields',
@@ -927,21 +930,15 @@ function switchTypeDependentOptions(type){
     }
 }
 
-function addToLabel(field, text, type, size, font, x, y, scale) {
+function addToLabel(field, text, type, size, font, x, y, width, height) {
      console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
     svg = d3.select(".d3-draw-svg");
 
     //get x,y coords and scale
     if ((typeof x || typeof y ) === 'undefined') {
-        // var page = d3.select("#page_format").node().value;
-        // var label = d3.select("#label_format").node().value;
-        // var label_sizes = page_formats[page].label_sizes;
-        // var label_width = label_sizes[label].label_width;
-        // var label_height = label_sizes[label].label_height;
         x = document.getElementById("d3-label-area").viewBox.baseVal.width/2;
         y = document.getElementById("d3-label-area").viewBox.baseVal.height/2;
     }
-    scale = (typeof scale === 'undefined') ? [1,1] : scale;
     console.log(" X is: "+x+" and y is: "+y);
 
     //set up new element
@@ -961,14 +958,13 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
             var img = new Image();
             img.src = "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size);
             img.onload = function() {
-                var width = this.width;
-                var height = this.height;
-                x = x - (width /2);
-                y = y - (height /2);
+                var element_width = width || this.width;
+                var element_height = height || this.height;
+                x = x - (element_width /2);
+                y = y - (element_height /2);
                 console.log("Final x is "+x+" and final y is "+y);
                 new_element.call(doTransform, function(state, selection) {
                     state.translate = [x,y]
-                    state.scale = scale
                 }, doSnap)
                 .append("svg:image")
                 .attr({
@@ -976,8 +972,8 @@ function addToLabel(field, text, type, size, font, x, y, scale) {
                     "value": field,
                     "size": size,
                     "type": type,
-                    "height": height,
-                    "width": width,
+                    "width": element_width,
+                    "height": element_height,
                     "href": "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size),
                 });
                 enable_ui();
@@ -1093,7 +1089,6 @@ function getLabelDetails(element, index) {
         y: y,
         height: height,
         width: width,
-        scale: scale,
         value: element.getAttribute("value"),
         type: element.getAttribute("type"),
         font: element.getAttribute("font") || 'Courier',
@@ -1227,7 +1222,7 @@ function load_design (list_id) {
                     return add_fields[token];
                 }
             });
-            addToLabel(value, text, element_obj.type, element_obj.size, element_obj.font, element_obj.x, element_obj.y, element_obj.scale);
+            addToLabel(value, text, element_obj.type, element_obj.size, element_obj.font, element_obj.x, element_obj.y, element_obj.width, element_obj.height);
         }
     }
 

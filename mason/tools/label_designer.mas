@@ -288,9 +288,9 @@
                         <br><label>Sort Labels by:</label>
                             <select class="form-control" id="sort_order" name="sort_by">
                                 <option value="accession_name">accession_name</option>
-                                <option value="list_order" selected>list_order</option>
+                                <option value="list_order">list_order</option>
                                 <option value="plot_name">plot_name</option>
-                                <option value="plot_number">plot_number</option>
+                                <option value="plot_number" selected>plot_number</option>
                                 <option value="rep_number">rep_number</option>
                                 <option value="row_number">row_number</option>
                                 <option value="column_number">column_number</option>
