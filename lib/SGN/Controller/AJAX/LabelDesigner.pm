@@ -264,11 +264,10 @@ __PACKAGE__->config(
                $design_info{'year'} = $year;
                $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
                print STDERR "Design info: " . Dumper(%design_info);
-
+               my $zpl = $label_params;
+               $zpl =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
               for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
-                  $label_params =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
-                  print $FH $label_params;
-
+                  print $FH $zpl;
                }
             $key_number++;
             }
@@ -290,18 +289,21 @@ sub label_params_to_zpl {
     my $pixels_to_dots_conversion_factor = 2.83;
     $label_width = $label_width * $pixels_to_dots_conversion_factor;
     $label_height = $label_height * $pixels_to_dots_conversion_factor;
-
     my $zpl = "^XA\n^LL$label_height^PW$label_width\n";
     foreach my $element (@label_params) {
         my %element = %$element;
-        $zpl .= "^FO$element{'x'},$element{'y'}";
+        my $x = $element{'x'} - ($element{'width'}/2);
+        my $y = $element{'y'} - ($element{'height'}/2);
+        $zpl .= "^FO$x,$y";
         if ( $element{'type'} eq "Code128" ) {
             my $height = $element{'size'} * 25;
             $zpl .= "^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS\n";
         } elsif ( $element{'type'} eq "QRCode" ) {
-            $zpl .= "^BQ,,$element{'size'}^FD   $element{'value'}^FS\n";
+            my $size = $element{'size'} - 1;
+            $zpl .= "^BQ,,$size^FDMA,$element{'value'}^FS\n";
         } else {
-            $zpl .= "^AA,$element{'size'}^FD$element{'value'}^FS\n";
+            # ^FB200,3,0,C,0^FD$5\&^FS
+            $zpl .= "^AA,$element{'size'}^FB$element{'width'},1,0,C,0^FD$element{'value'}^FS\n";
         }
     }
     $zpl .= "^XZ\n";
