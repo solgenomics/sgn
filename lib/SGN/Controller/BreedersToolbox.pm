@@ -276,6 +276,22 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
 }
 
+sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	      return;
+    }
+    $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
+    $c->stash->{odk_crossing_data_service_url} = $c->config->{odk_crossing_data_service_url};
+    $c->stash->{odk_phenotyping_data_service_name} = $c->config->{odk_phenotyping_data_service_name};
+    $c->stash->{odk_phenotyping_data_service_url} = $c->config->{odk_phenotyping_data_service_url};
+    $c->stash->{template} = '/breeders_toolbox/manage_odk_data_collection.mas';
+}
+
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {
     my $self =shift;
     my $c = shift;

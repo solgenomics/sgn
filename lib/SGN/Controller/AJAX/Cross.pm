@@ -1255,9 +1255,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $germplasm_info_uploaded_file = $uploader->archive();
     my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
 
-    my $ona_form_id = $c->config->{ona_form_id};
+    my $odk_crossing_data_service_form_id = $c->config->{odk_crossing_data_service_form_id};
+    my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
+    my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
+
     my $ua = LWP::UserAgent->new;
-    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
     my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
 
     my $server_endpoint = "https://api.ona.io/api/v1/metadata";
@@ -1293,7 +1296,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         Content_Type => 'form-data',
         Content => [
             data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>$ona_form_id,
+            "xform"=>$odk_crossing_data_service_form_id,
             "data_type"=>"media",
             "data_value"=>$uploaded_file
         ]
@@ -1332,7 +1335,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         Content_Type => 'form-data',
         Content => [
             data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>$ona_form_id,
+            "xform"=>$odk_crossing_data_service_form_id,
             "data_type"=>"media",
             "data_value"=>$germplasm_info_uploaded_file
         ]
