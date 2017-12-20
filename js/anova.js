@@ -79,6 +79,7 @@ function queryPhenoData(traitId) {
 	 	    
 	    if (response.Error) {
 		showMessage(response.Error);
+		jQuery("#run_anova").show();
 	    } else {
 		var traitsAbbrs = response.traits_abbrs;
 		runAnovaAnalysis(traitsAbbrs);
