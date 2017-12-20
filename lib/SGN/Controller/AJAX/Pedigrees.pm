@@ -280,11 +280,12 @@ sub get_full_pedigree_GET {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
     my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "accession"})->cvterm_id();
     my @queue = ($stock_id);
     my $nodes = [];
     while (@queue){
         my $node = pop @queue;
-        my $relationships = _get_relationships($schema, $mother_cvterm, $father_cvterm, $node);
+        my $relationships = _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $node);
         if ($relationships->{parents}->{mother}){
             push @queue, $relationships->{parents}->{mother};
         }
@@ -320,9 +321,10 @@ sub get_relationships_POST {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
     my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
+    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "accession"})->cvterm_id();
     my $nodes = [];
     while (@{$stock_ids}){
-        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, (shift @{$stock_ids}));
+        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, (shift @{$stock_ids}));
     }
     $c->stash->{rest} = $nodes;
 }
@@ -331,10 +333,11 @@ sub _get_relationships {
     my $schema = shift;
     my $mother_cvterm = shift;
     my $father_cvterm = shift;
+    my $accession_cvterm = shift;
     my $stock_id = shift;
     my $name = $schema->resultset("Stock::Stock")->find({stock_id=>$stock_id})->uniquename();
-    my $parents = _get_pedigree_parents($schema, $mother_cvterm, $father_cvterm, $stock_id);
-    my $children = _get_pedigree_children($schema, $mother_cvterm, $father_cvterm, $stock_id);
+    my $parents = _get_pedigree_parents($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
+    my $children = _get_pedigree_children($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
     return {
         id => $stock_id,
         name=>$name,
@@ -347,17 +350,20 @@ sub _get_pedigree_parents {
     my $schema = shift;
     my $mother_cvterm = shift;
     my $father_cvterm = shift;
+    my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
         { 
-            object_id => $stock_id,
-            type_id => $father_cvterm
+            'me.object_id' => $stock_id,
+            'me.type_id' => $father_cvterm,
+            'subject.type_id'=> $accession_cvterm
         },
         { 
-            object_id => $stock_id,
-            type_id => $mother_cvterm
+            'me.object_id' => $stock_id,
+            'me.type_id' => $mother_cvterm,
+            'subject.type_id'=> $accession_cvterm
         }
-    ]);
+    ],{join => 'subject'});
     my $parents = {};
     while (my $edge = $edges->next) {
         if ($edge->type_id==$mother_cvterm){
@@ -373,17 +379,20 @@ sub _get_pedigree_children {
     my $schema = shift;
     my $mother_cvterm = shift;
     my $father_cvterm = shift;
+    my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
         { 
-            subject_id => $stock_id,
-            type_id => $father_cvterm
+            'me.subject_id' => $stock_id,
+            'me.type_id' => $father_cvterm,
+            'object.type_id'=> $accession_cvterm
         },
         { 
-            subject_id => $stock_id,
-            type_id => $mother_cvterm
+            'me.subject_id' => $stock_id,
+            'me.type_id' => $mother_cvterm,
+            'object.type_id'=> $accession_cvterm
         }
-    ]);
+    ],{join => 'object'});
     my $children = {};
     $children->{mother_of}=[];
     $children->{father_of}=[];
