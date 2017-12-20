@@ -106,12 +106,14 @@ sub _authenticate_user {
     my $c = shift;
     my $status = $c->stash->{status};
 
-    my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-    #print STDERR $person_id." : ".$user_type." : ".$expired;
+    if ($c->config->{brapi_require_login} == 1){
+        my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+        #print STDERR $person_id." : ".$user_type." : ".$expired;
 
-    if (!$person_id || $expired || !$user_type) {
-        my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
-        _standard_response_construction($c, $brapi_package_result);
+        if (!$person_id || $expired || !$user_type) {
+            my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
+            _standard_response_construction($c, $brapi_package_result);
+        }
     }
 
     return 1;
