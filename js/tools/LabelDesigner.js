@@ -244,7 +244,7 @@ $(document).ready(function($) {
 
     // Every time a modal is shown, if it has an autofocus element, focus on it.
     $('.modal').on('shown.bs.modal', function() {
-        $(this).find('[autofocus]').focus();
+        $(this).find('[autofocus]').folabel
     });
 
     if (!isLoggedIn()) {
@@ -289,23 +289,31 @@ $(document).ready(function($) {
 
     });
 
-    $("#data_source_select").change(function() {
+    get_select_box('label_data_sources', 'data_source',
+        {
+            name: 'source_select',
+            id: 'source_select',
+            default: 'Select a data source',
+            live_search: 1,
+        });
 
-        if (this.value == 'trial') {
-            get_select_box('trials', 'data_source',
-                {
-                    name: 'data_list_select',
-                    id: 'trial_select',
-                    live_search: 1,
-                    empty: 1
-                });
-        } else if (this.value == 'plot_list') {
-            var lo = new CXGN.List();
-            $('#data_source').html(lo.listSelect('data', ['plots'], 'Select a plot list', 'refresh'));
-            $('#data_list_select').focus();
-        }
-
-    });
+    // $("#data_source_select").change(function() {
+    //
+    //     if (this.value == 'trial') {
+    //         get_select_box('trials', 'data_source',
+    //             {
+    //                 name: 'data_list_select',
+    //                 id: 'trial_select',
+    //                 live_search: 1,
+    //                 empty: 1
+    //             });
+    //     } else if (this.value == 'plot_list') {
+    //         var lo = new CXGN.List();
+    //         $('#data_source').html(lo.listSelect('data', ['plots'], 'Select a plot list', 'refresh'));
+    //         $('#data_list_select').focus();
+    //     }
+    //
+    // });
 
     $("#edit_additional_settings").on("click", function() {
         $('#editAdditionalSettingsModal').modal('show');

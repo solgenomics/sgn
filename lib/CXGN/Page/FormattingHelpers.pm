@@ -448,6 +448,8 @@ EOH
                      choices  => [array of choices],
                      selected => (optional) the selected value (from choices), either
                                  single value or listref (for multiple select box),
+                     selected_params => (optional) any additional HTML parameters to be attached
+                                to the selected option as a string ( 'hidden' ),
                      multiple => (optional) anything true here makes it a multiple-select
                                  box
                      live_search => (optional) anything true here adds a live-search to the select
@@ -486,8 +488,6 @@ sub simple_selectbox_html {
 
     $params{multiple} = $params{multiple} ? 'multiple="1"' : '';
 
-    $params{live_search} = $params{live_search} ? 'data-live-search="true"' : '';
-
     $params{id} ||= "simple_selectbox_" . ++our $__simple_selectbox_ctr;
     my $id = qq|id="$params{id}"|;
 
@@ -500,7 +500,7 @@ sub simple_selectbox_html {
     $params{name}   ||= '';
     my $data_related = $params{data_related} ? "data-related=".$params{data_related} : '';
     my $size = $params{size};
-    $retstring = qq!<select class="form-control" $id $data_related $params{multiple} $params{live_search} $params{params} name="$params{name}"!;
+    $retstring = qq!<select class="form-control" $id $data_related $params{multiple} $params{params} name="$params{name}"!;
     if ($size) {
         $retstring .= qq!size="$params{size}"!;
     }
@@ -540,7 +540,7 @@ sub simple_selectbox_html {
 		    last();
 		}
 	    }
-	    $retstring .= qq{<option title="$text" value="$name"$selected>$text</option>};
+	    $retstring .= qq{<option title="$text" value="$name"$selected $params{selected_params}>$text</option>};
 	}
     }
     $retstring .= qq{</optgroup>} if $in_group;
