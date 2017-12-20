@@ -96,6 +96,10 @@ sub _validate_with_plugin {
             $description =  $worksheet->get_cell($row,3)->value();
         }
 
+        if (!$seedlot_name && !$accession_name){
+            next;
+        }
+
         if (!$seedlot_name || $seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: seedlot_name missing.";
         }
