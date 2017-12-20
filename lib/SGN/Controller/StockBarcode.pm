@@ -1064,6 +1064,19 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
 
 }
 
+
+=head2 download_qrcode
+
+ URL:          mapped to URL /barcode/trial/download/trial_QRcode
+ Params:       project_name or project_name_file: trial names to generate barcodes for
+ Desc:         creates the barcode image, create a pdf file, returns the created
+               barcodes on a downloadable pdf file.
+ Ret:
+ Side Effects:
+ Example:
+
+=cut
+
 # Generate Trial barcode
 sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
   my $self = shift;
