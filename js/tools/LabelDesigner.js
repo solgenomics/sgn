@@ -273,7 +273,7 @@ $(document).ready(function($) {
 
         if (!page_params) {return;}
         var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
-        label_params = label_elements.map(getLabelDetails);
+        label_params = label_elements.filter(checkIfVisible).map(getLabelDetails);
 
         for (i=0; i < label_params.length; i++) { // add numbered element key for each set of label params
             data += '\n"element'+i+'": '+JSON.stringify(label_params[i]);
@@ -495,7 +495,7 @@ $(document).ready(function($) {
 
         var design = retrievePageParams();
         if (!design) {return;}
-        design.label_elements = label_elements.map(getLabelDetails)
+        design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
         var design_json = JSON.stringify(design);
         //console.log("Design json is: \n"+design_json);
 
@@ -1050,8 +1050,20 @@ function createAdders(add_fields) {
 
 }
 
-function getLabelDetails(element, index) {
+function checkIfVisible(element) {
+    var label_width = document.getElementById("d3-label-area").viewBox.baseVal.width;
+    var label_height = document.getElementById("d3-label-area").viewBox.baseVal.height;
+    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
+    var coords = transform_attributes.translate;
+    var type = element.getAttribute("type");
+    if (coords[0] > label_width || coords[1] > label_height) { // ignore elements not visible in draw area
+        return false; // skip
+    } else {
+        return true;
+    }
+}
 
+function getLabelDetails(element) {
     var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
     console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
     var coords = transform_attributes.translate;
@@ -1070,9 +1082,6 @@ function getLabelDetails(element, index) {
         x = parseInt(coords[0]) + (width/2);
         y = parseInt(coords[1]) + (height/2);
     }
-    // var center_x = parseInt(coords[0]) + (width/2);
-    // var center_y = parseInt(coords[1]) + (height/2);
-    // console.log("Center x is: "+center_x+" and center y is: "+center_y);
 
     return {
         x: x,
