@@ -112,9 +112,9 @@ sub _validate_with_plugin {
         if (!$accession_name || $accession_name eq '' ) {
             push @error_messages, "Cell A$row_name: accession_name missing.";
         }
-        elsif ($accession_name =~ /\s/ || $accession_name =~ /\// || $accession_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_name: accession_name must not contain spaces or slashes.";
-        }
+        #elsif ($accession_name =~ /\s/ || $accession_name =~ /\// || $accession_name =~ /\\/ ) {
+        #    push @error_messages, "Cell A$row_name: accession_name must not contain spaces or slashes.";
+        #}
         else {
             $seen_accession_names{$accession_name}=$row_name;
         }
