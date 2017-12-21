@@ -146,7 +146,8 @@ sub get_trial_phenotypes_heatmap {
 	plot => \@plot_No,
 	block => \@block_No,
 	rep => \@rep_No,
-	result => $result
+	result => $result,
+	plot_msg => \@msg
 	);
     print STDERR "Search End:".localtime."\n";
 	print STDERR Dumper($result);
