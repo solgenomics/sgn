@@ -101,10 +101,20 @@ jQuery(document).ready( function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                if (response.phenotypes && response.phenotypes){
-                    console.log(response.phenotypes.col);
+                if (response.phenotypes.col != "" && response.phenotypes.row != ""){
+                    var col = response.col;
+                    var row = response.row;
+                    console.log(response.phenotypes.col); 
                     console.log(response.phenotypes.row);
                     console.log(response.phenotypes.pheno);
+                    for (i=0; i<response.phenotypes.col.length; i++) {
+                        if (response.phenotypes.col[i] && response.phenotypes.row[i]){
+                            console.log(response.phenotypes.col[i]);
+                            console.log(response.phenotypes.row[i]);
+                            console.log(response.phenotypes.pheno[i]);
+                        }
+                    }
+                    
                     jQuery("#working_modal").modal("hide");
                     jQuery("#dataset-picker").css({"display": "inline-block" });
                     jQuery("#chart").css({"display": "inline-block"});
@@ -254,6 +264,9 @@ jQuery(document).ready( function() {
 });
 
 </script>
+
+<%doc>
+
 
 <%doc>
 
