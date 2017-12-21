@@ -58,7 +58,7 @@ sub barcode_preview :Path('/tools/label_designer/preview') {
             size => $size,
             margin => 0,
             version => 0,
-            level => 'L'
+            level => 'M'
         );
         my $barcode_file = $barcode_generator->get_barcode_file($file_location);
 

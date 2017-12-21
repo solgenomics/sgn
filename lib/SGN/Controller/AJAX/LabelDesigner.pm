@@ -204,7 +204,7 @@ __PACKAGE__->config(
                                   size => $element{'size'},
                                   margin => 0,
                                   version => 0,
-                                  level => 'L'
+                                  level => 'M'
                               );
                               my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
 
@@ -294,16 +294,14 @@ sub label_params_to_zpl {
         my %element = %$element;
         my $x = $element{'x'} - ($element{'width'}/2);
         my $y = $element{'y'} - ($element{'height'}/2);
-        $zpl .= "^FO$x,$y";
         if ( $element{'type'} eq "Code128" ) {
             my $height = $element{'size'} * 25;
-            $zpl .= "^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS\n";
+            $zpl .= "^FO$x,$y^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS\n";
         } elsif ( $element{'type'} eq "QRCode" ) {
-            my $size = $element{'size'} - 1;
-            $zpl .= "^BQ,,$size^FDMA,$element{'value'}^FS\n";
+            my $y = $y - 10; #adjust for 10 dot offset in zpl
+            $zpl .= "^FO$x,$y^BQ,,$element{'size'}^FDMA,$element{'value'}^FS\n";
         } else {
-            # ^FB200,3,0,C,0^FD$5\&^FS
-            $zpl .= "^AA,$element{'size'}^FB$element{'width'},1,0,C,0^FD$element{'value'}^FS\n";
+            $zpl .= "^FO$x,$y^AA,$element{'size'}^FD$element{'value'}^FS\n";
         }
     }
     $zpl .= "^XZ\n";

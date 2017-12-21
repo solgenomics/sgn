@@ -129,13 +129,14 @@ label_options["PDFText"] = {
 label_options["ZebraText"] = {
     name: "Text (Zebra)",
     sizes: {
-        "10": 10,
-        "20": 20,
-        "30": 30,
-        "39": 39,
-        "49": 49,
-        "58": 58,
-        "66": 66
+        "10": 9,
+        "20": 18,
+        "30": 27,
+        "40": 36,
+        "50": 45,
+        "60": 54,
+        "70": 63,
+        "80": 72
     }
 };
 
@@ -469,7 +470,7 @@ $(document).ready(function($) {
         }
         var text = document.getElementById("d3-add-field-input").value;
         var size = document.getElementById("d3-add-size-input").value;
-        var font = document.getElementById("d3-add-font-input").value;
+        var font = document.getElementById("d3-add-font-input").value || 'Courier';
         addToLabel(field, text, type, size, font);
     });
 
@@ -967,6 +968,10 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
 
         default:
         //add text specific attributes
+            var font_size = parseInt(size);
+            if (type =="ZebraText") {
+                font_size = font_size + parseInt(font_size/9);
+            }
             new_element.classed("text-box", true)
             .call(selectable, false)
             .call(doTransform, function(state, selection) {
@@ -978,7 +983,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 "value": field,
                 "size": size,
                 "type": type,
-                "font-size": size,
+                "font-size": font_size,
                 "font": font,
                 "style": font_styles[font], //(typeof font == 'undefined') ? "font-family:courier;" : label_options[type].fonts[font]
                 //"dominant-baseline": "mathematical",
@@ -1052,8 +1057,8 @@ function getLabelDetails(element, index) {
     var coords = transform_attributes.translate;
     var scale = transform_attributes.scale || new Array(1,1);
     var rect = element.getBBox();
-    var width = rect.width * scale[0];
-    var height = rect.height * scale[1];
+    var width = rect.width; //* scale[0];
+    var height = rect.height; //* scale[1];
     console.log("Height is: "+height+" and width is: "+width);
     var type = element.getAttribute("type");
     var x;
@@ -1221,6 +1226,7 @@ function load_design (list_id) {
                     return add_fields[token];
                 }
             });
+            console.log("Width is "+element_obj.width);
             addToLabel(value, text, element_obj.type, element_obj.size, element_obj.font, element_obj.x, element_obj.y, element_obj.width, element_obj.height);
         }
     }
