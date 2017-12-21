@@ -13,6 +13,8 @@
 
 .anova_dropdown dd { 
     position:relative; 
+    overflow-y: auto;
+    max-height: 200px; 
 }
 
 .anova_dropdown a, .anova_dropdown a:visited,  { 
