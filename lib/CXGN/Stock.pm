@@ -249,6 +249,9 @@ sub store {
     }
     else {
         print STDERR "Updating Stock ".localtime."\n";
+        if (!$self->name && $self->uniquename){
+            $self->name($self->uniquename);
+        }
         my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
         $row->name($self->name());
         $row->uniquename($self->uniquename());
