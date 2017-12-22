@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:12:2017 15:12
+date: 22:12:2017 15:34
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3721,7 +3721,7 @@ creation_date: 2017-09-12T13:01:44Z
 [Term]
 id: SP:0000417
 name: sepal lengh
-def: "Average lenght of sepals from a representative flower per plant. Length was measured in cm. from the pedicel to the end of the sepal." [SGN:EVDK]
+def: "Average length of sepals from a representative flower per plant. Length is measured in cm. from the pedicel to the end of the sepal." [SGN:EVDK]
 relationship: variable_of SP:0000411 ! sepal
 created_by: naama
 creation_date: 2017-09-12T13:03:58Z
@@ -3988,6 +3988,21 @@ synonym: "fruit epidermis color" EXACT []
 relationship: variable_of SP:0000097 ! epicarp color
 created_by: naama
 creation_date: 2017-12-22T15:10:17Z
+
+[Term]
+id: SP:0000451
+name: fruit pedicel scar
+relationship: part_of SP:0000011 ! fruit morphology
+created_by: naama
+creation_date: 2017-12-22T15:29:59Z
+
+[Term]
+id: SP:0000452
+name: fruit pedicel scar width. Observation 3-7 nominal scale
+def: "Scar width at the widest part of the pedicel scar. 3-7 score (3:narrow, 5:medium, 7:wide)." [SGN:NM]
+relationship: variable_of SP:0000451 ! fruit pedicel scar
+created_by: naama
+creation_date: 2017-12-22T15:30:20Z
 
 [Term]
 id: SP:0000706
