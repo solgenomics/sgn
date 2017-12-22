@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:12:2017 15:38
+date: 22:12:2017 15:48
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -4019,6 +4019,21 @@ def: "Presence of longitudinal stripes on immature fruits. 0-1 score (0:absence,
 relationship: variable_of SP:0000453 ! immature green fruit
 created_by: naama
 creation_date: 2017-12-22T15:36:50Z
+
+[Term]
+id: SP:0000455
+name: leaf dissection
+is_a: SP:0000004 ! leaf morphology
+created_by: naama
+creation_date: 2017-12-22T15:45:56Z
+
+[Term]
+id: SP:0000456
+name: leaf dissection. Observation 0-2 nominal scale
+def: "The extent of dissection in a fully opened leaf. 0-2 score (0:low, 1:intermediate, 2:high)." [SGN:NM]
+relationship: variable_of SP:0000455 ! leaf dissection
+created_by: naama
+creation_date: 2017-12-22T15:47:00Z
 
 [Term]
 id: SP:0000706
