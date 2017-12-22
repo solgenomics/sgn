@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 15:12:2017 17:18
+date: 21:12:2017 16:14
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3744,7 +3744,7 @@ creation_date: 2017-09-12T13:35:52Z
 [Term]
 id: SP:0000420
 name: pistil
-is_a: SP:0000008 ! flower morphology
+relationship: part_of SP:0000008 ! flower morphology
 created_by: naama
 creation_date: 2017-09-12T13:36:04Z
 
@@ -3765,7 +3765,7 @@ creation_date: 2017-09-12T13:36:34Z
 
 [Term]
 id: SP:0000423
-name: pistil length
+name: pistil length in cm
 def: "Length of the pistil in cm." [SGN:EVDK]
 relationship: variable_of SP:0000420 ! pistil
 created_by: naama
@@ -3940,6 +3940,21 @@ def: "Stamen color of fully opened flowers. 3-7 scale (3:yellow, 5:pale orange, 
 relationship: variable_of SP:0000443 ! stamen
 created_by: naama
 creation_date: 2017-12-15T17:16:28Z
+
+[Term]
+id: SP:0000445
+name: style
+relationship: part_of SP:0000420 ! pistil
+created_by: naama
+creation_date: 2017-12-21T16:11:56Z
+
+[Term]
+id: SP:0000446
+name: style exertion. Visual rating 1-4
+def: "The position of the style compared to the stamens. 1-4 score (1:inserted, 2:same level as stamen, 3:slightly exerted, 4:highly exerted)." [SGN:NM]
+relationship: variable_of SP:0000445 ! style
+created_by: naama
+creation_date: 2017-12-21T16:13:08Z
 
 [Term]
 id: SP:0000706
