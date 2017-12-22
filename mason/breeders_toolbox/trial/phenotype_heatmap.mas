@@ -128,8 +128,9 @@ jQuery(document).ready( function() {
                     
                     
                     
-                    
-                    
+                    var max_row = response.phenotypes.row_max;
+                    var max_col = response.phenotypes.col_max;
+                    alert(max_col+" and "+max_row);
       var margin = { top: 50, right: 0, bottom: 100, left: 30 },
           width = 960 - margin.left - margin.right,
           height = 430 - margin.top - margin.bottom,
