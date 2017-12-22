@@ -142,6 +142,55 @@ window.onload = function initialize() {
         manage_dl_with_cookie(token, ladda);
         window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&gbs_download_token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
     });
+
+    jQuery('#wizard_save_dataset_button').click( function() {
+	jQuery('#save_wizard_dataset_dialog').modal("show");
+    });
+
+    jQuery('#wizard_save_dataset_submit_button').click( function() {
+	var accessions = get_selected_results('accessions');
+	var trials = get_selected_results('trials');
+	var plots = get_selected_results('plots');
+	var years = get_selected_results('years');
+	var locations = get_selected_results('locations');
+	var traits = get_selected_results('traits');
+	var breeding_programs = get_selected_results('breeding_programs');
+	var genotyping_protocols = get_selected_results('genotyping_protocols');
+	var trial_types = get_selected_results('trial_types');
+	var trial_designs = get_selected_results('trial_designs');
+	var plants = get_selected_results('plants');
+	var name = jQuery('#save_wizard_dataset_name').val();
+	var description = jQuery('#save_wizard_dataset_description').val();
+	var category_order = get_selected_categories(4);
+	//alert(JSON.stringify(category_order));
+	var params =  "accessions="+JSON.stringify(accessions)+"&trials="+JSON.stringify(trials)+"&plots="+JSON.stringify(plots)+"&years="+JSON.stringify(years)+"&locations="+JSON.stringify(locations)+"&traits="+JSON.stringify(traits)+"&breeding_programs="+JSON.stringify(breeding_programs)+"&genotyping_protocols="+JSON.stringify(genotyping_protocols)+"&trial_types="+JSON.stringify(trial_types)+"&trial_designs="+JSON.stringify(trial_designs)+"&plants="+JSON.stringify(plants)+"&name="+name+"&description="+description+"&category_order="+JSON.stringify(category_order);
+
+	if (name === '' || name === undefined) {
+	    alert('Please enter a name for the selection.');
+	    return;
+	}
+
+	jQuery.ajax( {
+	    'url': '/ajax/dataset/save?'+params,
+            'method': 'POST',
+	    'success' : function(response) {
+		if (response.error) {
+		    alert(response.error);
+		}
+		else {
+	            alert("Successfully stored the dataset!");
+		    jQuery('#save_wizard_dataset_dialog').modal("hide");
+		    get_select_box('datasets', 'dataset_manage_select');
+		}
+
+	    },
+            'error': function(response) {
+	        alert("An error occurred.");
+		jQuery('#save_wizard_dataset_dialog').modal("hide");
+	    }
+	});
+
+    });
 }
 
 function addToggleIds () {
@@ -152,20 +201,22 @@ function addToggleIds () {
   }
 }
 
-function retrieve_and_display_set(categories, data, this_section) {
+function retrieve_and_display_set(categories, data, this_section, selected, dataset_id, callback) {
     if (window.console) console.log("categories = "+categories);
     if (window.console) console.log("data = "+JSON.stringify(data));
-    if (window.console) console.log("querytypes="+get_querytypes(this_section));
+    if (window.console) console.log("this section="+this_section);
+    if (window.console) console.log("selected = "+JSON.stringify(selected));
+
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
 	timeout: 60000,
 	method: 'POST',
 	data: {'categories': categories, 'data': data, 'querytypes': get_querytypes(this_section)},
 	    beforeSend: function(){
-		disable_ui();
+        if (!selected) {disable_ui();}
             },
             complete : function(){
-		enable_ui();
+              if (!selected) {enable_ui();}
             },
 	    success: function(response) {
 		if (response.error) {
@@ -187,12 +238,25 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    var select_id = "select"+this_section;
 
 		    jQuery('#'+data_id).html(data_html);
-		    show_list_counts(count_id, list.length);
+        if (selected) {
+          for (var n=0; n<selected.length; n++) {
+            jQuery("#"+data_id+" option[value='"+selected[n]+"']").prop("selected", true);
+          }
+        }
+        var data = jQuery('#'+data_id).val() || [];;
+		    show_list_counts(count_id, list.length, data.length);
+        update_download_options(this_section, categories);
 
 		    if (jQuery('#navbar_lists').length) {
           addToListMenu(listmenu_id, data_id, {
             selectText: true,
             typeSourceDiv: select_id });
+        }
+        if (callback) {
+          console.log("executing callback");
+          callback(dataset_id, this_section+1);
+        } else {
+          console.log("finished panel"+data_id+", no more callbacks");
         }
       }
     },
@@ -211,6 +275,9 @@ function retrieve_and_display_set(categories, data, this_section) {
             }
 
 	});
+}
+
+function retrieve_and_display_sets(categories, data, this_section, selected) {
 }
 
 function get_selected_data(this_section) {
@@ -238,7 +305,7 @@ function get_selected_categories(this_section) {
   for (i=2; i <= this_section; i++) {
     var element_id = "select"+i;
     var category = jQuery("#"+element_id).val();
-    selected_categories.push(category);
+    if (category != '') { selected_categories.push(category) };
   }
   var next_section = this_section +1;
   var next_select_id = "select"+next_section;
@@ -370,6 +437,22 @@ function create_list_start(message) {
       function() {
         pasteList();
     });
+}
+
+function pasteDataset() {
+  //if (window.console) console.log("pasting list . . .");
+disable_ui();
+  var dataset_id = jQuery('#paste_dataset_select').val();
+  //var value = jQuery('#list_start_list_select').val();
+  //if (window.console) console.log("list_start_list_select_val ="+value);
+  if (dataset_id === '') {
+    jQuery('#c1_data').html('');
+    return;
+  }
+  else {
+    replay_dataset_info(dataset_id, 1);
+  }
+  //enable_ui();
 }
 
 function pasteList() {
@@ -635,4 +718,35 @@ function manage_dl_with_cookie (token, ladda) {
       ladda.stop();
     }
   }, 500);
+}
+
+function replay_dataset_info(dataset_id, section_number) {
+    if (!dataset_id) { return; }
+    var d = new CXGN.Dataset();
+    var dataset = d.getDataset(dataset_id);
+
+    var category_order = dataset.category_order;
+    if (!category_order) {
+	category_order = Object.keys(dataset.categories);
+    }
+    var i = section_number - 1;
+    var category = category_order[i];
+  	jQuery('#select'+section_number).val(category);
+  reset_downstream_sections(section_number);
+  update_select_categories(section_number);
+
+  var categories = get_selected_categories(section_number);
+  var data = ''
+  if (section_number !== "1") data = get_selected_data(section_number);
+  var error = check_missing_criteria(categories, data, section_number); // make sure criteria selected in each panel
+  if (error) return;
+  if (data.length >= categories.length) data.pop(); //remove extra data array if exists
+  var selected = dataset.categories[category_order[i]];
+  var next_section_number = section_number + 1;
+  if (section_number < category_order.length) {
+    retrieve_and_display_set(categories, data, section_number, selected, dataset_id, replay_dataset_info);
+  } else {
+    retrieve_and_display_set(categories, data, section_number, selected);
+    enable_ui();
+  }
 }
