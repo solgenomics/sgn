@@ -178,7 +178,7 @@ font_styles = {
     "Times-BoldItalic": "font-family:times;font-weight:bold;font-style: italic;"
 }
 
-var add_fields = {};
+var add_fields = {}; // retrieved when data source is selected
 
 resizer_behaviour = d3.behavior.drag().on(
     "drag",
@@ -243,60 +243,16 @@ $(document).ready(function($) {
     initializeDrawArea();
     $('#source_select').focus();
 
-    // Every time a modal is shown, if it has an autofocus element, focus on it.
+    // Always focus on autofocus elements when modals are opened.
     $('.modal').on('shown.bs.modal', function() {
         $(this).find('[autofocus]').folabel
     });
 
-    if (!isLoggedIn()) {
-        $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
-        $('#save_design_div').html('<input class="form-control" placeholder="Login to save designs" disabled></input>');
-    } else {
-        $('#design_list').html('<select class="form-control" disabled><option>First select a data source</option></select>');
-        var save_html = '<input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input><span class="input-group-btn"><button class="btn btn-default" id="d3-save-button" type="button">Save</button></span>';
-        $('#save_design_div').html(save_html);
-    }
-
     $('#d3-save-button').click(function() {
-
-        var label_elements = document.getElementsByClassName('label-element');
-        label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        if (label_elements.length < 1) {
-            alert("No elements in the design. Please add design elements before saving");
-            return;
-        }
-
-        var lo = new CXGN.List();
-        var new_name = $('#save_design_name').val();
-
-        page_params = JSON.stringify(retrievePageParams());
-
-        if (!page_params) {return;}
-        var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
-        label_params = label_elements.filter(checkIfVisible).map(getLabelDetails);
-
-        for (i=0; i < label_params.length; i++) { // add numbered element key for each set of label params
-            data += '\n"element'+i+'": '+JSON.stringify(label_params[i]);
-        }
-
-        list_id = lo.newList(new_name);
-        if (list_id > 0) {
-            var elementsAdded = lo.addToList(list_id, data);
-            lo.setListType(list_id, 'label_design');
-        }
-        if (elementsAdded) {
-            alert("Saved label design with name " + new_name);
-        }
-
+        saveLabelDesign();
     });
 
-    get_select_box('label_data_sources', 'data_source',
-        {
-            name: 'source_select',
-            id: 'source_select',
-            default: 'Select a data source',
-            live_search: 1,
-        });
+    getDataSourceSelect();
 
     $("#edit_additional_settings").on("click", function() {
         $('#editAdditionalSettingsModal').modal('show');
@@ -326,20 +282,14 @@ $(document).ready(function($) {
             success: function(response) {
                 if (response.error) {
                     alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
-                    get_select_box('label_data_sources', 'data_source',
-                        {
-                            name: 'source_select',
-                            id: 'source_select',
-                            default: 'Select a data source',
-                            live_search: 1,
-                        });
+                    getDataSourceSelect();
                 } else {
-                    //console.log("Got longest elements: " + JSON.stringify(response));
                     add_fields = response;
                     add_fields["Select a field"] = {};
 
                     createAdders(add_fields);
                     initializeCustomModal(add_fields);
+                    showLoadOption();
 
                     if ( d3.select("#page_format").node().value && d3.select("#page_format").node().value != 'Select a page format') {
                         switchPageDependentOptions( d3.select("#page_format").node().value );
@@ -352,20 +302,6 @@ $(document).ready(function($) {
                             return d
                         });
                     }
-
-                    if (!isLoggedIn()) {
-                        $('#design_list').html('<select class="form-control" disabled><option>Login to load saved designs</option></select>');
-                    } else {
-                        var lo = new CXGN.List();
-                        $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh'));
-                        $('#design_list_list_select').change(
-                          function() {
-                            disable_ui();
-                            load_design(this.value);
-                            enable_ui();
-                        });
-                    }
-
                 }
             },
             error: function(request, status, err) {
@@ -378,7 +314,7 @@ $(document).ready(function($) {
     page_format_select.on("input", function() {
         var page = d3.select(this).node().value;
         if (!page || page == 'Select a page format') {
-            disable_draw_area();
+            disableDrawArea();
             d3.select("#label_format").selectAll("option").remove();
         } else {
             switchPageDependentOptions(page); // show correct download and text options
@@ -388,7 +324,7 @@ $(document).ready(function($) {
     $('#label_format').change(function() {
         var label = $(this).find('option:selected').val();
         if (!label || label == 'Select a label format') {
-            disable_draw_area();
+            disableDrawArea();
         } else {
             switchLabelDependentOptions(label);
         }
@@ -404,7 +340,7 @@ $(document).ready(function($) {
         custom_label.label_height = document.getElementById("label_height").value;
         changeLabelSize(custom_label.label_width, custom_label.label_height);
         $("#d3-add-and-download-div").removeAttr('style');
-        enable_draw_area();
+        enableDrawArea();
         $('#d3-add-type-input').focus();
     });
 
@@ -491,10 +427,8 @@ $(document).ready(function($) {
         }
         var download_type = $(this).val();
         var data_type = $('#source_select :selected').parent().attr('label');
-        //var data_type = document.getElementsByName("data_list_select")[0].id;//document.getElementsByName("acc")[0].value $('[name="data_list_select"]').id;
-        var value = $("#source_select").val();  //$('[name="data_list_select"] option:selected').value;
+        var value = $("#source_select").val();
         //console.log("Id is "+data_type+" and value is "+value);
-        // var trial_id = document.getElementById("trial_select").value;
         if (!value || value == 'Please select a trial' || value == 'Select a plot list') {
             alert("No data source selected. Please select a data source before downloading");
             return;
@@ -504,7 +438,6 @@ $(document).ready(function($) {
         if (!design) {return;}
         design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
         var design_json = JSON.stringify(design);
-        //console.log("Design json is: \n"+design_json);
 
         //send to server to build pdf file
         jQuery.ajax({
@@ -580,7 +513,6 @@ function initializeDrawArea() {
             "x": "50%",
             "y": "38%",
             "font-size": 30,
-            //"style": "font-family:courier;font-weight:bold;",
             "text-anchor": "middle",
             "alignment-baseline": "central",
         })
@@ -756,9 +688,17 @@ function doSnap(state, selection) {
     state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d : bottom_snap_d
 }
 
-function switchPageDependentOptions(page) {
-     //console.log("Page type is: " + page);
+function getDataSourceSelect() {
+    get_select_box('label_data_sources', 'data_source',
+        {
+            name: 'source_select',
+            id: 'source_select',
+            default: 'Select a data source',
+            live_search: 1,
+        });
+}
 
+function switchPageDependentOptions(page) {
      // load label size and label field options based on page type
      var label_sizes = page_formats[page].label_sizes;
      d3.select("#label_format").selectAll("option").remove();
@@ -789,14 +729,9 @@ function switchPageDependentOptions(page) {
 
         var label_elements = document.getElementsByClassName("label-element");
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        //console.log("working through "+label_elements.length+" label elements\n");
         for (var i=0; i<label_elements.length; i++) {
             var element = label_elements[i];
-            //console.log("Element type is: "+element.getAttribute("type"));
-            if (element.getAttribute("type") == "PDFText") {
-                //console.log("Removing element with value: "+element.getAttribute("value"));
-                element.parentNode.removeChild(element);
-            }
+            element.parentNode.removeChild(element); // remove all elements, barcodes too in case they have been scaled
         }
 
     } else { // disable Zebra text option and zpl download, clear zpl text elements
@@ -807,18 +742,15 @@ function switchPageDependentOptions(page) {
 
         var label_elements = document.getElementsByClassName("label-element");
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        //console.log("working through "+label_elements.length+" label elements\n");
         for (var i=0; i<label_elements.length; i++) {
             var element = label_elements[i];
-            //console.log("Element type is: "+element.getAttribute("type"));
-            if (element.getAttribute("type") == "ZebraText") {
-                //console.log("Removing element with value: "+element.getAttribute("value"));
+             if (element.getAttribute("type") == "ZebraText") { // remove only text, barcodes can stay
                 element.parentNode.removeChild(element);
-            }
+             }
         }
     }
 
-    if (page == 'Custom') {
+    if (page == 'Custom') { // show Custom inputs and attach handlers
         document.getElementById("d3-custom-dimensions-div").style.display = "inline";
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "visible";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
@@ -832,12 +764,12 @@ function switchPageDependentOptions(page) {
         $('#page-height').on("change", function() {
             page_formats[page].page_height = this.value;
         });
-    } else {
+    } else { //hide page custom input
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
         $('#label_format').focus();
     }
 
-    if ( page != 'Custom' && document.getElementById("label_format").value != 'Custom') {
+    if ( page != 'Custom' && document.getElementById("label_format").value != 'Custom') { //hide all Custom inputs
         document.getElementById("d3-custom-dimensions-div").style.display = "none";
         document.getElementById("d3-page-custom-dimensions-div").style.visibility = "hidden";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
@@ -860,8 +792,9 @@ function switchLabelDependentOptions(label) {
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
         $("#d3-add-and-download-div").removeAttr('style');
         $('#d3-add-type-input').focus();
-        enable_draw_area();
+        enableDrawArea();
     }
+    //set addtional options
     document.getElementById("top_margin").value = label_sizes[label].top_margin;
     document.getElementById("left_margin").value = label_sizes[label].left_margin;
     document.getElementById("horizontal_gap").value = label_sizes[label].horizontal_gap;
@@ -876,7 +809,6 @@ function switchTypeDependentOptions(type){
     if (type == "PDFText") {
 
         // set up font select
-        //var fonts = label_options[type].fonts;
         d3.select("#d3-add-font-input").selectAll("option").remove();
         d3.select("#d3-add-font-input").selectAll("option")
             .data(Object.keys(font_styles).sort())
@@ -907,7 +839,6 @@ function switchTypeDependentOptions(type){
         $("#d3-add-size-slider").show();
 
     } else {
-        //$("#d3-add-font-input").val('');
         document.getElementById("d3-add-font-div").style.visibility = "hidden";
         $("#d3-add-size-input").replaceWith('<select id="d3-add-size-input" class="form-control"></select>&nbsp&nbsp');
         d3.select("#d3-add-size-input").selectAll("option")
@@ -946,8 +877,13 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
 
             //add barcode specific attributes
             disable_ui();
+            var page = d3.select("#page_format").node().value;
             new_element.classed("barcode", true)
-            .call(selectable, true);
+            if ( page.match(/Zebra/) ) {
+                new_element.call(selectable, false);
+            } else {
+                new_element.call(selectable, true);
+            }
             var img = new Image();
             img.src = "/tools/label_designer/preview?content=" + encodeURIComponent(text) + "&type=" + encodeURIComponent(type) + "&size=" + encodeURIComponent(size);
             img.onload = function() {
@@ -974,7 +910,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
             break;
 
         default:
-        //add text specific attributes
+            //add text specific attributes
             var font_size = parseInt(size);
             if (type =="ZebraText") {
                 font_size = font_size + parseInt(font_size/9);
@@ -992,8 +928,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 "type": type,
                 "font-size": font_size,
                 "font": font,
-                "style": font_styles[font], //(typeof font == 'undefined') ? "font-family:courier;" : label_options[type].fonts[font]
-                //"dominant-baseline": "mathematical",
+                "style": font_styles[font],
                 "text-anchor": "middle",
                 "alignment-baseline": "middle",
             })
@@ -1003,9 +938,9 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
 }
 
 function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, sort_order, copies_per_plot) {
+    // save options in javascript object and in html elements
     var page = d3.select("#page_format").node().value;
     var label = d3.select("#label_format").node().value;
-    //console.log("page is "+page+" and label is "+label);
     page_formats[page].label_sizes[label].top_margin = top_margin;
     page_formats[page].label_sizes[label].left_margin = left_margin;
     page_formats[page].label_sizes[label].horizontal_gap = horizontal_gap;
@@ -1041,8 +976,6 @@ function createAdders(add_fields) {
             return d
         });
 
-        // remove text option if page format defined
-
     //load field options
     d3.select("#d3-add-field-input").selectAll("option").remove();
     d3.select("#d3-add-field-input").selectAll("option")
@@ -1076,8 +1009,8 @@ function getLabelDetails(element) {
     var coords = transform_attributes.translate;
     var scale = transform_attributes.scale || new Array(1,1);
     var rect = element.getBBox();
-    var width = rect.width; //* scale[0];
-    var height = rect.height; //* scale[1];
+    var width = rect.width * scale[0];
+    var height = rect.height * scale[1];
     console.log("Height is: "+height+" and width is: "+width);
     var type = element.getAttribute("type");
     var x;
@@ -1104,7 +1037,6 @@ function getLabelDetails(element) {
 
 function parseTransform(transform) {
     var attribute_object = {};
-    //console.log("transform is: "+JSON.stringify(transform));
     var attributes = transform.split(')');
 
     for (var i = 0; i < attributes.length; i++) {
@@ -1154,7 +1086,6 @@ function retrievePageParams() {
 
 function initializeCustomModal(add_fields) {
     //load field options
-    //console.log("adding fields"+add_fields);
     d3.select("#d3-custom-add-field-input").selectAll("option").remove();
     d3.select("#d3-custom-add-field-input").selectAll("option")
         .data(Object.keys(add_fields).sort())
@@ -1182,15 +1113,7 @@ function initializeCustomModal(add_fields) {
         var value = $(this).find('option:selected').text();
         var custom_field = $("#d3-custom-input").val() + value;
 
-        var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
-            //console.log("token is "+token);
-            if (token.match(/Number:/)) {
-                var parts = token.split(':');
-                return parts[1];
-            } else {
-                return add_fields[token];
-            }
-        });
+        var result = custom_field.replace(/\{(.*?)\}/g, fillInPlaceholders);
         $("#d3-custom-content").text(result);
     });
 
@@ -1201,21 +1124,74 @@ function initializeCustomModal(add_fields) {
 
 }
 
-function enable_draw_area() {
+function enableDrawArea() {
     var intro_elements = document.getElementsByClassName("d3-intro-text");
     for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "none"; }
     var label_elements = document.getElementsByClassName("label-element");
     for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "inline"; }
 }
 
-function disable_draw_area() {
+function disableDrawArea() {
     var intro_elements = document.getElementsByClassName("d3-intro-text");
     for (var i=0; i<intro_elements.length; i++) { intro_elements[i].style.display = "inline"; }
     var label_elements = document.getElementsByClassName("label-element");
     for(var i=0; i<label_elements.length; i++) { label_elements[i].style.display = "none"; }
 }
 
-function load_design (list_id) {
+function saveLabelDesign() {
+    var label_elements = document.getElementsByClassName('label-element');
+    label_elements = Array.prototype.slice.call(label_elements); // convert to array
+    if (label_elements.length < 1) {
+        alert("No elements in the design. Please add design elements before saving");
+        return;
+    }
+
+    var lo = new CXGN.List();
+    var new_name = $('#save_design_name').val();
+    page_params = JSON.stringify(retrievePageParams());
+
+    if (!page_params) {return;}
+    var data = page_params.slice(1, -1).split(",").join("\n"); // get key value pairs in list format
+    label_params = label_elements.filter(checkIfVisible).map(getLabelDetails);
+
+    for (i=0; i < label_params.length; i++) { // add numbered element key for each set of label params
+        data += '\n"element'+i+'": '+JSON.stringify(label_params[i]);
+    }
+
+    list_id = lo.newList(new_name);
+    if (list_id > 0) {
+        var elementsAdded = lo.addToList(list_id, data);
+        lo.setListType(list_id, 'label_design');
+    }
+    if (elementsAdded) {
+        alert("Saved label design with name " + new_name);
+    }
+}
+
+function fillInPlaceholders(match, placeholder) { // replace placeholders with actual values
+    console.log("Placeholder is "+placeholder);
+    if (placeholder.match(/Number:/)) {
+        var parts = placeholder.split(':');
+        return parts[1];
+    } else {
+        return add_fields[placeholder];
+    }
+}
+
+function showLoadOption() {
+    document.getElementById('design_label').style.display = "inline";
+    document.getElementById('design_list').style.display = "inline";
+    var lo = new CXGN.List();
+    $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh'));
+    $('#design_list_list_select').change(
+      function() {
+        disable_ui();
+        loadDesign(this.value);
+        enable_ui();
+    });
+}
+
+function loadDesign (list_id) {
     // console.log("Loading design from list with ID "+list_id);
     // clear existing draw area
     initializeDrawArea();
@@ -1227,21 +1203,12 @@ function load_design (list_id) {
     //parse into javascript object
     var fixed_elements = Object.values(elements).map(function(e){ return e.pop(); });
     var params = JSON.parse("{"+fixed_elements.join(',')+"}");
-    // console.log("Params: are: "+params);
 
     for (var key in params) {
         if (key.match(/element/)) {
             var element_obj = params[key];
             var value = element_obj.value;
-            var text = value.replace(/\{(.*?)\}/g, function(match, token) {
-                //console.log("token is "+token);
-                if (token.match(/Number:/)) {
-                    var parts = token.split(':');
-                    return parts[1];
-                } else {
-                    return add_fields[token];
-                }
-            });
+            var text = value.replace(/\{(.*?)\}/g, fillInPlaceholders);
             console.log("Width is "+element_obj.width);
             addToLabel(value, text, element_obj.type, element_obj.size, element_obj.font, element_obj.x, element_obj.y, element_obj.width, element_obj.height);
         }
@@ -1265,7 +1232,7 @@ function load_design (list_id) {
         page_formats[page].label_sizes['Custom'].label_height = params['label_height'];
         changeLabelSize(params['label_width'], params['label_height']);
         $("#d3-add-and-download-div").removeAttr('style');
-        enable_draw_area();
+        enableDrawArea();
     }
 
     saveAdditionalOptions(
@@ -1278,7 +1245,5 @@ function load_design (list_id) {
         params['sort_order'],
         params['copies_per_plot']
     );
-
-    console.log("List has been loaded!\n");
-
+    //console.log("List has been loaded!\n");
 }

@@ -16,10 +16,10 @@
             </div>
             <div class="col-md-4" id="data_source">
             </div>
-            <div class="col-md-2">
-                <label><b>Load Design?</b></label>
+            <div class="col-md-2" id="design_label" style="display:none;">
+                <label><i>Optional:</i></label>
             </div>
-            <div class="col-md-4" id="design_list">
+            <div class="col-md-4" id="design_list" style="display:none;">
             </div>
             <!-- FOR ADDING SPREADSHEETS AS A DATASOURCE, NOT IMPLEMENTED YET -->
             <!-- <div class="col-md-1">
@@ -158,7 +158,12 @@
             <div class="col-md-4">
                 <center>
                     <label>Save label design:</label>
-                    <div class="input-group" id="save_design_div"></div>
+                    <div class="input-group" id="save_design_div">
+                        <input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
+                        </span>
+                    </div>
                 </center>
             </div>
         </div>
