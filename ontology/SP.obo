@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:12:2017 15:03
+date: 22:12:2017 15:07
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3960,7 +3960,7 @@ creation_date: 2017-12-21T16:13:08Z
 id: SP:0000447
 name: fruit color phenotypic values
 def: "Historic terms - avoid using for future trials/experiments." [SGN:NM]
-is_a: SP:0000012 ! fruit color
+is_a: SP:0000097 ! epicarp color
 created_by: naama
 creation_date: 2017-12-21T16:20:16Z
 
@@ -3971,6 +3971,14 @@ def: "Color observation of immature green fruit. 3-9 score (3:green-white, 5:lig
 relationship: variable_of SP:0000097 ! epicarp color
 created_by: naama
 creation_date: 2017-12-22T14:40:01Z
+
+[Term]
+id: SP:0000449
+name: epicarp fruit color, observation nominal scale 0-6
+def: "Fruit color of the epicarp. Exterior color of mature fruit. 0-6 score (0:yellow, 1:yellow-orange, 2:orange, 3:red-orange, 4:pink, 5:red, 6:intense red)." [SGN:NM]
+relationship: variable_of SP:0000097 ! epicarp color
+created_by: naama
+creation_date: 2017-12-22T15:06:06Z
 
 [Term]
 id: SP:0000706
