@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:12:2017 15:54
+date: 22:12:2017 16:09
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -4049,6 +4049,14 @@ def: "The outline of fully opened leaf. 0-3 score (0:entire, 1:undulate, 2:serra
 relationship: variable_of SP:0000457 ! leaf border
 created_by: naama
 creation_date: 2017-12-22T15:52:41Z
+
+[Term]
+id: SP:0000459
+name: proximal angle micro 3%
+def: "The angle between best-fit lines drawn through the fruit perimeter on either side of the proximal end point. The Micro Distance setting determines the percentage of the perimeter from the proximal end point at which to center the linear regression points used to find the best-fit line. The points comprising 1.5% of the perimeter on either side of that center point are used in the regression." [SGN:EVDK]
+relationship: variable_of SP:0000074 ! proximal fruit end angle
+created_by: naama
+creation_date: 2017-12-22T15:55:07Z
 
 [Term]
 id: SP:0000706
