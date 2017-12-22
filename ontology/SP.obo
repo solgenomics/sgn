@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:12:2017 15:34
+date: 22:12:2017 15:38
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3969,6 +3969,7 @@ id: SP:0000448
 name: immature green fruit epicarp color	, observation nominal scale 3-9
 def: "Color observation of immature green fruit. 3-9 score (3:green-white, 5:light green, 7:green, 9:dark green)." [SGN:NM]
 relationship: variable_of SP:0000097 ! epicarp color
+relationship: variable_of SP:0000453 ! immature green fruit
 created_by: naama
 creation_date: 2017-12-22T14:40:01Z
 
@@ -4003,6 +4004,21 @@ def: "Scar width at the widest part of the pedicel scar. 3-7 score (3:narrow, 5:
 relationship: variable_of SP:0000451 ! fruit pedicel scar
 created_by: naama
 creation_date: 2017-12-22T15:30:20Z
+
+[Term]
+id: SP:0000453
+name: immature green fruit
+relationship: part_of SP:0000013 ! fruit ripening
+created_by: naama
+creation_date: 2017-12-22T15:35:04Z
+
+[Term]
+id: SP:0000454
+name: longitudinal stripes presence on immature green fruits. Observation 0-1 scale
+def: "Presence of longitudinal stripes on immature fruits. 0-1 score (0:absence, 1:present)." [SGN:NM]
+relationship: variable_of SP:0000453 ! immature green fruit
+created_by: naama
+creation_date: 2017-12-22T15:36:50Z
 
 [Term]
 id: SP:0000706
