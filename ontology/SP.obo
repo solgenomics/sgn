@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 21:12:2017 16:14
+date: 22:12:2017 15:03
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -1121,7 +1121,7 @@ xref: PATO:0000324
 xref: PO:0007038
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000012 ! fruit color
+is_a: SP:0000447 ! fruit color phenotypic values
 
 [Term]
 id: SP:0000122
@@ -1130,7 +1130,7 @@ xref: PATO:0000953
 xref: PO:0007038
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000012 ! fruit color
+is_a: SP:0000447 ! fruit color phenotypic values
 
 [Term]
 id: SP:0000123
@@ -1139,7 +1139,7 @@ xref: PATO:0001261
 xref: PO:0007038
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000012 ! fruit color
+is_a: SP:0000447 ! fruit color phenotypic values
 
 [Term]
 id: SP:0000124
@@ -1156,7 +1156,7 @@ xref: PATO:0000320
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000012 ! fruit color
+is_a: SP:0000447 ! fruit color phenotypic values
 
 [Term]
 id: SP:0000126
@@ -3955,6 +3955,22 @@ def: "The position of the style compared to the stamens. 1-4 score (1:inserted, 
 relationship: variable_of SP:0000445 ! style
 created_by: naama
 creation_date: 2017-12-21T16:13:08Z
+
+[Term]
+id: SP:0000447
+name: fruit color phenotypic values
+def: "Historic terms - avoid using for future trials/experiments." [SGN:NM]
+is_a: SP:0000012 ! fruit color
+created_by: naama
+creation_date: 2017-12-21T16:20:16Z
+
+[Term]
+id: SP:0000448
+name: immature green fruit epicarp color	, observation nominal scale 3-9
+def: "Color observation of immature green fruit. 3-9 score (3:green-white, 5:light green, 7:green, 9:dark green)." [SGN:NM]
+relationship: variable_of SP:0000097 ! epicarp color
+created_by: naama
+creation_date: 2017-12-22T14:40:01Z
 
 [Term]
 id: SP:0000706
