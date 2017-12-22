@@ -289,6 +289,8 @@ is_deeply(\@all_project_types, [
           'Advanced Yield Trial',
           'Clonal Evaluation',
           'Preliminary Yield Trial',
+          'Screen House',
+          'Seed Multiplication',
           'Seedling Nursery',
           'Uniform Yield Trial',
           'Variety Release Trial',

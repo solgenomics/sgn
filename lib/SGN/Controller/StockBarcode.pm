@@ -794,9 +794,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
              my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
              my $yposition = $ypos -7;
              my $label_text = $found[$i]->[1];
-             my $label_size =  20;
+             my $label_size =  60;
              $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
-             $pages[$page_nr-1]->string($font, $label_size, $xposition + 30, $yposition - 580, $label_text);
+             $pages[$page_nr-1]->string($font, $label_size, $xposition + 30, $yposition - 595, $label_text);
          
          }
      }
@@ -958,9 +958,9 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     $row = $stockprop_hash{$stock_id}->{'replicate'};
     $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
-    my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+    my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock.type_id=? and stock_relationship.subject_id =?;");
 
-    $h_acc->execute($stock_id);
+    $h_acc->execute($accession_cvterm_id,$stock_id);
     ($accession_name, $accession_id) = $h_acc->fetchrow_array;
 
     $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');

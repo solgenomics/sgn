@@ -15,7 +15,7 @@ layout: doc_page
 
 Before creating an account, please verify first that you don’t already have an account. You can use “Search” menu to check if you already registered as a user.
 
-In the "Search" menu, selecting the "People" tab and search your name. If nothing is found, proceed with the instructions below. Otherwise, clicking the “Login” button. If you have forgotten your password, you can retrieve it [*here*](http://www.cassavabase.org/solpeople/send-password.pl).
+In the "Search" menu, selecting the "People" tab and search your name. If nothing is found, proceed with the instructions below. Otherwise, clicking the “Login” button. If you have forgotten your password, you can retrieve it by clicking the "Forgot your password?" link on the login page.
 
 ### Creating a user account
 
@@ -34,7 +34,7 @@ After you submit the information, an email will be sent to the provided email ad
 
 To login, clicking the "Login" link in the toolbar on any page and enter your username and password.
 
-If you have forgotten your password, you can retrieve it [*here*](http://www.cassavabase.org/solpeople/send-password.pl).
+If you have forgotten your password, you can retrieve it by clicking the "Forgot your password?" link on the login page.
 
 <img src='{{"assets/images/image166.png" | relative_url }}' alt="login.png" width="624" height="133" />
 
@@ -60,16 +60,16 @@ Accounts with “user” status are able to:
 -   Post comments on pages
 -   Post to the forum
 
-To upgrade your account status to "submitter,” contact Cassavabase using the "contact" link provided at the footer of each page. Submitter accounts can add data, such as new plots, accessions, phenotype data and images. Click here to [*Contact Cassavabase*](http://www.cassavabase.org/contact/form).
+To upgrade your account status to "submitter,” contact the database curators using the "contact" link provided at the footer of each page. Submitter accounts can add data, such as new plots, accessions, phenotype data and images.
 
-### Submitting Feedback on the Cassavabase Website and Wiki
+### Submitting Feedback on an SGN Database
 
 We appreciate your feedback! Feel free to submit any questions or suggestions by using the "Feedback" link provided at the footer of each page.
 
 1.3. Menu Layout
 ----------------
 
-The Cassavabase website has a toolbar on the top of each page with a number of menus for convenient access of major functions. The menus, as pictured below, are “search,” “manage,” “analyze,” and “maps.” The toolbar also provides a quick search, a “log in” button, and a “new user” button.
+SGN Database websites have a toolbar on the top of each page with a number of menus for convenient access of major functions. The menus, as pictured below, are “search,” “manage,” “analyze,” and “maps.” The toolbar also provides a quick search, a “log in” button, and a “new user” button.
 
 <img src='{{"assets/images/image270.png" | relative_url }}' width="624" height="33" />
 
@@ -86,7 +86,7 @@ In the Search menu, the options are:
 | Trials                | Search trials by name, description, breeding program, year, location, and trial type.                                                  |
 | Markers               | Search different markers                                                                                                               |
 | Images                | Search images contained in the SGN database                                                                                            |
-| People                | Search Cassavabase users                                                                                                               |
+| People                | Search database users                                                                                                               |
 
 #### Manage
 
@@ -110,44 +110,21 @@ In the Manage menu, the options are:
 **Clicking on the "Analyze" link will give a full menu of all analysis functions**  
 In the Analyze menu, the options are:
 
-| Tab                     | Description                                                            |
-|-------------------------|------------------------------------------------------------------------|
-| **Breeder Tools**       |                                                                        |
-| Breeder Home            | Access breeding functionalities. Lists important and helpful links.    |
-| Barcode Tools           | Manage, create, and download barcodes. Also access barcode tools.      |
-| Genomic Selection       | Can search for traits, start building a GS model, and predict values based on genotypes |
-| **Sequence Analysis**   |                                                                        |
-| BLAST                   | Sequence homology search for the cassava genome                        |
-| **Other**               |                                                                        |
-| Ontology Browser        | Browse all recorded ontologies                                         |
-
-
-#### Maps
-
-| Tab                                    | Description                                                     |
-|----------------------------------------|-----------------------------------------------------------------|
-| Cassava 2011, 2013 and 2014 GBS Maps   | Map of cassava genomes, has markers listed per chromosome       |
-| **Genome**                             |                                                                 |
-| *Cassava Genome Browser at JGI*        | Comprehensive genome browser provided by Joint Genome Browser   |
-
-#### About
-
-| Tab   | Description   |
-|-----------------------|-----------------------------------------------------------------|
-| About NextGen Cassava | Access home page of NextGen Cassava Project                     |
-| Contact               | CassavaBase contact form                                        |
-| Cite CassavaBase      | cite CassavaBase in your publications                           |
-| Manual                | CassavaBase manual                                              |
-| Wiki                  | Access to NextGen Cassava wiki                                  |
-| FAQ                   | Cassavabase users frequently asked questions and useful answers |
-| Forum                 | CassavaBase forum                                               |
-| Twitter               | Sol Genomics twitter page                                       |
-| Facebook              | Sol Genomics facebook page                                      |
+| Tab                   | Description                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| **Breeder Tools**     |                                                                                         |
+| Breeder Home          | Access breeding functionalities. Lists important and helpful links.                     |
+| Barcode Tools         | Manage, create, and download barcodes. Also access barcode tools.                       |
+| Genomic Selection     | Can search for traits, start building a GS model, and predict values based on genotypes |
+| **Sequence Analysis** |                                                                                         |
+| BLAST                 | Sequence homology search                                                                |
+| **Other**             |                                                                                         |
+| Ontology Browser      | Browse all recorded ontologies                                                          |
 
 1.4. Working with Lists {#working-with-lists}
 -----------------------
 
-Lists are collections of identifiers that are stored in the database. Lists can be composed of accessions, plots, traits, locations, and trials. Lists are attached to the individual user's account, and can only be created and seen by the user while logged in. CassavaBase makes heavy use of lists in a number of tools on the website. For example, trials are created using lists of accessions.
+Lists are collections of identifiers that are stored in the database. Lists can be composed of accessions, plots, traits, locations, and trials. Lists are attached to the individual user's account, and can only be created and seen by the user while logged in. SGN databases make heavy use of lists in a number of tools on the website. For example, trials are created using lists of accessions.
 
 ### Generating lists
 

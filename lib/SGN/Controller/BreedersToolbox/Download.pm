@@ -211,6 +211,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
+    my $include_row_and_column_numbers = $c->req->param("include_row_and_column_numbers") && $c->req->param("include_row_and_column_numbers") ne 'null' ? $c->req->param("include_row_and_column_numbers") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -354,6 +355,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
+        include_row_and_column_numbers => $include_row_and_column_numbers,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
@@ -495,6 +497,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 		trial_list=>$trial_id_data->{transform},
 		accession_list=>$accession_id_data->{transform},
 		include_timestamp=>$timestamp_included,
+        include_row_and_column_numbers=>1,
 		data_level=>$datalevel,
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();

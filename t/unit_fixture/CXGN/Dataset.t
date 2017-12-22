@@ -24,6 +24,7 @@ $ds->description("test description");
 
 $ds->name("test");
 $ds->description("test description");
+$ds->sp_person_id(41);
 
 my $sp_dataset_id = $ds->store();
 
@@ -36,6 +37,7 @@ is_deeply($new_ds->plots(), $ds->plots(), "plots store");
 
 is($new_ds->name(), $ds->name(), "name store");
 is($new_ds->description(), $ds->description(), "desc store");
+is($new_ds->sp_person_id(), 41, "dataset owner");
 
 my @datasets = ( 
     CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()), 
