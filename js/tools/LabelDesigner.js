@@ -326,6 +326,13 @@ $(document).ready(function($) {
             success: function(response) {
                 if (response.error) {
                     alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
+                    get_select_box('label_data_sources', 'data_source',
+                        {
+                            name: 'source_select',
+                            id: 'source_select',
+                            default: 'Select a data source',
+                            live_search: 1,
+                        });
                 } else {
                     //console.log("Got longest elements: " + JSON.stringify(response));
                     add_fields = response;

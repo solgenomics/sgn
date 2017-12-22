@@ -9,7 +9,6 @@ use JSON;
 use Barcode::Code128;
 use PDF::API2;
 use Sort::Versions;
-# use Tie::UrlEncoder; our(%urlencode);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -27,8 +26,12 @@ __PACKAGE__->config(
         my $value = $c->req->param("value");
         my %longest_hash;
         print STDERR "Data type is $data_type and id is $value\n";
-       my ($trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       my ($trial_num, $trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
        print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
+       if ($trial_num > 1) {
+           $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
+           return;
+       }
 
        my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
        if (!$trial_name) {
@@ -100,8 +103,12 @@ __PACKAGE__->config(
        my $json = new JSON;
        my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
 
-       my ($trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
-    #    my $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
+       my ($trial_num, $trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       if ($trial_num > 1) {
+           $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
+           return;
+       }
+
         my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
         if (!$trial_name) {
             $c->stash->{rest} = { error => "Trial with id $trial_id does not exist. Can't create labels." };
@@ -355,6 +362,7 @@ sub get_plot_data {
     my $schema = shift;
     my $data_type = shift;
     my $value = shift;
+    my $num_trials = 1;
     my ($trial_id, $design);
     print STDERR "Data type is $data_type and value is $value\n";
     if ($data_type =~ m/Plot List/) {
@@ -365,10 +373,18 @@ sub get_plot_data {
         my $acc_t = $t->can_transform("plots", "plot_ids");
         my $plot_id_hash = $t->transform($schema, $acc_t, \@plot_list);
         my @plot_ids = @{$plot_id_hash->{transform}};
-
-
-        $trial_id = $schema->resultset("NaturalDiversity::NdExperimentStock")->search( { stock_id => $plot_ids[0] } )->search_related('nd_experiment')->search_related('nd_experiment_projects')->first->project_id();
-
+        my $trial_rs = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({
+            stock_id => { -in => \@plot_ids }
+        })->search_related('nd_experiment')->search_related('nd_experiment_projects');
+        my %trials = ();
+        while (my $row = $trial_rs->next()) {
+            print STDERR "Looking at id ".$row->project_id()."\n";
+            my $id = $row->project_id();
+            $trials{$id} = 1;
+        }
+        $num_trials = scalar keys %trials;
+        print STDERR "Count is $num_trials\n";
+        $trial_id = $trial_rs->first->project_id();
         my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
         print STDERR "Full Design is: ".Dumper($full_design);
         # reduce design hash, removing plots that aren't in list
@@ -388,8 +404,7 @@ sub get_plot_data {
         $trial_id = $value;
         $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
     }
-
-    return ($trial_id, $design);
+    return ($num_trials, $trial_id, $design);
 }
 
 
