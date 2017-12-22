@@ -274,7 +274,8 @@ my $start_time = time();
 
 </&>
 
-<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+<& /breeders_toolbox/trial/upload_plot_gps_dialogs.mas, trial_id => $trial_id &>
+<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_upload_plot_gps_button' >Upload GPS Coordinates</a>]" &>
 
 <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
 
@@ -296,6 +297,7 @@ my $start_time = time();
 
 % if (!$has_plant_entries) {
    <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
+   <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries</button>
    <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 % } else {
@@ -309,7 +311,7 @@ my $start_time = time();
 </&>
 
 <& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
-<&| /page/info_section.mas, id => "trial_treatments", title=>"Treatments",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_detail_page_add_treatment'>Add Treatment</a>]" &>
+<&| /page/info_section.mas, id => "trial_treatments", title=>"Field Management Factors",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_detail_page_add_treatment'>Add Management Factor</a>]" &>
 
 <& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id &>
 

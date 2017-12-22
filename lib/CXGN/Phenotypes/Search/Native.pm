@@ -20,6 +20,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         plant_list=>$plant_list,
         subplot_list=>$subplot_list,
         include_timestamp=>$include_timestamp,
+        include_row_and_column_numbers=>0,
         trait_contains=>$trait_contains,
         phenotype_min_value=>$phenotype_min_value,
         phenotype_max_value=>$phenotype_max_value,

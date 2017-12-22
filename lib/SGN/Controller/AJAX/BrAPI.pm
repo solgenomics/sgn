@@ -1855,11 +1855,11 @@ sub process_phenotypes_search {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
 	my $brapi_package_result = $brapi_module->search({
-		trait_ids => $clean_inputs->{observationVariableDbId},
-		accession_ids => $clean_inputs->{germplasmDbId},
-		study_ids => $clean_inputs->{studyDbId},
-		location_ids => $clean_inputs->{locationDbId},
-		years => $clean_inputs->{seasonDbId},
+		trait_ids => $clean_inputs->{observationVariableDbIds},
+		accession_ids => $clean_inputs->{germplasmDbIds},
+		study_ids => $clean_inputs->{studyDbIds},
+		location_ids => $clean_inputs->{locationDbIds},
+		years => $clean_inputs->{seasonDbIds},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 	});
