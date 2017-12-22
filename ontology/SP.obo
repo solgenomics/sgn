@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:12:2017 15:48
+date: 22:12:2017 15:54
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -4034,6 +4034,21 @@ def: "The extent of dissection in a fully opened leaf. 0-2 score (0:low, 1:inter
 relationship: variable_of SP:0000455 ! leaf dissection
 created_by: naama
 creation_date: 2017-12-22T15:47:00Z
+
+[Term]
+id: SP:0000457
+name: leaf border
+is_a: SP:0000004 ! leaf morphology
+created_by: naama
+creation_date: 2017-12-22T15:49:28Z
+
+[Term]
+id: SP:0000458
+name: leaf border variable. Observation 0-3 nominal scale
+def: "The outline of fully opened leaf. 0-3 score (0:entire, 1:undulate, 2:serrated, 3:strong serrated)." [SGN:NM]
+relationship: variable_of SP:0000457 ! leaf border
+created_by: naama
+creation_date: 2017-12-22T15:52:41Z
 
 [Term]
 id: SP:0000706
