@@ -12,72 +12,71 @@ use SGN::Model::Cvterm;
 
 BEGIN { extends "Catalyst::Controller"; }
 
-use CXGN::ZPL;
-
-
-sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $stock_names = $c->req->param("stock_names");
-    my $stock_names_file = $c->req->upload("stock_names_file");
-
-    my $complete_list = $stock_names ."\n".$stock_names_file;
-
-    $complete_list =~ s/\r//g;
-
-    my @names = split /\n/, $complete_list;
-
-    my @not_found;
-    my @found;
-    my @labels;
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    foreach my $name (@names) {
-
-	# skip empty lines
-	#
-	if (!$name) {
-	    next;
-	}
-
-	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
-
-	if (!$stock) {
-	    push @not_found, $name;
-	    next;
-	}
-
-	my $stock_id = $stock->stock_id();
-
-	push @found, $name;
-
-	# generate new zdl label
-	#
-	my $label = CXGN::ZPL->new();
-	$label->start_format();
-	$label->barcode_code128($c->config->{identifier_prefix}.$stock_id);
-	$label->end_format();
-	push @labels, $label;
-
-    }
-
-    my $dir = $c->tempfiles_subdir('zpl');
-    my ($FH, $filename) = $c->tempfile(TEMPLATE=>"zpl/zpl-XXXXX", UNLINK=>0);
-
-    foreach my $label (@labels) {
-        print $FH $label->render();
-    }
-    close($FH);
-
-    $c->stash->{not_found} = \@not_found;
-    $c->stash->{found} = \@found;
-    $c->stash->{file} = $filename;
-    $c->stash->{filetype} = "ZPL";
-    $c->stash->{template} = '/barcode/stock_download_result.mas';
-
-}
+# use CXGN::ZPL;
+# Deprecated
+# sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
+#     my $self = shift;
+#     my $c = shift;
+#
+#     my $stock_names = $c->req->param("stock_names");
+#     my $stock_names_file = $c->req->upload("stock_names_file");
+#
+#     my $complete_list = $stock_names ."\n".$stock_names_file;
+#
+#     $complete_list =~ s/\r//g;
+#
+#     my @names = split /\n/, $complete_list;
+#
+#     my @not_found;
+#     my @found;
+#     my @labels;
+#
+#     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+#
+#     foreach my $name (@names) {
+#
+# 	# skip empty lines
+# 	#
+# 	if (!$name) {
+# 	    next;
+# 	}
+#
+# 	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
+#
+# 	if (!$stock) {
+# 	    push @not_found, $name;
+# 	    next;
+# 	}
+#
+# 	my $stock_id = $stock->stock_id();
+#
+# 	push @found, $name;
+#
+# 	# generate new zdl label
+# 	#
+# 	my $label = CXGN::ZPL->new();
+# 	$label->start_format();
+# 	$label->barcode_code128($c->config->{identifier_prefix}.$stock_id);
+# 	$label->end_format();
+# 	push @labels, $label;
+#
+#     }
+#
+#     my $dir = $c->tempfiles_subdir('zpl');
+#     my ($FH, $filename) = $c->tempfile(TEMPLATE=>"zpl/zpl-XXXXX", UNLINK=>0);
+#
+#     foreach my $label (@labels) {
+#         print $FH $label->render();
+#     }
+#     close($FH);
+#
+#     $c->stash->{not_found} = \@not_found;
+#     $c->stash->{found} = \@found;
+#     $c->stash->{file} = $filename;
+#     $c->stash->{filetype} = "ZPL";
+#     $c->stash->{template} = '/barcode/stock_download_result.mas';
+#
+# }
 
 
 sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
@@ -127,8 +126,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if ($stock_names_file) {
 	     my $stock_file_contents = read_file($stock_names_file->{tempname});
 	     $stock_names = $stock_names ."\n".$stock_file_contents;
-    } 
-    
+    }
+
     $stock_names =~ s/\r//g;
     my @names = split /\n/, $stock_names;
 
@@ -162,7 +161,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if (scalar(@stocks_sorted) > 0){
         @names = @stocks_sorted;
     }
-    
+
     foreach my $name (@names) {
 
     	# skip empty lines
@@ -203,11 +202,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                 $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
                 $fdata_block = "blk:".$stockprop_hash{$stock_id}->{'block'};
                 $fdata_rep = "rep:".$stockprop_hash{$stock_id}->{'replicate'};
-                $fdata_rep_block = "block number:".$stockprop_hash{$stock_id}->{'block'}.', '."rep number:".$stockprop_hash{$stock_id}->{'replicate'}; 
+                $fdata_rep_block = "block number:".$stockprop_hash{$stock_id}->{'block'}.', '."rep number:".$stockprop_hash{$stock_id}->{'replicate'};
                 $fdata_plot = "plot:".$stockprop_hash{$stock_id}->{'plot number'};
                 $fdata_plot_20A4 = "plot number:".$stockprop_hash{$stock_id}->{'plot number'};
                 $musa_row_col_number = "row number:".$stockprop_hash{$stock_id}->{'row_number'}.', '."column number:".$stockprop_hash{$stock_id}->{'col_number'};
-                
+
                 my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
                 $h_acc->execute($stock_id);
@@ -256,7 +255,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $tract_type_id = 'plant';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
-      
+
       if ($cass_print_format eq 'crossing'){
           push @found, [ $stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
       }else{
@@ -280,7 +279,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
 
     my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];
-    
+
     ## for 10 labels per page
     my $label_height;
     if ($cass_print_format eq '32A4'){
@@ -304,7 +303,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
         }
     }
-    
+
     my @pages;
     foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) {
 	     print STDERR "Generating page $page...\n";
@@ -381,10 +380,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         my $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
         my $scalex = $final_barcode_width / $image->{width};
         my $scaley = $label_height / $image->{height};
-        
+
         if ($scalex < $scaley) { $scaley = $scalex; }
     	else { $scalex = $scaley; }
-        
+
         my ($year_text, $location_text, $label_boundary);
         if ($cass_print_format eq 'NCSU'){
             ($year_text,$location_text) = split ',', $added_text;
@@ -438,7 +437,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         else{
             $pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
         }
-        
+
 
       # my $lebel_number = scalar($#{$found[$i]});
       my $font = $pdf->font('BaseFont' => 'Courier-Bold');
@@ -577,7 +576,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
-     
+
      elsif ($cass_print_format eq 'IITA-3' && $barcode_type eq "2D") {
 
          foreach my $label_count (1..$labels_per_row) {
@@ -635,8 +634,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
-     
-     elsif ($cass_print_format eq 'NCSU' && $barcode_type eq "2D") { 
+
+     elsif ($cass_print_format eq 'NCSU' && $barcode_type eq "2D") {
          foreach my $label_count (1..$labels_per_row) {
            my $xposition = $left_margin + ($label_count -1) * $final_barcode_width;
            my $yposition = $ypos -7;
@@ -669,7 +668,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 90 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
          }
      }
-     
+
      elsif ($cass_print_format eq '32A4' && $barcode_type eq "2D") {
          foreach my $label_count (1..$labels_per_row) {
            my $xposition = $left_margin + ($label_count -1) * $final_barcode_width;
@@ -702,13 +701,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                 #$pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_7, $parents);
                 $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
            }
-           
+
            if ($found[$i]->[5] eq 'accession'){
                $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 20 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
            }else{
                $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 50 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
            }
-           
+
          }
      }
 
@@ -743,7 +742,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               #$pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_7, $parents);
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
          }
-         
+
          if ($found[$i]->[5] eq 'accession'){
              $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 20 + ($row_y_label_count -2) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
          }else{
@@ -768,7 +767,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            if ($found[$i]->[5] eq 'accession'){}
            else{
                 $label_text_6 = "accession: ".$found[$i]->[2];
-           }          
+           }
            my $parents_20A4 = "pedigree: ".$parents;
            $label_text_5 = $found[$i]->[14];
            $label_text_4 = $found[$i]->[8];
@@ -788,7 +787,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 200 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
          }
      }
-     
+
      elsif ($cass_print_format eq 'crossing' && $barcode_type eq "2D") {
          foreach my $label_count (1..$labels_per_row) {
              my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
@@ -797,10 +796,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
              my $label_size =  60;
              $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
              $pages[$page_nr-1]->string($font, $label_size, $xposition + 30, $yposition - 595, $label_text);
-         
+
          }
      }
-     
+
      elsif ($cass_print_format eq 'MUSA' && $barcode_type eq "2D") {
 
          foreach my $label_count (1..$labels_per_row) {
@@ -864,7 +863,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
-     
+
     elsif ($barcode_type eq "1D") {
 
     	foreach my $label_count (1..$labels_per_row) {

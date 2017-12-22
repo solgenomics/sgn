@@ -7,6 +7,8 @@ use Data::Dumper;
 use Try::Tiny;
 use JSON;
 use Barcode::Code128;
+use CXGN::QRcode;
+use CXGN::ZPL;
 use PDF::API2;
 use Sort::Versions;
 
@@ -97,7 +99,7 @@ __PACKAGE__->config(
        my $data_type = $c->req->param("data_type");
        my $value = $c->req->param("value");
        my $design_json = $c->req->param("design_json");
-       my $dots_to_pixels_conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
+       my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
        # decode json
        my $json = new JSON;
@@ -171,8 +173,8 @@ __PACKAGE__->config(
                    foreach my $element (@$label_params) {
                        #print STDERR "Element Dumper\n" . Dumper($element);
                        my %element = %{$element};
-                       my $elementx = $label_x + ( $element{'x'} / $dots_to_pixels_conversion_factor );
-                       my $elementy = $label_y - ( $element{'y'} / $dots_to_pixels_conversion_factor );
+                       my $elementx = $label_x + ( $element{'x'} / $conversion_factor );
+                       my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
 
                        my $filled_value = $element{'value'};
                        $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
@@ -195,8 +197,8 @@ __PACKAGE__->config(
                                close(PNG);
 
                                 my $image = $pdf->image_png($png_location);
-                                my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
-                                my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
+                                my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
                                 my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
                                 my $elementx = $elementx - ($width/2);
                                 #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
@@ -216,8 +218,8 @@ __PACKAGE__->config(
                               my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
 
                                my $image = $pdf->image_jpeg($jpeg_location);
-                               my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
-                               my $width = $element{'width'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
+                               my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                               my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
                                my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
                                my $elementx = $elementx - ($width/2);
                                $gfx->image($image, $elementx, $elementy, $width, $height);
@@ -228,9 +230,9 @@ __PACKAGE__->config(
 
                             my $font = $pdf->corefont($element{'font'}); # Add a built-in font to the PDF
                             # Add text to the page
-                            my $adjusted_size = $element{'size'} / $dots_to_pixels_conversion_factor; # scale to 72 pts per inch
+                            my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
                             $text->font($font, $adjusted_size);
-                            my $height = $element{'height'} / $dots_to_pixels_conversion_factor ; # scale to 72 pts per inch
+                            my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                             my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
                             $text->translate($elementx, $elementy);
                             $text->text_center($filled_value);
@@ -260,18 +262,29 @@ __PACKAGE__->config(
            $pdf->save();
 
        } elsif ($download_type eq 'zpl') {
-           # do zpl conversion
-           my $label_params = label_params_to_zpl($label_params, $design_params->{'label_width'}, $design_params->{'label_height'});
 
+           print STDERR "Generating zpl . . .\n";
+           my $zpl_obj = CXGN::ZPL->new(
+               print_width => $design_params->{'label_width'} * $conversion_factor,
+               label_length => $design_params->{'label_height'} * $conversion_factor
+           );
+           $zpl_obj->start_sequence();
+           $zpl_obj->label_format();
+           foreach my $element (@$label_params) {
+               my $x = $element->{'x'} - ($element->{'width'}/2);
+               my $y = $element->{'y'} - ($element->{'height'}/2);
+               $zpl_obj->new_element($element->{'type'}, $x, $y, $element->{'size'}, $element->{'value'});
+           }
+           $zpl_obj->end_sequence();
+           my $zpl_template = $zpl_obj->render();
            foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
-
-               print STDERR "Design key is $key\n";
+            #    print STDERR "Design key is $key\n";
                my %design_info = %{$design{$key}};
                $design_info{'trial_name'} = $trial_name;
                $design_info{'year'} = $year;
                $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
-               print STDERR "Design info: " . Dumper(%design_info);
-               my $zpl = $label_params;
+
+               my $zpl = $zpl_template;
                $zpl =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
               for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
                   print $FH $zpl;
@@ -282,39 +295,9 @@ __PACKAGE__->config(
 
        close($FH);
        print STDERR "Returning with filename . . .\n";
-    #    $c->stash->{rest} = { filename => $urlencode{$filename} };
-        $c->stash->{rest} = { filename => $filename };
+       $c->stash->{rest} = { filename => $filename };
 
    }
-
-sub label_params_to_zpl {
-    my $label_params_ref = shift;
-    my @label_params = @{$label_params_ref};
-
-    my $label_width = shift;
-    my $label_height = shift;
-    my $pixels_to_dots_conversion_factor = 2.83;
-    $label_width = $label_width * $pixels_to_dots_conversion_factor;
-    $label_height = $label_height * $pixels_to_dots_conversion_factor;
-    my $zpl = "^XA\n^LL$label_height^PW$label_width\n";
-    foreach my $element (@label_params) {
-        my %element = %$element;
-        my $x = $element{'x'} - ($element{'width'}/2);
-        my $y = $element{'y'} - ($element{'height'}/2);
-        if ( $element{'type'} eq "Code128" ) {
-            my $height = $element{'size'} * 25;
-            $zpl .= "^FO$x,$y^BY$element{'size'}^BCN,$height,N,N,N^FD   $element{'value'}^FS\n";
-        } elsif ( $element{'type'} eq "QRCode" ) {
-            my $y = $y - 10; #adjust for 10 dot offset in zpl
-            $zpl .= "^FO$x,$y^BQ,,$element{'size'}^FDMA,$element{'value'}^FS\n";
-        } else {
-            $zpl .= "^FO$x,$y^AA,$element{'size'}^FD$element{'value'}^FS\n";
-        }
-    }
-    $zpl .= "^XZ\n";
-    print STDERR "ZPL is $zpl\n";
-    return $zpl
-}
 
 sub process_field {
     my $field = shift;

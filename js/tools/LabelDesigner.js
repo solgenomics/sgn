@@ -731,7 +731,9 @@ function switchPageDependentOptions(page) {
         label_elements = Array.prototype.slice.call(label_elements); // convert to array
         for (var i=0; i<label_elements.length; i++) {
             var element = label_elements[i];
-            element.parentNode.removeChild(element); // remove all elements, barcodes too in case they have been scaled
+            if (element.getAttribute("type") != "ZebraText") { // remove all non-Zebra elements, barcodes too in case they have been scaled
+               element.parentNode.removeChild(element);
+            }
         }
 
     } else { // disable Zebra text option and zpl download, clear zpl text elements
@@ -855,7 +857,7 @@ function switchTypeDependentOptions(type){
 }
 
 function addToLabel(field, text, type, size, font, x, y, width, height) {
-     console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
+     //console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
     svg = d3.select(".d3-draw-svg");
 
     //get x,y coords and scale
@@ -874,7 +876,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
     switch (type) {
         case "Code128":
         case "QRCode":
-
+            console.log("Adding barcode of type "+type);
             //add barcode specific attributes
             disable_ui();
             var page = d3.select("#page_format").node().value;
@@ -891,7 +893,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 var element_height = height || this.height;
                 x = x - (element_width /2);
                 y = y - (element_height /2);
-                console.log("Final x is "+x+" and final y is "+y);
+                //console.log("Final x is "+x+" and final y is "+y);
                 new_element.call(doTransform, function(state, selection) {
                     state.translate = [x,y]
                 }, doSnap)
@@ -911,6 +913,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
 
         default:
             //add text specific attributes
+            console.log("Adding text of type "+type);
             var font_size = parseInt(size);
             if (type =="ZebraText") {
                 font_size = font_size + parseInt(font_size/9);
@@ -933,6 +936,8 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 "alignment-baseline": "middle",
             })
             .text(text)
+            console.log("Field is: "+field+" and size is: "+size+" and type is: "+type+" and font size is: "+font_size+" and font is: "+font+" and style is: "+font_styles[font]+" and text is: "+text);
+
             break;
     }
 }
@@ -1216,6 +1221,7 @@ function loadDesign (list_id) {
 
     var page = params['page_format'];
     document.getElementById('page_format').value = page;
+    console.log("page is "+page);
     switchPageDependentOptions(page);
     if (page == 'Custom') {
         document.getElementById("page_width").value = params['page_width'];
