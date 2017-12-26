@@ -125,7 +125,8 @@ sub get_trial_phenotypes_heatmap {
 	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results);
 	
 	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value) = $h->fetchrow_array()) {
-        push @$result, [$plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value ];
+        push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value} ;
+		#push @$result, { plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value };
 		push @col_No, $col_number;
 		push @row_No, $row_number;
 		push @pheno_val, $value;
@@ -139,6 +140,15 @@ sub get_trial_phenotypes_heatmap {
 	
 	my ($min_col, $max_col) = minmax @col_No;
 	my ($min_row, $max_row) = minmax @row_No;
+	my (@unique_col,@unique_row);
+	for my $x (1..$max_col){
+		push @unique_col, $x;
+	}
+	for my $y (1..$max_row){
+		push @unique_row, $y;
+	}
+	print STDERR Dumper(\@unique_col);
+	print STDERR Dumper(\@unique_row);
 
 	%results = (
 	col => \@col_No,
@@ -152,7 +162,9 @@ sub get_trial_phenotypes_heatmap {
 	result => $result,
 	plot_msg => \@msg,
 	col_max => $max_col,
-	row_max => $max_row
+	row_max => $max_row,
+	unique_col => \@unique_col,
+	unique_row => \@unique_row
 	);
     print STDERR "Search End:".localtime."\n";
 	print STDERR Dumper($result);
