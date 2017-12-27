@@ -18,6 +18,16 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
+    $('#program').change(function(){
+        get_select_box('folders', 'add_cross_folder_select_div', {
+            'name': 'add_cross_folder_id',
+            'id': 'add_cross_folder_id',
+            'folder_for_crosses' : true,
+            'empty': 1,
+            'breeding_program_id': jQuery('#program').val()
+        });
+    });
+
     $("#create_cross_link").click(function() {
 
         $("#cross_type_info").click(function() {
@@ -27,8 +37,9 @@ jQuery(document).ready(function($) {
         get_select_box('folders', 'add_cross_folder_select_div', {
             'name': 'add_cross_folder_id',
             'id': 'add_cross_folder_id',
-            'folder_for_crosses' : 1,
-            'empty': 1
+            'folder_for_crosses' : true,
+            'empty': 1,
+            'breeding_program_id': jQuery('#program').val()
         });
 
         var lo = new CXGN.List();
@@ -106,6 +117,7 @@ jQuery(document).ready(function($) {
         }
 
         var crossName = $("#cross_name").val();
+        crossName = crossName.trim();
         if (!crossName) {
             alert("A cross name is required");
             return;
@@ -131,6 +143,16 @@ jQuery(document).ready(function($) {
 
     });
 
+    $('#cross_upload_breeding_program').change(function(){
+        get_select_box('folders', 'cross_folder_select_div', {
+            'name': 'upload_folder_id',
+            'id': 'upload_folder_id',
+            'folder_for_crosses': true,
+            'empty': 1,
+            'breeding_program_id': jQuery('#cross_upload_breeding_program').val()
+        });
+    });
+
     $("#upload_crosses_link").click(function() {
 
         $("#cross_upload_spreadsheet_format_info").click(function() {
@@ -140,8 +162,9 @@ jQuery(document).ready(function($) {
         get_select_box('folders', 'cross_folder_select_div', {
             'name': 'upload_folder_id',
             'id': 'upload_folder_id',
-            'folder_for_crosses': 1,
-            'empty': 1
+            'folder_for_crosses': true,
+            'empty': 1,
+            'breeding_program_id': jQuery('#cross_upload_breeding_program').val()
         });
         $("#upload_crosses_dialog").modal("show");
     });
@@ -274,10 +297,10 @@ jQuery(document).ready(function($) {
                 alert("A parse error occurred. Please try again." + response);
             },
             success: function(response) {
+                jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery("#working_modal").modal("hide");
                     $('#cross_saved_dialog_message').modal("show");
                 }
             },

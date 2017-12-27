@@ -39,7 +39,7 @@ function getPopIds () {
    
     jQuery("#selected_trials").show();  
     jQuery("#combine_trials_div").show();
-    jQuery("#search_again_div").show();
+    jQuery("#search_again_div").hide();
    
 }
 
@@ -73,19 +73,19 @@ function removeSelectedTrial() {
             jQuery("#search_again_div").hide();
             jQuery("#done_selecting").val('Select');            
             
-            searchAgain();           
+          //  searchAgain();           
         }
     });
 
 }
 
 
-jQuery(document).ready(function() {
-    jQuery('#search_again').on('click', function() {
-	searchAgain();
-    });  
+// jQuery(document).ready(function() {
+//     jQuery('#search_again').on('click', function() {
+// 	searchAgain();
+//     });  
 
-});
+// });
 
 
 function searchAgain () {

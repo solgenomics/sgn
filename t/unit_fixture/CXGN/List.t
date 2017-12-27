@@ -62,6 +62,15 @@ print STDERR Dumper \@lists_sorted;
             'accessions',
             0
           ],
+          [
+            13,
+            'traits',
+            undef,
+            10,
+            76455,
+            'traits',
+            0
+          ],
 	  [
             '809',
             'janedoe_1_public',
@@ -185,6 +194,15 @@ is_deeply(\@lists_sorted, [
           ],
           [
             13,
+            'traits',
+            undef,
+            10,
+            76455,
+            'traits',
+            0
+          ],
+          [
+            14,
             'new_test_name',
             'new description',
             1,
@@ -263,6 +281,15 @@ is_deeply(\@lists_sorted, [
           ],
           [
             13,
+            'traits',
+            undef,
+            10,
+            76455,
+            'traits',
+            0
+          ],
+          [
+            14,
             'new_test_name',
             'new description',
             1,

@@ -33,7 +33,8 @@ $dest_seedlot->accession_stock_ids([$test_accession_stock_id1]);
 $dest_seedlot->organization_name('bti');
 $dest_seedlot->population_name('test seedlot pop');
 $dest_seedlot->breeding_program_id($seedlot_breeding_program_id);
-my $dest_seedlot_id = $dest_seedlot->store();
+my $return = $dest_seedlot->store();
+my $dest_seedlot_id = $return->{seedlot_id};
 
 print STDERR "SEEDLOT ID: $dest_seedlot_id, STOCK_ID ".$dest_seedlot->stock_id()."\n";
 
@@ -48,7 +49,8 @@ $source_seedlot->accession_stock_ids([$test_accession_stock_id1]);
 $source_seedlot->organization_name('bti');
 $source_seedlot->population_name('test seedlot pop');
 $source_seedlot->breeding_program_id($seedlot_breeding_program_id);
-my $source_seedlot_id = $source_seedlot->store();
+my $return = $source_seedlot->store();
+my $source_seedlot_id = $return->{seedlot_id};
 
 print STDERR "Creating transaction 1...\n";
 my $trans = CXGN::Stock::Seedlot::Transaction->new(
@@ -80,7 +82,7 @@ is($source_seedlot_after_trans1->current_count, -5, "check current count is corr
 is($source_seedlot_after_trans1->uniquename, $source_seedlot->uniquename, "check uniquename is saved");
 is($source_seedlot_after_trans1->location_code, $source_seedlot->location_code, "check location is saved");
 is($source_seedlot_after_trans1->organization_name, $source_seedlot->organization_name, "check organization is saved");
-is($source_seedlot_after_trans1->populations->[0], $source_seedlot->population_name, "check population is saved");
+is($source_seedlot_after_trans1->population_name, $source_seedlot->population_name, "check population is saved");
 is_deeply($source_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($source_seedlot_after_trans1->breeding_program_name, $seedlot_breeding_program_name);
 is($source_seedlot_after_trans1->breeding_program_id, $source_seedlot->breeding_program_id);
@@ -93,7 +95,7 @@ is($dest_seedlot_after_trans1->current_count, 5, "check current count is correct
 is($dest_seedlot_after_trans1->uniquename, $dest_seedlot->uniquename, "check uniquename is saved");
 is($dest_seedlot_after_trans1->location_code, $dest_seedlot->location_code, "check location is saved");
 is($dest_seedlot_after_trans1->organization_name, $dest_seedlot->organization_name, "check organization is saved");
-is($dest_seedlot_after_trans1->populations->[0], $dest_seedlot->population_name, "check population is saved");
+is($dest_seedlot_after_trans1->population_name, $dest_seedlot->population_name, "check population is saved");
 is_deeply($dest_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($dest_seedlot_after_trans1->breeding_program_name, $seedlot_breeding_program_name);
 is($dest_seedlot_after_trans1->breeding_program_id, $dest_seedlot->breeding_program_id);
@@ -133,7 +135,7 @@ is($source_seedlot_after_trans3->current_count, -9, "check current count is corr
 is($source_seedlot_after_trans3->uniquename, $source_seedlot->uniquename, "check uniquename is saved");
 is($source_seedlot_after_trans3->location_code, $source_seedlot->location_code, "check location is saved");
 is($source_seedlot_after_trans3->organization_name, $source_seedlot->organization_name, "check organization is saved");
-is($source_seedlot_after_trans3->populations->[0], $source_seedlot->population_name, "check population is saved");
+is($source_seedlot_after_trans3->population_name, $source_seedlot->population_name, "check population is saved");
 is_deeply($source_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($source_seedlot_after_trans3->breeding_program_name, $seedlot_breeding_program_name);
 is($source_seedlot_after_trans3->breeding_program_id, $source_seedlot->breeding_program_id);
@@ -156,16 +158,16 @@ is_deeply(\@transactions, [
           [
             'test seedlot 2',
             'test seedlot',
-            -5,
+            -7,
             'janedoe',
-            'Moving 5 seed from seedlot 2 to seedlot 1'
+            'Moving 7 seed from seedlot 2 to seedlot 1'
           ],
           [
             'test seedlot 2',
             'test seedlot',
-            -7,
+            -5,
             'janedoe',
-            'Moving 7 seed from seedlot 2 to seedlot 1'
+            'Moving 5 seed from seedlot 2 to seedlot 1'
           ]
         ], "check source seedlot transactions");
 
@@ -177,7 +179,7 @@ is($dest_seedlot_after_trans3->current_count, 9, "check current count is correct
 is($dest_seedlot_after_trans3->uniquename, $dest_seedlot->uniquename, "check uniquename is saved");
 is($dest_seedlot_after_trans3->location_code, $dest_seedlot->location_code, "check location is saved");
 is($dest_seedlot_after_trans3->organization_name, $dest_seedlot->organization_name, "check organization is saved");
-is($dest_seedlot_after_trans3->populations->[0], $dest_seedlot->population_name, "check population is saved");
+is($dest_seedlot_after_trans3->population_name, $dest_seedlot->population_name, "check population is saved");
 is_deeply($dest_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($dest_seedlot_after_trans3->breeding_program_name, $seedlot_breeding_program_name);
 is($dest_seedlot_after_trans3->breeding_program_id, $dest_seedlot->breeding_program_id);
@@ -191,11 +193,11 @@ foreach my $t (@{$dest_seedlot_after_trans3->transactions()}) {
 print STDERR Dumper \@transactions2;
 is_deeply(\@transactions2, [
           [
-            'test seedlot 2',
             'test seedlot',
-            5,
+            'test seedlot 2',
+            -3,
             'janedoe',
-            'Moving 5 seed from seedlot 2 to seedlot 1'
+            'Moving 3 seed from seedlot 1 to seedlot 2'
           ],
           [
             'test seedlot 2',
@@ -205,11 +207,11 @@ is_deeply(\@transactions2, [
             'Moving 7 seed from seedlot 2 to seedlot 1'
           ],
           [
-            'test seedlot',
             'test seedlot 2',
-            -3,
+            'test seedlot',
+            5,
             'janedoe',
-            'Moving 3 seed from seedlot 1 to seedlot 2'
+            'Moving 5 seed from seedlot 2 to seedlot 1'
           ]
         ], 'check transactions of dest_seedlot');
 

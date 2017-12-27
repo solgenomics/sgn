@@ -21,15 +21,15 @@ var accession_list_id;
 var validSpecies;
 var fuzzyResponse;
 
+function disable_ui() {
+    jQuery('#working_modal').modal("show");
+}
+
+function enable_ui() {
+    jQuery('#working_modal').modal("hide");
+}
+
 jQuery(document).ready(function ($) {
-
-    function disable_ui() {
-        $('#working_modal').modal("show");
-    }
-
-    function enable_ui() {
-        $('#working_modal').modal("hide");
-    }
 
     jQuery('#manage_accessions_populations_new').click(function(){
         jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"] ));
@@ -112,7 +112,7 @@ jQuery(document).ready(function ($) {
                 { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
             ],
             "fnInitComplete": function(oSettings, json) {
-                console.log(json);
+                //console.log(json);
                 var html = "";
                 for(var i=0; i<json.data.length; i++){
                     html += json.data[i].name+"\n";

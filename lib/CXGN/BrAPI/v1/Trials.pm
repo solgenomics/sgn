@@ -69,7 +69,6 @@ sub trials_search {
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
 	my $folder_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$folder_cvterm_id});
 
-	my @folder_studies;
 	my %additional_info;
 	my @data;
 	if ($folder_rs) {
@@ -77,6 +76,7 @@ sub trials_search {
 		my $rs_slice = $folder_rs->slice($page_size*$page, $page_size*($page+1)-1);
 		while (my $p = $rs_slice->next()) {
 			my $folder = CXGN::Trial::Folder->new({bcs_schema=>$self->bcs_schema, folder_id=>$p->project_id});
+			my @folder_studies;
 			if ($folder->is_folder) {
 				my $children = $folder->children();
 				foreach (@$children) {
