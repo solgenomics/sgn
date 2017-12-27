@@ -36,12 +36,23 @@ __PACKAGE__->config(
     );
 
 
+sub anova_check_design :Path('/anova/check/design/') Args(0) {
+    my ($self, $c) = @_;
+   
+    $c->stash->{trial_id} = $c->req->param('trial_id');
+
+    $self->check_trial_design($c);
+
+}
+
+
 sub anova_traits_list :Path('/anova/traits/list/') Args(0) {
     my ($self, $c) = @_;
    
     my $trial_id = $c->req->param('trial_id');
     
     $c->stash->{trial_id} = $trial_id;
+
     $self->anova_traits($c);
     
 }
@@ -59,7 +70,6 @@ sub anova_phenotype_data :Path('/anova/phenotype/data/') Args(0) {
     $c->stash->{traits_ids} = \@traits_ids;  
 
     $self->create_anova_phenodata_file($c);
-    $self->check_trial_design($c);
     $self->get_traits_abbrs($c);
    
 }
@@ -122,19 +132,16 @@ sub check_trial_design {
     my ($self, $c) = @_;
 
     my $trial_id = $c->stash->{trial_id};
-    
+   
     my $trial = CXGN::Trial->new(bcs_schema => $self->schema($c), 
 				 trial_id => $trial_id);
 
     my $design = $trial->get_design_type();
 
-    $c->stash->{pop_id} = $trial_id;    
-    $c->controller("solGS::solGS")->all_traits_file($c);
-    my $traits_file = $c->stash->{all_traits_file};
-    my @traits = read_file($traits_file);
-
     if (!$design) {
-	$c->stash->{rest}{'Error'} = 'This trial has no suitable trial design to do the ANOVA analysis.'; 
+	$c->stash->{rest}{'Error'} = 'This trial has no suitable design to do ANOVA analysis.'; 
+    } {
+	$c->stash->{rest}{'Design'} = $design; 
     }
     
 }
@@ -145,8 +152,8 @@ sub get_traits_abbrs {
 
     my $trial_id = $c->stash->{trial_id};
     my $traits_ids = $c->stash->{traits_ids};
-
-    $c->stash->{pop_id} = $trial_id;    
+  
+    $c->stash->{pop_id} = $trial_id;   
     $c->controller("solGS::solGS")->all_traits_file($c);
     my $traits_file = $c->stash->{all_traits_file};
     my @traits = read_file($traits_file);

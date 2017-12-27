@@ -18,8 +18,36 @@ jQuery(document).ready( function() {
 
 function allowAnova () {
   
-    listAnovaTraits();
+    checkDesign();
+  
+}
+
+
+function checkDesign () {
     
+    var trialId = getTrialId();  
+    
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+	data: {'trial_id': trialId},
+        url: '/anova/check/design/',      
+        success: function(response) {
+	     
+	    if (response.Error) {
+		showMessage(response.Error);
+		jQuery("#run_anova").hide();
+	    } else {
+		  
+		listAnovaTraits();
+	    }
+        },
+        error: function(response) {                          
+            showMessage("Error occured running the ANOVA.");	    	
+	    jQuery("#run_anova").show();
+        }                
+    });
+
 }
 
 
@@ -167,7 +195,6 @@ function runAnovaAnalysis(traits) {
     }
 
 }
-
 
 
 function listAnovaTraits ()  {
