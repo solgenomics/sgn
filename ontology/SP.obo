@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:12:2017 16:09
+date: 02:01:2018 15:47
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -4057,6 +4057,21 @@ def: "The angle between best-fit lines drawn through the fruit perimeter on eith
 relationship: variable_of SP:0000074 ! proximal fruit end angle
 created_by: naama
 creation_date: 2017-12-22T15:55:07Z
+
+[Term]
+id: SP:0000460
+name: fruit calyx
+relationship: part_of SP:0000069 ! fruit end
+created_by: naama
+creation_date: 2018-01-02T11:48:52Z
+
+[Term]
+id: SP:0000461
+name: Ribbing calyx end. Observation 0-9 scale
+def: "An arrangement of ribs surrounding the calyx end of a full size fruit. 0-9 score (0:absent, 3:very weak, 5:weak, 7:intermediate, 9:strong)." [SGN:NM]
+relationship: variable_of SP:0000460 ! fruit calyx
+created_by: naama
+creation_date: 2018-01-02T11:49:08Z
 
 [Term]
 id: SP:0000706
