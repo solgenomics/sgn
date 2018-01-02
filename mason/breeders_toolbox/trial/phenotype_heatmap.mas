@@ -48,7 +48,7 @@ $trial_id
   <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;  
 </div>
 
-<script charset="utf-8" defer="defer" type="text/javascript" >
+<script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
 var value = 'plot';
 var selected_trait;
@@ -89,7 +89,7 @@ jQuery(document).ready( function() {
         
     });
     
-
+ 
   jQuery(document).on('change', '#trial_list_dropdown', function () {
     d3.select("svg").remove(); //Remove already created heatmap.
     var selected = jQuery("#trial_list_dropdown").val();
@@ -125,13 +125,13 @@ jQuery(document).ready( function() {
                     //jQuery("#col_desc_heatmap").css("display","inline-block");
                     jQuery("#trait_heatmap").css("display", "none");
                     jQuery("#d_button").css("display", "inline-block");
-                    alert("I'm IN");
+                    //alert("I'm IN");
                     
                     
                     
                     var max_row = response.phenotypes.row_max;
                     var max_col = response.phenotypes.col_max;
-                    alert(max_col+" and "+max_row);
+                    //alert(max_col+" and "+max_row);
       var margin = { top: 50, right: 0, bottom: 100, left: 30 },
           width = 960 - margin.left - margin.right,
           height = 430 - margin.top - margin.bottom,
@@ -220,7 +220,7 @@ jQuery(document).ready( function() {
 
           legend.append("text")
             .attr("class", "mono")
-            .text(function(d) { return "≥ " + Math.round(d); })
+            .text(function(d) { return ">= " + Math.round(d); })
             .attr("x", function(d, i) { return legendElementWidth * i; })
             .attr("y", height + gridSize);
 
@@ -305,7 +305,7 @@ jQuery(document).ready( function() {
 </div>
 
 
-<script defer="defer">
+<script charset="utf-8" defer="defer">
 var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
   jQuery(document).ready( function() {
