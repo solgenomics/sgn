@@ -11,6 +11,18 @@ $trial_id
     #traitdiv {display: none; }
     #chart {display: none; }
     #dataset-picker {display: none; }
+    //#container_legend {display: none; }
+    
+    #container_heatmap {
+        //border:2px dashed #000;
+        height: 490px;
+        width: 700px;
+        overflow: auto;
+        //overflow: scroll;
+        display: none;
+        margin: 10px;
+    }
+
     
     rect.bordered {
         stroke: #E6E6E6;
@@ -40,6 +52,7 @@ $trial_id
     </div>
 </div>
 
+<div id="container_heatmap" ></div>
 <div id="trait_heatmap" >loading...</div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
 <div id="chart"></div>
@@ -47,6 +60,7 @@ $trial_id
 <div class="col-sm-10" id="d_button" style="display:none";>
   <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;  
 </div>
+<!--<div id="container_legend" ></div>-->
 
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
@@ -89,7 +103,7 @@ jQuery(document).ready( function() {
         
     });
     
- 
+
   jQuery(document).on('change', '#trial_list_dropdown', function () {
     d3.select("svg").remove(); //Remove already created heatmap.
     var selected = jQuery("#trial_list_dropdown").val();
@@ -104,16 +118,16 @@ jQuery(document).ready( function() {
                 if (response.phenotypes.col != "" && response.phenotypes.row != ""){
                     var col = response.col;
                     var row = response.row;
-                    console.log(response.phenotypes.col); 
-                    console.log(response.phenotypes.row);
-                    console.log(response.phenotypes.pheno);
+                    //console.log(response.phenotypes.col); 
+                    //console.log(response.phenotypes.row);
+                    //console.log(response.phenotypes.pheno);
                     //console.log(response.phenotypes.plot_msg);
                     for (i=0; i<response.phenotypes.col.length; i++) {
                         if (response.phenotypes.col[i] && response.phenotypes.row[i]){
-                            console.log(response.phenotypes.col[i]);
-                            console.log(response.phenotypes.row[i]);
-                            console.log(response.phenotypes.pheno[i]);
-                            console.log(response.phenotypes.plot_msg[i]);
+                            //console.log(response.phenotypes.col[i]);
+                            //console.log(response.phenotypes.row[i]);
+                            //console.log(response.phenotypes.pheno[i]);
+                            //console.log(response.phenotypes.plot_msg[i]);
                         }
                     }
                     
@@ -125,6 +139,7 @@ jQuery(document).ready( function() {
                     //jQuery("#col_desc_heatmap").css("display","inline-block");
                     jQuery("#trait_heatmap").css("display", "none");
                     jQuery("#d_button").css("display", "inline-block");
+                    //jQuery("#container_legend").css("display", "inline-block");
                     //alert("I'm IN");
                     
                     
@@ -134,7 +149,7 @@ jQuery(document).ready( function() {
                     //alert(max_col+" and "+max_row);
       var margin = { top: 50, right: 0, bottom: 100, left: 30 },
           width = 960 - margin.left - margin.right,
-          height = 430 - margin.top - margin.bottom,
+          height = 900 - margin.top - margin.bottom,
           gridSize = Math.floor(width / 24),
           legendElementWidth = gridSize*2,
           buckets = 9,
@@ -142,18 +157,19 @@ jQuery(document).ready( function() {
           days = response.phenotypes.unique_row,
           times = response.phenotypes.unique_col;
           datasets = response.phenotypes.result;
-         
-      var svg = d3.select("#chart").append("svg")
+    
+      // var svg = d3.select("#chart").append("svg") 
+      var svg = d3.select("#container_heatmap").append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          .attr("transform", "translate(" + margin.left + "," + 100 + ")");
 
       var dayLabels = svg.selectAll(".dayLabel")
           .data(days)
           .enter().append("text")
             .text(function (d) { return d; })
-            .attr("x", 0)
+            .attr("x", 0 )
             .attr("y", function (d, i) { return i * gridSize; })
             .style("text-anchor", "end")
             .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
@@ -164,7 +180,7 @@ jQuery(document).ready( function() {
           .enter().append("text")
             .text(function(d) { return d; })
             .attr("x", function(d, i) { return i * gridSize; })
-            .attr("y", 0)
+            .attr("y", 0 )
             .style("text-anchor", "middle")
             .attr("transform", "translate(" + gridSize / 2 + ", -6)")
             .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
@@ -172,7 +188,7 @@ jQuery(document).ready( function() {
         
       var heatmapChart = function(datasets) {
         
-        datasets.forEach(function(d) {  console.log("row:" +d.row+ "col:"+d.col + "value:"+d.pheno+ "msg:"+d.plot_msg);
+        datasets.forEach(function(d) {  //console.log("row:" +d.row+ "col:"+d.col + "value:"+d.pheno+ "msg:"+d.plot_msg);
 
             d.row = +d.row;
             d.col = +d.col;
@@ -204,16 +220,17 @@ jQuery(document).ready( function() {
           cards.select("title").text(function(d) { return d.plot_msg; });
           
           cards.exit().remove();
-
+ 
+         // legend = svg.selectAll(".legend")
           var legend = svg.selectAll(".legend")
               .data([0].concat(colorScale.quantiles()), function(d) { return d; });
-
+         
           legend.enter().append("g")
               .attr("class", "legend");
 
           legend.append("rect")
             .attr("x", function(d, i) { return legendElementWidth * i; })
-            .attr("y", height)
+            .attr("y", 0 - 90)
             .attr("width", legendElementWidth)
             .attr("height", gridSize / 2)
             .style("fill", function(d, i) { return colors[i]; });
@@ -222,7 +239,7 @@ jQuery(document).ready( function() {
             .attr("class", "mono")
             .text(function(d) { return ">= " + Math.round(d); })
             .attr("x", function(d, i) { return legendElementWidth * i; })
-            .attr("y", height + gridSize);
+            .attr("y", 0 - 90 + gridSize);
 
           legend.exit().remove();
         
@@ -230,7 +247,7 @@ jQuery(document).ready( function() {
         } ; 
       
       heatmapChart(datasets);
-    
+     // jQuery("#container_legend").html(legend);
       
       
                 
