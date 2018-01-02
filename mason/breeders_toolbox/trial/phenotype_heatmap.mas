@@ -15,7 +15,7 @@ $trial_id
     
     #container_heatmap {
         //border:2px dashed #000;
-        height: 490px;
+        height: 390px;
         width: 700px;
         overflow: auto;
         //overflow: scroll;
