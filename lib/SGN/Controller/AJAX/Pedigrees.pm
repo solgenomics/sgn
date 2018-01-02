@@ -9,6 +9,7 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use CXGN::List::Validate;
+use SGN::Model::Cvterm;
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -280,7 +281,7 @@ sub get_full_pedigree_GET {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
     my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "accession"})->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my @queue = ($stock_id);
     my $nodes = [];
     while (@queue){
@@ -321,7 +322,7 @@ sub get_relationships_POST {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
     my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
-    my $accession_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "accession"})->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $nodes = [];
     while (@{$stock_ids}){
         push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, (shift @{$stock_ids}));
