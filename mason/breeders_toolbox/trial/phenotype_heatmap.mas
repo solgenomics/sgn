@@ -3,8 +3,7 @@
 $trial_id
 </%args>
 
-
-<& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js', 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
+ <& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js', 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -49,7 +48,7 @@ $trial_id
   <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;  
 </div>
 
-<script defer="defer" type="text/javascript">
+<script charset="utf-8" defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
 var value = 'plot';
 var selected_trait;
@@ -108,11 +107,13 @@ jQuery(document).ready( function() {
                     console.log(response.phenotypes.col); 
                     console.log(response.phenotypes.row);
                     console.log(response.phenotypes.pheno);
+                    //console.log(response.phenotypes.plot_msg);
                     for (i=0; i<response.phenotypes.col.length; i++) {
                         if (response.phenotypes.col[i] && response.phenotypes.row[i]){
                             console.log(response.phenotypes.col[i]);
                             console.log(response.phenotypes.row[i]);
                             console.log(response.phenotypes.pheno[i]);
+                            console.log(response.phenotypes.plot_msg[i]);
                         }
                     }
                     
@@ -132,7 +133,7 @@ jQuery(document).ready( function() {
                     var max_col = response.phenotypes.col_max;
                     alert(max_col+" and "+max_row);
       var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-          width = 700 - margin.left - margin.right,
+          width = 960 - margin.left - margin.right,
           height = 430 - margin.top - margin.bottom,
           gridSize = Math.floor(width / 24),
           legendElementWidth = gridSize*2,
@@ -167,14 +168,16 @@ jQuery(document).ready( function() {
             .style("text-anchor", "middle")
             .attr("transform", "translate(" + gridSize / 2 + ", -6)")
             .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
-
+            
+        
       var heatmapChart = function(datasets) {
-      
-        datasets.forEach(function(d) { console.log("row:" +d.row+ "col:"+d.col + "value:"+d.pheno);
+        
+        datasets.forEach(function(d) {  console.log("row:" +d.row+ "col:"+d.col + "value:"+d.pheno+ "msg:"+d.plot_msg);
 
             d.row = +d.row;
             d.col = +d.col;
             d.pheno = +d.pheno;
+            
 
           var colorScale = d3.scale.quantile()
               .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
@@ -198,7 +201,7 @@ jQuery(document).ready( function() {
           cards.transition().duration(1000)
               .style("fill", function(d) { return colorScale(d.pheno); });
 
-          cards.select("title").text(function(d) { return d.pheno; });
+          cards.select("title").text(function(d) { return d.plot_msg; });
           
           cards.exit().remove();
 
