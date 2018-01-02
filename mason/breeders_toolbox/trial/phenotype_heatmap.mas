@@ -10,8 +10,6 @@ $trial_id
     #trial_no_phenoMSG {display: none; }
     #traitdiv {display: none; }
     #chart {display: none; }
-    #dataset-picker {display: none; }
-    //#container_legend {display: none; }
     
     #container_heatmap {
         //border:2px dashed #000;
@@ -22,7 +20,6 @@ $trial_id
         display: none;
         margin: 10px;
     }
-
     
     rect.bordered {
         stroke: #E6E6E6;
@@ -56,11 +53,9 @@ $trial_id
 <div id="trait_heatmap" >loading...</div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
 <div id="chart"></div>
-<div id="dataset-picker"></div>
 <div class="col-sm-10" id="d_button" style="display:none";>
-  <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;  
+ <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; --> 
 </div>
-<!--<div id="container_legend" ></div>-->
 
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
@@ -116,146 +111,115 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 if (response.phenotypes.col != "" && response.phenotypes.row != ""){
-                    var col = response.col;
-                    var row = response.row;
-                    //console.log(response.phenotypes.col); 
-                    //console.log(response.phenotypes.row);
-                    //console.log(response.phenotypes.pheno);
-                    //console.log(response.phenotypes.plot_msg);
                     for (i=0; i<response.phenotypes.col.length; i++) {
                         if (response.phenotypes.col[i] && response.phenotypes.row[i]){
                             //console.log(response.phenotypes.col[i]);
-                            //console.log(response.phenotypes.row[i]);
-                            //console.log(response.phenotypes.pheno[i]);
-                            //console.log(response.phenotypes.plot_msg[i]);
                         }
                     }
                     
                     jQuery("#working_modal").modal("hide");
-                    jQuery("#dataset-picker").css({"display": "inline-block" });
                     jQuery("#chart").css({"display": "inline-block"});
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
-                    //jQuery("#row_desc_heatmap").css("display","inline-block");
-                    //jQuery("#col_desc_heatmap").css("display","inline-block");
                     jQuery("#trait_heatmap").css("display", "none");
                     jQuery("#d_button").css("display", "inline-block");
-                    //jQuery("#container_legend").css("display", "inline-block");
-                    //alert("I'm IN");
-                    
-                    
-                    
-                    var max_row = response.phenotypes.row_max;
-                    var max_col = response.phenotypes.col_max;
-                    //alert(max_col+" and "+max_row);
-      var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-          width = 960 - margin.left - margin.right,
-          height = 900 - margin.top - margin.bottom,
-          gridSize = Math.floor(width / 24),
-          legendElementWidth = gridSize*2,
-          buckets = 9,
-          colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-          days = response.phenotypes.unique_row,
-          times = response.phenotypes.unique_col;
-          datasets = response.phenotypes.result;
-    
-      // var svg = d3.select("#chart").append("svg") 
-      var svg = d3.select("#container_heatmap").append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-          .attr("transform", "translate(" + margin.left + "," + 100 + ")");
 
-      var dayLabels = svg.selectAll(".dayLabel")
-          .data(days)
-          .enter().append("text")
-            .text(function (d) { return d; })
-            .attr("x", 0 )
-            .attr("y", function (d, i) { return i * gridSize; })
-            .style("text-anchor", "end")
-            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
-
-      var timeLabels = svg.selectAll(".timeLabel")
-          .data(times)
-          .enter().append("text")
-            .text(function(d) { return d; })
-            .attr("x", function(d, i) { return i * gridSize; })
-            .attr("y", 0 )
-            .style("text-anchor", "middle")
-            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
-            
-        
-      var heatmapChart = function(datasets) {
-        
-        datasets.forEach(function(d) {  //console.log("row:" +d.row+ "col:"+d.col + "value:"+d.pheno+ "msg:"+d.plot_msg);
-
-            d.row = +d.row;
-            d.col = +d.col;
-            d.pheno = +d.pheno;
-            
-
-          var colorScale = d3.scale.quantile()
-              .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
-              .range(colors);
-
-          var cards = svg.selectAll(".col")
-              .data(datasets, function(d) {return d.row+':'+d.col;});
-
-          cards.append("title");
-
-          cards.enter().append("rect")
-              .attr("x", function(d) { return (d.col - 1) * gridSize; })
-              .attr("y", function(d) { return (d.row - 1) * gridSize; })
-              .attr("rx", 4)
-              .attr("ry", 4)
-              .attr("class", "col bordered")
-              .attr("width", gridSize)
-              .attr("height", gridSize)
-              .style("fill", colors[0]);
-
-          cards.transition().duration(1000)
-              .style("fill", function(d) { return colorScale(d.pheno); });
-
-          cards.select("title").text(function(d) { return d.plot_msg; });
-          
-          cards.exit().remove();
- 
-         // legend = svg.selectAll(".legend")
-          var legend = svg.selectAll(".legend")
-              .data([0].concat(colorScale.quantiles()), function(d) { return d; });
-         
-          legend.enter().append("g")
-              .attr("class", "legend");
-
-          legend.append("rect")
-            .attr("x", function(d, i) { return legendElementWidth * i; })
-            .attr("y", 0 - 90)
-            .attr("width", legendElementWidth)
-            .attr("height", gridSize / 2)
-            .style("fill", function(d, i) { return colors[i]; });
-
-          legend.append("text")
-            .attr("class", "mono")
-            .text(function(d) { return ">= " + Math.round(d); })
-            .attr("x", function(d, i) { return legendElementWidth * i; })
-            .attr("y", 0 - 90 + gridSize);
-
-          legend.exit().remove();
-        
-         });  
-        } ; 
-      
-      heatmapChart(datasets);
-     // jQuery("#container_legend").html(legend);
-      
-      
+                  var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+                      width = 960 - margin.left - margin.right,
+                      height = 900 - margin.top - margin.bottom,
+                      gridSize = Math.floor(width / 24),
+                      legendElementWidth = gridSize*2,
+                      buckets = 9,
+                      colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+                      days = response.phenotypes.unique_row,
+                      times = response.phenotypes.unique_col;
+                      datasets = response.phenotypes.result;
                 
+                  var svg = d3.select("#container_heatmap").append("svg")
+                      .attr("width", width + margin.left + margin.right)
+                      .attr("height", height + margin.top + margin.bottom)
+                      .append("g")
+                      .attr("transform", "translate(" + margin.left + "," + 100 + ")");
+
+                  var dayLabels = svg.selectAll(".dayLabel")
+                      .data(days)
+                      .enter().append("text")
+                        .text(function (d) { return d; })
+                        .attr("x", 0 )
+                        .attr("y", function (d, i) { return i * gridSize; })
+                        .style("text-anchor", "end")
+                        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+
+                  var timeLabels = svg.selectAll(".timeLabel")
+                      .data(times)
+                      .enter().append("text")
+                        .text(function(d) { return d; })
+                        .attr("x", function(d, i) { return i * gridSize; })
+                        .attr("y", 0 )
+                        .style("text-anchor", "middle")
+                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });        
                     
+                  var heatmapChart = function(datasets) {
                     
+                    datasets.forEach(function(d) { 
+
+                        d.row = +d.row;
+                        d.col = +d.col;
+                        d.pheno = +d.pheno;    
+
+                      var colorScale = d3.scale.quantile()
+                          .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
+                          .range(colors);
+
+                      var cards = svg.selectAll(".col")
+                          .data(datasets, function(d) {return d.row+':'+d.col;});
+
+                      cards.append("title");
+
+                      cards.enter().append("rect")
+                          .attr("x", function(d) { return (d.col - 1) * gridSize; })
+                          .attr("y", function(d) { return (d.row - 1) * gridSize; })
+                          .attr("rx", 4)
+                          .attr("ry", 4)
+                          .attr("class", "col bordered")
+                          .attr("width", gridSize)
+                          .attr("height", gridSize)
+                          .style("fill", colors[0]);
+
+                      cards.transition().duration(1000)
+                          .style("fill", function(d) { return colorScale(d.pheno); });
+
+                      cards.select("title").text(function(d) { return d.plot_msg; });
+                      
+                      cards.exit().remove();
+             
+                      var legend = svg.selectAll(".legend")
+                          .data([0].concat(colorScale.quantiles()), function(d) { return d; });
+                     
+                      legend.enter().append("g")
+                          .attr("class", "legend");
+
+                      legend.append("rect")
+                        .attr("x", function(d, i) { return legendElementWidth * i; })
+                        .attr("y", 0 - 90)
+                        .attr("width", legendElementWidth)
+                        .attr("height", gridSize / 2)
+                        .style("fill", function(d, i) { return colors[i]; });
+
+                      legend.append("text")
+                        .attr("class", "mono")
+                        .text(function(d) { return ">= " + Math.round(d); })
+                        .attr("x", function(d, i) { return legendElementWidth * i; })
+                        .attr("y", 0 - 90 + gridSize);
+
+                      legend.exit().remove();
                     
-                    
-                    
+                     });  
+                    } ; 
+                  
+                  heatmapChart(datasets);
+              
                 }
                 else  {
                 
@@ -268,303 +232,7 @@ jQuery(document).ready( function() {
     }
     
   });
-  
-
-    
+      
 });
 
 </script>
-
-<%doc>
-
-
-<%doc>
-
-<style>
-
-#container_heatmap {
-    //border:2px dashed #000;
-    height: 490px;
-    width: 700px;
-    overflow: auto;
-    //overflow: scroll;
-    display: none;
-    margin: 10px;
-}
- #trait_heatmap {display: inline; }
- #trial_no_phenoMSG {display: none; }
- #row_desc_heatmap {display: none; margin: 2px}
- #col_desc_heatmap {display: none; margin: 2px}
-
-.row_desc_heatmap {
-    transform: rotate(-270deg);
-    /*transform-origin: left top;*/
-    transform-origin: 0% 4%;
-    float: left;
-}
-
-</style>
-
-<div id="row_desc_heatmap" class="row_desc_heatmap" >  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Rows </b></div>
-<p></br><div id="col_desc_heatmap" class="col_desc_heatmap">  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <ul class="legend">
-  <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
-  <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
-  <li><span class="checks"></span> Checks</li>
-  <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-  <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-</ul> </br></br> <b>Field Layout Columns </b></div></p>
-
-<div id="container_heatmap" ></div>
-<div id="trait_heatmap" >loading...</div>
-<div id="trial_no_phenoMSG" >Upload physical field coordinates for this trial</div>
-<div class="col-sm-10" id="d_button" style="display:none";>
-  <a id="download_heatmap" class="btn btn-primary">Download as Image</a> &nbsp;  
-</div>
-
-
-<script charset="utf-8" defer="defer">
-var trial_id = <% $trial_id %>;
-//alert("trial_id: "+trial_id)
-  jQuery(document).ready( function() {
-
-  jQuery('#pheno_heatmap_onswitch').click( function() {
-
-   jQuery.ajax( {
-        url: '/ajax/breeders/trial/'+trial_id+'/coords', 
-        beforeSend: function() {
-          jQuery("#working_modal").modal("show");
-        },
-        success: function(response) {
-           jQuery("#working_modal").modal("hide");
-           //alert("coordfile: "+response.coord_row);
-       if (response.coord_col[0] && response.coord_row[0]){
-           jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
-           //$("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
-           jQuery("#row_desc_heatmap").css("display","inline-block");
-           jQuery("#col_desc_heatmap").css("display","inline-block");
-           jQuery("#trait_heatmap").css("display", "none");
-           jQuery("#d_button").css("display", "inline-block");
-       }
-
-       else  {
-           jQuery("#trait_heatmap").css("display", "none");
-           //jQuery("#trait_heatmap").html('Upload physical field coordinates');
-           jQuery("#trial_no_phenoMSG").css("display", "inline-block");
-       }
-
-       var width = 65;
-       var plot_counter = 0;
-           var max_row = response.max_row;
-           var max_col = response.max_col;
-       var max_rep = response.max_rep;
-       var max_block = response.max_block;
-
-       var stage = new Kinetic.Stage({
-           container: 'container_heatmap',
-           //width: 2000,
-           //height: 2000,
-       width: max_col * width + 65,
-           height: max_row * width + 65,
-
-           });
-
-           var plot_layer = new Kinetic.Layer();
-       var popup_layer = new Kinetic.Layer();
-
-   var array_index;
-       for  (y = 0; y < max_row; y = y + 1) {
-           for ( x = 0; x < max_col; x = x + 1){
-
-               plot_counter++;
-
-               if (response.plot_number[y][x]){
-
-               } else {
-                   response.plot_number[y][x] = '';
-                   }
-
-               draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x], max_rep, max_block, response.controls, response.acc[y][x], response.blk[y][x], response.rep_no[y][x], response.plot_name[y][x]);
-
-           }
-       }
-
-       stage.add(plot_layer);
-       stage.add(popup_layer);
-
-       },
-     error: function(reponse) {
-          jQuery("#working_modal").modal("hide");
-     }
-   });
- });
-
-function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number, max_rep, max_block, controls, accessions, blk, rep_no, plot_name){
-//alert("plot id: "+plot_id+ ", accession: "+accessions );
- var width = 65;
-   var popup_x = width;
- var popup_width = 200;
-   x = x * width;
-   y = y * width;
-   if (x + width > max_col * width / 2){
-       popup_x = -1 * popup_width;
-   }
- if (x + width > max_col * width / 2 && max_col <= 5) {
-   popup_x = -1 * popup_width + 60;
- }
-
- var color;
- if (max_block == 1){
-   color = '#C0C0C0';
- }
- else if (max_block > 1){
-   function isEven(blk){
-       if (blk % 2 == 0)
-         color = '#cca6ac';
-       else
-         color = '#C0C0C0';
-   }
-   isEven(blk);
- }
- else{
-   color = '#cca6ac';
- }
-
- if (controls) {
- //alert("the control: "+controls);
-   for (var i = 0; i < controls.length; i++) {
-     if ( controls[i] == accessions) {
-       color = '#58d68d';
-     }
-   }
- }
-
- var stroke_col;
- if (max_rep == 1) {
-   stroke_col = 'black';
- }
- else if (max_rep > 1){
-   function isEven(rep_no){
-       if (rep_no % 2 == 0)
-         stroke_col = ' #f4d03f ';
-       else
-         stroke_col = 'black';
-   }
-   isEven(rep_no);
- }
- else{
-     stroke_col = ' #f4d03f ';
- }
-
-   var myRectangle = new Kinetic.Rect({
-   x:x,
-   y:y,
-   width:width,
-   height:width,
-   //fill:'#C0C0C0',
-   fill: color,
-   stroke: stroke_col,
-   strokeWidth:3,
-   //draggable: true
- });
-
-   var plot_txt_info = new Kinetic.Text({
-       x:x +10,
-       y:y + width/2,
-       //text: plot_counter,
-   text: plot_number,
-       fontSize: 20,
-       fontFamily: 'Arial',
-       fill: "white"
-     });
-
-
-     myRectangle.on('mouseover', function() {
-
-   //this.setFill('#ddd');
-   //plot_layer.draw();
-
-   var plot_txt = new Kinetic.Text({
-       x: x+popup_x+5+10,
-       y: y+14,
-       text: plot_msg,
-       fontSize: 14,
-       fontFamily: 'Arial',
-       fill: "white"
-     });
-
-        var plot_popup = new Kinetic.Rect({
-        x: x+popup_x+10,
-        y: y+8,
-        fill: '#000',
-            opacity: 0.6,
-        width: popup_width+10,
-        height: 90,
-        cornerRadius: 10
-     });
-
-     popup_layer.add(plot_popup);
-     popup_layer.add(plot_txt);
-     popup_layer.draw();
-
-     });
-
-     myRectangle.on('mouseout', function() {
-
-        //this.setFill('#C0C0C0');
-         //plot_layer.draw();
-
-       popup_layer.removeChildren();
-          popup_layer.draw();
-
-     });
-
-     myRectangle.addEventListener("dblclick", myFunction);
-
-     function myFunction() {
-       window.location.href = '/stock/'+plot_id+'/view';
-     }
-
-     plot_layer.add(myRectangle);
-     plot_layer.add(plot_txt_info);
-
-}
-
-function downloadCanvas(link, canvasId, filename) {
-   //var canvas = document.getElementById(canvasId);
-   var canvas = document.getElementsByTagName('canvas')[0];
-   var dataurl = canvas.toDataURL();
-    link.href = dataurl;
-    link.download = filename;
-}
-
-document.getElementById('download_heatmap').addEventListener('click', function() {
-      downloadCanvas(this, 'container_heatmap', 'fieldMap.png');
-}, false);
-
-});
-
-</script>
-
-<style>
-#download_heatmap {
-       float:left;
-       cursor:pointer;
-       color:#ccc;
-       padding:3px;
-   }
-   #download_heatmap:hover {
-       color:#fff;
-   }
-
-.legend { list-style: none; }
-.legend li { float: left; margin-right: 10px; }
-.legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
-/* your colors */
-.legend .block_even_number { background-color: #cca6ac; }
-.legend .block_odd_number { background-color: #C0C0C0; }
-.legend .checks { background-color: #58d68d; }
-.legend .rep_even_number { background-color: #f4d03f; height: 4px; width: 16px;}
-.legend .rep_odd_number { background-color: black; height: 4px; width: 16px;}
-</style>
-
-</%doc>
