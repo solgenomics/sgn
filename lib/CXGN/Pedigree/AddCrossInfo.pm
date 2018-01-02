@@ -27,6 +27,8 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
+use JSON::Any;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -35,8 +37,10 @@ has 'chado_schema' => (
 		 required => 1,
 		);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
-has 'info_type' => (isa =>'Str', is => 'rw', predicate => 'has_info_type', required => 1,);
-has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value', required => 1,);
+#has 'info_type' => (isa =>'Str', is => 'rw', predicate => 'has_info_type', required => 1,);
+#has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value', required => 1,);
+has 'cross_info' => (isa =>'Str', is => 'rw', predicate => 'has_cross_info',);
+
 
 
 sub add_info {
@@ -51,34 +55,50 @@ sub add_info {
     #get cross (stock of type cross)
     my $cross_stock = $self->_get_cross($self->get_cross_name());
     if (!$cross_stock) {
-      print STDERR "Cross could not be found\n";
-      return;
+        print STDERR "Cross could not be found\n";
+        return;
     }
+
+    my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property');
+    my $cross_info = $self->get_cross_info();
+    $cross_stock->create_stockprops({$cross_info_cvterm->name() => $cross_info});
+
+};
+
+
+
+
+
+
+
+
+
 
 
     #get experiment
-    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-      ->find({
-	      'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
-	     },
-	     {
-	      join => 'nd_experiment_stocks',
-	     });
-    if (!$experiment) {
-      print STDERR "Cross experiment could not be found\n";
-      return;
-    }
+
+    #my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+    #  ->find({
+	  #    'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
+	  #   },
+	  #   {
+	  #    join => 'nd_experiment_stocks',
+	  #   });
+    #if (!$experiment) {
+    #  print STDERR "Cross experiment could not be found\n";
+    #  return;
+    #}
 
 		#print STDERR "Adding info type: " . $self->get_info_type() . " value: " . $self->get_value() . "\n";
-    my $info_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $self->get_info_type(), 'nd_experiment_property');
+    #my $info_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $self->get_info_type(), 'nd_experiment_property');
 
-		$experiment->find_or_create_related('nd_experimentprops' , {
-	      nd_experiment_id => $experiment->nd_experiment_id(),
-	      type_id  =>  $info_type_cvterm->cvterm_id(),
-	      value  =>  $self->get_value(),
-		});
+		#$experiment->find_or_create_related('nd_experimentprops' , {
+	  #    nd_experiment_id => $experiment->nd_experiment_id(),
+	  #    type_id  =>  $info_type_cvterm->cvterm_id(),
+	  #    value  =>  $self->get_value(),
+		#});
 
-  };
+
 
   #try to add all cross info in a transaction
   try {

@@ -39,7 +39,7 @@ jQuery(document).ready(function() {
       jQuery('#progeny_information_div').html(html);
 
       var progeny = response.progeny.sort() || [];
-      
+
       progeny.forEach(function(accession_info_array) { // swap position of id and uniquename for each progeny array
         accession_info_array.reverse();
       });

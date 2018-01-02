@@ -43,6 +43,7 @@ use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
 use JSON;
+use JSON::Any;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
@@ -575,6 +576,7 @@ sub add_individual_cross {
   my $male_plot;
   my $maternal = shift;
   my $paternal = shift;
+
   my $owner_name = $c->user()->get_object()->get_username();
   my @progeny_names;
   my $progeny_increment = 1;
@@ -585,12 +587,12 @@ sub add_individual_cross {
   my $prefix = $c->req->param('prefix');
   my $suffix = $c->req->param('suffix');
   my $progeny_number = $c->req->param('progeny_number');
-  my $number_of_flowers = $c->req->param('number_of_flowers');
-  my $number_of_fruits = $c->req->param('number_of_fruits');
-  my $number_of_seeds = $c->req->param('number_of_seeds');
+  my $number_of_flowers = $c->req->param('flower_number');
+  my $number_of_fruits = $c->req->param('fruit_number');
+  my $number_of_seeds = $c->req->param('seed_number');
   my $visible_to_role = $c->req->param('visible_to_role');
 
-  print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
+  print STDERR Dumper "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type Number of Flowers: $number_of_flowers";
 
   if ($female_plot_id){
       my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
@@ -725,25 +727,44 @@ if ($progeny_number) {
 }
 
 #add number of flowers as an experimentprop if specified
-if ($number_of_flowers) {
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-    $cross_add_info->set_number_of_flowers($number_of_flowers);
-    $cross_add_info->add_info();
-}
+#if ($number_of_flowers) {
+#    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
+#    $cross_add_info->set_number_of_flowers($number_of_flowers);
+#    $cross_add_info->add_info();
+#}
 
-if ($number_of_fruits) {
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-    $cross_add_info->set_number_of_fruits($number_of_fruits);
-    $cross_add_info->add_info();
-}
+#if ($number_of_fruits) {
+#    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
+#    $cross_add_info->set_number_of_fruits($number_of_fruits);
+#    $cross_add_info->add_info();
+#}
 
 
 #add number of seeds as an experimentprop if specified
-if ($number_of_seeds) {
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-    $cross_add_info->set_number_of_seeds($number_of_seeds);
+#if ($number_of_seeds) {
+#    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
+#    $cross_add_info->set_number_of_seeds($number_of_seeds);
+#    $cross_add_info->add_info();
+#}
+
+    my @cross_info = ();
+    if($number_of_flowers){
+        push @cross_info, {number_of_flowers => $number_of_flowers};
+    }
+
+    if($number_of_fruits){
+        push @cross_info, {number_of_fruits => $number_of_fruits};
+    }
+
+    if($number_of_seeds){
+        push @cross_info, {number_of_seeds => $number_of_seeds};
+    }
+
+    my $cross_info_json = JSON::Any->encode(\@cross_info);
+    #print STDERR Dumper "JSON string:". $cross_info_json . "\n";
+
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name, cross_info => $cross_info_json} );
     $cross_add_info->add_info();
-}
 
   };
   if ($@) {
