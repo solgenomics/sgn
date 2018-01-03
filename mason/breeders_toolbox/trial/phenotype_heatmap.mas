@@ -187,7 +187,9 @@ jQuery(document).ready( function() {
                           .attr("width", gridSize)
                           .attr("height", gridSize)
                           .style("fill", colors[0])
-                          .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); console.log('over');})
+                          .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); 
+                                                                            //console.log('over');
+                                                        })
                           .on("mouseout", function(d) { 
                                                           var cards = svg.selectAll(".col")
                                                               .data(datasets, function(d) {return d.row+':'+d.col;});
@@ -210,7 +212,7 @@ jQuery(document).ready( function() {
                                                             cards.select("title").text(function(d) { return d.plot_msg; }) ;
                                                             
                                                             cards.exit().remove();
-                                                            console.log('out');
+                                                            //console.log('out');
                                                             });
 
                       cards.transition().duration(1000)
