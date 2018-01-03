@@ -204,6 +204,14 @@ sub get_crossing_data_GET {
             }
             print STDERR Dumper \%cross_info;
             print STDERR Dumper \%plant_status_info;
+
+            #Create or get crossing trial based on name of form
+
+            foreach (keys %cross_info){
+                #Add cross to database and link to crossing trial
+                #Add cross_metadata_json stockprop
+            }
+
         } else {
             print STDERR Dumper $resp;
         }
