@@ -110,6 +110,11 @@ sub get_crossing_data_GET {
             );
             my %cross_info;
             my %plant_status_info;
+            my %cross_subculture_lookup;
+            my %cross_activeseed_lookup;
+            my %rooting_cross_lookup;
+            my %rooting_subculture_lookup;
+            my %rooting_activeseed_lookup;
             foreach my $activity_hash (@$message_hash){
                 my $activity_category = $activity_hash->{userCategory};
                 my $actions = $activity_hash->{$user_categories{$activity_category}};
@@ -121,8 +126,6 @@ sub get_crossing_data_GET {
                     my $attachment_filename = $filepath_components[$#filepath_components];
                     $attachment_lookup{$attachment_filename} = $_->{download_url};
                 }
-                my %cross_subculture_lookup;
-                my %cross_activeseed_lookup;
                 if ($activity_category eq 'field'){
                     #MISSING 'flowering'
                     foreach my $a (@$actions){
@@ -140,16 +143,16 @@ sub get_crossing_data_GET {
                             $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_download} = $attachment_lookup{$a->{$attachment_identifier}};
                         }
                         if ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
-                            $cross_info{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}->{$a->{'FieldActivities/fieldActivity'}} = $a;
+                            push @{$cross_info{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}->{$a->{'FieldActivities/fieldActivity'}}}, $a;
                         }
                         if ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
-                            $cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'} = $a;
+                            push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
                         }
                         if ($a->{'FieldActivities/fieldActivity'} eq 'harvesting'){
-                            $cross_info{$a->{'FieldActivities/harvesting/harvestID'}}->{'harvesting'} = $a;
+                            push @{$cross_info{$a->{'FieldActivities/harvesting/harvestID'}}->{'harvesting'}}, $a;
                         }
                         if ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
-                            $cross_info{$a->{'FieldActivities/seedExtraction/extractionID'}}->{'seedExtraction'} = $a;
+                            push @{$cross_info{$a->{'FieldActivities/seedExtraction/extractionID'}}->{'seedExtraction'}}, $a;
                         }
                     }
                 }
@@ -157,38 +160,44 @@ sub get_crossing_data_GET {
                     #MISSING
                     foreach my $a (@$actions){
                         if ($a->{'Laboratory/labActivity'} eq 'embryoRescue'){
-                            $cross_info{$a->{'Laboratory/embryoRescue/embryorescueID'}}->{'embryoRescue'} = $a;
+                            push @{$cross_info{$a->{'Laboratory/embryoRescue/embryorescueID'}}->{'embryoRescue'}}, $a;
                         }
                         if ($a->{'Laboratory/labActivity'} eq 'germinating_after_2wks'){
-                            $cross_info{$a->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wksID'}}->{'germinating_after_2wks'} = $a;
+                            push @{$cross_info{$a->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wksID'}}->{'germinating_after_2wks'}}, $a;
                         }
                         if ($a->{'Laboratory/labActivity'} eq 'germinating_after_8weeks'){
-                            $cross_info{$a->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeksID'}}->{'germinating_after_8weeks'} = $a;
+                            push @{$cross_info{$a->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeksID'}}->{'germinating_after_8weeks'}}, $a;
                             foreach my $active_seed (@{$a->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds'}}){
                                 $cross_info{$a->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeksID'}}->{'active_seeds'}->{$active_seed->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds/activeID'}} = $active_seed;
                             }
                         }
                         if ($a->{'Laboratory/labActivity'} eq 'subculture'){
-                            $cross_info{$a->{'Laboratory/subculturing/cross_Sub'}}->{'subculture'} = $a;
+                            push @{$cross_info{$a->{'Laboratory/subculturing/cross_Sub'}}->{'subculture'}}, $a;
                             foreach my $subculture (@{$a->{'Laboratory/subculturing/subccultures'}}){
-                                $cross_info{$a->{'Laboratory/subculturing/cross_Sub'}}->{'active_seeds'}->{$subculture->{'Laboratory/subculturing/getGerminating_8weeks_ID'}}->{'subcultures'}->{$a->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $subculture;
-                                $cross_subculture_lookup{$a->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $a->{'Laboratory/subculturing/cross_Sub'};
-                                $cross_activeseed_lookup{$a->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $subculture->{'Laboratory/subculturing/getGerminating_8weeks_ID'};
+                                $cross_info{$a->{'Laboratory/subculturing/cross_Sub'}}->{'active_seeds'}->{$a->{'Laboratory/subculturing/getGerminating_8weeks_ID'}}->{'subcultures'}->{$subculture->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $subculture;
+                                $cross_subculture_lookup{$subculture->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $a->{'Laboratory/subculturing/cross_Sub'};
+                                $cross_activeseed_lookup{$subculture->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $a->{'Laboratory/subculturing/getGerminating_8weeks_ID'};
                             }
                         }
                         if ($a->{'Laboratory/labActivity'} eq 'rooting'){
-                            $cross_info{$cross_subculture_lookup{$a->{'Laboratory/rooting/getSubcultureID'}}}->{'rooting'} = $a;
-                            foreach my $rooting (@{$a->{'Laboratory/subculturing/subccultures'}}){
-                                $cross_info{$cross_subculture_lookup{$rooting->{'Laboratory/rooting/rootingID'}}}->{'active_seeds'}->{$cross_activeseed_lookup{$rooting->{'Laboratory/rooting/rootingID'}}}->{'subcultures'}->{$rooting->{'Laboratory/rooting/rootingID'}}->{'rooting'} = $rooting;
-                            }
+                            push @{$cross_info{$cross_subculture_lookup{$a->{'Laboratory/rooting/getSubcultureID'}}}->{'rooting'}}, $a;
+                            $cross_info{$cross_subculture_lookup{$a->{'Laboratory/rooting/getSubcultureID'}}}->{'active_seeds'}->{$cross_activeseed_lookup{$a->{'Laboratory/rooting/getSubcultureID'}}}->{'subcultures'}->{$a->{'Laboratory/rooting/getSubcultureID'}}->{'rooting'} = $a;
+                            $rooting_cross_lookup{$a->{'Laboratory/rooting/rootingID'}} = $cross_subculture_lookup{$a->{'Laboratory/rooting/getSubcultureID'}};
+                            $rooting_activeseed_lookup{$a->{'Laboratory/rooting/rootingID'}} = $cross_activeseed_lookup{$a->{'Laboratory/rooting/getSubcultureID'}};
+                            $rooting_subculture_lookup{$a->{'Laboratory/rooting/rootingID'}} = $a->{'Laboratory/rooting/getSubcultureID'};
                         }
                     }
                 }
                 if ($activity_category eq 'screenhouse'){
                     #MISSING
                     foreach my $a (@$actions){
-                        if ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
-                            $cross_info{$a->{'FieldActivities/seedExtraction/extractionID'}}->{'seedExtraction'} = $a;
+                        if ($a->{'screenhse_activities/screenhouseActivity'} eq 'screenhouse_humiditychamber'){
+                            push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'screenhouse_humiditychamber'}}, $a;
+                            $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'rooting'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}} = $a;
+                        }
+                        if ($a->{'screenhse_activities/screenhouseActivity'} eq 'hardening'){
+                            push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'hardening'}}, $a;
+                            $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'rooting'}->{$a->{'screenhse_activities/hardening/hardeningID'}}->{'hardening'} = $a;
                         }
                     }
                 }

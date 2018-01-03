@@ -121,7 +121,7 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                //console.log(response);
+                console.log(response);
                 jQuery("#working_modal").modal("hide");
 
                 if (response.error){
