@@ -608,7 +608,7 @@ sub multi_modeling_message {
     			$all_success = 0; 
     			my $trait_name = uc($output_details->{$k}->{trait_name});
     			$message .= "The analysis for $trait_name failed.\n\n";	
-			$message .= 'Refering page: ' . $output_details->{referer} . "\n\n";
+			$message .= 'Refering page: ' . $trait_page . "\n\n";
     		    }		
     		}
     	    }
@@ -654,7 +654,7 @@ sub single_modeling_message {
 		    else 
 		    {  
 			$message  = "The analysis for $trait_name failed.\n\n";
-			$message .= 'Refering page: ' . $output_details->{referer} . "\n\n";
+			$message .= 'Refering page: ' . $trait_page . "\n\n";
 			$message .= "We will troubleshoot the cause and contact you when we find out more.";	 
 		    }		
 		}
@@ -701,7 +701,7 @@ sub selection_prediction_message {
     		    else 
     		    {  
 			$message  = "The analysis for $trait_name failed.\n\n";
-			$message .= 'Refering page: ' . $output_details->{referer} . "\n\n";
+			$message .= 'Refering page: ' . $prediction_pop_page . "\n\n";
 			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";		 
     		    }
 
@@ -750,7 +750,7 @@ sub population_download_message {
 
 			$message  = "Downloading phenotype and genotype data for $pop_name failed.\n";
 			$message .= "\nPossible causes are:\n$msg_geno\n$msg_pheno\n";
-			$message .= 'Refering page: ' . $output_details->{referer} . "\n\n";
+			$message .= 'Refering page: ' . $pop_page . "\n\n";
 			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	 
 		    }
 		}		
@@ -798,7 +798,7 @@ sub combine_populations_message {
 			else 
 			{  		    
 			    $message .= "Downloading phenotype and genotype data for $pop_name failed.";
-			    $message .= 'Refering page: ' . $output_details->{referer} . "\n\n";
+			    $message .= 'Refering page: ' . $pop_page . "\n\n";
 			    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	    
 			}
 		    }		
