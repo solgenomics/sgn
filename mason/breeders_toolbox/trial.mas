@@ -245,11 +245,7 @@ my $start_time = time();
 
 </style> -->
 
-<&| /page/info_section.mas, id => "pheno_heatmap", title=>"Phenotype Heatmap", collapsible=>1, collapsed => 1 &>
 
-    <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
-
-</&>
 
 <& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries &>
 
@@ -352,6 +348,12 @@ my $start_time = time();
 % }
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+
+</&>
+
+<&| /page/info_section.mas, id => "pheno_heatmap", title=>"Phenotype Heatmap", collapsible=>1, collapsed => 1 &>
+
+    <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
 
 </&>
 
