@@ -130,8 +130,8 @@ jQuery(document).ready( function() {
                       legendElementWidth = gridSize*2,
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-                      days = response.phenotypes.unique_row,
-                      times = response.phenotypes.unique_col;
+                      rows = response.phenotypes.unique_row,
+                      columns = response.phenotypes.unique_col;
                       datasets = response.phenotypes.result;
                 
                   var svg = d3.select("#container_heatmap").append("svg")
@@ -140,25 +140,25 @@ jQuery(document).ready( function() {
                       .append("g")
                       .attr("transform", "translate(" + margin.left + "," + 100 + ")");
 
-                  var dayLabels = svg.selectAll(".dayLabel")
-                      .data(days)
+                  var rowLabels = svg.selectAll(".rowLabel")
+                      .data(rows)
                       .enter().append("text")
                         .text(function (d) { return d; })
                         .attr("x", 0 )
                         .attr("y", function (d, i) { return i * gridSize; })
                         .style("text-anchor", "end")
                         .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "rowLabel mono axis axis-workweek" : "rowLabel mono axis"); });
 
-                  var timeLabels = svg.selectAll(".timeLabel")
-                      .data(times)
+                  var columnLabels = svg.selectAll(".columnLabel")
+                      .data(columns)
                       .enter().append("text")
                         .text(function(d) { return d; })
                         .attr("x", function(d, i) { return i * gridSize; })
                         .attr("y", 0 )
                         .style("text-anchor", "middle")
                         .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });        
+                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });        
                     
                   var heatmapChart = function(datasets) {
                     
