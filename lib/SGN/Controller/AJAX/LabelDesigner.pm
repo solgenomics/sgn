@@ -138,6 +138,7 @@ __PACKAGE__->config(
        my $dir = $c->tempfiles_subdir('labels');
        my $file_prefix = $trial_name;
        $file_prefix =~ s/[^a-zA-Z0-9-_]//g;
+
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$download_type");
 
        # initialize loop variables
@@ -295,7 +296,7 @@ __PACKAGE__->config(
 
        close($FH);
        print STDERR "Returning with filename . . .\n";
-       $c->stash->{rest} = { filename => $filename };
+       $c->stash->{rest} = { filename => $c->config->{basepath}."/".$filename };
 
    }
 
