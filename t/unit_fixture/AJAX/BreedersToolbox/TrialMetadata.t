@@ -62,6 +62,12 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'traits_assayed' => [[[70741,'dry matter content percentage|CO_334:0000092'],[70666,'fresh root weight|CO_334:0000012'],[70773,'fresh shoot weight measurement in kg|CO_334:0000016']]]});
 
+my $trait_id = 70741;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/heatmap?selected='.$trait_id );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/trait_histogram/70741');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -130,5 +136,6 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/treatment
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'treatments'}->[0]->[1], 'test_trial_treatmentname1');
+
 
 done_testing();
