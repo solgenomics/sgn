@@ -35,6 +35,7 @@ use SGN::Model::Cvterm;
 use LWP::UserAgent;
 use JSON;
 use CXGN::UploadFile;
+use DateTime;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',

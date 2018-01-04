@@ -17,22 +17,13 @@ $odk_phenotyping_data_service_url => undef
 <ul><li>ODK is an application that allows mobile data collection using user defined forms on Android or IOS devices. Data collected on the device can be instantaneously synched to the ODK server. To find out more go to the <a href="https://opendatakit.org/">ODK site</a>. Many services have developed web interfaces to better streamline the ODK experience. These services assist in creating forms, deploying forms to your mobile application, and visualizing data uploaded back from the mobile device. Currently we are working with <a href="http://www.smap.com.au">SMAP</a> and <a href="https://ona.io/home/">ONA</a> as two ODK services.</li></ul>
 <h4>What do I do from this page?</h4>
 <ul>
-<li>SMAP is currently being used for collecting phenotype information. The user collects phenotypes using a form they previously created. The questions in the form map directly to terms in the ontology. As they collect data on the mobile device, the data is synched to SMAP. From here, we run a script twice a day, which pulls data on SMAP into our database.
-</li>
 <li>ONA is currently being used for collecting crossing information. This requires exporting a crossing plan from here to the ONA server. The crossing plan guides collection of cross information and this data is synched with ONA using ODK. From here, we run a script twice a day, which pulls data on ONA into our database.
+</li>
+<li>SMAP is currently being used for collecting phenotype information. The user collects phenotypes using a form they previously created. The questions in the form map directly to terms in the ontology. As they collect data on the mobile device, the data is synched to SMAP. From here, we run a script twice a day, which pulls data on SMAP into our database.
 </li>
 </ul>
 </div>
 
-<div class="well">
-
-<&| /page/info_section.mas, title=>'SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
-
-<button class="btn btn-primary btn-sm" id="import_odk_phenotype_data" >Import Phenotype Data from SMAP</button>
-
-</&>
-
-</div>
 <div class="well">
 
 <& /breeders_toolbox/cross_wishlist.mas &>
@@ -47,8 +38,48 @@ $odk_phenotyping_data_service_url => undef
     </div>
 </form>
 
-<button class="btn btn-primary btn-sm" id="create_cross_wishlist" >Export Cross Wishlist (Crossing Plan) to ONA</button>
-<button class="btn btn-primary btn-sm" id="import_odk_cross_data" >Import Crossing Data from ONA</button>
+<hr>
+
+<center>
+<button class="btn btn-primary btn-sm" id="create_cross_wishlist" >Export Cross Wishlist (Crossing Plan) to Selected Form on ONA</button>
+<button class="btn btn-info btn-sm" id="import_odk_cross_data" >Import Crossing Data from Selected Form on ONA</button>
+</center>
+
+<hr>
+
+<form class="form-horizontal" id="schedule_import_odk_cross_data_form" name="schedule_import_odk_cross_data_form">
+    <div class="form-group">
+        <label class="col-sm-6 control-label">Schedule Import From Selected Form on ONA: </label>
+        <div class="col-sm-4" >
+            <select class="form-control" id="schedule_import_odk_crossing_form_data">
+                <option value="everyday">Once per day at midnight</option>
+                <option value="everyminute">Once per minute</option>
+                <option value="none">None</option>
+            </select>
+        </div>
+        <div class="col-sm-2" >
+            <button class="btn btn-info btn-sm" id="schedule_import_odk_cross_data" >Confirm</button>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-6 control-label">Scheduled Time: </label>
+        <div class="col-sm-6" >
+            <div id="scheduled_odk_cross_import_time">Not Set</div>
+        </div>
+    </div>
+</form>
+
+<div id="scheduled_odk_cross_cronjobs"></div>
+
+</&>
+
+</div>
+
+<div class="well">
+
+<&| /page/info_section.mas, title=>'SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
+
+<button class="btn btn-primary btn-sm" id="import_odk_phenotype_data" >Import Phenotype Data from SMAP</button>
 
 </&>
 
@@ -75,7 +106,9 @@ jQuery(document).ready(function () {
             if (response.success){
                 var form_dropdown_select_html = '<select class="form-control" id="availabe_odk_crossing_forms">';
                 for(var i=0; i<response.forms.length; i++){
-                    form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';
+                    if (response.forms[i].id_string == 'BtracT_NM2017_01'){
+                        form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';
+                    }
                 }
                 form_dropdown_select_html = form_dropdown_select_html + '</select>';
                 jQuery('#import_odk_cross_data_available_forms').html(form_dropdown_select_html);
@@ -84,6 +117,33 @@ jQuery(document).ready(function () {
         error: function(response){
             jQuery("#working_modal").modal("hide");
             alert("Error retrieving available ODK crossing forms");
+        }
+    });
+
+    jQuery.ajax ( {
+        url : '/ajax/odk/get_crossing_data_cronjobs',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+                if (response.entries[0] == '0-59/1 * * * * '){
+                    jQuery('#scheduled_odk_cross_import_time').html("Once per minute");
+                }
+                if (response.entries[0] == '1 0 * * * '){
+                    jQuery('#scheduled_odk_cross_import_time').html("Once per day at midnight");
+                }
+            }
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving available scheduled ODK cross import cronjobs");
         }
     });
 
@@ -128,6 +188,28 @@ jQuery(document).ready(function () {
             }
         });
     });
+
+    jQuery('#schedule_import_odk_cross_data').click( function(e){
+        jQuery.ajax ( {
+            url : '/ajax/odk/schedule_get_crossing_data?form_id='+jQuery('#availabe_odk_crossing_forms').val()+'&timing='+jQuery('#schedule_import_odk_crossing_form_data').val(),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error){
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error scheduling import of ODK crossing data.");
+            }
+        });
+    });
+
 });
 
 </script>

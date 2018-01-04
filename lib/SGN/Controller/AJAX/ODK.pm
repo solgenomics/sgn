@@ -147,5 +147,121 @@ sub get_crossing_data_GET {
     }
 }
 
+sub schedule_get_crossing_data : Path('/ajax/odk/schedule_get_crossing_data') : ActionClass('REST') { }
+
+sub schedule_get_crossing_data_GET {
+    my ( $self, $c ) = @_;
+    my $form_id = $c->req->param('form_id');
+    my $timing_select = $c->req->param('timing');
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
+    my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
+    my $temp_file_path = $temp_file->filename;
+
+    my $rootpath = $c->config->{rootpath};
+    my $basepath = $c->config->{basepath};
+    my $archive_path = $c->config->{archive_path};
+    my $ODk_username = $c->config->{odk_crossing_data_service_username};
+    my $ODK_password = $c->config->{odk_crossing_data_service_password};
+    my $database_name = $c->config->{dbname};
+    my $database_user = $c->config->{dbuser};
+    my $database_pass = $c->config->{dbpass};
+    my $database_host = $c->config->{dbhost};
+    my $www_user = $c->config->{www_user};
+    my $include_path = 'export PERL5LIB="$PERL5LIB:/usr/local/lib/x86_64-linux-gnu/perl/5.20.2:'.$rootpath.'/local-lib:'.$rootpath.'/local-lib/lib/perl5:/usr/local/share/perl/5.20.2:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/Cview/lib:'.$rootpath.'/ITAG/lib:'.$rootpath.'/biosource/lib:'.$rootpath.'/tomato_genome/lib:'.$rootpath.'/solGS/lib:'.$rootpath.'/Chado/chado/lib:'.$rootpath.'/Tea/lib"';
+    my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -r $user_role -a $archive_path -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -D $database_name -U $database_user -p $database_pass -H $database_host >> /home/vagrant/cron.log 2>&1";
+    my $timing = '';
+    if ($timing_select eq 'everyminute'){
+        $timing = "0-59/1 * * * * ";
+    } elsif ($timing_select eq 'everyday'){
+        $timing = "1 0 * * * ";
+    }
+    my $crontab_line = $timing.$perl_command."\n";
+    print STDERR $crontab_line;
+    my $crontab_file = $c->config->{crontab_file};
+    open (my $F, ">", $crontab_file) || die "Could not open $crontab_file: $!\n";
+        if ($timing){
+            print $F $crontab_line;
+        }
+    close $F;
+    # perl /home/vagrant/cxgn/sgn/bin/ODK/ODK_ONA_get_crosses.pl -u 482 -r curator -a /data/prod/archive -t /home/vagrant/test_ONA_cross_info -n seedtracker -m Seedtracking101 -o 237289 -D cassava_orig -U web_usr -p web_usr -H localhost
+
+    my $enable_new_crontab = "crontab -u $www_user $crontab_file";
+    system($enable_new_crontab);
+
+    $c->stash->{rest} = { success => 1 };
+    $c->detach();
+}
+
+
+sub get_crossing_data_cronjobs : Path('/ajax/odk/get_crossing_data_cronjobs') : ActionClass('REST') { }
+
+sub get_crossing_data_cronjobs_GET {
+    my ( $self, $c ) = @_;
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my @entries;
+    my $crontab_file = $c->config->{crontab_file};
+    open(my $fh, '<:encoding(UTF-8)', $crontab_file)
+        or die "Could not open file '$crontab_file' $!";
+ 
+    while (my $row = <$fh>) {
+        chomp $row;
+        my @c = split 'export', $row;
+        push @entries, $c[0];
+    }
+    close $fh;
+
+    $c->stash->{rest} = { success => 1, entries=>\@entries };
+    $c->detach();
+}
 
 1;
