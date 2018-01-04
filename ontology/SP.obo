@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 04:01:2018 14:27
+date: 04:01:2018 15:09
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3546,8 +3546,8 @@ creation_date: 2017-02-06T15:17:20Z
 
 [Term]
 id: SP:0000395
-name: columella area
-def: "The area of the fruit columella in mm^2." [SGN:EVDK]
+name: columella and placenta area measurement mm^2
+def: "The area of the fruit columella and placenta in mm^2. The area of the fruit columella and placenta of fruits sliced at the equatorial axis." [SGN:EVDK]
 relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2017-09-07T14:56:35Z
