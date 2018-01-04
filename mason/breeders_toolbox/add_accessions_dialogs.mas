@@ -202,7 +202,7 @@ $editable_stock_props => {}
                     <li>ploidy_level(s) (a number indicating the ploidy (e.g. 2 for diploid, 3 for triploid), numeric. many values can be uploaded as comma separated list.)</li>
 % }
 % if (exists($editable_stock_props->{'genome_structure'})){
-                    <li>genome_structure(s) (genome structure(s) for accession. many can be uploaded as comma separated list.)</li>
+                    <li>genome_structure(s) (genome structure(s) for accession which take into account ploidy and ancestral genome info e.g. AAA, AB. many can be uploaded as comma separated list.)</li>
 % }
 % if (exists($editable_stock_props->{'variety'})){
                     <li>variety(s) (variety can be defined as a group of individuals or plants having similar traits that can be reproduced "true to type" from generation to generation. may be uploaded as comma separated list.)</li>
