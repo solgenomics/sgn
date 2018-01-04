@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 02:01:2018 15:47
+date: 04:01:2018 14:25
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3554,7 +3554,8 @@ creation_date: 2017-09-07T14:56:35Z
 
 [Term]
 id: SP:0000396
-name: pericarp cell number
+name: pericarp cell layers, counting
+def: "Number of cell layers in the tomato pericarp in axial abaxial axis. Counting the number of cells intersected by a line perpendicular to the exocarp, avoiding vascular bundles, endocarp layer, 2-4 small cell layers right bellow the exocarp, and 0-1 layers right above the endocarp." [SGN:NM]
 relationship: variable_of SP:0000397 ! pericarp cells
 created_by: naama
 creation_date: 2017-09-07T14:58:51Z
