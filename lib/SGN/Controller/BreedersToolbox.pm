@@ -282,8 +282,8 @@ sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if (!$c->user()) {
-	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
-	      return;
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
     }
     $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
     $c->stash->{odk_crossing_data_service_url} = $c->config->{odk_crossing_data_service_url};
