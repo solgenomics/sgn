@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 04:01:2018 14:25
+date: 04:01:2018 14:27
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3570,6 +3570,7 @@ creation_date: 2017-09-07T15:00:10Z
 [Term]
 id: SP:0000398
 name: pericarp max cell size
+def: "Size of the biggest tomato cells in the pericarp in mm^2." [SGN:NM]
 relationship: variable_of SP:0000397 ! pericarp cells
 created_by: naama
 creation_date: 2017-09-07T15:00:56Z
