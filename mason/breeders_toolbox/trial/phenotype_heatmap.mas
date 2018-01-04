@@ -57,10 +57,57 @@ $trial_id
  <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; --> 
 </div>
 
+<div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SuppressPlotPhenoDialog">Suppress Plot Phenotype Measurement </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plot_pheno_form" name="suppress_plot_pheno_form">
+                    
+                    <center>
+                    <p3> Suppressed measurement will be seen as an outlier and can be excluded during phenotype analysis and download.</p3>
+                    </center></br>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Plot Name:</label>
+                            <div class="col-sm-8" id="myplot_name">
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Phenotype Value: </label>
+                            <div class="col-sm-8" id="pheno_value">
+                            
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Trait ID: </label>
+                            <div class="col-sm-8" id="mytrait_id">
+                            
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="suppress_plot_pheno_dialog_submit" id="suppress_plot_pheno_dialog_submit">Suppress Phenotype</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
 var value = 'plot';
-var selected_trait;
+var selected;
 jQuery(document).ready( function() {
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
@@ -101,7 +148,7 @@ jQuery(document).ready( function() {
 
   jQuery(document).on('change', '#trait_list_dropdown', function () {
     d3.select("svg").remove(); //Remove already created heatmap.
-    var selected = jQuery("#trait_list_dropdown").val();
+    selected = jQuery("#trait_list_dropdown").val();
     if (selected == ''){ }
     else {
         jQuery.ajax( {
@@ -187,6 +234,15 @@ jQuery(document).ready( function() {
                           .attr("width", gridSize)
                           .attr("height", gridSize)
                           .style("fill", colors[0])
+                          .on("click", function(d) { 
+                                                     var phenoValue = d.pheno ;
+                                                     var plotName = d.plotname ; 
+                                                     jQuery("#suppress_plot_pheno_dialog").modal("show"); 
+                                                     jQuery("#myplot_name").html(plotName);
+                                                     jQuery("#pheno_value").html(phenoValue);
+                                                     jQuery("#mytrait_id").html(selected);
+                                                     
+                                                        })
                           .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); 
                                                                             //console.log('over');
                                                         })
