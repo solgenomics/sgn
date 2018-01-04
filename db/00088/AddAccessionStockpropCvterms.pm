@@ -69,6 +69,9 @@ sub patch {
             'introgression_chromosome',
             'introgression_start_position_bp',
             'introgression_end_position_bp',
+            'notes' #Found in editable_stock_props,
+            'variety' #Found in editable_stock_props,
+            'state' #Found in editable_stock_props
         ]
     };
 

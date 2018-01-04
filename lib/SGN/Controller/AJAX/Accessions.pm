@@ -331,6 +331,7 @@ sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') 
 sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    #print STDERR Dumper $c->req->param('full_info');
     my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;

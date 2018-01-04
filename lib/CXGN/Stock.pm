@@ -862,6 +862,7 @@ sub _store_stockprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
+    #print STDERR Dumper $type;
     my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
     my @arr = split ',', $value;
     foreach (@arr){

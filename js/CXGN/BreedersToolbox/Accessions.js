@@ -230,6 +230,7 @@ jQuery(document).ready(function ($) {
     });
 
     function add_accessions(full_info, species_names) {
+        //console.log(full_info);
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',

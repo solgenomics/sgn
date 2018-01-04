@@ -368,11 +368,11 @@ sub _parse_with_plugin {
                 if ($col_name_map{$i}->[0] eq 'donor' || $col_name_map{$i}->[0] eq 'donor institute' || $col_name_map{$i}->[0] eq 'donor PUI'){
                     my %donor_key_map = ('donor'=>'donorGermplasmName', 'donor institute'=>'donorInstituteCode', 'donor PUI'=>'germplasmPUI');
                     if (exists($row_info{donors})){
-                        my $donors_hash = $row_info{donors};
+                        my $donors_hash = $row_info{donors}->[0];
                         $donors_hash->{$donor_key_map{$col_name_map{$i}->[0]}} = $stockprops_value;
-                        $row_info{donors} = $donors_hash;
+                        $row_info{donors} = [$donors_hash];
                     } else {
-                        $row_info{donors} = { $donor_key_map{$col_name_map{$i}->[0]} => $stockprops_value };
+                        $row_info{donors} = [{ $donor_key_map{$col_name_map{$i}->[0]} => $stockprops_value }];
                     }
                 } else {
                     $row_info{$col_name_map{$i}->[1]} = $stockprops_value;
