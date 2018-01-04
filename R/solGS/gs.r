@@ -10,7 +10,7 @@ options(echo = FALSE)
 library(rrBLUP)
 library(plyr)
 library(stringr)
-library(lme4)
+#library(lme4)
 library(randomForest)
 library(data.table)
 library(parallel)
@@ -72,8 +72,8 @@ formattedPhenoData <- c()
 phenoData          <- c()
 
 genoFile <- grep("genotype_data_", inputFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
-
 message('geno file ', genoFile)
+
 if (is.null(genoFile)) {
   stop("genotype data file is missing.")
 }
@@ -111,7 +111,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
   if (file.info(phenoFile)$size == 0) {
     stop("phenotype data file is empty.")
   }
-  
+
   phenoData <- fread(phenoFile, na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
 }
 
@@ -141,12 +141,15 @@ if (datasetInfo == 'combined populations') {
     colnames(phenoTrait)[1] <- 'genotypes'
    
   } else {
+
     phenoTrait <- getAdjMeans(phenoData, trait)
+
   }
 }
 
 if (is.null(filteredGenoData)) {
-  
+ 
+  genoData <- unique(genoData, by='V1')
   #genoDataFilter::filterGenoData
   genoData <- filterGenoData(genoData, maf=0)
   genoData <- roundAlleleDosage(genoData)
