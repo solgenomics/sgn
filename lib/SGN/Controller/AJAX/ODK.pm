@@ -98,7 +98,7 @@ sub get_crossing_data_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to request ODK crossing data import!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -107,7 +107,7 @@ sub get_crossing_data_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to request ODK crossing data import!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -161,7 +161,7 @@ sub schedule_get_crossing_data_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to schedule ODK crossing data import!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -170,7 +170,7 @@ sub schedule_get_crossing_data_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to schedule ODK crossing data import!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -193,7 +193,7 @@ sub schedule_get_crossing_data_GET {
     my $database_pass = $c->config->{dbpass};
     my $database_host = $c->config->{dbhost};
     my $www_user = $c->config->{www_user};
-    my $include_path = 'export PERL5LIB="$PERL5LIB:/usr/local/lib/x86_64-linux-gnu/perl/5.20.2:'.$rootpath.'/local-lib:'.$rootpath.'/local-lib/lib/perl5:/usr/local/share/perl/5.20.2:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/Cview/lib:'.$rootpath.'/ITAG/lib:'.$rootpath.'/biosource/lib:'.$rootpath.'/tomato_genome/lib:'.$rootpath.'/solGS/lib:'.$rootpath.'/Chado/chado/lib:'.$rootpath.'/Tea/lib"';
+    my $include_path = 'export PERL5LIB="$PERL5LIB:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib"';
     my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -r $user_role -a $archive_path -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -D $database_name -U $database_user -p $database_pass -H $database_host >> /home/vagrant/cron.log 2>&1";
     my $timing = '';
     if ($timing_select eq 'everyminute'){
@@ -202,7 +202,7 @@ sub schedule_get_crossing_data_GET {
         $timing = "1 0 * * * ";
     }
     my $crontab_line = $timing.$perl_command."\n";
-    print STDERR $crontab_line;
+    #print STDERR $crontab_line;
     my $crontab_file = $c->config->{crontab_file};
     open (my $F, ">", $crontab_file) || die "Could not open $crontab_file: $!\n";
         if ($timing){
@@ -231,7 +231,7 @@ sub get_crossing_data_cronjobs_GET {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to see scheduled ODK crossing data import!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -240,7 +240,7 @@ sub get_crossing_data_cronjobs_GET {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to see scheduled ODK crossing data import!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();

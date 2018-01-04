@@ -106,7 +106,7 @@ sub save_ona_cross_info {
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
-        print STDERR Dumper $message_hash;
+        #print STDERR Dumper $message_hash;
 
         my %user_categories = (
             'field' => 'FieldActivities',
@@ -216,7 +216,8 @@ sub save_ona_cross_info {
         print STDERR Dumper \%plant_status_info;
         my %odk_cross_hash = (
             cross_info => \%cross_info,
-            plant_status_info => \%plant_status_info
+            plant_status_info => \%plant_status_info,
+            raw_message => $message_hash
         );
 
         #Store recieved info into file and use UploadFile to archive
