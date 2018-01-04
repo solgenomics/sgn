@@ -93,6 +93,7 @@ if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
 genoData <- c()
 if (is.null(filteredGenoData)) {
   genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  genoData <- unique(genoData, by='V1')
   message('read in unfiltered geno data')
 }
 
@@ -149,7 +150,6 @@ if (datasetInfo == 'combined populations') {
 
 if (is.null(filteredGenoData)) {
  
-  genoData <- unique(genoData, by='V1')
   #genoDataFilter::filterGenoData
   genoData <- filterGenoData(genoData, maf=0)
   genoData <- roundAlleleDosage(genoData)
