@@ -116,10 +116,16 @@ sub get_crossing_data_GET {
     }
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
+    my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
+    my $temp_file_path = $temp_file->filename;
     my $odk_crosses = CXGN::ODK::Crosses->new({
         bcs_schema=>$bcs_schema,
         metadata_schema=>$metadata_schema,
         sp_person_id=>$user_id,
+        sp_person_role=>$user_role,
+        archive_path=>$c->config->{archive_path},
+        temp_file_path=>$temp_file_path,
         odk_crossing_data_service_username=>$c->config->{odk_crossing_data_service_username},
         odk_crossing_data_service_password=>$c->config->{odk_crossing_data_service_password},
         odk_crossing_data_service_form_id=>$form_id
@@ -128,11 +134,17 @@ sub get_crossing_data_GET {
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     if ($odk_crossing_data_service_name eq 'ONA'){
         my $result = $odk_crosses->save_ona_cross_info();
+        if ($result->{error}){
+            $c->stash->{rest} = { error => $result->{error} };
+            $c->detach();
+        } elsif ($result->{success}){
+            $c->stash->{rest} = { success => 1 };
+            $c->detach();
+        }
     } else {
         $c->stash->{rest} = { error => 'Error: We only support ONA as an ODK crossing service for now.' };
         $c->detach();
     }
-    $c->stash->{rest} = { success => 1 };
 }
 
 

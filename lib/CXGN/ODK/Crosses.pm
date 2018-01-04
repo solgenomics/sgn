@@ -10,6 +10,9 @@ my $odk_crosses = CXGN::ODK::Crosses->new({
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     sp_person_id=>$sp_person_id,
+    sp_person_role=>$sp_person_role,
+    archive_path=>$archive_path,
+    temp_file_path=>$temp_file_path,
     odk_crossing_data_service_username=>$odk_crossing_data_service_username,
     odk_crossing_data_service_password=>$odk_crossing_data_service_password,
     odk_crossing_data_service_form_id=>$odk_crossing_data_service_form_id
@@ -31,6 +34,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use LWP::UserAgent;
 use JSON;
+use CXGN::UploadFile;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -50,6 +54,12 @@ has 'sp_person_id' => (
     required => 1,
 );
 
+has 'sp_person_role' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'odk_crossing_data_service_username' => (
     isa => 'Str',
     is => 'rw',
@@ -63,6 +73,18 @@ has 'odk_crossing_data_service_password' => (
 );
 
 has 'odk_crossing_data_service_form_id' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'archive_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'temp_file_path' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
@@ -108,9 +130,18 @@ sub save_ona_cross_info {
                 my $attachment_filename = $filepath_components[$#filepath_components];
                 $attachment_lookup{$attachment_filename} = $_->{download_url};
             }
-            if ($activity_category eq 'field'){
-                #MISSING 'flowering'
-                foreach my $a (@$actions){
+
+            foreach my $a (@$actions){
+                $a->{userCategory} = $activity_hash->{userCategory};
+                $a->{startTime} = $activity_hash->{startTime};
+                $a->{userName} = $activity_hash->{userName};
+                $a->{'meta/instanceID'} = $activity_hash->{'meta/instanceID'};
+                $a->{'formhub/uuid'} = $activity_hash->{'formhub/uuid'};
+                $a->{'meta/instanceName'} = $activity_hash->{'meta/instanceName'};
+                $a->{'fieldgroup/gps'} = $activity_hash->{'fieldgroup/gps'} || '';
+
+                if ($activity_category eq 'field'){
+                    #MISSING 'flowering'
                     if ($a->{'FieldActivities/fieldActivity'} eq 'status'){
                         my $status_identifier;
                         my $attachment_identifier;
@@ -137,10 +168,8 @@ sub save_ona_cross_info {
                         push @{$cross_info{$a->{'FieldActivities/seedExtraction/extractionID'}}->{'seedExtraction'}}, $a;
                     }
                 }
-            }
-            if ($activity_category eq 'laboratory'){
-                #MISSING
-                foreach my $a (@$actions){
+                if ($activity_category eq 'laboratory'){
+                    #MISSING
                     if ($a->{'Laboratory/labActivity'} eq 'embryoRescue'){
                         push @{$cross_info{$a->{'Laboratory/embryoRescue/embryorescueID'}}->{'embryoRescue'}}, $a;
                     }
@@ -169,10 +198,8 @@ sub save_ona_cross_info {
                         $rooting_subculture_lookup{$a->{'Laboratory/rooting/rootingID'}} = $a->{'Laboratory/rooting/getSubcultureID'};
                     }
                 }
-            }
-            if ($activity_category eq 'screenhouse'){
-                #MISSING
-                foreach my $a (@$actions){
+                if ($activity_category eq 'screenhouse'){
+                    #MISSING
                     if ($a->{'screenhse_activities/screenhouseActivity'} eq 'screenhouse_humiditychamber'){
                         push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'screenhouse_humiditychamber'}}, $a;
                         $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'rooting'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}} = $a;
@@ -186,6 +213,35 @@ sub save_ona_cross_info {
         }
         print STDERR Dumper \%cross_info;
         print STDERR Dumper \%plant_status_info;
+        my %odk_cross_hash = (
+            cross_info => \%cross_info,
+            plant_status_info => \%plant_status_info
+        );
+
+        #Store recieved info into file and use UploadFile to archive
+        #Store recieved info into metadata for display on ODK dashboard
+        my $temp_file_path = $self->temp_file_path;
+        open(my $F1, ">", $temp_file_path) || die "Can't open file ".$temp_file_path;
+            my $encoded_odk_cross_hash = encode_json \%odk_cross_hash;
+            print $F1 $encoded_odk_cross_hash;
+        close($F1);
+
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $temp_file_path,
+            subdirectory => "ODK_ONA_cross_info",
+            archive_path => $self->archive_path,
+            archive_filename => "ODK_ONA_cross_info_download",
+            timestamp => $timestamp,
+            user_id => $self->sp_person_id,
+            user_role => $self->sp_person_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            return { error => "Could not save file ODK_ONA_cross_info_download in archive" };
+        }
 
         #Create or get crossing trial based on name of form
 
@@ -194,8 +250,11 @@ sub save_ona_cross_info {
             #Add cross_metadata_json stockprop
         }
 
+        return { success => 1 };
+
     } else {
         print STDERR Dumper $resp;
+        return { error => "Could not connect to ONA" };
     }
 }
 
