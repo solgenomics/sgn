@@ -29,47 +29,79 @@ $odk_phenotyping_data_service_url => undef
 <& /breeders_toolbox/cross_wishlist.mas &>
 <&| /page/info_section.mas, title=>'ONA ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
 
-<form class="form-horizontal" id="import_odk_cross_data_form" name="import_odk_cross_data_form">
-    <div class="form-group">
-        <label class="col-sm-4 control-label">Available ODK Forms on ONA: </label>
-        <div class="col-sm-8" >
-            <div id="import_odk_cross_data_available_forms"></div>
+<&| /page/info_section.mas, title=>'Management', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <form class="form-horizontal" id="import_odk_cross_data_form" name="import_odk_cross_data_form">
+            <div class="form-group">
+                <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
+                <div class="col-sm-8" >
+                    <div id="import_odk_cross_data_available_forms"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-sm-1">
+                <span style="font-size:3em;" class="glyphicon glyphicon-transfer"></span>
+            </div>
+            <div class="col-sm-11">
+                <button class="pull-right btn btn-primary btn-sm" id="create_cross_wishlist" >Export Cross Wishlist (Crossing Plan) to Selected Form on ONA</button>
+                <br/><br/>
+                <button class="pull-right btn btn-info btn-sm" id="import_odk_cross_data" >Import Crossing Data from Selected Form on ONA</button>
+            </div>
         </div>
     </div>
-</form>
+</div>
 
-<hr>
-
-<center>
-<button class="btn btn-primary btn-sm" id="create_cross_wishlist" >Export Cross Wishlist (Crossing Plan) to Selected Form on ONA</button>
-<button class="btn btn-info btn-sm" id="import_odk_cross_data" >Import Crossing Data from Selected Form on ONA</button>
-</center>
-
-<hr>
-
-<form class="form-horizontal" id="schedule_import_odk_cross_data_form" name="schedule_import_odk_cross_data_form">
-    <div class="form-group">
-        <label class="col-sm-6 control-label">Schedule Import From Selected Form on ONA: </label>
-        <div class="col-sm-4" >
-            <select class="form-control" id="schedule_import_odk_crossing_form_data">
-                <option value="everyday">Once per day at midnight</option>
-                <option value="everyminute">Once per minute</option>
-                <option value="none">None</option>
-            </select>
-        </div>
-        <div class="col-sm-2" >
-            <button class="btn btn-info btn-sm" id="schedule_import_odk_cross_data" >Confirm</button>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-sm-1">
+                <span style="font-size:3em;" class="glyphicon glyphicon-time"></span>
+            </div>
+            <div class="col-sm-11">
+                <form class="form-horizontal" id="schedule_import_odk_cross_data_form" name="schedule_import_odk_cross_data_form">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Schedule Import For Selected Form: </label>
+                        <div class="col-sm-4" >
+                            <select class="form-control" id="schedule_import_odk_crossing_form_data">
+                                <option value="everyday">Once per day at midnight</option>
+                                <option value="everyminute">Once per minute</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-2" >
+                            <button class="btn btn-info btn-sm" id="schedule_import_odk_cross_data" >Confirm</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Scheduled Time: </label>
+                        <div class="col-sm-6" >
+                            <div id="scheduled_odk_cross_import_time">
+                                <input type="text" disabled value="Not Set" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-    <div class="form-group">
-        <label class="col-sm-6 control-label">Scheduled Time: </label>
-        <div class="col-sm-6" >
-            <div id="scheduled_odk_cross_import_time">Not Set</div>
-        </div>
-    </div>
-</form>
+</div>
 
-<div id="scheduled_odk_cross_cronjobs"></div>
+</&>
+
+<&| /page/info_section.mas, title=>'Progress', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
+
+<div id="odk_cross_progress_div"></div>
+
+</&>
+
 
 </&>
 
@@ -134,16 +166,37 @@ jQuery(document).ready(function () {
             }
             if (response.success){
                 if (response.entries[0] == '0-59/1 * * * * '){
-                    jQuery('#scheduled_odk_cross_import_time').html("Once per minute");
+                    jQuery('#scheduled_odk_cross_import_time').html('<input type="text" disabled value="Once per minute" class="form-control" />');
                 }
                 if (response.entries[0] == '1 0 * * * '){
-                    jQuery('#scheduled_odk_cross_import_time').html("Once per day at midnight");
+                    jQuery('#scheduled_odk_cross_import_time').html('<input type="text" disabled value="Once per day at midnight" class="form-control" />');
                 }
             }
         },
         error: function(response){
             jQuery("#working_modal").modal("hide");
             alert("Error retrieving available scheduled ODK cross import cronjobs");
+        }
+    });
+
+    jQuery.ajax ({
+        url : '/ajax/odk/get_crossing_data_progress',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+            }
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving ODK cross data progress");
         }
     });
 

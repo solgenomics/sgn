@@ -264,4 +264,55 @@ sub get_crossing_data_cronjobs_GET {
     $c->detach();
 }
 
+sub get_crossing_data_progress : Path('/ajax/odk/get_crossing_data_progress') : ActionClass('REST') { }
+
+sub get_crossing_data_progress_GET {
+    my ( $self, $c ) = @_;
+    my $file_type = $c->req->param("cross_wishlist_type_select");
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to see ODK crossing data progress!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to see ODK crossing data progress!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+
+    my $wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $file_type});
+    my @wishlist_file_lines;
+    if ($wishlist_md_file){
+        my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
+        print STDERR "cross_wishlist $wishlist_file_path\n";
+        open(my $fh, '<', $wishlist_file_path)
+            or die "Could not open file '$wishlist_file_path' $!";
+        my $header_row = <$fh>;
+        while ( my $row = <$fh> ){
+            chomp $row;
+            push @wishlist_file_lines, $row;
+        }
+    }
+    print STDERR Dumper \@wishlist_file_lines;
+
+    $c->stash->{rest} = { success => 1 };
+    $c->detach();
+}
+
 1;
