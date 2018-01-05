@@ -340,6 +340,7 @@ sub get_crossing_data_progress_GET {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
+    my %combined;
     my $wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({file_id=> $file_id});
     my @wishlist_file_lines;
     if ($wishlist_md_file){
@@ -349,14 +350,75 @@ sub get_crossing_data_progress_GET {
         open(my $fh, '<', $wishlist_file_path)
             or die "Could not open file '$wishlist_file_path' $!";
         my $header_row = <$fh>;
+        chomp $header_row;
+        my @header_row = split ',', $header_row;
+        print STDERR $header_row."\n";
         while ( my $row = <$fh> ){
             chomp $row;
-            push @wishlist_file_lines, $row;
+            my @cols = split ',', $row;
+            #print STDERR Dumper \@cols;
+            if (scalar(@cols) != scalar(@header_row)){
+                $c->stash->{rest} = {error=>'Cross wishlist not parsed correctly!'};
+                $c->detach();
+            }
+            my @cleaned_cols;
+            foreach (@cols){
+                #$_ =~ s/\s+//g;
+                push @cleaned_cols, $_;
+            }
+            push @wishlist_file_lines, \@cleaned_cols;
         }
-    }
-    print STDERR Dumper \@wishlist_file_lines;
+        #print STDERR Dumper \@wishlist_file_lines;
 
-    $c->stash->{rest} = { success => 1 };
+        my %cross_wishlist_hash;
+        foreach (@wishlist_file_lines){
+            my $female_accession_name = $_->[2];
+            my $number_males = $_->[9];
+            for my $n (10 .. 10+$number_males){
+                if ($_->[$n]){
+                    $cross_wishlist_hash{$female_accession_name}->{$_->[$n]}++;
+                }
+            }
+        }
+        #print STDERR Dumper \%cross_wishlist_hash;
+
+        my @all_cross_parents;
+        my %all_cross_info;
+        my %all_plant_status_info;
+        my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
+        while (my $r=$odk_submissions->next){
+            my $odk_submission = decode_json $r->comment;
+            my $cross_parents = $odk_submission->{cross_parents};
+            my $cross_info = $odk_submission->{cross_info};
+            my $plant_status_info = $odk_submission->{plant_status_info};
+            push @all_cross_parents, $cross_parents;
+            foreach my $cross (keys %$cross_info){
+                $all_cross_info{$cross} = $cross_info->{$cross};
+            }
+            foreach my $plant (keys %$plant_status_info){
+                $all_plant_status_info{$plant} = $plant_status_info->{$plant};
+            }
+        }
+        #print STDERR Dumper \@all_cross_parents;
+        #print STDERR Dumper \%all_plant_status_info;
+        #print STDERR Dumper \%all_cross_info;
+
+        foreach my $female_accession_name (keys %cross_wishlist_hash){
+            my $male_hash = $cross_wishlist_hash{$female_accession_name};
+            foreach my $male_accession_name (keys %$male_hash){
+                foreach my $cross_parents (@all_cross_parents){
+                    if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
+                        foreach my $cross_name (keys %{$cross_parents->{$female_accession_name}->{$male_accession_name}}){
+                            print STDERR Dumper $cross_name;
+                            $combined{$female_accession_name}->{$male_accession_name}->{$cross_name} = $all_cross_info{$cross_name};
+                        }
+                    }
+                }
+            }
+        }
+        #print STDERR Dumper \%combined;
+    }
+    $c->stash->{rest} = { success => 1, progress=>\%combined };
     $c->detach();
 }
 

@@ -36,6 +36,7 @@ use LWP::UserAgent;
 use JSON;
 use CXGN::UploadFile;
 use DateTime;
+use File::Basename qw | basename dirname|;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -114,6 +115,7 @@ sub save_ona_cross_info {
             'screenhouse' => 'screenhse_activities'
         );
         my %cross_info;
+        my %cross_parents;
         my %plant_status_info;
         my %cross_subculture_lookup;
         my %cross_activeseed_lookup;
@@ -158,9 +160,17 @@ sub save_ona_cross_info {
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
                         push @{$cross_info{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}->{$a->{'FieldActivities/fieldActivity'}}}, $a;
+
+                        my $female_accession_name = $a->{'FieldActivities/FirstPollination/firstFemaleName'};
+                        my $male_accession_name = $a->{'FieldActivities/FirstPollination/selectedMaleName'};
+                        $cross_parents{$female_accession_name}->{$male_accession_name}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                         push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
+
+                        my $female_accession_name = $a->{'FieldActivities/RepeatPollination/getRptFemaleAccName'};
+                        my $male_accession_name = $a->{'FieldActivities/RepeatPollination/getMaleAccName'};
+                        $cross_parents{$female_accession_name}->{$male_accession_name}->{$a->{'FieldActivities/RepeatPollination/getCrossID'}}++;
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'harvesting'){
                         push @{$cross_info{$a->{'FieldActivities/harvesting/harvestID'}}->{'harvesting'}}, $a;
@@ -216,6 +226,7 @@ sub save_ona_cross_info {
         print STDERR Dumper \%plant_status_info;
         my %odk_cross_hash = (
             cross_info => \%cross_info,
+            cross_parents => \%cross_parents,
             plant_status_info => \%plant_status_info,
             raw_message => $message_hash
         );
@@ -223,18 +234,19 @@ sub save_ona_cross_info {
         #Store recieved info into file and use UploadFile to archive
         #Store recieved info into metadata for display on ODK dashboard
         my $temp_file_path = $self->temp_file_path;
+        my $encoded_odk_cross_hash = encode_json \%odk_cross_hash;
         open(my $F1, ">", $temp_file_path) || die "Can't open file ".$temp_file_path;
-            my $encoded_odk_cross_hash = encode_json \%odk_cross_hash;
             print $F1 $encoded_odk_cross_hash;
         close($F1);
 
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();
+        my $file_type = "ODK_ONA_cross_info_download";
         my $uploader = CXGN::UploadFile->new({
             tempfile => $temp_file_path,
             subdirectory => "ODK_ONA_cross_info",
             archive_path => $self->archive_path,
-            archive_filename => "ODK_ONA_cross_info_download",
+            archive_filename => $file_type,
             timestamp => $timestamp,
             user_id => $self->sp_person_id,
             user_role => $self->sp_person_role
@@ -244,6 +256,17 @@ sub save_ona_cross_info {
         if (!$archived_filename_with_path) {
             return { error => "Could not save file ODK_ONA_cross_info_download in archive" };
         }
+
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->sp_person_id});
+        my $file_row = $metadata_schema->resultset("MdFiles")
+            ->create({
+                basename => basename($archived_filename_with_path),
+                dirname => dirname($archived_filename_with_path),
+                filetype => $file_type,
+                md5checksum => $md5->hexdigest(),
+                metadata_id => $md_row->metadata_id(),
+                comment => $encoded_odk_cross_hash
+            });
 
         #Create or get crossing trial based on name of form
 
