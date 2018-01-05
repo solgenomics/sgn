@@ -37,7 +37,7 @@ $odk_phenotyping_data_service_url => undef
             <div class="form-group">
                 <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
                 <div class="col-sm-8" >
-                    <div id="import_odk_cross_data_available_forms"></div>
+                    <div id="import_odk_cross_data_available_forms">LOADING...</div>
                 </div>
             </div>
         </form>
@@ -98,6 +98,19 @@ $odk_phenotyping_data_service_url => undef
 
 <&| /page/info_section.mas, title=>'Progress', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
 
+<div class="panel panel-default">
+    <div class="panel-body">
+        <form class="form-horizontal" id="odk_cross_data_form_wishlist_select" name="odk_cross_data_form_wishlist_select">
+            <div class="form-group">
+                <label class="col-sm-4 control-label">Select A Cross Wishlist: </label>
+                <div class="col-sm-8" >
+                    <div id="odk_cross_data_available_wishlists">LOADING...</div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="odk_cross_progress_div"></div>
 
 </&>
@@ -153,6 +166,51 @@ jQuery(document).ready(function () {
     });
 
     jQuery.ajax ( {
+        url : '/ajax/odk/get_crossing_available_wishlists',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+                var wishlist_dropdown_select_html = '<select class="form-control" id="odk_cross_data_available_wishlists_select">';
+                for(var i=0; i<response.wishlists.length; i++){
+                    wishlist_dropdown_select_html = wishlist_dropdown_select_html + '<option value="'+response.wishlists[i][0]+'">'+response.wishlists[i][1]+'</option>';
+                }
+                wishlist_dropdown_select_html = wishlist_dropdown_select_html + '</select>';
+                jQuery('#odk_cross_data_available_wishlists').html(wishlist_dropdown_select_html);
+
+                jQuery.ajax ({
+                    url : '/ajax/odk/get_crossing_data_progress?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
+                    success: function(response){
+                        console.log(response);
+                        jQuery("#working_modal").modal("hide");
+
+                        if (response.error){
+                            alert(response.error);
+                        }
+                        if (response.success){
+                        }
+                    },
+                    error: function(response){
+                        jQuery("#working_modal").modal("hide");
+                        alert("Error retrieving ODK cross data progress");
+                    }
+                });
+
+            }
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving available ODK crossing forms");
+        }
+    });
+
+    jQuery.ajax ( {
         url : '/ajax/odk/get_crossing_data_cronjobs',
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
@@ -176,27 +234,6 @@ jQuery(document).ready(function () {
         error: function(response){
             jQuery("#working_modal").modal("hide");
             alert("Error retrieving available scheduled ODK cross import cronjobs");
-        }
-    });
-
-    jQuery.ajax ({
-        url : '/ajax/odk/get_crossing_data_progress',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response){
-            console.log(response);
-            jQuery("#working_modal").modal("hide");
-
-            if (response.error){
-                alert(response.error);
-            }
-            if (response.success){
-            }
-        },
-        error: function(response){
-            jQuery("#working_modal").modal("hide");
-            alert("Error retrieving ODK cross data progress");
         }
     });
 
