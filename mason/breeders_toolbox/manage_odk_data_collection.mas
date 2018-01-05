@@ -194,6 +194,46 @@ jQuery(document).ready(function () {
                             alert(response.error);
                         }
                         if (response.success){
+                            var progress = response.progress;
+                            for (var female_accession_name in progress) {
+                                if (progress.hasOwnProperty(female_accession_name)) {
+                                    var males = progress[female_accession_name]
+                                    for (var male_accession_name in males) {
+                                        if (males.hasOwnProperty(male_accession_name)) {
+                                            var crosses = progress[female_accession_name][male_accession_name];
+                                            for (var cross_name in crosses) {
+                                                if (crosses.hasOwnProperty(cross_name)) {
+                                                    var actions = progress[female_accession_name][male_accession_name][cross_name];
+                                                    for (var cross_name in crosses) {
+                                                        if (crosses.hasOwnProperty(cross_name)) {
+                                                            
+                                                        }
+                                                    }
+                                                }
+                                                if (crosses.hasOwnProperty("active_seeds")) {
+                                                    var active_seeds = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"];
+                                                    for (var active_seed in active_seeds) {
+                                                        if (active_seeds.hasOwnProperty(active_seed)) {
+                                                            var active_seed_actions = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed];
+                                                            if (active_seed_actions.hasOwnProperty("subcultures")) {
+                                                                var subcultures = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed]["subcultures"];
+                                                                for (var subculture in subcultures) {
+                                                                    if (subcultures.hasOwnProperty(subculture)) {
+                                                                        var subculture_actions = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed]["subcultures"][subculture];
+                                                                        if (subculture_actions.hasOwnProperty("rooting")) {
+                                                                            var rooting = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed]["subcultures"][subculture]["rooting"];
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     },
                     error: function(response){
