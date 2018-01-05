@@ -209,3 +209,4 @@ composable_cvs	method_ontology		05/01/2017		00073
 composable_cvs	unit_ontology		05/01/2017		00073
 composable_cvs	time_ontology		05/01/2017		00073
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
+phenotype_property  phenotype_outlier   suppressed phenotype measurement    01/04/2018  aco46   00089
