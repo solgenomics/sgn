@@ -149,7 +149,10 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
     my $field_info = shift;
     my $base_url = $c->config->{main_production_site_url};
     my $text = "$base_url/breeders/plot_phenotyping?stock_id=$stock_id";
-
+    if ($field_info eq "trial"){
+       $text =  "TrailID:".$stock_id."\n TrialName:".$stock_name;
+    }
+    
     $c->tempfiles_subdir('barcode');
     my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 

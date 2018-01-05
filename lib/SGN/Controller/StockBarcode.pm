@@ -80,7 +80,7 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
 }
 
 
-sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
+sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) { 
     my ($self, $c) = @_;
 
     my $stock_names = $c->req->param("stock_names");
@@ -1052,6 +1052,163 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
         }
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_4);
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
+}
+
+  $pdf->close();
+
+  $c->stash->{not_found} = \@not_found;
+  $c->stash->{found} = \@found;
+  $c->stash->{file} = $filename;
+  $c->stash->{filetype} = 'PDF';
+  $c->stash->{template} = '/barcode/stock_download_result.mas';
+
+}
+
+
+=head2 download_qrcode
+
+ URL:          mapped to URL /barcode/trial/download/trial_QRcode
+ Params:       project_name or project_name_file: trial names to generate barcodes for
+ Desc:         creates the barcode image, create a pdf file, returns the created
+               barcodes on a downloadable pdf file.
+ Ret:
+ Side Effects:
+ Example:
+
+=cut
+
+# Generate Trial barcode
+sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $project_names = $c->req->param("trial_names_2");
+  my $project_names_file = $c->req->upload("trial_names_file_2");
+  my $labels_per_page =  64;
+  my $page_format = "letter";
+  my $labels_per_row  = 4;
+  my $top_margin_mm = 12;
+  my $left_margin_mm = 10;
+  my $bottom_margin_mm = 12;
+  my $right_margin_mm = 10;
+  my $barcode_type = "trial";
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  
+ # convert mm into pixels
+  #
+  my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
+                    $left_margin_mm,
+                    $bottom_margin_mm,
+                    $right_margin_mm);
+
+  # read file if upload
+  #
+  if ($project_names_file) {
+     my $project_file_contents = read_file($project_names_file->{tempname});
+     $project_names = $project_names ."\n".$project_file_contents;
+  }
+
+  $project_names =~ s/\r//g;
+  my @names = split /\n/, $project_names;
+
+  my @not_found;
+  my @found;
+  my $project_id;
+
+  foreach my $name (@names) {
+
+    # skip empty lines
+    #
+    if (!$name) {
+        next;
+    }
+
+    my $project = $schema->resultset("Project::Project")->find( { name=>$name });
+
+    if (!$project) {
+        push @not_found, $name;
+        next;
+    }
+    my $project_id = $project->project_id();
+    push @found, [ $project_id, $name];
+    
+}    
+  my $dir = $c->tempfiles_subdir('pdfs');
+  my ($FH, $filename) = $c->tempfile(TEMPLATE=>"pdfs/pdf-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
+  print STDERR "FILENAME: $filename \n\n\n";
+  my $pdf = PDF::Create->new(filename=>$c->path_to($filename),
+           Author=>$c->config->{project_name},
+           Title=>'Labels',
+           CreationDate => [ localtime ],
+           Version=>1.2,
+            );
+
+  my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
+
+  my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];
+  my $label_height = 40;
+  
+  my @pages;
+  foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) {
+     print STDERR "Generating page $page...\n";
+     push @pages, $base_page->new_page();
+  }
+
+  my $row_y_label_count = 1;
+  my $labels_on_page = 0;
+  my $row_count = 0;
+  my $ypos;
+  for (my $i=0; $i<@found; $i++) {
+    my $label_count = $i + 1;
+    my $page_nr = $self->label_to_page($labels_per_page, $label_count);
+    my $label_on_page = ($label_count -1) % $labels_per_page;
+
+    # generate barcode
+    
+    my $tempfile;
+    $tempfile = $c->forward('/barcode/phenotyping_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $barcode_type] );
+
+    print STDERR "$tempfile\n";
+    my $image = $pdf->image($tempfile);
+    print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+
+    # note: pdf coord system zero is lower left corner
+    #
+    my $xlabel_margin = 3.5;
+    my $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
+
+    my $scalex = $final_barcode_width / $image->{width};
+    my $scaley = $label_height / $image->{height};
+
+    if ($scalex < $scaley) { $scaley = $scalex; }
+    else { $scalex = $scaley; }
+    my $label_boundary; 
+    
+    my $label_height_16_per_page = 45;
+    my $custom_label_height = 90;
+    if ($labels_on_page == 64){
+        $row_count = 0;
+        $labels_on_page = 0;
+    }
+    if ($row_y_label_count == 1 || $row_y_label_count > $labels_per_row){
+        $label_boundary = $page_height - ($row_count * $label_height_16_per_page) - $top_margin;
+        $ypos = $label_boundary - int( ($custom_label_height - $image->{height} * $scaley) /2);
+        $row_count++;
+    }
+    if ($row_y_label_count > $labels_per_row){
+        $row_y_label_count = 1;
+    }
+    print STDERR $row_y_label_count." ".$row_count." ".$ypos." ".$labels_on_page."\n";
+    $row_y_label_count++;
+    $labels_on_page++;
+
+    my $font = $pdf->font('BaseFont' => 'Times-Roman');
+    my $label_text = $found[$i]->[1];
+    my $label_size =  10;
+    my $xposition = $left_margin + 5 + ($row_y_label_count -2) * $final_barcode_width;
+    my $yposition = $ypos;
+    
+    $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 89 + ($row_y_label_count -2) * $final_barcode_width, ypos=>$ypos + 20.5, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 }
 
   $pdf->close();
