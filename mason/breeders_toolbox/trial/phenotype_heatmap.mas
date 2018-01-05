@@ -174,7 +174,6 @@ jQuery(document).ready( function() {
                       width = 960 - margin.left - margin.right,
                       height = 900 - margin.top - margin.bottom,
                       gridSize = Math.floor(width / 24),
-                      gridSize2 = Math.floor(width / 22),
                       legendElementWidth = gridSize*2,
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
@@ -316,6 +315,18 @@ jQuery(document).ready( function() {
     }
     
   });
+
+  jQuery("#suppress_plot_pheno_dialog_submit").click(function() {
+    suppress_plot_phenotype();
+  });
+  
+  function suppress_plot_phenotype() {
+    jQuery("#suppress_plot_pheno_dialog").modal("hide");
+    var sup_plotName = jQuery('#myplot_name').html();
+    var sup_traitValue = jQuery('#pheno_value').html();
+    var sup_traitID = jQuery('#mytrait_id').html();
+    //alert(sup_plotName+","+sup_traitValue+"," +sup_traitID);
+  } 
       
 });
 
