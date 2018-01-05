@@ -27,7 +27,7 @@ $odk_phenotyping_data_service_url => undef
 <div class="well">
 
 <& /breeders_toolbox/cross_wishlist.mas &>
-<&| /page/info_section.mas, title=>'ONA ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
+<&| /page/info_section.mas, title=>'Crossing Data: ONA ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
 
 <&| /page/info_section.mas, title=>'Management', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
 
@@ -109,7 +109,7 @@ $odk_phenotyping_data_service_url => undef
 
 <div class="well">
 
-<&| /page/info_section.mas, title=>'SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
+<&| /page/info_section.mas, title=>'Phenotype Data: SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
 
 <button class="btn btn-primary btn-sm" id="import_odk_phenotype_data" >Import Phenotype Data from SMAP</button>
 
