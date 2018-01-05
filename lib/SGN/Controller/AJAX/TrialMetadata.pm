@@ -1368,8 +1368,44 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     });
     my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
     
-    $c->stash->{rest} = { phenotypes => $phenotype };
-    
+    $c->stash->{rest} = { phenotypes => $phenotype };    
+}
+
+sub suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $plot_name = $c->req->param('plot_name');
+  my $plot_pheno_value = $c->req->param('phenotype_value');
+  my $trait_id = $c->req->param('trait_id');
+  my $trial_id = $c->stash->{trial_id};
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
+    return;
+  }
+
+  my $suppress_plot_phenotype = CXGN::Phenotypes::TrialPhenotype->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    plot_name => $plot_name,
+    phenotype_value => $plot_pheno_value,
+    trait_id => $trait_id,
+  });
+
+  my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
+
+  my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
+  if ($replace_return_error) {
+    $c->stash->{rest} = { error => $replace_return_error };
+    return;
+  }
+
+  $c->stash->{rest} = { success => 1};
 }
 
 1;

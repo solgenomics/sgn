@@ -104,6 +104,31 @@ $trial_id
     </div>
 </div>
 
+<div class="modal  fade" id="suppress_phenotype_dialog_success_message" name="suppress_phenotype_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="SuppressPhenoDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SuppressPhenoDialog">Suppress Phenotype For Plot </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plotPheno_form" name="suppress_plotPheno_form">
+
+                    <p3> Phenotype was suppressed successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
 var value = 'plot';
@@ -326,6 +351,32 @@ jQuery(document).ready( function() {
     var sup_traitValue = jQuery('#pheno_value').html();
     var sup_traitID = jQuery('#mytrait_id').html();
     //alert(sup_plotName+","+sup_traitValue+"," +sup_traitID);
+    
+    new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/breeders/trial/<% $trial_id %>/suppress_phenotype',
+        dataType: "json",
+        data: {
+                'plot_name': sup_plotName,
+                'phenotype_value': sup_traitValue,
+                'trait_id': sup_traitID,
+        },
+        beforeSend: function() {
+            jQuery('#working_modal').modal("show");
+        },
+        success: function(response){
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+              alert("Error Suppressing Phenotype: "+response.error);
+            }else {
+                jQuery('#suppress_phenotype_dialog_success_message').modal("show");
+            }
+          },
+          error: function() {
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred suppressing phenotype');
+          }
+    });
   } 
       
 });
