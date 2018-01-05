@@ -2294,6 +2294,22 @@ sub get_trial_contacts {
 	return \@contacts;
 }
 
+=head2 suppress_plot_phenotype
+
+ Usage:        	my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id);
+				 if ($suppress_return_error) {
+				   $c->stash->{rest} = { error => $suppress_return_error };
+				   return;
+				 }
+ 
+ Desc:         Suppresses plot phenotype
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub suppress_plot_phenotype {
 	my $self = shift;
     my $trait_id = shift;
