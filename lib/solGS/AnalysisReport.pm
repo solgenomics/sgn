@@ -592,13 +592,14 @@ sub multi_modeling_message {
     	    if (ref $output_details->{$k} eq 'HASH')
     	    {
     		if ($output_details->{$k}->{trait_id})
-    		{	  
+    		{
+		    my $trait_name = uc($output_details->{$k}->{trait_name});
+		    my $trait_page = $output_details->{$k}->{trait_page};
+
     		    if ($output_details->{$k}->{success})
     		    {
     			$cnt++;
     			$all_success = 1;
-    			my $trait_name = uc($output_details->{$k}->{trait_name});
-    			my $trait_page = $output_details->{$k}->{trait_page};
     			$message .= "The analysis for $trait_name is done."
     			    ." You can view the model output here:"
     			    ."\n\n$trait_page\n\n";
@@ -606,7 +607,6 @@ sub multi_modeling_message {
     		    else 
     		    {  
     			$all_success = 0; 
-    			my $trait_name = uc($output_details->{$k}->{trait_name});
     			$message .= "The analysis for $trait_name failed.\n\n";	
 			$message .= 'Refering page: ' . $trait_page . "\n\n";
     		    }		
