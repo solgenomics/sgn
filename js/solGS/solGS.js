@@ -36,8 +36,8 @@ solGS.waitPage = function (page, args) {
 
     function  askUser(page, args) {
 	
-	var t = '<p>This analysis may take longer than 20 min. ' 
-	    + 'Would you like to be emailed when it is done?</p>';
+	var t = '<p>This analysis takes long time. ' 
+	    + 'You can request the analysis and you will be emailed when it completes.</p>';
 	
 	jQuery('<div />')
 	    .html(t)
@@ -47,8 +47,8 @@ solGS.waitPage = function (page, args) {
 		modal  : true,
 		title  : "Analysis job submission",
  		buttons: {	
-		    Yes: {
-			text: 'Yes',
+		    OK: {
+			text: 'OK',
 			class: 'btn btn-success',
                         id   : 'queue_job',
 			click: function() {
@@ -58,16 +58,16 @@ solGS.waitPage = function (page, args) {
 			},
 		    }, 
 		    
-		    No: { 
-			text: 'No, I will wait...',
-			class: 'btn btn-primary',
-                        id   : 'no_queue',
-			click: function() { 
-			    jQuery(this).dialog("close");
+		    // No: { 
+		    // 	text: 'No, I will wait...',
+		    // 	class: 'btn btn-primary',
+                    //     id   : 'no_queue',
+		    // 	click: function() { 
+		    // 	    jQuery(this).dialog("close");
 			    
-			    displayAnalysisNow(page, args);
-			},
-		    },
+		    // 	    displayAnalysisNow(page, args);
+		    // 	},
+		    // },
 		    
 		    Cancel: { 
 			text: 'Cancel',
