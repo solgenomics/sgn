@@ -1065,7 +1065,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
 }
 
 
-=head2 download_qrcode
+=head2 download_trial_qrcode
 
  URL:          mapped to URL /barcode/trial/download/trial_QRcode
  Params:       project_name or project_name_file: trial names to generate barcodes for
@@ -1078,7 +1078,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
 =cut
 
 # Generate Trial barcode
-sub download_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
+sub download_trial_qrcode : Path('/barcode/trial/download/trial_QRcode') : Args(0) {
   my $self = shift;
   my $c = shift;
   my $project_names = $c->req->param("trial_names_2");
