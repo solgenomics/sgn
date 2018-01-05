@@ -259,9 +259,7 @@ sub _get_pedigrees_from_file {
     return \@pedigrees;
 }
 
-###################
-#
-=item get_full_pedigree
+=head2 get_full_pedigree
 
 Usage:
     GET "/ajax/pedigrees/get_full?stock_id=<STOCK_ID>";
@@ -270,8 +268,7 @@ Responds with JSON array containing pedigree relationship objects for the
 accession identified by STOCK_ID and all of its parents (recursively).
 
 =cut
-#
-###################
+
 sub get_full_pedigree : Path('/ajax/pedigrees/get_full') : ActionClass('REST') { }
 sub get_full_pedigree_GET {
     my $self = shift;
@@ -296,9 +293,7 @@ sub get_full_pedigree_GET {
     $c->stash->{rest} = $nodes;
 }
 
-###################
-#
-=item get_relationships
+=head2 get_relationships
 
 Usage:
     POST "/ajax/pedigrees/get_relationships";
@@ -308,8 +303,7 @@ Responds with JSON array containing pedigree relationship objects for the
 accessions identified by the provided STOCK_IDs.
 
 =cut
-#
-###################
+
 sub get_relationships : Path('/ajax/pedigrees/get_relationships') : ActionClass('REST') { }
 sub get_relationships_POST {
     my $self = shift;
