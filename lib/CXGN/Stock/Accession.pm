@@ -389,11 +389,12 @@ sub store {
     }
     if ($self->germplasmPUI){
         $self->_store_stockprop('PUI', $self->germplasmPUI);
-    } else {
-        my $germplasm_pui = $self->main_production_site_url."/stock/".$id."/view";
-        $self->_store_stockprop('PUI', $germplasm_pui);
-        $self->germplasmPUI($germplasm_pui);
     }
+
+    #Include the newly created entry in this database as a PUI
+    my $germplasm_pui = $self->main_production_site_url."/stock/".$id."/view";
+    $self->_store_stockprop('PUI', $germplasm_pui);
+
     if ($self->germplasmSeedSource){
         $self->_store_stockprop('seed source', $self->germplasmSeedSource);
     }
