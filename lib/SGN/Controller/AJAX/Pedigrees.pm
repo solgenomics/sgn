@@ -279,8 +279,8 @@ sub get_full_pedigree_GET {
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
-    my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
+    my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my @queue = ($stock_id);
     my $nodes = [];
@@ -320,8 +320,8 @@ sub get_relationships_POST {
     my $s_ids = $c->req->body_params->{stock_id};
     push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
-    my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
+    my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $nodes = [];
     while (@{$stock_ids}){
