@@ -3,7 +3,7 @@
 $trial_id
 </%args>
 
- <& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js', 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -82,6 +82,13 @@ $trial_id
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Phenotype Value: </label>
                             <div class="col-sm-8" id="pheno_value">
+                            
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Phenotype ID: </label>
+                            <div class="col-sm-8" id="mypheno_id">
                             
                             </div>
                         </div>
@@ -261,10 +268,12 @@ jQuery(document).ready( function() {
                           .on("click", function(d) { 
                                                      var phenoValue = d.pheno ;
                                                      var plotName = d.plotname ; 
+                                                     var phenoID = d.pheno_id;
                                                      jQuery("#suppress_plot_pheno_dialog").modal("show"); 
                                                      jQuery("#myplot_name").html(plotName);
                                                      jQuery("#pheno_value").html(phenoValue);
                                                      jQuery("#mytrait_id").html(selected);
+                                                     jQuery("#mypheno_id").html(phenoID);
                                                      
                                                         })
                           .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); 
@@ -350,6 +359,7 @@ jQuery(document).ready( function() {
     var sup_plotName = jQuery('#myplot_name').html();
     var sup_traitValue = jQuery('#pheno_value').html();
     var sup_traitID = jQuery('#mytrait_id').html();
+    var sup_phenoID = jQuery('#mypheno_id').html();
     //alert(sup_plotName+","+sup_traitValue+"," +sup_traitID);
     
     new jQuery.ajax({
@@ -360,6 +370,7 @@ jQuery(document).ready( function() {
                 'plot_name': sup_plotName,
                 'phenotype_value': sup_traitValue,
                 'trait_id': sup_traitID,
+                'phenotype_id': sup_phenoID,
         },
         beforeSend: function() {
             jQuery('#working_modal').modal("show");

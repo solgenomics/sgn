@@ -22,7 +22,7 @@ my @phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
 
 
 =cut
-
+ 
 
 
 use strict;
@@ -52,7 +52,6 @@ has 'trait_id' => (
     required => 1,
 );
 
-
 sub get_trial_phenotypes_heatmap {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -76,6 +75,7 @@ sub get_trial_phenotypes_heatmap {
 	  plot_number=> 'plot_number.value',
 	  block_number=> 'block_number.value',
       phenotype_value=> 'phenotype.value',
+	  phenotype_id=> 'phenotype.phenotype_id',
       plot_name=> 'plot.uniquename AS plot_name',
       accession_name=> 'accession.uniquename',
       from_clause=> " FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
@@ -97,7 +97,7 @@ sub get_trial_phenotypes_heatmap {
       JOIN project USING(project_id)",
     );
 
-	my $select_clause = "SELECT  DISTINCT ".$columns{'stock_id'}.", ".$columns{'plot_name'}.", ".$columns{'accession_name'}.", ".$columns{'plot_number'}.", ".$columns{'block_number'}.", ".$columns{'rep'}.", ".$columns{'row_number'}.", ".$columns{'col_number'}.", ".$columns{'phenotype_value'}."";
+	my $select_clause = "SELECT  DISTINCT ".$columns{'stock_id'}.", ".$columns{'plot_name'}.", ".$columns{'accession_name'}.", ".$columns{'plot_number'}.", ".$columns{'block_number'}.", ".$columns{'rep'}.", ".$columns{'row_number'}.", ".$columns{'col_number'}.", ".$columns{'phenotype_value'}.", ".$columns{'phenotype_id'}."";
 
 	my $from_clause = $columns{'from_clause'};
 
@@ -124,9 +124,9 @@ sub get_trial_phenotypes_heatmap {
     my $result = [];
 	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results);
 	
-	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value) = $h->fetchrow_array()) {
+	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value, $pheno_id) = $h->fetchrow_array()) {
 		my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
-        push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp} ;
+        push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$pheno_id} ;
 		push @col_No, $col_number;
 		push @row_No, $row_number;
 		push @pheno_val, $value;
@@ -170,7 +170,5 @@ sub get_trial_phenotypes_heatmap {
 	#print STDERR Dumper($result);
     return \%results;
 }
-
-
 
 1;
