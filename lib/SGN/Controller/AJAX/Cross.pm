@@ -781,10 +781,10 @@ sub create_cross_wishlist_POST : Args(0) {
     my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     my $location = $t->get_location();
     my $location_name = $location->[1];
-    if ($location_name ne 'Arusha'){
-        $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
-        $c->detach();
-    }
+    #if ($location_name ne 'Arusha'){
+    #    $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
+    #    $c->detach();
+    #}
 
     my %selected_cross_hash;
     my %selected_females;
@@ -901,6 +901,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
     my $trial_id = $c->req->param('trial_id');
+    my $ona_form_id = $c->req->param('form_id');
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
     #print STDERR Dumper $data;
     #print STDERR Dumper $selected_plot_ids;
@@ -1185,9 +1186,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path2,
-       subdirectory => 'cross_wishlist',
+       subdirectory => 'cross_wishlist_'.$site_name,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'cross_wishlist_'.$site_name.'_'.$location_name.'.csv',
+       archive_filename => 'cross_wishlist_'.$location_name.'.csv',
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1245,9 +1246,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path3,
-       subdirectory => 'cross_wishlist',
+       subdirectory => 'cross_wishlist_'.$site_name,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'germplasm_info_'.$site_name.'_'.$location_name.'.csv',
+       archive_filename => 'germplasm_info_'.$location_name.'.csv',
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1255,7 +1256,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $germplasm_info_uploaded_file = $uploader->archive();
     my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
 
-    my $odk_crossing_data_service_form_id = $c->config->{odk_crossing_data_service_form_id};
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
 
@@ -1296,7 +1296,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         Content_Type => 'form-data',
         Content => [
             data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>$odk_crossing_data_service_form_id,
+            "xform"=>$ona_form_id,
             "data_type"=>"media",
             "data_value"=>$uploaded_file
         ]
@@ -1335,7 +1335,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         Content_Type => 'form-data',
         Content => [
             data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>$odk_crossing_data_service_form_id,
+            "xform"=>$ona_form_id,
             "data_type"=>"media",
             "data_value"=>$germplasm_info_uploaded_file
         ]

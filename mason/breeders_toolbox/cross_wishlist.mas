@@ -18,6 +18,17 @@
 
             <div class="modal-body">
                 <div class="container-fluid">
+                    <div class="well">
+                        <form class="form-horizontal" id="cross_wishlist_create_select_form_id" name="cross_wishlist_create_select_form_id">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
+                                <div class="col-sm-8" >
+                                    <div id="cross_wishlist_create_select_form_id_div">LOADING...</div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                     <ul class="nav nav-pills nav-justified" id="cross_wishlist_tab_select">
                         <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Lists</a></li>
                         <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Not Using Lists</a></li>
@@ -36,9 +47,19 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name(s): </label>
+                                    <label class="col-sm-3 control-label">Trial Name: </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_trial_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="well well-sm">
+                                    <div class="form-group">
+                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <div class="col-sm-6" >
+                                            <div id="cross_wishlist_trial_select_list_cross_wishlist_name_div">
+                                                <input class="form-control" type="text" disabled value="Please Select a Trial First" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -62,9 +83,19 @@
 
                             <form class="form-horizontal" >
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name(s): </label>
+                                    <label class="col-sm-3 control-label">Trial Name: </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_trial_select_no_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="well well-sm">
+                                    <div class="form-group">
+                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <div class="col-sm-6" >
+                                            <div id="cross_wishlist_trial_select_no_list_cross_wishlist_name_div">
+                                                <input class="form-control" type="text" disabled value="Please Select a Trial First" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -182,6 +213,35 @@ function draw_cross_grid(female_accessions, male_accessions){
 
 jQuery(document).ready(function($) {
 
+    jQuery.ajax ({
+        url : '/ajax/odk/get_crossing_available_forms',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+                var form_dropdown_select_html = '<select class="form-control" id="cross_wishlist_availabe_odk_crossing_forms">';
+                for(var i=0; i<response.forms.length; i++){
+                    if (response.forms[i].id_string == 'BtracT_NM2017_01'){
+                        form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';
+                    }
+                }
+                form_dropdown_select_html = form_dropdown_select_html + '</select>';
+                jQuery('#cross_wishlist_create_select_form_id_div').html(form_dropdown_select_html);
+            }
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving available ODK crossing forms");
+        }
+    });
+
     jQuery('#show_cross_wishlists_select_submits').click(function(){
         jQuery('#show_cross_wishlists_response_dialog').modal('show');
 
@@ -214,7 +274,7 @@ jQuery(document).ready(function($) {
 
     });
 
-%  if ($c->config->{odk_crossing_data_service_form_id} ne 'NULL'){
+%  if ($c->config->{odk_crossing_data_service_name} ne 'NULL'){
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
         jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"] ));
@@ -245,6 +305,10 @@ jQuery(document).ready(function($) {
 
     get_select_box('trials', 'cross_wishlist_trial_select_list_div', { 'name' : 'cross_wishlist_list_trial_id', 'id' : 'cross_wishlist_list_trial_id', 'empty':1, 'multiple':0 });
 
+    jQuery(document).on('change', "#cross_wishlist_list_trial_id", function() {
+        cross_wishlist_change_trials_lists();
+    });
+
     jQuery(document).on('change', "#cross_wishlist_trial_id", function() {
         cross_wishlist_change_trials();
     });
@@ -272,6 +336,40 @@ jQuery(document).ready(function($) {
             trial_ids_string = trial_ids;
         }
         get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids_array, 'names_as_select':1 });
+
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+trial_ids_array[0]+'/location',
+            success: function(response) {
+                //console.log(response);
+                jQuery('#cross_wishlist_trial_select_no_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="cross_wishlist_'+response.location[1]+'" />');
+            },
+            error: function(response) {
+                alert("An error occurred getting trial location");
+            }
+        });
+    };
+
+    function cross_wishlist_change_trials_lists () {
+        var trial_ids = jQuery('#cross_wishlist_list_trial_id').val();
+        var trial_ids_string = '';
+        if ( jQuery.isArray(trial_ids) ) {
+            trial_ids_array = trial_ids;
+            trial_ids_string = trial_ids.join();
+        } else {
+            trial_ids_array = [trial_ids];
+            trial_ids_string = trial_ids;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+trial_ids_array[0]+'/location',
+            success: function(response) {
+                //console.log(response);
+                jQuery('#cross_wishlist_trial_select_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="cross_wishlist_'+response.location[1]+'" />');
+            },
+            error: function(response) {
+                alert("An error occurred getting trial location");
+            }
+        });
     };
 
     jQuery(document).on('change', "#cross_wishlist_female_accession_ids", function() {
@@ -436,7 +534,8 @@ jQuery(document).ready(function($) {
             data: {
                 'crosses': JSON.stringify(cross_data),
                 'selected_plot_ids': JSON.stringify(selected_plot_ids),
-                'trial_id': trial_id
+                'trial_id': trial_id,
+                'form_id': jQuery('#cross_wishlist_availabe_odk_crossing_forms').val()
             },
             dataType:'json',
             beforeSend: function() {
