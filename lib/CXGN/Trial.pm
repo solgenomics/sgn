@@ -2294,5 +2294,54 @@ sub get_trial_contacts {
 	return \@contacts;
 }
 
+=head2 suppress_plot_phenotype
+
+ Usage:        	my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id);
+				 if ($suppress_return_error) {
+				   $c->stash->{rest} = { error => $suppress_return_error };
+				   return;
+				 }
+ 
+ Desc:         Suppresses plot phenotype
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub suppress_plot_phenotype {
+	my $self = shift;
+    my $trait_id = shift;
+    my $plot_name = shift;
+    my $phenotype_value = shift;
+	my $phenotype_id = shift;
+	my $schema = $self->bcs_schema;
+    my $trial_id = $self->get_trial_id();
+	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+	my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
+	my $error;
+	
+	print " VAR: $trial_id, $trait_id, $plot_name, $phenotype_value, $phenotype_id, $phenotype_outlier_type_id\n";
+	
+	my $prop_rs = $self->bcs_schema->resultset('Phenotype::Phenotypeprop')->search(
+		{ 'phenotype_id' => $phenotype_id, 'type_id'=>$phenotype_outlier_type_id }
+	);
+	
+	if ($prop_rs->count == 0) {
+		my $suppress_plot_pheno = $schema->resultset("Phenotype::Phenotypeprop")->create({
+			phenotype_id => $phenotype_id,
+			type_id       => $phenotype_outlier_type_id,
+			value => 1,
+		});
+	}
+	else {
+		$error = "This plot phenotype has already been suppressed.";
+	}
+	
+	return $error;
+	
+}
+
 
 1;
