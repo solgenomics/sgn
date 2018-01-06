@@ -13,9 +13,11 @@ my $odk_crosses = CXGN::ODK::Crosses->new({
     sp_person_role=>$sp_person_role,
     archive_path=>$archive_path,
     temp_file_path=>$temp_file_path,
+    cross_wishlist_md_file_id=>$cross_wishlist_md_file_id,
     odk_crossing_data_service_username=>$odk_crossing_data_service_username,
     odk_crossing_data_service_password=>$odk_crossing_data_service_password,
-    odk_crossing_data_service_form_id=>$odk_crossing_data_service_form_id
+    odk_crossing_data_service_form_id=>$odk_crossing_data_service_form_id,
+    odk_cross_progress_tree_file_dir=>$odk_cross_progress_tree_file_dir
 });
 my $result = $odk_crosses->save_ona_cross_info();
 
@@ -37,6 +39,11 @@ use JSON;
 use CXGN::UploadFile;
 use DateTime;
 use File::Basename qw | basename dirname|;
+use Carp;
+use File::Path qw(make_path);
+use File::Spec::Functions qw / catfile catdir/;
+use Bio::Chado::Schema;
+use CXGN::Metadata::Schema;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -51,6 +58,12 @@ has 'metadata_schema' => (
 );
 
 has 'sp_person_id' => (
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
+);
+
+has 'cross_wishlist_md_file_id' => (
     isa => 'Int',
     is => 'rw',
     required => 1,
@@ -87,6 +100,12 @@ has 'archive_path' => (
 );
 
 has 'temp_file_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'odk_cross_progress_tree_file_dir' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
@@ -257,16 +276,26 @@ sub save_ona_cross_info {
             return { error => "Could not save file ODK_ONA_cross_info_download in archive" };
         }
 
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->sp_person_id});
-        my $file_row = $metadata_schema->resultset("MdFiles")
-            ->create({
-                basename => basename($archived_filename_with_path),
-                dirname => dirname($archived_filename_with_path),
-                filetype => $file_type,
-                md5checksum => $md5->hexdigest(),
-                metadata_id => $md_row->metadata_id(),
-                comment => $encoded_odk_cross_hash
-            });
+        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
+        #my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->sp_person_id});
+        #my $file_row = $metadata_schema->resultset("MdFiles")
+        #    ->create({
+        #        basename => basename($archived_filename_with_path),
+        #        dirname => dirname($archived_filename_with_path),
+        #        filetype => $file_type,
+        #        md5checksum => $md5->hexdigest(),
+        #        metadata_id => $md_row->metadata_id(),
+        #        comment => $encoded_odk_cross_hash
+        #    });
+
+        my $h = $metadata_schema->storage->dbh->prepare("INSERT INTO metadata.md_metadata (create_person_id) VALUES (?) RETURNING metadata_id");
+        my $r = $h->execute($self->sp_person_id);
+        my $metadata_id = $h->fetchrow_array();
+        my $h2 = $metadata_schema->storage->dbh->prepare("INSERT INTO metadata.md_files (basename, dirname, filetype, md5checksum, metadata_id, comment) VALUES (?,?,?,?,?,?) RETURNING metadata_id");
+        my $r2 = $h2->execute(basename($archived_filename_with_path), dirname($archived_filename_with_path), $file_type, $md5->hexdigest(), $metadata_id, $encoded_odk_cross_hash);
+
+        #Update cross progress tree
+        $self->create_odk_cross_progress_tree();
 
         #Create or get crossing trial based on name of form
 
@@ -281,6 +310,126 @@ sub save_ona_cross_info {
         print STDERR Dumper $resp;
         return { error => "Could not connect to ONA" };
     }
+}
+
+sub create_odk_cross_progress_tree {
+    my $self = shift;
+    my $wishlist_file_id = $self->cross_wishlist_md_file_id;
+    my $metadata_schema = $self->metadata_schema;
+
+    my %combined;
+
+    #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
+    #my $wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({file_id=> $wishlist_file_id});
+
+    my $h = $metadata_schema->storage->dbh->prepare("SELECT dirname, basename FROM metadata.md_files WHERE file_id=?");
+    $h->execute($wishlist_file_id);
+    my @wishlist_file_elements = $h->fetchrow_array;
+
+    my @wishlist_file_lines;
+    if (@wishlist_file_elements){
+
+        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
+        #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
+
+        #my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
+
+        my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_MusaBase_Arusha_KgtuGst.csv";
+        print STDERR "cross_wishlist $wishlist_file_path\n";
+        open(my $fh, '<', $wishlist_file_path)
+            or die "Could not open file '$wishlist_file_path' $!";
+        my $header_row = <$fh>;
+        chomp $header_row;
+        my @header_row = split ',', $header_row;
+        #print STDERR $header_row."\n";
+        while ( my $row = <$fh> ){
+            chomp $row;
+            my @cols = split ',', $row;
+            #print STDERR Dumper \@cols;
+            if (scalar(@cols) != scalar(@header_row)){
+                return {error=>'Cross wishlist not parsed correctly!'};
+            }
+            push @wishlist_file_lines, \@cols;
+        }
+        #print STDERR Dumper \@wishlist_file_lines;
+
+        my %cross_wishlist_hash;
+        foreach (@wishlist_file_lines){
+            my $female_accession_name = $_->[2];
+            my $number_males = $_->[9];
+            for my $n (10 .. 10+$number_males){
+                if ($_->[$n]){
+                    $cross_wishlist_hash{$female_accession_name}->{$_->[$n]}++;
+                }
+            }
+        }
+        #print STDERR Dumper \%cross_wishlist_hash;
+
+        my @all_cross_parents;
+        my %all_cross_info;
+        my %all_plant_status_info;
+
+        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
+        #my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
+        #while (my $r=$odk_submissions->next){
+        #    my $odk_submission = decode_json $r->comment;
+
+        $h = $metadata_schema->storage->dbh->prepare("SELECT comment FROM metadata.md_files WHERE filetype='ODK_ONA_cross_info_download' ORDER BY file_id ASC");
+        $h->execute();
+        while (my $r = $h->fetchrow_array) {
+            my $odk_submission = decode_json $r;
+            my $cross_parents = $odk_submission->{cross_parents};
+            my $cross_info = $odk_submission->{cross_info};
+            my $plant_status_info = $odk_submission->{plant_status_info};
+            push @all_cross_parents, $cross_parents;
+            foreach my $cross (keys %$cross_info){
+                $all_cross_info{$cross} = $cross_info->{$cross};
+            }
+            foreach my $plant (keys %$plant_status_info){
+                $all_plant_status_info{$plant} = $plant_status_info->{$plant};
+            }
+        }
+        #print STDERR Dumper \@all_cross_parents;
+        #print STDERR Dumper \%all_plant_status_info;
+        #print STDERR Dumper \%all_cross_info;
+
+        foreach my $female_accession_name (keys %cross_wishlist_hash){
+            my $male_hash = $cross_wishlist_hash{$female_accession_name};
+            foreach my $male_accession_name (keys %$male_hash){
+                foreach my $cross_parents (@all_cross_parents){
+                    if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
+                        foreach my $cross_name (keys %{$cross_parents->{$female_accession_name}->{$male_accession_name}}){
+                            print STDERR Dumper $cross_name;
+                            $combined{$female_accession_name}->{$male_accession_name}->{$cross_name} = $all_cross_info{$cross_name};
+                        }
+                    } else {
+                        $male_accession_name =~ s/\s+//g;
+                        if ($male_accession_name){
+                            $combined{$female_accession_name}->{$male_accession_name} = "No Crosses Performed";
+                        }
+                    }
+                }
+            }
+        }
+        #print STDERR Dumper \%combined;
+    }
+
+    my $html = encode_json \%combined;
+    #while (my ($female_accession_name)
+
+
+    my $dir = $self->odk_cross_progress_tree_file_dir;
+    eval { make_path($dir) };
+    if ($@) {
+        print "Couldn't create $dir: $@";
+    }
+    my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
+
+    my $OUTFILE;
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
 }
 
 1;
