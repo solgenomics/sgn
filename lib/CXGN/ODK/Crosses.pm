@@ -241,8 +241,8 @@ sub save_ona_cross_info {
                 }
             }
         }
-        print STDERR Dumper \%cross_info;
-        print STDERR Dumper \%plant_status_info;
+        #print STDERR Dumper \%cross_info;
+        #print STDERR Dumper \%plant_status_info;
         my %odk_cross_hash = (
             cross_info => \%cross_info,
             cross_parents => \%cross_parents,
@@ -356,10 +356,14 @@ sub create_odk_cross_progress_tree {
         my %cross_wishlist_hash;
         foreach (@wishlist_file_lines){
             my $female_accession_name = $_->[2];
+            my $female_plot_name = $_->[1];
+            my $wishlist_entry_created_timestamp = $_->[7];
+            my $wishlist_entry_created_by = $_->[8];
             my $number_males = $_->[9];
+            my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
             for my $n (10 .. 10+$number_males){
                 if ($_->[$n]){
-                    $cross_wishlist_hash{$female_accession_name}->{$_->[$n]}++;
+                    $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
                 }
             }
         }
@@ -393,19 +397,24 @@ sub create_odk_cross_progress_tree {
         #print STDERR Dumper \%all_plant_status_info;
         #print STDERR Dumper \%all_cross_info;
 
-        foreach my $female_accession_name (keys %cross_wishlist_hash){
-            my $male_hash = $cross_wishlist_hash{$female_accession_name};
-            foreach my $male_accession_name (keys %$male_hash){
-                foreach my $cross_parents (@all_cross_parents){
-                    if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
-                        foreach my $cross_name (keys %{$cross_parents->{$female_accession_name}->{$male_accession_name}}){
-                            print STDERR Dumper $cross_name;
-                            $combined{$female_accession_name}->{$male_accession_name}->{$cross_name} = $all_cross_info{$cross_name};
-                        }
-                    } else {
-                        $male_accession_name =~ s/\s+//g;
-                        if ($male_accession_name){
-                            $combined{$female_accession_name}->{$male_accession_name} = "No Crosses Performed";
+        foreach my $top_level (keys %cross_wishlist_hash){
+            foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
+                my $planned_female_plot_name_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name};
+                foreach my $planned_female_plot_name (keys %$planned_female_plot_name_hash){
+                    my $male_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$planned_female_plot_name};
+                    foreach my $male_accession_name (keys %$male_hash){
+                        foreach my $cross_parents (@all_cross_parents){
+                            if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
+                                foreach my $cross_name (keys %{$cross_parents->{$female_accession_name}->{$male_accession_name}}){
+                                    print STDERR Dumper $cross_name;
+                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cross_name} = $all_cross_info{$cross_name};
+                                }
+                            } else {
+                                $male_accession_name =~ s/\s+//g;
+                                if ($male_accession_name){
+                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name} = "No Crosses Performed";
+                                }
+                            }
                         }
                     }
                 }
@@ -414,9 +423,77 @@ sub create_odk_cross_progress_tree {
         #print STDERR Dumper \%combined;
     }
 
-    my $html = encode_json \%combined;
-    #while (my ($female_accession_name)
-
+    #my $html = encode_json \%combined;
+    my $html = '<ul>';
+    while (my ($top_level, $female_accession_hash) = each %combined){
+        $html .= "<li data-jstree='{\"type\":\"cross_wishlist\"}' ><a href=\"#\">Wishlist Entry: ".$top_level.'</a><ul>';
+        while (my ($female_accession_name, $planned_female_plot_name_hash) = each %$female_accession_hash){
+            $html .= "<li data-jstree='{\"type\":\"cross_wishlist_female_accession\"}' ><a href=\"#\">Wishlist Female Accession: ".$female_accession_name.'</a><ul>';
+            while (my ($planned_female_plot_name, $male_accession_hash) = each %$planned_female_plot_name_hash){
+                $html .= "<li data-jstree='{\"type\":\"cross_wishlist_planned_female_plot\"}' ><a href=\"#\">Wishlist Female Plot: ".$planned_female_plot_name.'</a><ul>';
+                while (my ($male_accession_name, $crosses_hash) = each %$male_accession_hash){
+                    $html .= "<li data-jstree='{\"type\":\"cross_wishlist_male_accession\"}' ><a href=\"#\">Wishlist Male Accession: ".$male_accession_name.'</a><ul>';
+                    if (ref($crosses_hash) eq "HASH") {
+                        while (my ($cross_name, $actions_hash) = each %$crosses_hash){
+                            $html .= "<li data-jstree='{\"type\":\"cross_name\", \"opened\":true}' ><a href=\"#\">Cross Name: ".$cross_name.'</a><ul>';
+                            while (my ($action_name, $actions_array) = each %$actions_hash){
+                                if ($action_name eq 'active_seeds'){
+                                    my $active_seeds_hash = $actions_array;
+                                    $html .= "<li data-jstree='{\"type\":\"active_seeds\"}' ><a href=\"#\">".$action_name.'</a><ul>';
+                                    while (my ($active_seed_name, $active_seed_hash) = each %$active_seeds_hash){
+                                        $html .= "<li data-jstree='{\"type\":\"active_seed_name\"}' ><a href=\"#\">".$active_seed_name.'</a><ul>';
+                                        while (my ($active_seed_action, $active_seed_action_value) = each %$active_seed_hash){
+                                            if ($active_seed_action eq 'subcultures'){
+                                                my $subcultures_hash = $active_seed_action_value;
+                                                $html .= "<li data-jstree='{\"type\":\"subcultures\"}' ><a href=\"#\">".$active_seed_action.'</a><ul>';
+                                                while (my ($subculture_name, $active_seed_hash) = each %$subcultures_hash){
+                                                    $html .= "<li data-jstree='{\"type\":\"subculture_name\"}' ><a href=\"#\">".$subculture_name.'</a><ul>';
+                                                    while (my ($active_seed_action, $active_seed_action_value) = each %$active_seed_hash){
+                                                        
+                                                        
+                                                    }
+                                                    $html .= "</ul></li>";
+                                                }
+                                                $html .= "</ul></li>";
+                                            } else {
+                                                if (ref($active_seed_action_value) eq "SCALAR") {
+                                                    $html .= "<li data-jstree='{\"type\":\"action_attr\"}' ><a href=\"#\">".$active_seed_action.':'.$active_seed_action_value.'</a></li>';
+                                                }
+                                            }
+                                        }
+                                        $html .= "</ul></li>";
+                                    }
+                                    $html .= "</ul></li>";
+                                } else {
+                                    $html .= "<li data-jstree='{\"type\":\"action_name\"}' ><a href=\"#\">".$action_name.'</a><ul>';
+                                    foreach my $action_hash (@$actions_array){
+                                        my $action_start = $action_hash->{userName}." @ ".$action_hash->{startTime};
+                                        $html .= "<li data-jstree='{\"type\":\"action_time\"}' ><a href=\"#\">".$action_start.'</a><ul>';
+                                        while (my ($action_attr_name, $val) = each %$action_hash){
+                                            if (ref($val) eq 'HASH' || ref($val) eq 'ARRAY'){
+                                                $val = encode_json $val;
+                                            }
+                                            $html .= "<li data-jstree='{\"type\":\"action_attr\"}' ><a href=\"#\">".$action_attr_name.':'.$val.'</a></li>';
+                                        }
+                                        $html .= "</ul></li>";
+                                    }
+                                    $html .= "</ul></li>";
+                                }
+                            }
+                            $html .= "</ul></li>";
+                        }
+                    } else {
+                        $html .= "<li data-jstree='{\"type\":\"action_attr\"}' ><a href=\"#\">".$crosses_hash.'</a></li>';
+                    }
+                    $html .= "</ul></li>";
+                }
+                $html .= "</ul></li>";
+            }
+            $html .= "</ul></li>";
+        }
+        $html .= "</ul></li>";
+    }
+    $html .= '</ul>';
 
     my $dir = $self->odk_cross_progress_tree_file_dir;
     eval { make_path($dir) };

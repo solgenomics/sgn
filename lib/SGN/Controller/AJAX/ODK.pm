@@ -357,7 +357,7 @@ sub get_odk_cross_progress_cached_GET {
     open(my $fh, '<', $filename) or die "cannot open file $filename";
     {
         local $/;
-        $html = decode_json <$fh>;
+        $html = <$fh>;
     }
     close($fh);
 

@@ -6,7 +6,10 @@ $odk_phenotyping_data_service_name => undef
 $odk_phenotyping_data_service_url => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
+<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree' ] &>
+
+<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+
 
 <& /page/page_title.mas, title=>"Manage ODK Data Collection" &>
 
@@ -112,7 +115,32 @@ $odk_phenotyping_data_service_url => undef
     </div>
 </div>
 
-<div id="odk_cross_progress_div"></div>
+<div id="odk_cross_progress_div">
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Information</th>
+                <th>Cross Wishlist -- Crosses Completed -- Lab Actions Completed</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <h4>Search</h4>
+                    <input type="text" class="form-control input-sm" id="odk_cross_progress_tree_search" placeholder="Search" />
+                    <hr>
+                    <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+                    <hr>
+                </td>
+                <td>
+                    <div id="odk_cross_progress_tree_div" >[loading...]</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
 
 </&>
 
@@ -185,64 +213,70 @@ jQuery(document).ready(function () {
                 wishlist_dropdown_select_html = wishlist_dropdown_select_html + '</select>';
                 jQuery('#odk_cross_data_available_wishlists').html(wishlist_dropdown_select_html);
 
-                jQuery.ajax ({
-                    url : '/ajax/odk/get_odk_cross_progress_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
-                    success: function(response){
-                        console.log(response);
-                        jQuery("#working_modal").modal("hide");
 
-                        if (response.error){
-                            alert(response.error);
-                        }
-                        if (response.success){
-                            html = '<table class="table table-bordered"><thead><tr></tr></thead><tbody>';
-                        
-                            var progress = response.progress;
-                            for (var female_accession_name in progress) {
-                                if (progress.hasOwnProperty(female_accession_name)) {
-                                    var males = progress[female_accession_name]
-                                    for (var male_accession_name in males) {
-                                        if (males.hasOwnProperty(male_accession_name)) {
-                                            var crosses = progress[female_accession_name][male_accession_name];
-                                            for (var cross_name in crosses) {
-                                                if (crosses.hasOwnProperty(cross_name)) {
-                                                    var actions = progress[female_accession_name][male_accession_name][cross_name];
-                                                    for (var cross_name in crosses) {
-                                                        if (crosses.hasOwnProperty(cross_name)) {
-                                                            
-                                                        }
-                                                    }
-                                                }
-                                                if (crosses.hasOwnProperty("active_seeds")) {
-                                                    var active_seeds = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"];
-                                                    for (var active_seed in active_seeds) {
-                                                        if (active_seeds.hasOwnProperty(active_seed)) {
-                                                            var active_seed_actions = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed];
-                                                            if (active_seed_actions.hasOwnProperty("subcultures")) {
-                                                                var subcultures = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed]["subcultures"];
-                                                                for (var subculture in subcultures) {
-                                                                    if (subcultures.hasOwnProperty(subculture)) {
-                                                                        var subculture_actions = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed]["subcultures"][subculture];
-                                                                        if (subculture_actions.hasOwnProperty("rooting")) {
-                                                                            var rooting = progress[female_accession_name][male_accession_name][cross_name]["active_seeds"][active_seed]["subcultures"][subculture]["rooting"];
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    error: function(response){
-                        jQuery("#working_modal").modal("hide");
-                        alert("Error retrieving ODK cross data progress");
+                //Load ODK Cross Progress Tree
+                jQuery.ajax( {
+                    url: '/ajax/odk/get_odk_cross_progress_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
+                    success: function(response) {
+                        var html = response.html;
+
+                        jQuery('#odk_cross_progress_tree_div').html(html);
+                        //console.log(html);
+                        jQuery('#odk_cross_progress_tree_div').jstree( {
+                            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+                            "valid_children" : [ "folder", "trial", "breeding_program" ],
+                            "types" : {
+                                "cross_wishlist" : {
+                                    "icon": 'glyphicon glyphicon-briefcase text-info',
+                                },
+                                "cross_wishlist_female_accession" : {
+                                    "icon": 'glyphicon glyphicon-queen text-danger',
+                                },
+                                "cross_wishlist_planned_female_plot" : {
+                                    "icon": 'glyphicon glyphicon-queen text-danger',
+                                },
+                                "cross_wishlist_male_accession" : {
+                                    "icon": 'glyphicon glyphicon-king text-success',
+                                },
+                                "cross_name" : {
+                                    "icon": 'glyphicon glyphicon-random text-primary',
+                                },
+                                "active_seeds" : {
+                                    "icon": 'glyphicon glyphicon-eye-open text-success',
+                                },
+                                "active_seed_name" : {
+                                    "icon": 'glyphicon glyphicon-chevron-right text-success',
+                                },
+                                "subcultures" : {
+                                    "icon": 'glyphicon glyphicon-leaf text-success',
+                                },
+                                "subculture_name" : {
+                                    "icon": 'glyphicon glyphicon-chevron-right text-success',
+                                },
+                                "action_name" : {
+                                    "icon": 'glyphicon glyphicon-fast-forward text-info',
+                                },
+                                "action_time" : {
+                                    "icon": 'glyphicon glyphicon-time text-info',
+                                },
+                                "action_attr" : {
+                                    "icon": 'glyphicon glyphicon-minus',
+                                },
+                            },
+                            "search" : {
+                                 "case_insensitive" : true,
+                             },
+                             "plugins" : ["html_data","types","search"],
+                         });
+                     },
+                     error: function(response) {
+                        alert("An error occurred while loading the trial data.");
                     }
+                });
+
+                jQuery("#odk_cross_progress_tree_search").keyup(function() {
+                    var v = jQuery("#odk_cross_progress_tree_search").val();
+                    jQuery("#odk_cross_progress_tree_div").jstree(true).search(v);
                 });
 
             }
