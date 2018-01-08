@@ -219,11 +219,6 @@ jQuery(document).ready(function () {
                             'url' : '/ajax/odk/get_odk_cross_progress_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
                             'data' : function (node) {
                                 return { 'id' : node.id };
-                            },
-                            'success': function(response){
-                                console.log(response);
-                                console.log(response.data);
-                                return response.data;
                             }
                         },
                         'themes': { 'name': 'proton', 'responsive': true}
