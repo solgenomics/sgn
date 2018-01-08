@@ -191,21 +191,16 @@ jQuery(document).ready( function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-
                 var col_length; 
                 var row_length;
-
                 for (i=0; i<response.phenotypes.col.length; i++) {
                     if (response.phenotypes.col[i] && response.phenotypes.row[i]){
                         //console.log(response.phenotypes.col[i]);
                         col_length = response.phenotypes.col[i];
                         row_length = response.phenotypes.row[i];
                     }
-
                 }
-                
                 if (col_length && row_length) {
-
                     jQuery("#working_modal").modal("hide");
                     jQuery("#chart").css({"display": "inline-block"});
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
