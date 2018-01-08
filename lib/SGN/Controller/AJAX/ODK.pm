@@ -353,16 +353,28 @@ sub get_odk_cross_progress_cached_GET {
 
     my $dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
     my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
-    my $html = '';
+    print STDERR "Opening $filename \n";
+    my $contents;
     open(my $fh, '<', $filename) or die "cannot open file $filename";
     {
         local $/;
-        $html = <$fh>;
+        $contents = decode_json <$fh>;
     }
     close($fh);
+    my $json = $contents->{top_level_json};
 
-    #print STDERR $html;
-    $c->stash->{rest} = { success => 1, html => $html };
+    my $top_level_id = $c->req->param('id');
+    print STDERR Dumper $top_level_id;
+    if ($top_level_id eq '#'){
+        $top_level_id = undef;
+    }
+    if ($top_level_id){
+        my $top_level_contents = $contents->{top_level_contents};
+        $json = $top_level_contents->{$top_level_id};
+    }
+
+    #print STDERR Dumper $json;
+    $c->stash->{rest} = $json;
 }
 
 1;
