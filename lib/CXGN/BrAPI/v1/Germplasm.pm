@@ -221,6 +221,46 @@ sub germplasm_pedigree {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
 }
 
+sub germplasm_progeny {
+	my $self = shift;
+	my $inputs = shift;
+	my $stock_id = $inputs->{stock_id};
+	my $mother_cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
+	my $father_cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
+	my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'accession', 'stock_type')->cvterm_id();
+	my $stock = = $self->bcs_schema()->resultset("Stock::Stock")->find([
+		{ 
+		    'me.type_id'=> $accession_cvterm,
+			'me.stock_id'=> $stock_id,
+		}
+	]);
+	my $edges = $self->bcs_schema()->resultset("Stock::StockRelationship")->search([
+		{ 
+		    'me.subject_id' => $stock_id,
+		    'me.type_id' => $father_cvterm,
+		    'object.type_id'=> $accession_cvterm
+		},
+		{ 
+		    'me.subject_id' => $stock_id,
+		    'me.type_id' => $mother_cvterm,
+		    'object.type_id'=> $accession_cvterm
+		}
+	],{join => 'object'});
+    my $results = {
+		defaultDisplayName=>$stock->uniquename,
+		germplasmDbId=>$stock_id,
+		data=>[]
+	};
+    while (my $edge = $edges->next) {
+        if ($edge->type_id==$mother_cvterm){
+            push @{$children->{mother_of}}, $edge->object_id;
+        } else {
+            push @{$children->{father_of}}, $edge->object_id;
+        }
+    }
+    return $children;
+}
+
 sub germplasm_markerprofiles {
 	my $self = shift;
 	my $stock_id = shift;
