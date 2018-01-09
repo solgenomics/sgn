@@ -25,6 +25,7 @@ use JSON;
 use CXGN::ODK::Crosses;
 use Carp;
 use File::Spec::Functions qw / catfile catdir/;
+use File::Path qw(make_path);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
