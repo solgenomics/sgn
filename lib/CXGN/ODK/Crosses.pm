@@ -126,7 +126,7 @@ sub save_ona_cross_info {
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
-        #print STDERR Dumper $message_hash;
+        print STDERR Dumper $message_hash;
 
         my %user_categories = (
             'field' => 'FieldActivities',
@@ -163,7 +163,7 @@ sub save_ona_cross_info {
                 $a->{'fieldgroup/gps'} = $activity_hash->{'fieldgroup/gps'} || '';
 
                 if ($activity_category eq 'field'){
-                    #MISSING 'flowering'
+                    #MISSING
                     if ($a->{'FieldActivities/fieldActivity'} eq 'status'){
                         my $status_identifier;
                         my $attachment_identifier;
@@ -177,10 +177,14 @@ sub save_ona_cross_info {
                         $plant_status_info{$a->{$status_identifier}}->{'status'} = $a;
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_download} = $attachment_lookup{$a->{$attachment_identifier}};
                     }
+                    if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
+                        my $plot_name = _get_plot_name_from_barcode_id($a->{'FieldActivities/Flowering/flowerID'});
+                        $plant_status_info{$plot_name}->{'flowering'} = $a;
+                    }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
                         push @{$cross_info{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}->{$a->{'FieldActivities/fieldActivity'}}}, $a;
 
-                        my $female_accession_name = $a->{'FieldActivities/FirstPollination/firstFemaleName'};
+                        my $female_accession_name = $a->{'FieldActivities/FirstPollination/FemaleName'};
                         my $male_accession_name = $a->{'FieldActivities/FirstPollination/selectedMaleName'};
                         $cross_parents{$female_accession_name}->{$male_accession_name}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
                     }
@@ -242,7 +246,7 @@ sub save_ona_cross_info {
             }
         }
         print STDERR Dumper \%cross_info;
-        #print STDERR Dumper \%plant_status_info;
+        print STDERR Dumper \%plant_status_info;
         my %odk_cross_hash = (
             cross_info => \%cross_info,
             cross_parents => \%cross_parents,
@@ -332,11 +336,10 @@ sub create_odk_cross_progress_tree {
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
-
         #my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-
         my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_MusaBase_Arusha_KgtuGst.csv";
         print STDERR "cross_wishlist $wishlist_file_path\n";
+
         open(my $fh, '<', $wishlist_file_path)
             or die "Could not open file '$wishlist_file_path' $!";
         my $header_row = <$fh>;
@@ -411,11 +414,24 @@ sub create_odk_cross_progress_tree {
                             if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
                                 foreach my $cross_name (keys %{$cross_parents->{$female_accession_name}->{$male_accession_name}}){
                                     #print STDERR Dumper $cross_name;
-                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cross_name} = $all_cross_info{$cross_name};
+                                    my $cross_info = $all_cross_info{$cross_name};
+                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cross_name} = $cross_info;
+                                    if ($cross_info->{'firstPollination'}){
+                                        foreach my $first_pollination (@{$cross_info->{'firstPollination'}}){
+                                            my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femID'});
+                                            if ($planned_female_plot_name eq $female_plot_name){
+                                                $combined{$top_level}->{'wishlist_female_plot_match'} = $female_plot_name;
+                                            } else {
+                                                $combined{$top_level}->{'wishlist_female_plot_no_match'} = $female_plot_name;
+                                            }
+                                        }
+                                    }
                                     $open_tree{$top_level}++;
                                 }
                             } else {
-                                $male_accession_name =~ s/\s+//g;
+                                if ($male_accession_name =~ /^\s*$/) {
+                                    $male_accession_name =~ s/\s+//g;
+                                }
                                 if ($male_accession_name){
                                     $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name} = "No Crosses Performed";
                                 }
@@ -439,114 +455,141 @@ sub create_odk_cross_progress_tree {
             'id' => $top_level,
             'children' => JSON::true,
         };
-        if (exists($open_tree{$top_level})){
-            $node->{state}->{opened} = JSON::true;
-            $node->{text} = 'Wishlist Entry: '.$top_level;
-            $node->{icon} = 'glyphicon glyphicon-briefcase text-info';
-        } else {
+        my $icon_color = '';
+        my $crossed_female_plot_name = '';
+        if (!exists($open_tree{$top_level})){
             $node->{state}->{opened} = JSON::false;
             $node->{text} = 'Wishlist Entry: '.$top_level." : No Crosses";
-            $node->{icon} = 'glyphicon glyphicon-briefcase text-danger';
+            $icon_color = 'text-danger';
+            $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
+        }
+        if (exists($female_accession_hash->{wishlist_female_plot_match})){
+            $node->{text} = '<span class="text-success">Wishlist Entry: '.$top_level.': Cross Performed On Wishlist Female Plot</span>';
+            $icon_color = 'text-success';
+            $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
+            $node->{state}->{opened} = JSON::true;
+            $crossed_female_plot_name = $female_accession_hash->{wishlist_female_plot_match};
+        } elsif (exists($female_accession_hash->{wishlist_female_plot_no_match})){
+            $node->{text} = 'Wishlist Entry: '.$top_level.': Cross Performed But Not On Wishlist Female Plot';
+            $icon_color = 'text-info';
+            $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
+            $node->{state}->{opened} = JSON::false;
         }
         push @top_level_json, $node;
 
         my @top_level_content_json;
         while (my ($female_accession_name, $planned_female_plot_name_hash) = each %$female_accession_hash){
-            my $planned_female_node = {
-                'text' => 'Wishlist Female Accession: '.$female_accession_name,
-                'icon' => 'glyphicon glyphicon-queen text-info',
-            };
-            push @top_level_content_json, $planned_female_node;
-            while (my ($planned_female_plot_name, $male_accession_hash) = each %$planned_female_plot_name_hash){
-                my $planned_female_plot_node = {
-                    'text' => 'Wishlist Female Plot: '.$planned_female_plot_name,
-                    'icon' => 'glyphicon glyphicon-queen text-info',
+            if ($female_accession_name ne 'wishlist_female_plot_match' && $female_accession_name ne 'wishlist_female_plot_no_match'){
+                my $planned_female_node = {
+                    'text' => 'Wishlist Female Accession: '.$female_accession_name,
+                    'icon' => 'glyphicon glyphicon-queen '.$icon_color,
+                    'state' => { 'opened' => JSON::true }
                 };
-                push @{$planned_female_node->{children}}, $planned_female_plot_node;
-                while (my ($male_accession_name, $crosses_hash) = each %$male_accession_hash){
-                    my $planned_male_node = {
-                        'text' => 'Wishlist Male Accession: '.$male_accession_name,
-                        'icon' => 'glyphicon glyphicon-king text-info',
+                push @top_level_content_json, $planned_female_node;
+                while (my ($planned_female_plot_name, $male_accession_hash) = each %$planned_female_plot_name_hash){
+                    my $planned_female_plot_node = {
+                        'text' => 'Wishlist Female Plot: '.$planned_female_plot_name,
                     };
-                    push @{$planned_female_plot_node->{children}}, $planned_male_node;
-                    if (ref($crosses_hash) eq "HASH") {
-                        while (my ($cross_name, $actions_hash) = each %$crosses_hash){
-                            my $cross_node = {
-                                'text' => 'Cross Name: '.$cross_name,
-                                'icon' => 'glyphicon glyphicon-random text-primary',
-                            };
-                            push @{$planned_male_node->{children}}, $cross_node;
-                            while (my ($action_name, $actions_array) = each %$actions_hash){
-                                if ($action_name eq 'active_seeds'){
-                                    my $active_seeds_hash = $actions_array;
-                                    my $active_seeds_node = {
-                                        'text' => $action_name,
-                                        'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                    };
-                                    push @{$cross_node->{children}}, $active_seeds_node;
-                                    while (my ($active_seed_name, $active_seed_hash) = each %$active_seeds_hash){
-                                        my $active_seed_node = {
-                                            'text' => $active_seed_name,
-                                            'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                    push @{$planned_female_node->{children}}, $planned_female_plot_node;
+                    if ($crossed_female_plot_name){
+                        if ($planned_female_plot_name eq $crossed_female_plot_name){
+                            $planned_female_plot_node->{state}->{opened} = JSON::true;
+                            $planned_female_plot_node->{icon} = 'glyphicon glyphicon-queen '.$icon_color;
+                        } else {
+                            $planned_female_plot_node->{icon} = 'glyphicon glyphicon-queen';
+                            $planned_female_plot_node->{text} .= ': Cross Performed on Different Female Plot';
+                            next;
+                        }
+                    } else {
+                        $planned_female_plot_node->{icon} = 'glyphicon glyphicon-queen '.$icon_color;
+                    }
+                    while (my ($male_accession_name, $crosses_hash) = each %$male_accession_hash){
+                        my $planned_male_node = {
+                            'text' => 'Wishlist Male Accession: '.$male_accession_name
+                        };
+                        push @{$planned_female_plot_node->{children}}, $planned_male_node;
+                        if (ref($crosses_hash) eq "HASH") {
+                            $planned_male_node->{state}->{opened} = JSON::true;
+                            $planned_male_node->{icon} = 'glyphicon glyphicon-king '.$icon_color;
+                            while (my ($cross_name, $actions_hash) = each %$crosses_hash){
+                                my $cross_node = {
+                                    'text' => 'Cross Name: '.$cross_name,
+                                    'icon' => 'glyphicon glyphicon-random text-primary',
+                                    'state' => { 'opened' => JSON::true }
+                                };
+                                push @{$planned_male_node->{children}}, $cross_node;
+                                while (my ($action_name, $actions_array) = each %$actions_hash){
+                                    if ($action_name eq 'active_seeds'){
+                                        my $active_seeds_hash = $actions_array;
+                                        my $active_seeds_node = {
+                                            'text' => $action_name,
+                                            'icon' => 'glyphicon glyphicon-eye-open text-success',
                                         };
-                                        push @{$active_seeds_node->{children}}, $active_seed_node;
-                                        while (my ($active_seed_action, $active_seed_action_value) = each %$active_seed_hash){
-                                            if ($active_seed_action eq 'subcultures'){
-                                                my $subcultures_hash = $active_seed_action_value;
-                                                my $subcultures_node = {
-                                                    'text' => $active_seed_action,
-                                                    'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                };
-                                                push @{$active_seed_node->{children}}, $subcultures_node;
-                                                while (my ($subculture_name, $subcultures_hash) = each %$subcultures_hash){
-                                                    my $subculture_node = {
-                                                        'text' => $subculture_name,
-                                                        'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                        push @{$cross_node->{children}}, $active_seeds_node;
+                                        while (my ($active_seed_name, $active_seed_hash) = each %$active_seeds_hash){
+                                            my $active_seed_node = {
+                                                'text' => $active_seed_name,
+                                                'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                            };
+                                            push @{$active_seeds_node->{children}}, $active_seed_node;
+                                            while (my ($active_seed_action, $active_seed_action_value) = each %$active_seed_hash){
+                                                if ($active_seed_action eq 'subcultures'){
+                                                    my $subcultures_hash = $active_seed_action_value;
+                                                    my $subcultures_node = {
+                                                        'text' => $active_seed_action,
+                                                        'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                     };
-                                                    push @{$subcultures_node->{children}}, $subculture_node;
-                                                    while (my ($subcultures_action_name, $subculture_action_value) = each %$subcultures_hash){
-                                                        if ($subcultures_action_name eq 'rooting'){
-                                                            my $rooting_hash = $subculture_action_value;
-                                                            my $rootings_node = {
-                                                                'text' => $subcultures_action_name,
-                                                                'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                            };
-                                                            push @{$subculture_node->{children}}, $rootings_node;
-                                                            while (my ($rooting_name, $rooting_hash) = each %$rooting_hash){
-                                                                my $rooting_node = {
-                                                                    'text' => $rooting_name,
-                                                                    'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                    push @{$active_seed_node->{children}}, $subcultures_node;
+                                                    while (my ($subculture_name, $subcultures_hash) = each %$subcultures_hash){
+                                                        my $subculture_node = {
+                                                            'text' => $subculture_name,
+                                                            'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                        };
+                                                        push @{$subcultures_node->{children}}, $subculture_node;
+                                                        while (my ($subcultures_action_name, $subculture_action_value) = each %$subcultures_hash){
+                                                            if ($subcultures_action_name eq 'rooting'){
+                                                                my $rooting_hash = $subculture_action_value;
+                                                                my $rootings_node = {
+                                                                    'text' => $subcultures_action_name,
+                                                                    'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                                 };
-                                                                push @{$rootings_node->{children}}, $rooting_node;
-                                                                while (my ($rooting_action, $rooting_action_value) = each %$rooting_hash){
-                                                                    if ($rooting_action eq 'hardening'){
-                                                                        my $hardening_hash = $rooting_action_value;
-                                                                        my $hardenings_node = {
-                                                                            'text' => $rooting_action,
-                                                                            'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                                        };
-                                                                        push @{$rooting_node->{children}}, $hardenings_node;
-                                                                        while (my ($hardening_name, $hardening) = each %$hardening_hash){
-                                                                            my $hardening_node = {
-                                                                                'text' => $hardening_name,
-                                                                                'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                push @{$subculture_node->{children}}, $rootings_node;
+                                                                while (my ($rooting_name, $rooting_hash) = each %$rooting_hash){
+                                                                    my $rooting_node = {
+                                                                        'text' => $rooting_name,
+                                                                        'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                    };
+                                                                    push @{$rootings_node->{children}}, $rooting_node;
+                                                                    while (my ($rooting_action, $rooting_action_value) = each %$rooting_hash){
+                                                                        if ($rooting_action eq 'hardening'){
+                                                                            my $hardening_hash = $rooting_action_value;
+                                                                            my $hardenings_node = {
+                                                                                'text' => $rooting_action,
+                                                                                'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                                             };
-                                                                            push @{$hardenings_node->{children}}, $hardening_node;
+                                                                            push @{$rooting_node->{children}}, $hardenings_node;
+                                                                            while (my ($hardening_name, $hardening) = each %$hardening_hash){
+                                                                                my $hardening_node = {
+                                                                                    'text' => $hardening_name,
+                                                                                    'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                                };
+                                                                                push @{$hardenings_node->{children}}, $hardening_node;
+                                                                            }
                                                                         }
-                                                                    }
-                                                                    if ($rooting_action eq 'screenhouse_humiditychamber'){
-                                                                        my $humidity_hash = $rooting_action_value;
-                                                                        my $humiditys_node = {
-                                                                            'text' => $rooting_action,
-                                                                            'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                                        };
-                                                                        push @{$rooting_node->{children}}, $humiditys_node;
-                                                                        while (my ($humidity_name, $humidity) = each %$humidity_hash){
-                                                                            my $humidity_node = {
-                                                                                'text' => $humidity_name,
-                                                                                'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                        if ($rooting_action eq 'screenhouse_humiditychamber'){
+                                                                            my $humidity_hash = $rooting_action_value;
+                                                                            my $humiditys_node = {
+                                                                                'text' => $rooting_action,
+                                                                                'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                                             };
-                                                                            push @{$humiditys_node->{children}}, $humidity_node;
+                                                                            push @{$rooting_node->{children}}, $humiditys_node;
+                                                                            while (my ($humidity_name, $humidity) = each %$humidity_hash){
+                                                                                my $humidity_node = {
+                                                                                    'text' => $humidity_name,
+                                                                                    'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                                };
+                                                                                push @{$humiditys_node->{children}}, $humidity_node;
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
@@ -556,41 +599,42 @@ sub create_odk_cross_progress_tree {
                                                 }
                                             }
                                         }
-                                    }
-                                } else {
-                                    my $action_name_node = {
-                                        'text' => $action_name,
-                                        'icon' => 'glyphicon glyphicon-fast-forward text-info',
-                                    };
-                                    push @{$cross_node->{children}}, $action_name_node;
-                                    foreach my $action_hash (@$actions_array){
-                                        my $action_start = $action_hash->{userName}." @ ".$action_hash->{startTime};
-                                        my $action_time_node = {
-                                            'text' => $action_start,
-                                            'icon' => 'glyphicon glyphicon-time',
+                                    } else {
+                                        my $action_name_node = {
+                                            'text' => $action_name,
+                                            'icon' => 'glyphicon glyphicon-fast-forward text-info',
                                         };
-                                        push @{$action_name_node->{children}}, $action_time_node;
-                                        while (my ($action_attr_name, $val) = each %$action_hash){
-                                            if (ref($val) eq 'HASH' || ref($val) eq 'ARRAY'){
-                                                $val = encode_json $val;
-                                            }
-                                            $val =~ s/<br>//g;
-                                            my $action_attr_node = {
-                                                'text' => $action_attr_name.':'.$val,
-                                                'icon' => 'glyphicon glyphicon-minus',
+                                        push @{$cross_node->{children}}, $action_name_node;
+                                        foreach my $action_hash (@$actions_array){
+                                            my $action_start = $action_hash->{userName}." @ ".$action_hash->{startTime};
+                                            my $action_time_node = {
+                                                'text' => $action_start,
+                                                'icon' => 'glyphicon glyphicon-time',
                                             };
-                                            push @{$action_time_node->{children}}, $action_attr_node;
+                                            push @{$action_name_node->{children}}, $action_time_node;
+                                            while (my ($action_attr_name, $val) = each %$action_hash){
+                                                if (ref($val) eq 'HASH' || ref($val) eq 'ARRAY'){
+                                                    $val = encode_json $val;
+                                                }
+                                                $val =~ s/<br>//g;
+                                                my $action_attr_node = {
+                                                    'text' => $action_attr_name.':'.$val,
+                                                    'icon' => 'glyphicon glyphicon-minus',
+                                                };
+                                                push @{$action_time_node->{children}}, $action_attr_node;
+                                            }
                                         }
                                     }
                                 }
                             }
+                        } else {
+                            $planned_male_node->{icon} = 'glyphicon glyphicon-king';
+                            my $action_attr_node = {
+                                'text' => $crosses_hash,
+                                'icon' => 'glyphicon glyphicon-minus',
+                            };
+                            push @{$planned_male_node->{children}}, $action_attr_node;
                         }
-                    } else {
-                        my $action_attr_node = {
-                            'text' => $crosses_hash,
-                            'icon' => 'glyphicon glyphicon-minus',
-                        };
-                        push @{$planned_male_node->{children}}, $action_attr_node;
                     }
                 }
             }
@@ -616,6 +660,13 @@ sub create_odk_cross_progress_tree {
     print { $OUTFILE } encode_json \%save_content or croak "Cannot write to $filename: $!";
     close $OUTFILE or croak "Cannot close $filename: $!";
 
+}
+
+sub _get_plot_name_from_barcode_id {
+    my $id_full = shift;
+    $id_full =~ s/stock\ name\:\ //g;
+    my @id_split = split ' plot_id: ', $id_full;
+    return $id_split[0];
 }
 
 1;
