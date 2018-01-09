@@ -379,7 +379,7 @@ sub create_odk_cross_progress_tree {
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
-        #while (my $r=$odk_submissions->next){
+        #while (my $r=$odk_submissions->next)
         #    my $odk_submission = decode_json $r->comment;
 
         $h = $metadata_schema->storage->dbh->prepare("SELECT comment FROM metadata.md_files WHERE filetype='ODK_ONA_cross_info_download' ORDER BY file_id ASC");
