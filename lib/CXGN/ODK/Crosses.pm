@@ -299,7 +299,10 @@ sub save_ona_cross_info {
         my $r2 = $h2->execute(basename($archived_filename_with_path), dirname($archived_filename_with_path), $file_type, $md5->hexdigest(), $metadata_id, $encoded_odk_cross_hash);
 
         #Update cross progress tree
-        $self->create_odk_cross_progress_tree();
+        my $return = $self->create_odk_cross_progress_tree();
+        if ($return->{error}){
+            return { error => $return->{error} };
+        }
 
         #Create or get crossing trial based on name of form
 
@@ -351,7 +354,7 @@ sub create_odk_cross_progress_tree {
             my @cols = split ',', $row;
             #print STDERR Dumper \@cols;
             if (scalar(@cols) != scalar(@header_row)){
-                return {error=>'Cross wishlist not parsed correctly!'};
+                return { error=>'Cross wishlist not parsed correctly!' };
             }
             push @wishlist_file_lines, \@cols;
         }
