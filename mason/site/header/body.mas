@@ -18,6 +18,7 @@ jQuery(document).ready( function() {
 
   setUpLogin();
   setUpLists();
+  setUpDatasets();
 
 });
 

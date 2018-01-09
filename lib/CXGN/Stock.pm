@@ -249,6 +249,9 @@ sub store {
     }
     else {
         print STDERR "Updating Stock ".localtime."\n";
+        if (!$self->name && $self->uniquename){
+            $self->name($self->uniquename);
+        }
         my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
         $row->name($self->name());
         $row->uniquename($self->uniquename());
@@ -859,8 +862,12 @@ sub _store_stockprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
+    #print STDERR Dumper $type;
     my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
-    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+    my @arr = split ',', $value;
+    foreach (@arr){
+        my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $_});
+    }
 }
 
 sub _update_stockprop {

@@ -1,0 +1,126 @@
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min', 'CXGN.Dataset' ] &>
+
+<div class="modal fade" id="save_wizard_dataset_dialog" name="save_wizard_dataset_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadWizardPhenotypesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="saveWizardDatasetDialog">Save Dataset</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Selection Name </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="save_wizard_dataset_name" />		      
+                </div>
+            </div>
+        </form><br/>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+	
+        <button type="button" class="btn btn-default" name="save_wizard_dataset_cancel_button" id="save_wizard_dataset_cancel_button" data-target="#save_wizard_dataset_cancel_button">Cancel</button>
+        <button type="button" class="btn btn-primary" name="save_dataset_submit_button" id="wizard_save_dataset_submit_button" title="Submit">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<table  alt="breeder search" border="0" ><tr>
+	<td>
+	  <div>
+	    <br />
+	    <button class="btn btn-primary" id="wizard_save_dataset_button" data-style="expand-right" title="To save selections, you must be logged in with a filter selected">Save current selection</button>
+	  </div>
+	</td>
+	<td width="30">&nbsp;</td>
+	<td width="300">
+	  Retrieve stored selections<br />
+	  <div id="dataset_manage_select" >
+	  </div>
+	  <script>
+	    if (isLoggedIn()) { 
+	      get_select_box('datasets','dataset_manage_select');
+	    }
+	    else { 
+              jQuery('#dataset_manage_select').html('(Log in to use feature)');
+	    }
+
+	  </script>
+	  <button type="button" id="show_dataset_on_wizard_button" >Show on wizard</button>
+	  <button type="button" id="show_dataset_metadata_button" >View metadata</button>
+	  <button id="delete_dataset_button">Delete</button>
+  </td></tr>
+</table> 
+
+<div id="dataset_details_dialog" class="modal fade" role="dialog">
+  <div class="modal-dialog"> 
+    <div class="modal-content">
+      <div class="modal-header">
+	<h4>Selection Details</h4>
+      </div>
+
+      <div class="modal-body">
+	<div id="dataset_details_content">[loading...]</div>
+      </div>
+      <div class="modal-footer">
+	<button type="button" class="btn btn-default" id="dataset_details_dialog_close_button">Close</button>
+      </div>
+    </div>
+  </div>
+    
+<script>
+
+jQuery(document).ready(function () {
+
+  jQuery('#show_dataset_metadata_button').click( function() { 
+    jQuery('#dataset_details_dialog').modal('show');
+    showDatasetItems('dataset_details_content', jQuery('#dataset_manage_select').find(':selected').val());
+  });
+
+  jQuery('#dataset_details_dialog_close_button').click( function() { 
+    jQuery('#dataset_details_dialog').modal("hide");
+    jQuery('.modal-backdrop').remove();
+  });
+
+  jQuery('#save_wizard_dataset_cancel_button').click( function() { 
+    jQuery('#save_wizard_dataset_dialog').modal("hide");
+    jQuery('.modal-backddrop').remove();
+  });
+
+  if (!isLoggedIn()) { 
+    jQuery('#show_dataset_on_wizard_button').attr('disabled', true);
+    jQuery('#delete_dataset_button').attr('disabled', true);
+    jQuery('#show_dataset_metadata_button').attr('disabled', true);
+    jQuery('#wizard_save_dataset_button').attr('disabled', true);
+  } 
+
+  jQuery('#show_dataset_on_wizard_button').click(function() { 
+    var d = new CXGN.Dataset();
+    var dataset_id = jQuery('#dataset_manage_select').find(':selected').val();
+    replay_dataset_info(dataset_id, 1);    
+  });
+
+  jQuery('#delete_dataset_button').click(function() { 
+    var dataset_name = jQuery('#dataset_manage_select').find(':selected').text();
+    var dataset_id = jQuery('#dataset_manage_select').find(':selected').val();
+    
+    if (confirm('Would you really like to delete the dataset "'+dataset_name+'"? This operation cannot be undone.')) { 
+      var d = new CXGN.Dataset();
+      d.deleteDataset(dataset_id);
+      get_select_box('datasets','dataset_manage_select');
+    }
+      
+  });
+
+});
+
+</script>

@@ -60,6 +60,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		organization_list=>$params->{organization} ? [$params->{organization}] : undef,
         property_term=>$params->{property_term},
         property_value=>$params->{property_value},
+        introgression_parent=>$params->{introgression_parent},
+        introgression_backcross_parent=>$params->{introgression_backcross_parent},
+        introgression_map_version=>$params->{introgression_map_version},
+        introgression_chromosome=>$params->{introgression_chromosome},
+        introgression_start_position_bp=>$params->{introgression_start_position_bp},
+        introgression_end_position_bp=>$params->{introgression_end_position_bp},
 		limit=>$limit,
 		offset=>$offset,
         display_pedigree=>0

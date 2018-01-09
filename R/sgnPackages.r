@@ -179,7 +179,8 @@ if (length(newCran) > 0) {
   install.packages(newCran,
                    repos=cranSite,
                    quiet=TRUE,
-                   verbose=FALSE)
+                   verbose=FALSE,
+                   dependencies=TRUE)
 } else {
   message('No new cran packages to install.')
 }
@@ -198,7 +199,8 @@ if (length(newGitPaths) > 0) {
                          install_github(newGitPaths,
                                         force=TRUE,
                                         quiet=TRUE,
-                                        verbose=FALSE))
+                                        verbose=FALSE,
+                                        dependencies=TRUE))
 } else {
   message('No new github packages to install.')
 }

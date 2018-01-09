@@ -32,6 +32,7 @@ use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
+use CXGN::Dataset;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -690,6 +691,32 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     );
     $c->stash->{rest} = { select => $html };
 }
+
+sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $html = '<select><option disabled="1">None</option></select>';
+    my $user_id;
+    if ($c->user()) {
+	if ($user_id = $c->user->get_object()->get_sp_person_id()) { 
+
+	    my $datasets = CXGN::Dataset->get_datasets_by_user(
+		$c->dbic_schema("CXGN::People::Schema"),
+		$user_id);
+
+	    print STDERR "Retrieved datasets: ".Dumper($datasets);
+	    
+	    $html = simple_selectbox_html(
+		name => 'available_datasets',
+		id => 'available_datasets',
+		choices => $datasets,
+		);
+
+	}
+    }
+    $c->stash->{rest} = { select => $html };
+} 
 
 sub _clean_inputs {
 	no warnings 'uninitialized';
