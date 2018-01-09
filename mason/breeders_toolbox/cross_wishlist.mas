@@ -228,7 +228,7 @@ jQuery(document).ready(function($) {
             if (response.success){
                 var form_dropdown_select_html = '<select class="form-control" id="cross_wishlist_availabe_odk_crossing_forms">';
                 for(var i=0; i<response.forms.length; i++){
-                    if (response.forms[i].id_string == 'BtracT_NM2017_01'){
+                    if (response.forms[i].id_string == '<% $c->config->{odk_crossing_data_form_name} %>'){
                         form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';
                     }
                 }
