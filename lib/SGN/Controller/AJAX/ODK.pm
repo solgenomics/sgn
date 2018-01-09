@@ -364,7 +364,7 @@ sub get_odk_cross_progress_cached_GET {
     my $json = $contents->{top_level_json};
 
     my $top_level_id = $c->req->param('id');
-    print STDERR Dumper $top_level_id;
+    print STDERR "ODK Cross Tree Progress Node: ".$top_level_id."\n";
     if ($top_level_id eq '#'){
         $top_level_id = undef;
     }

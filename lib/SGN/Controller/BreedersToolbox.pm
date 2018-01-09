@@ -290,6 +290,7 @@ sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
     }
     $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
     $c->stash->{odk_crossing_data_service_url} = $c->config->{odk_crossing_data_service_url};
+    $c->stash->{odk_crossing_data_form_name} = $c->config->{odk_crossing_data_form_name};
     $c->stash->{odk_phenotyping_data_service_name} = $c->config->{odk_phenotyping_data_service_name};
     $c->stash->{odk_phenotyping_data_service_url} = $c->config->{odk_phenotyping_data_service_url};
     $c->stash->{template} = '/breeders_toolbox/manage_odk_data_collection.mas';

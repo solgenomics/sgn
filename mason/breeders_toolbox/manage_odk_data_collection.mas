@@ -2,6 +2,7 @@
 <%args>
 $odk_crossing_data_service_name => undef
 $odk_crossing_data_service_url => undef
+$odk_crossing_data_form_name => undef
 $odk_phenotyping_data_service_name => undef
 $odk_phenotyping_data_service_url => undef
 </%args>
@@ -178,7 +179,7 @@ jQuery(document).ready(function () {
             if (response.success){
                 var form_dropdown_select_html = '<select class="form-control" id="availabe_odk_crossing_forms">';
                 for(var i=0; i<response.forms.length; i++){
-                    if (response.forms[i].id_string == 'BtracT_NM2017_01'){
+                    if (response.forms[i].id_string == '<% $odk_crossing_data_form_name %>'){
                         form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';
                     }
                 }
@@ -213,7 +214,7 @@ jQuery(document).ready(function () {
 
 
                 //Load ODK Cross Progress Tree
-                jQuery('#odk_cross_progress_tree_div').jstree( {
+                jQuery('#odk_cross_progress_tree_div').jstree({
                     "core": {
                         'data' : {
                             'url' : '/ajax/odk/get_odk_cross_progress_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
@@ -226,7 +227,7 @@ jQuery(document).ready(function () {
                     "search" : {
                         "case_insensitive" : true,
                     },
-                    "plugins" : ["html_data","search"],
+                    "plugins" : ["html_data","search","sort"],
                 });
 
                 jQuery("#odk_cross_progress_tree_search").keyup(function() {

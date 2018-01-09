@@ -241,7 +241,7 @@ sub save_ona_cross_info {
                 }
             }
         }
-        #print STDERR Dumper \%cross_info;
+        print STDERR Dumper \%cross_info;
         #print STDERR Dumper \%plant_status_info;
         my %odk_cross_hash = (
             cross_info => \%cross_info,
@@ -513,7 +513,6 @@ sub create_odk_cross_progress_tree {
                                                             };
                                                             push @{$subculture_node->{children}}, $rootings_node;
                                                             while (my ($rooting_name, $rooting_hash) = each %$rooting_hash){
-                                                                print STDERR Dumper $rooting_hash;
                                                                 my $rooting_node = {
                                                                     'text' => $rooting_name,
                                                                     'icon' => 'glyphicon glyphicon-chevron-right text-success',
