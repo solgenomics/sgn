@@ -392,7 +392,7 @@ is_a: SP:0000039 ! fruit shape index
 [Term]
 id: SP:0000049
 name: fruit shape triangle
-def: "Proximal/distal width ratio.\nThe ratio of the width at fruit proximal end to the width at the fruit distal end." [SGN:EVDK]
+def: "Proximal/distal width ratio. The ratio of the width at fruit proximal end to the width at the fruit distal end." [SGN:EVDK]
 synonym: "tri" RELATED []
 xref: PATO:0001875
 xref: PO:0007010
@@ -403,7 +403,7 @@ relationship: variable_of SP:0000038 ! fruit shape
 [Term]
 id: SP:0000050
 name: fruit shape circular
-def: "Fitting precision R2. How well the boundary of a perfect circle fits the boundary of a fruit.\n\nThe ratio of the error resulting from a best-fit circle to the area of the fruit. Error is the average magnitude of residuals (Res) along the fruit perimeter, divided by the radius of the circle. Smaller values indicate that the fruit is more Circular." [SGN:EVDK]
+def: "Fitting precision R2. How well the boundary of a perfect circle fits the boundary of a fruit. The ratio of the error resulting from a best-fit circle to the area of the fruit. Error is the average magnitude of residuals (Res) along the fruit perimeter, divided by the radius of the circle. Smaller values indicate that the fruit is more Circular." [SGN:EVDK]
 synonym: "cir" RELATED []
 xref: PO:0007010
 xref: PO:0007042
@@ -481,7 +481,7 @@ is_a: SP:0000038 ! fruit shape
 [Term]
 id: SP:0000059
 name: obovoid
-def: "1/2fOb(y) x Tob. The degree of pear-shapeness.\n\nIf the area of the fruit is greater below mid-height than above it, then Obovoid is calculated from the maximum width (W), the height at which the maximum width occurs (y), the average width above that height (w1), and the\n average width below that height (w2), and a scaling function scale_ob as: Obovoid = 1/2 * scale_ob(y) * (1- w1/W + w2/W) If Obovoid > 0, subtract 0.4. Otherwise, Obovoid is 0." [SGN:EVDK]
+def: "1/2fOb(y) x Tob. The degree of pear-shapeness. If the area of the fruit is greater below mid-height than above it, then Obovoid is calculated from the maximum width (W), the height at which the maximum width occurs (y), the average width above that height (w1), and the average width below that height (w2), and a scaling function scale_ob as: Obovoid = 1/2 * scale_ob(y) * (1- w1/W + w2/W) If Obovoid > 0, subtract 0.4. Otherwise, Obovoid is 0." [SGN:EVDK]
 synonym: "obo" RELATED []
 synonym: "obovate" RELATED []
 synonym: "pear shape" RELATED []
@@ -493,7 +493,7 @@ relationship: variable_of SP:0000058 ! fruit shape eccentric
 [Term]
 id: SP:0000060
 name: ovoid
-def: "1/2fOv(y) x Tov. The opposite of pear-shapeness.\n\nIf the area of the fruit is greater above mid-height than below it, then Ovoid is calculated from the maximum width (W), the height at which the maximum width occurs (y), the average width above that height (w1), and the\n average width below that height (w2), and a scaling function scale_ov as:Ovoid = 1/2 *scale_ov(y) * (1 - w2/W + w1/W). If Ovoid > 0, subtract 0.4. Otherwise, Ovoid is 0." [SGN:EVDK]
+def: "1/2fOv(y) x Tov. The opposite of pear-shapeness. If the area of the fruit is greater above mid-height than below it, then Ovoid is calculated from the maximum width (W), the height at which the maximum width occurs (y), the average width above that height (w1), and the average width below that height (w2), and a scaling function scale_ov as:Ovoid = 1/2 *scale_ov(y) * (1 - w2/W + w1/W). If Ovoid > 0, subtract 0.4. Otherwise, Ovoid is 0." [SGN:EVDK]
 synonym: "ovate" RELATED []
 synonym: "ovo" RELATED []
 xref: PO:0007010
@@ -555,7 +555,7 @@ is_a: SP:0000058 ! fruit shape eccentric
 [Term]
 id: SP:0000066
 name: vertical asymmetry
-def: "[sum|m-mi|]/L. Degree of vertical asymmetry .\n\nThe average distance (Res_w) between a vertical line through the fruit at mid-width and the midpoint of the fruit width at each height." [SGN:EVDK]
+def: "[sum|m-mi|]/L. Degree of vertical asymmetry. The average distance (Res_w) between a vertical line through the fruit at mid-width and the midpoint of the fruit width at each height." [SGN:EVDK]
 synonym: "ver" RELATED []
 xref: PO:0007010
 xref: PO:0007042
@@ -565,7 +565,7 @@ relationship: variable_of SP:0000058 ! fruit shape eccentric
 [Term]
 id: SP:0000067
 name: fruit shape ellipsoid
-def: "Fitting precision R2. How well the boundary of a perfect ellipse fits the boundary of a fruit.\n\nThe ratio of the error resulting from a best-fit ellipse to the area of the fruit. Error is the average magnitude of residuals (Res) along the fruit perimeter, divided by the length of the major (longer) axis of the ellipse. Smaller values indicate that the fruit is more ellipsoid." [SGN:EVDK]
+def: "Fitting precision R2. How well the boundary of a perfect ellipse fits the boundary of a fruit. The ratio of the error resulting from a best-fit ellipse to the area of the fruit. Error is the average magnitude of residuals (Res) along the fruit perimeter, divided by the length of the major (longer) axis of the ellipse. Smaller values indicate that the fruit is more ellipsoid." [SGN:EVDK]
 synonym: "ell" RELATED []
 xref: PO:0007010
 xref: PO:0007042
@@ -652,7 +652,7 @@ is_a: SP:0000072 ! proximal fruit end shape
 [Term]
 id: SP:0000075
 name: distal fruit end blockiness
-def: "Distal fruit end width/mid width ratio.\nThe ratio of the width at the distal fruit end to the mid-fruit width." [SGN:EVDK]
+def: "Distal fruit end width/mid width ratio. The ratio of the width at the distal fruit end to the mid-fruit width." [SGN:EVDK]
 synonym: "dblk" RELATED []
 xref: PATO:0001234
 xref: PO:0007010
@@ -663,7 +663,7 @@ relationship: variable_of SP:0000070 ! distal fruit end shape
 [Term]
 id: SP:0000076
 name: distal fruit end indentation
-def: "Fruit end indented area/total fruit area.\nThe ratio of the area of the distal indentation (bounded by the distal protrusion points, D_sl and D_sr) to the total area of the fruit, multiplied by 10. T.A. version 3.0." [SGN:EVDK]
+def: "Fruit end indented area/total fruit area. The ratio of the area of the distal indentation (bounded by the distal protrusion points, D_sl and D_sr) to the total area of the fruit, multiplied by 10. T.A. version 3.0." [SGN:EVDK]
 synonym: "diar" RELATED []
 xref: PATO:0001234
 xref: PO:0007010
@@ -674,7 +674,7 @@ relationship: variable_of SP:0000070 ! distal fruit end shape
 [Term]
 id: SP:0000077
 name: distal fruit end protrusion
-def: "Distal fruit end protruded area/total fruit area.\nThe ratio of the area of the distal protrusion (bounded by the distal protrusion points, D_sl and D_sr) to the total area of the fruit, multiplied by 10. T.A. version 3.0 ." [SGN:EVDK]
+def: "Distal fruit end protruded area/total fruit area. The ratio of the area of the distal protrusion (bounded by the distal protrusion points, D_sl and D_sr) to the total area of the fruit, multiplied by 10. T.A. version 3.0 ." [SGN:EVDK]
 synonym: "nipple tip" RELATED []
 xref: PATO:0001234
 xref: PO:0007010
@@ -696,7 +696,7 @@ relationship: variable_of SP:0000072 ! proximal fruit end shape
 [Term]
 id: SP:0000079
 name: proximal fruit end indentation
-def: "Proximal fruit end indented area/total fruit area.\nThe ratio of the area of the proximal indentation (bounded by the proximal shoulder points, P_sl and P_sr) to the total area of the fruit, multiplied by 10. T.A. version 3.0 ." [SGN:EVDK]
+def: "Proximal fruit end indented area/total fruit area. The ratio of the area of the proximal indentation (bounded by the proximal shoulder points, P_sl and P_sr) to the total area of the fruit, multiplied by 10. T.A. version 3.0 ." [SGN:EVDK]
 xref: PATO:0001195
 xref: PO:0007010
 xref: PO:0007042
@@ -801,7 +801,7 @@ creation_date: 2008-02-12T03:11:00Z
 [Term]
 id: SP:0000089
 name: fruit locule number, counting
-def: "The number of locules in the fruit.\nThis data is taken in the transversal section." [SGN:EVDK]
+def: "The number of locules in the fruit. This data is taken in the transversal section." [SGN:EVDK]
 synonym: "lcn" RELATED []
 xref: PO:0007010
 xref: PO:0007042
@@ -940,7 +940,7 @@ is_a: SP:0000462 ! fruit size value
 [Term]
 id: SP:0000103
 name: fruit lobedness degree
-def: "Fruit bumpiness index.\nThe standard deviation of distances (d) from the center of the fruit (assuming all pixels have equal mass) to the perimeter, multiplied by 100." [SGN:EVDK]
+def: "Fruit bumpiness index. The standard deviation of distances (d) from the center of the fruit (assuming all pixels have equal mass) to the perimeter, multiplied by 100." [SGN:EVDK]
 synonym: "fruit bumpiness" RELATED []
 xref: PATO:0000052
 xref: PO:0007010
@@ -3276,7 +3276,7 @@ creation_date: 2010-07-15T04:20:01Z
 [Term]
 id: SP:0000361
 name: Cross section average hue
-def: "Hue is a measure of color in CIELab colorspace.\nFor 'a' values > 0, hue is 180/pi * cos[a / chroma].\nFor 'a' values < 0 , hues is 360 - {180/pi * acos[a / chroma] }." [JASHS:(2008) 133(4)\:579-586]
+def: "Hue is a measure of color in CIELab colorspace. For 'a' values > 0, hue is 180/pi * cos[a / chroma]. For 'a' values < 0 , hues is 360 - {180/pi * acos[a / chroma] }." [JASHS:(2008) 133(4)\:579-586]
 is_a: SP:0000353 ! endocarp cross section color
 created_by: Naama
 creation_date: 2010-07-15T04:23:43Z
@@ -3284,7 +3284,7 @@ creation_date: 2010-07-15T04:23:43Z
 [Term]
 id: SP:0000362
 name: Cross section average chroma
-def: "Chroma is a measure of saturation in CIELab colorspace.\nChroma is the square root of (a^2 + b^2)." [JASHS:(2008) 133(4)\:579-586]
+def: "Chroma is a measure of saturation in CIELab colorspace. Chroma is the square root of (a^2 + b^2)." [JASHS:(2008) 133(4)\:579-586]
 is_a: SP:0000353 ! endocarp cross section color
 created_by: Naama
 creation_date: 2010-07-15T04:27:15Z
@@ -3814,7 +3814,7 @@ creation_date: 2017-09-22T12:03:07Z
 [Term]
 id: SP:0000428
 name: stem length between 1st and 10th true leaves (cm)
-def: "The distance between the 1st and the 10th leaf in cm.\nRecorded at complete developmental stage." [SGn:EVDK]
+def: "The distance between the 1st and the 10th leaf in cm. Recorded at complete developmental stage." [SGn:EVDK]
 relationship: variable_of SP:0000427 ! stem length
 created_by: naama
 creation_date: 2017-09-22T12:03:26Z
@@ -3882,7 +3882,7 @@ creation_date: 2017-09-22T13:40:25Z
 [Term]
 id: SP:0000437
 name: number of primary leaflets per leaf
-def: "Number of primary leaflets per leaf. Counting\nin fully opened leaves when the plant is completely developed." [SGN:EVDK]
+def: "Number of primary leaflets per leaf. Counting in fully opened leaves when the plant is completely developed." [SGN:EVDK]
 relationship: variable_of SP:0000436 ! leaflets number
 created_by: naama
 creation_date: 2017-09-22T13:40:46Z
@@ -3890,7 +3890,7 @@ creation_date: 2017-09-22T13:40:46Z
 [Term]
 id: SP:0000438
 name: number of secondary leaflets per leaf
-def: "Number of secondary leaflets per leaf. Counting\nin fully opened leaves when the plant is completely developed." [SGN:EVDK]
+def: "Number of secondary leaflets per leaf. Counting in fully opened leaves when the plant is completely developed." [SGN:EVDK]
 relationship: variable_of SP:0000436 ! leaflets number
 created_by: naama
 creation_date: 2017-09-22T13:41:28Z
@@ -3906,7 +3906,7 @@ creation_date: 2017-12-14T15:53:18Z
 [Term]
 id: SP:0000440
 name: leaf habit visual rating 1-9 scale
-def: "Description of the way the leaves are held naturally.  Recorded at complete developmental stage of the plant. Visual rating 1-9 score  (1:semi-erect, 3:semi-horizontal, 5:horizontal, 7:horizontal-drooping, 9:drooping)." [SGN:NM]
+def: "Description of the way the leaves are held naturally. Recorded at complete developmental stage of the plant. Visual rating 1-9 score (1:semi-erect, 3:semi-horizontal, 5:horizontal, 7:horizontal-drooping, 9:drooping)." [SGN:NM]
 relationship: variable_of SP:0000439 ! leaf habit
 created_by: naama
 creation_date: 2017-12-14T15:55:33Z
