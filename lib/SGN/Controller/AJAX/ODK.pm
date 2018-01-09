@@ -352,6 +352,10 @@ sub get_odk_cross_progress_cached_GET {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
     my $dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
+    eval { make_path($dir) };
+    if ($@) {
+        print "Couldn't create $dir: $@";
+    }
     my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
