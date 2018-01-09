@@ -112,9 +112,9 @@ print STDERR Dumper $design_json;
 $mech->post_ok('http://localhost:3010/tools/label_designer/download', [ 'download_type' => $download_type, 'data_type' => $data_type, 'value'=> $value, 'design_json' => $design_json ]);
 $response = decode_json $mech->content;
 
-my $filename = $response->{'filename'};
-my $pdf = CAM::PDF->new($filename);
-print STDERR "Contents are:\n".$pdf->getPageText(1);
+my $file = $response->{'filepath'};
+my $pdf = CAM::PDF->new($file);
+#print STDERR "Contents are:\n".$pdf->getPageText(1);
 
 my $expected_text = "UG120054 Plot: 35667 NIR: 17-0001 UG130026 Plot: 35668 NIR: 17-0002 UG130106 Plot: 35669 NIR: 17-0003 UG130034 Plot: 35670 NIR: 17-0004 UG120062 Plot: 35671 NIR: 17-0005 UG130071 Plot: 35672 NIR: 17-0006 UG120251 Plot: 35673 NIR: 17-0007 UG130088 Plot: 35674 NIR: 17-0008 UG120022 Plot: 35675 NIR: 17-0009 UG120141 Plot: 35676 NIR: 17-0010 UG120161 Plot: 35677 NIR: 17-0011 UG130046 Plot: 35678 NIR: 17-0012 UG120017 Plot: 35679 NIR: 17-0013 UG120053 Plot: 35680 NIR: 17-0014 UG120239 Plot: 35681 NIR: 17-0015 UG130111 Plot: 35682 NIR: 17-0016 UG130011 Plot: 35683 NIR: 17-0017 UG130096 Plot: 35684 NIR: 17-0018 UG130105 Plot: 35685 NIR: 17-0019 UG130131 Plot: 35686 NIR: 17-0020 UG120163 Plot: 35687 NIR: 17-0021 UG120257 Plot: 35688 NIR: 17-0022 UG120027 Plot: 35689 NIR: 17-0023 UG120195 Plot: 35690 NIR: 17-0024 UG120240 Plot: 35691 NIR: 17-0025 UG130007 Plot: 35692 NIR: 17-0026 UG120300 Plot: 35693 NIR: 17-0027 UG120291 Plot: 35694 NIR: 17-0028 UG120196 Plot: 35695 NIR: 17-0029 UG130098 Plot: 35696 NIR: 17-0030\n";
 is($pdf->getPageText(1), $expected_text, 'download pdf test');

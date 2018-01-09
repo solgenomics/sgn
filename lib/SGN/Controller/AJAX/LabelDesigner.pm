@@ -296,7 +296,10 @@ __PACKAGE__->config(
 
        close($FH);
        print STDERR "Returning with filename . . .\n";
-       $c->stash->{rest} = { filename => $c->config->{basepath}."/".$filename };
+       $c->stash->{rest} = {
+           filename => $filename,
+           filepath => $c->config->{basepath}."/".$filename 
+       };
 
    }
 
