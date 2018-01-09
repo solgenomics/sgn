@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 04:01:2018 15:09
+date: 09:01:2018 15:23
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -513,14 +513,14 @@ relationship: part_of SP:0000006 ! flowering
 
 [Term]
 id: SP:0000062
-name: heart shape
+name: heart shape degree. Calculation.
 def: "0.25 x [1/2fOv(y) x Tov] + 20 x [(H_sl + H_sr)/2*H] the degree of heart shapeness." [SGN:EVDK]
 synonym: "hrt" RELATED []
 xref: PATO:0000948
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000038 ! fruit shape
+relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
 id: SP:0000063
@@ -705,7 +705,7 @@ relationship: variable_of SP:0000072 ! proximal fruit end shape
 
 [Term]
 id: SP:0000080
-name: fruit mass
+name: fruit mass, weight in grams
 def: "The mass of the fruit measured in grams." [SGN:EVDK]
 synonym: "fruit weight" RELATED []
 synonym: "fw" RELATED []
@@ -749,7 +749,7 @@ is_obsolete: true
 
 [Term]
 id: SP:0000085
-name: fruit area
+name: fruit area, measurement in square centimeters, cm^2
 def: "The area of the fruit in cm^2." [SGN:EVDK]
 xref: PATO:0001323
 xref: PO:0007010
@@ -773,7 +773,7 @@ creation_date: 2008-02-12T03:11:00Z
 
 [Term]
 id: SP:0000087
-name: fruit perimeter
+name: fruit perimeter, measurement in centimeters
 def: "The maximum perimeter of the fruit in cm." [SGN:EVDK]
 synonym: "fruit circumference" RELATED []
 synonym: "per" RELATED []
@@ -800,7 +800,7 @@ creation_date: 2008-02-12T03:11:00Z
 
 [Term]
 id: SP:0000089
-name: fruit locule number
+name: fruit locule number, counting
 def: "The number of locules in the fruit.\nThis data is taken in the transversal section." [SGN:EVDK]
 synonym: "lcn" RELATED []
 xref: PO:0007010
@@ -858,7 +858,7 @@ creation_date: 2008-02-13T10:05:00Z
 
 [Term]
 id: SP:0000095
-name: pericarp area
+name: pericarp area in square millimeters, mm^2
 def: "The area of the pericarp (mm^2)." [SGN:EVDK]
 xref: PO:0007010
 xref: PO:0007042
@@ -869,7 +869,7 @@ creation_date: 2008-02-12T03:36:00Z
 
 [Term]
 id: SP:0000096
-name: septum + pericarp area
+name: septum + pericarp area, calculation in square millimeters
 def: "The sum of the areas of the septum and the pericarp in mm^2." [SGN:EVDK]
 xref: PO:0005008
 xref: PO:0007010
@@ -927,7 +927,7 @@ xref: PATO:0000587
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000010 ! fruit size
+is_a: SP:0000462 ! fruit size value
 
 [Term]
 id: SP:0000102
@@ -935,7 +935,7 @@ name: large fruit
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000010 ! fruit size
+is_a: SP:0000462 ! fruit size value
 
 [Term]
 id: SP:0000103
@@ -1023,7 +1023,7 @@ name: long fruit
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000038 ! fruit shape
+is_a: SP:0000463 ! fruit shape phenotypic values
 
 [Term]
 id: SP:0000112
@@ -1031,7 +1031,7 @@ name: rounded fruit
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000038 ! fruit shape
+is_a: SP:0000463 ! fruit shape phenotypic values
 
 [Term]
 id: SP:0000113
@@ -1589,7 +1589,7 @@ id: SP:0000173
 name: fasciated
 def: "Fasciated fruit shape. Multipe locules." [SGN:NM]
 xref: PATO:0000949
-is_a: SP:0000038 ! fruit shape
+is_a: SP:0000463 ! fruit shape phenotypic values
 
 [Term]
 id: SP:0000174
@@ -1937,7 +1937,7 @@ id: SP:0000217
 name: specific gravity
 def: "Weight in air / (weight in air -weight in water)." [potato_cooperators:WDJ]
 xref: PO:0004547
-relationship: part_of SP:0000080 ! fruit mass
+relationship: part_of SP:0000080 ! fruit mass, weight in grams
 relationship: part_of SP:0000216 ! tuber mass
 created_by: Naama
 creation_date: 2010-05-18T11:49:44Z
@@ -3362,7 +3362,7 @@ creation_date: 2010-07-19T01:12:38Z
 
 [Term]
 id: SP:0000372
-name: pericarp thickness
+name: pericarp thickness, calculation in millimeters
 def: "Pericarp thickness in mm." [SGN:EVDK]
 synonym: "pericarp width" RELATED []
 relationship: variable_of SP:0000371 ! pericarp
@@ -3540,7 +3540,7 @@ id: SP:0000394
 name: fruit dry weight percentage
 def: "Net dry weight (after 1 week in oven) divided by net fresh weight of the fruit and multiplied by 100." [SGN:EVDK]
 synonym: "fruit solids percentage" EXACT []
-relationship: variable_of SP:0000080 ! fruit mass
+relationship: variable_of SP:0000080 ! fruit mass, weight in grams
 created_by: naama
 creation_date: 2017-02-06T15:17:20Z
 
@@ -3569,8 +3569,8 @@ creation_date: 2017-09-07T15:00:10Z
 
 [Term]
 id: SP:0000398
-name: pericarp max cell size
-def: "Size of the biggest tomato cells in the pericarp in mm^2." [SGN:NM]
+name: pericarp max cell size, calculation in square micrometers
+def: "Size of the biggest tomato cells in the pericarp in um^2." [SGN:NM]
 relationship: variable_of SP:0000397 ! pericarp cells
 created_by: naama
 creation_date: 2017-09-07T15:00:56Z
@@ -4074,6 +4074,22 @@ def: "An arrangement of ribs surrounding the calyx end of a full size fruit. 0-9
 relationship: variable_of SP:0000460 ! fruit calyx
 created_by: naama
 creation_date: 2018-01-02T11:49:08Z
+
+[Term]
+id: SP:0000462
+name: fruit size value
+def: "Historic phenotype values for fruit size." []
+is_a: SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2018-01-09T15:13:55Z
+
+[Term]
+id: SP:0000463
+name: fruit shape phenotypic values
+def: "Phenotype values for fruit shape. Used historically, should not be used anymore for recording fruit traits/variables." []
+is_a: SP:0000038 ! fruit shape
+created_by: naama
+creation_date: 2018-01-09T15:15:57Z
 
 [Term]
 id: SP:0000706
