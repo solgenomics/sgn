@@ -1016,6 +1016,58 @@ sub germplasm_pedigree_GET {
 }
 
 
+=head2 brapi/v1/germplasm/{id}/progeny?notation=purdy
+
+ Usage: To retrieve progeny (direct descendant) information for a single germplasm
+ Desc:
+ Return JSON example:
+ { 
+    "metadata" : {
+        "pagination": {},
+        "status": [],
+        "datafiles": []
+    },
+    "result" : {
+       "germplasmDbId": "382",
+       "defaultDisplayName": "Pahang",
+       "data" : [{
+          "progenyGermplasmDbId": "403",
+          "parentType": "FEMALE"
+       }, { 
+          "progenyGermplasmDbId": "402",
+          "parentType": "MALE"
+       }, { 
+          "progenyGermplasmDbId": "405",
+          "parentType": "SELF"
+       }]
+    }
+ }
+ Args:
+ Side Effects:
+
+=cut
+
+sub germplasm_progeny : Chained('germplasm_single') PathPart('progeny') Args(0) : ActionClass('REST') { }
+
+sub germplasm_progeny_POST {
+	my $self = shift;
+	my $c = shift;
+}
+
+sub germplasm_progeny_GET {
+	my $self = shift;
+	my $c = shift;
+	my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+	my $brapi_package_result = $brapi_module->germplasm_progeny({
+		stock_id => $c->stash->{stock_id}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+
 
 
 sub germplasm_attributes_detail  : Chained('germplasm_single') PathPart('attributes') Args(0) : ActionClass('REST') { }
