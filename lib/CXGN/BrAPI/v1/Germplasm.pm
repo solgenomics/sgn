@@ -267,7 +267,11 @@ sub germplasm_progeny {
         }
     }
 	my $total_count = scalar @{$result->{data}};
-	my $result->{data} = [@{$result->{data}}[$page_size*$page .. $page_size*($page+1)-1]];
+	my $last_item = $page_size*($page+1)-1;
+	if($last_item > $total_count-1){
+	    $last_item = $total_count-1
+	}
+	my $result->{data} = [@{$result->{data}}[$page_size*$page .. $last_item]];
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm progeny result constructed');
