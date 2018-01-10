@@ -11,6 +11,7 @@ use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::TrialPhenotype;
 use CXGN::Login;
 use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
@@ -1351,6 +1352,48 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     }
 
     $c->stash->{rest} = {success => 1};
+}
+
+sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trait_id = $c->req->param("selected");
+    
+    my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
+    	bcs_schema=>$schema,
+    	trial_id=>$trial_id,
+        trait_id=>$trait_id
+    });
+    my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
+    
+    $c->stash->{rest} = { phenotypes => $phenotype };    
+}
+
+sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $plot_name = $c->req->param('plot_name');
+  my $plot_pheno_value = $c->req->param('phenotype_value');
+  my $trait_id = $c->req->param('trait_id');
+  my $phenotype_id = $c->req->param('phenotype_id');
+  my $trial_id = $c->stash->{trial_id};
+  my $trial = $c->stash->{trial};
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
+    return;
+  }
+
+  my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id);
+  if ($suppress_return_error) {
+    $c->stash->{rest} = { error => $suppress_return_error };
+    return;
+  }
+ 
+  $c->stash->{rest} = { success => 1};
 }
 
 1;
