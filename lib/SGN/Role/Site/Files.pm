@@ -77,6 +77,14 @@ before 'setup_finalize' => sub {
     # care of creating temp dirs if it wants.
     $c->chown_generated_dir( $_ ) for grep -d, $temp_base->children;
 
+    my @dirs = glob('/tmp/cgi_compile_*');
+    if (@dirs) { 
+	print STDERR "Detected cgi_compile dirs... changing permissions.\n";
+	foreach my $d (@dirs) { 
+	    $c->chown_generated_dir($d);
+	}
+    }
+
 };
 
 =head2 generated_file_uri
