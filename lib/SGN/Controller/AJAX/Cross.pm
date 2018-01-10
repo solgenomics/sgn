@@ -884,7 +884,6 @@ sub create_cross_wishlist_submit : Path('/ajax/cross/create_cross_wishlist_submi
 
 sub create_cross_wishlist_submit_POST : Args(0) {
     my ($self, $c) = @_;
-    my $time = DateTime->now();
 
     if (!$c->user){
         $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
@@ -894,6 +893,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $user_name = $c->user()->get_object()->get_username();
     my $site_name = $c->config->{project_name};
 
+    my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
@@ -995,7 +995,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $seedlot_name = $female->{seedlot_name} || '';
             my $seedlot_transaction_operator = $female->{seed_transaction_operator} || '';
             my $seedlot_num_seed_per_plot = $female->{num_seed_per_plot} || '';
-            my $line = '"'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.localtime().'","'.$user_name.'","';
+            my $time = DateTime->now();
+            my $entry_timestamp = $time->ymd()."_".$time->hms().":".$time->millisecond.":".$time->microsecond.":".$time->nanosecond;
+            my $line = '"'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.$entry_timestamp.'","'.$user_name.'","';
 
             if (!exists($seen_info_plots{$plot_id})){
                 my $female_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$female->{accession_id}});
@@ -1025,6 +1027,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     push @descendents_array, $v->{name};
                 }
                 my $descendents_string = join ',', @descendents_array;
+                my $time = DateTime->now();
                 my $entry_timestamp = $time->ymd()."_".$time->hms().":".$time->millisecond.":".$time->microsecond.":".$time->nanosecond;
                 push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
                 $seen_info_plots{$plot_id}++;
@@ -1080,6 +1083,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                                 push @descendents_array, $v->{name};
                             }
                             my $descendents_string = join ',', @descendents_array;
+                            my $time = DateTime->now();
                             my $entry_timestamp = $time->ymd()."_".$time->hms().":".$time->millisecond.":".$time->microsecond.":".$time->nanosecond;
                             push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
                             $seen_info_plots{$plot_id}++;

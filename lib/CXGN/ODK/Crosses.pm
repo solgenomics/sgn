@@ -231,6 +231,13 @@ sub save_ona_cross_info {
                         $rooting_activeseed_lookup{$a->{'Laboratory/rooting/rootingID'}} = $cross_activeseed_lookup{$a->{'Laboratory/rooting/getSubcultureID'}};
                         $rooting_subculture_lookup{$a->{'Laboratory/rooting/rootingID'}} = $a->{'Laboratory/rooting/getSubcultureID'};
                     }
+                    if ($a->{'Laboratory/labActivity'} eq 'contamination'){
+                        push @{$cross_info{$cross_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}}->{'contamination'}}, $a;
+                        $cross_info{$cross_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}}->{'active_seeds'}->{$cross_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}}->{'subcultures'}->{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}->{'contamination'}->{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $a;
+                        $rooting_cross_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $cross_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}};
+                        $rooting_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $cross_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}};
+                        $rooting_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $a->{'Laboratory/embryo_contamination/lab_econtaminationID'};
+                    }
                 }
                 if ($activity_category eq 'screenhouse'){
                     #MISSING
@@ -335,12 +342,14 @@ sub create_odk_cross_progress_tree {
 
     my @wishlist_file_lines;
     my %open_tree;
+    my %cross_combinations;
+    my %top_level_title;
     if (@wishlist_file_elements){
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
         my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_MusaBase_Arusha_KgtuGst.csv";
+        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
@@ -367,10 +376,15 @@ sub create_odk_cross_progress_tree {
             my $wishlist_entry_created_timestamp = $_->[7];
             my $wishlist_entry_created_by = $_->[8];
             my $number_males = $_->[9];
+            $wishlist_entry_created_by =~ tr/"//d;
+            $wishlist_entry_created_timestamp =~ tr/"//d;
+            $female_accession_name =~ tr/"//d;
+            $female_plot_name =~ tr/"//d;
             $number_males =~ tr/"//d;
             my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
             for my $n (10 .. 10+int($number_males)){
                 if ($_->[$n]){
+                    $_->[$n] =~ tr/"//d;
                     $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
                 }
             }
@@ -417,7 +431,6 @@ sub create_odk_cross_progress_tree {
                         foreach my $cross_parents (@all_cross_parents){
                             if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
                                 foreach my $cross_name (keys %{$cross_parents->{$female_accession_name}->{$male_accession_name}}){
-                                    #print STDERR Dumper $cross_name;
                                     my $cross_info = $all_cross_info{$cross_name};
                                     $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cross_name} = $cross_info;
                                     if ($cross_info->{'firstPollination'}){
@@ -425,6 +438,7 @@ sub create_odk_cross_progress_tree {
                                             my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femID'});
                                             if ($planned_female_plot_name eq $female_plot_name){
                                                 $combined{$top_level}->{'wishlist_female_plot_match'} = $female_plot_name;
+                                                $cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$female_plot_name}->{$male_accession_name}->{$cross_name}++;
                                             } else {
                                                 $combined{$top_level}->{'wishlist_female_plot_no_match'} = $female_plot_name;
                                             }
@@ -442,11 +456,14 @@ sub create_odk_cross_progress_tree {
                             }
                         }
                     }
+                    my $male_accession_names = join ',', keys %$male_hash;
+                    $top_level_title{$top_level} = "Planned Female Accession: $female_accession_name. Planned Female Plot: $planned_female_plot_name. Planned Male Accession(s): $male_accession_names.";
                 }
             }
         }
         #print STDERR Dumper \%combined;
     }
+    #print STDERR Dumper \%cross_combinations;
 
     my %seen_top_levels;
     my %top_level_contents;
@@ -459,27 +476,31 @@ sub create_odk_cross_progress_tree {
             'id' => $top_level,
             'children' => JSON::true,
         };
+        push @top_level_json, $node;
+
         my $icon_color = '';
         my $crossed_female_plot_name = '';
         if (!exists($open_tree{$top_level})){
             $node->{state}->{opened} = JSON::false;
-            $node->{text} = 'Wishlist Entry: '.$top_level." : No Crosses";
+            $node->{text} = '<span order-field="2" title="'.$top_level_title{$top_level}.'">Wishlist Entry: '.$top_level." : No Crosses</span>";
             $icon_color = 'text-danger';
             $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
         }
         if (exists($female_accession_hash->{wishlist_female_plot_match})){
-            $node->{text} = '<span class="text-success">Wishlist Entry: '.$top_level.': Cross Performed On Wishlist Female Plot</span>';
+            #print STDERR Dumper $female_accession_hash;
+            $node->{text} = '<span order-field="0" title="'.$top_level_title{$top_level}.'" class="text-success">Crossed Wishlist Entry: '.$top_level.'</span>';
             $icon_color = 'text-success';
             $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
             $node->{state}->{opened} = JSON::true;
             $crossed_female_plot_name = $female_accession_hash->{wishlist_female_plot_match};
         } elsif (exists($female_accession_hash->{wishlist_female_plot_no_match})){
-            $node->{text} = 'Wishlist Entry: '.$top_level.': Cross Performed But Not On Wishlist Female Plot';
+            $node->{text} = '<span order-field="1" title="'.$top_level_title{$top_level}.'">Possibly Crossed Wishlist Entry: '.$top_level.': Cross Performed But Not On This Wishlist Female Plot</span>';
             $icon_color = 'text-info';
             $node->{icon} = 'glyphicon glyphicon-briefcase '.$icon_color;
             $node->{state}->{opened} = JSON::false;
+            $node->{children} = JSON::false;
+            next;
         }
-        push @top_level_json, $node;
 
         my @top_level_content_json;
         while (my ($female_accession_name, $planned_female_plot_name_hash) = each %$female_accession_hash){
@@ -493,20 +514,9 @@ sub create_odk_cross_progress_tree {
                 while (my ($planned_female_plot_name, $male_accession_hash) = each %$planned_female_plot_name_hash){
                     my $planned_female_plot_node = {
                         'text' => 'Wishlist Female Plot: '.$planned_female_plot_name,
+                        'icon' => 'glyphicon glyphicon-queen '.$icon_color
                     };
                     push @{$planned_female_node->{children}}, $planned_female_plot_node;
-                    if ($crossed_female_plot_name){
-                        if ($planned_female_plot_name eq $crossed_female_plot_name){
-                            $planned_female_plot_node->{state}->{opened} = JSON::true;
-                            $planned_female_plot_node->{icon} = 'glyphicon glyphicon-queen '.$icon_color;
-                        } else {
-                            $planned_female_plot_node->{icon} = 'glyphicon glyphicon-queen';
-                            $planned_female_plot_node->{text} .= ': Cross Performed on Different Female Plot';
-                            next;
-                        }
-                    } else {
-                        $planned_female_plot_node->{icon} = 'glyphicon glyphicon-queen '.$icon_color;
-                    }
                     while (my ($male_accession_name, $crosses_hash) = each %$male_accession_hash){
                         my $planned_male_node = {
                             'text' => 'Wishlist Male Accession: '.$male_accession_name
@@ -516,6 +526,11 @@ sub create_odk_cross_progress_tree {
                             $planned_male_node->{state}->{opened} = JSON::true;
                             $planned_male_node->{icon} = 'glyphicon glyphicon-king '.$icon_color;
                             while (my ($cross_name, $actions_hash) = each %$crosses_hash){
+                                if (exists($cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$crossed_female_plot_name}->{$male_accession_name}->{$cross_name})){
+                                    $planned_female_plot_node->{state}->{opened} = JSON::true;
+                                } else {
+                                    next;
+                                }
                                 my $cross_node = {
                                     'text' => 'Cross Name: '.$cross_name,
                                     'icon' => 'glyphicon glyphicon-random text-primary',
@@ -596,6 +611,21 @@ sub create_odk_cross_progress_tree {
                                                                             }
                                                                         }
                                                                     }
+                                                                }
+                                                            }
+                                                            if ($subcultures_action_name eq 'contamination'){
+                                                                my $contaminations_hash = $subculture_action_value;
+                                                                my $contaminations_node = {
+                                                                    'text' => $subcultures_action_name,
+                                                                    'icon' => 'glyphicon glyphicon-eye-open text-success',
+                                                                };
+                                                                push @{$subculture_node->{children}}, $contaminations_node;
+                                                                while (my ($contamination_name, $contamination_hash) = each %$contaminations_hash){
+                                                                    my $contamination_node = {
+                                                                        'text' => $contamination_name,
+                                                                        'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                    };
+                                                                    push @{$contaminations_node->{children}}, $contamination_node;
                                                                 }
                                                             }
                                                         }
