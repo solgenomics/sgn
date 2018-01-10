@@ -225,15 +225,17 @@ sub germplasm_progeny {
 	my $self = shift;
 	my $inputs = shift;
 	my $stock_id = $inputs->{stock_id};
-	my $mother_cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
-	my $father_cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
-	my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'accession', 'stock_type')->cvterm_id();
-	my $stock = = $self->bcs_schema()->resultset("Stock::Stock")->find([
-		{ 
-		    'me.type_id'=> $accession_cvterm,
-			'me.stock_id'=> $stock_id,
-		}
-	]);
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+	print STDERR Dumper $stock_id;
+	my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ 
+	    'type_id'=> $accession_cvterm,
+		'stock_id'=> $stock_id,
+	});
 	my $edges = $self->bcs_schema()->resultset("Stock::StockRelationship")->search([
 		{ 
 		    'me.subject_id' => $stock_id,
@@ -246,19 +248,29 @@ sub germplasm_progeny {
 		    'object.type_id'=> $accession_cvterm
 		}
 	],{join => 'object'});
-    my $results = {
+    my $result = {
 		defaultDisplayName=>$stock->uniquename,
 		germplasmDbId=>$stock_id,
 		data=>[]
 	};
     while (my $edge = $edges->next) {
         if ($edge->type_id==$mother_cvterm){
-            push @{$children->{mother_of}}, $edge->object_id;
+            push @{$result->{data}}, {
+				progenyGermplasmDbId => $edge->object_id,
+				parentType => "FEMALE"
+			};
         } else {
-            push @{$children->{father_of}}, $edge->object_id;
+            push @{$result->{data}}, {
+				progenyGermplasmDbId => $edge->object_id,
+				parentType => "MALE"
+			};
         }
     }
-    return $children;
+	my $total_count = scalar @{$result->{data}};
+	my $result->{data} = [@{$result->{data}}[$page_size*$page .. $page_size*($page+1)-1]];
+	my @data_files;
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm progeny result constructed');
 }
 
 sub germplasm_markerprofiles {

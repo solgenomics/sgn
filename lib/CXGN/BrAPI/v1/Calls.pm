@@ -37,6 +37,7 @@ sub calls {
 		['germplasm-search', ['json'], ['GET','POST'] ],
 		['germplasm/id', ['json'], ['GET'] ],
 		['germplasm/id/pedigree', ['json'], ['GET'] ],
+		['germplasm/id/progeny', ['json'], ['GET'] ],
 		['germplasm/id/markerprofiles', ['json'], ['GET'] ],
 		['germplasm/id/attributes', ['json'], ['GET'] ],
 		['attributes', ['json'], ['GET'] ],
