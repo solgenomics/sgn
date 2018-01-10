@@ -106,12 +106,14 @@ sub _authenticate_user {
     my $c = shift;
     my $status = $c->stash->{status};
 
-    my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-    #print STDERR $person_id." : ".$user_type." : ".$expired;
+    if ($c->config->{brapi_require_login} == 1){
+        my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+        #print STDERR $person_id." : ".$user_type." : ".$expired;
 
-    if (!$person_id || $expired || !$user_type) {
-        my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
-        _standard_response_construction($c, $brapi_package_result);
+        if (!$person_id || $expired || !$user_type) {
+            my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
+            _standard_response_construction($c, $brapi_package_result);
+        }
     }
 
     return 1;
@@ -187,11 +189,11 @@ sub authenticate_token_DELETE {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-#sub authenticate_token_GET {
-#    my $self = shift;
-#    my $c = shift;
-#    process_authenticate_token($self,$c);
-#}
+sub authenticate_token_GET {
+    my $self = shift;
+    my $c = shift;
+    process_authenticate_token($self,$c);
+}
 
 sub authenticate_token_POST {
 	my $self = shift;
@@ -1009,6 +1011,58 @@ sub germplasm_pedigree_GET {
 	my $brapi_package_result = $brapi_module->germplasm_pedigree({
 		stock_id => $c->stash->{stock_id},
 		notation => $clean_inputs->{notation}->[0]
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+
+=head2 brapi/v1/germplasm/{id}/progeny?notation=purdy
+
+ Usage: To retrieve progeny (direct descendant) information for a single germplasm
+ Desc:
+ Return JSON example:
+ { 
+    "metadata" : {
+        "pagination": {},
+        "status": [],
+        "datafiles": []
+    },
+    "result" : {
+       "germplasmDbId": "382",
+       "defaultDisplayName": "Pahang",
+       "data" : [{
+          "progenyGermplasmDbId": "403",
+          "parentType": "FEMALE"
+       }, { 
+          "progenyGermplasmDbId": "402",
+          "parentType": "MALE"
+       }, { 
+          "progenyGermplasmDbId": "405",
+          "parentType": "SELF"
+       }]
+    }
+ }
+ Args:
+ Side Effects:
+
+=cut
+
+sub germplasm_progeny : Chained('germplasm_single') PathPart('progeny') Args(0) : ActionClass('REST') { }
+
+sub germplasm_progeny_POST {
+	my $self = shift;
+	my $c = shift;
+}
+
+sub germplasm_progeny_GET {
+	my $self = shift;
+	my $c = shift;
+	my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+	my $brapi_package_result = $brapi_module->germplasm_progeny({
+		stock_id => $c->stash->{stock_id}
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }

@@ -461,10 +461,23 @@ $stock_id
           .attr("rx",10)
           .attr("ry",10)
           .attr("x",-100);
-        nodeNodes.append("a").attr("target","_blank")
+        nodeNodes.filter(function(d){
+            return d.id!=STOCK_ID;
+          })
+          .append("a").attr("target","_blank")
           .attr("href",function(d){
             if(d.id==STOCK_ID) return null;
             return "/stock/"+d.value.id+"/view";
+          })
+          .append('text').classed('node-name-text',true)
+          .attr('y',15)
+          .attr('text-anchor',"middle")
+          .html(function(d){
+            return d.value.name;
+          })
+          .attr('fill',"black");
+        nodeNodes.filter(function(d){
+            return d.id==STOCK_ID;
           })
           .append('text').classed('node-name-text',true)
           .attr('y',15)

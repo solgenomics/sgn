@@ -145,6 +145,7 @@ sub _validate_with_plugin {
   }
 
   my @pairs;
+  my %seen_plot_numbers;
   for my $row ( 1 .. $row_max ) {
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
@@ -236,6 +237,13 @@ sub _validate_with_plugin {
     if (!($plot_number =~ /^\d+?$/)) {
         push @error_messages, "Cell C$row_name: plot number is not a positive integer: $plot_number";
     }
+    #plot number must be unique in file
+    if (exists($seen_plot_numbers{$plot_number})){
+        push @error_messages, "Cell C$row_name: plot number must be unique in your file. You already used this plot number in C".$seen_plot_numbers{$plot_number};
+    } else {
+        $seen_plot_numbers{$plot_number} = $row_name;
+    }
+
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
         push @error_messages, "Cell D$row_name: block number missing";

@@ -14,7 +14,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$gs_traits_index
+$gs_traits_index => undef
 
 </%args>
 

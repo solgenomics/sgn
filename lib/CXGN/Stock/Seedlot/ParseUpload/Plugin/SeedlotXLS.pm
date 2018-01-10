@@ -180,10 +180,12 @@ sub _parse_with_plugin {
             $seen_accession_names{$accession_name}++;
         }
     }
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my @accessions = keys %seen_accession_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@accessions }
+        'uniquename' => { -in => \@accessions },
+        'type_id' => $accession_cvterm_id
     });
     my %accession_lookup;
     while (my $r=$rs->next){
