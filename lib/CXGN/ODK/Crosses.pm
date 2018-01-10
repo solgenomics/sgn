@@ -524,11 +524,18 @@ sub create_odk_cross_progress_tree {
                         push @{$planned_female_plot_node->{children}}, $planned_male_node;
                         if (ref($crosses_hash) eq "HASH") {
                             $planned_male_node->{state}->{opened} = JSON::true;
-                            $planned_male_node->{icon} = 'glyphicon glyphicon-king '.$icon_color;
                             while (my ($cross_name, $actions_hash) = each %$crosses_hash){
                                 if (exists($cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$crossed_female_plot_name}->{$male_accession_name}->{$cross_name})){
+                                    $planned_male_node->{icon} = 'glyphicon glyphicon-king '.$icon_color;
                                     $planned_female_plot_node->{state}->{opened} = JSON::true;
                                 } else {
+                                    $planned_male_node->{icon} = 'glyphicon glyphicon-king';
+                                    $planned_male_node->{state}->{opened} = JSON::false;
+                                    my $cross_node = {
+                                        'text' => 'No Crosses',
+                                        'icon' => 'glyphicon glyphicon-minus',
+                                    };
+                                    push @{$planned_male_node->{children}}, $cross_node;
                                     next;
                                 }
                                 my $cross_node = {
