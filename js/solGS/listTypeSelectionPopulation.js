@@ -49,7 +49,7 @@ jQuery(document).ready( function() {
         if (listId) {
 	
 	    jQuery("#list_type_selection_pop_load").click(function() {
-		alert(listDetail.type)   
+	//	alert(listDetail.type)   
 		if (listDetail.type.match(/accessions/)) {
 		    
 		    askSelectionJobQueueing(listId);
@@ -84,7 +84,7 @@ function checkPredictedListSelection () {
 		    url: '/solgs/check/predicted/list/selection',                   
 		    success: function(response) { 
 			args = JSON.parse(args);
-			alert('response ' + response.output)
+		
 			if (response.output) {		    
 			    displayPredictedListTypeSelectionPops(args, response.output); 
 			    
@@ -114,10 +114,10 @@ function getSelectionListElementsNames (list) {
 
 
 function getListTypeSelectionPopDetail(listId) {   
-    alert(typeof(listId))
+   
     if (typeof(listId) == 'number') {
 	var list = new CXGN.List();
-	alert('list detail' + listId)
+
 	var listData;
 	var listType;
 	var listName;
