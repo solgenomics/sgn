@@ -339,8 +339,8 @@ sub create_odk_cross_progress_tree {
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
-        #my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_MusaBase_Arusha_KgtuGst.csv";
+        my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
+        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_MusaBase_Arusha_KgtuGst.csv";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
