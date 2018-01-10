@@ -9,6 +9,7 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use CXGN::List::Validate;
+use SGN::Model::Cvterm;
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -259,9 +260,7 @@ sub _get_pedigrees_from_file {
     return \@pedigrees;
 }
 
-###################
-#
-=item get_full_pedigree
+=head2 get_full_pedigree
 
 Usage:
     GET "/ajax/pedigrees/get_full?stock_id=<STOCK_ID>";
@@ -270,21 +269,21 @@ Responds with JSON array containing pedigree relationship objects for the
 accession identified by STOCK_ID and all of its parents (recursively).
 
 =cut
-#
-###################
+
 sub get_full_pedigree : Path('/ajax/pedigrees/get_full') : ActionClass('REST') { }
 sub get_full_pedigree_GET {
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
-    my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
+    my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my @queue = ($stock_id);
     my $nodes = [];
     while (@queue){
         my $node = pop @queue;
-        my $relationships = _get_relationships($schema, $mother_cvterm, $father_cvterm, $node);
+        my $relationships = _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $node);
         if ($relationships->{parents}->{mother}){
             push @queue, $relationships->{parents}->{mother};
         }
@@ -296,9 +295,7 @@ sub get_full_pedigree_GET {
     $c->stash->{rest} = $nodes;
 }
 
-###################
-#
-=item get_relationships
+=head2 get_relationships
 
 Usage:
     POST "/ajax/pedigrees/get_relationships";
@@ -308,8 +305,7 @@ Responds with JSON array containing pedigree relationship objects for the
 accessions identified by the provided STOCK_IDs.
 
 =cut
-#
-###################
+
 sub get_relationships : Path('/ajax/pedigrees/get_relationships') : ActionClass('REST') { }
 sub get_relationships_POST {
     my $self = shift;
@@ -318,11 +314,12 @@ sub get_relationships_POST {
     my $s_ids = $c->req->body_params->{stock_id};
     push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $mother_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "female_parent"})->cvterm_id();
-    my $father_cvterm = $schema->resultset("Cv::Cvterm")->find({name  => "male_parent"})->cvterm_id();
+    my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $nodes = [];
     while (@{$stock_ids}){
-        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, (shift @{$stock_ids}));
+        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, (shift @{$stock_ids}));
     }
     $c->stash->{rest} = $nodes;
 }
@@ -331,10 +328,11 @@ sub _get_relationships {
     my $schema = shift;
     my $mother_cvterm = shift;
     my $father_cvterm = shift;
+    my $accession_cvterm = shift;
     my $stock_id = shift;
     my $name = $schema->resultset("Stock::Stock")->find({stock_id=>$stock_id})->uniquename();
-    my $parents = _get_pedigree_parents($schema, $mother_cvterm, $father_cvterm, $stock_id);
-    my $children = _get_pedigree_children($schema, $mother_cvterm, $father_cvterm, $stock_id);
+    my $parents = _get_pedigree_parents($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
+    my $children = _get_pedigree_children($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
     return {
         id => $stock_id,
         name=>$name,
@@ -347,17 +345,20 @@ sub _get_pedigree_parents {
     my $schema = shift;
     my $mother_cvterm = shift;
     my $father_cvterm = shift;
+    my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
         { 
-            object_id => $stock_id,
-            type_id => $father_cvterm
+            'me.object_id' => $stock_id,
+            'me.type_id' => $father_cvterm,
+            'subject.type_id'=> $accession_cvterm
         },
         { 
-            object_id => $stock_id,
-            type_id => $mother_cvterm
+            'me.object_id' => $stock_id,
+            'me.type_id' => $mother_cvterm,
+            'subject.type_id'=> $accession_cvterm
         }
-    ]);
+    ],{join => 'subject'});
     my $parents = {};
     while (my $edge = $edges->next) {
         if ($edge->type_id==$mother_cvterm){
@@ -373,17 +374,20 @@ sub _get_pedigree_children {
     my $schema = shift;
     my $mother_cvterm = shift;
     my $father_cvterm = shift;
+    my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
         { 
-            subject_id => $stock_id,
-            type_id => $father_cvterm
+            'me.subject_id' => $stock_id,
+            'me.type_id' => $father_cvterm,
+            'object.type_id'=> $accession_cvterm
         },
         { 
-            subject_id => $stock_id,
-            type_id => $mother_cvterm
+            'me.subject_id' => $stock_id,
+            'me.type_id' => $mother_cvterm,
+            'object.type_id'=> $accession_cvterm
         }
-    ]);
+    ],{join => 'object'});
     my $children = {};
     $children->{mother_of}=[];
     $children->{father_of}=[];
