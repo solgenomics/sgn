@@ -314,7 +314,7 @@ sub check : Path('/tools/blast/check') Args(1) {
     my $cluster_tmp_dir = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
     #my $jobid =~ s/\.\.//g; # prevent hacks
-    my $job_file = File::Spec->catfile($cluster_tmp_dir, $jobid.".job");
+    my $job_file = File::Spec->catfile($cluster_tmp_dir, $jobid, "job");
 
     my $job = CXGN::Tools::Run->new( { job_file => $job_file} );
 
@@ -341,6 +341,8 @@ sub check : Path('/tools/blast/check') Args(1) {
       my $result_file = $self->jobid_to_file($c, $jobid.".out");
 
       my $job_out_file = $job->out_file();
+
+      print STDERR "Job out file = $job_out_file...\n";
       for( 1..10 ) {
   	    uncache($job_out_file);
   	    last if -f $job_out_file;
@@ -366,6 +368,7 @@ sub check : Path('/tools/blast/check') Args(1) {
       # my $t7 = [gettimeofday]; #-------------------------- TIME CHECK
 
       # system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
+      print STDERR "Copying result file to website tempdir...\n";
       copy($job_out_file, $result_file) or die "Can't copy result file '$job_out_file' to $result_file ($!)";
 
       # my $t8 = [gettimeofday]; #-------------------------- TIME CHECK
