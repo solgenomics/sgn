@@ -867,6 +867,11 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
     }
     console.log(" X is: "+x+" and y is: "+y);
 
+    //count existing elements
+    var label_elements = document.getElementsByClassName('label-element');
+    label_elements = Array.prototype.slice.call(label_elements); // convert to array
+    var count = label_elements.length;
+
     //set up new element
     var new_element = svg.append("g")
         .classed("draggable", true)
@@ -899,6 +904,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 }, doSnap)
                 .append("svg:image")
                 .attr({
+                    "id": "element"+count,
                     "class": "label-element",
                     "value": field,
                     "size": size,
@@ -925,6 +931,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
             })
             .append("text")
             .attr({
+                "id": "element"+count,
                 "class": "label-element",
                 "value": field,
                 "size": size,
