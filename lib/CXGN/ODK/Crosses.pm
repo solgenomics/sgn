@@ -367,6 +367,7 @@ sub create_odk_cross_progress_tree {
             my $wishlist_entry_created_timestamp = $_->[7];
             my $wishlist_entry_created_by = $_->[8];
             my $number_males = $_->[9];
+            $number_males =~ tr/"//d;
             my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
             for my $n (10 .. 10+int($number_males)){
                 if ($_->[$n]){
