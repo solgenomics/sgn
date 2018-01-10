@@ -230,7 +230,7 @@ function createTrialsTable (tableId) {
     var table = '<table id="' + tableId +  '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
     table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>'; 
-    table    += '<th id="color_tip" title="You can combine Trials with matching color."><span class="glyphicon glyphicon-question-sign"></span></th>';
+   // table    += '<th id="color_tip" title="You can combine Trials with matching color."><span class="glyphicon glyphicon-question-sign"></span></th>';
     table    += '</tr></thead>';
     table    += '</table>';
 

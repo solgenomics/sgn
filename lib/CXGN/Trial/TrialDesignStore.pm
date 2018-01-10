@@ -414,7 +414,7 @@ sub store {
 				my $parent_stock;
 				my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
 				$stock_lookup->set_stock_name($stock_name);
-				$parent_stock = $stock_lookup->get_stock();
+				$parent_stock = $stock_lookup->get_stock($accession_cvterm_id);
 
 				if (!$parent_stock) {
 					die ("Error while saving trial layout: no stocks found matching $stock_name");

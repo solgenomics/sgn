@@ -148,6 +148,14 @@ stock_property	entry number	From BrAPI	03/27/2017	nm529	00076
 stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076
 stock_property	current_count	For keeping current count of seedlot	09/06/2017	nm529	00086
 stock_property  crossing_metadata_json    00086
+stock_property	ploidy_level	For indicating ploidy level of accession	12/20/2017	nm529	00088
+stock_property	genome_structure	For indicating genome structure of accession	12/20/2017	nm529	00088
+stock_property	introgression_parent	For indicating introgression parent accession name	12/20/2017	nm529	00088
+stock_property	introgression_backcross_parent	For indicating introgression backcross parent accession name	12/20/2017	nm529	00088
+stock_property	introgression_map_version	For indicating map version of introgression bp position	12/20/2017	nm529	00088
+stock_property	introgression_chromosome	For indicating chromosome number of introgression	12/20/2017	nm529	00088
+stock_property	introgression_start_position_bp	For indicating introgression start position in bp	12/20/2017	nm529	00088
+stock_property	introgression_end_position_bp	For indicating introgression end position in bp	12/20/2017	nm529	00088
 stock_relationship	cross_relationship				00052
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052
@@ -201,3 +209,4 @@ composable_cvs	method_ontology		05/01/2017		00073
 composable_cvs	unit_ontology		05/01/2017		00073
 composable_cvs	time_ontology		05/01/2017		00073
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
+phenotype_property  phenotype_outlier   suppressed phenotype measurement    01/04/2018  aco46   00089

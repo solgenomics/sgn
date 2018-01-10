@@ -12,11 +12,10 @@ Isaak Y Tecle, iyt2@cornell.edu
 
 =head1 LICENSE
 
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
+This library is free software. You can redistribute it and/or modifyi
+t under the same terms as Perl itself.
 
 =cut
-
 
 package SGN::Model::solGS::solGS;
 
@@ -829,7 +828,7 @@ sub structure_genotype_data {
 
 	if ($cnt > 1)
 	{
-	    ($duplicate_stock) = grep(/^$stock$/, @stocks);
+	    $duplicate_stock = $stock ~~ @stocks; #grep(/^$stock$/, @stocks);
 	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
 	}
 	
