@@ -206,7 +206,8 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
 } else if (length(predictionFile) != 0) {
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
- 
+  predictionData <- unique(predictionData, by='V1')
+  
   predictionData <- filterGenoData(predictionData, maf=0)
   predictionData <- roundAlleleDosage(predictionData)
   
