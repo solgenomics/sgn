@@ -106,6 +106,7 @@ $user_id => undef
     <option value="number_of_seeds_planted">Number of embryos planted</option>
     <option value="number_of_seeds_germinated">Number of seeds germinated</option>
     <option value="number_of_progeny">Number of progeny</option>
+    <option value="number_of_seeds_distributed">Number of seeds distributed</option>
   </select>
 
   <input id="property_value" />

@@ -304,7 +304,7 @@ sub test_matviews {
 
   if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
     print STDERR "Populated views, now proceeding with query . . . .\n";
-    return { success => "Populated views, query can proceed." };
+    return { status => "Populated views, query can proceed." };
   } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
     return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
   } elsif (%response_hash && $response_hash{'error'}) {

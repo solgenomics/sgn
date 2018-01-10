@@ -67,7 +67,7 @@ $d->find_element_ok("close_list_item_dialog", "id", "find close_list_item_dialog
 
 sleep(1);
 
-my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n", 'trials'=>"test\ntest_trial\ntest_genotyping_project\n", 'years'=>"2014\n2015\n", 'traits'=>"fresh shoot weight|CO:0000016\ndry matter content|CO:0000092\nharvest index|CO:0000015\n");
+my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n", 'trials'=>"test\ntest_trial\ntest_genotyping_project\n", 'years'=>"2014\n2015\n", 'traits'=>"fresh shoot weight|CO_334:0000016\ndry matter content|CO_334:0000092\nharvest index|CO_334:0000015\n");
 
 foreach my $list_type ( keys %test_lists ) {
 

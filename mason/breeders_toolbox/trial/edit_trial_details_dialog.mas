@@ -5,6 +5,7 @@ $breeding_program
 $location
 $year
 $trial_type
+$trial_type_id
 $planting_date
 $harvest_date
 $trial_description
@@ -55,8 +56,8 @@ $trial_description
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="edit_trial_type">Trial Type: </label>
                     <div class="col-sm-8">
-                      <div class="input-group">
-                        <select class="form-control" id="edit_trial_type" title="type" value="<%$trial_type%>"></select>
+                      <div class="input-group"> 
+                        <select class="form-control" id="edit_trial_type" title="type" value="<%$trial_type_id%>"></select>
                       </div>
                     </div>
                 </div>

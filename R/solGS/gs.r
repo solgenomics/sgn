@@ -10,7 +10,7 @@ options(echo = FALSE)
 library(rrBLUP)
 library(plyr)
 library(stringr)
-library(lme4)
+#library(lme4)
 library(randomForest)
 library(data.table)
 library(parallel)
@@ -72,8 +72,8 @@ formattedPhenoData <- c()
 phenoData          <- c()
 
 genoFile <- grep("genotype_data_", inputFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
-
 message('geno file ', genoFile)
+
 if (is.null(genoFile)) {
   stop("genotype data file is missing.")
 }
@@ -93,6 +93,7 @@ if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
 genoData <- c()
 if (is.null(filteredGenoData)) {
   genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  genoData <- unique(genoData, by='V1')
   message('read in unfiltered geno data')
 }
 
@@ -111,7 +112,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
   if (file.info(phenoFile)$size == 0) {
     stop("phenotype data file is empty.")
   }
-  
+
   phenoData <- fread(phenoFile, na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
 }
 
@@ -141,15 +142,23 @@ if (datasetInfo == 'combined populations') {
     colnames(phenoTrait)[1] <- 'genotypes'
    
   } else {
+
     phenoTrait <- getAdjMeans(phenoData, trait)
+
   }
 }
 
 if (is.null(filteredGenoData)) {
-  
+ 
   #genoDataFilter::filterGenoData
   genoData <- filterGenoData(genoData, maf=0)
-  filteredGenoData   <- genoData 
+  genoData <- roundAlleleDosage(genoData)
+
+  genoData <- as.data.frame(genoData)
+  rownames(genoData) <- genoData[, 1]
+  genoData[, 1]      <- NULL
+  filteredGenoData   <- genoData
+  
 } else {
   genoData           <- as.data.frame(filteredGenoData)
   rownames(genoData) <- genoData[, 1]
@@ -199,6 +208,11 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
  
   predictionData <- filterGenoData(predictionData, maf=0)
+  predictionData <- roundAlleleDosage(predictionData)
+  
+  predictionData  <- as.data.frame(predictionData)
+  rownames(predictionData) <- predictionData[, 1]
+  predictionData[, 1]      <- NULL
   filteredPredGenoData <- predictionData
 }
 

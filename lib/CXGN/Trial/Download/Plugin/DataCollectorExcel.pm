@@ -1,6 +1,40 @@
 
 package CXGN::Trial::Download::Plugin::DataCollectorExcel;
 
+=head1 NAME
+
+CXGN::Trial::Download::Plugin::DataCollectorExcel
+
+=head1 SYNOPSIS
+
+This plugin module is loaded from CXGN::Trial::Download
+
+------------------------------------------------------------------
+
+For downloading a "DataCollector Spreadsheet" for collecting phenotypes (as
+used in SGN::Controller::AJAX::DataCollectorDownload->create_DataCollector_spreadsheet_POST):
+
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    trait_list => \@trait_list,
+    filename => $file_path,
+    format => 'DataCollectorExcel',
+    data_level => $data_level,
+});
+my $spreadsheet_response = $create_spreadsheet->download();
+if ($spreadsheet_response->{error}) {
+    $c->stash->{rest} = { error => $spreadsheet_response->{error} };
+    return;
+}
+my $file_name = basename($file_path);
+$c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
+
+
+=head1 AUTHORS
+
+=cut
+
 use Moose::Role;
 use utf8;
 

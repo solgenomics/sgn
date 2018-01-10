@@ -9,6 +9,7 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use CXGN::List::Validate;
+use SGN::Model::Cvterm;
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -126,7 +127,9 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         return;
     }
 
+    print STDERR "UploadPedigreeCheck1".localtime()."\n";
     my $pedigrees = _get_pedigrees_from_file($c, $archived_filename_with_path);
+    print STDERR "UploadPedigreeCheck2".localtime()."\n";
 
     my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
     my $error;
@@ -135,6 +138,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
 
     my $pedigree_check = $add->validate_pedigrees($protocol_id);
+    print STDERR "UploadPedigreeCheck3".localtime()."Complete\n";
     #print STDERR Dumper $pedigree_check;
     if (!$pedigree_check){
         $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
@@ -257,6 +261,152 @@ sub _get_pedigrees_from_file {
     }
     return \@pedigrees;
 }
+
+=head2 get_full_pedigree
+
+Usage:
+    GET "/ajax/pedigrees/get_full?stock_id=<STOCK_ID>";
+
+Responds with JSON array containing pedigree relationship objects for the 
+accession identified by STOCK_ID and all of its parents (recursively).
+
+=cut
+
+sub get_full_pedigree : Path('/ajax/pedigrees/get_full') : ActionClass('REST') { }
+sub get_full_pedigree_GET {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->req->param('stock_id');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my @queue = ($stock_id);
+    my $nodes = [];
+    while (@queue){
+        my $node = pop @queue;
+        my $relationships = _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $node);
+        if ($relationships->{parents}->{mother}){
+            push @queue, $relationships->{parents}->{mother};
+        }
+        if ($relationships->{parents}->{father}){
+            push @queue, $relationships->{parents}->{father};
+        }
+        push @{$nodes}, $relationships;
+    }
+    $c->stash->{rest} = $nodes;
+}
+
+=head2 get_relationships
+
+Usage:
+    POST "/ajax/pedigrees/get_relationships";
+    BODY "stock_id=<STOCK_ID>[&stock_id=<STOCK_ID>...]"
+
+Responds with JSON array containing pedigree relationship objects for the 
+accessions identified by the provided STOCK_IDs.
+
+=cut
+
+sub get_relationships : Path('/ajax/pedigrees/get_relationships') : ActionClass('REST') { }
+sub get_relationships_POST {
+    my $self = shift;
+    my $c = shift;
+    my $stock_ids = [];
+    my $s_ids = $c->req->body_params->{stock_id};
+    push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $nodes = [];
+    while (@{$stock_ids}){
+        push @{$nodes}, _get_relationships($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, (shift @{$stock_ids}));
+    }
+    $c->stash->{rest} = $nodes;
+}
+
+sub _get_relationships {
+    my $schema = shift;
+    my $mother_cvterm = shift;
+    my $father_cvterm = shift;
+    my $accession_cvterm = shift;
+    my $stock_id = shift;
+    my $name = $schema->resultset("Stock::Stock")->find({stock_id=>$stock_id})->uniquename();
+    my $parents = _get_pedigree_parents($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
+    my $children = _get_pedigree_children($schema, $mother_cvterm, $father_cvterm, $accession_cvterm, $stock_id);
+    return {
+        id => $stock_id,
+        name=>$name,
+        parents=> $parents,
+        children=> $children
+    };
+}
+
+sub _get_pedigree_parents {
+    my $schema = shift;
+    my $mother_cvterm = shift;
+    my $father_cvterm = shift;
+    my $accession_cvterm = shift;
+    my $stock_id = shift;
+    my $edges = $schema->resultset("Stock::StockRelationship")->search([
+        { 
+            'me.object_id' => $stock_id,
+            'me.type_id' => $father_cvterm,
+            'subject.type_id'=> $accession_cvterm
+        },
+        { 
+            'me.object_id' => $stock_id,
+            'me.type_id' => $mother_cvterm,
+            'subject.type_id'=> $accession_cvterm
+        }
+    ],{join => 'subject'});
+    my $parents = {};
+    while (my $edge = $edges->next) {
+        if ($edge->type_id==$mother_cvterm){
+            $parents->{mother}=$edge->subject_id;
+        } else {
+            $parents->{father}=$edge->subject_id;
+        }
+    }
+    return $parents;
+}
+
+sub _get_pedigree_children {
+    my $schema = shift;
+    my $mother_cvterm = shift;
+    my $father_cvterm = shift;
+    my $accession_cvterm = shift;
+    my $stock_id = shift;
+    my $edges = $schema->resultset("Stock::StockRelationship")->search([
+        { 
+            'me.subject_id' => $stock_id,
+            'me.type_id' => $father_cvterm,
+            'object.type_id'=> $accession_cvterm
+        },
+        { 
+            'me.subject_id' => $stock_id,
+            'me.type_id' => $mother_cvterm,
+            'object.type_id'=> $accession_cvterm
+        }
+    ],{join => 'object'});
+    my $children = {};
+    $children->{mother_of}=[];
+    $children->{father_of}=[];
+    while (my $edge = $edges->next) {
+        if ($edge->type_id==$mother_cvterm){
+            push @{$children->{mother_of}}, $edge->object_id;
+        } else {
+            push @{$children->{father_of}}, $edge->object_id;
+        }
+    }
+    return $children;
+}
+
+# sub _trait_overlay {
+#     my $schema = shift;
+#     my $node_list = shift;
+# }
 
 
 1;

@@ -2,6 +2,8 @@
 
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
+
 <& /page/page_title.mas, title=>"Download Using Lists" &>
 
 <div class="container-fluid">
@@ -54,14 +56,14 @@ Choose a list for each parameter and click "Download".
       </div>
    </td>
    <td>
-<div class="checkbox">
- <label><input type="checkbox" id="format" name="format" value=".csv" checked>.csv</label>
+<div class="radio">
+ <label><input type="radio" id="format" name="format" value=".csv" checked>.csv</label>
 </div>
-<div class="checkbox">
-  <label><input type="checkbox" id="format" name="format" value=".xls">.xls</label>
+<div class="radio">
+  <label><input type="radio" id="format" name="format" value=".xls">.xls</label>
 </div>
-<div class="checkbox">
-  <label><input type="checkbox" id="format" name="format" value="html">html</label>
+<div class="radio">
+  <label><input type="radio" id="format" name="format" value="html">html</label>
 </div>
     </td>
     <td>
@@ -78,8 +80,8 @@ Choose a list for each parameter and click "Download".
     </select>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="phenotype" value="Download" />
-      <input type="hidden" id="download_token_value" name="download_token_value"/>
+      <button class="btn btn-primary" type="button" id="phenotype">Download</button>
+      <input type="hidden" id="phenotype_download_token" name="phenotype_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -97,8 +99,6 @@ $(document).ready(function() {
     $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
 
     $('#phenotype').click(function() {
-
-    disable_ui();
 
       var accession_list_id = $('#accession_list_list_select').val();
       var trial_list_id = $('#trial_list_list_select').val();
@@ -126,34 +126,19 @@ $(document).ready(function() {
       }
 
       if (problem_lists.length > 0) {
-      	 enable_ui();
       	 alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
 	 return;
       }
 
-      var token = new Date().getTime(); //use the current timestamp as the token value
-      $('#download_token_value').val(token);
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#phenotype_download_token').val(token);
+      jQuery('#download_form').submit();
 
-      $('#download_form').submit();
-
-      var fileDownloadCheckTimer;
-      fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
-      			     var cookieValue = $.cookie('fileDownloadToken');
-			     if (cookieValue == token) {
-			     	window.clearInterval(fileDownloadCheckTimer);
-				jQuery.removeCookie('fileDownloadToken'); //clears this cookie value
-				enable_ui();
-				}
-			}, 1000);
 	});
 
-	function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
 });
 
 </script>
@@ -171,6 +156,9 @@ $(document).ready(function() {
       Accessions
     </th>
     <th>
+      Format
+    </th>
+    <th>
       Action
     </th>
   </tr>
@@ -182,7 +170,16 @@ $(document).ready(function() {
       </div>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="pedigree" value="Download" />
+ <div class="radio">
+  <label><input type="radio" id="ped_format" name="ped_format" value="parents_only" checked>Direct parents only</label>
+ </div>
+ <div class="radio">
+   <label><input type="radio" id="ped_format" name="ped_format" value="full">Full pedigrees</label>
+ </div>
+     </td>
+    <td>
+      <button class="btn btn-primary" type="button" id="pedigree">Download</button>
+      <input type="hidden" id="pedigree_download_token" name="pedigree_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -192,59 +189,40 @@ $(document).ready(function() {
 
 
 <script>
-  $(document).ready(function() {
+$(document).ready(function() {
 
-      var lo = new CXGN.List();
+    var lo = new CXGN.List();
 
-      $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], 'select'));
+    $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], 'select'));
 
-      $('#pedigree').click(function() {
+    $('#pedigree').click(function() {
 
-      disable_ui();
+        var accession_list_id = $('#pedigree_accession_list_list_select').val();
+        if (!accession_list_id) {
+            alert("You need to select an accession list!");
+            return;
+        }
 
-      var accession_list_id = $('#pedigree_accession_list_list_select').val();
-      var trial_list_id = $('#genotype_trial_list_list_select').val();
+        var accession_validation = 1;
+        if (accession_list_id) {
+            accession_validation = lo.validate(accession_list_id, 'accessions', true);
 
+        }
 
-      var accession_validation = 1;
-      if (accession_list_id) {
-        accession_validation = lo.validate(accession_list_id, 'accessions', true);
+        if (accession_validation != 1) {
+            alert("The accession list did not pass validation. Please correct the list and try again");
+            return;
+        }
 
-      }
-
-   if (! accession_list_id) {
-        alert("You need to select an accession!");
-        return;
-      }
-
-      var problem_lists = new Array();
-
-      if (accession_validation != 1) {
-        problem_lists.push('accessions');
-      }
-
-   console.log(problem_lists);
-
-      if (problem_lists.length > 0) {
-        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-        return;
-      }
-
-     jQuery('#download_pedigree').submit();
-
-      enable_ui()
+        var ladda = Ladda.create(this);
+        ladda.start();
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        manage_dl_with_cookie(token, ladda);
+        jQuery('#pedigree_download_token').val(token);
+        jQuery('#download_pedigree').submit();
 
     });
-
-function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
-
-  });
+});
 
 </script>
 
@@ -279,7 +257,8 @@ function disable_ui() {
       </div>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="genotype" value="Download" />
+      <button class="btn btn-primary" type="button" id="genotype">Download</button>
+      <input type="hidden" id="gbs_download_token" name="gbs_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -296,8 +275,6 @@ function disable_ui() {
       get_select_box("genotyping_protocols", "protocol_list");
 
       $('#genotype').click(function() {
-
-      disable_ui()
 
       var accession_list_id = $('#genotype_accession_list_list_select').val();
       var protocol_list_id = $('#protocol_list').val();
@@ -326,20 +303,14 @@ function disable_ui() {
         return;
       }
 
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#gbs_download_token').val(token);
       jQuery('#download_gbs').submit();
 
-      enable_ui()
-
-
     });
-
-	function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
 
   });
 </script>
@@ -376,7 +347,8 @@ function disable_ui() {
       </div>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="genotype_qc" value="Quality Control" />
+      <button class="btn btn-primary" type="button" id="genotype_qc">Download</button>
+      <input type="hidden" id="qc_download_token" name="qc_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -409,8 +381,6 @@ function disable_ui() {
 		title: 'Downloading genotype...'
 		});
 
-      disable_ui()
-
       var accession_list_id = $('#genotype_qc_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
 
@@ -442,22 +412,14 @@ function disable_ui() {
         return;
       }
 
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#qc_download_token').val(token);
       jQuery('#gbs_qc').submit();
 
-      enable_ui()
-
-
-
-
     });
-
-	function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
 
   });
 </script>

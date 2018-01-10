@@ -1,0 +1,87 @@
+
+<%args>
+$user_id => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min','buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min'] &>
+<br>
+<div class="table-responsive" style="margin-top: 10px;">
+    <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Abbreviation</th>
+                <th>Country</th>
+                <th>Program</th>
+                <th>Type</th>
+                <th>Altitude(m)</th>
+                <th>Trials</th>
+
+            </tr>
+        </thead>
+        <!-- <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption> -->
+    </table>
+</div>
+<br>
+
+<& /breeders_toolbox/upload_locations_dialogs.mas &>
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery.ajax( {
+    	url: '/ajax/location/all',
+        beforeSend: function() {
+            // put working animation handling here
+    	},
+    	success: function(response) {
+            var export_message = window.location.href + ' location data.';
+            locationJSON = JSON.parse(response.data);
+            //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
+
+            var table = jQuery('#location_table').DataTable( {
+                data: locationJSON,
+                dom: 'Bfrtip',
+                select: true,
+                "columns": [
+                    { "data": "properties.Id" },
+                    { "data": "properties.Name" },
+                    { "data": "properties.Abbreviation" },
+                    { "data": "properties.Code",
+                        "render":function(data, type, full, meta){
+                           return full.properties.Code + ' ' + full.properties.Country;
+                        }
+                    },
+                    { "data": "properties.Program" },
+                    { "data": "properties.Type" },
+                    { "data": "properties.Altitude" },
+                    { "data": "properties.Trials" },
+                ],
+                buttons: [ 'copy','print'],
+                drawCallback: function( settings ) {
+                   var api = this.api();
+                   var name_data = api.column(1, { search:'applied' } ).data();
+                   var names = [];
+                   for (var i = 0; i < name_data.length; i++) { //extract names from data object
+                       names.push(name_data[i]+'\n');
+                   }
+                   //console.log("Names are: "+JSON.stringify(names));
+                   $('#location_names').html(names);
+                   addToListMenu('locations_to_list_menu', 'location_names', {
+                     listType: 'locations'
+                   });
+                }
+            });
+
+            var map = initialize_map('location_map', locationJSON, table);
+
+    	},
+    	error: function(response) {
+    	    alert("An error occurred");
+    	}
+    });
+
+ });
+</script>

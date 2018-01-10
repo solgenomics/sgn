@@ -1,6 +1,5 @@
 
 <%args>
-$locations
 $user_id => undef
 </%args>
 
@@ -8,9 +7,21 @@ $user_id => undef
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add Location</a>]' &>
+<&| /page/info_section.mas, title=>'Location Table',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_locations_link">Upload New Locations</a>]' &>
 
-<& /breeders_toolbox/location.mas, locations=>$locations, user_id=>$user_id &>
+<& /breeders_toolbox/location_table.mas, user_id=>$user_id &>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Copy Locations to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the location names in the table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="locations_to_list_menu"></div>
+<div id="location_names" style="display: none;"></div>
+</&>
+
+<&| /page/info_section.mas, title=>'Location Map',  collapsible=>1, collapsed=>0 &>
+
+<& /breeders_toolbox/location_map.mas, user_id=>$user_id &>
 
 </&>
 

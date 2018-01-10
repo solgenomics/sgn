@@ -52,7 +52,7 @@ sub login {
 				return CXGN::BrAPI::JSONResponse->return_error($status, 'Logins Disabled');
 			}
 			if ($login_info->{person_id}) {
-				my %result = ( 'first_name' => $login_info->{first_name}, 'last_name' => $login_info->{last_name}, 'cookie' =>$login_info->{cookie_string} );
+				my %result = ( 'userDisplayName' => $login_info->{first_name}." ".$login_info->{last_name}, 'access_token' =>$login_info->{cookie_string} );
 				my @data_files;
 				my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
 				return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Login Successfull');

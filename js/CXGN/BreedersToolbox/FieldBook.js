@@ -32,7 +32,9 @@ jQuery(document).ready(function($) {
         var list = new CXGN.List();
         var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list');
         jQuery('#select_list_div').html(trait_lists);
-        show_list_counts('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);
+        if (document.getElementById("html_select_traits_for_trait_file")) {
+            show_list_counts('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);
+        }
 
         jQuery('#html_select_traits_for_trait_file').change(
             function() {
@@ -75,6 +77,8 @@ function generate_trait_file() {
     if (trait_list_id) {
         var list = new CXGN.List();
         trait_list = JSON.stringify(list.getList(trait_list_id));
+        var valid_list = JSON.stringify(list.validate(trait_list_id, 'traits', 1));
+        if (!valid_list) { return; }
         trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
     } else {
         trait_ids = JSON.stringify(jQuery('#html_select_traits_for_trait_file').val());

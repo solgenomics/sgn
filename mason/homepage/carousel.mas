@@ -99,7 +99,7 @@
             <h3><a href="http://www.nature.com/articles/nplants201674" target="_blank">Petunia Sps. Genomes</a></h3>
             <p><a href="http://www.nature.com/articles/nplants201674" target="_blank">Insight into the evolution of the Solanaceae from the parental genomes of Petunia hybrida</a></p>
         </div>
-        
+
         <div class="carousel-sgn-links">
           <ul class="sgn_sm_list">
             <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeaxi162&loc=Peaxi162Scf00001"><li>Browse the <i>P. axillaris</i> genome</li></a>
@@ -110,7 +110,7 @@
             <a href="ftp://ftp.solgenomics.net/genomes/Petunia_inflata"><li><i>P. inflata</i> Downloads</li></a>
           </ul>
         </div>
-        
+
         </div>
       </div>
 
@@ -152,7 +152,7 @@
           </div>
         </a>
       </div> -->
-      
+
 
       <div class="item">
           <div style="background:url(/documents/img/homepage_carousel/solcuc2017.png) center center; background-size:cover;" class="slider-size">
@@ -202,7 +202,7 @@
       </div> -->
 
     </div><!-- Wrapper for slides end-->
-    
+
   <div class="progress" style="height:5px">
     <hr class="transition-timer-carousel-progress-bar" />
   </div>
@@ -397,7 +397,7 @@
 		height:100px;
 		margin-top:170px
 	}
-  
+
   .transition-timer-carousel-progress-bar {
       height: 4px;
       background-color: #337ab7;
@@ -408,12 +408,12 @@
       position: relative;
       border-radius: 0px;
   }
-  
+
   .progress {
     margin-top: 5px;
     border-radius: 0px;
   }
-  
+
 </style>
 
 <!--
@@ -424,48 +424,48 @@
 
   jQuery(document).ready(function() {
 
-    var $item = $('.carousel .item');
+    var $item = jQuery('.carousel .item');
     // var $wHeight = $(window).height();
 
-    var numberofSlides = $('.item').length;
+    var numberofSlides = jQuery('.item').length;
     var randomSlide = Math.floor((Math.random() * numberofSlides));
     var currentSlide = randomSlide;
 
-    $('.carousel-indicators li').each(function(){
-      var $slideValue = $(this).attr('data-slide-to');
+    jQuery('.carousel-indicators li').each(function(){
+      var $slideValue = jQuery(this).attr('data-slide-to');
       if (randomSlide == $slideValue) {
-        $(this).addClass('active');
+        jQuery(this).addClass('active');
         $item.eq($slideValue).addClass('active');
       } else {
-        $(this).removeClass('active');
+        jQuery(this).removeClass('active');
         $item.eq($slideValue).removeClass('active');
       }
     });
 
-    $('#btn_carousel_indicators a').each(function(){
-      var $slideValue = $(this).attr('data-slide-to');
+    jQuery('#btn_carousel_indicators a').each(function(){
+      var $slideValue = jQuery(this).attr('data-slide-to');
       // alert("currentSlide: "+$currentSlide+", slideValue: "+$slideValue)
       if (randomSlide == $slideValue) {
-        $(this).parent().addClass('active');
+        jQuery(this).parent().addClass('active');
       } else {
-        $(this).parent().removeClass('active');
+        jQuery(this).parent().removeClass('active');
       }
     });
 
-    $('#myCarousel').bind('slid.bs.carousel', function (e) {
-      $('.carousel-indicators li').each(function(){
-        if ($(this).hasClass('active')) {
-          currentSlide = $(this).attr('data-slide-to');;
+    jQuery('#myCarousel').bind('slid.bs.carousel', function (e) {
+      jQuery('.carousel-indicators li').each(function(){
+        if (jQuery(this).hasClass('active')) {
+          currentSlide = jQuery(this).attr('data-slide-to');;
         }
       });
 
-      $('#btn_carousel_indicators li').removeClass('active');
+      jQuery('#btn_carousel_indicators li').removeClass('active');
 
-      $('#btn_carousel_indicators a').each(function(){
-        var $slideValue = $(this).attr('data-slide-to');
+      jQuery('#btn_carousel_indicators a').each(function(){
+        var $slideValue = jQuery(this).attr('data-slide-to');
         // alert("currentSlide: "+currentSlide+", slideValue: "+$slideValue)
         if(currentSlide == $slideValue) {
-          $(this).parent().addClass('active');
+          jQuery(this).parent().addClass('active');
         }
       });
 
@@ -479,21 +479,21 @@
 		// $("#myCarousel").swipeleft(function() {
 		//       $("#myCarousel").carousel('next');
 		//     });
-       
-    
-    
-    
+
+
+
+
   //progress bar
   var percent = 0,
   	interval = 50,//time showing each slide
-    $bar = $('.transition-timer-carousel-progress-bar'),
-  	$crsl = $('#myCarousel');
+    $bar = jQuery('.transition-timer-carousel-progress-bar'),
+  	$crsl = jQuery('#myCarousel');
 
     $crsl.carousel({//initialize
       interval: false,
       pause: true
     }).on('slide.bs.carousel', function (){percent = 0;});//restart progress bar on new slide
-    
+
   	function progressBarCarousel() {
       $bar.css({width:percent+'%'});
   		percent = percent +0.5;
@@ -512,11 +512,11 @@
           }
       );
     }
-    
-    
-    
-    
-    $(".ui-loading").css("display","none");
-    $(".ui-loader").css("display","none");
+
+
+
+
+    jQuery(".ui-loading").css("display","none");
+    jQuery(".ui-loader").css("display","none");
   });
 </script>

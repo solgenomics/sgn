@@ -19,6 +19,7 @@ package SGN::Controller::AJAX::Accessions;
 use Moose;
 use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
+use CXGN::Stock::StockLookup;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::BreedersToolbox::OrganismFuzzySearch;
@@ -27,6 +28,7 @@ use CXGN::Chado::Stock;
 use CXGN::List;
 use Data::Dumper;
 use Try::Tiny;
+use CXGN::Stock::ParseUpload;
 #use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -69,6 +71,7 @@ sub do_fuzzy_search {
     my $c = shift;
     my $accession_list = shift;
     my $organism_list = shift;
+    print STDERR "DoFuzzySearch 1".localtime()."\n";
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
@@ -97,6 +100,7 @@ sub do_fuzzy_search {
 
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+    print STDERR "DoFuzzySearch 2".localtime()."\n";
 
     $found_accessions = $fuzzy_search_result->{'found'};
     $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
@@ -129,7 +133,7 @@ sub do_fuzzy_search {
             }
         }
     }
-
+    print STDERR "DoFuzzySearch 3".localtime()."\n";
     #print STDERR Dumper $fuzzy_accessions;
 
     $c->stash->{rest} = {
@@ -173,6 +177,110 @@ sub do_exact_search {
     };
     #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
+}
+
+sub verify_accessions_file : Path('/ajax/accessions/verify_accessions_file') : ActionClass('REST') { }
+sub verify_accessions_file_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $upload = $c->req->upload('new_accessions_upload_file');
+    my $subdirectory = "accessions_spreadsheet_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props);
+    $parser->load_plugin('AccessionsXLS');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
+        $c->detach();
+    }
+
+    my $full_data = $parsed_data->{parsed_data};
+    my @accession_names;
+    my %full_accessions;
+    while (my ($k,$val) = each %$full_data){
+        push @accession_names, $val->{germplasmName};
+        $full_accessions{$val->{germplasmName}} = $val;
+    }
+    my $new_list_id = CXGN::List::create_list($c->dbc->dbh, "AccessionsIn".$upload_original_name.$timestamp, 'Autocreated when upload accessions from file '.$upload_original_name.$timestamp, $user_id);
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $new_list_id } );
+    $list->add_bulk(\@accession_names);
+    $list->type('accessions');
+
+    $c->stash->{rest} = {
+        success => "1",
+        list_id => $new_list_id,
+        full_data => \%full_accessions,
+        absent => $parsed_data->{absent_accessions},
+        fuzzy => $parsed_data->{fuzzy_accessions},
+        found => $parsed_data->{found_accessions},
+        absent_organisms => $parsed_data->{absent_organisms},
+        fuzzy_organisms => $parsed_data->{fuzzy_organisms},
+        found_organisms => $parsed_data->{found_organisms}
+    };
 }
 
 sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionClass('REST') { }
@@ -223,6 +331,7 @@ sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') 
 sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    #print STDERR Dumper $c->req->param('full_info');
     my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;
@@ -254,6 +363,7 @@ sub add_accession_list_POST : Args(0) {
                     type_id=>$type_id,
                     species=>$_->{species},
                     #genus=>$_->{genus},
+                    stock_id=>$_->{stock_id}, #For adding properties to an accessions
                     name=>$_->{defaultDisplayName},
                     uniquename=>$_->{germplasmName},
                     organization_name=>$_->{organizationName},
@@ -274,7 +384,20 @@ sub add_accession_list_POST : Args(0) {
                     #subtaxa=>$_->{subtaxa},
                     #subtaxaAuthority=>$_->{subtaxaAuthority},
                     donors=>$_->{donors},
-                    acquisitionDate=>$_->{acquisitionDate}
+                    acquisitionDate=>$_->{acquisitionDate},
+                    transgenic=>$_->{transgenic},
+                    notes=>$_->{notes},
+                    state=>$_->{state},
+                    variety=>$_->{variety},
+                    genomeStructure=>$_->{genomeStructure},
+                    ploidyLevel=>$_->{ploidyLevel},
+                    locationCode=>$_->{locationCode},
+                    introgression_parent=>$_->{introgression_parent},
+                    introgression_backcross_parent=>$_->{introgression_backcross_parent},
+                    introgression_map_version=>$_->{introgression_map_version},
+                    introgression_chromosome=>$_->{introgression_chromosome},
+                    introgression_start_position_bp=>$_->{introgression_start_position_bp},
+                    introgression_end_position_bp=>$_->{introgression_end_position_bp}
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
@@ -309,7 +432,7 @@ sub add_accession_list_POST : Args(0) {
         print STDERR "Transaction error storing stocks: $transaction_error $transaction_error_phenome\n";
         return;
     }
-    print STDERR Dumper \@added_fullinfo_stocks;
+    #print STDERR Dumper \@added_fullinfo_stocks;
     $c->stash->{rest} = {
         success => "1",
         added => \@added_fullinfo_stocks
@@ -317,8 +440,32 @@ sub add_accession_list_POST : Args(0) {
     return;
 }
 
-sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') :   { }
+sub possible_seedlots : Path('/ajax/accessions/possible_seedlots') : ActionClass('REST') { }
+sub possible_seedlots_POST : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  
+  my $names = $c->req->body_data->{'names'};
+    
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+  my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
+  
+  my $synonyms = $stock_lookup->get_stock_synonyms('any_name','accession',$names);
+  
+  my @uniquenames = keys %{$synonyms};
+  
+  my $seedlots = $accession_manager->get_possible_seedlots(\@uniquenames);
+    
+  print STDERR $names;
+  $c->stash->{rest} = {
+      success => "1",
+      seedlots=> $seedlots,
+      synonyms=>$synonyms
+  };
+  return;
+}
 
+sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }
 sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -362,9 +509,23 @@ sub populations_GET : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
-    my $populations = $ac->get_all_populations($c);
+    my $populations = $ac->get_all_populations();
 
     $c->stash->{rest} = { populations => $populations };
+}
+
+sub population_members : Path('/ajax/manage_accessions/population_members') : ActionClass('REST') { }
+
+sub population_members_GET : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    my $members = $ac->get_population_members($stock_id);
+
+    $c->stash->{rest} = { data => $members };
 }
 
 sub _parse_list_from_json {

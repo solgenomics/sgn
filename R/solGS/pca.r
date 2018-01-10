@@ -11,8 +11,8 @@ options(echo = FALSE)
 library(randomForest)
 library(data.table)
 library(genoDataFilter)
-library(SNPRelate)
-library(parallel)
+#library(SNPRelate)
+#library(parallel)
 #library(tidyr)
 
 allArgs <- commandArgs()
@@ -35,7 +35,7 @@ genoDataFile <- grep("genotype_data",
                    value = TRUE
                    )
 
-#genoDataFile2 <- c('/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/cache/genotype_data_443.txt')
+#genoDataFile2 <- c('/mnt/hgfs/cxgn/genotype_data_108.txt')
 
 scoresFile <- grep("pca_scores",
                         outFiles,
@@ -102,52 +102,36 @@ if (sum(is.na(genoData)) > 0) {
   genoData <- na.roughfix(genoData)
 }
 
-nCores <- detectCores()
-message('no cores: ', nCores)
-if (nCores > 1) {
-  nCores <- (nCores %/% 2)
-} else {
-  nCores <- 1
-}
+## nCores <- detectCores()
+## message('no cores: ', nCores)
+## if (nCores > 1) {
+##   nCores <- (nCores %/% 2)
+## } else {
+##   nCores <- 1
+## }
 
-gdsFile <- basename(genoDataFile)
-gdsFile <- gsub('.txt', '.gds', gdsFile)
+pcsCnt <- 10
 
-snpgdsCreateGeno(gdsFile, data.matrix(genoData), snpfirstdim=FALSE)
+pca <- prcomp(genoData, retx=TRUE)
+pca <- summary(pca)
 
-genoDataGdsFile <- snpgdsOpen(gdsFile)
-
-pcaOut <- snpgdsPCA(genoDataGdsFile, remove.monosnp=FALSE, eigen.cnt=10, num.thread=nCores)
-
-variances <- round(pcaOut$varprop*100, 2)
-variances <- as.numeric(grep(pattern="\\d+", variances, value=TRUE))
-
-loadingsOut <- snpgdsPCASNPLoading(pcaOut, genoDataGdsFile, num.thread=nCores)
-
-loadings <- round(loadingsOut$snploading, 5)
-scores   <- data.frame(round(pcaOut$eigenvec, 5))
-                     
-snpgdsClose(genoDataGdsFile)
-
-variances <- data.frame(variances)
-scores    <- data.frame(scores)
-loadings  <- data.frame(loadings)
-
-pcs <- c()
-
-for (i in 1:10) {
-  pcs[i] <- paste("PC", i, sep='')
-}
-
-
-genotypes          <- rownames(genoData)
-markers            <- names(genoData)
-rownames(loadings) <- pcs
-colnames(loadings) <- markers
-colnames(scores)   <- pcs
-rownames(scores)   <- genotypes
+scores   <- data.frame(pca$x)
+scores   <- scores[, 1:pcsCnt]
+scores   <- round(scores, 3)
 
 scores   <- scores[order(row.names(scores)), ]
+
+variances <- data.frame(pca$importance)
+variances <- variances[2, 1:pcsCnt]
+variances <- round(variances, 4) * 100
+variances <- data.frame(t(variances))
+
+colnames(variances) <- 'variances'
+
+loadings <- data.frame(pca$rotation)
+loadings <- loadings[, 1:pcsCnt]
+loadings <- round(loadings, 3)
+
 
 fwrite(scores,
        file      = scoresFile,

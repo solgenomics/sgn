@@ -36,8 +36,10 @@ use CXGN::UploadFile;
 use CXGN::Fieldbook::TraitInfo;
 use CXGN::Fieldbook::DownloadTrial;
 use SGN::Model::Cvterm;
-
-#use Data::Dumper;
+use CXGN::List;
+use CXGN::List::Validate;
+use CXGN::List::Transform;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -55,6 +57,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
   my $data_level = $c->req->param('data_level') || 'plots';
+  my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
 
@@ -83,6 +86,30 @@ sub create_fieldbook_from_trial_POST : Args(0) {
             return;
         }
     }
+    if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        if (!$trial->has_subplot_entries()) {
+            $c->stash->{rest} = {error =>  "Trial does not have subplot entries." };
+            return;
+        }
+    }
+
+    my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    my $selected_trait_list_id = $c->req->param('trait_list');
+    my @selected_traits;
+    my @trait_list;
+    if ($selected_trait_list_id){
+        my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $selected_trait_list_id });
+        @trait_list = @{$list->elements()};
+        my $validator = CXGN::List::Validate->new();
+        my @absent_traits = @{$validator->validate($schema, 'traits', \@trait_list)->{'missing'}};
+        if (scalar(@absent_traits)>0){
+            $c->stash->{rest} = {error =>  "Trait list is not valid because of these terms: ".join ',',@absent_traits };
+            $c->detach();
+        }
+        my $lt = CXGN::List::Transform->new();
+        @selected_traits = @{$lt->transform($schema, "traits_2_trait_ids", \@trait_list)->{transform}};
+    }
 
   my $dir = $c->tempfiles_subdir('/other');
   my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
@@ -97,15 +124,24 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
         data_level => $data_level,
+        treatment_project_ids => $treatment_project_ids,
+        selected_columns => $selected_columns,
+        selected_trait_ids => \@selected_traits,
+        selected_trait_names => \@trait_list
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
+    my $error;
+    if ($create_fieldbook_return->{'error_messages'}){
+        $error = join ',', @{$create_fieldbook_return->{'error_messages'}};
+    }
 
     $c->stash->{rest} = {
-        error_string => $create_fieldbook_return->{'error_messages'},
+        error_string => $error,
         success => 1,
         result => $create_fieldbook_return->{'result'},
         file => $create_fieldbook_return->{'file'},
+        file_id => $create_fieldbook_return->{'file_id'},
     };
 }
 
@@ -158,20 +194,21 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   my $order = 0;
 
   foreach my $term (@trait_list) {
-
-      my ($trait_name, $full_cvterm_accession) = split (/\|/, $term);
-      my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
+      #print STDERR "term is $term\n";
+      my @parts = split (/\|/ , $term);
+      my ($db_name, $accession) = split ":", pop @parts;
+      my $trait_name = join ("|", @parts);
+      #print STDERR "trait name is $trait_name, full cvterm accession is $full_cvterm_accession\n";
+      #my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
 
       $accession =~ s/\s+$//;
       $accession =~ s/^\s+//;
       $db_name =~ s/\s+$//;
       $db_name =~ s/^\s+//;
 
-      print STDERR "traitname: $term | accession: $accession \n";
-
       my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_ids[$order] );
       my $synonym = $cvterm->get_uppercase_synonym();
-      my $name = $synonym || $trait_name;
+      my $name = $synonym || $trait_name; # use uppercase synonym if defined, otherwise use full trait name
       $order++;
 
       #get trait info
@@ -187,6 +224,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       #return error if not $trait_info_string;
       #print line with trait info
       #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
+      print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
       print FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
   }
 

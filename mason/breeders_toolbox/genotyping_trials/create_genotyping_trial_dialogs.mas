@@ -1,0 +1,106 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="igd_genotyping_trial_dialog" name="igd_genotyping_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="addGenoTrialDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addGenoTrialDialog">Add IGD Genotyping Trial</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+        
+        <&| /page/explanation.mas, title=>'Template information' &>
+            <p>
+                <b>File format information</b>
+                <br>
+                <a id="genotyping_trial_upload_spreadsheet_format_info">Spreadsheet format</a>
+            </p>
+        </&>
+        
+	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_igd_genotyping_trials_form" name="upload_igd_genotyping_trials_form" action="/ajax/breeders/igdgenotypetrial">
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Breeding Program: </label>
+      	      <div class="col-sm-9">
+	        <span id="igd_breeding_program_select_div"></span>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Location: </label>
+      	      <div class="col-sm-9">
+	        <span id="igd_location_select_div"></span>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Year: </label>
+      	      <div class="col-sm-9">
+	        <span id="igd_year_select_div"></span>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Description: </label>
+      	      <div class="col-sm-9">
+	        <textarea class="form-control" id="igd_genotyping_trial_description" name="igd_genotyping_trial_description" ></textarea>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Upload Genotyping Excel Sheet From IGD: </label>
+      	      <div class="col-sm-9">
+	        <input type="file" name="igd_genotyping_trial_upload_file" id="igd_genotyping_trial_upload_file" encoding="multipart/form-data" />
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-3 control-label">Accession List: </label>
+      	      <div class="col-sm-9">
+	        <span id="igd_accession_select_box_span">[loading...]</span>
+              </div>
+	    </div>
+	  </form>      
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="add_igd_geno_trial_submit" id="add_igd_geno_trial_submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="igd_genotyping_trial_info_dialog" name="igd_genotyping_trial_info_dialog" tabindex="-1" role="dialog" aria-labelledby="addGenoTrialInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addGenoTrialInfoDialog">Add IGD Genotyping Trial Info</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="new_submission_process_explanation">
+                <b>Instructions:</b>
+                <br />
+                Please note the changes to the submission process for the Cornell genotyping facility (all database users). 
+                <ol>
+                <li>Go to <a href="https://slims.biotech.cornell.edu">slims.biotech.cornell.edu</a> to get a tab delimited spreadsheet file containing information on the genotyping trial name and where to insert the blank.</li>
+                <li>Use the "Create IGD Genotyping Trial" link on this page to upload the file, together with a list of accessions.</li>
+                <li>Use the link on the trial detail page to create the file to proceed with the submission.</li>
+                </ol>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('#genotyping_trial_upload_spreadsheet_format_info').click(function(){
+        jQuery('#igd_genotyping_trial_info_dialog').modal('show');
+    });
+});
+
+</script>

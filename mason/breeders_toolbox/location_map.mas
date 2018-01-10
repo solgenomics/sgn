@@ -1,0 +1,683 @@
+
+<%args>
+$user_id => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ['leaflet', 'esri-leaflet', 'esri-leaflet-geocoder-debug', 'leaflet_extra-markers_min', 'jquery.dstk'] &>
+<center><p><i> Add a new location by clicking on the map. Or select an exisiting location to view details and options.</i></p></center>
+<br>
+<div id="location_map" style="height: 540px;"></div>
+
+<div class="modal fade" id="store_location_dialog" name="store_location_dialog" tabindex="-1" role="dialog" aria-labelledby="storeLocationDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="storeLocationDialog">Location Details</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" name="store_location_form" id="store_location_form">
+        <div class="form-group" id="location_id" style="display: none"></div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Name: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_name" id="location_name" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Abbreviation: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_abbreviation" id="location_abbreviation" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Country: </label>
+      	      <div class="col-sm-10">
+                  <select class="form-control" id="location_country" name="location_country">
+                    <option value=""></option>
+                    <option value="ABW">ABW Aruba </option>
+                    <option value="AFG">AFG Afghanistan </option>
+                    <option value="AGO">AGO Angola </option>
+                    <option value="AIA">AIA Anguilla </option>
+                    <option value="ALA">ALA Åland Islands </option>
+                    <option value="ALB">ALB Albania </option>
+                    <option value="AND">AND Andorra </option>
+                    <option value="ANT">ANT Netherlands Antilles </option>
+                    <option value="ARE">ARE United Arab Emirates </option>
+                    <option value="ARG">ARG Argentina </option>
+                    <option value="ARM">ARM Armenia </option>
+                    <option value="ASM">ASM American Samoa </option>
+                    <option value="ATA">ATA Antarctica </option>
+                    <option value="ATF">ATF French Southern Territories </option>
+                    <option value="ATG">ATG Antigua and Barbuda </option>
+                    <option value="AUS">AUS Australia </option>
+                    <option value="AUT">AUT Austria </option>
+                    <option value="AZE">AZE Azerbaijan </option>
+                    <option value="BDI">BDI Burundi </option>
+                    <option value="BEL">BEL Belgium </option>
+                    <option value="BEN">BEN Benin </option>
+                    <option value="BFA">BFA Burkina Faso </option>
+                    <option value="BGD">BGD Bangladesh </option>
+                    <option value="BGR">BGR Bulgaria </option>
+                    <option value="BHR">BHR Bahrain </option>
+                    <option value="BHS">BHS Bahamas </option>
+                    <option value="BIH">BIH Bosnia and Herzegovina </option>
+                    <option value="BLM">BLM Saint Barthélemy </option>
+                    <option value="BLR">BLR Belarus </option>
+                    <option value="BLZ">BLZ Belize </option>
+                    <option value="BMU">BMU Bermuda </option>
+                    <option value="BOL">BOL Bolivia, Plurinational State of </option>
+                    <option value="BRA">BRA Brazil </option>
+                    <option value="BRB">BRB Barbados </option>
+                    <option value="BRN">BRN Brunei Darussalam </option>
+                    <option value="BTN">BTN Bhutan </option>
+                    <option value="BVT">BVT Bouvet Island </option>
+                    <option value="BWA">BWA Botswana </option>
+                    <option value="CAF">CAF Central African Republic </option>
+                    <option value="CAN">CAN Canada </option>
+                    <option value="CCK">CCK Cocos (Keeling) Islands </option>
+                    <option value="CHE">CHE Switzerland </option>
+                    <option value="CHL">CHL Chile </option>
+                    <option value="CHN">CHN China </option>
+                    <option value="CIV">CIV Côte d'Ivoire </option>
+                    <option value="CMR">CMR Cameroon </option>
+                    <option value="COD">COD Congo, the Democratic Republic of the </option>
+                    <option value="COG">COG Congo </option>
+                    <option value="COK">COK Cook Islands </option>
+                    <option value="COL">COL Colombia </option>
+                    <option value="COM">COM Comoros </option>
+                    <option value="CPV">CPV Cape Verde </option>
+                    <option value="CRI">CRI Costa Rica </option>
+                    <option value="CUB">CUB Cuba </option>
+                    <option value="CXR">CXR Christmas Island </option>
+                    <option value="CYM">CYM Cayman Islands </option>
+                    <option value="CYP">CYP Cyprus </option>
+                    <option value="CZE">CZE Czech Republic </option>
+                    <option value="DEU">DEU Germany </option>
+                    <option value="DJI">DJI Djibouti </option>
+                    <option value="DMA">DMA Dominica </option>
+                    <option value="DNK">DNK Denmark </option>
+                    <option value="DOM">DOM Dominican Republic </option>
+                    <option value="DZA">DZA Algeria </option>
+                    <option value="ECU">ECU Ecuador </option>
+                    <option value="EGY">EGY Egypt </option>
+                    <option value="ERI">ERI Eritrea </option>
+                    <option value="ESH">ESH Western Sahara </option>
+                    <option value="ESP">ESP Spain </option>
+                    <option value="EST">EST Estonia </option>
+                    <option value="ETH">ETH Ethiopia </option>
+                    <option value="FIN">FIN Finland </option>
+                    <option value="FJI">FJI Fiji </option>
+                    <option value="FLK">FLK Falkland Islands (Malvinas) </option>
+                    <option value="FRA">FRA France </option>
+                    <option value="FRO">FRO Faroe Islands </option>
+                    <option value="FSM">FSM Micronesia, Federated States of </option>
+                    <option value="GAB">GAB Gabon </option>
+                    <option value="GBR">GBR United Kingdom </option>
+                    <option value="GEO">GEO Georgia </option>
+                    <option value="GGY">GGY Guernsey </option>
+                    <option value="GHA">GHA Ghana </option>
+                    <option value="GIB">GIB Gibraltar </option>
+                    <option value="GIN">GIN Guinea </option>
+                    <option value="GLP">GLP Guadeloupe </option>
+                    <option value="GMB">GMB Gambia </option>
+                    <option value="GNB">GNB Guinea-Bissau </option>
+                    <option value="GNQ">GNQ Equatorial Guinea </option>
+                    <option value="GRC">GRC Greece </option>
+                    <option value="GRD">GRD Grenada </option>
+                    <option value="GRL">GRL Greenland </option>
+                    <option value="GTM">GTM Guatemala </option>
+                    <option value="GUF">GUF French Guiana </option>
+                    <option value="GUM">GUM Guam </option>
+                    <option value="GUY">GUY Guyana </option>
+                    <option value="HKG">HKG Hong Kong </option>
+                    <option value="HMD">HMD Heard Island and McDonald Islands </option>
+                    <option value="HND">HND Honduras </option>
+                    <option value="HRV">HRV Croatia </option>
+                    <option value="HTI">HTI Haiti </option>
+                    <option value="HUN">HUN Hungary </option>
+                    <option value="IDN">IDN Indonesia </option>
+                    <option value="IMN">IMN Isle of Man </option>
+                    <option value="IND">IND India </option>
+                    <option value="IOT">IOT British Indian Ocean Territory </option>
+                    <option value="IRL">IRL Ireland </option>
+                    <option value="IRN">IRN Iran, Islamic Republic of </option>
+                    <option value="IRQ">IRQ Iraq </option>
+                    <option value="ISL">ISL Iceland </option>
+                    <option value="ISR">ISR Israel </option>
+                    <option value="ITA">ITA Italy </option>
+                    <option value="JAM">JAM Jamaica </option>
+                    <option value="JEY">JEY Jersey </option>
+                    <option value="JOR">JOR Jordan </option>
+                    <option value="JPN">JPN Japan </option>
+                    <option value="KAZ">KAZ Kazakhstan </option>
+                    <option value="KEN">KEN Kenya </option>
+                    <option value="KGZ">KGZ Kyrgyzstan </option>
+                    <option value="KHM">KHM Cambodia </option>
+                    <option value="KIR">KIR Kiribati </option>
+                    <option value="KNA">KNA Saint Kitts and Nevis </option>
+                    <option value="KOR">KOR Korea, Republic of </option>
+                    <option value="KWT">KWT Kuwait </option>
+                    <option value="LAO">LAO Lao People's Democratic Republic </option>
+                    <option value="LBN">LBN Lebanon </option>
+                    <option value="LBR">LBR Liberia </option>
+                    <option value="LBY">LBY Libyan Arab Jamahiriya </option>
+                    <option value="LCA">LCA Saint Lucia </option>
+                    <option value="LIE">LIE Liechtenstein </option>
+                    <option value="LKA">LKA Sri Lanka </option>
+                    <option value="LSO">LSO Lesotho </option>
+                    <option value="LTU">LTU Lithuania </option>
+                    <option value="LUX">LUX Luxembourg </option>
+                    <option value="LVA">LVA Latvia </option>
+                    <option value="MAC">MAC Macao </option>
+                    <option value="MAF">MAF Saint Martin (French part) </option>
+                    <option value="MAR">MAR Morocco </option>
+                    <option value="MCO">MCO Monaco </option>
+                    <option value="MDA">MDA Moldova, Republic of </option>
+                    <option value="MDG">MDG Madagascar </option>
+                    <option value="MDV">MDV Maldives </option>
+                    <option value="MEX">MEX Mexico </option>
+                    <option value="MHL">MHL Marshall Islands </option>
+                    <option value="MKD">MKD Macedonia, the former Yugoslav Republic of </option>
+                    <option value="MLI">MLI Mali </option>
+                    <option value="MLT">MLT Malta </option>
+                    <option value="MMR">MMR Myanmar </option>
+                    <option value="MNE">MNE Montenegro </option>
+                    <option value="MNG">MNG Mongolia </option>
+                    <option value="MNP">MNP Northern Mariana Islands </option>
+                    <option value="MOZ">MOZ Mozambique </option>
+                    <option value="MRT">MRT Mauritania </option>
+                    <option value="MSR">MSR Montserrat </option>
+                    <option value="MTQ">MTQ Martinique </option>
+                    <option value="MUS">MUS Mauritius </option>
+                    <option value="MWI">MWI Malawi </option>
+                    <option value="MYS">MYS Malaysia </option>
+                    <option value="MYT">MYT Mayotte </option>
+                    <option value="NAM">NAM Namibia </option>
+                    <option value="NCL">NCL New Caledonia </option>
+                    <option value="NER">NER Niger </option>
+                    <option value="NFK">NFK Norfolk Island </option>
+                    <option value="NGA">NGA Nigeria </option>
+                    <option value="NIC">NIC Nicaragua </option>
+                    <option value="NIU">NIU Niue </option>
+                    <option value="NLD">NLD Netherlands </option>
+                    <option value="NOR">NOR Norway </option>
+                    <option value="NPL">NPL Nepal </option>
+                    <option value="NRU">NRU Nauru </option>
+                    <option value="NZL">NZL New Zealand </option>
+                    <option value="OMN">OMN Oman </option>
+                    <option value="PAK">PAK Pakistan </option>
+                    <option value="PAN">PAN Panama </option>
+                    <option value="PCN">PCN Pitcairn </option>
+                    <option value="PER">PER Peru </option>
+                    <option value="PHL">PHL Philippines </option>
+                    <option value="PLW">PLW Palau </option>
+                    <option value="PNG">PNG Papua New Guinea </option>
+                    <option value="POL">POL Poland </option>
+                    <option value="PRI">PRI Puerto Rico </option>
+                    <option value="PRK">PRK Korea, Democratic People's Republic of </option>
+                    <option value="PRT">PRT Portugal </option>
+                    <option value="PRY">PRY Paraguay </option>
+                    <option value="PSE">PSE Palestinian Territory, Occupied </option>
+                    <option value="PYF">PYF French Polynesia </option>
+                    <option value="QAT">QAT Qatar </option>
+                    <option value="REU">REU Réunion </option>
+                    <option value="ROU">ROU Romania </option>
+                    <option value="RUS">RUS Russian Federation </option>
+                    <option value="RWA">RWA Rwanda </option>
+                    <option value="SAU">SAU Saudi Arabia </option>
+                    <option value="SDN">SDN Sudan </option>
+                    <option value="SEN">SEN Senegal </option>
+                    <option value="SGP">SGP Singapore </option>
+                    <option value="SGS">SGS South Georgia and the South Sandwich Islands </option>
+                    <option value="SHN">SHN Saint Helena, Ascension and Tristan da Cunha </option>
+                    <option value="SJM">SJM Svalbard and Jan Mayen </option>
+                    <option value="SLB">SLB Solomon Islands </option>
+                    <option value="SLE">SLE Sierra Leone </option>
+                    <option value="SLV">SLV El Salvador </option>
+                    <option value="SMR">SMR San Marino </option>
+                    <option value="SOM">SOM Somalia </option>
+                    <option value="SPM">SPM Saint Pierre and Miquelon </option>
+                    <option value="SRB">SRB Serbia </option>
+                    <option value="STP">STP Sao Tome and Principe </option>
+                    <option value="SUR">SUR Suriname </option>
+                    <option value="SVK">SVK Slovakia </option>
+                    <option value="SVN">SVN Slovenia </option>
+                    <option value="SWE">SWE Sweden </option>
+                    <option value="SWZ">SWZ Swaziland </option>
+                    <option value="SYC">SYC Seychelles </option>
+                    <option value="SYR">SYR Syrian Arab Republic </option>
+                    <option value="TCA">TCA Turks and Caicos Islands </option>
+                    <option value="TCD">TCD Chad </option>
+                    <option value="TGO">TGO Togo </option>
+                    <option value="THA">THA Thailand </option>
+                    <option value="TJK">TJK Tajikistan </option>
+                    <option value="TKL">TKL Tokelau </option>
+                    <option value="TKM">TKM Turkmenistan </option>
+                    <option value="TLS">TLS Timor-Leste </option>
+                    <option value="TON">TON Tonga </option>
+                    <option value="TTO">TTO Trinidad and Tobago </option>
+                    <option value="TUN">TUN Tunisia </option>
+                    <option value="TUR">TUR Turkey </option>
+                    <option value="TUV">TUV Tuvalu </option>
+                    <option value="TWN">TWN Taiwan, Province of China </option>
+                    <option value="TZA">TZA Tanzania, United Republic of </option>
+                    <option value="UGA">UGA Uganda </option>
+                    <option value="UKR">UKR Ukraine </option>
+                    <option value="UMI">UMI United States Minor Outlying Islands </option>
+                    <option value="URY">URY Uruguay </option>
+                    <option value="USA">USA United States </option>
+                    <option value="UZB">UZB Uzbekistan </option>
+                    <option value="VAT">VAT Holy See (Vatican City State) </option>
+                    <option value="VCT">VCT Saint Vincent and the Grenadines </option>
+                    <option value="VEN">VEN Venezuela, Bolivarian Republic of </option>
+                    <option value="VGB">VGB Virgin Islands, British </option>
+                    <option value="VIR">VIR Virgin Islands, U.S. </option>
+                    <option value="VNM">VNM Viet Nam </option>
+                    <option value="VUT">VUT Vanuatu </option>
+                    <option value="WLF">WLF Wallis and Futuna </option>
+                    <option value="WSM">WSM Samoa </option>
+                    <option value="YEM">YEM Yemen </option>
+                    <option value="ZAF">ZAF South Africa </option>
+                    <option value="ZMB">ZMB Zambia </option>
+                    <option value="ZWE">ZWE Zimbabwe</option>
+                  </select>
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Program: </label>
+      	      <div class="col-sm-10" id="breeding_program" name="breeding_program">
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Type: </label>
+      	      <div class="col-sm-10">
+                  <select class="form-control" id="location_type" name="location_type">
+                      <option value=""></option>
+                      <option value="Farm">Farm</option>
+                      <option value="Field">Field</option>
+                      <option value="Greenhouse">Greenhouse</option>
+                      <option value="Screenhouse">Screenhouse</option>
+                      <option value="Lab">Lab</option>
+                      <option value="Storage">Storage</option>
+                      <option value="Other">Other</option>
+                  </select>
+              </div>
+	    </div>
+      <div class="form-group">
+              <label class="col-sm-2 control-label">Latitude: </label>
+              <div class="col-sm-10">
+    <input class="form-control" name="location_latitude" id="location_latitude" type="text" size="4"/>
+              </div>
+      </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Longitude: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_longitude" id="location_longitude" type="text" size="4"/>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Altitude (m): </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_altitude" id="location_altitude" type="text" size="4"/>
+              </div>
+	    </div>
+	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="store_location_submit" id="store_location_submit">Store Location Details</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+  $('#add_location_link').click( function() {
+      $('#add_location_dialog').modal("show");
+   });
+
+   get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':'please select'});
+
+   $('#store_location_submit').click( function(event) {
+       event.preventDefault();
+       var id= $('#location_id').val();
+       var name = $('#location_name').val();
+       name = name.trim();
+       var abbreviation = $('#location_abbreviation').val();
+       var country_code = $('#location_country').val();
+       var country_text = $('#location_country option:selected').text();
+       var country_name = country_text.replace(/^[^\s]+(.*)/, '$1').trim();
+       var program = $('#breeding_program_select option:selected').text();
+       var type = $('#location_type').val();
+       var latitude = $('#location_latitude').val();
+       var longitude = $('#location_longitude').val();
+       var altitude = $('#location_altitude').val();
+       //console.log("Location program to store is "+program);
+       //console.log("Location name to store is "+name);
+       //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
+
+       if (name == '') { alert('A location name is required.');  return; }
+
+       $.ajax({
+         type: 'POST',
+         url: '/ajax/location/store',
+         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'program': program, 'type': type, 'latitude':latitude, 'longitude':longitude, 'altitude': altitude },
+         success: function(response) {
+                  if (response.error) { alert(response.error); }
+                  else {
+                      alert(response.success);
+                      $('#store_location_dialog').modal("hide");
+                      location.reload();
+                  }
+                 },
+         error: function() { alert('An error occurred while storing the location details. Please try again later.'); }
+       });
+   });
+
+});
+
+function initialize_map (id, locationJSON, table) {
+
+    var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+           attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    var topomap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+    });
+
+    var streetmap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+    });
+
+    var baseMaps = {
+        "Street (Default)": streetmap,
+        "Topographical": topomap,
+        "Satellite": satellite
+    };
+
+    var location_layer = L.geoJSON(locationJSON, {
+        pointToLayer: function (feature, latlng) {
+           return L.marker(latlng, style(feature));
+       },
+       onEachFeature: onEachFeature
+    });
+
+    var overlayMaps = {
+        "Locations": location_layer
+    };
+
+    var mymap = L.map( id, {
+        layers: [streetmap, location_layer]
+    });
+
+    var locateUser = L.Control.extend({
+        onAdd: function (map) {
+            var container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom glyphicon glyphicon-map-marker');
+
+            container.style.backgroundColor = 'white';
+            container.style.cursor = "pointer";
+            container.title = 'Zoom to my location';
+            container.style.width = '30px';
+            container.style.height = '30px';
+
+            container.onclick = function(){
+              map.locate({setView: true});
+            }
+            return container;
+        }
+    });
+
+    mymap.addControl(new locateUser({ position: 'topleft' }));
+
+    mymap.fitBounds(location_layer.getBounds());
+    var layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'bottomright'}).addTo(mymap);
+
+    var popup = L.popup();
+
+    function onMapClick(e) {
+        popup
+            .setLatLng(e.latlng)
+            .setContent(
+                'Add a new location here?<br><center><a href="javascript:;" onclick="add_from_map(\''+e.latlng.lat+','+e.latlng.lng+'\')">Add Location</a></center>'
+            )
+            .openOn(mymap);
+    }
+
+    mymap.on('click', onMapClick);
+
+    var arcgisOnline = L.esri.Geocoding.arcgisOnlineProvider();
+
+    var searchControl = L.esri.Geocoding.geosearch({
+        providers: [
+          arcgisOnline,
+          L.esri.Geocoding.featureLayerProvider({
+            url: 'https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0/',
+            searchFields: ['Name', 'Organization'],
+            label: 'GIS Day Events',
+            bufferRadius: 5000,
+            formatSuggestion: function(feature){
+              return feature.properties.Name + ' - ' + feature.properties.Organization;
+            }
+          })
+      ],
+      position: 'topright',
+      expanded: true
+    }).addTo(mymap);
+
+    table.on( 'draw.dt', function () {  // recreate location layer based on filtered table contents
+        location_layer.clearLayers();
+        var ids = {};
+        table.column(0,  { search:'applied' } ).data().each(function(value, index) {
+            ids[value] = true;
+        });
+        layerControl.removeLayer(location_layer);
+        location_layer = L.geoJson(locationJSON, {
+            filter: function(feature, layer) {
+                return ids[feature.properties.Id];
+            },
+            pointToLayer: function (feature, latlng) {
+               return L.marker(latlng, style(feature));
+           },
+           onEachFeature: onEachFeature
+        });
+
+        layerControl.addOverlay(location_layer, "Locations");
+        location_layer.addTo(mymap);
+        mymap.fitBounds(location_layer.getBounds());
+    });
+    return;
+}
+
+function style(feature) {
+    //console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
+
+    var farmMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'red',
+        shape: 'circle',
+        prefix: ''
+    });
+
+    var fieldMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'orange',
+        shape: 'circle',
+        prefix: ''
+    });
+
+    var defaultMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'cyan',
+        shape: 'circle',
+        prefix: ''
+    });
+
+    var greenhouseMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'green-light',
+        shape: 'penta',
+        prefix: ''
+    });
+
+    var screenhouseMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'white',
+        shape: 'penta',
+        prefix: ''
+    });
+
+    var labMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'blue',
+        shape: 'square',
+        prefix: ''
+    });
+
+    var storageMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'purple',
+        shape: 'square',
+        prefix: ''
+    });
+
+    var otherMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'pink',
+        shape: 'circle',
+        prefix: ''
+    });
+
+    switch (feature.properties.Type) {
+        case 'Farm':   return { icon: farmMarker };
+        case 'Field': return { icon: fieldMarker };
+        case 'Greenhouse':   return { icon: greenhouseMarker };
+        case 'Screenhouse':   return { icon: screenhouseMarker };
+        case 'Lab':   return { icon: labMarker };
+        case 'Storage':   return { icon: storageMarker };
+        case 'Other':   return { icon: otherMarker };
+        default:    return { icon: defaultMarker };
+    }
+}
+
+function onEachFeature(feature, layer) {
+        // var keys = ["Id","Name","Abbreviation","Country","Program","Type","Latitude","Longitude","Altitude","Trials"];
+        var keys = ["Abbreviation","Program","Type","Trials"];
+        var popupContent = '<table class="table table-sm"><caption style="text-align: center;"><font id="'+feature.properties.Id+'_name" size="3" color="black">'+feature.properties.Name+'</font></caption><tbody>';
+        for (var i = 0; i < keys.length; i++) {
+            popupContent += '<tr><th>'+keys[i]+'</th><td>'+feature.properties[keys[i]]+'</td></tr>';
+        }
+        var options = '[<a href="javascript:;" onclick="edit_location('+feature.properties.Id+')">Edit</a>]&nbsp[<a href="javascript:;" onclick="delete_location('+feature.properties.Id+')">Delete</a>]';
+        popupContent += '<tr><th>Options</th><td>'+options+'</td></tr></tbody></table>';
+        layer.bindPopup(popupContent);
+}
+
+  function delete_location(id) {
+    var name = $('#'+id+'_name').text();
+    var yes = confirm('Are you sure you want to delete location '+name+'? ');
+
+    if (! yes) { return; }
+
+    new jQuery.ajax( {
+      type: 'POST',
+      url: '/ajax/location/delete/'+id,
+      success: function(response) {
+                  if (response.error) { alert(response.error); }
+                  else {
+                    alert(response.success);
+		    location.reload();
+                  }
+               },
+      error: function(response) {
+                 alert("An error occurred");
+             }
+      });
+   }
+
+
+    function add_from_map(coordinate_string) {
+        //console.log("coordinate_string is"+coordinate_string);
+        var latlng = coordinate_string.split(',');
+        latitude = latlng[0], longitude = latlng[1];
+        var coordinates = [parseFloat(latitude),parseFloat(longitude)];
+        
+        
+        // removed because of mixed content restrictions. Can be uncommented once datascience toolkit can be accessed locally or over https
+        
+        // var dstk = $.DSTK();
+        // dstk.coordinates2statistics(coordinates, function(c2s_result) {
+        // 
+        //   dstk.coordinates2politics(coordinates, function(c2p_result) {
+            //console.log("elevation result is "+JSON.stringify(c2s_result));
+            //console.log("politics result is "+JSON.stringify(c2p_result));
+            //console.log("elevation result is "+c2s_result[0].statistics.elevation+" and politics result is "+c2p_result[0].politics);
+            // if (!c2s_result[0].statistics.elevation || !c2p_result[0].politics) {
+            //     alert("Unable to add a location at these coordinates. Please make sure your new location is located on land between 60 north and south.");
+            //     return;
+            // }
+            // var elevation = c2s_result[0].statistics.elevation.value;
+            // var code= c2p_result[0].politics[0].code.toUpperCase();
+            //console.log("elevation is "+elevation+" and code is "+code);
+            
+            
+            $('#location_id').val('');
+            $('#location_name').val('');
+            $('#location_abbreviation').val('');
+            $('#breeding_program_select').val('');
+            $('#location_type').val('');
+            // $('#location_country').val(code);
+            // $('#location_altitude').val(elevation);
+            $('#location_country').val('');
+            $('#location_altitude').val('');
+            $('#location_latitude').val(coordinates[0]);
+            $('#location_longitude').val(coordinates[1]);
+            $('#store_location_dialog').modal("show");
+        //   });
+        // });
+
+    }
+
+   function edit_location(id) {
+        var table = jQuery('#location_table').DataTable();
+        var index = table.rows().eq( 0 ).filter( function (rowIdx) {
+            return table.cell( rowIdx, 0 ).data() === id ? true : false;
+        } );
+       var data = table.rows(index).data();
+       var all_rows = [];
+       for (var i=0; i < data.length ;i++){
+           all_rows.push(data[i]);
+       }
+       var loc_data = all_rows.shift();
+        //console.log("Data for location to edit: "+JSON.stringify(loc_data));
+        //console.log("Program for location to edit is "+loc_data.properties.Program);
+        $('#location_id').val(loc_data.properties.Id);
+        $('#location_name').val(loc_data.properties.Name);
+        $('#location_abbreviation').val(loc_data.properties.Abbreviation);
+        $('#location_country').val(loc_data.properties.Code);
+        $('#breeding_program_select option:first').text('');
+        $('#breeding_program_select option:first').prop('selected', true);
+        $("#breeding_program_select option").filter(function() {
+            return this.text == loc_data.properties.Program;
+        }).attr('selected', true);
+        $('#location_type').val(loc_data.properties.Type);
+        $('#location_latitude').val(loc_data.properties.Latitude);
+        $('#location_longitude').val(loc_data.properties.Longitude);
+        $('#location_altitude').val(loc_data.properties.Altitude);
+        $('#store_location_dialog').modal("show");
+    }
+
+</script>

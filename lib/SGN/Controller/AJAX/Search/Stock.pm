@@ -60,6 +60,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		organization_list=>$params->{organization} ? [$params->{organization}] : undef,
         property_term=>$params->{property_term},
         property_value=>$params->{property_value},
+        introgression_parent=>$params->{introgression_parent},
+        introgression_backcross_parent=>$params->{introgression_backcross_parent},
+        introgression_map_version=>$params->{introgression_map_version},
+        introgression_chromosome=>$params->{introgression_chromosome},
+        introgression_start_position_bp=>$params->{introgression_start_position_bp},
+        introgression_end_position_bp=>$params->{introgression_end_position_bp},
 		limit=>$limit,
 		offset=>$offset,
         display_pedigree=>0
@@ -69,6 +75,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	my $draw = $params->{draw};
 	$draw =~ s/\D//g; # cast to int
 
+    #print STDERR Dumper $result;
 	my @return;
 	foreach (@$result){
 		my $stock_id = $_->{stock_id};
@@ -80,7 +87,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		my @owners = @{$_->{owners}};
 		my @owners_html;
 		foreach (@owners){
-			push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[1].'</a>';
+			push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';
 		}
 		my $owners_string = join ', ', @owners_html;
 		push @return, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organization_string ];
