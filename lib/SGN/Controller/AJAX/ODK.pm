@@ -206,7 +206,7 @@ sub schedule_get_crossing_data_GET {
     my $database_host = $c->config->{dbhost};
     my $prod_user = $c->config->{production_username};
     my $crontab_log = $c->config->{crontab_log_filepath};
-    my $include_path = 'export PERL5LIB="$PERL5LIB:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/local-lib:'.$rootpath.'/local-lib/lib"';
+    my $include_path = 'export PERL5LIB="$PERL5LIB:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/local-lib/lib/perl5"';
     my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -r $user_role -a $archive_path -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -w $cross_wishlist_id -f $progress_tree_dir -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
     my $timing = '';
     if ($timing_select eq 'everyminute'){
