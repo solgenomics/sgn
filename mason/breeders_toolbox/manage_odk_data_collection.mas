@@ -127,6 +127,7 @@ $odk_phenotyping_data_service_url => undef
     <div class="panel-body">
         <div id="odk_cross_progress_div">
 
+            <h3>Progress Tree</h3>
             <input type="text" class="form-control input-sm" id="odk_cross_progress_tree_search" placeholder="Search Across Tree" /><br/>
             <table class="table table-bordered">
                 <thead>
