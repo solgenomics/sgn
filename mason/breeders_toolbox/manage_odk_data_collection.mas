@@ -7,7 +7,7 @@ $odk_phenotyping_data_service_name => undef
 $odk_phenotyping_data_service_url => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree' ] &>
+<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'd3.d3Min', 'SGN.Scatterplot' ] &>
 
 <link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
 
@@ -112,6 +112,17 @@ $odk_phenotyping_data_service_url => undef
 
 <&| /page/info_section.mas, title=>'Progress', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
 
+<div id="testing_div"></div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h3>Summary of Received Cross Data</h3>
+        <div id="odk_cross_progress_summary_div">
+        [LOADING...]
+        </div>
+    </div>
+</div>
+
 <div class="panel panel-default">
     <div class="panel-body">
         <div id="odk_cross_progress_div">
@@ -120,7 +131,7 @@ $odk_phenotyping_data_service_url => undef
                 <thead>
                     <tr>
                         <th>Information</th>
-                        <th>Cross Wishlist -- Crosses Completed -- Lab Actions Completed</th>
+                        <th>All Cross Wishlist Entries-- Crosses Completed -- Lab Actions Completed</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -197,9 +208,6 @@ jQuery(document).ready(function () {
 
     jQuery.ajax ( {
         url : '/ajax/odk/get_crossing_available_wishlists',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
         success: function(response){
             console.log(response);
 
@@ -214,6 +222,100 @@ jQuery(document).ready(function () {
                 wishlist_dropdown_select_html = wishlist_dropdown_select_html + '</select>';
                 jQuery('#odk_cross_data_available_wishlists').html(wishlist_dropdown_select_html);
 
+
+                jQuery.ajax ({
+                    url : '/ajax/odk/get_odk_cross_summary_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
+                    success: function(response){
+                        console.log(response);
+                        jQuery("#working_modal").modal("hide");
+                        summary = response.summary;
+                        plot_data_fill = [];
+                        html = '<table class="table table-hover table-bordered"><thead><tr><th>Cross Information</th><th>Plots</th></tr></thead><tbody>';
+                        for (var top_level in summary) {
+                            if (summary.hasOwnProperty(top_level)) {
+                                html = html + '<tr>';
+                                for (var cross_name in summary[top_level]){
+                                    if (summary[top_level].hasOwnProperty(cross_name)){
+                                        html = html + '<td><h3>'+cross_name+'</h3>';
+                                        var cross = summary[top_level][cross_name];
+                                        var plot_data = [];
+                                        for (var activity in cross){
+                                            if (cross.hasOwnProperty(activity)){
+                                                html = html + '<b>'+activity + ' ('+cross[activity].length+')</b>: <br/>';
+                                                for (var i=0; i<cross[activity].length; i++){
+                                                    var action = cross[activity][i];
+                                                    for (var attr in action){
+                                                        if (action.hasOwnProperty(attr)){
+                                                            html = html + '&nbsp;&nbsp;&nbsp;&nbsp;<small>'+attr + ': ' +action[attr]+"</small><br/>";
+                                                        }
+                                                    }
+                                                    html = html + '&nbsp;&nbsp;&nbsp;&nbsp;----</br>';
+
+                                                    if (activity == 'seedExtraction'){
+                                                        var date = action['extraction_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Total Seeds Extracted", "x_pos":parseInt(date), "y_pos":parseInt(action['total_seeds_extracted']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'embryoRescue'){
+                                                        var date = action['embryorescue_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Good Seeds", "x_pos":parseInt(date), "y_pos":parseInt(action['good_seeds']) };
+                                                        plot_data.push(datum);
+                                                        var datum = { "type":activity, "label":"Bad Seeds", "x_pos":parseInt(date), "y_pos":parseInt(action['bad_seeds']) };
+                                                        plot_data.push(datum);
+                                                        var datum = { "type":activity, "label":"Embryo Rescued Seeds", "x_pos":parseInt(date), "y_pos":parseInt(action['embryorescue_seeds']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'screenhouse_humiditychamber'){
+                                                        var date = action['screenhse_transfer_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Screenhouse Humidity Chamber", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'rooting'){
+                                                        var date = action['rooting_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Rooting", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'hardening'){
+                                                        var date = action['hardening_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Hardening", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'contamination'){
+                                                        var date = action['lab_contamination_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Contamination", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'subculture'){
+                                                        var date = action['subculture_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Subcultures Count", "x_pos":parseInt(date), "y_pos":parseInt(action['subcultures_count']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        //console.log(plot_data);
+                                        cross_name_clean = cross_name.replace('/', '').replace('(', '').replace(')','');
+                                        var div_id = encodeURI(cross_name_clean)+'_plot_div';
+                                        plot_data_fill.push([plot_data, div_id]);
+                                        html = html + '</td><td><div id="'+div_id+'"></div></td>';
+                                    }
+                                }
+                                html = html + '</tr>';
+                            }
+                        }
+                        html = html + '</tbody></table>';
+                        jQuery('#odk_cross_progress_summary_div').html(html);
+                        for (var i=0; i<plot_data_fill.length; i++){
+                            if (plot_data_fill[i][0].length > 0){
+                                SGND3ScatterPlot(plot_data_fill[i][0], plot_data_fill[i][1], "Date of Activity");
+                            }
+                        }
+                    },
+                    error: function(response){
+                        jQuery("#working_modal").modal("hide");
+                        alert("Error retrieving available ODK crossing forms");
+                    }
+                });
 
                 //Load ODK Cross Progress Tree
                 jQuery('#odk_cross_progress_tree_div').jstree({
@@ -240,7 +342,6 @@ jQuery(document).ready(function () {
             }
         },
         error: function(response){
-            jQuery("#working_modal").modal("hide");
             alert("Error retrieving available ODK crossing forms");
         }
     });

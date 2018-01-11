@@ -252,8 +252,9 @@ sub save_ona_cross_info {
                 }
             }
         }
-        print STDERR Dumper \%cross_info;
+        #print STDERR Dumper \%cross_info;
         print STDERR Dumper \%plant_status_info;
+
         my %odk_cross_hash = (
             cross_info => \%cross_info,
             cross_parents => \%cross_parents,
@@ -468,6 +469,7 @@ sub create_odk_cross_progress_tree {
     my %seen_top_levels;
     my %top_level_contents;
     my @top_level_json;
+    my %summary_info;
     while (my ($top_level, $female_accession_hash) = each %combined){
         if (exists($seen_top_levels{$top_level})){
             die "top level $top_level not unique \n";
@@ -653,6 +655,122 @@ sub create_odk_cross_progress_tree {
                                                 'icon' => 'glyphicon glyphicon-time',
                                             };
                                             push @{$action_name_node->{children}}, $action_time_node;
+
+                                            my $activity_summary;
+                                            my $user_category = $action_hash->{'userCategory'};
+                                            if ($user_category eq 'field'){
+                                                my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
+                                                if ($activity_name eq 'firstPollination'){
+                                                    $activity_summary = {
+                                                        femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
+                                                        maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
+                                                        femalePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
+                                                        malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
+                                                        date => $action_hash->{'FieldActivities/FirstPollination/firstpollination_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'repeatPollination'){
+                                                    $activity_summary = {
+                                                        femaleAccessionName => $action_hash->{'FieldActivities/RepeatPollination/getRptFemaleAccName'},
+                                                        maleAccessionName => $action_hash->{'FieldActivities/RepeatPollination/getRptMaleAccName'},
+                                                        malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/RepeatPollination/rptMalID'}),
+                                                        date => $action_hash->{'FieldActivities/RepeatPollination/rptpollination_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'harvesting'){
+                                                    $activity_summary = {
+                                                        taken_ripening_shed => $action_hash->{'FieldActivities/harvesting/taken_ripening_shed'},
+                                                        harvesting_date => $action_hash->{'FieldActivities/harvesting/harvesting_date'},
+                                                        pollinated_date => $action_hash->{'FieldActivities/harvesting/pollinated_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'seedExtraction'){
+                                                    $activity_summary = {
+                                                        harvest_date => $action_hash->{'FieldActivities/seedExtraction/getHarvest_date'},
+                                                        total_seeds_extracted => $action_hash->{'FieldActivities/seedExtraction/totalSeedsExtracted'},
+                                                        extraction_date => $action_hash->{'FieldActivities/seedExtraction/extraction_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'germinating_after_2wks'){
+                                                    $activity_summary = {
+                                                        rescued_seeds => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_seeds'},
+                                                        germinating_2wks_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wks_date'},
+                                                        rescued_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_date'},
+                                                        actively_2wks => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/actively_2wks'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'germinating_after_8weeks'){
+                                                    $activity_summary = {
+                                                        active_2weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/active_2wks'},
+                                                        active_8weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/actively_8weeks'},
+                                                        germinated_2wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinated_2wksdate'},
+                                                        germinating_8wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeks_date'},
+                                                        active_seeds_count => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds_count'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                            }
+                                            if ($user_category eq 'laboratory'){
+                                                my $activity_name = $action_hash->{'Laboratory/labActivity'};
+                                                if ($activity_name eq 'embryoRescue'){
+                                                    $activity_summary = {
+                                                        good_seeds => $action_hash->{'Laboratory/embryoRescue/goodSeeds'},
+                                                        extracted_date => $action_hash->{'Laboratory/embryoRescue/extracted_date'},
+                                                        embryorescue_seeds => $action_hash->{'Laboratory/embryoRescue/embryorescue_seeds'},
+                                                        bad_seeds => $action_hash->{'Laboratory/embryoRescue/badSeeds'},
+                                                        total_seeds => $action_hash->{'Laboratory/embryoRescue/getTotalSeeds'},
+                                                        embryorescue_date=> $action_hash->{'Laboratory/embryoRescue/embryorescue_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'subculture'){
+                                                    $activity_summary = {
+                                                        subcultures_count => $action_hash->{'Laboratory/subculturing/subccultures_count'},
+                                                        multiplication_number => $action_hash->{'Laboratory/subculturing/multiplicationNumber'},
+                                                        subculture_date => $action_hash->{'Laboratory/subculturing/subculture_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'rooting'){
+                                                    $activity_summary = {
+                                                        subculture_date => $action_hash->{'Laboratory/rooting/getSubDate'},
+                                                        rooting_date => $action_hash->{'Laboratory/rooting/rooting_date'},
+                                                        rooting_plantlet => $action_hash->{'Laboratory/rooting/rooting_plantlet'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'contamination'){
+                                                    $activity_summary = {
+                                                        contamination_location => $action_hash->{'Laboratory/embryo_contamination/contamination_location'},
+                                                        lab_contaminated => $action_hash->{'Laboratory/embryo_contamination/lab_contaminated'},
+                                                        lab_contamination_date => $action_hash->{'Laboratory/embryo_contamination/lab_contamination_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                            }
+                                            if ($user_category eq 'screenhouse'){
+                                                my $activity_name = $action_hash->{'screenhse_activities/screenhouseActivity'};
+                                                if ($activity_name eq 'screenhouse_humiditychamber'){
+                                                    $activity_summary = {
+                                                        screenhse_transfer_date => $action_hash->{'screenhse_activities/screenhouse/screenhse_transfer_date'},
+                                                        rooted_date => $action_hash->{'screenhse_activities/screenhouse/rooted_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                                if ($activity_name eq 'hardening'){
+                                                    $activity_summary = {
+                                                        screenhsed_date => $action_hash->{'screenhse_activities/hardening/screenhsed_date'},
+                                                        hardening_date => $action_hash->{'screenhse_activities/hardening/hardening_date'},
+                                                    };
+                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                }
+                                            }
+
                                             while (my ($action_attr_name, $val) = each %$action_hash){
                                                 if (ref($val) eq 'HASH' || ref($val) eq 'ARRAY'){
                                                     $val = encode_json $val;
@@ -682,10 +800,12 @@ sub create_odk_cross_progress_tree {
         }
         $top_level_contents{$top_level} = \@top_level_content_json;
     }
+    #print STDERR Dumper \%summary_info;
 
     my %save_content = (
         top_level_json => \@top_level_json,
-        top_level_contents => \%top_level_contents
+        top_level_contents => \%top_level_contents,
+        summary_info => \%summary_info
     );
 
     my $dir = $self->odk_cross_progress_tree_file_dir;
