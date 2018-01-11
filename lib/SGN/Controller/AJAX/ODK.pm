@@ -160,6 +160,10 @@ sub schedule_get_crossing_data : Path('/ajax/odk/schedule_get_crossing_data') : 
 
 sub schedule_get_crossing_data_GET {
     my ( $self, $c ) = @_;
+    if ($c->config->{production_server}){
+        $c->stash->{rest} = { error=>'Please use contact form. Currently this cannot be set through the website.' };
+        $c->detach();
+    }
     my $form_id = $c->req->param('form_id');
     my $cross_wishlist_id = $c->req->param('cross_wishlist_md_file_id');
     my $timing_select = $c->req->param('timing');
@@ -235,10 +239,6 @@ sub get_crossing_data_cronjobs : Path('/ajax/odk/get_crossing_data_cronjobs') : 
 
 sub get_crossing_data_cronjobs_GET {
     my ( $self, $c ) = @_;
-    if ($c->config->{production_server}){
-        $c->stash->{rest} = { error=>'Please use contact form. Currently this cannot be set through the website.' };
-        $c->detach();
-    }
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
