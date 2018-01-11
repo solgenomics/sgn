@@ -8,6 +8,7 @@ $trial_id
 <style>
     #trait_heatmap {display: inline; }
     #trial_no_phenoMSG {display: none; }
+    #trial_no_rowColMSG {display: none; }
     #traitdiv {display: none; }
     #chart {display: none; }
     
@@ -52,6 +53,11 @@ $trial_id
 <div id="container_heatmap" ></div>
 <div id="trait_heatmap" >loading...</div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
+<div class="container" id="trial_no_rowColMSG">
+    <div class="well">
+        <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre>
+    </div>
+</div>
 <div id="chart"></div>
 <div class="col-sm-10" id="d_button" style="display:none";>
  <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; --> 
@@ -189,13 +195,16 @@ jQuery(document).ready( function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                if (response.phenotypes.col != "" && response.phenotypes.row != ""){
-                    for (i=0; i<response.phenotypes.col.length; i++) {
-                        if (response.phenotypes.col[i] && response.phenotypes.row[i]){
-                            //console.log(response.phenotypes.col[i]);
-                        }
+                var col_length; 
+                var row_length;
+                for (i=0; i<response.phenotypes.col.length; i++) {
+                    if (response.phenotypes.col[i] && response.phenotypes.row[i]){
+                        //console.log(response.phenotypes.col[i]);
+                        col_length = response.phenotypes.col[i];
+                        row_length = response.phenotypes.row[i];
                     }
-                    
+                }
+                if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#chart").css({"display": "inline-block"});
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
@@ -339,7 +348,10 @@ jQuery(document).ready( function() {
               
                 }
                 else  {
-                
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#container_heatmap").css("display", "none");
+                    jQuery("#trait_heatmap").css("display", "none");
+                    jQuery("#trial_no_rowColMSG").css("display", "inline-block");
                 }
              },
              error: function(reponse) {
