@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 09:01:2018 15:23
+date: 11:01:2018 11:27
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -858,8 +858,8 @@ creation_date: 2008-02-13T10:05:00Z
 
 [Term]
 id: SP:0000095
-name: pericarp area in square millimeters, mm^2
-def: "The area of the pericarp (mm^2)." [SGN:EVDK]
+name: pericarp area in square centimeter, cm^2
+def: "The area of the pericarp (cm^2)." [SGN:EVDK]
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009084
@@ -869,8 +869,8 @@ creation_date: 2008-02-12T03:36:00Z
 
 [Term]
 id: SP:0000096
-name: septum + pericarp area, calculation in square millimeters
-def: "The sum of the areas of the septum and the pericarp in mm^2." [SGN:EVDK]
+name: septum + pericarp area, calculation in square centimeters, cm^2
+def: "The sum of the areas of the septum and the pericarp in cm^2." [SGN:EVDK]
 xref: PO:0005008
 xref: PO:0007010
 xref: PO:0007042
@@ -3362,8 +3362,8 @@ creation_date: 2010-07-19T01:12:38Z
 
 [Term]
 id: SP:0000372
-name: pericarp thickness, calculation in millimeters
-def: "Pericarp thickness in mm." [SGN:EVDK]
+name: pericarp thickness, calculation in centimetes
+def: "Pericarp thickness in cm." [SGN:EVDK]
 synonym: "pericarp width" RELATED []
 relationship: variable_of SP:0000371 ! pericarp
 created_by: Naama
@@ -3546,8 +3546,8 @@ creation_date: 2017-02-06T15:17:20Z
 
 [Term]
 id: SP:0000395
-name: columella and placenta area measurement mm^2
-def: "The area of the fruit columella and placenta in mm^2. The area of the fruit columella and placenta of fruits sliced at the equatorial axis." [SGN:EVDK]
+name: columella and placenta area measurement in square centimeters, cm^2
+def: "The area of the fruit columella and placenta in cm^2. The area of the fruit columella and placenta of fruits sliced at the equatorial axis." [SGN:EVDK]
 relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2017-09-07T14:56:35Z
@@ -3569,7 +3569,7 @@ creation_date: 2017-09-07T15:00:10Z
 
 [Term]
 id: SP:0000398
-name: pericarp max cell size, calculation in square micrometers
+name: pericarp max cell size, calculation in square micrometers, um^2
 def: "Size of the biggest tomato cells in the pericarp in um^2." [SGN:NM]
 relationship: variable_of SP:0000397 ! pericarp cells
 created_by: naama
