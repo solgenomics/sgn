@@ -235,6 +235,10 @@ sub get_crossing_data_cronjobs : Path('/ajax/odk/get_crossing_data_cronjobs') : 
 
 sub get_crossing_data_cronjobs_GET {
     my ( $self, $c ) = @_;
+    if ($c->config->{production_server}){
+        $c->stash->{rest} = { error=>'Please use contact form. Currently this cannot be set through the website.' };
+        $c->detach();
+    }
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
