@@ -84,6 +84,8 @@ $odk_phenotyping_data_service_url => undef
                         <div class="col-sm-4" >
                             <select class="form-control" id="schedule_import_odk_crossing_form_data">
                                 <option value="everyday">Once per day at midnight</option>
+                                <option value="twicedaily">Twice daily at midnight and noon</option>
+                                <option value="everyhour">Once per hour</option>
                                 <option value="everyminute">Once per minute</option>
                                 <option value="none">None</option>
                             </select>
@@ -256,12 +258,20 @@ jQuery(document).ready(function () {
                 alert(response.error);
             }
             if (response.success){
+                var html = 'Not Set';
                 if (response.entries[0] == '0-59/1 * * * * '){
-                    jQuery('#scheduled_odk_cross_import_time').html('<input type="text" disabled value="Once per minute" class="form-control" />');
+                    html = '<input type="text" disabled value="Once per minute" class="form-control" />';
                 }
                 if (response.entries[0] == '1 0 * * * '){
-                    jQuery('#scheduled_odk_cross_import_time').html('<input type="text" disabled value="Once per day at midnight" class="form-control" />');
+                    html = '<input type="text" disabled value="Once per day at midnight" class="form-control" />';
                 }
+                if (response.entries[0] == '0 * * * * '){
+                    html = '<input type="text" disabled value="Once per hour" class="form-control" />';
+                }
+                if (response.entries[0] == '0 0,12 * * * '){
+                    html = '<input type="text" disabled value="Twice daily at midnight and noon" class="form-control" />';
+                }
+                jQuery('#scheduled_odk_cross_import_time').html(html);
             }
         },
         error: function(response){
@@ -314,7 +324,7 @@ jQuery(document).ready(function () {
         });
     });
 
-    jQuery('#schedule_import_odk_cross_data').click( function(e){
+    jQuery('#schedule_import_odk_cross_data').click( function(){
         jQuery.ajax ( {
             url : '/ajax/odk/schedule_get_crossing_data?cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val()+'&timing='+jQuery('#schedule_import_odk_crossing_form_data').val(),
             beforeSend: function() {

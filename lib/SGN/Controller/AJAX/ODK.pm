@@ -217,6 +217,10 @@ sub schedule_get_crossing_data_GET {
         $timing = "0-59/1 * * * * ";
     } elsif ($timing_select eq 'everyday'){
         $timing = "1 0 * * * ";
+    } elsif ($timing_select eq 'everyhour'){
+        $timing = "0 * * * * ";
+    } elsif ($timing_select eq 'twicedaily'){
+        $timing = "0 0,12 * * * ";
     }
     my $crontab_line = $timing.$perl_command."\n";
     #print STDERR $crontab_line;
