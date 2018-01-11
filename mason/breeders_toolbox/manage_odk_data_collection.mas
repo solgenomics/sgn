@@ -127,22 +127,15 @@ $odk_phenotyping_data_service_url => undef
     <div class="panel-body">
         <div id="odk_cross_progress_div">
 
+            <input type="text" class="form-control input-sm" id="odk_cross_progress_tree_search" placeholder="Search Across Tree" /><br/>
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Information</th>
                         <th>All Cross Wishlist Entries-- Crosses Completed -- Lab Actions Completed</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>
-                            <h4>Search</h4>
-                            <input type="text" class="form-control input-sm" id="odk_cross_progress_tree_search" placeholder="Search" />
-                            <hr>
-                            <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
-                            <hr>
-                        </td>
                         <td>
                             <div id="odk_cross_progress_tree_div" >[loading...]</div>
                         </td>
