@@ -243,6 +243,7 @@ sub save_ona_cross_info {
                             } else {
                                 print STDERR "GET ODK IMAGE: $download_url to $image_temp_file\n";
                                 my $ua = LWP::UserAgent->new();
+                                $ua->credentials( 'api.ona.io:443', 'DJANGO', $self->odk_crossing_data_service_username, $self->odk_crossing_data_service_password );
                                 my $response = $ua->get($download_url);
                                 if ($response->is_success){
                                     my $content = $response->decoded_content;
