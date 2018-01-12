@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 11:01:2018 11:27
+date: 12:01:2018 15:26
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -869,7 +869,7 @@ creation_date: 2008-02-12T03:36:00Z
 
 [Term]
 id: SP:0000096
-name: septum + pericarp area, calculation in square centimeters, cm^2
+name: septum and pericarp area, calculation in square centimeters, cm^2
 def: "The sum of the areas of the septum and the pericarp in cm^2." [SGN:EVDK]
 xref: PO:0005008
 xref: PO:0007010
