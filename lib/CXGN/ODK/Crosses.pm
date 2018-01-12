@@ -133,7 +133,9 @@ sub save_ona_cross_info {
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $form_id = $self->odk_crossing_data_service_form_id;
-    my $ua = LWP::UserAgent->new;
+    my $ua = LWP::UserAgent->new(
+        ssl_opts => { verify_hostname => 0 }
+    );
     $ua->credentials( 'api.ona.io:443', 'DJANGO', $self->odk_crossing_data_service_username, $self->odk_crossing_data_service_password );
     my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
     my $server_endpoint = "https://api.ona.io/api/v1/data/$form_id";
@@ -438,8 +440,8 @@ sub create_odk_cross_progress_tree {
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
-        my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
+        #my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
+        my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
