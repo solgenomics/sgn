@@ -241,18 +241,27 @@ sub save_ona_cross_info {
                                 $image = SGN::Image->new( $schema->storage->dbh, $found_image_id, $context );
                                 print STDERR "Found Image $found_image_id\n";
                             } else {
-                                my $code = getstore($download_url, $image_temp_file);
-                                print STDERR "ODK IMAGE: $download_url to $image_temp_file CODE $code\n";
-                                $image = SGN::Image->new( $schema->storage->dbh, undef, $context );
-                                $image->set_sp_person_id($self->sp_person_id);
-                                my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
-                                $image_id = $image->get_image_id;
+                                print STDERR "GET ODK IMAGE: $download_url to $image_temp_file\n";
+                                my $ua = LWP::UserAgent->new();
+                                my $response = $ua->get($download_url);
+                                if ($response->is_success){
+                                    my $content = $response->decoded_content;
+                                    open my $OUTFILE, '>', $image_temp_file or die "Error opening $image_temp_file: $!";
+                                    print { $OUTFILE } $content or croak "Cannot write to $image_temp_file: $!";
+                                    close $OUTFILE or croak "Cannot close $image_temp_file: $!";
+                                    $image = SGN::Image->new( $schema->storage->dbh, undef, $context );
+                                    $image->set_sp_person_id($self->sp_person_id);
+                                    my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
+                                    $image_id = $image->get_image_id;
+                                }
                             }
-                            my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-                            my $image_source_tag_thumb = $image->get_img_src_tag("thumbnail");
-                            print STDERR "IMAGE FOR ".$stock_id.": ".$image_id.": ".$image_source_tag_tiny."\n";
-                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_tiny} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_thumb} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_thumb.'</a>';
+                            if ($image && $image_id){
+                                my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
+                                my $image_source_tag_thumb = $image->get_img_src_tag("thumbnail");
+                                print STDERR "IMAGE FOR ".$stock_id.": ".$image_id.": ".$image_source_tag_tiny."\n";
+                                $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_tiny} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+                                $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_thumb} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_thumb.'</a>';
+                            }
                         }
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
