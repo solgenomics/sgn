@@ -173,10 +173,13 @@ sub save_ona_cross_info {
                 my $download_url = $_->{download_url};
                 my $url = $self->odk_crossing_data_service_url.$download_url;
                 my $image_temp_file = $self->temp_file_dir."/$attachment_filename";
-                my $code = mirror($url, $image_temp_file);
-                print STDERR $url.": ".$image_temp_file.": ".$code."\n";
+                my @filename_components = split '\.', $attachment_filename;
+                #Check that image has not already been saved
+                my $h = $metadata_schema->storage->dbh->prepare("SELECT image_id FROM metadata.md_image WHERE original_filename=? ORDER BY image_id DESC LIMIT 1;");
+                my $r = $h->execute($filename_components[0]);
+                my $image_id = $h->fetchrow_array();
 
-                $attachment_lookup{$attachment_filename} = $image_temp_file;
+                $attachment_lookup{$attachment_filename} = [$image_temp_file, $image_id, $url];
             }
 
             foreach my $a (@$actions){
@@ -214,7 +217,10 @@ sub save_ona_cross_info {
                             $status_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocPlotName';
                             $attachment_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_image';
                         }
-                        my $image_temp_file = $attachment_lookup{$a->{$attachment_identifier}};
+                        my $image_temp_file_info = $attachment_lookup{$a->{$attachment_identifier}};
+                        my $image_temp_file = $image_temp_file_info->[0];
+                        my $found_image_id = $image_temp_file_info->[1];
+                        my $download_url = $image_temp_file_info->[2];
                         $plant_status_info{$a->{$status_identifier}}->{'status'} = $a;
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_download} = $image_temp_file;
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_message} = $a->{$status_message_identifier};
@@ -228,15 +234,25 @@ sub save_ona_cross_info {
                         my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $a->{$status_identifier}, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
                         if ($stock && $image_temp_file){
                             my $stock_id = $stock->stock_id;
-                            my $image = SGN::Image->new( $schema->storage->dbh, undef, $context );
-                            $image->set_sp_person_id($self->sp_person_id);
-                            my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
-                            my $new_image_id = $image->get_image_id;
+                            my $image_id;
+                            my $image;
+                            if ($found_image_id){
+                                $image_id = $found_image_id;
+                                $image = SGN::Image->new( $schema->storage->dbh, $found_image_id, $context );
+                                print STDERR "Found Image $found_image_id\n";
+                            } else {
+                                my $code = getstore($download_url, $image_temp_file);
+                                print STDERR "ODK IMAGE: $download_url to $image_temp_file CODE $code\n";
+                                $image = SGN::Image->new( $schema->storage->dbh, undef, $context );
+                                $image->set_sp_person_id($self->sp_person_id);
+                                my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
+                                $image_id = $image->get_image_id;
+                            }
                             my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
                             my $image_source_tag_thumb = $image->get_img_src_tag("thumbnail");
-                            print STDERR "IMAGE FOR ".$stock_id.": ".$stock_image_id.": ".$new_image_id.": ".$image_source_tag_tiny."\n";
-                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_tiny} = '<a href="/image/view/'.$new_image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_thumb} = '<a href="/image/view/'.$new_image_id.'" target="_blank">'.$image_source_tag_thumb.'</a>';
+                            print STDERR "IMAGE FOR ".$stock_id.": ".$image_id.": ".$image_source_tag_tiny."\n";
+                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_tiny} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_thumb} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_thumb.'</a>';
                         }
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
