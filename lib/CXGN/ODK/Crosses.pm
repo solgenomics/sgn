@@ -12,8 +12,10 @@ my $odk_crosses = CXGN::ODK::Crosses->new({
     sp_person_id=>$sp_person_id,
     sp_person_role=>$sp_person_role,
     archive_path=>$archive_path,
+    temp_file_dir=>$temp_file_dir,
     temp_file_path=>$temp_file_path,
     cross_wishlist_md_file_id=>$cross_wishlist_md_file_id,
+    odk_crossing_data_service_url=>$odk_crossing_data_service_url,
     odk_crossing_data_service_username=>$odk_crossing_data_service_username,
     odk_crossing_data_service_password=>$odk_crossing_data_service_password,
     odk_crossing_data_service_form_id=>$odk_crossing_data_service_form_id,
@@ -34,6 +36,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use LWP::Simple;
 use LWP::UserAgent;
 use JSON;
 use CXGN::UploadFile;
@@ -44,6 +47,7 @@ use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
+use SGN::Image;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -75,6 +79,12 @@ has 'sp_person_role' => (
     required => 1,
 );
 
+has 'odk_crossing_data_service_url' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'odk_crossing_data_service_username' => (
     isa => 'Str',
     is => 'rw',
@@ -99,6 +109,12 @@ has 'archive_path' => (
     required => 1,
 );
 
+has 'temp_file_dir' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'temp_file_path' => (
     isa => 'Str',
     is => 'rw',
@@ -113,6 +129,7 @@ has 'odk_cross_progress_tree_file_dir' => (
 
 sub save_ona_cross_info {
     my $self = shift;
+    my $context = shift; #Needed for SGN::Image to store images to plots
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $form_id = $self->odk_crossing_data_service_form_id;
@@ -123,10 +140,13 @@ sub save_ona_cross_info {
     print STDERR $server_endpoint."\n";
     my $resp = $ua->get($server_endpoint);
 
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
-        print STDERR Dumper $message_hash;
+        #print STDERR Dumper $message_hash;
 
         my %user_categories = (
             'field' => 'FieldActivities',
@@ -150,7 +170,13 @@ sub save_ona_cross_info {
                 my $attachment_filepath = $_->{filename};
                 my @filepath_components = split '/', $attachment_filepath;
                 my $attachment_filename = $filepath_components[$#filepath_components];
-                $attachment_lookup{$attachment_filename} = $_->{download_url};
+                my $download_url = $_->{download_url};
+                my $url = $self->odk_crossing_data_service_url.$download_url;
+                my $image_temp_file = $self->temp_file_dir."/$attachment_filename";
+                my $code = mirror($url, $image_temp_file);
+                print STDERR $url.": ".$image_temp_file.": ".$code."\n";
+
+                $attachment_lookup{$attachment_filename} = $image_temp_file;
             }
 
             foreach my $a (@$actions){
@@ -174,8 +200,21 @@ sub save_ona_cross_info {
                             $status_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocPlotName';
                             $attachment_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_image';
                         }
+                        my $image_temp_file = $attachment_lookup{$a->{$attachment_identifier}};
                         $plant_status_info{$a->{$status_identifier}}->{'status'} = $a;
-                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_download} = $attachment_lookup{$a->{$attachment_identifier}};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_download} = $image_temp_file;
+
+                        my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $a->{$status_identifier}, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
+                        if ($stock && $image_temp_file){
+                            my $stock_id = $stock->stock_id;
+                            my $image = SGN::Image->new( $schema->storage->dbh, undef, $context );
+                            $image->set_sp_person_id($self->sp_person_id);
+                            my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
+                            my $new_image_id = $image->get_image_id;
+                            my $image_source_tag = $image->get_img_src_tag("thumbnail");
+                            print STDERR "IMAGE FOR ".$stock_id.": ".$stock_image_id.": ".$new_image_id.": ".$image_source_tag."\n";
+                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display} = '<a href="/image/view/'.$new_image_id.'" target="_blank">'.$image_source_tag.'</a>';
+                        }
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
                         my $plot_name = _get_plot_name_from_barcode_id($a->{'FieldActivities/Flowering/flowerID'});
@@ -349,8 +388,8 @@ sub create_odk_cross_progress_tree {
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
-        my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
+        #my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
+        my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
@@ -427,6 +466,9 @@ sub create_odk_cross_progress_tree {
             foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
                 my $planned_female_plot_name_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name};
                 foreach my $planned_female_plot_name (keys %$planned_female_plot_name_hash){
+                    if (exists($all_plant_status_info{$planned_female_plot_name}->{'status'})){
+                        $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{'planned_female_plot_name_status'} = $all_plant_status_info{$planned_female_plot_name}->{'status'};
+                    }
                     my $male_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$planned_female_plot_name};
                     foreach my $male_accession_name (keys %$male_hash){
                         foreach my $cross_parents (@all_cross_parents){
@@ -520,279 +562,286 @@ sub create_odk_cross_progress_tree {
                     };
                     push @{$planned_female_node->{children}}, $planned_female_plot_node;
                     while (my ($male_accession_name, $crosses_hash) = each %$male_accession_hash){
-                        my $planned_male_node = {
-                            'text' => 'Wishlist Male Accession: '.$male_accession_name
-                        };
-                        push @{$planned_female_plot_node->{children}}, $planned_male_node;
-                        if (ref($crosses_hash) eq "HASH") {
-                            $planned_male_node->{state}->{opened} = JSON::true;
-                            while (my ($cross_name, $actions_hash) = each %$crosses_hash){
-                                if (exists($cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$crossed_female_plot_name}->{$male_accession_name}->{$cross_name})){
-                                    $planned_male_node->{icon} = 'glyphicon glyphicon-king '.$icon_color;
-                                    $planned_female_plot_node->{state}->{opened} = JSON::true;
-                                } else {
-                                    $planned_male_node->{icon} = 'glyphicon glyphicon-king';
-                                    $planned_male_node->{state}->{opened} = JSON::false;
+                        if ($male_accession_name eq 'planned_female_plot_name_status'){
+                            my $status = $crosses_hash;
+                            print STDERR Dumper $status;
+                            $planned_female_plot_node->{text} .= ' : '.$status->{'attachment_display'};
+                        }
+                        else {
+                            my $planned_male_node = {
+                                'text' => 'Wishlist Male Accession: '.$male_accession_name
+                            };
+                            push @{$planned_female_plot_node->{children}}, $planned_male_node;
+                            if (ref($crosses_hash) eq "HASH") {
+                                $planned_male_node->{state}->{opened} = JSON::true;
+                                while (my ($cross_name, $actions_hash) = each %$crosses_hash){
+                                    if (exists($cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$crossed_female_plot_name}->{$male_accession_name}->{$cross_name})){
+                                        $planned_male_node->{icon} = 'glyphicon glyphicon-king '.$icon_color;
+                                        $planned_female_plot_node->{state}->{opened} = JSON::true;
+                                    } else {
+                                        $planned_male_node->{icon} = 'glyphicon glyphicon-king';
+                                        $planned_male_node->{state}->{opened} = JSON::false;
+                                        my $cross_node = {
+                                            'text' => 'No Crosses',
+                                            'icon' => 'glyphicon glyphicon-minus',
+                                        };
+                                        push @{$planned_male_node->{children}}, $cross_node;
+                                        next;
+                                    }
                                     my $cross_node = {
-                                        'text' => 'No Crosses',
-                                        'icon' => 'glyphicon glyphicon-minus',
+                                        'text' => 'Cross Name: '.$cross_name,
+                                        'icon' => 'glyphicon glyphicon-random text-primary',
+                                        'state' => { 'opened' => JSON::true }
                                     };
                                     push @{$planned_male_node->{children}}, $cross_node;
-                                    next;
-                                }
-                                my $cross_node = {
-                                    'text' => 'Cross Name: '.$cross_name,
-                                    'icon' => 'glyphicon glyphicon-random text-primary',
-                                    'state' => { 'opened' => JSON::true }
-                                };
-                                push @{$planned_male_node->{children}}, $cross_node;
-                                while (my ($action_name, $actions_array) = each %$actions_hash){
-                                    if ($action_name eq 'active_seeds'){
-                                        my $active_seeds_hash = $actions_array;
-                                        my $active_seeds_node = {
-                                            'text' => $action_name,
-                                            'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                        };
-                                        push @{$cross_node->{children}}, $active_seeds_node;
-                                        while (my ($active_seed_name, $active_seed_hash) = each %$active_seeds_hash){
-                                            my $active_seed_node = {
-                                                'text' => $active_seed_name,
-                                                'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                    while (my ($action_name, $actions_array) = each %$actions_hash){
+                                        if ($action_name eq 'active_seeds'){
+                                            my $active_seeds_hash = $actions_array;
+                                            my $active_seeds_node = {
+                                                'text' => $action_name,
+                                                'icon' => 'glyphicon glyphicon-eye-open text-success',
                                             };
-                                            push @{$active_seeds_node->{children}}, $active_seed_node;
-                                            while (my ($active_seed_action, $active_seed_action_value) = each %$active_seed_hash){
-                                                if ($active_seed_action eq 'subcultures'){
-                                                    my $subcultures_hash = $active_seed_action_value;
-                                                    my $subcultures_node = {
-                                                        'text' => $active_seed_action,
-                                                        'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                    };
-                                                    push @{$active_seed_node->{children}}, $subcultures_node;
-                                                    while (my ($subculture_name, $subcultures_hash) = each %$subcultures_hash){
-                                                        my $subculture_node = {
-                                                            'text' => $subculture_name,
-                                                            'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                            push @{$cross_node->{children}}, $active_seeds_node;
+                                            while (my ($active_seed_name, $active_seed_hash) = each %$active_seeds_hash){
+                                                my $active_seed_node = {
+                                                    'text' => $active_seed_name,
+                                                    'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                };
+                                                push @{$active_seeds_node->{children}}, $active_seed_node;
+                                                while (my ($active_seed_action, $active_seed_action_value) = each %$active_seed_hash){
+                                                    if ($active_seed_action eq 'subcultures'){
+                                                        my $subcultures_hash = $active_seed_action_value;
+                                                        my $subcultures_node = {
+                                                            'text' => $active_seed_action,
+                                                            'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                         };
-                                                        push @{$subcultures_node->{children}}, $subculture_node;
-                                                        while (my ($subcultures_action_name, $subculture_action_value) = each %$subcultures_hash){
-                                                            if ($subcultures_action_name eq 'rooting'){
-                                                                my $rooting_hash = $subculture_action_value;
-                                                                my $rootings_node = {
-                                                                    'text' => $subcultures_action_name,
-                                                                    'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                                };
-                                                                push @{$subculture_node->{children}}, $rootings_node;
-                                                                while (my ($rooting_name, $rooting_hash) = each %$rooting_hash){
-                                                                    my $rooting_node = {
-                                                                        'text' => $rooting_name,
-                                                                        'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                        push @{$active_seed_node->{children}}, $subcultures_node;
+                                                        while (my ($subculture_name, $subcultures_hash) = each %$subcultures_hash){
+                                                            my $subculture_node = {
+                                                                'text' => $subculture_name,
+                                                                'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                            };
+                                                            push @{$subcultures_node->{children}}, $subculture_node;
+                                                            while (my ($subcultures_action_name, $subculture_action_value) = each %$subcultures_hash){
+                                                                if ($subcultures_action_name eq 'rooting'){
+                                                                    my $rooting_hash = $subculture_action_value;
+                                                                    my $rootings_node = {
+                                                                        'text' => $subcultures_action_name,
+                                                                        'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                                     };
-                                                                    push @{$rootings_node->{children}}, $rooting_node;
-                                                                    while (my ($rooting_action, $rooting_action_value) = each %$rooting_hash){
-                                                                        if ($rooting_action eq 'hardening'){
-                                                                            my $hardening_hash = $rooting_action_value;
-                                                                            my $hardenings_node = {
-                                                                                'text' => $rooting_action,
-                                                                                'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                                            };
-                                                                            push @{$rooting_node->{children}}, $hardenings_node;
-                                                                            while (my ($hardening_name, $hardening) = each %$hardening_hash){
-                                                                                my $hardening_node = {
-                                                                                    'text' => $hardening_name,
-                                                                                    'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                    push @{$subculture_node->{children}}, $rootings_node;
+                                                                    while (my ($rooting_name, $rooting_hash) = each %$rooting_hash){
+                                                                        my $rooting_node = {
+                                                                            'text' => $rooting_name,
+                                                                            'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                        };
+                                                                        push @{$rootings_node->{children}}, $rooting_node;
+                                                                        while (my ($rooting_action, $rooting_action_value) = each %$rooting_hash){
+                                                                            if ($rooting_action eq 'hardening'){
+                                                                                my $hardening_hash = $rooting_action_value;
+                                                                                my $hardenings_node = {
+                                                                                    'text' => $rooting_action,
+                                                                                    'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                                                 };
-                                                                                push @{$hardenings_node->{children}}, $hardening_node;
+                                                                                push @{$rooting_node->{children}}, $hardenings_node;
+                                                                                while (my ($hardening_name, $hardening) = each %$hardening_hash){
+                                                                                    my $hardening_node = {
+                                                                                        'text' => $hardening_name,
+                                                                                        'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                                    };
+                                                                                    push @{$hardenings_node->{children}}, $hardening_node;
+                                                                                }
                                                                             }
-                                                                        }
-                                                                        if ($rooting_action eq 'screenhouse_humiditychamber'){
-                                                                            my $humidity_hash = $rooting_action_value;
-                                                                            my $humiditys_node = {
-                                                                                'text' => $rooting_action,
-                                                                                'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                                            };
-                                                                            push @{$rooting_node->{children}}, $humiditys_node;
-                                                                            while (my ($humidity_name, $humidity) = each %$humidity_hash){
-                                                                                my $humidity_node = {
-                                                                                    'text' => $humidity_name,
-                                                                                    'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                            if ($rooting_action eq 'screenhouse_humiditychamber'){
+                                                                                my $humidity_hash = $rooting_action_value;
+                                                                                my $humiditys_node = {
+                                                                                    'text' => $rooting_action,
+                                                                                    'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                                                 };
-                                                                                push @{$humiditys_node->{children}}, $humidity_node;
+                                                                                push @{$rooting_node->{children}}, $humiditys_node;
+                                                                                while (my ($humidity_name, $humidity) = each %$humidity_hash){
+                                                                                    my $humidity_node = {
+                                                                                        'text' => $humidity_name,
+                                                                                        'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                                    };
+                                                                                    push @{$humiditys_node->{children}}, $humidity_node;
+                                                                                }
                                                                             }
                                                                         }
                                                                     }
                                                                 }
-                                                            }
-                                                            if ($subcultures_action_name eq 'contamination'){
-                                                                my $contaminations_hash = $subculture_action_value;
-                                                                my $contaminations_node = {
-                                                                    'text' => $subcultures_action_name,
-                                                                    'icon' => 'glyphicon glyphicon-eye-open text-success',
-                                                                };
-                                                                push @{$subculture_node->{children}}, $contaminations_node;
-                                                                while (my ($contamination_name, $contamination_hash) = each %$contaminations_hash){
-                                                                    my $contamination_node = {
-                                                                        'text' => $contamination_name,
-                                                                        'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                if ($subcultures_action_name eq 'contamination'){
+                                                                    my $contaminations_hash = $subculture_action_value;
+                                                                    my $contaminations_node = {
+                                                                        'text' => $subcultures_action_name,
+                                                                        'icon' => 'glyphicon glyphicon-eye-open text-success',
                                                                     };
-                                                                    push @{$contaminations_node->{children}}, $contamination_node;
+                                                                    push @{$subculture_node->{children}}, $contaminations_node;
+                                                                    while (my ($contamination_name, $contamination_hash) = each %$contaminations_hash){
+                                                                        my $contamination_node = {
+                                                                            'text' => $contamination_name,
+                                                                            'icon' => 'glyphicon glyphicon-chevron-right text-success',
+                                                                        };
+                                                                        push @{$contaminations_node->{children}}, $contamination_node;
+                                                                    }
                                                                 }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
-                                        }
-                                    } else {
-                                        my $action_name_node = {
-                                            'text' => $action_name,
-                                            'icon' => 'glyphicon glyphicon-fast-forward text-info',
-                                        };
-                                        push @{$cross_node->{children}}, $action_name_node;
-                                        foreach my $action_hash (@$actions_array){
-                                            my $action_start = $action_hash->{userName}." @ ".$action_hash->{startTime};
-                                            my $action_time_node = {
-                                                'text' => $action_start,
-                                                'icon' => 'glyphicon glyphicon-time',
+                                        } else {
+                                            my $action_name_node = {
+                                                'text' => $action_name,
+                                                'icon' => 'glyphicon glyphicon-fast-forward text-info',
                                             };
-                                            push @{$action_name_node->{children}}, $action_time_node;
-
-                                            my $activity_summary;
-                                            my $user_category = $action_hash->{'userCategory'};
-                                            if ($user_category eq 'field'){
-                                                my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
-                                                if ($activity_name eq 'firstPollination'){
-                                                    $activity_summary = {
-                                                        femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
-                                                        maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
-                                                        femalePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
-                                                        malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
-                                                        date => $action_hash->{'FieldActivities/FirstPollination/firstpollination_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'repeatPollination'){
-                                                    $activity_summary = {
-                                                        femaleAccessionName => $action_hash->{'FieldActivities/RepeatPollination/getRptFemaleAccName'},
-                                                        maleAccessionName => $action_hash->{'FieldActivities/RepeatPollination/getRptMaleAccName'},
-                                                        malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/RepeatPollination/rptMalID'}),
-                                                        date => $action_hash->{'FieldActivities/RepeatPollination/rptpollination_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'harvesting'){
-                                                    $activity_summary = {
-                                                        taken_ripening_shed => $action_hash->{'FieldActivities/harvesting/taken_ripening_shed'},
-                                                        harvesting_date => $action_hash->{'FieldActivities/harvesting/harvesting_date'},
-                                                        pollinated_date => $action_hash->{'FieldActivities/harvesting/pollinated_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'seedExtraction'){
-                                                    $activity_summary = {
-                                                        harvest_date => $action_hash->{'FieldActivities/seedExtraction/getHarvest_date'},
-                                                        total_seeds_extracted => $action_hash->{'FieldActivities/seedExtraction/totalSeedsExtracted'},
-                                                        extraction_date => $action_hash->{'FieldActivities/seedExtraction/extraction_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'germinating_after_2wks'){
-                                                    $activity_summary = {
-                                                        rescued_seeds => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_seeds'},
-                                                        germinating_2wks_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wks_date'},
-                                                        rescued_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_date'},
-                                                        actively_2wks => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/actively_2wks'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'germinating_after_8weeks'){
-                                                    $activity_summary = {
-                                                        active_2weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/active_2wks'},
-                                                        active_8weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/actively_8weeks'},
-                                                        germinated_2wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinated_2wksdate'},
-                                                        germinating_8wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeks_date'},
-                                                        active_seeds_count => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds_count'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                            }
-                                            if ($user_category eq 'laboratory'){
-                                                my $activity_name = $action_hash->{'Laboratory/labActivity'};
-                                                if ($activity_name eq 'embryoRescue'){
-                                                    $activity_summary = {
-                                                        good_seeds => $action_hash->{'Laboratory/embryoRescue/goodSeeds'},
-                                                        extracted_date => $action_hash->{'Laboratory/embryoRescue/extracted_date'},
-                                                        embryorescue_seeds => $action_hash->{'Laboratory/embryoRescue/embryorescue_seeds'},
-                                                        bad_seeds => $action_hash->{'Laboratory/embryoRescue/badSeeds'},
-                                                        total_seeds => $action_hash->{'Laboratory/embryoRescue/getTotalSeeds'},
-                                                        embryorescue_date=> $action_hash->{'Laboratory/embryoRescue/embryorescue_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'subculture'){
-                                                    $activity_summary = {
-                                                        subcultures_count => $action_hash->{'Laboratory/subculturing/subccultures_count'},
-                                                        multiplication_number => $action_hash->{'Laboratory/subculturing/multiplicationNumber'},
-                                                        subculture_date => $action_hash->{'Laboratory/subculturing/subculture_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'rooting'){
-                                                    $activity_summary = {
-                                                        subculture_date => $action_hash->{'Laboratory/rooting/getSubDate'},
-                                                        rooting_date => $action_hash->{'Laboratory/rooting/rooting_date'},
-                                                        rooting_plantlet => $action_hash->{'Laboratory/rooting/rooting_plantlet'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'contamination'){
-                                                    $activity_summary = {
-                                                        contamination_location => $action_hash->{'Laboratory/embryo_contamination/contamination_location'},
-                                                        lab_contaminated => $action_hash->{'Laboratory/embryo_contamination/lab_contaminated'},
-                                                        lab_contamination_date => $action_hash->{'Laboratory/embryo_contamination/lab_contamination_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                            }
-                                            if ($user_category eq 'screenhouse'){
-                                                my $activity_name = $action_hash->{'screenhse_activities/screenhouseActivity'};
-                                                if ($activity_name eq 'screenhouse_humiditychamber'){
-                                                    $activity_summary = {
-                                                        screenhse_transfer_date => $action_hash->{'screenhse_activities/screenhouse/screenhse_transfer_date'},
-                                                        rooted_date => $action_hash->{'screenhse_activities/screenhouse/rooted_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                                if ($activity_name eq 'hardening'){
-                                                    $activity_summary = {
-                                                        screenhsed_date => $action_hash->{'screenhse_activities/hardening/screenhsed_date'},
-                                                        hardening_date => $action_hash->{'screenhse_activities/hardening/hardening_date'},
-                                                    };
-                                                    push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                }
-                                            }
-
-                                            while (my ($action_attr_name, $val) = each %$action_hash){
-                                                if (ref($val) eq 'HASH' || ref($val) eq 'ARRAY'){
-                                                    $val = encode_json $val;
-                                                }
-                                                $val =~ s/<br>//g;
-                                                my $action_attr_node = {
-                                                    'text' => $action_attr_name.':'.$val,
-                                                    'icon' => 'glyphicon glyphicon-minus',
+                                            push @{$cross_node->{children}}, $action_name_node;
+                                            foreach my $action_hash (@$actions_array){
+                                                my $action_start = $action_hash->{userName}." @ ".$action_hash->{startTime};
+                                                my $action_time_node = {
+                                                    'text' => $action_start,
+                                                    'icon' => 'glyphicon glyphicon-time',
                                                 };
-                                                push @{$action_time_node->{children}}, $action_attr_node;
+                                                push @{$action_name_node->{children}}, $action_time_node;
+
+                                                my $activity_summary;
+                                                my $user_category = $action_hash->{'userCategory'};
+                                                if ($user_category eq 'field'){
+                                                    my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
+                                                    if ($activity_name eq 'firstPollination'){
+                                                        $activity_summary = {
+                                                            femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
+                                                            maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
+                                                            femalePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
+                                                            malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
+                                                            date => $action_hash->{'FieldActivities/FirstPollination/firstpollination_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'repeatPollination'){
+                                                        $activity_summary = {
+                                                            femaleAccessionName => $action_hash->{'FieldActivities/RepeatPollination/getRptFemaleAccName'},
+                                                            maleAccessionName => $action_hash->{'FieldActivities/RepeatPollination/getRptMaleAccName'},
+                                                            malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/RepeatPollination/rptMalID'}),
+                                                            date => $action_hash->{'FieldActivities/RepeatPollination/rptpollination_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'harvesting'){
+                                                        $activity_summary = {
+                                                            taken_ripening_shed => $action_hash->{'FieldActivities/harvesting/taken_ripening_shed'},
+                                                            harvesting_date => $action_hash->{'FieldActivities/harvesting/harvesting_date'},
+                                                            pollinated_date => $action_hash->{'FieldActivities/harvesting/pollinated_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'seedExtraction'){
+                                                        $activity_summary = {
+                                                            harvest_date => $action_hash->{'FieldActivities/seedExtraction/getHarvest_date'},
+                                                            total_seeds_extracted => $action_hash->{'FieldActivities/seedExtraction/totalSeedsExtracted'},
+                                                            extraction_date => $action_hash->{'FieldActivities/seedExtraction/extraction_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'germinating_after_2wks'){
+                                                        $activity_summary = {
+                                                            rescued_seeds => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_seeds'},
+                                                            germinating_2wks_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wks_date'},
+                                                            rescued_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_date'},
+                                                            actively_2wks => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/actively_2wks'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'germinating_after_8weeks'){
+                                                        $activity_summary = {
+                                                            active_2weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/active_2wks'},
+                                                            active_8weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/actively_8weeks'},
+                                                            germinated_2wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinated_2wksdate'},
+                                                            germinating_8wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeks_date'},
+                                                            active_seeds_count => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds_count'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                }
+                                                if ($user_category eq 'laboratory'){
+                                                    my $activity_name = $action_hash->{'Laboratory/labActivity'};
+                                                    if ($activity_name eq 'embryoRescue'){
+                                                        $activity_summary = {
+                                                            good_seeds => $action_hash->{'Laboratory/embryoRescue/goodSeeds'},
+                                                            extracted_date => $action_hash->{'Laboratory/embryoRescue/extracted_date'},
+                                                            embryorescue_seeds => $action_hash->{'Laboratory/embryoRescue/embryorescue_seeds'},
+                                                            bad_seeds => $action_hash->{'Laboratory/embryoRescue/badSeeds'},
+                                                            total_seeds => $action_hash->{'Laboratory/embryoRescue/getTotalSeeds'},
+                                                            embryorescue_date=> $action_hash->{'Laboratory/embryoRescue/embryorescue_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'subculture'){
+                                                        $activity_summary = {
+                                                            subcultures_count => $action_hash->{'Laboratory/subculturing/subccultures_count'},
+                                                            multiplication_number => $action_hash->{'Laboratory/subculturing/multiplicationNumber'},
+                                                            subculture_date => $action_hash->{'Laboratory/subculturing/subculture_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'rooting'){
+                                                        $activity_summary = {
+                                                            subculture_date => $action_hash->{'Laboratory/rooting/getSubDate'},
+                                                            rooting_date => $action_hash->{'Laboratory/rooting/rooting_date'},
+                                                            rooting_plantlet => $action_hash->{'Laboratory/rooting/rooting_plantlet'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'contamination'){
+                                                        $activity_summary = {
+                                                            contamination_location => $action_hash->{'Laboratory/embryo_contamination/contamination_location'},
+                                                            lab_contaminated => $action_hash->{'Laboratory/embryo_contamination/lab_contaminated'},
+                                                            lab_contamination_date => $action_hash->{'Laboratory/embryo_contamination/lab_contamination_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                }
+                                                if ($user_category eq 'screenhouse'){
+                                                    my $activity_name = $action_hash->{'screenhse_activities/screenhouseActivity'};
+                                                    if ($activity_name eq 'screenhouse_humiditychamber'){
+                                                        $activity_summary = {
+                                                            screenhse_transfer_date => $action_hash->{'screenhse_activities/screenhouse/screenhse_transfer_date'},
+                                                            rooted_date => $action_hash->{'screenhse_activities/screenhouse/rooted_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'hardening'){
+                                                        $activity_summary = {
+                                                            screenhsed_date => $action_hash->{'screenhse_activities/hardening/screenhsed_date'},
+                                                            hardening_date => $action_hash->{'screenhse_activities/hardening/hardening_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                }
+
+                                                while (my ($action_attr_name, $val) = each %$action_hash){
+                                                    if (ref($val) eq 'HASH' || ref($val) eq 'ARRAY'){
+                                                        $val = encode_json $val;
+                                                    }
+                                                    $val =~ s/<br>//g;
+                                                    my $action_attr_node = {
+                                                        'text' => $action_attr_name.':'.$val,
+                                                        'icon' => 'glyphicon glyphicon-minus',
+                                                    };
+                                                    push @{$action_time_node->{children}}, $action_attr_node;
+                                                }
                                             }
                                         }
                                     }
                                 }
+                            } else {
+                                $planned_male_node->{icon} = 'glyphicon glyphicon-king';
+                                my $action_attr_node = {
+                                    'text' => $crosses_hash,
+                                    'icon' => 'glyphicon glyphicon-minus',
+                                };
+                                push @{$planned_male_node->{children}}, $action_attr_node;
                             }
-                        } else {
-                            $planned_male_node->{icon} = 'glyphicon glyphicon-king';
-                            my $action_attr_node = {
-                                'text' => $crosses_hash,
-                                'icon' => 'glyphicon glyphicon-minus',
-                            };
-                            push @{$planned_male_node->{children}}, $action_attr_node;
                         }
                     }
                 }
