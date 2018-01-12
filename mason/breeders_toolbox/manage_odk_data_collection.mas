@@ -233,7 +233,7 @@ jQuery(document).ready(function () {
                         jQuery("#working_modal").modal("hide");
                         summary = response.summary;
                         plot_data_fill = [];
-                        html = '<table class="table table-hover table-bordered"><thead><tr><th>Cross Information</th><th>Plots</th></tr></thead><tbody>';
+                        html = '<table id="odk_cross_info_status_table" class="table table-hover table-bordered"><thead><tr><th>Cross Information</th><th>Plots</th></tr></thead><tbody>';
                         for (var top_level in summary) {
                             if (summary.hasOwnProperty(top_level)) {
                                 html = html + '<tr>';
@@ -313,6 +313,9 @@ jQuery(document).ready(function () {
                                 SGND3ScatterPlot(plot_data_fill[i][0], plot_data_fill[i][1], "Date of Activity");
                             }
                         }
+                        jQuery('#odk_cross_info_status_table').DataTable({
+                            "order": [[ 0, "desc" ]]
+                        });
 
                         var plant_status_html = '<table id="odk_cross_plant_status_table" class="table table-hover table-bordered"><thead><tr><th>Plot Name</th><th>Date</th><th>Status</th></tr></thead><tbody>';
                         var plant_status_summary = response.plant_status_summary;
