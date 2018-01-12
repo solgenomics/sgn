@@ -253,6 +253,8 @@ sub save_ona_cross_info {
                                     $image->set_sp_person_id($self->sp_person_id);
                                     my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
                                     $image_id = $image->get_image_id;
+                                } else {
+                                    print STDERR $response->status_line."\n";
                                 }
                             }
                             if ($image && $image_id){
