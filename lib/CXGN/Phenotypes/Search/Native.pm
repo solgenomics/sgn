@@ -19,6 +19,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         plot_list=>$plot_list,
         plant_list=>$plant_list,
         subplot_list=>$subplot_list,
+        exclude_phenotype_outlier=>0,
         include_timestamp=>$include_timestamp,
         include_row_and_column_numbers=>0,
         trait_contains=>$trait_contains,
@@ -98,6 +99,12 @@ has 'year_list' => (
     is => 'rw',
 );
 
+has 'exclude_phenotype_outlier' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'include_timestamp' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -161,6 +168,7 @@ sub search {
     my $design_layout_select = '';
     my %design_layout_hash;
     my $using_layout_hash;
+    #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         $using_layout_hash = 1;
         foreach (@{$self->trial_list}){
@@ -172,6 +180,25 @@ sub search {
                     foreach my $p (@{$val->{plant_ids}}){
                         $design_layout_hash{$p} = $val;
                     }
+                }
+            }
+            #For performace reasons it is faster to include specific stock_ids in the query.
+            if ($self->data_level eq 'plot'){
+                my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
+                foreach (@$plots){
+                    push @{$self->plot_list}, $_->[0];
+                }
+            }
+            if ($self->data_level eq 'plant'){
+                my $plants = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plants();
+                foreach (@$plants){
+                    push @{$self->plant_list}, $_->[0];
+                }
+            }
+            if ($self->data_level eq 'subplot'){
+                my $subplots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_subplots();
+                foreach (@$subplots){
+                    push @{$self->subplot_list}, $_->[0];
                 }
             }
         }
