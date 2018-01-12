@@ -440,9 +440,10 @@ sub get_odk_cross_summary_cached_GET {
     }
     close($fh);
     my $summary = $contents->{summary_info};
+    my $plant_status_summary = $contents->{summary_plant_status_info};
 
     #print STDERR Dumper $summary;
-    $c->stash->{rest} = { summary => $summary };
+    $c->stash->{rest} = { summary => $summary, plant_status_summary => $plant_status_summary };
 }
 
 1;

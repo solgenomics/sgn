@@ -116,6 +116,15 @@ $odk_phenotyping_data_service_url => undef
 
 <div class="panel panel-default">
     <div class="panel-body">
+        <h3>Summary of Received Plant Status</h3>
+        <div id="odk_cross_plant_status_progress_summary_div">
+        [LOADING...]
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
         <h3>Summary of Received Cross Data</h3>
         <div id="odk_cross_progress_summary_div">
         [LOADING...]
@@ -304,6 +313,37 @@ jQuery(document).ready(function () {
                                 SGND3ScatterPlot(plot_data_fill[i][0], plot_data_fill[i][1], "Date of Activity");
                             }
                         }
+
+                        var plant_status_html = '<table id="odk_cross_plant_status_table" class="table table-hover table-bordered"><thead><tr><th>Plot Name</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+                        var plant_status_summary = response.plant_status_summary;
+                        console.log(plant_status_summary);
+                        for (var plot_name in plant_status_summary){
+                            if (plant_status_summary.hasOwnProperty(plot_name)){
+                                plant_status_html = plant_status_html + '<tr><td>' + plot_name + '</td><td>';
+                                var has_status = 0;
+                                for (var status_type in plant_status_summary[plot_name]){
+                                    has_status = 1;
+                                    if (plant_status_summary[plot_name].hasOwnProperty(status_type)){
+                                        var status = plant_status_summary[plot_name][status_type];
+                                        if (status_type == 'status'){
+                                            plant_status_html = plant_status_html + status['status_date'] + '</td><td><b>Status:</b><br/>Accession Name: ' + status['status_accession_name'] + '<br/>Trial Name: ' + status['status_trial_name'] + '<br/>User: ' + status['status_user'] + '<br/>Status Location: ' + status['status_location'] + '<br/>Status: ' + status['status_message'] + '<br/>Note: ' + status['status_note'] + '<br/>Image: ' + status['attachment_display_thumb'] + '<br/>';
+                                        }
+                                        if (status_type == 'flowering'){
+                                            plant_status_html = plant_status_html + status['FieldActivities/Flowering/flowering_date'] + '</td><td><b>Flowering:</b><br/>Accession Name: ' + status['FieldActivities/Flowering/flowerName'] + '<br/>Plant Sex: ' + status['FieldActivities/Flowering/plantSex'] + '<br/>';
+                                        }
+                                    }
+                                }
+                                if (has_status == 0){
+                                    plant_status_html = plant_status_html + '</td><td>';
+                                }
+                                plant_status_html = plant_status_html + '</td></tr>';
+                            }
+                        }
+                        plant_status_html = plant_status_html + '</tbody></thead>';
+                        jQuery('#odk_cross_plant_status_progress_summary_div').html(plant_status_html);
+                        jQuery('#odk_cross_plant_status_table').DataTable({
+                            "order": [[ 1, "desc" ]]
+                        });
                     },
                     error: function(response){
                         jQuery("#working_modal").modal("hide");

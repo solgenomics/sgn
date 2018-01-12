@@ -193,9 +193,23 @@ sub save_ona_cross_info {
                     if ($a->{'FieldActivities/fieldActivity'} eq 'status'){
                         my $status_identifier;
                         my $attachment_identifier;
+                        my $status_message_identifier;
+                        my $status_note_identifier;
+                        my $status_date_identifier;
+                        my $status_location_identifier;
+                        my $status_user_identifier;
+                        my $status_trial_identifier;
+                        my $status_accession_identifier;
                         if ($a->{'FieldActivities/plantstatus/plant_statusLocPlotName'}){
                             $status_identifier = 'FieldActivities/plantstatus/plant_statusLocPlotName';
                             $attachment_identifier = 'FieldActivities/plantstatus/status_image';
+                            $status_message_identifier = 'FieldActivities/plantstatus/plant_status';
+                            $status_note_identifier = 'FieldActivities/plantstatus/status_comments';
+                            $status_date_identifier = 'FieldActivities/plantstatus/status_Date';
+                            $status_location_identifier = 'FieldActivities/plantstatus/plant_statusAccLoc';
+                            $status_user_identifier = 'FieldActivities/plantstatus/status_reporter';
+                            $status_trial_identifier = 'FieldActivities/plantstatus/plant_statusLocTrialName';
+                            $status_accession_identifier = 'FieldActivities/plantstatus/plant_statusLocAccName';
                         } elsif ($a->{'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocPlotName'}){
                             $status_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocPlotName';
                             $attachment_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_image';
@@ -203,6 +217,13 @@ sub save_ona_cross_info {
                         my $image_temp_file = $attachment_lookup{$a->{$attachment_identifier}};
                         $plant_status_info{$a->{$status_identifier}}->{'status'} = $a;
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_download} = $image_temp_file;
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_message} = $a->{$status_message_identifier};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_note} = $a->{$status_note_identifier};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_date} = $a->{$status_date_identifier};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_location} = $a->{$status_location_identifier};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_user} = $a->{$status_user_identifier};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_trial_name} = $a->{$status_trial_identifier};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_accession_name} = $a->{$status_accession_identifier};
 
                         my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $a->{$status_identifier}, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
                         if ($stock && $image_temp_file){
@@ -211,9 +232,11 @@ sub save_ona_cross_info {
                             $image->set_sp_person_id($self->sp_person_id);
                             my $stock_image_id = $image->process_image($image_temp_file, 'stock', $stock_id);
                             my $new_image_id = $image->get_image_id;
-                            my $image_source_tag = $image->get_img_src_tag("thumbnail");
-                            print STDERR "IMAGE FOR ".$stock_id.": ".$stock_image_id.": ".$new_image_id.": ".$image_source_tag."\n";
-                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display} = '<a href="/image/view/'.$new_image_id.'" target="_blank">'.$image_source_tag.'</a>';
+                            my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
+                            my $image_source_tag_thumb = $image->get_img_src_tag("thumbnail");
+                            print STDERR "IMAGE FOR ".$stock_id.": ".$stock_image_id.": ".$new_image_id.": ".$image_source_tag_tiny."\n";
+                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_tiny} = '<a href="/image/view/'.$new_image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+                            $plant_status_info{$a->{$status_identifier}}->{'status'}->{attachment_display_thumb} = '<a href="/image/view/'.$new_image_id.'" target="_blank">'.$image_source_tag_thumb.'</a>';
                         }
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
@@ -384,6 +407,7 @@ sub create_odk_cross_progress_tree {
     my %open_tree;
     my %cross_combinations;
     my %top_level_title;
+    my %all_plant_status_info;
     if (@wishlist_file_elements){
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
@@ -433,7 +457,6 @@ sub create_odk_cross_progress_tree {
 
         my @all_cross_parents;
         my %all_cross_info;
-        my %all_plant_status_info;
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
@@ -564,8 +587,7 @@ sub create_odk_cross_progress_tree {
                     while (my ($male_accession_name, $crosses_hash) = each %$male_accession_hash){
                         if ($male_accession_name eq 'planned_female_plot_name_status'){
                             my $status = $crosses_hash;
-                            print STDERR Dumper $status;
-                            $planned_female_plot_node->{text} .= ' : '.$status->{'attachment_display'};
+                            $planned_female_plot_node->{text} .= ' : '.$status->{'attachment_display_tiny'}.' : STATUS = '.$status->{'status_message'};
                         }
                         else {
                             my $planned_male_node = {
@@ -854,7 +876,8 @@ sub create_odk_cross_progress_tree {
     my %save_content = (
         top_level_json => \@top_level_json,
         top_level_contents => \%top_level_contents,
-        summary_info => \%summary_info
+        summary_info => \%summary_info,
+        summary_plant_status_info => \%all_plant_status_info
     );
 
     my $dir = $self->odk_cross_progress_tree_file_dir;
