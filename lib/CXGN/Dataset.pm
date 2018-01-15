@@ -251,9 +251,19 @@ has 'is_live' =>     ( isa => 'Bool',
 
 has 'data_level' =>  ( isa => 'String',
 		       is => 'rw',
-		       isa => enum([qw[ plot plant ]]),
+		       isa => enum([qw[ plot plant subplot ]]),
 		       default => 'plot',
     );
+
+=head2 exclude_phenotype_outlier()
+
+=cut
+
+has 'exclude_phenotype_outlier' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
@@ -468,6 +478,8 @@ sub retrieve_phenotypes {
 		trait_list=>$self->traits(),
 		trial_list=>$self->trials(),
 		accession_list=>$self->accessions(),
+        include_row_and_column_numbers=>1,
+        exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;

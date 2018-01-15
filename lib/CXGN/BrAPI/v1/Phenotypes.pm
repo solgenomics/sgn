@@ -51,6 +51,7 @@ sub search {
 	my $inputs = shift;
 	my $data_level = $inputs->{data_level} || 'plot';
 	my $search_type = $inputs->{search_type} || 'complete';
+	my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
 	my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
 	my @study_ids_array = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
@@ -78,7 +79,8 @@ sub search {
             year_list=>\@years_array,
             location_list=>\@location_ids_array,
             accession_list=>\@accession_ids_array,
-            include_row_and_column_numbers=>1
+            include_row_and_column_numbers=>1,
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier
         }
     );
     my $data = $phenotypes_search->search();
