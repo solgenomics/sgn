@@ -436,7 +436,8 @@ if (length(predictionData) == 0) {
         valBlups   <- data.frame(valBlups)
 
         slG <- slG[which(slG <= nrow(phenoTrait))]   
-        slGDf <- phenoTrait[slG,]
+ 
+        slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
         rownames(slGDf) <- slGDf[, 1]     
         slGDf[, 1] <- NULL
       
