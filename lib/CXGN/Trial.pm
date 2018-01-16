@@ -29,7 +29,7 @@ use SGN::Model::Cvterm;
 use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
-
+use JSON;
 
 =head2 accessor bcs_schema()
 
@@ -2316,13 +2316,14 @@ sub suppress_plot_phenotype {
     my $plot_name = shift;
     my $phenotype_value = shift;
 	my $phenotype_id = shift;
+	my $username = shift;
+	my $timestamp = shift;
 	my $schema = $self->bcs_schema;
     my $trial_id = $self->get_trial_id();
 	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
 	my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
 	my $error;
-	
-	print " VAR: $trial_id, $trait_id, $plot_name, $phenotype_value, $phenotype_id, $phenotype_outlier_type_id\n";
+	my $json_string = { value => 1, username=>$username, timestamp=>$timestamp };
 	
 	my $prop_rs = $self->bcs_schema->resultset('Phenotype::Phenotypeprop')->search(
 		{ 'phenotype_id' => $phenotype_id, 'type_id'=>$phenotype_outlier_type_id }
@@ -2332,9 +2333,9 @@ sub suppress_plot_phenotype {
 		my $suppress_plot_pheno = $schema->resultset("Phenotype::Phenotypeprop")->create({
 			phenotype_id => $phenotype_id,
 			type_id       => $phenotype_outlier_type_id,
-			value => 1,
+			value => encode_json $json_string,
 		});
-	}
+	} 
 	else {
 		$error = "This plot phenotype has already been suppressed.";
 	}
