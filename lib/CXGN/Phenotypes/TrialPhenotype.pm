@@ -72,7 +72,7 @@ sub get_trial_phenotypes_heatmap {
       row_number=> 'row_number.value::int',
       col_number=> 'col_number.value::int',
       rep=> 'rep.value',
-	  plot_number=> 'plot_number.value',
+	  plot_number=> 'plot_number.value::INT',
 	  block_number=> 'block_number.value',
       phenotype_value=> 'phenotype.value',
 	  phenotype_id=> 'phenotype.phenotype_id',
@@ -101,7 +101,7 @@ sub get_trial_phenotypes_heatmap {
 
 	my $from_clause = $columns{'from_clause'};
 
-	my $order_clause = " ORDER BY 4, 7, 8 ASC";
+	my $order_clause = " ORDER BY 7, 8, 4 ASC";
 	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 	my $numeric_regex_2 = '/^\s*$/';
 
@@ -154,8 +154,10 @@ sub get_trial_phenotypes_heatmap {
 	for my $y (1..$max_row){
 		push @unique_row, $y;
 	}
-	#print STDERR Dumper(\@unique_col);
-	#print STDERR Dumper(\@unique_row);
+	
+	
+	print STDERR Dumper(\@row_No);
+	print STDERR Dumper(\@plot_No);
 
 	%results = (
 	col => \@col_No,
