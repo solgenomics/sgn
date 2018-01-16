@@ -128,7 +128,7 @@ my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
 #my $p_download_link = qq|<a href = "/stock/$stock_id/phenotypes">[Download phenotypes]</a>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
-my $p_download_link = '<a target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete">[Download phenotypes]</a>';
+my $p_download_link = '<a target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete&include_row_and_column_numbers=1">[Download phenotypes]</a>';
 my $direct_genotypes = $stockref->{direct_genotypes};
 my $g_download_link = qq|<a href =  "/stock/$stock_id/genotypes">Download genotypes</a>| if (keys %$direct_genotypes) ;
 ############################
