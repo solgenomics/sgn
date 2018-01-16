@@ -20,6 +20,8 @@ package SGN::Controller::AJAX::Cross;
 use Moose;
 use Try::Tiny;
 use DateTime;
+use Time::HiRes qw(time);
+use POSIX qw(strftime);
 use Data::Dumper;
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -995,8 +997,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $seedlot_name = $female->{seedlot_name} || '';
             my $seedlot_transaction_operator = $female->{seed_transaction_operator} || '';
             my $seedlot_num_seed_per_plot = $female->{num_seed_per_plot} || '';
-            my $time = DateTime->now();
-            my $entry_timestamp = $time->ymd()."_".$time->hms().":".$time->millisecond.":".$time->microsecond.":".$time->nanosecond;
+            my $t = time;
+            my $entry_timestamp = strftime '%F %T', localtime $t;
+            $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
             my $line = '"'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.$entry_timestamp.'","'.$user_name.'","';
 
             if (!exists($seen_info_plots{$plot_id})){
@@ -1027,8 +1030,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     push @descendents_array, $v->{name};
                 }
                 my $descendents_string = join ',', @descendents_array;
-                my $time = DateTime->now();
-                my $entry_timestamp = $time->ymd()."_".$time->hms().":".$time->millisecond.":".$time->microsecond.":".$time->nanosecond;
+                my $t = time;
+                my $entry_timestamp = strftime '%F %T', localtime $t;
+                $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
                 push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
                 $seen_info_plots{$plot_id}++;
             }
@@ -1083,8 +1087,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                                 push @descendents_array, $v->{name};
                             }
                             my $descendents_string = join ',', @descendents_array;
-                            my $time = DateTime->now();
-                            my $entry_timestamp = $time->ymd()."_".$time->hms().":".$time->millisecond.":".$time->microsecond.":".$time->nanosecond;
+                            my $t = time;
+                            my $entry_timestamp = strftime '%F %T', localtime $t;
+                            $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
                             push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
                             $seen_info_plots{$plot_id}++;
                         }
