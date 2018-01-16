@@ -101,7 +101,7 @@ sub get_trial_phenotypes_heatmap {
 
 	my $from_clause = $columns{'from_clause'};
 
-	my $order_clause = " ORDER BY 7, 8 ASC";
+	my $order_clause = " ORDER BY 4, 7, 8 ASC";
 	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 	my $numeric_regex_2 = '/^\s*$/';
 
