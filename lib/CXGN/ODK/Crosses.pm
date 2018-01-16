@@ -198,26 +198,38 @@ sub save_ona_cross_info {
                     if ($a->{'FieldActivities/fieldActivity'} eq 'status'){
                         my $status_identifier;
                         my $attachment_identifier;
-                        my $status_message_identifier;
+                        my $status_message_identifier = 'FieldActivities/plantstatus/plant_status';
                         my $status_note_identifier;
                         my $status_date_identifier;
-                        my $status_location_identifier;
+                        my $status_location_identifier = '';
                         my $status_user_identifier;
                         my $status_trial_identifier;
                         my $status_accession_identifier;
                         if ($a->{'FieldActivities/plantstatus/plant_statusLocPlotName'}){
                             $status_identifier = 'FieldActivities/plantstatus/plant_statusLocPlotName';
                             $attachment_identifier = 'FieldActivities/plantstatus/status_image';
-                            $status_message_identifier = 'FieldActivities/plantstatus/plant_status';
                             $status_note_identifier = 'FieldActivities/plantstatus/status_comments';
                             $status_date_identifier = 'FieldActivities/plantstatus/status_Date';
                             $status_location_identifier = 'FieldActivities/plantstatus/plant_statusAccLoc';
                             $status_user_identifier = 'FieldActivities/plantstatus/status_reporter';
                             $status_trial_identifier = 'FieldActivities/plantstatus/plant_statusLocTrialName';
                             $status_accession_identifier = 'FieldActivities/plantstatus/plant_statusLocAccName';
+                        } elsif ($a->{'FieldActivities/plantstatus/fallen_plant/fallen_statusLocPlotName'}){
+                            $status_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_statusLocPlotName';
+                            $attachment_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_image';
+                            $status_note_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_comments';
+                            $status_date_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_date';
+                            $status_user_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_reporter';
+                            $status_trial_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_statusLocTrialName';
+                            $status_accession_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_statusLocAccName';
                         } elsif ($a->{'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocPlotName'}){
                             $status_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocPlotName';
                             $attachment_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_image';
+                            $status_note_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_comments';
+                            $status_date_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_date';
+                            $status_user_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_reporter';
+                            $status_trial_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocTrialName';
+                            $status_accession_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocAccName';
                         }
                         my $image_temp_file_info = $attachment_lookup{$a->{$attachment_identifier}};
                         my $image_temp_file = $image_temp_file_info->[0];
@@ -228,7 +240,7 @@ sub save_ona_cross_info {
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_message} = $a->{$status_message_identifier};
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_note} = $a->{$status_note_identifier};
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_date} = $a->{$status_date_identifier};
-                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_location} = $a->{$status_location_identifier};
+                        $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_location} = $a->{$status_location_identifier} || '';
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_user} = $a->{$status_user_identifier};
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_trial_name} = $a->{$status_trial_identifier};
                         $plant_status_info{$a->{$status_identifier}}->{'status'}->{status_accession_name} = $a->{$status_accession_identifier};
@@ -440,8 +452,8 @@ sub create_odk_cross_progress_tree {
 
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
-        my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
+        #my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
+        my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
