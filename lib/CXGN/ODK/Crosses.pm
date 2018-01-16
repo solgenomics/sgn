@@ -355,7 +355,7 @@ sub save_ona_cross_info {
             }
         }
         #print STDERR Dumper \%cross_info;
-        print STDERR Dumper \%plant_status_info;
+        #print STDERR Dumper \%plant_status_info;
 
         my %odk_cross_hash = (
             cross_info => \%cross_info,
@@ -523,7 +523,7 @@ sub create_odk_cross_progress_tree {
         print STDERR "Number ODK Cross Submissions: ".$odk_cross_submission_count."\n";
         #print STDERR Dumper \@all_cross_parents;
         #print STDERR Dumper \%all_plant_status_info;
-        #print STDERR Dumper \%all_cross_info;
+        print STDERR Dumper \%all_cross_info;
 
         foreach my $top_level (keys %cross_wishlist_hash){
             foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
@@ -567,9 +567,9 @@ sub create_odk_cross_progress_tree {
                 }
             }
         }
-        #print STDERR Dumper \%combined;
+        print STDERR Dumper \%combined;
     }
-    #print STDERR Dumper \%cross_combinations;
+    print STDERR Dumper \%cross_combinations;
 
     my %seen_top_levels;
     my %top_level_contents;
@@ -805,25 +805,6 @@ sub create_odk_cross_progress_tree {
                                                         };
                                                         push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
                                                     }
-                                                    if ($activity_name eq 'germinating_after_2wks'){
-                                                        $activity_summary = {
-                                                            rescued_seeds => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_seeds'},
-                                                            germinating_2wks_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wks_date'},
-                                                            rescued_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_date'},
-                                                            actively_2wks => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/actively_2wks'},
-                                                        };
-                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                    }
-                                                    if ($activity_name eq 'germinating_after_8weeks'){
-                                                        $activity_summary = {
-                                                            active_2weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/active_2wks'},
-                                                            active_8weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/actively_8weeks'},
-                                                            germinated_2wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinated_2wksdate'},
-                                                            germinating_8wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeks_date'},
-                                                            active_seeds_count => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds_count'},
-                                                        };
-                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
-                                                    }
                                                 }
                                                 if ($user_category eq 'laboratory'){
                                                     my $activity_name = $action_hash->{'Laboratory/labActivity'};
@@ -859,6 +840,25 @@ sub create_odk_cross_progress_tree {
                                                             contamination_location => $action_hash->{'Laboratory/embryo_contamination/contamination_location'},
                                                             lab_contaminated => $action_hash->{'Laboratory/embryo_contamination/lab_contaminated'},
                                                             lab_contamination_date => $action_hash->{'Laboratory/embryo_contamination/lab_contamination_date'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'germinating_after_2wks'){
+                                                        $activity_summary = {
+                                                            rescued_seeds => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_seeds'},
+                                                            germinating_2wks_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wks_date'},
+                                                            rescued_date => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/rescued_date'},
+                                                            actively_2wks => $action_hash->{'Laboratory/embryo_germinatn_after_2wks/actively_2wks'},
+                                                        };
+                                                        push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
+                                                    }
+                                                    if ($activity_name eq 'germinating_after_8weeks'){
+                                                        $activity_summary = {
+                                                            active_2weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/active_2wks'},
+                                                            active_8weeks => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/actively_8weeks'},
+                                                            germinated_2wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinated_2wksdate'},
+                                                            germinating_8wksdate => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeks_date'},
+                                                            active_seeds_count => $action_hash->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds_count'},
                                                         };
                                                         push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
                                                     }
