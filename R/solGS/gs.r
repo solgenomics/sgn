@@ -206,7 +206,8 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
 } else if (length(predictionFile) != 0) {
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
- 
+  predictionData <- unique(predictionData, by='V1')
+  
   predictionData <- filterGenoData(predictionData, maf=0)
   predictionData <- roundAlleleDosage(predictionData)
   
@@ -435,7 +436,8 @@ if (length(predictionData) == 0) {
         valBlups   <- data.frame(valBlups)
 
         slG <- slG[which(slG <= nrow(phenoTrait))]   
-        slGDf <- phenoTrait[slG,]
+ 
+        slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
         rownames(slGDf) <- slGDf[, 1]     
         slGDf[, 1] <- NULL
       
