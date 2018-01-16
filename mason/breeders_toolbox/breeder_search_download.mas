@@ -48,6 +48,16 @@
             </div>
 
             <div class="form-group">
+                <label class="col-sm-3 control-label">Suppress User Defined Phenotype Outliers: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_wizard_phenotypes_exclude_outliers">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label class="col-sm-3 control-label">Trait Name Contains: </label>
                 <div class="col-sm-9" >
                     <input id="download_wizard_phenotype_trait_contains" name="download_wizard_phenotype_trait_contains" type="text" class="form-control" placeholder="Example: storage root,oxoglutarate"/>

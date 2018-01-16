@@ -92,6 +92,7 @@ sub download {
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
     my $search_type = $self->search_type();
+    my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -115,7 +116,7 @@ sub download {
 		plant_list=>$plant_list,
 		include_timestamp=>$include_timestamp,
         include_row_and_column_numbers=>$self->include_row_and_column_numbers,
-        exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
 		trait_contains=>$trait_contains,
 		phenotype_min_value=>$phenotype_min_value,
 		phenotype_max_value=>$phenotype_max_value,
@@ -145,7 +146,7 @@ sub download {
 		my $max_value_text = $phenotype_max_value ? $phenotype_max_value : '';
 		my $location_list_text = $location_list ? join(",", @$location_list) : '';
 		my $year_list_text = $year_list ? join(",", @$year_list) : '';
-		$ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text");
+		$ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outliers: $exclude_phenotype_outlier");
 	}
 
     for (my $line=0; $line< scalar(@data); $line++) {
