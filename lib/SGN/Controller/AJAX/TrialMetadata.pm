@@ -1381,13 +1381,16 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
   my $phenotype_id = $c->req->param('phenotype_id');
   my $trial_id = $c->stash->{trial_id};
   my $trial = $c->stash->{trial};
+  my $user_name = $c->user()->get_object()->get_username();
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
 
   if ($self->privileges_denied($c)) {
     $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
     return;
   }
 
-  my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id);
+  my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id, $user_name, $timestamp);
   if ($suppress_return_error) {
     $c->stash->{rest} = { error => $suppress_return_error };
     return;
