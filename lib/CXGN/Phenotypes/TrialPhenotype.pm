@@ -155,9 +155,17 @@ sub get_trial_phenotypes_heatmap {
 		push @unique_row, $y;
 	}
 	
-	
-	print STDERR Dumper(\@row_No);
-	print STDERR Dumper(\@plot_No);
+	if ($col_No[0] == ""){
+		print "NO COLUMN NUMBER:" .scalar(@col_No)."\n";
+		my @row_instances = uniq @row_No;
+		print STDERR Dumper(\@row_instances);
+		my %unique_row_counts;
+		$unique_row_counts{$_}++ for @row_No;
+		print STDERR Dumper(\%unique_row_counts);
+		
+	}
+	#print STDERR Dumper(\@row_No);
+	#print STDERR Dumper(\@plot_No);
 
 	%results = (
 	col => \@col_No,
