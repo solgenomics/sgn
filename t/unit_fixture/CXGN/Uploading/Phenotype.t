@@ -3444,7 +3444,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	bcs_schema=>$f->bcs_schema,
 	data_level=>'plot',
 	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-	trial_list=>[137,900],
+	trial_list=>[137],
 	plot_list=>\@plot_ids,
 	include_timestamp=>0,
 	phenotype_min_value=>1,
@@ -3464,7 +3464,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	bcs_schema=>$f->bcs_schema,
 	data_level=>'plot',
 	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-	trial_list=>[137,900],
+	trial_list=>[137],
 	plot_list=>\@plot_ids,
 	include_timestamp=>0,
 	phenotype_min_value=>1,
@@ -3479,7 +3479,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	bcs_schema=>$f->bcs_schema,
 	data_level=>'plant',
 	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-	trial_list=>[137,900],
+	trial_list=>[137],
 	accession_list=>\@accession_ids,
 	include_timestamp=>1,
 	trait_contains=>['r'],
@@ -3889,7 +3889,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	bcs_schema=>$f->bcs_schema,
 	data_level=>'all',
 	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-	trial_list=>[137,900],
+	trial_list=>[137],
 	accession_list=>\@accession_ids,
 	plot_list=>\@plot_ids,
 	plant_list=>\@plant_ids,
@@ -4506,7 +4506,7 @@ my $download = CXGN::Trial::Download->new({
 	bcs_schema=>$f->bcs_schema,
 	data_level=>'all',
 	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-	trial_list=>[137,900],
+	trial_list=>[137],
 	year_list => [2014],
 	location_list => [23],
 	accession_list=>\@accession_ids,
@@ -4540,61 +4540,61 @@ if (exists($contents->[1]->{parser})){
 my $csv_response = [
           '
 ,,,,,,,,,,variable',
-          '"studyYear","studyDbId","studyName","studyDesign","locationDbId","locationName","germplasmDbId","germplasmName","germplasmSynonyms","observationLevel",variable,"observationUnitName","replicate","blockNumber","plotNumber","dry matter content percentage|CO_334:0000092","fresh root weight|CO_334:0000012","fresh shoot weight measurement in kg|CO_334:0000016","sprouting proportion|CO_334:0000008"
+          '"studyYear","studyDbId","studyName","studyDesign","locationDbId","locationName","germplasmDbId","germplasmName","germplasmSynonyms","observationLevel",variable,"observationUnitName","replicate","blockNumber","plotNumber","rowNumber","colNumber","dry matter content percentage|CO_334:0000092","fresh root weight|CO_334:0000012","fresh shoot weight measurement in kg|CO_334:0000016","sprouting proportion|CO_334:0000008"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial21","1","1","1","35,2016-04-27 12:12:20-0500","36","20,2016-02-11 12:12:20-0500","45"
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial21","1","1","1","","","35,2016-04-27 12:12:20-0500","36","20,2016-02-11 12:12:20-0500","45"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial210","3","1","10","30,2016-04-27 15:12:20-0500","45","29,2016-02-11 15:12:20-0500","45"
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial210","3","1","10","","","30,2016-04-27 15:12:20-0500","45","29,2016-02-11 15:12:20-0500","45"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_1","3","1","10","28","38","",""
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_1","3","1","10","","","28","38","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_2","3","1","10","29","","",""
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_2","3","1","10","","","29","","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial211","3","1","11","38,2016-04-27 03:12:20-0500","46","30,2016-02-11 03:12:20-0500",""
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial211","3","1","11","","","38,2016-04-27 03:12:20-0500","46","30,2016-02-11 03:12:20-0500",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_1","3","1","11","30","40","",""
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_1","3","1","11","","","30","40","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_2","3","1","11","31","41","",""
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_2","3","1","11","","","31","41","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial214","3","1","14","30,2016-04-27 23:12:20-0500","49","33,2016-02-11 23:12:20-0500",""
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial214","3","1","14","","","30,2016-04-27 23:12:20-0500","49","33,2016-02-11 23:12:20-0500",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_1","3","1","14","36","46","",""
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_1","3","1","14","","","36","46","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_2","3","1","14","37","47","",""
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_2","3","1","14","","","37","47","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_1","1","1","1","42,2016-01-07 12:08:24-0500","20","",""
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_1","1","1","1","","","42,2016-01-07 12:08:24-0500","20","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_2","1","1","1","42,2016-01-07 12:08:24-0500","21","",""
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_2","1","1","1","","","42,2016-01-07 12:08:24-0500","21","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial23","1","1","3","38,2016-04-27 01:12:20-0500","38","22,2016-02-11 01:12:20-0500","23"
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial23","1","1","3","","","38,2016-04-27 01:12:20-0500","38","22,2016-02-11 01:12:20-0500","23"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_1","1","1","3","41,2016-01-07 12:08:27-0500","24","",""
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_1","1","1","3","","","41,2016-01-07 12:08:27-0500","24","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_2","1","1","3","41,2016-01-07 12:08:27-0500","25","",""
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_2","1","1","3","","","41,2016-01-07 12:08:27-0500","25","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial24","2","1","4","39,2016-04-27 11:12:20-0500","39","23,2016-02-11 11:12:20-0500","78"
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial24","2","1","4","","","39,2016-04-27 11:12:20-0500","39","23,2016-02-11 11:12:20-0500","78"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_1","2","1","4","","26","",""
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_1","2","1","4","","","","26","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_2","2","1","4","","27","",""
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_2","2","1","4","","","","27","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial25","1","1","5","35,2016-04-27 09:12:20-0500","40","24,2016-02-11 09:12:20-0500","56"
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial25","1","1","5","","","35,2016-04-27 09:12:20-0500","40","24,2016-02-11 09:12:20-0500","56"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_1","1","1","5","","28","",""
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_1","1","1","5","","","","28","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_2","1","1","5","","29","",""
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_2","1","1","5","","","","29","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial26","2","1","6","30,2016-04-27 16:12:20-0500","41","25,2016-02-11 16:12:20-0500","45"
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial26","2","1","6","","","30,2016-04-27 16:12:20-0500","41","25,2016-02-11 16:12:20-0500","45"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_1","2","1","6","20","30","",""
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_1","2","1","6","","","20","30","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_2","2","1","6","21","","",""
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_2","2","1","6","","","21","","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial28","2","1","8","39,2016-04-27 13:12:20-0500","43","27,2016-02-11 13:12:20-0500","23"
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial28","2","1","8","","","39,2016-04-27 13:12:20-0500","43","27,2016-02-11 13:12:20-0500","23"
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_1","2","1","8","","34","",""
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_1","2","1","8","","","","34","",""
 ',
-          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_2","2","1","8","25","35","",""
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_2","2","1","8","","","25","35","",""
 '
         ];
 
@@ -4603,7 +4603,7 @@ my $download = CXGN::Trial::Download->new({
 	bcs_schema=>$f->bcs_schema,
 	data_level=>'all',
 	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-	trial_list=>[137,900],
+	trial_list=>[137],
 	year_list => [2014],
 	location_list => [23],
 	accession_list=>\@accession_ids,
@@ -4615,7 +4615,9 @@ my $download = CXGN::Trial::Download->new({
 	phenotype_max_value=>80,
 	search_type=>'complete',
 	filename => $tempfile,
-	format => 'TrialPhenotypeCSV'
+	format => 'TrialPhenotypeCSV',
+    include_row_and_column_numbers => 1,
+    exclude_phenotype_outlier => 1
 });
 my $error = $download->download();
 
