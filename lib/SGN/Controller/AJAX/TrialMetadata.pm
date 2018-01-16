@@ -12,6 +12,8 @@ use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Cross;
+
+use CXGN::Phenotypes::TrialPhenotype;
 use CXGN::Login;
 use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
@@ -640,6 +642,149 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
+sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    #Check that trial has a location set
+    my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $nd_geolocation_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search(
+        {'nd_experiments.type_id'=>$field_experiment_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}},
+        { 'join' => { 'nd_experiments' => {'nd_experiment_projects'=>'project'} } }
+    );
+    my $nd_geolocation = $nd_geolocation_rs->first;
+    if (!$nd_geolocation){
+        $c->stash->{rest} = {error=>'This trial has no location set!'};
+        $c->detach();
+    }
+
+    my $upload = $c->req->upload('trial_upload_plot_gps_file');
+    my $subdirectory = "trial_plot_gps_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialPlotGPSCoordinatesXLS');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
+    }
+
+    my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
+
+    my $upload_plot_gps_txn = sub {
+        my %plot_stock_ids_hash;
+        while (my ($key, $val) = each(%$parsed_data)){
+            $plot_stock_ids_hash{$val->{plot_stock_id}} = $val;
+        }
+        my @plot_stock_ids = keys %plot_stock_ids_hash;
+        my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>\@plot_stock_ids}});
+        while (my $plot=$plots_rs->next){
+            my $coords = $plot_stock_ids_hash{$plot->stock_id};
+            my $geo_json = {
+                "type"=> "Feature",
+                "geometry"=> {
+                    "type"=> "Polygon",
+                    "coordinates"=> [
+                        [
+                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                            [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
+                            [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
+                            [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
+                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                        ]
+                    ]
+                },
+                "properties"=> {
+                    "format"=> "WGS84",
+                }
+            };
+            my $geno_json_string = encode_json $geo_json;
+            #print STDERR $geno_json_string."\n";
+            my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
+            $previous_plot_gps_rs->delete_all();
+            $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+        }
+        my $layout = CXGN::Trial::TrialLayout->new({
+            schema => $schema,
+            trial_id => $c->stash->{trial_id}
+        });
+        $layout->generate_and_cache_layout();
+    };
+    eval {
+        $schema->txn_do($upload_plot_gps_txn);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload trial plot GPS coordinates. ($@).\n";
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1231,6 +1376,51 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     }
 
     $c->stash->{rest} = { data => \@crosses };
+}
+
+sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trait_id = $c->req->param("selected");
+
+    my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
+    	bcs_schema=>$schema,
+    	trial_id=>$trial_id,
+        trait_id=>$trait_id
+    });
+    my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
+
+    $c->stash->{rest} = { phenotypes => $phenotype };
+}
+
+sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $plot_name = $c->req->param('plot_name');
+  my $plot_pheno_value = $c->req->param('phenotype_value');
+  my $trait_id = $c->req->param('trait_id');
+  my $phenotype_id = $c->req->param('phenotype_id');
+  my $trial_id = $c->stash->{trial_id};
+  my $trial = $c->stash->{trial};
+  my $user_name = $c->user()->get_object()->get_username();
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
+    return;
+  }
+
+  my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id, $user_name, $timestamp);
+  if ($suppress_return_error) {
+    $c->stash->{rest} = { error => $suppress_return_error };
+    return;
+  }
+
+  $c->stash->{rest} = { success => 1};
 }
 
 

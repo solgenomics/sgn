@@ -93,12 +93,15 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $accessions = $ac->get_all_accessions($c);
     # my $populations = $ac->get_all_populations($c);
 
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
     $c->stash->{accessions} = $accessions;
     $c->stash->{list_id} = $list_id;
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
-
 }
 
 sub manage_roles : Path("/breeders/manage_roles") Args(0) {
@@ -547,7 +550,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
 sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
-
+    $c->stash->{dataset_id} = $c->req->param('dataset_id');
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }

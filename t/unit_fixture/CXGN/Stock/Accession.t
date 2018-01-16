@@ -37,7 +37,7 @@ my $stock1donors = [
 
 my $stock1 = CXGN::Stock::Accession->new({
     schema=>$schema,
-    #main_production_site_url=>$main_production_site_url,
+    main_production_site_url=>$main_production_site_url,
     type=>'accession',
     species=>$species,
     #genus=>$_->{genus},
@@ -73,7 +73,7 @@ is_deeply($s->population_name, $stock1_pop_name);
 is($s->description, $stock1_desc);
 is($s->type, 'accession');
 is($s->accessionNumber, $stock1_accession_number);
-is($s->germplasmPUI, $stock1_pui);
+is($s->germplasmPUI, $stock1_pui.",$main_production_site_url/stock/$stock_id1/view");
 is($s->germplasmSeedSource, $stock1_source);
 print STDERR Dumper $s->synonyms;
 is_deeply($s->synonyms, $stock1_synonyms);
@@ -143,7 +143,7 @@ is_deeply($s->population_name, $stock2_pop_name);
 is($s->description, $stock2_desc);
 is($s->type, 'accession');
 is($s->accessionNumber, $stock2_accession_number);
-ok($s->germplasmPUI);
+is($s->germplasmPUI, "$main_production_site_url/stock/$stock_id2/view");
 is($s->germplasmSeedSource, $stock2_source);
 is_deeply($s->synonyms, $stock2_synonyms);
 is($s->instituteCode, $stock2_inst);

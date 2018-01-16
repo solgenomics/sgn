@@ -29,7 +29,7 @@ use SGN::Model::Cvterm;
 use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
-
+use JSON;
 
 =head2 accessor bcs_schema()
 
@@ -852,7 +852,7 @@ sub get_phenotype_metadata {
 	my $trial_id = $self->get_trial_id();
 	my @file_array;
 	my %file_info;
-	my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 ORDER BY file_id ASC";
+	my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping') ORDER BY file_id ASC";
 	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
 	$h->execute($trial_id);
 
@@ -2293,6 +2293,56 @@ sub get_trial_contacts {
 	}
 
 	return \@contacts;
+}
+
+=head2 suppress_plot_phenotype
+
+ Usage:        	my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id);
+				 if ($suppress_return_error) {
+				   $c->stash->{rest} = { error => $suppress_return_error };
+				   return;
+				 }
+ 
+ Desc:         Suppresses plot phenotype
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub suppress_plot_phenotype {
+	my $self = shift;
+    my $trait_id = shift;
+    my $plot_name = shift;
+    my $phenotype_value = shift;
+	my $phenotype_id = shift;
+	my $username = shift;
+	my $timestamp = shift;
+	my $schema = $self->bcs_schema;
+    my $trial_id = $self->get_trial_id();
+	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+	my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
+	my $error;
+	my $json_string = { value => 1, username=>$username, timestamp=>$timestamp };
+	
+	my $prop_rs = $self->bcs_schema->resultset('Phenotype::Phenotypeprop')->search(
+		{ 'phenotype_id' => $phenotype_id, 'type_id'=>$phenotype_outlier_type_id }
+	);
+	
+	if ($prop_rs->count == 0) {
+		my $suppress_plot_pheno = $schema->resultset("Phenotype::Phenotypeprop")->create({
+			phenotype_id => $phenotype_id,
+			type_id       => $phenotype_outlier_type_id,
+			value => encode_json $json_string,
+		});
+	} 
+	else {
+		$error = "This plot phenotype has already been suppressed.";
+	}
+	
+	return $error;
+	
 }
 
 

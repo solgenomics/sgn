@@ -36,7 +36,7 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 13, "check number of columns in created pheno spreadsheet.");
+ok(scalar(@$columns) == 12, "check number of columns in created pheno spreadsheet.");
 
 #print STDERR Dumper @contents->[0]->[1];
 #print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
@@ -103,7 +103,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
           'Operator',
           'Date',
           'Design Type(s)',
-          'Treatment(s)',
+          undef,
           undef,
           'plot_number',
           '1',
@@ -131,7 +131,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
           'Enter operator here',
           'Enter date here',
           'test_trial: CRD',
-          'test_trial: NONE',
+          undef,
           undef,
           'block_number',
           '1',
@@ -202,19 +202,6 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
           undef,
           undef,
           undef,
-          'treatment_name'
-        ], "check contents of 7column in created pheno spreadsheet."
-);
-
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
-is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
-          undef,
-          undef,
-          undef,
-          undef,
-          undef,
-          undef,
-          undef,
           'planting_date',
           '2017-July-04',
           '2017-July-04',
@@ -231,11 +218,11 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
           '2017-July-04',
           '2017-July-04',
           '2017-July-04'
-        ], "check contents of 8column in created pheno spreadsheet."
+        ], "check contents of 7column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
-is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
+is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
           undef,
           undef,
           undef,
@@ -259,11 +246,11 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
           '2017-July-21',
           '2017-July-21',
           '2017-July-21'
-        ], "check contents of 9 column in created pheno spreadsheet."
+        ], "check contents of 8 column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
-is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
+is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
           undef,
           undef,
           undef,
@@ -287,6 +274,19 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
           'test_trial',
           'test_trial',
           'test_trial'
+        ], "check contents of 9 column in created pheno spreadsheet."
+);
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
+is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'dry matter content percentage|CO_334:0000092'
         ], "check contents of 10 column in created pheno spreadsheet."
 );
 
@@ -299,21 +299,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
           undef,
           undef,
           undef,
-          'dry matter content percentage|CO_334:0000092'
-        ], "check contents of 11 column in created pheno spreadsheet."
-);
-
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[12];
-is_deeply(@contents->[0]->[1]->{'cell'}->[12], [
-          undef,
-          undef,
-          undef,
-          undef,
-          undef,
-          undef,
-          undef,
           'fresh root weight|CO_334:0000012'
-        ], "check contents of 12 column in created pheno spreadsheet."
+        ], "check contents of 11 column in created pheno spreadsheet."
 );
 
 done_testing();

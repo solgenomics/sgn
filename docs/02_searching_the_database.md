@@ -78,6 +78,12 @@ The phenotypes download is quite flexible, and can download a subset of all the 
 
 The genotype download is more stringent. It requires a minimum of one accession and one genotyping protocol to be selected in the wizard select boxes. Text boxes on the right hand side of the page will help track what requirements have been selected. One clicked, the “Download Genotypes” button will download a simple genotype dosage file for each accession.
 
+#### Saving the wizard selections
+
+As discussed above, the selections of the individual select boxes in the wizard can be saved separately to a list. The lists can be used as inputs in other tools on the site. However, sometimes creating a selection is quite time consuming and restoring the selections from four different lists would be cumbersome too. Therefore, the selections can be saved together in a dataset, and named for later retrieval. This is done in the section "Save current selection" that is below the "Download" section. When the button named "Save current selection" is clicked, it brings up a dialog box that allows to name the selection. Clicking on "Save" in the dialog box saves the selection dataset, "Cancel" closes the dialog without saving. Next to the "Save current selection" button is a pull down menu which can be used to manage stored datasets. A particular dataset can be chosen, and the buttons beneath the pull down can be used to retrieve the dataset to be displayed on the wizard ("Show on wizard"), display some data about the dataset ("View metadata"), or to delete the dataset ("Delete").
+
+![]({{"assets/images/wizard_save_current_selection.png" | relative_url }})
+
 ### 2.1.3 Updating the Wizard
 
 The search wizard uses a copy of the database, or a cache, to return results quickly. If data appears to be missing, it usually means that the cache needs to be updated. Users with submitter privileges or above can do this using the ‘Update wizard’ link. 
