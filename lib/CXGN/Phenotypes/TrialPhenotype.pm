@@ -125,6 +125,13 @@ sub get_trial_phenotypes_heatmap {
 	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results);
 	
 	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value, $pheno_id) = $h->fetchrow_array()) {
+		if (!$row_number && !$col_number){
+			if ($block_number){
+				$row_number = $block_number;
+			}elsif ($rep && !$block_number ){
+				$row_number = $rep;
+			}
+		}
 		my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
         push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$pheno_id} ;
 		push @col_No, $col_number;
