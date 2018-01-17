@@ -116,3 +116,24 @@ Trials on the database can be searched based on trial name, description, breedin
 
 On the Trait Search page (menu item `Search > Traits`), traits in the database can be searched by ID, name, or descripiton. Selecting traits in the results of the search allows one to add the selected results to a trait list, or create a new trait list from the select results.
 ![]({{"assets/images/trait-search.png" | relative_url }})
+
+2.5 Ontology Browser
+-----------------
+
+A more advanced tool for searching for Traits is the ontology browser, available by clicking on Analyze and Ontology Browser. From here you can search ontologies and see the various classifications of terms in a tree display.
+
+![]({{"assets/images/ontology_browser.png" | relative_url }})
+
+The terms which appear in the Trait Search in 2.4 are only variable terms. The ontology browser shows these variables as different from their grouping terms by indicating VARIABLE_OF like in the following screenshot.
+
+![]({{"assets/images/ontology_browser_variable.png" | relative_url }})
+
+2.6 Search Seedlots
+-----------------
+
+Seedlots are different from Accessions in that they represent the physical seed being evaluated in an experiment. Seedlots have things like physical storage locations and seed quantities, which accessions do not. To search for available seedlots you go to Manage and then click Seed Lots. By clicking Search Seedlots, you can specify query information. The results from your search will be in the table below the search form.
+
+![]({{"assets/images/search_seedlots.png" | relative_url }})
+
+![]({{"assets/images/manage_seedlots.png" | relative_url }})
+
