@@ -155,62 +155,23 @@ sub get_trial_phenotypes_heatmap {
 		push @unique_row, $y;
 	}
 	
-    
+    my $false_coord = 'false_coord';
 	if ($col_No[0] == ""){
         @col_No = ();
-		print "NO COLUMN NUMBER:" .scalar(@col_No)."\n";
+        
 		my @row_instances = uniq @row_No;
-		print STDERR Dumper(\@row_instances);
 		my %unique_row_counts;
-		$unique_row_counts{$_}++ for @row_No;
-		print STDERR Dumper(\%unique_row_counts);
-        #my $result_count = scalar(@$result);
-        
-        my @col_number;
+		$unique_row_counts{$_}++ for @row_No;        
         my @col_number2;
-        for my $rep (1 .. scalar(@row_instances)){
-          if ($rep % 2){
-            push @col_number, (1..(scalar(@plot_No)));
-          } else {
-            push @col_number, (reverse 1..(scalar(@plot_No)));
-          }
-        }
-        #print STDERR Dumper(\@col_number);
-        
         for my $key (keys %unique_row_counts){
-                push @col_number2, (1..$unique_row_counts{$key});
+            push @col_number2, (1..$unique_row_counts{$key});
         }
-        print STDERR Dumper(\@col_number2);
-        # my $plot_count = scalar(@plot_No) / scalar(@row_instances);
-        # my @array;
-        # foreach my $k (keys %unique_row_counts){
-        #     for my $seq (1..$unique_row_counts{$k}){
-        #         push @array, $seq;
-        #     }
-        #     
-        # }
-        for (my $i=0; $i < scalar(@$result); $i++){
-            print "MY ARRAY COUNT:" .@$result[$i]->{'row'}."\n";
-            #keys %unique_row_counts;
-            #for my $key (keys %unique_row_counts){
-            
-            #for my $key (@row_instances){
-                #my $rw = $unique_row_counts{$key};
-            #    print "ALL KEY: $key\n";
-            #while(my($k, $v) = each %unique_row_counts){
-                #print "MY HASH ROWS:".$unique_row_counts{'1'}."\n";
-                
-                # if ((@$result[$i]->{'row'} == $key) && $plot_No[$i] == @$result[$i]->{'plotn'}) {
-                #     print "MY DEAL:\n";
-                     
-                     @$result[$i]->{'col'} = $col_number2[$i];
-                     push @col_No, $col_number2[$i];
-                # }
-            #} 
-        }
-		
+        for (my $i=0; $i < scalar(@$result); $i++){               
+            @$result[$i]->{'col'} = $col_number2[$i];
+            push @col_No, $col_number2[$i];
+        }		
 	}
-	print STDERR Dumper(\@$result);
+	#print STDERR Dumper(\@$result);
 	#print STDERR Dumper(\@plot_No);
 
 	%results = (
@@ -227,7 +188,8 @@ sub get_trial_phenotypes_heatmap {
 	col_max => $max_col,
 	row_max => $max_row,
 	unique_col => \@unique_col,
-	unique_row => \@unique_row
+	unique_row => \@unique_row,
+    false_coord => $false_coord
 	);
     print STDERR "Search End:".localtime."\n";
 	#print STDERR Dumper($result);
