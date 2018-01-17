@@ -747,25 +747,23 @@ if ($progeny_number) {
 #    $cross_add_info->add_info();
 #}
 
-    my @cross_info = ();
-    if($number_of_flowers){
-        push @cross_info, {number_of_flowers => $number_of_flowers};
+    my @cross_props = (
+      ['number_of_flowers',$number_of_flowers],
+      ['number_of_fruits',$number_of_fruits],
+      ['number_of_seeds',$number_of_seeds]
+    );
+
+    foreach (@cross_props){
+      if ($_->[1]){
+        my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+          chado_schema => $chado_schema,
+          cross_name => $cross_name,
+          key => $_->[0],
+          value => $_->[1]
+        });
+        $cross_add_info->add_info();
+      }
     }
-
-    if($number_of_fruits){
-        push @cross_info, {number_of_fruits => $number_of_fruits};
-    }
-
-    if($number_of_seeds){
-        push @cross_info, {number_of_seeds => $number_of_seeds};
-    }
-
-    my $cross_info_json = JSON::Any->encode(\@cross_info);
-    #print STDERR Dumper "JSON string:". $cross_info_json . "\n";
-
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name, cross_info => $cross_info_json} );
-    $cross_add_info->add_info();
-
   };
   if ($@) {
 $c->stash->{rest} = { error => "An error occurred: $@"};
