@@ -155,10 +155,10 @@ sub get_trial_phenotypes_heatmap {
 		push @unique_row, $y;
 	}
 	
-    my $false_coord = 'false_coord';
+    my $false_coord;
 	if ($col_No[0] == ""){
         @col_No = ();
-        
+        $false_coord = 'false_coord';
 		my @row_instances = uniq @row_No;
 		my %unique_row_counts;
 		$unique_row_counts{$_}++ for @row_No;        
