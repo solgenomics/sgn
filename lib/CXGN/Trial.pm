@@ -30,6 +30,7 @@ use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
 use JSON;
+use File::Basename qw | basename dirname|;
 
 =head2 accessor bcs_schema()
 
@@ -37,10 +38,21 @@ accessor for bcs_schema. Needs to be set when calling the constructor.
 
 =cut
 
-has 'bcs_schema' => ( isa => "Ref",
-		      is => 'rw',
-		      required => 1,
-    );
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+);
+
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+);
 
 
 
@@ -1211,6 +1223,77 @@ sub total_phenotypes {
 
     my $pt_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { });
     return $pt_rs->count();
+}
+
+=head2 function add_additional_uploaded_file()
+
+ Usage:        $trial->add_additional_uploaded_file();
+ Desc:         adds metadata.md_file entry for additional_files_uploaded to trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub add_additional_uploaded_file {
+    my $self = shift;
+    my $user_id = shift;
+    my $archived_filename_with_path = shift;
+    my $md5checksum = shift;
+    my $result = $self->get_nd_experiment_id();
+    if ($result->{error}){
+        return {error => $result->{error} };
+    }
+    my $nd_experiment_id = $result->{nd_experiment_id};
+
+    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => 'trial_additional_file_upload',
+            md5checksum => $md5checksum,
+            metadata_id => $md_row->metadata_id(),
+        });
+    my $file_id = $file_row->file_id();
+    my $experiment_file = $self->phenome_schema->resultset("NdExperimentMdFiles")
+        ->create({
+            nd_experiment_id => $nd_experiment_id,
+            file_id => $file_id,
+        });
+
+    return {success => 1, file_id=>$file_id};
+}
+
+=head2 function get_additional_uploaded_files()
+
+ Usage:        $trial->get_additional_uploaded_files();
+ Desc:         retrieves metadata.md_file entries for additional_files_uploaded to trial. these entries are created from add_additional_uploaded_file
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_additional_uploaded_files {
+    my $self = shift;
+    my $trial_id = $self->get_trial_id();
+    my @file_array;
+    my %file_info;
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM project JOIN nd_experiment_project USING(project_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file_upload' ORDER BY file_id ASC";
+    my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+
+    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
+        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
+    }
+    foreach (keys %file_info){
+        push @file_array, $file_info{$_};
+    }
+    return \@file_array;
 }
 
 =head2 function get_phenotypes_for_trait($trait_id)

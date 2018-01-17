@@ -16,6 +16,7 @@ use CXGN::Login;
 use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -37,9 +38,18 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
 
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
     $c->stash->{trial_id} = $trial_id;
-    $c->stash->{schema} =  $c->dbic_schema("Bio::Chado::Schema");
-    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->stash->{schema}, trial_id => $trial_id });
+    $c->stash->{schema} =  $bcs_schema;
+    $c->stash->{trial} = CXGN::Trial->new({
+        bcs_schema => $bcs_schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        trial_id => $trial_id
+    });
 
     if (!$c->stash->{trial}) {
 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
@@ -795,7 +805,7 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -804,7 +814,7 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -812,9 +822,6 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $upload = $c->req->upload('trial_upload_additional_file');
     my $subdirectory = "trial_additional_file_upload";
     my $upload_original_name = $upload->filename();
@@ -839,33 +846,28 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         $c->detach();
     }
     unlink $upload_tempfile;
+    my $md5checksum = $md5->hexdigest();
 
-    my $result = $c->stash->{trial}->get_nd_experiment_id();
+    my $result = $c->stash->{trial}->add_additional_uploaded_file($user_id, $archived_filename_with_path, $md5checksum);
     if ($result->{error}){
-        $c->stash->{rest} = {error => $result->{error}};
+        $c->stash->{rest} = {error=>$result->{error}};
         $c->detach();
     }
-    my $nd_experiment_id = $result->{nd_experiment_id};
-
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $file_row = $metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => $subdirectory,
-            md5checksum => $md5->hexdigest(),
-            metadata_id => $md_row->metadata_id(),
-        });
-    my $experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")
-        ->create({
-            nd_experiment_id => $nd_experiment_id,
-            file_id => $file_row->file_id(),
-        });
-
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
 }
 
+sub get_trial_additional_file_uploaded : Chained('trial') PathPart('get_uploaded_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to see uploaded additional files!'};
+        $c->detach();
+    }
+
+    my $files = $c->stash->{trial}->get_additional_uploaded_files();
+    $c->stash->{rest} = {success=>1, files=>$files};
+}
 
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;

@@ -4,6 +4,10 @@ $trial_id => undef
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
+<div id="trial_additional_uploaded_files_div">
+[LOADING...]
+</div>
+
 <div class="modal fade" id="trial_upload_additional_file_dialog" name="trial_upload_additional_file_dialog" tabindex="-1" role="dialog" aria-labelledby="trialUploadAdditionalFileDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -72,6 +76,8 @@ $trial_id => undef
 
 jQuery(document).ready(function(){
 
+    display_trial_additional_upload_files();
+
     jQuery('#trial_upload_additional_files_link').click( function(){
         jQuery('#trial_upload_additional_file_dialog').modal('show');
     });
@@ -113,9 +119,32 @@ jQuery(document).ready(function(){
             }
             if (response.success) {
                 alert("File uploaded successfully");
+                display_trial_additional_upload_files();
             }
         }
     });
+
+    function display_trial_additional_upload_files (){
+        jQuery.ajax ({
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_uploaded_additional_file',
+            beforeSend : function(){
+                jQuery('#trial_additional_uploaded_files_div').html("[LOADING...]");
+            },
+            success: function(response){
+                //console.log(response);
+                var html = "<table class='table table-hover table-condensed table-bordered' id='trial_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
+                for (i=0; i<response.files.length; i++) {
+                    html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a></td></tr>';
+                }
+                html = html + "</tbody></table>";
+                jQuery('#trial_additional_uploaded_files_div').html(html);
+                jQuery('#trial_additional_uploaded_files_table').DataTable();
+            },
+            error: function(response){
+                alert("Error retrieving additional uploaded files.");
+            }
+        });
+    }
 
 });
 
