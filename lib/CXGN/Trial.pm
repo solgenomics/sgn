@@ -168,6 +168,34 @@ sub set_description {
 }
 
 
+=head2 function get_nd_experiment_id()
+
+ Usage:        my $location = $trial->get_nd_experiment_id();
+ Desc:          Every trial should have only a single nd_experiment entry of type 'field_layout'. This returns this nd_experiment_id for the trial.
+ Ret:          $nd_experiment_id
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_nd_experiment_id {
+    my $self = shift;
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $nd_experiment_rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+        { 'me.type_id' => $nd_experiment_type_id, 'project.project_id' => $self->get_trial_id },
+        { 'join' => {'nd_experiment_projects'=>'project'}}
+    );
+    if ($nd_experiment_rs->count > 1){
+        return {error => "A trial cannot have more than one nd_experiment entry of type field_layout. Please contact us."};
+    }
+    if ($nd_experiment_rs == 1){
+        return {success => 1, nd_experiment_id => $nd_experiment_rs->first->nd_experiment_id};
+    } else {
+        return {error => "This trial does not have an nd_experiment entry of type field_layout. Please contact us."}
+    }
+}
+
 =head2 function get_location()
 
  Usage:        my $location = $trial->get_location();

@@ -783,6 +783,90 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
+sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $upload = $c->req->upload('trial_upload_additional_file');
+    my $subdirectory = "trial_additional_file_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+
+    my $result = $c->stash->{trial}->get_nd_experiment_id();
+    if ($result->{error}){
+        $c->stash->{rest} = {error => $result->{error}};
+        $c->detach();
+    }
+    my $nd_experiment_id = $result->{nd_experiment_id};
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $file_row = $metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => $subdirectory,
+            md5checksum => $md5->hexdigest(),
+            metadata_id => $md_row->metadata_id(),
+        });
+    my $experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")
+        ->create({
+            nd_experiment_id => $nd_experiment_id,
+            file_id => $file_row->file_id(),
+        });
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;

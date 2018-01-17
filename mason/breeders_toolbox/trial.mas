@@ -415,6 +415,12 @@ my $start_time = time();
 
   </&><!-- closes uploaded file section -->
 
+  <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="trial_upload_additional_files_link">Upload Additional Files</a>]' &>
+
+  <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id &>
+
+  </&><!-- closes uploaded additional file section -->
+
 </div><!-- closes well -->
 
 </&><!-- closes entire phenotyping file section -->
