@@ -142,6 +142,33 @@ $trial_id
     </div>
 </div>
 
+<div class="modal  fade" id="delete_trait_dialog_confirm_message" name="delete_trait_dialog_confirm_message" tabindex="-1" role="dialog" aria-labelledby="DeleteAssayedTraitDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteAssayedTraitDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trait_deletion_form" name="trait_deletion_form">
+
+                    <p3><b>Please, confirm the deletion of selected trait...</b></p3> </br></br>
+                    <center><p2><b>NOTE:</b> Trait is deleted permanently from the database.</p2></center>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_trait_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_selected_trait_dialog_submit" id="delete_selected_trait_dialog_submit">Delete Trait</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
 var value = 'plot';
@@ -410,13 +437,13 @@ jQuery(document).ready( function() {
   }
   
   jQuery("#delete_trait").click(function() {
+    jQuery("#delete_trait_dialog_confirm_message").modal("show");
+  });
+  jQuery("#delete_selected_trait_dialog_submit").click(function() {
     delete_selected_assayed_trait();
   }); 
   
-  function delete_selected_assayed_trait() {
-  alert(phenotypes_id);
-  
-  }
+
       
 });
 
