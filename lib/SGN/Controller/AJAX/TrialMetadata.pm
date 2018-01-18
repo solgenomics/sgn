@@ -1404,6 +1404,8 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     my $c = shift;
     my $pheno_ids = $c->req->param('pheno_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
     my @phenotypes_ids = JSON::decode_json($pheno_ids);
     print STDERR Dumper(@phenotypes_ids);
     
@@ -1418,7 +1420,11 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
       return;
     }
     
-    
+    my $delete_trait_return_error = $trial->delete_assayed_trait($trial_id, @phenotypes_ids);
+    if ($delete_trait_return_error) {
+      $c->stash->{rest} = { error => $delete_trait_return_error };
+      return;
+    }
     
     $c->stash->{rest} = { success => 1};
 }

@@ -2344,5 +2344,18 @@ sub suppress_plot_phenotype {
 	
 }
 
+sub delete_assayed_trait {
+	my $self = shift;
+	my $trait_id = shift;
+	my @pheno_ids = shift;
+	my $schema = $self->bcs_schema;
+	my $trial_id = $self->get_trial_id();
+	my $error;
+	print STDERR Dumper(\@pheno_ids);
+	
+	
+	return $error;
+	
+}
 
 1;
