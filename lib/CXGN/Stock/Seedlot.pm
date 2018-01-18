@@ -459,9 +459,7 @@ sub _store_seedlot_relationships {
 
     eval {
         $error = $self->_store_seedlot_accessions();
-        if (!$error){
-            $error = $self->_store_seedlot_crosses();
-        }
+        $error = $self->_store_seedlot_crosses();
         if (!$error){
             my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
             my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({
@@ -545,14 +543,13 @@ sub _update_accession_stock_ids {
 
 sub _retrieve_accessions {
     my $self = shift;
-
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-
-    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search({ 'me.type_id' => $type_id, 'me.object_id' => $self->seedlot_id(), 'subject.type_id'=>$accession_type_id }, {'join'=>'subject'});
 
     my @accession_ids;
     while (my $row = $rs->next()) {
-	push @accession_ids, $row->subject_id();
+        push @accession_ids, $row->subject_id();
     }
 
     $self->accession_stock_ids(\@accession_ids);
@@ -601,8 +598,9 @@ sub _store_seedlot_crosses {
 sub _update_cross_stock_ids {
     my $self = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'type_id'=>$type_id});
-    while (my $r=$acc_rs->next){
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
+    my $cross_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>$cross_type_id}, {'join'=>'subject'});
+    while (my $r=$cross_rs->next){
         $r->delete();
     }
     my $error = $self->_store_seedlot_crosses();
@@ -611,10 +609,9 @@ sub _update_cross_stock_ids {
 
 sub _retrieve_crosses {
     my $self = shift;
-
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-
-    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search({ 'me.type_id' => $type_id, 'me.object_id' => $self->seedlot_id(), 'subject.type_id'=>$cross_type_id }, {'join'=>'subject'});
 
     my @cross_ids;
     while (my $row = $rs->next()) {
@@ -717,6 +714,8 @@ sub store {
             }
 
         } else { #Updating seedlot
+
+            #Attempting to update seedlot's accessions. Will not proceed if seedlot has already been used in transactions.
             if($self->accession_stock_ids){
                 my $input_accession_ids = $self->accession_stock_ids;
                 my $transactions = $self->transactions();
@@ -732,18 +731,19 @@ sub store {
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (accessions) cannot be changed now!";
                 } else {
                     $error = $self->_update_accession_stock_ids();
-                    if (!$error){
-                        my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->accession_stock_ids->[0]);
-                    }
+                    my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->accession_stock_ids->[0]);
                 }
                 if ($error){
                     die $error;
                 }
             }
+
+            #Attempting to update seedlot's crosses. Will not proceed if seedlot has already been used in transactions.
             if($self->cross_stock_ids){
                 my $input_cross_ids = $self->cross_stock_ids;
                 my $transactions = $self->transactions();
                 my %stored_crosses = map {$_->[0] => 1} @{$self->crosses};
+                $self->cross_stock_ids($input_cross_ids);
                 my $crosses_have_changed;
                 foreach (@$input_cross_ids){
                     if (!exists($stored_crosses{$_})){
@@ -754,6 +754,7 @@ sub store {
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (crosses) cannot be changed now!";
                 } else {
                     $error = $self->_update_cross_stock_ids();
+                    my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->cross_stock_ids->[0]);
                 }
                 if ($error){
                     die $error;
