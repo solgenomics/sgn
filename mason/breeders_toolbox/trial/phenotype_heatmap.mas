@@ -155,7 +155,7 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trait_deletion_form" name="trait_deletion_form">
 
                     <p3><b>Please, confirm the deletion of selected trait...</b></p3> </br></br>
-                    <center><p2><b>NOTE:</b> Trait is deleted permanently from the database.</p2></center>
+                    <center><p2> ...trait is deleted permanently from the database...</p2></center>
 
                     </form>
                 </div>
@@ -173,7 +173,7 @@ $trial_id
 var trial_id = <% $trial_id %>;
 var value = 'plot';
 var selected;
-var phenotypes_id;
+var phenotypes_id = [];
 jQuery(document).ready( function() {
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
@@ -224,10 +224,9 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 var col_length; 
-                var row_length;
+                var row_length;        
                 var false_coord = response.phenotypes.false_coord;
                 phenotypes_id = response.phenotypes.phenoID;
-                //alert(phenotypes_id);
                 for (i=0; i<response.phenotypes.col.length; i++) {
                     if (response.phenotypes.col[i] && response.phenotypes.row[i]){
                         //console.log(response.phenotypes.col[i]);
@@ -444,13 +443,14 @@ jQuery(document).ready( function() {
   }); 
   
   function delete_selected_assayed_trait() {
-    alert(phenotypes_id);
+    var pheno_id = phenotypes_id;
     new jQuery.ajax({
         type: 'POST',
+        traditional: true,
         url: '/ajax/breeders/trial/<% $trial_id %>/delete_single_trait',
-        dataType: 'json',
+        dataType: "json",
         data: {
-            'phenotypes_id': phenotypes_id,
+            'pheno_id': JSON.stringify(pheno_id),
         },
         beforeSend: function(){
             jQuery("#working_modal").modal("show");
