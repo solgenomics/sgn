@@ -294,9 +294,9 @@ sub save_ona_cross_info {
                     if ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                         push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
 
-                        my $female_accession_name = $a->{'FieldActivities/RepeatPollination/getRptFemaleAccName'};
-                        my $male_accession_name = $a->{'FieldActivities/RepeatPollination/getMaleAccName'};
-                        $cross_parents{$female_accession_name}->{$male_accession_name}->{$a->{'FieldActivities/RepeatPollination/getCrossID'}}++;
+                        #my $female_accession_name = $a->{'FieldActivities/RepeatPollination/getRptFemaleAccName'};
+                        #my $male_accession_name = $a->{'FieldActivities/RepeatPollination/getMaleAccName'};
+                        #$cross_parents{$female_accession_name}->{$male_accession_name}->{$a->{'FieldActivities/RepeatPollination/getCrossID'}}++;
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'harvesting'){
                         push @{$cross_info{$a->{'FieldActivities/harvesting/harvestID'}}->{'harvesting'}}, $a;
@@ -357,6 +357,7 @@ sub save_ona_cross_info {
         }
         #print STDERR Dumper \%cross_info;
         #print STDERR Dumper \%plant_status_info;
+        #print STDERR Dumper \%cross_parents;
 
         my %odk_cross_hash = (
             cross_info => \%cross_info,
@@ -454,7 +455,7 @@ sub create_odk_cross_progress_tree {
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
         my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_Finu5iQ.txt";
+        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_pxV488A.txt";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
@@ -462,14 +463,9 @@ sub create_odk_cross_progress_tree {
         my $header_row = <$fh>;
         chomp $header_row;
         my @header_row = split ',', $header_row;
-        #print STDERR $header_row."\n";
         while ( my $row = <$fh> ){
             chomp $row;
             my @cols = split ',', $row;
-            #print STDERR Dumper \@cols;
-            if (scalar(@cols) != scalar(@header_row)){
-                return { error=>'Cross wishlist not parsed correctly!' };
-            }
             push @wishlist_file_lines, \@cols;
         }
         #print STDERR Dumper \@wishlist_file_lines;
