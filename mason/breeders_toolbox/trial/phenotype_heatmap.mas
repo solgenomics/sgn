@@ -146,6 +146,7 @@ $trial_id
 var trial_id = <% $trial_id %>;
 var value = 'plot';
 var selected;
+var phenotypes_id;
 jQuery(document).ready( function() {
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
@@ -198,6 +199,8 @@ jQuery(document).ready( function() {
                 var col_length; 
                 var row_length;
                 var false_coord = response.phenotypes.false_coord;
+                phenotypes_id = response.phenotypes.phenoID;
+                alert(phenotypes_id);
                 for (i=0; i<response.phenotypes.col.length; i++) {
                     if (response.phenotypes.col[i] && response.phenotypes.row[i]){
                         //console.log(response.phenotypes.col[i]);
