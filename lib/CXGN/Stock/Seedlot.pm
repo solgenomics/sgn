@@ -66,7 +66,8 @@ has 'nd_geolocation_id' => (
 
 =head2 Accessor cross()
 
-The cross this seedlot is associated with. Not yet implemented.
+The crosses this seedlot is a "collection_of"
+# for setter, use cross_stock_ids
 
 =cut
 
@@ -84,8 +85,8 @@ has 'cross_stock_ids' =>   (
 
 =head2 Accessor accessions()
 
-The accessions this seedlot is associated with.
-# for setter, use accession_stock_id
+The accessions this seedlot is a "collection_of"
+# for setter, use accession_stock_ids
 
 =cut
 
@@ -418,35 +419,6 @@ sub _build_transactions {
     $self->transactions($transactions);
 }
 
-sub _store_seedlot_crosses {
-    my $self = shift;
-    foreach my $a (@{$self->cross_stock_ids()}) {
-        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
-        if ($self->organism_id){
-            if ($self->organism_id != $organism_id){
-                return "Accessions must all be the same organism, so that a population can group the seed lots.\n";
-            }
-        }
-        $self->organism_id($organism_id);
-    }
-
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-    foreach my $a (@{$self->cross_stock_ids()}) {
-        my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
-
-        if ($already_exists) {
-            print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
-            next;
-        }
-        my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
-            object_id => $self->seedlot_id(),
-            subject_id => $a,
-            type_id => $type_id,
-        });
-    }
-}
-
-
 sub _store_seedlot_location {
     my $self = shift;
     my $nd_geolocation = $self->schema()->resultset("NaturalDiversity::NdGeolocation")->find_or_create({
@@ -507,6 +479,30 @@ sub _store_seedlot_relationships {
     return $error;
 }
 
+sub _update_seedlot_breeding_program {
+    my $self = shift;
+    my $stock = $self->stock;
+    my $seedlot_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot_experiment', 'experiment_type')->cvterm_id();
+    my $nd_exp_project = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$seedlot_experiment_cvterm_id})->search_related('nd_experiment_projects');
+    if($nd_exp_project->count != 1){
+        die "There should be exactly one nd_experiment_project for any single seedlot!";
+    }
+    my $nd_exp_proj = $nd_exp_project->first();
+    $nd_exp_proj->update({project_id=>$self->breeding_program_id});
+}
+
+sub _update_seedlot_location {
+    my $self = shift;
+    my $stock = $self->stock;
+    my $seedlot_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot_experiment', 'experiment_type')->cvterm_id();
+    my $nd_exp = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$seedlot_experiment_cvterm_id});
+    if($nd_exp->count != 1){
+        die "There should be exactly one nd_experiment for any single seedlot!";
+    }
+    my $nd = $nd_exp->first();
+    $nd->update({nd_geolocation_id=>$self->nd_geolocation_id});
+}
+
 sub _store_seedlot_accessions {
     my $self = shift;
     foreach my $a (@{$self->accession_stock_ids()}) {
@@ -525,6 +521,72 @@ sub _store_seedlot_accessions {
 
         if ($already_exists) {
             print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
+            next;
+        }
+        my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
+            object_id => $self->seedlot_id(),
+            subject_id => $a,
+            type_id => $type_id,
+        });
+    }
+}
+
+sub _update_accession_stock_ids {
+    my $self = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'type_id'=>$type_id});
+    while (my $r=$acc_rs->next){
+        $r->delete();
+    }
+    my $error = $self->_store_seedlot_accessions();
+    return $error;
+}
+
+sub _retrieve_accessions {
+    my $self = shift;
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
+
+    my @accession_ids;
+    while (my $row = $rs->next()) {
+	push @accession_ids, $row->subject_id();
+    }
+
+    $self->accession_stock_ids(\@accession_ids);
+
+    $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@accession_ids }});
+    my @names;
+    while (my $s = $rs->next()) {
+        push @names, [ $s->stock_id(), $s->uniquename() ];
+    }
+    $self->accessions(\@names);
+}
+
+sub _remove_accession {
+    my $self = shift;
+}
+
+
+sub _store_seedlot_crosses {
+    my $self = shift;
+    foreach my $a (@{$self->cross_stock_ids()}) {
+        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
+        if ($self->organism_id){
+            if ($self->organism_id != $organism_id){
+                return "Crosses must all be the same organism to be in a seed lot.\n";
+            }
+        }
+        $self->organism_id($organism_id);
+    }
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+    foreach my $a (@{$self->cross_stock_ids()}) {
+        my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
+
+        if ($already_exists) {
+            print STDERR "Cross with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
             next;
         }
         my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
@@ -568,67 +630,6 @@ sub _retrieve_crosses {
     $self->crosses(\@names);
 }
 
-
-sub _update_seedlot_breeding_program {
-    my $self = shift;
-    my $stock = $self->stock;
-    my $seedlot_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot_experiment', 'experiment_type')->cvterm_id();
-    my $nd_exp_project = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$seedlot_experiment_cvterm_id})->search_related('nd_experiment_projects');
-    if($nd_exp_project->count != 1){
-        die "There should be exactly one nd_experiment_project for any single seedlot!";
-    }
-    my $nd_exp_proj = $nd_exp_project->first();
-    $nd_exp_proj->update({project_id=>$self->breeding_program_id});
-}
-
-sub _update_seedlot_location {
-    my $self = shift;
-    my $stock = $self->stock;
-    my $seedlot_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot_experiment', 'experiment_type')->cvterm_id();
-    my $nd_exp = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$seedlot_experiment_cvterm_id});
-    if($nd_exp->count != 1){
-        die "There should be exactly one nd_experiment for any single seedlot!";
-    }
-    my $nd = $nd_exp->first();
-    $nd->update({nd_geolocation_id=>$self->nd_geolocation_id});
-}
-
-sub _update_accession_stock_ids {
-    my $self = shift;
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'type_id'=>$type_id});
-    while (my $r=$acc_rs->next){
-        $r->delete();
-    }
-    my $error = $self->_store_seedlot_accessions();
-    return $error;
-}
-
-sub _retrieve_accessions {
-    my $self = shift;
-
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-
-    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
-
-    my @accession_ids;
-    while (my $row = $rs->next()) {
-	push @accession_ids, $row->subject_id();
-    }
-
-    $self->accession_stock_ids(\@accession_ids);
-
-    $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@accession_ids }});
-    my @names;
-    while (my $s = $rs->next()) {
-        push @names, [ $s->stock_id(), $s->uniquename() ];
-    }
-    $self->accessions(\@names);
-}
-
-sub _remove_accession {
-    my $self = shift;
-}
 
 =head2 Method current_count()
 
