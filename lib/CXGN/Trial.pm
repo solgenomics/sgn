@@ -2353,6 +2353,14 @@ sub delete_assayed_trait {
 	my $error;
 	print STDERR Dumper(\@pheno_ids);
 	
+		# my $delete_trait_rs = $schema->resultset("Phenotype::Phenotype")->search({
+		# 	phenotype_id => {-in => \@pheno_ids} ,
+		# 
+		# });
+		# while (my $r = $delete_trait_rs->next){
+		# 	$r->delete;
+		# }
+	
 	
 	return $error;
 	
