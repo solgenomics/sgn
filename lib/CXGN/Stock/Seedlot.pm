@@ -458,8 +458,12 @@ sub _store_seedlot_relationships {
     my $error;
 
     eval {
-        $error = $self->_store_seedlot_accessions();
-        $error = $self->_store_seedlot_crosses();
+        if ($self->accession_stock_ids){
+            $error = $self->_store_seedlot_accessions();
+        }
+        if ($self->cross_stock_ids){
+            $error = $self->_store_seedlot_crosses();
+        }
         if (!$error){
             my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
             my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({

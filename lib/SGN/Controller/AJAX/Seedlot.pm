@@ -190,8 +190,14 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $location_code = $c->req->param("seedlot_location");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
-    my $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename})->stock_id();
-    my $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename})->stock_id();
+    my $accession_id;
+    if ($accession_uniquename){
+        $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename})->stock_id();
+    }
+    my $cross_id;
+    if ($cross_uniquename){
+        $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename})->stock_id();
+    }
     if ($accession_uniquename && !$accession_id){
         $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
         $c->detach();
@@ -200,7 +206,11 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->stash->{rest} = {error=>'The given cross name is not in the database! Seedlots can only be added onto existing crosses.'};
         $c->detach();
     }
-    if (!$accession_id || !$cross_id){
+    if ($accession_id && $cross_id){
+        $c->stash->{rest} = {error=>'A seedlot must have either an accession OR a cross as contents. Not both.'};
+        $c->detach();
+    }
+    if (!$accession_id && !$cross_id){
         $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
         $c->detach();
     }
