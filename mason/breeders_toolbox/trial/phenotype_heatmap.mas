@@ -443,7 +443,33 @@ jQuery(document).ready( function() {
     delete_selected_assayed_trait();
   }); 
   
-
+  function delete_selected_assayed_trait() {
+    alert(phenotypes_id);
+    new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/breeders/trial/<% $trial_id %>/delete_single_trait',
+        dataType: 'json',
+        data: {
+            'phenotypes_id': phenotypes_id,
+        },
+        beforeSend: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error){
+                alert("Error deleting trait:" +response.error);
+            }else{
+                jQuery("#").modal("show");
+            }
+        },
+        error: function(){
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred deleting trait');
+        }
+    });
+  
+  }
       
 });
 
