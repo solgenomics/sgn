@@ -534,7 +534,8 @@ sub _store_seedlot_accessions {
 sub _update_accession_stock_ids {
     my $self = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'type_id'=>$type_id});
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
+    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>$accession_type_id}, {'join'=>'subject'});
     while (my $r=$acc_rs->next){
         $r->delete();
     }
@@ -720,6 +721,7 @@ sub store {
                 my $input_accession_ids = $self->accession_stock_ids;
                 my $transactions = $self->transactions();
                 my %stored_accessions = map {$_->[0] => 1} @{$self->accessions};
+                $self->accession_stock_ids($input_accession_ids);
                 my $accessions_have_changed;
                 foreach (@$input_accession_ids){
                     if (!exists($stored_accessions{$_})){
@@ -730,6 +732,9 @@ sub store {
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (accessions) cannot be changed now!";
                 } else {
                     $error = $self->_update_accession_stock_ids();
+                    if (!$error){
+                        my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->accession_stock_ids->[0]);
+                    }
                 }
                 if ($error){
                     die $error;
