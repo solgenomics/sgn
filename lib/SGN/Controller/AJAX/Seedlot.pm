@@ -190,6 +190,11 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $location_code = $c->req->param("seedlot_location");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
+    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$uniquename});
+    if ($previous_seedlot){
+        $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+        $c->detach();
+    }
     my $accession_id;
     if ($accession_uniquename){
         $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename})->stock_id();
@@ -216,6 +221,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     my $accession_ids = $accession_id ? [$accession_id] : undef;
     my $cross_ids = $cross_id ? [$cross_id] : undef;
+    my $from_stock_id = $accession_id ? $accession_id : $cross_id;
+    my $from_stock_uniquename = $accession_uniquename ? $accession_uniquename : $cross_uniquename;
     my $population_name = $c->req->param("seedlot_population_name");
     my $organization = $c->req->param("seedlot_organization");
     my $amount = $c->req->param("seedlot_amount");
@@ -241,14 +248,12 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->organization_name($organization);
         $sl->population_name($population_name);
         $sl->breeding_program_id($breeding_program_id);
-        #TO DO
-        #$sl->cross_id($cross_id);
         my $return = $sl->store();
         my $seedlot_id = $return->{seedlot_id};
 
         my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
         $transaction->factor(1);
-        $transaction->from_stock([$accession_id, $accession_uniquename]);
+        $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
         $transaction->to_stock([$seedlot_id, $uniquename]);
         $transaction->amount($amount);
         $transaction->timestamp($timestamp);

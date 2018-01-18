@@ -164,6 +164,7 @@ sub list_seedlots {
     my $minimum_count = shift;
     my $contents = shift;
 
+    print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
