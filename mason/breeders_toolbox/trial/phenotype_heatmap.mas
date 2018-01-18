@@ -168,6 +168,32 @@ $trial_id
     </div>
 </div>
 
+<div class="modal  fade" id="delete_trait_dialog_success_message" name="delete_trait_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="TraitDeletionDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="TraitDeletionDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_trait_form" name="delete_trait_form">
+
+                    <p3> Trait deletion was successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trait_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
@@ -460,7 +486,7 @@ jQuery(document).ready( function() {
             if (response.error){
                 alert("Error deleting trait:" +response.error);
             }else{
-                jQuery("#").modal("show");
+                jQuery("#delete_trait_dialog_success_message").modal("show");
             }
         },
         error: function(){
