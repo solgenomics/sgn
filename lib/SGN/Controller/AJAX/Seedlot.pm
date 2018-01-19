@@ -50,7 +50,6 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $contents_cross
     );
     my @seedlots;
-    my %unique_seedlots;
     foreach my $sl (@$list) {
         my $source_stocks = $sl->{source_stocks};
         my $contents_html = '';

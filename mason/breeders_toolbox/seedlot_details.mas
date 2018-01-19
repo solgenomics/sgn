@@ -4,6 +4,8 @@ $seedlot_id
 $uniquename
 $current_count => 0
 $content_html
+$content_accession_name
+$content_cross_name
 $organization_name
 $population_name
 $timestamp
@@ -69,7 +71,7 @@ $timestamp
 
                 <div id="seedlot_transaction_from_seedlot">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Taken From Existing Seedlot:</label>
+                        <label class="col-sm-3 control-label">Taken From Existing Seedlot:<br/><small>Only showing seedlots with matching content</small></label>
                         <div class="col-sm-9" >
                             <div id="seedlot_transaction_seedlot_div"></div>
                         </div>
@@ -88,7 +90,7 @@ $timestamp
                     </div>
                     <div id="seedlot_transaction_to_seedlot_new_no">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">To Existing Seedlot: </label>
+                            <label class="col-sm-3 control-label">To Existing Seedlot:<br/><small>Only showing seedlots with matching content</small> </label>
                             <div class="col-sm-9" >
                                 <div id="seedlot_transaction_to_seedlot_existing"></div>
                             </div>
@@ -330,8 +332,8 @@ $timestamp
   jQuery(document).ready(function () {
   
     jQuery('#add_seedlot_transaction_button').click( function() {
-        get_select_box('stocks', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'stock_type_name':'seedlot', 'multiple':'0' });
-        get_select_box('stocks', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'stock_type_name':'seedlot', 'multiple':'0' });
+        get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
+        get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
         get_select_box('breeding_programs', 'transaction_new_seedlot_breeding_program_div', { 'name' : 'transaction_new_seedlot_breeding_program_id', 'id' : 'transaction_new_seedlot_breeding_program_id' });
         jQuery('#add_seedlot_transaction_dialog').modal('show')
     });
