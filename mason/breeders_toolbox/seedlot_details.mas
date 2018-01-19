@@ -241,12 +241,40 @@ $timestamp
                         <input class="form-control" type="text" id="edit_seedlot_details_location" value="LOADING..."/>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Accession: </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" type="text" id="edit_seedlot_details_accession" value="LOADING..."/>
+
+                <div class="well well-sm">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label">Contents: </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-9">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Accession name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="edit_seedlot_details_accession" placeholder="One Content Required">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <center><h4>OR</h4></center>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="edit_seedlot_details_cross" placeholder="One Content Required">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Population: </label>
                     <div class="col-sm-9" >
@@ -283,6 +311,9 @@ $timestamp
     jQuery("#edit_seedlot_details_accession").autocomplete({
        source: '/ajax/stock/accession_autocomplete',
     });
+    jQuery("#edit_seedlot_details_cross").autocomplete({
+       source: '/ajax/stock/cross_autocomplete',
+    });
 
     var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( {
         'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
@@ -310,7 +341,16 @@ $timestamp
                 jQuery('#edit_seedlot_details_organization').val(response.organization_name);
                 jQuery('#edit_seedlot_details_population').val(response.population_name);
                 jQuery('#edit_seedlot_details_location').val(response.location_code);
-                jQuery('#edit_seedlot_details_accession').val(response.accessions[0][1]);
+                var accession_name = '';
+                if (response.accessions.length > 0){
+                    accession_name = response.accessions[0][1];
+                }
+                var cross_name = '';
+                if (response.crosses.length > 0){
+                    cross_name = response.crosses[0][1];
+                }
+                jQuery('#edit_seedlot_details_accession').val(accession_name);
+                jQuery('#edit_seedlot_details_cross').val(cross_name);
             }
             if (response.error) {
                 alert(response.error);
@@ -489,15 +529,20 @@ $timestamp
         var population = jQuery('#edit_seedlot_details_population').val();
         var location = jQuery('#edit_seedlot_details_location').val();
         var accession = jQuery('#edit_seedlot_details_accession').val();
+        var cross = jQuery('#edit_seedlot_details_cross').val();
         if (uniquename == ''){
             alert('Seedlot name must not be blank');
         } else if (breeding_program == ''){
             alert('Breeding program must not be blank');
         } else if (location == ''){
             alert('Location must not be blank');
-        } else if (accession == ''){
-            alert('Accession must not be blank');
-        } else {
+        } else if (accession == '' && cross == '') {
+            alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
+        }
+        else if (accession != '' && cross != '') {
+            alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
+        }
+        else {
             jQuery.ajax({
                 url: '/ajax/breeders/seedlot/<% $seedlot_id %>/edit',
                 data: {
@@ -506,7 +551,8 @@ $timestamp
                     'organization':organization,
                     'population':population,
                     'location':location,
-                    'accession':accession
+                    'accession':accession,
+                    'cross':cross
                 },
                 beforeSend: function(){
                     jQuery('#working_modal').modal('show');

@@ -53,7 +53,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         my $source_stocks = $sl->{source_stocks};
         my $contents_html = '';
         foreach (@$source_stocks){
-            $contents_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
+            $contents_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ('.$_->[2].') ';
         }
         push @seedlots, {
             breeding_program_id => $sl->{breeding_program_id},
@@ -101,6 +101,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         organization_name => $c->stash->{seedlot}->organization_name(),
         population_name => $c->stash->{seedlot}->population_name(),
         accessions => $c->stash->{seedlot}->accessions(),
+        crosses => $c->stash->{seedlot}->crosses(),
     };
 }
 
@@ -116,13 +117,16 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
         $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot detail. Please contact us." };
         $c->detach();
     }
+    my $seedlot = $c->stash->{seedlot};
 
+    my $saved_seedlot_name = $seedlot->uniquename;
     my $seedlot_name = $c->req->param('uniquename');
     my $breeding_program_name = $c->req->param('breeding_program');
     my $organization = $c->req->param('organization');
     my $population = $c->req->param('population');
     my $location = $c->req->param('location');
-    my $accession = $c->req->param('accession');
+    my $accession_uniquename = $c->req->param('accession');
+    my $cross_uniquename = $c->req->param('cross');
     my $schema = $c->stash->{schema};
     my $breeding_program = $schema->resultset('Project::Project')->find({name=>$breeding_program_name});
     if (!$breeding_program){
@@ -132,20 +136,48 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $breeding_program_id = $breeding_program->project_id();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $accession_row = $schema->resultset('Stock::Stock')->find({uniquename=>$accession, type_id=>$accession_cvterm_id});
-    if (!$accession_row){
-        $c->stash->{rest} = { error => "The accession $accession does not exist in the database. Please add it first or choose another." };
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+    if ($saved_seedlot_name ne $seedlot_name){
+        my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name, type_id=>$seedlot_cvterm_id});
+        if ($previous_seedlot){
+            $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+            $c->detach();
+        }
+    }
+    my $accession_id;
+    if ($accession_uniquename){
+        $accession_id = [$schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename, type_id=>$accession_cvterm_id})->stock_id()];
+    }
+    my $cross_id;
+    if ($cross_uniquename){
+        $cross_id = [$schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id()];
+    }
+    if ($accession_uniquename && !$accession_id){
+        $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
         $c->detach();
     }
-    my $accession_id = $accession_row->stock_id();
+    if ($cross_uniquename && !$cross_id){
+        $c->stash->{rest} = {error=>'The given cross name is not in the database! Seedlots can only be added onto existing crosses.'};
+        $c->detach();
+    }
+    if ($accession_id && $cross_id){
+        $c->stash->{rest} = {error=>'A seedlot must have either an accession OR a cross as contents. Not both.'};
+        $c->detach();
+    }
+    if (!$accession_id && !$cross_id){
+        $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
+        $c->detach();
+    }
 
-    my $seedlot = $c->stash->{seedlot};
     $seedlot->name($seedlot_name);
     $seedlot->uniquename($seedlot_name);
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);
     $seedlot->location_code($location);
-    $seedlot->accession_stock_ids([$accession_id]);
+    $seedlot->accession_stock_ids($accession_id);
+    $seedlot->cross_stock_ids($cross_id);
     $seedlot->population_name($population);
     my $return = $seedlot->store();
     if (exists($return->{error})){
@@ -186,22 +218,27 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $uniquename = $c->req->param("seedlot_name");
+    my $seedlot_uniquename = $c->req->param("seedlot_name");
     my $location_code = $c->req->param("seedlot_location");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
-    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$uniquename});
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename, type_id=>$seedlot_cvterm_id});
     if ($previous_seedlot){
         $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
         $c->detach();
     }
     my $accession_id;
     if ($accession_uniquename){
-        $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename})->stock_id();
+        $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename, type_id=>$accession_cvterm_id})->stock_id();
     }
     my $cross_id;
     if ($cross_uniquename){
-        $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename})->stock_id();
+        $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id();
     }
     if ($accession_uniquename && !$accession_id){
         $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
@@ -219,6 +256,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
         $c->detach();
     }
+
     my $accession_ids = $accession_id ? [$accession_id] : undef;
     my $cross_ids = $cross_id ? [$cross_id] : undef;
     my $from_stock_id = $accession_id ? $accession_id : $cross_id;
@@ -236,12 +274,12 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    print STDERR "Creating new Seedlot $uniquename\n";
+    print STDERR "Creating new Seedlot $seedlot_uniquename\n";
     my $seedlot_id;
 
     eval {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
-        $sl->uniquename($uniquename);
+        $sl->uniquename($seedlot_uniquename);
         $sl->location_code($location_code);
         $sl->accession_stock_ids($accession_ids);
         $sl->cross_stock_ids($cross_ids);
@@ -254,7 +292,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
         $transaction->factor(1);
         $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
-        $transaction->to_stock([$seedlot_id, $uniquename]);
+        $transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
         $transaction->amount($amount);
         $transaction->timestamp($timestamp);
         $transaction->description($description);
@@ -469,9 +507,10 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transactions = $c->stash->{seedlot}->transactions();
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
-    my %types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $plot_type_id => 'plot' );
+    my %types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $plot_type_id => 'plot', $cross_type_id => 'cross' );
 
     #print STDERR Dumper $transactions;
     my @transactions;

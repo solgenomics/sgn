@@ -168,6 +168,8 @@ sub list_seedlots {
     my %unique_seedlots;
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
@@ -202,12 +204,14 @@ sub list_seedlots {
                 {'stock_relationship_objects' => 'subject'},
                 'stockprops'
             ],
-            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
-            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'location', 'location_id', 'current_count'],
+            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
+            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id', 'current_count'],
             order_by => {-asc=>'project.name'},
             #distinct => 1
         }
     );
+
+    my %source_types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $cross_type_id => 'cross' );
     my $records_total = $rs->count();
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
@@ -221,7 +225,7 @@ sub list_seedlots {
         $unique_seedlots{$row->uniquename}->{location} = $row->get_column('location');
         $unique_seedlots{$row->uniquename}->{location_id} = $row->get_column('location_id');
         $unique_seedlots{$row->uniquename}->{current_count} = $row->get_column('current_count');
-        push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename')];
+        push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
     }
     my @seedlots;
     foreach (sort keys %unique_seedlots){

@@ -165,7 +165,8 @@ jQuery(document).ready(function(){
                     if (response.success == 1) { 
                         alert("The seedlot has been created.");
                         jQuery('#add_seedlot_dialog').modal('hide');
-                        seedlots_table.ajax.reload();
+                        //seedlots_table.ajax.reload();
+                        document.location.reload();
                     }
                     if (response.error) {
                         alert(response.error);
