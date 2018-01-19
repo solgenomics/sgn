@@ -396,17 +396,20 @@ sub upload_seedlots_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_crosses => $parse_errors->{'missing_crosses'}};
         $c->detach();
     }
 
     my @added_stocks;
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
+            my $accession_id = $val->{accession_stock_id} ? [$val->{accession_stock_id}] : undef;
+            my $cross_id = $val->{cross_stock_id} ? [$val->{cross_stock_id}] : undef;
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             $sl->uniquename($key);
             $sl->location_code($location);
-            $sl->accession_stock_ids([$val->{accession_stock_id}]);
+            $sl->accession_stock_ids($accession_id);
+            $sl->cross_stock_ids($cross_id);
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
@@ -416,9 +419,11 @@ sub upload_seedlots_POST : Args(0) {
             my $return = $sl->store();
             my $seedlot_id = $return->{seedlot_id};
 
+            my $from_stock_id = $val->{accession_stock_id} ? $val->{accession_stock_id} : $val->{cross_stock_id};
+            my $from_stock_name = $val->{accession} ? $val->{accession} : $val->{cross_name};
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
             $transaction->factor(1);
-            $transaction->from_stock([$val->{accession_stock_id}, $val->{accession}]);
+            $transaction->from_stock([$from_stock_id, $from_stock_name]);
             $transaction->to_stock([$seedlot_id, $key]);
             $transaction->amount($val->{amount});
             $transaction->timestamp($timestamp);

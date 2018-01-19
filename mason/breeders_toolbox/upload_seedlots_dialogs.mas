@@ -86,6 +86,7 @@
                             <tr>
                                 <td>seedlot_name</td>
                                 <td>accession_name</td>
+                                <td>cross_name</td>
                                 <td>amount</td>
                                 <td>description</td>
                             </tr>
@@ -96,13 +97,16 @@
                     <br/>
                     seedlot_name (must be unique)
                     <br />
+                    <br/>
                     accession_name (must exist in the database)
-                    <br />
+                    <br/><b>OR</b><br/>
+                    cross_name (must exist in the database)
+                    <br /><br/>
                     <b>Optional fields:</b>
                     <br />
                     amount (number of seeds in seedlot. if not given will default to 0)
                     <br />
-                    description
+                    description (information about why this seedlot is being added)
                 </div>
             </div>
             <div class="modal-footer">
