@@ -561,13 +561,48 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         eval { 
             my $location_code = $c->req->param('to_new_seedlot_location_name');
             my $accession_uniquename = $c->req->param('to_new_seedlot_accession_name');
-            my $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename})->stock_id();
+            my $cross_uniquename = $c->req->param('to_new_seedlot_cross_name');
             my $organization = $c->req->param('to_new_seedlot_organization');
             my $population_name = $c->req->param('to_new_seedlot_population_name');
             my $breeding_program_id = $c->req->param('to_new_seedlot_breeding_program_id');
             my $amount = $c->req->param('to_new_seedlot_amount');
             my $timestamp = $c->req->param('to_new_seedlot_timestamp');
             my $description = $c->req->param('to_new_seedlot_description');
+
+            my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+            my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+            my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+            my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_uniquename, type_id=>$seedlot_cvterm_id});
+            if ($previous_seedlot){
+                $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+                $c->detach();
+            }
+            my $accession_id;
+            if ($accession_uniquename){
+                $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename, type_id=>$accession_cvterm_id})->stock_id();
+            }
+            my $cross_id;
+            if ($cross_uniquename){
+                $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id();
+            }
+            if ($accession_uniquename && !$accession_id){
+                $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
+                $c->detach();
+            }
+            if ($cross_uniquename && !$cross_id){
+                $c->stash->{rest} = {error=>'The given cross name is not in the database! Seedlots can only be added onto existing crosses.'};
+                $c->detach();
+            }
+            if ($accession_id && $cross_id){
+                $c->stash->{rest} = {error=>'A seedlot must have either an accession OR a cross as contents. Not both.'};
+                $c->detach();
+            }
+            if (!$accession_id && !$cross_id){
+                $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
+                $c->detach();
+            }
+
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
