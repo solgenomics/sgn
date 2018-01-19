@@ -3,7 +3,7 @@
 $seedlot_id
 $uniquename
 $current_count => 0
-$accessions
+$content_html
 $organization_name
 $population_name
 $timestamp
@@ -28,7 +28,7 @@ $timestamp
 <tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
-<tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
+<tr><td><b>Contents</b></td><td><% $content_html %></td></tr>
 <tr><td><b>Population</b></td><td><% $population_name %></td></tr>
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 </table>
