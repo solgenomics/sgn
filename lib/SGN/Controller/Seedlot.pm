@@ -6,6 +6,7 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 use CXGN::Stock::Seedlot;
+use Data::Dumper;
 
 sub seedlots :Path('/breeders/seedlots') :Args(0) { 
     my $self = shift;
@@ -31,13 +32,13 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $accessions_html = '';
     if ($accessions){
         $accessions_html .= '<a href="/stock/'.$accessions->[0].'/view">'.$accessions->[1].'</a> (accession)';
-        push @content_accession_names, $_->[1];
+        push @content_accession_names, $accessions->[1];
     }
     my $crosses = $sl->cross();
     my $crosses_html = '';
     if ($crosses){
         $crosses_html .= '<a href="/cross/'.$crosses->[0].'">'.$crosses->[1].'</a> (cross)';
-        push @content_cross_names, $_->[1];
+        push @content_cross_names, $crosses->[1];
     }
     my $populations = $sl->populations();
     my $populations_html = '';
