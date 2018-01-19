@@ -429,10 +429,10 @@ $timestamp
             to_new_seedlot_timestamp = jQuery('#transaction_new_seedlot_timestamp').val();
             to_new_seedlot_description = jQuery('#transaction_new_seedlot_description').val();
 
-            else if (to_new_seedlot_accession_name == '' && to_new_seedlot_cross_name == '') {
+            if (to_new_seedlot_accession_name == '' && to_new_seedlot_cross_name == '') {
                 alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
             }
-            else if (to_new_seedlot_accession_name != '' && to_new_seedlot_cross_name != '') {
+            if (to_new_seedlot_accession_name != '' && to_new_seedlot_cross_name != '') {
                 alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
             }
         }
