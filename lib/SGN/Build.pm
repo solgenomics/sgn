@@ -39,6 +39,7 @@ sub ACTION_build {
        $self->check_R
            or die "R dependency check failed, aborting.\n";
    }
+
 }
 
 # override install to just copy the whole dir into the install_base
@@ -84,59 +85,37 @@ sub create_build_script {
 
 sub check_R {
     my ( $self, @args ) = @_;
+   
     if( $HAVE_CAPTURE ) {
         my $ret;
         my $out = Capture::Tiny::capture_merged {
-            $ret = $self->_run_R_check( @args );
+	    $ret = $self->_check_R_version;
         };
 
-        $self->{R}{check_output} = $out;
-        if( !$ret and my ($missing) = $out =~ /required but not available:\s+(\S(?:[^\n]+\n)+)\n/si ) {
-            $self->{R}{missing_packages} = [ split /\s+/, $missing ];
-        }
-
+         $self->{R}{check_output} = $out;
+  
         return $ret;
     } else {
-        return $self->_run_R_check( @args );
+	return $self->_check_R_version
     }
 }
 
 sub _R_installdeps {
     my ( $self ) = @_;
 
-    if( $self->check_R ) {
-        print "All R prerequisites satisfied\n";
-        return;
-    }
+    print "\n\nInstalling R dependencies in ~/cxgn/R_libs. \nDepending on the number of deps to install, this may take long time.\n\nAfter the installation completes, set the env variable R_LIBS_USER in your system (/etc/R/Renviron) to \"~/cxgn/R_libs\". This will ensure deps you manually install in R will be in the same place as sgn R libraries and avoid installation of the same R packages in multiple places. It will also add packages in the \"~/cxgn/R_libs\" to the search path\n\n";
 
-    my @missing_packages = @{ $self->{R}{missing_packages} || [] };
-    unless( @missing_packages ) {
-        print "No missing R packages detected, cannot installdeps for R.\n";
-        return;
-    }
+    my $rout = qx /Rscript R\/sgnPackages.r 2>&1 /;
 
-    my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
-    my $cran_mirror = $ENV{CRAN_MIRROR} || "http://lib.stat.cmu.edu/R/CRAN";
+    print "\nR dependencies installation output:\n $rout\n";
 
-    my $tf = File::Temp->new;
-    $tf->print( <<EOR );
-userdir <- unlist(strsplit(Sys.getenv("R_LIBS_USER"), .Platform\$path.sep))[1L]
-if (!file.exists(userdir) && !dir.create(userdir, recursive = TRUE, showWarnings = TRUE))
-   stop("unable to create ", sQuote(userdir))
-.libPaths(c(userdir, .libPaths()))
-install.packages( $package_vec, contriburl = contrib.url("$cran_mirror") )
-EOR
-     $tf->close;
-
-    # use system so the user will be able to use the R graphical
-    # mirror chooser, and other things
-    system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
     if( $? ) {
-        _handle_errors($?);
-        warn "Failed to automatically install R dependencies\n";
-    } elsif( $self->check_R ) {
-        print "Successfully installed R dependencies.\n";
+	_handle_errors($?);
+	warn "Failed to automatically install R dependencies\n\n";
+    } else  {
+	print "Successfully installed R dependencies.\n\n";
     }
+
 }
 
 sub _handle_errors {
@@ -154,29 +133,23 @@ sub _handle_errors {
 sub _run_R_check {
     my $self = shift;
 
-    print "\nChecking R prerequisites...\n";
-
     # check the R version ourself, since R CMD check apparently does
     # not do it.
     $self->_check_R_version
         or return 0;
 
-    my $no_manual = $self->_R_version_current ge version->new('3.2.0') ? '--no-manual' : '';
-
-    my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
-    if ( $ret || $? ) {
+    if ( $? ) {
         _handle_errors($?);
-        warn "\nR PREREQUISITE CHECK FAILED.\n\n";
+        warn "\nR version PREREQUISITE CHECK FAILED.\n\n";
         return 0;
     } else {
-        print "R prerequisites OK.\n\n";
+        print "\nR version prerequisite OK.\n\n";
         return 1;
     }
 }
 
 sub _check_R_version {
     my $self = shift;
-
 
     unless ($HAVE_PARSE_DEB_CONTROL) {
         warn "Parse::Deb::Control not present, skipping R configuration";
@@ -188,20 +161,21 @@ sub _check_R_version {
         return 1;
     } else {
         warn "R VERSION CHECK FAILED, we have ".$self->_R_version_current.", but we require $cmp $v.\n";
-        warn "To install R : sudo aptitude install r-base-core\n\n";
+        warn "To install R : sudo apt-get update; sudo apt-get install r-base r-base-dev\n\n";
         return 0;
     }
 }
 
-# parse and return the R DESCRIPTION file
+# parse and return the R cran deps file
 sub _R_desc {
-    return Parse::Deb::Control->new([qw[ R_files DESCRIPTION ]]);
+    return Parse::Deb::Control->new([qw[ R_files cran ]]);
 }
 
 # parse and return the version of R we require as string list like
 # ('>=','2.10.0')
 sub _R_version_required {
     my $self = shift;
+    
     my @k = $self->_R_desc->get_keys('Depends')
         or return ( '>=', 0 );
     my ($version) = ${$k[0]->{value}} =~ / \b R \s* \( ([^\)]+) /x

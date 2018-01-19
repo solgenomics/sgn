@@ -3,7 +3,7 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [  ] &>
+<& /util/import_javascript.mas, classes => [ "CXGN.List", "CXGN.BreederSearch" ] &>
 
 
 <div id="trial_accessions_html">
@@ -15,34 +15,74 @@ jQuery(document).ready(function () {
 
     jQuery('#trial_accessions_onswitch').one("click",  function() {
 
-	jQuery.ajax ( {
+    jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
-	    beforeSend: function() {
-		jQuery("#working_modal").modal("show");
-	    },
-	    success: function(response){
-	        // console.log(response);
-		jQuery("#working_modal").modal("hide");
-		var trial_accessions_html = "<table class='table table-hover table-condensed table-bordered' id='trial_accessions_table'><thead><tr><th>Unique Name</th></tr></thead><tbody>";
-		for (i=0; i<response.accessions[0].length; i++) {
-		    trial_accessions_html = trial_accessions_html + "<tr><td><a href='/stock/" + response.accessions[0][i].stock_id +"/view'>"+ response.accessions[0][i].accession_name + "</a></td></tr>";
-		}
-		trial_accessions_html = trial_accessions_html + "</tbody></table>";
-		jQuery('#trial_accessions_html').empty();
-		jQuery('#trial_accessions_html').html(trial_accessions_html);
-        enable_accessions_datatable();
-	    },
-	    error: function(response){
-	        jQuery("#working_modal").modal("hide");
-		alert("Error retrieving accessions.");
-	    }
-	});
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                // console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="accessions_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+
+                html += '<tr><td><button class="btn btn-default btn-sm" id="accessions_select_all" name="1">Select All</button><br><br>'
+                html += '<div class="well well-sm"><div id="accessions_data_count" name="1">No Selection</div></div>'
+                html += '<div id="accessions_to_list_menu"></div><td><tr></table>'
+
+                jQuery('#trial_accessions_html').html(html);
+
+                var accessions = [];
+                for (var i=0; i<response.accessions[0].length; i++){
+                    var accession_uniquename = response.accessions[0][i].accession_name;
+                    var accession_stock_id = response.accessions[0][i].stock_id;
+                    var t = [accession_stock_id, accession_uniquename];
+                    accessions.push(t);
+                }
+
+                var accession = accessions.sort() || [];
+
+                var accessions_html = format_options_list(accession);
+                jQuery('#accessions_data').html(accessions_html);
+ 
+                var data = jQuery('#accessions_data').val() || [];
+                show_list_counts('accessions_data_count', accessions.length, data.length);
+ 
+                if (jQuery('#accessions_data').length) {
+                      addToListMenu('accessions_to_list_menu', 'accessions_data', {
+                      selectText: true,
+                      listType: 'accessions'
+                    });
+                }
+
+                jQuery('#accessions_select_all').click( function() { // select all
+                    var data_id = "accessions_data";
+                    selectAllOptions(document.getElementById(data_id));
+
+                    var data = jQuery("#"+data_id).val() || [];
+                    var count_id = "accessions_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('#accessions_data').change( function() { // update count when data selections change
+                    var data_id = jQuery(this).attr('id');
+                    var data = jQuery('#'+data_id).val() || [];
+                    var count_id = "accessions_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('select').dblclick( function() { // open detail page
+                    window.open("../../stock/"+this.value+"/view");
+                });
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving accessions.");
+            }
+        });
     });
 
 });
-
-function enable_accessions_datatable() {
-    jQuery('#trial_accessions_table').DataTable();
-}
 
 </script>

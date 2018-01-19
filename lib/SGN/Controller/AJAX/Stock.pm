@@ -70,6 +70,7 @@ sub add_stockprop_POST {
         my $req = $c->req;
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
+        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
@@ -776,17 +777,126 @@ sub stock_organization_autocomplete : Local : ActionClass('REST') { }
 
 sub stock_organization_autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
+    _stockproperty_autocomplete($c, $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $c->req->param('term'), 'organization');
+}
 
-    my $term = $c->req->param('term');
+=head2 stock_introgression_parent_autocomplete
+
+Public Path: /ajax/stock/stock_introgression_parent_autocomplete
+
+Autocomplete a stock introgression parent. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only introgression_parent stockprops that are linked with a stock
+
+=cut
+
+sub stock_introgression_parent_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_introgression_parent_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    _stockproperty_autocomplete($c, $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $c->req->param('term'), 'introgression_parent');
+}
+
+=head2 stock_introgression_backcross_parent_autocomplete
+
+Public Path: /ajax/stock/stock_introgression_backcross_parent_autocomplete
+
+Autocomplete a stock introgression backcross parent. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only introgression_backcross_parent stockprops that are linked with a stock
+
+=cut
+
+sub stock_introgression_backcross_parent_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_introgression_backcross_parent_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    _stockproperty_autocomplete($c, $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $c->req->param('term'), 'introgression_backcross_parent');
+}
+
+=head2 stock_introgression_map_version_autocomplete
+
+Public Path: /ajax/stock/stock_introgression_map_version_autocomplete
+
+Autocomplete a stock introgression map version. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only introgression_map_version stockprops that are linked with a stock
+
+=cut
+
+sub stock_introgression_map_version_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_introgression_map_version_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    _stockproperty_autocomplete($c, $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $c->req->param('term'), 'introgression_map_version');
+}
+
+=head2 stock_introgression_chromosome_autocomplete
+
+Public Path: /ajax/stock/stock_introgression_chromosome_autocomplete
+
+Autocomplete a stock introgression chromosome. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only introgression_chromosome stockprops that are linked with a stock
+
+=cut
+
+sub stock_introgression_chromosome_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_introgression_chromosome_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    _stockproperty_autocomplete($c, $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $c->req->param('term'), 'introgression_chromosome');
+}
+
+=head2 stock_introgression_start_position_bp_autocomplete
+
+Public Path: /ajax/stock/stock_introgression_start_position_bp_autocomplete
+
+Autocomplete a stock introgression start position in bp. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only introgression_start_position_bp stockprops that are linked with a stock
+
+=cut
+
+sub stock_introgression_start_position_bp_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_introgression_start_position_bp_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    _stockproperty_autocomplete($c, $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $c->req->param('term'), 'introgression_start_position_bp');
+}
+
+=head2 stock_introgression_end_position_bp_autocomplete
+
+Public Path: /ajax/stock/stock_introgression_end_position_bp_autocomplete
+
+Autocomplete a stock introgression end position in bp. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only introgression_end_position_bp stockprops that are linked with a stock
+
+=cut
+
+sub stock_introgression_end_position_bp_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_introgression_end_position_bp_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    _stockproperty_autocomplete($c, $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), $c->req->param('term'), 'introgression_end_position_bp');
+}
+
+sub _stockproperty_autocomplete {
+    my $c = shift;
+    my $schema = shift;
+    my $term = shift;
+    my $cvterm_name = shift;
     # trim and regularize whitespace
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, 'stock_property')->cvterm_id();
     my @response_list;
-    my $q = "SELECT  distinct value FROM stockprop JOIN cvterm on cvterm_id = type_id WHERE cvterm.name = ? AND value ilike ?";
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute( 'organization' , '%'.$term.'%');
-    while  (my ($organization_name) = $sth->fetchrow_array ) {
-        push @response_list, $organization_name;
+    my $q = "SELECT distinct value FROM stockprop WHERE type_id=? and value ilike ?";
+    my $sth = $schema->storage->dbh->prepare($q);
+    $sth->execute( $cvterm_id, '%'.$term.'%');
+    while  (my ($val) = $sth->fetchrow_array ) {
+        push @response_list, $val;
     }
     $c->stash->{rest} = \@response_list;
 }
@@ -881,6 +991,40 @@ sub accession_autocomplete_GET :Args(0) {
 
     my @response_list;
     my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='vector_construct') ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 accession_or_cross_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub accession_or_cross_autocomplete : Local : ActionClass('REST') { }
+
+sub accession_or_cross_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='cross') ORDER BY stock.uniquename LIMIT 20";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
     while (my ($stock_name) = $sth->fetchrow_array) {
@@ -1557,7 +1701,13 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my @stocks;
     foreach my $r (@$result){
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      my $url;
+      if ($cvterm_name eq 'seedlot'){
+          $url = qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>};
+      } else {
+          $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
+      }
+      push @stocks, [$url, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1574,7 +1724,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my @stocks;
     foreach my $r (@$result){
       my ($cvterm_name, $stock_id, $stock_name) = @$r;
-      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}];
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1594,7 +1744,7 @@ sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@group};
@@ -1615,7 +1765,7 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};

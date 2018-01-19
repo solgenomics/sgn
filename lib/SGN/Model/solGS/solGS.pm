@@ -12,11 +12,10 @@ Isaak Y Tecle, iyt2@cornell.edu
 
 =head1 LICENSE
 
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
+This library is free software. You can redistribute it and/or modifyi
+t under the same terms as Perl itself.
 
 =cut
-
 
 package SGN::Model::solGS::solGS;
 
@@ -35,7 +34,7 @@ use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use Math::Round::Var;
-use CXGN::Genotype::Search;
+#use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -739,8 +738,8 @@ sub first_stock_genotype_data {
     
 	my $dataref = $dataset->retrieve_genotypes($protocol_id);
 	$geno_data  = $self->structure_genotype_data($dataref);
-
-	last if $geno_data;
+     
+	last if ${$geno_data};
     }
  
     return $geno_data;
@@ -811,36 +810,42 @@ sub genotype_data {
 sub structure_genotype_data {
     my ($self, $dataref) =@_;
 
-    my $geno_row  = @$dataref[0]->{genotype_hash};
-    my $markers   = $self->_get_dataset_markers($geno_row);
-    my $headers   = $self->_create_genotype_dataset_headers($markers);
+    my $geno_data;
    
-    my $geno_data .= "\t" . $headers . "\n";    
-   
-    my @stocks;
-    my $duplicate_stock;   
-    my $cnt;
-   
-    foreach my $dg (@$dataref)
+    if (@$dataref)
     {
-	$cnt++;
+	my $geno_row  = @$dataref[0]->{genotype_hash};
+	my $markers   = $self->_get_dataset_markers($geno_row);
+	my $headers   = $self->_create_genotype_dataset_headers($markers);
 	
-	my $stock = $dg->{germplasmName};
+	$geno_data = "\t" . $headers . "\n";    
 	
-	if ($cnt > 1)
+	my @stocks;
+	my $duplicate_stock;   
+	my $cnt = 0;
+	
+	foreach my $dg (@$dataref)
 	{
-	    ($duplicate_stock) = grep(/^$stock$/, @stocks);
-	}
-	
-	if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
-	{
-	    push @stocks, $stock;
+	    $cnt++;
 	    
-	    my $geno_hash = $dg->{genotype_hash}; 
+	    my $stock = $dg->{germplasmName};
+
+	    if ($cnt > 1)
+	    {
+		$duplicate_stock = $stock ~~ @stocks; #grep(/^$stock$/, @stocks);
+	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
+	    }
 	    
-	    $geno_data .= $stock . "\t";
-	    $geno_data .= $self->_create_genotype_row($geno_hash);
-	    $geno_data .= "\n";
+	    if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
+	    {
+		push @stocks, $stock;
+		
+		my $geno_hash = $dg->{genotype_hash}; 
+		
+		$geno_data .= $stock . "\t";
+		$geno_data .= $self->_create_genotype_row($headers, $geno_hash);
+		$geno_data .= "\n";
+	    }
 	}
     }
 
@@ -851,26 +856,62 @@ sub structure_genotype_data {
 
 sub genotypes_list_genotype_data {
     my ($self, $genotypes) = @_;
-   
-    my $st_rs = $self->get_stocks_rs($genotypes);
-    my @acc_ids;
 
-    while (my $row = $st_rs->next)
-    {    
-	push @acc_ids, $row->get_column('stock_id');	
+   
+ #    my $protocol_id = $self->protocol_id();
+	    
+ #    my $dataset = CXGN::Dataset->new({
+ # 	people_schema => $self->people_schema,
+ # 	schema  => $self->schema,
+ # 	accessions => $genotypes_ids});	
+
+ #    my $dataref = $dataset->retrieve_genotypes($protocol_id);
+ #    $geno_data  = $self->structure_genotype_data($dataref);	   
+
+
+    my $genotypes_rs = $self->accessions_list_genotypes_rs($genotypes);
+
+    my $markers;
+  
+    while (my $stock_rs = $genotypes_rs->next) 
+    {
+	$markers = $self->extract_project_markers($stock_rs);
+	last if $markers;
     }
 
-    my $protocol_id = $self->protocol_id();
+    my $geno_data = "\t" . $markers . "\n";
+
+    my @markers = split(/\t/, $markers);
+
+    my $cnt = 0;
+    my @stocks;
+    
+    while (my $stock_rs = $genotypes_rs->next) 
+    {
+	$cnt++;
+	my $duplicate_stock;
+	my $stock;
+
+	if ($cnt > 1)
+	{
+		$stock = $stock_rs->get_column('stock_name');
+		$duplicate_stock = $stock ~~ @stocks; #grep(/^$stock$/, @stocks);
+	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
 	    
-    my $dataset = CXGN::Dataset->new({
-	people_schema => $self->people_schema,
-	schema  => $self->schema,
-	accession_list => \@acc_ids});	 
+	} 
+   
+	if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
+	{
+	    push @stocks, $stock;
 
-    my $dataref    = $dataset->retrieve_genotypes($protocol_id);
-    my $geno_data  = $self->structure_genotype_data($dataref);	   
+	    my $geno_values = $self->stock_genotype_values(\@markers, $stock_rs);	    
+	    $geno_data .= $geno_values;
+	}
+	
 
-    return $geno_data;
+    }
+
+    return \$geno_data;
 
 }
 
@@ -1130,38 +1171,30 @@ sub _get_dataset_markers {
 sub _create_genotype_dataset_headers {
     my ($self, $markers) = @_; 
 
-    my $headers;
-    foreach my $marker (@$markers) 
-    {
-	$headers .= $marker;
-	$headers .= "\t" unless $marker eq @$markers[-1];
-    }
- 
+    my $headers = join("\t", @$markers);
+   
     return $headers;  
 }
 
 
 sub _create_genotype_row {
-    my ($self, $genotype_hash) = @_; 
+    my ($self, $headers, $genotype_hash) = @_; 
 
-    my @markers      = keys %$genotype_hash;
-    my $marker_count = scalar(@markers);
- 
+    my @markers = split("\t", $headers);
+
     my $geno_values;
     foreach my $marker (@markers) 
     {   
 	no warnings 'uninitialized';
-
-        my $genotype =  $genotype_hash->{$marker};
-	$genotype =  $genotype_hash->{$marker};
-
-        $geno_values .= $self->round_allele_dosage_values($genotype);       
+	
+	$geno_values .= $genotype_hash->{$marker};
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }
 
     return $geno_values;
 
 }
+
 
 sub round_allele_dosage_values {
     my ($self, $geno_values) = @_;
@@ -1177,26 +1210,24 @@ sub round_allele_dosage_values {
 
 
 sub stock_genotype_values {
-    my ($self, $geno_row) = @_;
+    my ($self, $header_markers, $geno_row) = @_;
               
     my $json_values  = $geno_row->get_column('value');
     my $values       = JSON::Any->decode($json_values);
-    my @markers      = keys %$values;
-    my $marker_count = scalar(@markers);
+
     
     my $stock_name = $geno_row->get_column('stock_name');
-   
-    my $round = Math::Round::Var->new(0);
+
                       
-    my $geno_values = $geno_row->get_column('stock_name') . "\t";
+    my $geno_values = $stock_name . "\t";
    
-    foreach my $marker (@markers) 
+    foreach my $marker (@$header_markers) 
     {   
 	no warnings 'uninitialized';
 
         my $genotype =  $values->{$marker};
-        $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
-        $geno_values .= "\t" unless $marker eq $markers[-1];
+	$geno_values .= $genotype;
+        $geno_values .= "\t" unless $marker eq $header_markers->[-1];
     }
 
     $geno_values .= "\n";      

@@ -31,6 +31,7 @@ use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
+use CXGN::Dataset;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -169,6 +170,30 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
       id => $id,
       choices => \@types,
       selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->req->param("trial_id");
+
+    my $id = $c->req->param("id") || "treatment_select";
+    my $name = $c->req->param("name") || "treatment_select";
+    my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    my $data = $trial->get_treatments();
+
+    if ($empty) {
+        unshift @$data, [ 0, "None" ];
+    }
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => $data,
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -554,6 +579,32 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     );
     $c->stash->{rest} = { select => $html };
 }
+
+sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $html = '<select><option disabled="1">None</option></select>';
+    my $user_id;
+    if ($c->user()) {
+	if ($user_id = $c->user->get_object()->get_sp_person_id()) { 
+
+	    my $datasets = CXGN::Dataset->get_datasets_by_user(
+		$c->dbic_schema("CXGN::People::Schema"),
+		$user_id);
+
+	    print STDERR "Retrieved datasets: ".Dumper($datasets);
+	    
+	    $html = simple_selectbox_html(
+		name => 'available_datasets',
+		id => 'available_datasets',
+		choices => $datasets,
+		);
+
+	}
+    }
+    $c->stash->{rest} = { select => $html };
+} 
 
 sub _clean_inputs {
 	no warnings 'uninitialized';

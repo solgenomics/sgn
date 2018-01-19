@@ -70,7 +70,92 @@ $identifier => ''
                                        }
                                        else if (barcode_type == "1D") {
                                          jQuery("#2D_fieldbook_option").hide();
+                                       } 
+                                   });
+                                   
+                                   jQuery(document).on('change', '#select_print_format', function () {
+                                       var format = jQuery("#select_print_format").val();
+                                       if (format == "32A4") {
+                                         var labels_row = 10;
+                                         var labels_cols = 4; 
+                                         var tops_margin = 12;
+                                         var lefts_margin = 17;
+                                         var bottoms_margin = 12;
+                                         var rights_margin = 10;
                                        }
+                                       if (format == "32_unique") {
+                                         var labels_row = 10;
+                                         var labels_cols = 4; 
+                                         var tops_margin = 12;
+                                         var lefts_margin = 17;
+                                         var bottoms_margin = 12;
+                                         var rights_margin = 10;
+                                       }
+                                       else if (format == "CASS") {
+                                       var labels_row = 10;
+                                       var labels_cols = 2; 
+                                       var tops_margin = 10;
+                                       var lefts_margin = 112;
+                                       var bottoms_margin = 13;
+                                       var rights_margin = 20;                                       
+                                       }
+                                       else if (format == "MUSA") {
+                                       var labels_row = 10;
+                                       var labels_cols = 2; 
+                                       var tops_margin = 10;
+                                       var lefts_margin = 112;
+                                       var bottoms_margin = 13;
+                                       var rights_margin = 20;
+                                       }
+                                       else if (format == "NCSU") {
+                                       var labels_row = 10;
+                                       var labels_cols = 3; 
+                                       var tops_margin = 12;
+                                       var lefts_margin = 10;
+                                       var bottoms_margin = 12;
+                                       var rights_margin = 10;
+                                       var text = 'year,location';                                       
+                                       }
+                                       else if (format == "20A4") {
+                                       var labels_row = 10;
+                                       var labels_cols = 2; 
+                                       var tops_margin = 12;
+                                       var lefts_margin = 10;
+                                       var bottoms_margin = 12;
+                                       var rights_margin = 10;
+                                       }
+                                       else if (format == "IITA-3") {
+                                       var labels_row = 20;
+                                       var labels_cols = 3; 
+                                       var tops_margin = 13;
+                                       var lefts_margin = 130;
+                                       var bottoms_margin = 11;
+                                       var rights_margin = 10;
+                                       }
+                                       else if (format == "crossing") {
+                                       var labels_row = 1;
+                                       var labels_cols = 1; 
+                                       var tops_margin = 5;
+                                       var lefts_margin = 2;
+                                       var bottoms_margin = 0;
+                                       var rights_margin = 0;
+                                       }
+                                       jQuery("#text_margin").empty();
+                                       jQuery("#text_margin").val(text);
+                                       jQuery("#label_rows").empty();
+                                       jQuery("#label_rows").val(labels_row);
+                                       jQuery("#label_cols").empty();
+                                       jQuery("#label_cols").val(labels_cols);
+                                       jQuery("#select_barcode_type").prop('selectedIndex',1);
+                                       jQuery("#page_format").prop('selectedIndex',0);
+                                       jQuery("#tops_margin").empty();
+                                       jQuery("#tops_margin").val(tops_margin);
+                                       jQuery("#left_margin").empty();
+                                       jQuery("#left_margin").val(lefts_margin);
+                                       jQuery("#bottom_margin").empty();
+                                       jQuery("#bottom_margin").val(bottoms_margin);
+                                       jQuery("#right_margin").empty();
+                                       jQuery("#right_margin").val(rights_margin);
                                    });
                                 });
                                </script>
@@ -79,9 +164,16 @@ $identifier => ''
                                  <label class="col-sm-4 control-label">Printing Format (Optional): </label>
                                  <div class="col-sm-8">
                                      <select class="form-control" id="select_print_format" name="select_print_format">
-                                       <option selected disabled>select printing format</option>
+                                       <!--<option selected disabled>select printing format</option>-->
+                                       <option value="">select printing format</option>
                                        <option value="CASS">CASS printing format</option>
                                        <option value="MUSA">MUSA printing format</option>
+                                       <option value="32A4">32 label Size Sticker Paper</option>
+                                       <option value="32_unique">32 Unique label Size Sticker Paper</option>
+                                       <option value="20A4">20 label Size Sticker Paper</option>
+                                       <option value="NCSU">NCSU printing format</option>
+                                       <option value="IITA-3">IITA-3-barcode</option>
+                                       <option value="crossing">CROSS</option>
                                      </select>
                                  </div>
                                </div>

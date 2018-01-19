@@ -54,7 +54,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
   <div id="stock_search_form" class="form-horizontal well">
 
-    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => 'Uniquename', collapsible=>1, collapsed=>0 &>
 
     <div class="row">
       <div class="col-sm-11">
@@ -80,6 +80,10 @@ my $breeding_programs_select = simple_selectbox_html(
         </div>
       </div>
     </div>
+
+    </&>
+    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
+
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
@@ -135,6 +139,64 @@ my $breeding_programs_select = simple_selectbox_html(
           <label class="col-sm-3 control-label">Organization: </label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    </&>
+    <&| /page/info_section.mas, title => 'Genetic Properties', collapsible=>1, collapsed=>1 &>
+
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Introgression Parent: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="introgression_parent" placeholder="Type to Autocomplete"/>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Introgession Backcross Parent: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="introgression_backcross_parent" placeholder="Type to Autocomplete"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Introgression Map Version: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="introgression_map_version" placeholder="Type to Autocomplete"/>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Introgression Chromosome: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="introgression_chromosome" placeholder="Type to Autocomplete"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Introgression Start Position (bp): </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="introgression_start_position_bp" placeholder="Type to Autocomplete"/>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Introgression End Position (bp): </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="introgression_end_position_bp" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
@@ -278,6 +340,24 @@ jQuery(document).ready(function () {
      jQuery("#organization").autocomplete({
         source: '/ajax/stock/stock_organization_autocomplete',
      });
+     jQuery("#introgression_parent").autocomplete({
+        source: '/ajax/stock/stock_introgression_parent_autocomplete',
+     });
+     jQuery("#introgression_backcross_parent").autocomplete({
+        source: '/ajax/stock/stock_introgression_backcross_parent_autocomplete',
+     });
+     jQuery("#introgression_map_version").autocomplete({
+        source: '/ajax/stock/stock_introgression_map_version_autocomplete',
+     });
+     jQuery("#introgression_chromosome").autocomplete({
+        source: '/ajax/stock/stock_introgression_chromosome_autocomplete',
+     });
+     jQuery("#introgression_start_position_bp").autocomplete({
+        source: '/ajax/stock/stock_introgression_start_position_bp_autocomplete',
+     });
+     jQuery("#introgression_end_position_bp").autocomplete({
+        source: '/ajax/stock/stock_introgression_end_position_bp_autocomplete',
+     });
 
    var stock_table = jQuery('#stock_search_results').DataTable( {
 
@@ -285,7 +365,7 @@ jQuery(document).ready(function () {
      'ordering'  : false,
      'processing': true,
      'serverSide': true,
-     'lengthMenu': [10,20,50,100,1000],
+     'lengthMenu': [10,20,50,100,1000,5000],
      'ajax': { 'url':  '/ajax/search/stocks',
                'data': function(d) {
                   d.any_name  = jQuery('#any_name').val();
@@ -303,6 +383,12 @@ jQuery(document).ready(function () {
                   d.organization = jQuery('#organization').val();
                   d.property_term = jQuery('#editable_stockprop_search_term').val();
                   d.property_value = jQuery('#editable_stockprop_search_value').val();
+                  d.introgression_parent = jQuery('#introgression_parent').val();
+                  d.introgression_backcross_parent = jQuery('#introgression_backcross_parent').val();
+                  d.introgression_map_version = jQuery('#introgression_map_version').val();
+                  d.introgression_chromosome = jQuery('#introgression_chromosome').val();
+                  d.introgression_start_position_bp = jQuery('#introgression_start_position_bp').val();
+                  d.introgression_end_position_bp = jQuery('#introgression_end_position_bp').val();
              }
          }
     });

@@ -77,7 +77,7 @@ sub list_databases_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my @db_list;
 
-    my $db_rs = $bcs_schema->resultset('General::Db')->search({description=>'BrAPI_App_Database_Display'});
+    my $db_rs = $bcs_schema->resultset('General::Db')->search({description=>'BrAPI_App_Database_Display'}, {order_by=>{'-asc'=>'db_id'}});
     while(my $r = $db_rs->next()){
         push @db_list, [$r->name, $r->url];
     }

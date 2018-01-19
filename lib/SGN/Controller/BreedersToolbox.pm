@@ -93,12 +93,15 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $accessions = $ac->get_all_accessions($c);
     # my $populations = $ac->get_all_populations($c);
 
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
     $c->stash->{accessions} = $accessions;
     $c->stash->{list_id} = $list_id;
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
-
 }
 
 sub manage_roles : Path("/breeders/manage_roles") Args(0) {
@@ -133,20 +136,11 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 	return;
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
-    my $breeding_programs = $bp->get_breeding_programs();
-    my $locations = {};
-    foreach my $b (@$breeding_programs) {
-	$locations->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
-    }
-    $locations->{'Other'} = $bp->get_locations_by_breeding_program();
+    $c->assets->include('/static/css/leaflet.css');
+    $c->assets->include('/static/css/leaflet.extra-markers.min.css');
+    $c->assets->include('/static/css/esri-leaflet-geocoder.css');
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
-
-    print STDERR "Locations: " . Dumper($locations);
-
-    $c->stash->{locations} = $locations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
@@ -229,6 +223,25 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
 
+}
+
+sub manage_upload :Path("/breeders/upload") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+    my $breeding_programs = $projects->get_breeding_programs();
+    $c->stash->{locations} = $projects->get_all_locations();
+    $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{timestamp} = localtime;
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
 }
 
 sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
@@ -534,7 +547,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
 sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
-
+    $c->stash->{dataset_id} = $c->req->param('dataset_id');
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }

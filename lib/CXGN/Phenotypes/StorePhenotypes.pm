@@ -45,6 +45,7 @@ use Scalar::Util qw(looks_like_number);
 use SGN::Image;
 use CXGN::ZipFile;
 use CXGN::UploadFile;
+use CXGN::List::Transform;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -69,6 +70,11 @@ has 'user_id' => (isa => "Int",
 has 'stock_list' => (isa => "ArrayRef",
     is => 'rw',
     required => 1
+);
+
+has 'stock_id_list' => (isa => "ArrayRef[Int]|Undef",
+    is => 'rw',
+    required => 0,
 );
 
 has 'trait_list' => (isa => "ArrayRef",
@@ -116,12 +122,18 @@ has 'unique_trait_stock' => (isa => "HashRef",
 #build is used for creating hash lookups in this case
 sub create_hash_lookups {
     my $self = shift;
+    my $schema = $self->bcs_schema;
 
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
+    my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
-    my $schema = $self->bcs_schema;
+
+    my $t = CXGN::List::Transform->new();
+    my $stock_id_list = $t->transform($schema, 'stocks_2_stock_ids', \@stock_list);
+    $self->stock_id_list($stock_id_list->{'transform'});
+
     foreach my $trait_name (@trait_list) {
         #print STDERR "trait: $trait_name\n";
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
@@ -133,7 +145,7 @@ sub create_hash_lookups {
     #for checking if values in the file are already stored in the database or in the same file
     my %check_unique_trait_stock;
     my %check_unique_value_trait_stock;
-    my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
+    my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}, 'stock.stock_id'=>{-in=>$self->stock_id_list}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
     while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
         my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
         my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
@@ -161,7 +173,7 @@ sub verify {
     #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
     @trait_list = @{$self->trait_list};
     my $error_message;
@@ -342,6 +354,7 @@ sub store {
     my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
     ## Used later to attach file metadata.
@@ -353,7 +366,7 @@ sub store {
     my $rs;
     my %data;
     $rs = $schema->resultset('Stock::Stock')->search(
-        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] },
+        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
         {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
             '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
             '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
@@ -385,6 +398,7 @@ sub store {
                 if (!$timestamp) {
                     $timestamp = 'NA'.$upload_date;
                 }
+                my $treatments = $value_array->[2];
 
                 if (defined($trait_value) && length($trait_value)) {
 
@@ -427,6 +441,12 @@ sub store {
 
                         ## Link the experiment to the project
                         $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
+
+                        #Link the experiment to the treatments
+                        foreach my $treatment (@$treatments){
+                            my $treatment_project_id = $schema->resultset('Project::Project')->find({name=>$treatment})->project_id();
+                            $experiment->create_related('nd_experiment_projects', {project_id => $treatment_project_id});
+                        }
 
                         # Link the experiment to the stock
                         $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
@@ -543,9 +563,13 @@ sub save_archived_file_metadata {
     my $archived_file = shift;
     my $archived_file_type = shift;
     my $experiment_ids = shift;
+    my $md5checksum;
 
-    my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_file);
+    if ($archived_file ne 'none'){
+        my $upload_file = CXGN::UploadFile->new();
+        my $md5 = $upload_file->get_md5($archived_file);
+        $md5checksum = $md5->hexdigest();
+    }
 
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
     $md_row->insert();
@@ -554,7 +578,7 @@ sub save_archived_file_metadata {
             basename => basename($archived_file),
             dirname => dirname($archived_file),
             filetype => $archived_file_type,
-            md5checksum => $md5->hexdigest(),
+            md5checksum => $md5checksum,
             metadata_id => $md_row->metadata_id(),
         });
     $file_row->insert();

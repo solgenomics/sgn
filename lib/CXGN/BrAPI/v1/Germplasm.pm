@@ -221,6 +221,62 @@ sub germplasm_pedigree {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
 }
 
+sub germplasm_progeny {
+	my $self = shift;
+	my $inputs = shift;
+	my $stock_id = $inputs->{stock_id};
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+	print STDERR Dumper $stock_id;
+	my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ 
+	    'type_id'=> $accession_cvterm,
+		'stock_id'=> $stock_id,
+	});
+	my $edges = $self->bcs_schema()->resultset("Stock::StockRelationship")->search([
+		{ 
+		    'me.subject_id' => $stock_id,
+		    'me.type_id' => $father_cvterm,
+		    'object.type_id'=> $accession_cvterm
+		},
+		{ 
+		    'me.subject_id' => $stock_id,
+		    'me.type_id' => $mother_cvterm,
+		    'object.type_id'=> $accession_cvterm
+		}
+	],{join => 'object'});
+    my $full_data = [];
+    while (my $edge = $edges->next) {
+        if ($edge->type_id==$mother_cvterm){
+            push @{$full_data}, {
+				progenyGermplasmDbId => $edge->object_id,
+				parentType => "FEMALE"
+			};
+        } else {
+            push @{$full_data}, {
+				progenyGermplasmDbId => $edge->object_id,
+				parentType => "MALE"
+			};
+        }
+    }
+	my $total_count = scalar @{$full_data};
+	my $last_item = $page_size*($page+1)-1;
+	if($last_item > $total_count-1){
+	    $last_item = $total_count-1;
+	}
+	my $result = { 
+		defaultDisplayName=>$stock->uniquename,
+		germplasmDbId=>$stock_id,
+		data=>[@{$full_data}[$page_size*$page .. $last_item]]
+	};
+	my @data_files;
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm progeny result constructed');
+}
+
 sub germplasm_markerprofiles {
 	my $self = shift;
 	my $stock_id = shift;

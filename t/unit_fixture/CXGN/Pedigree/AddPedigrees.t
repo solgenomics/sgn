@@ -24,25 +24,25 @@ my $schema = $test->bcs_schema();
 
 # biparental pedigree
 #
-ok(my $pedigree = Bio::GeneticRelationships::Pedigree->new(name => "test_accession1", cross_type => "biparental"),"Create pedigree object");
-ok(my $female_parent = Bio::GeneticRelationships::Individual->new(name => 'test_accession3'),"Create individual for pedigree");
-ok(my $male_parent = Bio::GeneticRelationships::Individual->new(name => 'test_accession4'),"Create individual for pedigree");
+ok(my $pedigree = Bio::GeneticRelationships::Pedigree->new(name => "XG120251", cross_type => "biparental"),"Create pedigree object");
+ok(my $female_parent = Bio::GeneticRelationships::Individual->new(name => 'XG120261'),"Create individual for pedigree");
+ok(my $male_parent = Bio::GeneticRelationships::Individual->new(name => 'XG120273'),"Create individual for pedigree");
 ok($pedigree->set_female_parent($female_parent), "Set a female parent for a pedigree");
 ok($pedigree->set_male_parent($male_parent), "Set a male parent for a pedigree");
 
 # self
 #
-ok(my $pedigree2 = Bio::GeneticRelationships::Pedigree->new(name => "test_accession4", cross_type => "self"),"Create pedigree object");
-ok(my $female_parent2 = Bio::GeneticRelationships::Individual->new(name => 'test_accession3'),"Create individual for pedigree");
-ok(my $male_parent2 = Bio::GeneticRelationships::Individual->new(name => 'test_accession3'),"Create individual for pedigree");
+ok(my $pedigree2 = Bio::GeneticRelationships::Pedigree->new(name => "XG120273", cross_type => "self"),"Create pedigree object");
+ok(my $female_parent2 = Bio::GeneticRelationships::Individual->new(name => 'XG120261'),"Create individual for pedigree");
+ok(my $male_parent2 = Bio::GeneticRelationships::Individual->new(name => 'XG120261'),"Create individual for pedigree");
 ok($pedigree2->set_female_parent($female_parent2), "Set a female parent for a pedigree");
 ok($pedigree2->set_male_parent($male_parent2), "Set a male parent for a pedigree");
 
 # unknown male parent
 #
-ok(my $pedigree3 = Bio::GeneticRelationships::Pedigree->new(name => "test_accession1", cross_type => "open"),"Create pedigree object");
-ok(my $female_parent3 = Bio::GeneticRelationships::Individual->new(name => 'test_accession2'),"Create individual for pedigree");
-ok(my $male_parent3 = Bio::GeneticRelationships::Individual->new(name => 'test_accession3'),"Create individual for pedigree");
+ok(my $pedigree3 = Bio::GeneticRelationships::Pedigree->new(name => "XG120251", cross_type => "open"),"Create pedigree object");
+ok(my $female_parent3 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
+ok(my $male_parent3 = Bio::GeneticRelationships::Individual->new(name => 'XG120261'),"Create individual for pedigree");
 ok($pedigree3->set_female_parent($female_parent3), "Set a female parent for a pedigree");
 ###ok($pedigree3->set_male_parent(''), "Set an empty male parent for a pedigree");
 
@@ -73,7 +73,7 @@ my $population_row = $test->bcs_schema()->resultset("Stock::Stock")->create(
 #$open_parent->set_members(\@members);
 ok(my $open_parent = Bio::GeneticRelationships::Individual->new(name => 'test_population'),"Create individual for pop");
 
-my $open_pedigree = Bio::GeneticRelationships::Pedigree->new(name => 'test_accession5', cross_type => 'open');
+my $open_pedigree = Bio::GeneticRelationships::Pedigree->new(name => 'XG120198', cross_type => 'open');
 $open_pedigree->set_female_parent($female_parent3);
 $open_pedigree->set_male_parent($open_parent);
 my $add_open_pedigree = CXGN::Pedigree::AddPedigrees->new(schema=>$schema, pedigrees => [ $open_pedigree ]);

@@ -284,18 +284,25 @@ foreach (@project_types) {
     push @all_project_types, $_->[1];
 }
 @all_project_types = sort @all_project_types;
-#print STDERR Dumper \@all_project_types;
+print STDERR Dumper \@all_project_types;
 is_deeply(\@all_project_types, [
           'Advanced Yield Trial',
           'Clonal Evaluation',
-          'Genetic Gain',
-          'Health Status',
-          'Heterosis',
           'Preliminary Yield Trial',
+          'Screen House',
+          'Seed Multiplication',
           'Seedling Nursery',
-          'Storage',
           'Uniform Yield Trial',
-          'Variety Release Trial'
+          'Variety Release Trial',
+          'crossing_trial',
+          'genetic_gain_trial',
+          'genotyping_trial',
+          'grafting_trial',
+          'health_status_trial',
+          'heterosis_trial',
+          'phenotyping_trial',
+          'pollinating_trial',
+          'storage_trial'
         ], "check get_all_project_types");
 
 
@@ -339,9 +346,10 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
 	trial_location => 'test_location',
 	trial_name => "anothertrial",
 	design => $trial_design,
+    operator => 'janedoe'
     });
 
-my $message = $new_trial->save_trial();
+my $save = $new_trial->save_trial();
 
 my $after_design_creation_count = $stock_count_rs->count();
 

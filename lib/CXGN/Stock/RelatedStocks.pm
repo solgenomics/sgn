@@ -23,12 +23,15 @@ sub get_trial_related_stock {
     my $ schema = $self->dbic_schema();
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of_subplot', 'stock_relationship')->cvterm_id();
+    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
 
     my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship
             INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
             INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
             WHERE stock_relationship.object_id = ? AND (stock_relationship.type_id = ?
-            OR stock_relationship.type_id = ?)
+            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ?)
 
             UNION ALL
 
@@ -36,11 +39,11 @@ sub get_trial_related_stock {
             INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
             INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
             WHERE stock_relationship.subject_id = ? AND (stock_relationship.type_id = ?
-            OR stock_relationship.type_id = ?) ";
+            OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ? OR stock_relationship.type_id = ?) ";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($stock_id, $plot_of_type_id, $plant_of_type_id, $stock_id, $plot_of_type_id, $plant_of_type_id);
+    $h->execute($stock_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $plant_of_subplot_type_id, $seed_transaction_type_id, $stock_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $plant_of_subplot_type_id, $seed_transaction_type_id);
 
     my @trial_related_stock =();
     while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){

@@ -5,6 +5,7 @@ use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -73,27 +74,13 @@ sub _validate_with_plugin {
         push @error_messages, "Cell D1: description is missing from the header";
     }
 
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-
-    my $rs = $schema->resultset('Stock::Stock')->search(
-      { 'me.is_obsolete' => { '!=' => 't' } },
-      {
-       '+select'=> ['me.uniquename', 'me.type_id'],
-       '+as'=> ['uniquename', 'stock_type_id']
-      }
-    );
-
-    my %seedlot_check;
-    while (my $s = $rs->next()) {
-        $seedlot_check{$s->get_column('uniquename')} = 1;
-    }
-
     my %seen_seedlot_names;
+    my %seen_accession_names;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $seedlot_name;
         my $accession_name;
-        my $amount;
+        my $amount = 0;
         my $description;
 
         if ($worksheet->get_cell($row,0)) {
@@ -104,8 +91,6 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,2)) {
             $amount =  $worksheet->get_cell($row,2)->value();
-        } else {
-            $amount = 0;
         }
         if ($worksheet->get_cell($row,3)) {
             $description =  $worksheet->get_cell($row,3)->value();
@@ -118,10 +103,6 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: seedlot_name must not contain spaces or slashes.";
         }
         else {
-            if ($seedlot_check{$seedlot_name}) {
-                push @error_messages, "Cell A$row_name: seedlot_name already exists: $seedlot_name";
-            }
-
             #file must not contain duplicate plot names
             if ($seen_seedlot_names{$seedlot_name}) {
                 push @error_messages, "Cell A$row_name: duplicate seedlot_name at cell A".$seen_seedlot_names{$seedlot_name}.": $seedlot_name";
@@ -129,26 +110,33 @@ sub _validate_with_plugin {
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
-        #accession name must not be blank
         if (!$accession_name || $accession_name eq '') {
             push @error_messages, "Cell B$row_name: accession name missing";
         } else {
-            #accession name must exist in the database
-            if (!$self->_get_accession($accession_name)) {
-                push @error_messages, "Cell B$row_name: accession name does not exist as a stock or as synonym: $accession_name";
-                $missing_accessions{$accession_name} = 1;
-            }
+            $seen_accession_names{$accession_name}++;
         }
 
-        #amount must not be blank
-        if (!$amount || $amount eq '') {
+        if (!defined($amount) || $amount eq '') {
             push @error_messages, "Cell C$row_name: amount missing";
         }
     }
 
-    if (scalar( keys %missing_accessions) > 0) {
-        my @missing_accessions_list = keys %missing_accessions;
-        $errors{'missing_accessions'} = \@missing_accessions_list;
+    my @accessions = keys %seen_accession_names;
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0) {
+        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        $errors{'missing_accessions'} = \@accessions_missing;
+    }
+
+    my @seedlots = keys %seen_seedlot_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@seedlots }
+    });
+    while (my $r=$rs->next){
+        push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -180,11 +168,30 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
+    my %seen_accession_names;
+    for my $row ( 1 .. $row_max ) {
+        my $accession_name;
+        if ($worksheet->get_cell($row,1)) {
+            $accession_name = $worksheet->get_cell($row,1)->value();
+            $seen_accession_names{$accession_name}++;
+        }
+    }
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my @accessions = keys %seen_accession_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@accessions },
+        'type_id' => $accession_cvterm_id
+    });
+    my %accession_lookup;
+    while (my $r=$rs->next){
+        $accession_lookup{$r->uniquename} = $r->stock_id;
+    }
+
     for my $row ( 1 .. $row_max ) {
         my $seedlot_name;
         my $accession_name;
-        my $accession_stock;
-        my $amount;
+        my $amount = 0;
         my $description;
 
         if ($worksheet->get_cell($row,0)) {
@@ -192,25 +199,22 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,1)) {
             $accession_name = $worksheet->get_cell($row,1)->value();
-            $accession_stock = $self->_get_accession($accession_name);
         }
         if ($worksheet->get_cell($row,2)) {
             $amount =  $worksheet->get_cell($row,2)->value();
-        } else {
-            $amount = 0;
         }
         if ($worksheet->get_cell($row,3)) {
             $description =  $worksheet->get_cell($row,3)->value();
         }
 
         #skip blank lines
-        if (!$seedlot_name && !$accession_name && !$description && !$amount) {
+        if (!$seedlot_name && !$accession_name && !$description) {
             next;
         }
 
         $parsed_seedlots{$seedlot_name} = {
-            accession => $accession_stock->uniquename(),
-            accession_stock_id => $accession_stock->stock_id(),
+            accession => $accession_name,
+            accession_stock_id => $accession_lookup{$accession_name},
             amount => $amount,
             description => $description
         };
@@ -220,40 +224,5 @@ sub _parse_with_plugin {
     return 1;
 }
 
-
-sub _get_accession {
-    my $self = shift;
-    my $accession_name = shift;
-    my $schema = $self->get_chado_schema();
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $stock = $schema->resultset('Stock::Stock')->search(
-      {
-          'me.is_obsolete' => { '!=' => 't' },
-          'me.type_id' => $accession_cvterm,
-          -or => [
-              'lower(me.uniquename)' => lc($accession_name),
-              -and => [
-                  'lower(type.name)' => { like => '%synonym%' },
-                  'lower(stockprops.value)' => lc($accession_name),
-              ],
-          ],
-      },
-      {
-          join => {'stockprops' => 'type'},
-          distinct => 1
-      }
-    );
-
-    if (!$stock) {
-        print STDERR "$accession_name is not an accession\n";
-        return;
-    }
-    if ($stock->count != 1){
-        print STDERR "Accession name ($accession_name) is not a unique stock unqiuename or synonym\n";
-        return;
-    }
-
-    return $stock->first();
-}
 
 1;

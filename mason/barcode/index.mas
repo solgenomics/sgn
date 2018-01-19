@@ -162,6 +162,91 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
             jQuery("#2D_fieldbook_option").hide();
           }
       });
+      
+      $(document).on('change', '#select_print_format', function () {
+          var format = jQuery("#select_print_format").val();
+          if (format == "32A4") {
+            var label_row = 10;
+            var label_cols = 4; 
+            var tops_margin = 12;
+            var left_margin = 17;
+            var bottom_margin = 12;
+            var right_margin = 10;            
+          }
+          if (format == "32_unique") {
+            var label_row = 10;
+            var label_cols = 4; 
+            var tops_margin = 12;
+            var left_margin = 17;
+            var bottom_margin = 12;
+            var right_margin = 10;
+          }
+          else if (format == "CASS") {
+          var label_row = 10;
+          var label_cols = 2; 
+          var tops_margin = 10;
+          var left_margin = 112;
+          var bottom_margin = 13;
+          var right_margin = 20;
+          }
+          else if (format == "MUSA") {
+          var label_row = 10;
+          var label_cols = 2; 
+          var tops_margin = 10;
+          var left_margin = 112;
+          var bottom_margin = 13;
+          var right_margin = 20;
+          }
+          else if (format == "NCSU") {
+          var label_row = 10;
+          var label_cols = 3; 
+          var tops_margin = 12;
+          var left_margin = 10;
+          var bottom_margin = 12;
+          var right_margin = 10;
+          var text = 'year,location'; 
+          }
+          else if (format == "20A4") {
+          var label_row = 10;
+          var label_cols = 2; 
+          var tops_margin = 12;
+          var left_margin = 10;
+          var bottom_margin = 12;
+          var right_margin = 10;
+          }
+          else if (format == "IITA-3") {
+          var label_row = 20;
+          var label_cols = 3; 
+          var tops_margin = 13;
+          var left_margin = 130;
+          var bottom_margin = 11;
+          var right_margin = 10;
+          }
+          else if (format == "crossing") {
+          var label_row = 1;
+          var label_cols = 1; 
+          var tops_margin = 5;
+          var left_margin = 2;
+          var bottom_margin = 0;
+          var right_margin = 0;
+          }
+          jQuery("#text_margin").empty();
+          jQuery("#text_margin").val(text);
+          jQuery("#label_rows").empty();
+          jQuery("#label_rows").val(label_row);
+          jQuery("#label_cols").empty();
+          jQuery("#label_cols").val(label_cols);
+          jQuery("#select_barcode_type").prop('selectedIndex',1);
+          jQuery("#page_format").prop('selectedIndex',0);
+          jQuery("#tops_margin").empty();
+          jQuery("#tops_margin").val(tops_margin);
+          jQuery("#left_margin").empty();
+          jQuery("#left_margin").val(left_margin);
+          jQuery("#bottom_margin").empty();
+          jQuery("#bottom_margin").val(bottom_margin);
+          jQuery("#right_margin").empty();
+          jQuery("#right_margin").val(right_margin);
+      });
   });
 </script>
     </div>
@@ -190,9 +275,16 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
     <label class="col-sm-4 control-label">Printing Format (Optional): </label>
     <div class="col-sm-8">
         <select class="form-control" id="select_print_format" name="select_print_format">
-          <option selected disabled>select printing format</option>
+          <!--<option selected disabled>select printing format</option>-->
+          <option value="">select printing format</option>
           <option value="CASS">CASS printing format</option>
           <option value="MUSA">MUSA printing format</option>
+          <option value="32A4">32 label Size Sticker Paper</option>
+          <option value="32_unique">32 Unique label Size Sticker Paper</option>
+          <option value="20A4">20 label Size Sticker Paper</option>
+          <option value="NCSU">NCSU printing format</option>
+          <option value="IITA-3">IITA-3-barcode</option>
+          <option value="crossing">CROSS</option>
         </select>
     </div>
   </div>
@@ -263,7 +355,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
       <div id="list_menu_location_2"></div>
 <script defer="defer">
   jQuery(document).ready(function() {
-      pasteListMenu('stock_names_2', 'list_menu_location_2');
+      pasteListMenu('stock_names_2', 'list_menu_location_2', 'paste', 'plots');
   });
 
 </script>
@@ -291,6 +383,58 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
     </div> -->
 
 %#  <& /barcode/printer_settings.mas &> #%
+
+  <button style="float:right" type="submit" class="btn btn-info btn-sm" type="submit" value="Download Barcodes">Download Barcodes</button>
+  <button style="float:right" class="btn btn-default btn-sm" type="reset" >Clear</button>
+</form>
+
+<br/>
+
+  </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+</div>
+</div>
+
+<br/>
+
+</&>
+
+<!-- Trial barcode -->
+
+<&| /page/info_section.mas, title=>'Download Trial Barcodes', collapsible=>1, collapsed=>0 &>
+
+<div class="well well-sm">
+<div class="row">
+  <div class="col-md-1 col-lg-1">
+  </div>
+  <div class="col-md-10 col-lg-10">
+
+<form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/trial/download/trial_QRcode" >
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Enter a List of Trial Names: </label>
+    <div class="col-sm-8">
+      <textarea class="form-control" id="trial_names_2" name="trial_names_2" ></textarea>
+    </div>
+  </div>
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Or Paste From a List: </label>
+    <div class="col-sm-8">
+      <div id="list_menu_location_3"></div>
+<script defer="defer">
+  jQuery(document).ready(function() {
+      pasteListMenu('trial_names_2', 'list_menu_location_3', 'paste', 'trials');
+  });
+
+</script>
+    </div>
+  </div>
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Or Upload <font size="3" color="#5bc0de">Tab-delimited Text File</font> With Trial Names: </label>
+    <div class="col-sm-8">
+      <input type="file" name="trial_names_file_2" />
+    </div>
+  </div>
 
   <button style="float:right" type="submit" class="btn btn-info btn-sm" type="submit" value="Download Barcodes">Download Barcodes</button>
   <button style="float:right" class="btn btn-default btn-sm" type="reset" >Clear</button>

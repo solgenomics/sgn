@@ -32,6 +32,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Login;
+use CXGN::Stock::StockLookup;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -210,6 +211,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
+    my $include_row_and_column_numbers = $c->req->param("include_row_and_column_numbers") && $c->req->param("include_row_and_column_numbers") ne 'null' ? $c->req->param("include_row_and_column_numbers") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -353,6 +355,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
+        include_row_and_column_numbers => $include_row_and_column_numbers,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
@@ -494,6 +497,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 		trial_list=>$trial_id_data->{transform},
 		accession_list=>$accession_id_data->{transform},
 		include_timestamp=>$timestamp_included,
+        include_row_and_column_numbers=>1,
 		data_level=>$datalevel,
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
@@ -718,9 +722,27 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $c->res->body($error);
     return;
   }
+  
+  # find accession synonyms
+  my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
+  my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
+  my $synonym_string = "";
+  while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
+      if(scalar(@{$synonym_list})>0){
+          if(not length($synonym_string)<1){
+              $synonym_string.=" ";
+          }
+          $synonym_string.=$uniquename."=(";
+          $synonym_string.= (join ", ", @{$synonym_list}).")";
+      }
+  }
+  
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
   print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
+  if (length($synonym_string)>0){
+      print $TEMP "# Synonyms: ".$synonym_string."\n";
+  }
   print $TEMP "Marker\t";
 
   print STDERR "Decoding genotype data ...".localtime()."\n";

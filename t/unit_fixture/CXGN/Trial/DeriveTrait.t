@@ -81,10 +81,11 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial_derive_trait",
     trial_name => "test_trial_derive_trait",
     design_type => "RCBD",
+    operator => "janedoe"
 }), "create trial object");
 
-ok(my $trial_id = $trial_create->save_trial(), "save trial");
-
+ok(my $save = $trial_create->save_trial(), "save trial");
+my $trial_id = $save->{'trial_id'};
 my $trial = CXGN::Trial->new({ bcs_schema => $fix->bcs_schema(), trial_id => $trial_id });
 
 my $trial_plots = $trial->get_plots();

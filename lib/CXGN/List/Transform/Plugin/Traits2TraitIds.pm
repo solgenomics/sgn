@@ -33,12 +33,18 @@ sub transform {
     foreach my $term (@$list) { 
 	my $missing_flag = 0;
 	my $rs; 
-	my ($trait_name, $full_accession) = split (/\|/ , $term);
-	my ($db, $accession) = split ":", $full_accession;
+    
+    my @parts = split (/\|/ , $term);
+    my ($db_name, $accession) = split ":", pop @parts;
+    
+    $accession =~ s/\s+$//;
+    $accession =~ s/^\s+//;
+    $db_name =~ s/\s+$//;
+    $db_name =~ s/^\s+//;
 	
 	my $db_rs = $schema->resultset("General::Db")->search( 
 	    { 
-		name => $db,
+		name => $db_name,
 	    });
 	
 	if ($db_rs->count() == 0) { 

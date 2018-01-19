@@ -291,7 +291,6 @@ jQuery(document).ready(function () {
 
   function replace_accession_in_trial() {
     jQuery('#replace_trial_accessions_dialog').modal("hide");
-    jQuery('#working_modal').modal("show");
     var old_accession_id = jQuery('#trial_accessions_table').val();
     var new_accession = jQuery('#replace_database_accession').val();
 
@@ -303,7 +302,9 @@ jQuery(document).ready(function () {
               'old_accession_id': old_accession_id,
               'new_accession': new_accession,
       },
-
+      beforeSend: function(){
+        jQuery('#working_modal').modal("show");
+      },
       success: function (response) {
         jQuery('#working_modal').modal("hide");
 
@@ -334,7 +335,6 @@ jQuery(document).ready(function () {
   });
 
   function substitute_plot_accession() {
-    jQuery('#working_modal').modal("show");
 
     var plot_1_info = jQuery('#trial_plot_1_name_table').val();
     var plot_2_info = jQuery('#trial_plot_2_name_table').val();
@@ -347,7 +347,9 @@ jQuery(document).ready(function () {
               'plot_1_info': plot_1_info,
               'plot_2_info': plot_2_info,
       },
-
+      beforeSend: function(){
+        jQuery('#working_modal').modal("show");
+      },
       success: function (response) {
         jQuery('#working_modal').modal("hide");
 
@@ -359,6 +361,7 @@ jQuery(document).ready(function () {
       },
       error: function(){
         jQuery('#working_modal').modal("hide");
+        alert('An error occurred substituting plot accession. Please try again or contact us.');
       }
     });
   }

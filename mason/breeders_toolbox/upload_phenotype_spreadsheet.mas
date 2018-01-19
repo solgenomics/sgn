@@ -35,6 +35,7 @@
                         <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
+                            <option value="subplots">Subplots</option>
                         </select>
                     </div>
                 </div>
@@ -81,8 +82,7 @@
 
             <h4>Required Data:</h4>
             <ul>
-                <li>plot_name or plant_name (must exist in the database)</li>
-                <li>trait name|trait id (must exist in the trait ontology)</li>
+                <li>Please click the above button to generate the required phenotype spreadsheet</li>
             </ul>
 
             <h4>Notes:</h4>
