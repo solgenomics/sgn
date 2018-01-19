@@ -372,12 +372,12 @@ $timestamp
                 jQuery('#edit_seedlot_details_population').val(response.population_name);
                 jQuery('#edit_seedlot_details_location').val(response.location_code);
                 var accession_name = '';
-                if (response.accessions.length > 0){
-                    accession_name = response.accessions[0][1];
+                if (response.accession){
+                    accession_name = response.accession[1];
                 }
                 var cross_name = '';
-                if (response.crosses.length > 0){
-                    cross_name = response.crosses[0][1];
+                if (response.cross){
+                    cross_name = response.cross[1];
                 }
                 jQuery('#edit_seedlot_details_accession').val(accession_name);
                 jQuery('#edit_seedlot_details_cross').val(cross_name);

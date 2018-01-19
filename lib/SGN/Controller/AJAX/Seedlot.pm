@@ -106,8 +106,8 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
         organization_name => $c->stash->{seedlot}->organization_name(),
         population_name => $c->stash->{seedlot}->population_name(),
-        accessions => $c->stash->{seedlot}->accession(),
-        crosses => $c->stash->{seedlot}->cross(),
+        accession => $c->stash->{seedlot}->accession(),
+        cross => $c->stash->{seedlot}->cross(),
     };
 }
 
@@ -154,11 +154,11 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     }
     my $accession_id;
     if ($accession_uniquename){
-        $accession_id = [$schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename, type_id=>$accession_cvterm_id})->stock_id()];
+        $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename, type_id=>$accession_cvterm_id})->stock_id();
     }
     my $cross_id;
     if ($cross_uniquename){
-        $cross_id = [$schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id()];
+        $cross_id = $schema->resultset('Stock::Stock')->find({uniquename=>$cross_uniquename, type_id=>$cross_cvterm_id})->stock_id();
     }
     if ($accession_uniquename && !$accession_id){
         $c->stash->{rest} = {error=>'The given accession name is not in the database! Seedlots can only be added onto existing accessions.'};
@@ -182,8 +182,8 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);
     $seedlot->location_code($location);
-    $seedlot->accession_stock_ids($accession_id);
-    $seedlot->cross_stock_ids($cross_id);
+    $seedlot->accession_stock_id($accession_id);
+    $seedlot->cross_stock_id($cross_id);
     $seedlot->population_name($population);
     my $return = $seedlot->store();
     if (exists($return->{error})){

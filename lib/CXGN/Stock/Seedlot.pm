@@ -576,11 +576,12 @@ sub _store_seedlot_accession {
     return;
 }
 
-sub _update_accession_stock_id {
+sub _update_content_stock_id {
     my $self = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
-    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>$accession_type_id}, {'join'=>'subject'});
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
+    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>[$accession_type_id,$cross_type_id]}, {'join'=>'subject'});
     while (my $r=$acc_rs->next){
         $r->delete();
     }
@@ -636,18 +637,6 @@ sub _store_seedlot_cross {
         type_id => $type_id,
     });
     return;
-}
-
-sub _update_cross_stock_id {
-    my $self = shift;
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
-    my $cross_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>$cross_type_id}, {'join'=>'subject'});
-    while (my $r=$cross_rs->next){
-        $r->delete();
-    }
-    my $error = $self->_store_seedlot_cross();
-    return $error;
 }
 
 sub _retrieve_cross {
@@ -760,13 +749,13 @@ sub store {
             if($self->accession_stock_id){
                 my $input_accession_id = $self->accession_stock_id;
                 my $transactions = $self->transactions();
-                my $stored_accession_id = $self->accession->[0];
+                my $stored_accession_id = $self->accession ? $self->accession->[0] : 0;
                 $self->accession_stock_id($input_accession_id);
                 my $accessions_have_changed = $input_accession_id == $stored_accession_id ? 0 : 1;
                 if ($accessions_have_changed && scalar(@$transactions)>1){
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (accessions) cannot be changed now!";
                 } elsif ($accessions_have_changed && scalar(@$transactions) <= 1) {
-                    $error = $self->_update_accession_stock_id();
+                    $error = $self->_update_content_stock_id();
                     my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->accession_stock_id);
                 }
                 if ($error){
@@ -778,13 +767,13 @@ sub store {
             if($self->cross_stock_id){
                 my $input_cross_id = $self->cross_stock_id;
                 my $transactions = $self->transactions();
-                my $stored_cross_id = $self->cross->[0];
+                my $stored_cross_id = $self->cross ? $self->cross->[0] : 0;
                 $self->cross_stock_id($input_cross_id);
                 my $crosses_have_changed = $input_cross_id == $stored_cross_id ? 0 : 1;
                 if ($crosses_have_changed && scalar(@$transactions)>1){
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (crosses) cannot be changed now!";
                 } elsif ($crosses_have_changed && scalar(@$transactions) <= 1) {
-                    $error = $self->_update_cross_stock_id();
+                    $error = $self->_update_content_stock_id();
                     my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->cross_stock_id);
                 }
                 if ($error){
