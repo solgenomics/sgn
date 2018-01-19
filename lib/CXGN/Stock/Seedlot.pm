@@ -66,39 +66,39 @@ has 'nd_geolocation_id' => (
 
 =head2 Accessor cross()
 
-The crosses this seedlot is a "collection_of"
-# for setter, use cross_stock_ids
+The crosses this seedlot is a "collection_of". Returns an arrayref of [$cross_stock_id, $cross_uniquename]
+# for setter, use cross_stock_id
 
 =cut
 
-has 'crosses' => (
-    isa => 'ArrayRef[ArrayRef]',
+has 'cross' => (
+    isa => 'ArrayRef|Undef',
     is => 'rw',
     lazy     => 1,
-    builder  => '_retrieve_crosses',
+    builder  => '_retrieve_cross',
 );
 
-has 'cross_stock_ids' =>   (
-    isa => 'ArrayRef[Int]|Undef',
+has 'cross_stock_id' =>   (
+    isa => 'Int|Undef',
     is => 'rw',
 );
 
 =head2 Accessor accessions()
 
-The accessions this seedlot is a "collection_of"
-# for setter, use accession_stock_ids
+The accessions this seedlot is a "collection_of". Returns an arrayref of [$accession_stock_id, $accession_uniquename]
+# for setter, use accession_stock_id
 
 =cut
 
-has 'accessions' => (
-    isa => 'ArrayRef[ArrayRef]',
+has 'accession' => (
+    isa => 'ArrayRef|Undef',
     is => 'rw',
     lazy     => 1,
-    builder  => '_retrieve_accessions',
+    builder  => '_retrieve_accession',
 );
 
-has 'accession_stock_ids' => (
-    isa => 'ArrayRef[Int]|Undef',
+has 'accession_stock_id' => (
+    isa => 'Int|Undef',
     is => 'rw',
 );
 
@@ -241,6 +241,17 @@ sub list_seedlots {
     return (\@seedlots, $records_total);
 }
 
+# class method
+=head2 Class method: verify_seedlot_stock_lists()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, \@stock_names, \@seedlot_names);
+ Desc:         Class method that verifies if a given list of seedlots is valid for a given list of accessions
+ Ret:          success or error
+ Args:         $schema, $stock_names, $seedlot_names
+ Side Effects: accesses the database
+
+=cut
+
 sub verify_seedlot_stock_lists {
     my $class = shift;
     my $schema = shift;
@@ -316,6 +327,17 @@ sub verify_seedlot_stock_lists {
     return \%return;
 }
 
+# class method
+=head2 Class method: verify_seedlot_plot_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, [[$seedlot_name, $plot_name]]);
+ Desc:         Class method that verifies if a given list of pairs of seedlot_name and plot_name have the same underlying accession.
+ Ret:          success or error
+ Args:         $schema, $stock_names, $seedlot_names
+ Side Effects: accesses the database
+
+=cut
+
 sub verify_seedlot_plot_compatibility {
     my $class = shift;
     my $schema = shift;
@@ -361,6 +383,17 @@ sub verify_seedlot_plot_compatibility {
     }
     return \%return;
 }
+
+# class method
+=head2 Class method: verify_seedlot_accessions()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, [[$seedlot_name, $accession_name]]);
+ Desc:         Class method that verifies if a given list of pairs of seedlot_name and accession_name have the same underlying accession.
+ Ret:          success or error
+ Args:         $schema, $stock_names, $seedlot_names
+ Side Effects: accesses the database
+
+=cut
 
 sub verify_seedlot_accessions {
     my $class = shift;
@@ -469,11 +502,11 @@ sub _store_seedlot_relationships {
     my $error;
 
     eval {
-        if ($self->accession_stock_ids){
-            $error = $self->_store_seedlot_accessions();
+        if ($self->accession_stock_id){
+            $error = $self->_store_seedlot_accession();
         }
-        if ($self->cross_stock_ids){
-            $error = $self->_store_seedlot_crosses();
+        if ($self->cross_stock_id){
+            $error = $self->_store_seedlot_cross();
         }
         if (!$error){
             my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
@@ -516,35 +549,34 @@ sub _update_seedlot_location {
     $nd->update({nd_geolocation_id=>$self->nd_geolocation_id});
 }
 
-sub _store_seedlot_accessions {
+sub _store_seedlot_accession {
     my $self = shift;
-    foreach my $a (@{$self->accession_stock_ids()}) {
-        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
-        if ($self->organism_id){
-            if ($self->organism_id != $organism_id){
-                return "Accessions must all be the same organism, so that a population can group the seed lots.\n";
-            }
+    my $accession_stock_id = $self->accession_stock_id;
+
+    my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $accession_stock_id})->organism_id();
+    if ($self->organism_id){
+        if ($self->organism_id != $organism_id){
+            return "Accessions must all be the same organism, so that a population can group the seed lots.\n";
         }
-        $self->organism_id($organism_id);
     }
+    $self->organism_id($organism_id);
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-    foreach my $a (@{$self->accession_stock_ids()}) {
-        my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
+    my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$accession_stock_id });
 
-        if ($already_exists) {
-            print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
-            next;
-        }
-        my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
-            object_id => $self->seedlot_id(),
-            subject_id => $a,
-            type_id => $type_id,
-        });
+    if ($already_exists) {
+        print STDERR "Accession with id $accession_stock_id is already associated with seedlot id ".$self->seedlot_id()."\n";
+        return "Accession with id $accession_stock_id is already associated with seedlot id ".$self->seedlot_id();
     }
+    my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
+        object_id => $self->seedlot_id(),
+        subject_id => $accession_stock_id,
+        type_id => $type_id,
+    });
+    return;
 }
 
-sub _update_accession_stock_ids {
+sub _update_accession_stock_id {
     my $self = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
@@ -552,29 +584,27 @@ sub _update_accession_stock_ids {
     while (my $r=$acc_rs->next){
         $r->delete();
     }
-    my $error = $self->_store_seedlot_accessions();
+    my $error = $self->_store_seedlot_accession();
     return $error;
 }
 
-sub _retrieve_accessions {
+sub _retrieve_accession {
     my $self = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
     my $rs = $self->schema()->resultset("Stock::StockRelationship")->search({ 'me.type_id' => $type_id, 'me.object_id' => $self->seedlot_id(), 'subject.type_id'=>$accession_type_id }, {'join'=>'subject'});
 
-    my @accession_ids;
-    while (my $row = $rs->next()) {
-        push @accession_ids, $row->subject_id();
+    my $accession_id;
+    if ($rs->count == 1){
+        $accession_id = $rs->first->subject_id;
     }
 
-    $self->accession_stock_ids(\@accession_ids);
+    if ($accession_id){
+        $self->accession_stock_id($accession_id);
 
-    $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@accession_ids }});
-    my @names;
-    while (my $s = $rs->next()) {
-        push @names, [ $s->stock_id(), $s->uniquename() ];
+        my $accession_rs = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $accession_id });
+        $self->accession([$accession_rs->stock_id(), $accession_rs->uniquename()]);
     }
-    $self->accessions(\@names);
 }
 
 sub _remove_accession {
@@ -582,35 +612,33 @@ sub _remove_accession {
 }
 
 
-sub _store_seedlot_crosses {
+sub _store_seedlot_cross {
     my $self = shift;
-    foreach my $a (@{$self->cross_stock_ids()}) {
-        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
-        if ($self->organism_id){
-            if ($self->organism_id != $organism_id){
-                return "Crosses must all be the same organism to be in a seed lot.\n";
-            }
+    my $cross_stock_id = $self->cross_stock_id;
+    my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $cross_stock_id})->organism_id();
+    if ($self->organism_id){
+        if ($self->organism_id != $organism_id){
+            return "Crosses must all be the same organism to be in a seed lot.\n";
         }
-        $self->organism_id($organism_id);
     }
+    $self->organism_id($organism_id);
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-    foreach my $a (@{$self->cross_stock_ids()}) {
-        my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
+    my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$cross_stock_id });
 
-        if ($already_exists) {
-            print STDERR "Cross with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
-            next;
-        }
-        my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
-            object_id => $self->seedlot_id(),
-            subject_id => $a,
-            type_id => $type_id,
-        });
+    if ($already_exists) {
+        print STDERR "Cross with id $cross_stock_id is already associated with seedlot id ".$self->seedlot_id()."\n";
+        return "Cross with id $cross_stock_id is already associated with seedlot id ".$self->seedlot_id();
     }
+    my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
+        object_id => $self->seedlot_id(),
+        subject_id => $cross_stock_id,
+        type_id => $type_id,
+    });
+    return;
 }
 
-sub _update_cross_stock_ids {
+sub _update_cross_stock_id {
     my $self = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
@@ -618,29 +646,27 @@ sub _update_cross_stock_ids {
     while (my $r=$cross_rs->next){
         $r->delete();
     }
-    my $error = $self->_store_seedlot_crosses();
+    my $error = $self->_store_seedlot_cross();
     return $error;
 }
 
-sub _retrieve_crosses {
+sub _retrieve_cross {
     my $self = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
     my $rs = $self->schema()->resultset("Stock::StockRelationship")->search({ 'me.type_id' => $type_id, 'me.object_id' => $self->seedlot_id(), 'subject.type_id'=>$cross_type_id }, {'join'=>'subject'});
 
-    my @cross_ids;
-    while (my $row = $rs->next()) {
-        push @cross_ids, $row->subject_id();
+    my $cross_id;
+    if ($rs->count == 1){
+        $cross_id = $rs->first->subject_id;
     }
 
-    $self->cross_stock_ids(\@cross_ids);
+    if ($cross_id){
+        $self->cross_stock_id($cross_id);
 
-    $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@cross_ids }});
-    my @names;
-    while (my $s = $rs->next()) {
-        push @names, [ $s->stock_id(), $s->uniquename() ];
+        my $cross_rs = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $cross_id });
+        $self->cross([$cross_rs->stock_id(), $cross_rs->uniquename()]);
     }
-    $self->crosses(\@names);
 }
 
 
@@ -730,46 +756,36 @@ sub store {
 
         } else { #Updating seedlot
 
-            #Attempting to update seedlot's accessions. Will not proceed if seedlot has already been used in transactions.
-            if($self->accession_stock_ids){
-                my $input_accession_ids = $self->accession_stock_ids;
+            #Attempting to update seedlot's accession. Will not proceed if seedlot has already been used in transactions.
+            if($self->accession_stock_id){
+                my $input_accession_id = $self->accession_stock_id;
                 my $transactions = $self->transactions();
-                my %stored_accessions = map {$_->[0] => 1} @{$self->accessions};
-                $self->accession_stock_ids($input_accession_ids);
-                my $accessions_have_changed;
-                foreach (@$input_accession_ids){
-                    if (!exists($stored_accessions{$_})){
-                        $accessions_have_changed = 1;
-                    }
-                }
+                my $stored_accession_id = $self->accession->[0];
+                $self->accession_stock_id($input_accession_id);
+                my $accessions_have_changed = $input_accession_id == $stored_accession_id ? 0 : 1;
                 if ($accessions_have_changed && scalar(@$transactions)>1){
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (accessions) cannot be changed now!";
-                } else {
-                    $error = $self->_update_accession_stock_ids();
-                    my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->accession_stock_ids->[0]);
+                } elsif ($accessions_have_changed && scalar(@$transactions) <= 1) {
+                    $error = $self->_update_accession_stock_id();
+                    my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->accession_stock_id);
                 }
                 if ($error){
                     die $error;
                 }
             }
 
-            #Attempting to update seedlot's crosses. Will not proceed if seedlot has already been used in transactions.
-            if($self->cross_stock_ids){
-                my $input_cross_ids = $self->cross_stock_ids;
+            #Attempting to update seedlot's cross. Will not proceed if seedlot has already been used in transactions.
+            if($self->cross_stock_id){
+                my $input_cross_id = $self->cross_stock_id;
                 my $transactions = $self->transactions();
-                my %stored_crosses = map {$_->[0] => 1} @{$self->crosses};
-                $self->cross_stock_ids($input_cross_ids);
-                my $crosses_have_changed;
-                foreach (@$input_cross_ids){
-                    if (!exists($stored_crosses{$_})){
-                        $crosses_have_changed = 1;
-                    }
-                }
+                my $stored_cross_id = $self->cross->[0];
+                $self->cross_stock_id($input_cross_id);
+                my $crosses_have_changed = $input_cross_id == $stored_cross_id ? 0 : 1;
                 if ($crosses_have_changed && scalar(@$transactions)>1){
                     $error = "This seedlot ".$self->uniquename." has been used in transactions, so the contents (crosses) cannot be changed now!";
-                } else {
-                    $error = $self->_update_cross_stock_ids();
-                    my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->cross_stock_ids->[0]);
+                } elsif ($crosses_have_changed && scalar(@$transactions) <= 1) {
+                    $error = $self->_update_cross_stock_id();
+                    my $update_first_transaction_id = $transactions->[0]->update_transaction_object_id($self->cross_stock_id);
                 }
                 if ($error){
                     die $error;

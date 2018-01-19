@@ -106,8 +106,8 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
         organization_name => $c->stash->{seedlot}->organization_name(),
         population_name => $c->stash->{seedlot}->population_name(),
-        accessions => $c->stash->{seedlot}->accessions(),
-        crosses => $c->stash->{seedlot}->crosses(),
+        accessions => $c->stash->{seedlot}->accession(),
+        crosses => $c->stash->{seedlot}->cross(),
     };
 }
 
@@ -263,8 +263,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $c->detach();
     }
 
-    my $accession_ids = $accession_id ? [$accession_id] : undef;
-    my $cross_ids = $cross_id ? [$cross_id] : undef;
     my $from_stock_id = $accession_id ? $accession_id : $cross_id;
     my $from_stock_uniquename = $accession_uniquename ? $accession_uniquename : $cross_uniquename;
     my $population_name = $c->req->param("seedlot_population_name");
@@ -287,8 +285,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
         $sl->location_code($location_code);
-        $sl->accession_stock_ids($accession_ids);
-        $sl->cross_stock_ids($cross_ids);
+        $sl->accession_stock_id($accession_id);
+        $sl->cross_stock_id($cross_id);
         $sl->organization_name($organization);
         $sl->population_name($population_name);
         $sl->breeding_program_id($breeding_program_id);
@@ -409,13 +407,11 @@ sub upload_seedlots_POST : Args(0) {
     my @added_stocks;
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
-            my $accession_id = $val->{accession_stock_id} ? [$val->{accession_stock_id}] : undef;
-            my $cross_id = $val->{cross_stock_id} ? [$val->{cross_stock_id}] : undef;
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             $sl->uniquename($key);
             $sl->location_code($location);
-            $sl->accession_stock_ids($accession_id);
-            $sl->cross_stock_ids($cross_id);
+            $sl->accession_stock_id($val->{accession_stock_id});
+            $sl->cross_stock_id($val->{cross_stock_id});
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
@@ -613,14 +609,12 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
                 $c->stash->{rest} = {error=>'A seedlot must have either an accession or a cross as contents.'};
                 $c->detach();
             }
-            my $accession_content_id = $accession_id ? [$accession_id] : undef;
-            my $cross_content_id = $cross_id ? [$cross_id] : undef;
 
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
-            $sl->accession_stock_ids($accession_content_id);
-            $sl->cross_stock_ids($cross_content_id);
+            $sl->accession_stock_id($accession_id);
+            $sl->cross_stock_id($cross_id);
             $sl->organization_name($organization);
             $sl->population_name($population_name);
             $sl->breeding_program_id($breeding_program_id);

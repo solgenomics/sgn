@@ -27,16 +27,16 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     );
     my @content_accession_names;
     my @content_cross_names;
-    my $accessions = $sl->accessions();
+    my $accessions = $sl->accession();
     my $accessions_html = '';
-    foreach (@$accessions){
-        $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> (accession)';
+    if ($accessions){
+        $accessions_html .= '<a href="/stock/'.$accessions->[0].'/view">'.$accessions->[1].'</a> (accession)';
         push @content_accession_names, $_->[1];
     }
-    my $crosses = $sl->crosses();
+    my $crosses = $sl->cross();
     my $crosses_html = '';
-    foreach (@$crosses){
-        $crosses_html .= '<a href="/cross/'.$_->[0].'">'.$_->[1].'</a> (cross)';
+    if ($crosses){
+        $crosses_html .= '<a href="/cross/'.$crosses->[0].'">'.$crosses->[1].'</a> (cross)';
         push @content_cross_names, $_->[1];
     }
     my $populations = $sl->populations();
