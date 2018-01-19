@@ -162,7 +162,8 @@ sub list_seedlots {
     my $breeding_program = shift;
     my $location = shift;
     my $minimum_count = shift;
-    my $contents = shift;
+    my $contents_accession = shift;
+    my $contents_cross = shift;
 
     print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
@@ -189,8 +190,13 @@ sub list_seedlots {
     if ($location) {
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
-    if ($contents) {
-        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents.'%' };
+    if ($contents_accession) {
+        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents_accession.'%' };
+        $search_criteria{'subject.type_id'} = $accession_type_id;
+    }
+    if ($contents_cross) {
+        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents_cross.'%' };
+        $search_criteria{'subject.type_id'} = $cross_type_id;
     }
     if ($minimum_count) {
         $search_criteria{'stockprops.value' }  = { '>' => $minimum_count };

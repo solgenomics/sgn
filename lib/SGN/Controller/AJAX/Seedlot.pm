@@ -30,7 +30,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $breeding_program = $params->{breeding_program} || '';
     my $location = $params->{location} || '';
     my $minimum_count = $params->{minimum_count} || '';
-    my $contents = $params->{contents} || '';
+    my $contents_accession = $params->{contents_accession} || '';
+    my $contents_cross = $params->{contents_cross} || '';
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
     my $limit = ($offset+$rows)-1;
@@ -45,7 +46,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $breeding_program,
         $location,
         $minimum_count,
-        $contents
+        $contents_accession,
+        $contents_cross
     );
     my @seedlots;
     my %unique_seedlots;
@@ -53,7 +55,12 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         my $source_stocks = $sl->{source_stocks};
         my $contents_html = '';
         foreach (@$source_stocks){
-            $contents_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ('.$_->[2].') ';
+            if ($_->[2] eq 'accession'){
+                $contents_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ('.$_->[2].') ';
+            }
+            if ($_->[2] eq 'cross'){
+                $contents_html .= '<a href="/cross/'.$_->[0].'">'.$_->[1].'</a> ('.$_->[2].') ';
+            }
         }
         push @seedlots, {
             breeding_program_id => $sl->{breeding_program_id},
