@@ -2346,21 +2346,48 @@ sub suppress_plot_phenotype {
 
 sub delete_assayed_trait {
 	my $self = shift;
-	my $trait_id = shift;
 	my @pheno_ids = shift;
+	my @trait_ids = shift;
 	my $schema = $self->bcs_schema;
-	my $trial_id = $self->get_trial_id();
-	my $error;
-	print STDERR Dumper(\@pheno_ids);
+	my ($error, @nd_expt_ids);
+	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+print STDERR Dumper(\@pheno_ids);
+print "CVTERM FOR PHENOTYPING: $nd_experiment_type_id\n";
+	my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id };
+	if (scalar(@trait_ids) > 0){
+		$search_params->{'me.observable_id'} = { '-in' => \@trait_ids };
+	}
+	if (scalar(@pheno_ids) > 0){
+		$search_params->{'me.phenotype_id'} = { '-in' => \@pheno_ids };
+	}
 	
-		# my $delete_trait_rs = $schema->resultset("Phenotype::Phenotype")->search({
-		# 	phenotype_id => {-in => \@pheno_ids} ,
-		# 
-		# });
-		# while (my $r = $delete_trait_rs->next){
-		# 	$r->delete;
-		# }
-	
+	if (scalar(@pheno_ids) > 0 || scalar(@trait_ids) > 0 ){
+		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
+		$search_params,
+		{
+			join => { 'nd_experiment_phenotypes' => 'nd_experiment' },
+			'+select' => ['me.phenotype_id', 'nd_experiment.nd_experiment_id'],
+			'+as' => ['pheno_id', 'nd_expt_id'],
+		});
+		while( my $res = $delete_pheno_id_rs->next()){
+			my $nd_expt_id = $res->get_column('nd_expt_id');
+			push @nd_expt_ids, $nd_expt_id;
+			$res->delete;
+		}
+		
+		my $delete_nd_expt_id_rs = $schema->resultset("Nd_experiment::Nd_experiment")->search({
+			nd_experiment_id => { '-in' => \@nd_expt_ids },
+		});
+		while (my $res = $delete_nd_expt_id_rs->next()){
+			my $q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id=?;";
+			my $h = $schema->prepare($q);
+			$h->execute($res->value);
+			$res->delete;
+		}	
+	}
+	else {
+		$error = "List of trait or phenotype ids was not provided for deletion.";
+	}
 	
 	return $error;
 	
