@@ -43,7 +43,6 @@ use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
 use JSON;
-use JSON::Any;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
@@ -344,18 +343,31 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => { 'nd_experiment' =>  'nd_experiment_stocks' }});
+    #my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => { 'nd_experiment' =>  'nd_experiment_stocks' }});
+    my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
+    my $cross_json_string = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_info_cvterm})->value();
 
-    my $props = {};
+    print STDERR Dumper($cross_json_string);
 
-    print STDERR "PROPS LEN ".$rs->count()."\n";
+    my $cross_json_hash ={};
+    $cross_json_hash = decode_json $cross_json_string;
 
-    while (my $prop = $rs->next()) {
-	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('nd_experimentprop_id') ];
-    }
+    print STDERR Dumper($cross_json_hash);
+
+    $c->stash->{rest} = { props => $cross_json_hash };
+
+
+
+#    my $props = {};
+
+#    print STDERR "PROPS LEN ".$rs->count()."\n";
+
+#    while (my $prop = $rs->next()) {
+#	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('nd_experimentprop_id') ];
+#    }
 
     #print STDERR Dumper($props);
-    $c->stash->{rest} = { props => $props };
+    #$c->stash->{rest} = { props => $props };
 
 
 }
