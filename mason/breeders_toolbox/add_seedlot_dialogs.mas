@@ -1,5 +1,7 @@
 <%args>
 $timestamp
+$accession_uniquename => ''
+$cross_uniquename => ''
 </%args>
 
 <div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
@@ -40,6 +42,29 @@ $timestamp
                             </div>
                         </div>
                         <div class="col-sm-9">
+% if ($accession_uniquename || $cross_uniquename){
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Accession name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="seedlot_accession_uniquename" placeholder="One Content Required" disabled value="<% $accession_uniquename %>">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <center><h4>OR</h4></center>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="seedlot_cross_uniquename" placeholder="One Content Required" disabled value="<% $cross_uniquename %>">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+% } else {
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
@@ -61,6 +86,7 @@ $timestamp
                                     </div>
                                 </div>
                             </div>
+% }
                         </div>
                     </div>
                 </div>
@@ -99,7 +125,7 @@ $timestamp
         </div>
       </div>
       <div class="modal-footer">
-        <button id="create_new_seedlot_button" type="button" class="btn btn-default" >OK</button>
+        <button id="create_new_seedlot_button" type="button" class="btn btn-primary" >OK</button>
       </div>
     </div>
   </div>

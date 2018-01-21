@@ -586,6 +586,7 @@ sub _update_content_stock_id {
         $r->delete();
     }
     my $error = $self->_store_seedlot_accession();
+    $error = $self->_store_seedlot_cross();
     return $error;
 }
 

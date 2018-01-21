@@ -1,6 +1,8 @@
 
 <%args>
 $stock_id
+$stock_uniquename => undef
+$stock_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
@@ -23,6 +25,20 @@ $stock_id
 <div id="trial_stock_names" style="display: none;"></div>
 </&>
 </&>
+
+% if ($stock_type eq 'accession'){
+    <&| /page/info_section.mas, id=>'related_seedlots_to_accessions', title => 'Seedlots of this Accession', collapsible=>1, collapsed=>1 &>
+        <table id="seedlots_of_accession_table" class="table table-hover table-striped">
+        </table>
+
+        <br>
+        <&| /page/info_section.mas, title => 'Copy Seedlots to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the seedlot names showing in table to a new or exisiting list</i>'&>
+            <br>
+            <div style="text-align:right" id="accession_seedlots_to_list_menu"></div>
+            <div id="accession_seedlot_names" style="display: none;"></div>
+        </&>
+    </&>
+% }
 
 <&| /page/info_section.mas, id=>'related_stock_progenies', title => 'Progenies', collapsible=>1, collapsed=>1 &>
 <table id = "progenies" class="table table-hover table-striped">
@@ -168,6 +184,46 @@ jQuery(document).ready(function(){
                     addToListMenu("tissue_samples_to_list_menu", "tissue_sample_names", {
                         selectText: true,
                         listType:'null'
+                    });
+                }
+            }
+        });
+    });
+
+    jQuery('#related_seedlots_to_accessions_onswitch').one("click", function(){
+
+        var seedlots_table = jQuery('#seedlots_of_accession_table').DataTable({
+            'searching' : false,
+            'ordering'  : false,
+            'processing': true,
+            'serverSide': true,
+            'lengthMenu': [10,20,50,100,1000],
+            'ajax': { 'url': '/ajax/breeders/seedlots',
+                      'data': function(d) {
+                         d.contents_accession = "<% $stock_uniquename %>";
+                    }
+            },
+            columns: [
+                { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
+                { title: "Breeding Program", "data": "breeding_program_name" },
+                { title: "Contents", "data": "contents_html" },
+                { title: "Seedlot Location", "data": "location" },
+                { title: "Count", "data": "count" },
+            ],
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#accession_seedlots_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i].seedlot_stock_uniquename+"\n";
+                    }
+                    jQuery("#accession_seedlot_names").html(html);
+                    addToListMenu("accession_seedlots_to_list_menu", "accession_seedlot_names", {
+                        selectText: true,
+                        listType: 'seedlots',
+                        listName: 'seedlots'
                     });
                 }
             }

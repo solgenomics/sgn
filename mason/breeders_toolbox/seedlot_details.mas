@@ -214,7 +214,7 @@ $timestamp
         </div>
       </div>
       <div class="modal-footer">
-        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-default" >OK</button>
+        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-primary" >OK</button>
       </div>
     </div>
   </div>
@@ -234,7 +234,7 @@ $timestamp
         </div>
       </div>
       <div class="modal-footer">
-        <button id="edit_seedlot_transaction_button" type="button" class="btn btn-default" >Save</button>
+        <button id="edit_seedlot_transaction_button" type="button" class="btn btn-primary" >Save</button>
       </div>
     </div>
   </div>
@@ -318,7 +318,7 @@ $timestamp
         </div>
       </div>
       <div class="modal-footer">
-        <button id="edit_seedlot_details_button" type="button" class="btn btn-default" >Save</button>
+        <button id="edit_seedlot_details_button" type="button" class="btn btn-primary" >Save</button>
       </div>
     </div>
   </div>
