@@ -33,7 +33,10 @@ $stock_type => undef
 </&>
 
 % if ($stock_type eq 'accession'){
-    <&| /page/info_section.mas, id=>'related_seedlots_to_accessions', title => 'Seedlots of this Accession', collapsible=>1, collapsed=>1 &>
+
+    <& /breeders_toolbox/add_seedlot_dialogs.mas, accession_uniquename=>$stock_uniquename &>
+
+    <&| /page/info_section.mas, id=>'related_seedlots_to_accessions', title => 'Seedlots of this Accession', collapsible=>1, collapsed=>1, subtitle=>"[<a id='add_seedlot_button' >Create New Seedlot</a>]" &>
         <div class="well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">

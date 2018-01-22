@@ -1,5 +1,5 @@
 <%args>
-$timestamp
+$timestamp => localtime()
 $accession_uniquename => ''
 $cross_uniquename => ''
 </%args>
