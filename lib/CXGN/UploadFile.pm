@@ -101,6 +101,7 @@ sub archive {
 	die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
     }
     if (!$subdirectory || !$tempfile || !$archive_filename ) {
+        print STDERR "File archive failed: incomplete information to archive file.\n";
 	die "File archive failed: incomplete information to archive file.\n";
     }
     if ($self->include_timestamp){
