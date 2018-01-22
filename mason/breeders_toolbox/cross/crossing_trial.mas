@@ -207,6 +207,19 @@ my $start_time = time();
 </table>
  </&>
 
+ <&| /page/info_section.mas, title => 'Crossing Experiment Info', collapsible=>1, collapsed=>0 &>
+ <table id = "cross_properties_trial" class="table table-hover table-striped">
+ <thead>
+  <tr>
+   <th>Cross Name</th>
+   <th>Number of Flowers</th>
+   <th>Number of Fruits</th>
+   <th>Number of Seeds</th>
+ </tr>
+ </thead>
+ </table>
+  </&>
+
  <script>
 
  jQuery(document).ready(function(){
@@ -214,6 +227,10 @@ my $start_time = time();
     jQuery('#crosses_in_trial').DataTable({
      'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
      });
+
+     jQuery('#cross_properties_trial').DataTable({
+      'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
+      });
  });
 
  </script>

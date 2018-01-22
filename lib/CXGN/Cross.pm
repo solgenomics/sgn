@@ -4,6 +4,7 @@ package CXGN::Cross;
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use JSON;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
   is => 'rw',
@@ -29,6 +30,8 @@ has 'trial_id' => (isa => "Int",
   is => 'rw',
   required => 0,
 );
+
+
 
 sub BUILD {
     my $self = shift;
@@ -225,6 +228,41 @@ sub get_crosses_in_trial {
 
     return \@data;
 }
+
+=head2 get_cross_properties_trial
+
+
+=cut
+
+sub get_cross_properties_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $trial_id = $self->trial_id;
+
+    my $cross_props_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        LEFT JOIN stockprop ON (nd_experiment_stock.stock_id = stockprop.stock_id)
+        LEFT JOIN stock ON (stockprop.stock_id = stock.stock_id)
+        WHERE stockprop.type_id = ? AND nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare ($q);
+
+    $h->execute($cross_props_typeid, $trial_id);
+
+    my @data = ();
+    while(my($cross_id, $cross_name, $cross_props) = $h->fetchrow_array()){
+      #print STDERR Dumper $cross_props;
+      my $cross_props_hash = decode_json$cross_props;
+            push @data, [$cross_id, $cross_name, $cross_props_hash]
+    }
+
+    return \@data;
+
+}
+
+
 
 =head2 delete
 
