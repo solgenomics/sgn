@@ -533,11 +533,15 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         my $to_url;
         if ($t->from_stock()->[2] == $type_id){
             $from_url = '<a href="/breeders/seedlot/'.$t->from_stock()->[0].'" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
+        } elsif ($t->from_stock()->[2] == $cross_type_id){
+            $from_url = '<a href="/cross/'.$t->from_stock()->[0].'" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         } else {
             $from_url = '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         }
         if ($t->to_stock()->[2] == $type_id){
             $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
+        } elsif ($t->from_stock()->[2] == $cross_type_id){
+            $to_url = '<a href="/cross/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
         } else {
             $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
         }
