@@ -98,9 +98,7 @@ sub archive {
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)  ) {
-        print STDERR "You have insufficient privileges to archive a file. \n";
-        print STDERR Dumper $self->user_role;
-	die  "You have insufficient privileges to archive a file.\n";
+	die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
     }
     if (!$subdirectory || !$tempfile || !$archive_filename ) {
         print STDERR "File archive failed: incomplete information to archive file.\n";
