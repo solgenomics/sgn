@@ -2,14 +2,10 @@
 
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.LabelDesigner', 'CXGN.BreederSearch', 'bootstrap-select_min'] &>
+<& /page/page_title.mas, title=>"Label Designer" &>
 
 <div class="row">
     <div class="well col-md-12">
-        <div class="col-md-12">
-            <center>
-                <h4>Format:</h4>
-            </center>
-        </div>
         <div class="col-md-12" style="margin-bottom:20px;">
             <div class="col-md-2">
                 <label><b>Data Source:</b></label>

@@ -243,6 +243,9 @@ $(document).ready(function($) {
     initializeDrawArea();
     $('#source_select').focus();
 
+    //Add link to docs
+    jQuery('#pagetitle_h3').append('&nbsp;<a id="label_designer_docs_link" href="http://solgenomics.github.io/sgn/03_managing_breeding_data/03_11.html"><span class="glyphicon glyphicon-info-sign"></span></a>');
+
     // Always focus on autofocus elements when modals are opened.
     $('.modal').on('shown.bs.modal', function() {
         $(this).find('[autofocus]').folabel
