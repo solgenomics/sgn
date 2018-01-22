@@ -19,7 +19,7 @@ $mech->get_ok('http://localhost:3010/brapi/v1/calls?pageSize=5&page=3');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'result' => {'data' => [{'call' => 'crops','datatypes' => ['json'],'methods' => ['GET']},{'call' => 'seasons','datatypes' => ['json'],'methods' => ['GET','POST']},{'call' => 'studyTypes','datatypes' => ['json'],'methods' => ['GET','POST']},{'methods' => ['GET','POST'],'datatypes' => ['json'],'call' => 'trials'},{'call' => 'trials/id','datatypes' => ['json'],'methods' => ['GET']}]},'metadata' => {'pagination' => {'totalPages' => 9,'pageSize' => 5,'totalCount' => 41,'currentPage' => 3},'status' => [{'info' => 'BrAPI base call found with page=3, pageSize=5'},{'info' => 'Loading CXGN::BrAPI::v1::Calls'},{'success' => 'Calls result constructed'}],'datafiles' => []}}, 'check calls response content');
+is_deeply($response,{'metadata' => {'status' => [{'info' => 'BrAPI base call found with page=3, pageSize=5'},{'info' => 'Loading CXGN::BrAPI::v1::Calls'},{'success' => 'Calls result constructed'}],'datafiles' => [],'pagination' => {'totalPages' => 9,'totalCount' => 42,'currentPage' => 3,'pageSize' => 5}},'result' => {'data' => [{'call' => 'programs','methods' => ['GET'],'datatypes' => ['json']},{'call' => 'crops','methods' => ['GET'],'datatypes' => ['json']},{'datatypes' => ['json'],'methods' => ['GET','POST'],'call' => 'seasons'},{'datatypes' => ['json'],'methods' => ['GET','POST'],'call' => 'studyTypes'},{'datatypes' => ['json'],'call' => 'trials','methods' => ['GET','POST']}]}}, 'check calls response content');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/calls?pageSize=50&datatype=tsv');
 $response = decode_json $mech->content;
