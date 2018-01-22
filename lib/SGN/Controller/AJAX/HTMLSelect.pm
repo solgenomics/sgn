@@ -27,6 +27,7 @@ use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Onto;
+use CXGN::List;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
@@ -216,6 +217,8 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $size = $c->req->param("size");
     my $empty = $c->req->param("empty") || "";
     my $multiple = $c->req->param("multiple") || 0;
+    my $live_search = $c->req->param("live_search") || 0;
+
     my @trials;
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
@@ -229,6 +232,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
+      live_search => $live_search,
       name => $name,
       id => $id,
       size => $size,
@@ -236,6 +240,114 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR "Retrieving list items . . .\n";
+
+    my $id = $c->req->param("id") || "label_data_sources_select";
+    my $name = $c->req->param("name") || "label_data_sources_select";
+    my $empty = $c->req->param("empty") || "";
+    my $live_search = $c->req->param("live_search") ? 'data-live-search="true"' : '';
+    my $default = $c->req->param("default") || 0;
+
+    my $user_id = $c->user()->get_sp_person_id();
+    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'plots');
+    print STDERR "Lists are ".Dumper($lists)."\n";
+    my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh(), 'plots');
+    print STDERR "Public lists are ".Dumper($public_lists)."\n";
+
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $projects = $p->get_breeding_programs();
+    my @trials = [];
+    foreach my $project (@$projects) {
+      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$field_trials) {
+          push @trials, $_;
+      }
+    }
+    @trials = sort { $a->[1] cmp $b->[1] } @trials;
+
+    my @choices = [];
+    push @choices, '__Your Plot Lists';
+    foreach my $item (@$lists) {
+        push @choices, [@$item[0], @$item[1]];
+    }
+    push @choices, '__Public Plot Lists';
+    foreach my $item (@$public_lists) {
+        push @choices, [@$item[0], @$item[1]];
+    }
+    push @choices, '__Trials';
+    foreach my $trial (@trials) {
+        push @choices, $trial;
+    }
+    #
+    print STDERR "Choices are:\n".Dumper(@choices);
+
+    if ($default) { unshift @choices, [ '', $default ]; }
+
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@choices,
+      params => $live_search,
+      selected_params => 'hidden'
+    );
+
+    $c->stash->{rest} = { select => $html };
+}
+# sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
+#     my $self = shift;
+#     my $c = shift;
+#
+    # my $id = $c->req->param("id") || "label_data_sources_select";
+    # my $name = $c->req->param("name") || "label_data_sources_select";
+    # my $empty = $c->req->param("empty") || "";
+    # my $live_search = $c->req->param("live_search") ? 'data-live-search="true"' : '';
+    # my $default = $c->req->param("default") || 0;
+    #
+    # my $lists = CXGN::List::available_lists($c->dbc->dbh(), $c->user(), 'plots');
+    # my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh(), 'plots');
+    #
+    # my $projects = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
+    # my @trials = [];
+    # foreach my $project (@$projects) {
+    #   my ($field_trials, $cross_trials, $genotyping_trials) = $projects->get_trials_by_breeding_program($project->[0]);
+    #   foreach (@$field_trials) {
+    #       push @trials, $_;
+    #   }
+    # }
+    # @trials = sort { $a->[1] cmp $b->[1] } @trials;
+    #
+    # my @choices = [];
+    # push @choices, '__Your Plot Lists';
+    # foreach my $item (@$lists) {
+    #     push @choices, $item;
+    # }
+    # push @choices, '__Public Plot Lists';
+    # foreach my $item (@$public_lists) {
+    #     push @choices, $item;
+    # }
+    # push @choices, '__Trials';
+    # foreach my $trial (@trials) {
+    #     push @choices, $trial;
+    # }
+    #
+    # print STDERR "Choices are:\n".Dumper(@choices);
+    #
+    # if ($default) { unshift @trials, [ '', $default ]; }
+    #
+    # my $html = simple_selectbox_html(
+    #   name => $name,
+    #   id => $id,
+    #   choices => \@choices,
+    #   params => $live_search
+    # );
+#
+#     $c->stash->{rest} = { select => $html };
+# }
 
 sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $self = shift;
