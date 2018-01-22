@@ -1045,10 +1045,11 @@ jQuery(document).ready(function ($) {
         for (var i=0; i<design_array.length; i++){
             html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
             var design_hash = JSON.parse(design_array[i]);
+            //console.log(design_hash);
             for (var key in design_hash){
                 if (key != 'treatments'){
                     var plot_obj = design_hash[key];
-                    html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
+                    html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"'  data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-subplot_names='"+JSON.stringify(plot_obj.subplots_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
                 }
             }
             html += "</tbody></table>";
@@ -1075,6 +1076,8 @@ jQuery(document).ready(function ($) {
         jQuery('input[name="add_trial_treatment_input"]').each(function() {
             if (this.checked){
                 var plot_name = jQuery(this).data('plot_name');
+                var plant_names = jQuery(this).data('plant_names');
+                var subplot_names = jQuery(this).data('subplot_names');
                 var trial_index = jQuery(this).data('trial_index');
                 var trial_treatment = jQuery(this).data('trial_treatment');
                 if (trial_index in trial_treatments){
@@ -1084,10 +1087,22 @@ jQuery(document).ready(function ($) {
                     } else {
                         trial[trial_treatment] = [plot_name];
                     }
+                    for(var i=0; i<plant_names.length; i++){
+                        trial[trial_treatment].push(plant_names[i]);
+                    }
+                    for(var i=0; i<subplot_names.length; i++){
+                        trial[trial_treatment].push(subplot_names[i]);
+                    }
                     trial_treatments[trial_index] = trial;
                 } else {
                     obj = {};
                     obj[trial_treatment] = [plot_name];
+                    for(var i=0; i<plant_names.length; i++){
+                        obj[trial_treatment].push(plant_names[i]);
+                    }
+                    for(var i=0; i<subplot_names.length; i++){
+                        obj[trial_treatment].push(subplot_names[i]);
+                    }
                     trial_treatments[trial_index] = obj;
                 }
             }

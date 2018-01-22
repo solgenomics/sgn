@@ -87,7 +87,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $labels_per_page = $c->req->param("label_rows") || 10;
     my $labels_per_row  = $c->req->param("label_cols") || 1;
     my $page_format = $c->req->param("page_format") || "letter";
-    my $top_margin_mm = $c->req->param("top_margin");
+    my $top_margin_mm = $c->req->param("tops_margin");
     my $left_margin_mm = $c->req->param("left_margin");
     my $bottom_margin_mm = $c->req->param("bottom_margin");
     my $right_margin_mm = $c->req->param("right_margin");
@@ -105,7 +105,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
     my $xlabel_margin = 8;
     # convert mm into pixels
-    #
+    print "MY TOP MARGIN: $top_margin_mm\n";
     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $right_margin_mm = 10, $barcode_type = "2D", $labels_per_row = 2; }
     if ($cass_print_format eq 'IITA-3') {$left_margin_mm = 130, $top_margin_mm = 13, $bottom_margin_mm =  11, $right_margin_mm = 10, $labels_per_row = 3, $barcode_type = "2D"; }

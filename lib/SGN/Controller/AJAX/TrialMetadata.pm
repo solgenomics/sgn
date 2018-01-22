@@ -16,6 +16,7 @@ use CXGN::Login;
 use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -37,9 +38,18 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
 
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
     $c->stash->{trial_id} = $trial_id;
-    $c->stash->{schema} =  $c->dbic_schema("Bio::Chado::Schema");
-    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->stash->{schema}, trial_id => $trial_id });
+    $c->stash->{schema} =  $bcs_schema;
+    $c->stash->{trial} = CXGN::Trial->new({
+        bcs_schema => $bcs_schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        trial_id => $trial_id
+    });
 
     if (!$c->stash->{trial}) {
 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
@@ -783,6 +793,82 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
+sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $upload = $c->req->upload('trial_upload_additional_file');
+    my $subdirectory = "trial_additional_file_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $md5checksum = $md5->hexdigest();
+
+    my $result = $c->stash->{trial}->add_additional_uploaded_file($user_id, $archived_filename_with_path, $md5checksum);
+    if ($result->{error}){
+        $c->stash->{rest} = {error=>$result->{error}};
+        $c->detach();
+    }
+    $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
+}
+
+sub get_trial_additional_file_uploaded : Chained('trial') PathPart('get_uploaded_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to see uploaded additional files!'};
+        $c->detach();
+    }
+
+    my $files = $c->stash->{trial}->get_additional_uploaded_files();
+    $c->stash->{rest} = {success=>1, files=>$files};
+}
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -888,6 +974,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $trial = $c->stash->{trial};
     my $design = decode_json $c->req->param('design');
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
+    my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -897,6 +984,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design_type => $trial->get_design_type(),
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
+        new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
