@@ -1,0 +1,460 @@
+
+<%doc>
+
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<& '/page/page_title.mas', title => "Interactive Barcoder" &>
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js' ] &>
+
+
+<div class="row">
+  <div class="col-md-9">
+    <div class="well" style="padding:0;">
+      <div class="d3-draw-area"></div>
+    </div>
+    <div class="well">
+      <center>
+        <label>Add Text</label>
+        <br>
+        <select id="d3-font-size-input" class="form-control input" min="5" max="72" style="width:15%;float:left;">
+          <option value="7.5">7.5pt</option>
+          <option value="8">8pt</option>
+          <option value="9">9pt</option>
+          <option value="10">10pt</option>
+          <option value="10.5">10.5pt</option>
+          <option value="11">11pt</option>
+          <option value="12" selected>12pt</option>
+          <option value="14">14pt</option>
+          <option value="16">16pt</option>
+          <option value="18">18pt</option>
+          <option value="20">20pt</option>
+          <option value="22">22pt</option>
+          <option value="24">24pt</option>
+          <option value="26">26pt</option>
+          <option value="28">28pt</option>
+          <option value="36">36pt</option>
+          <option value="48">48pt</option>
+          <option value="72">72pt</option>
+        </select>
+        <button class="btn btn-primary d3-add-text" value="plot_id" >Plot</button>
+        <button class="btn btn-primary d3-add-text" value="replicate" >Replicate</button>
+        <button class="btn btn-primary d3-add-text" value="block" >Block</button>
+        <button class="btn btn-primary d3-add-text" value="accession" >Accession</button>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#customTextModal">Custom</button>
+      </center>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="well">
+      <center>
+        <label>Barcode</label>
+        <br>
+        <select id="d3-barcode-select" class="input-sm form-control form-group"></select>
+      </center>
+    </div>
+    <div class="well">
+      <label>Grid</label>
+      <div class="form-group">
+        <input id="d3-grid-number" class="form-control input-sm" type="number">
+        <input id="d3-grid-slider" class="form-control input-sm" type="range"> 
+        <input id="d3-snapping-check" type="checkbox" checked>  Snap
+      </div>
+    </div>
+    <div class="well">
+      <button id="d3-save-button" class="btn btn-primary">Save</button>
+      <a id="link" target="_blank" class="btn button btn-primary"> Download </a>
+    </div>
+    <!-- <div class="well">
+      <label>Layout</label>
+      <div class="form-group">
+        <input id="d3-width-number" class="form-control input-sm" type="number">
+        <input id="d3-width-slider" class="form-control input-sm" type="range">
+        <input id="d3-height-number" class="form-control input-sm" type="number">
+        <input id="d3-height-slider" class="form-control input-sm" type="range">
+      </div>
+    </div> -->
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="customTextModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
+            <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;" >Suppose I want the <span class="btn btn-primary btn-sm d3-text-placeholder" value="plot" contenteditable="false" style="height: 2em; margin-top:-0.15em;display: inline-block; padding:0.2em 0.4em;">plot-number</span> in my text.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="d3-custom-text" type="button" class="btn btn-primary" data-dismiss="modal">Add Text</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="savingplace"></div>
+
+<script>
+var barcode_types = [
+  {name:"barc_type A",width:1*72,height:0.5*72},
+  {name:"barc_type B",width:1*72,height:72},
+  {name:"barc_type C",width:1*72,height:0.25*72}
+];
+
+//set up drag behaviour
+var drag_behaviour = d3.behavior.drag().on(
+  "drag", function(){
+    var o = d3.select(this)
+      .call(doTransform,function(state,selection){
+        state.translate[0]+=d3.event.dx;
+        state.translate[1]+=d3.event.dy;
+      });
+});
+function draggable(d,i){
+  var bb = this.node().getBBox();
+  this.attr({
+      "s-x": bb.x,
+      "s-y": bb.y
+    })
+    .call(doTransform,function(state,selection){
+      state.translate = [-bb.x,-bb.y]
+    })
+    .call(drag_behaviour);
+}
+
+resizer_behaviour = d3.behavior.drag().on(
+  "drag", function(d,i){
+    var target = d;
+    var bb = getTransGroupBounds(target.node())
+    var mx = d3.event.x;
+    var my = d3.event.y;
+    if (d3.select("#d3-snapping-check").property("checked")){
+      var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
+      mx = Math.round(mx/grid_size)*grid_size
+      my = Math.round(my/grid_size)*grid_size
+    }
+    var xexpand = (mx - bb.x)/bb.width
+    var yexpand = (my - bb.y)/bb.height
+    expand = Math.max(xexpand,yexpand)
+    if (!isNaN(expand)){
+      target.call(doTransform,function(state,selection){
+          var expX = state.scale[0]*expand;
+          var expY = state.scale[1]*expand;
+          var mi = Math.min(expX*bb.width,expY*bb.height);
+          if (mi<=3) {
+            expX = state.scale[0];
+            expY = state.scale[1];
+          }
+          state.scale[0] = expX;
+          state.scale[1] = expY;
+      });
+    }
+    var newbb = getTransGroupBounds(target.node())
+    d3.select(this.parentNode).select(".selection-tool-outline")
+      .attr({
+        x:newbb.x,
+        y:newbb.y,
+        width:newbb.width,
+        height:newbb.height,
+      })
+    d3.select(this.parentNode).select(".selection-tool-resizer")
+      .attr({
+        x:newbb.x+newbb.width-3,
+        y:newbb.y+newbb.height-3,
+      })
+    d3.select(this.parentNode).select(".selection-tool-remover")
+      .attr({
+        x:newbb.x-3,
+        y:newbb.y-3,
+      })
+});
+function selectable(selection,resizeable){
+  this.on("mousedown",function(){
+    d3.select(".selection-tools").remove();
+  })
+  this.on("click", function(){
+    var o = d3.select(".d3-draw-svg");
+    var bb = getTransGroupBounds(this);
+    var target = d3.select(this);
+    var tools = o.append('g')
+      .classed("selection-tools",true)
+      .datum(target);
+    tools.append("rect")
+      .classed("selection-tool-outline",true)
+      .attr({
+        x:bb.x,
+        y:bb.y,
+        width:bb.width,
+        height:bb.height,
+        fill:"none",
+        stroke: "black",
+        "stroke-dasharray": ("3,3"),
+        "stroke-width":"1"
+      })
+    tools.append("rect")
+      .classed("selection-tool-remover",true)
+      .attr({
+        x:bb.x-4,
+        y:bb.y-4,
+        width:8,
+        height:8,
+        fill: "red",
+        stroke: "none"
+      })
+      .on("click",function(){
+        target.remove();
+        clearSelection();
+      })
+    if (resizeable){
+      tools.append("rect")
+        .classed("selection-tool-resizer",true)
+        .attr({
+          x:bb.x+bb.width-4,
+          y:bb.y+bb.height-4,
+          width:8,
+          height:8,
+          fill: "green",
+          stroke: "none"
+        }).call(resizer_behaviour);
+    }
+  })
+}
+function clearSelection(){
+  d3.select(".selection-tools").remove();
+}
+
+
+function doTransform(selection,transformFunc){
+  var state = d3.transform(selection.attr("transform"));
+  transformFunc(state,selection);
+  selection.attr("transform",state.toString());
+}
+
+function getTransGroupBounds(node){
+  var bb = node.getBBox()
+  var state = d3.transform(d3.select(node).attr("transform"));
+  bb.x = bb.x*state.scale[0]
+  bb.y = bb.y*state.scale[1]
+  bb.width = bb.width*state.scale[0]
+  bb.height = bb.height*state.scale[1]
+  bb.x += state.translate[0]
+  bb.y += state.translate[1]
+  return bb
+}
+
+$(document).ready(function($) {
+  //begin settings
+  var draw_height = 200;
+  var draw_width = 400;
+  //end settings
+  
+  //create svg canvas
+  var svg = d3.select(".d3-draw-area")
+    .append('svg')
+    .classed("label-template",true)
+    .attr({
+      width: "100%",
+      viewBox: "0 0 "+draw_width+" "+draw_height
+    }).classed("d3-draw-svg",true);
+
+  //set up background
+  svg.append('rect')
+    .classed("d3-bg",true)
+    .attr({
+      x:0,
+      y:0,
+      width:draw_width,
+      height:draw_height,
+      fill:"#eee"
+    })
+    .on("click",clearSelection);
+  
+  //set up grid and grid slider/input
+  var grid = svg.append("g").classed("d3-bg-grid",true);
+  var grid_slider = d3.select("#d3-grid-slider");
+  var grid_number = d3.select("#d3-grid-number");
+  grid_slider.attr({
+    min:10,
+    max: 0.5*(draw_height<draw_width ? draw_height : draw_width),
+    step: 1
+  });
+  grid_number.attr({
+    min:10,
+    max: 0.5*(draw_height<draw_width ? draw_height : draw_width),
+    step: 1
+  });
+  grid_number.property("value",18);
+  grid_slider.property("value",18);
+  grid_slider.on("input",function(){
+    grid_number.property("value",this.value)
+    updateGrid();});
+  grid_number.on("input",function(){
+    grid_slider.node().value=this.value;
+    updateGrid();});
+  var grid_size = parseInt(grid_slider.node().value);
+  updateGrid();
+
+  //set up barcode and barcode select
+  var barcode_select = d3.select("#d3-barcode-select");
+  var barcode_g = svg.append("g")
+    .classed("barcode",true);
+  barcode_select.selectAll("option")
+    .data(barcode_types)
+    .enter().append("option")
+    .text(function(d){return d.name})
+    .attr("value",function(d,i){return i});
+  barcode_select.insert("option","*")
+    .attr({"selected":true,"value":-1});
+  barcode_select.on("input",function(){
+    clearSelection();
+    var val = d3.select(this).node().value;
+    if (val>=0){
+      barcode_g.html("")
+      .append('g')
+      .classed("draggable",true)
+      .classed("selectable",true)
+      .call(draggable)
+      .call(selectable,true)
+      .call(doTransform,function(state,selection){
+        state.translate[0] += (draw_width/2)-(barcode_types[val].width/2)
+        state.translate[1] += (draw_height/2)-(barcode_types[val].height/2)
+      })
+      .on("mouseup", dragSnap)
+      .append('rect')
+        .attr({
+          x:0,
+          y:0,
+          width:barcode_types[val].width,
+          height:barcode_types[val].height,
+          fill:"#333"
+        })
+    }
+  });
+    
+
+  //set up text options
+  d3.selectAll(".d3-add-text").on("click",function(){
+    var th = d3.select(this);
+    var text = th.text()+": <"+"%"+th.attr("value")+"%"+">";
+    addText(text);
+  })
+
+  d3.select("#d3-custom-text").on("click",function(){
+    var text_content = d3.select("#d3-text-content")
+    text_content.selectAll(".d3-text-placeholder").each(function(d,i){
+      var th = d3.select(this)
+      th.html("").text("<"+"%"+th.attr("value")+"%"+">")
+    });
+    var text = text_content.text();
+    text_content.html("");
+    addText(text)
+  })
+});
+
+function addText(text){
+  svg = d3.select(".d3-draw-svg");
+  var newTB = svg.append("g")
+    .classed("text-box",true);
+  var fontSize = parseInt(d3.select("#d3-font-size-input").node().value);
+  var newText = newTB
+    .append("text")
+    .attr({
+      //y:fontSize,
+      "font-size":fontSize,
+      "dominant-baseline": "mathematical",
+    })
+    .text(text);
+  newTB.classed("draggable",true)
+    .classed("selectable",true)
+    .call(draggable)
+    .call(selectable,false)
+    .on("mouseup", dragSnap);
+}
+
+function updateGrid(){
+  var grid = d3.select(".d3-bg-grid").html("");
+  var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
+  var bg = d3.select(".d3-bg");
+  var height = parseInt(bg.attr("height"));
+  var width = parseInt(bg.attr("width"));
+  for (var y = grid_size; y < height; y+=grid_size) {
+    grid.append('line')
+      .attr({
+        x1: 0,
+        x2: width,
+        y1: y,
+        y2: y,
+        stroke: "rgba(0,0,0,0.2)",
+        "stroke-width": 1
+      }).on("click",clearSelection);
+  }
+  for (var x = grid_size; x < width; x+=grid_size) {
+    grid.append('line')
+      .attr({
+        x1: x,
+        x2: x,
+        y1: 0,
+        y2: height,
+        stroke: "rgba(0,0,0,0.2)",
+        "stroke-width": 1
+      }).on("click",clearSelection);
+  }
+}
+
+function dragSnap(){
+  if (d3.select("#d3-snapping-check").property("checked")){
+    var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
+    var o = d3.select(this)
+      .call(doTransform,function(state,selection){
+        var bb = getTransGroupBounds(selection.node());
+        var left_snap_d = (Math.round(bb.x/grid_size))*grid_size-bb.x
+        var right_snap_d = (Math.round((bb.x+bb.width)/grid_size)*grid_size-bb.width)-bb.x
+        var top_snap_d = (Math.round(bb.y/grid_size))*grid_size-bb.y
+        var bottom_snap_d = (Math.round((bb.y+bb.height)/grid_size)*grid_size-bb.height)-bb.y
+        state.translate[0] += Math.abs(left_snap_d) < Math.abs(right_snap_d) ? left_snap_d: right_snap_d
+        state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d: bottom_snap_d
+      });
+  }
+}
+
+$("#d3-save-button").on("click",function(event) {
+  clearSelection();
+  $(".label-template").clone().appendTo("#savingplace");
+  var img = d3.select("#savingplace .label-template")
+    .attr("id","d3-to-save")
+  img.select(".d3-bg").remove();
+  img.select(".d3-bg-grid").remove();
+  var svg = document.getElementById("d3-to-save");
+
+  //get svg source.
+  var serializer = new XMLSerializer();
+  var source = serializer.serializeToString(svg);
+
+  //add name spaces.
+  if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+      source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+  }
+
+  //add xml declaration
+  source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+    
+  //convert svg source to URI data scheme.
+  var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+
+
+  //set url value to a element's href attribute.
+  document.getElementById("link").href = url;
+  //you can download svg file by right click menu.
+  img.remove();
+});
+</script>
