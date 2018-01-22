@@ -974,6 +974,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $trial = $c->stash->{trial};
     my $design = decode_json $c->req->param('design');
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
+    my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -983,6 +984,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design_type => $trial->get_design_type(),
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
+        new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
