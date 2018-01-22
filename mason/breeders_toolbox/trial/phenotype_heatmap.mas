@@ -197,6 +197,7 @@ jQuery(document).ready( function() {
              success: function(response) {
                 var col_length; 
                 var row_length;
+                var false_coord = response.phenotypes.false_coord;
                 for (i=0; i<response.phenotypes.col.length; i++) {
                     if (response.phenotypes.col[i] && response.phenotypes.row[i]){
                         //console.log(response.phenotypes.col[i]);
@@ -210,6 +211,7 @@ jQuery(document).ready( function() {
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
                     jQuery("#trait_heatmap").css("display", "none");
                     jQuery("#d_button").css("display", "inline-block");
+                    
 
                   var margin = { top: 50, right: 0, bottom: 100, left: 30 },
                       width = 960 - margin.left - margin.right,
@@ -345,7 +347,9 @@ jQuery(document).ready( function() {
                     } ; 
                   
                   heatmapChart(datasets);
-              
+                  if (false_coord){
+                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                  }
                 }
                 else  {
                     jQuery("#working_modal").modal("hide");
