@@ -2346,36 +2346,38 @@ sub suppress_plot_phenotype {
 
 sub delete_assayed_trait {
 	my $self = shift;
-	my @pheno_ids = shift;
-	my @trait_ids = shift;
+	my $pheno_ids = shift;
+	my $trait_ids = shift;
 	my $schema = $self->bcs_schema;
+	my $phenomeSchema = $self->
 	my ($error, @nd_expt_ids);
 	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
-print STDERR Dumper(\@pheno_ids);
+print STDERR Dumper($pheno_ids);
 print "CVTERM FOR PHENOTYPING: $nd_experiment_type_id\n";
 	my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id };
-	if (scalar(@trait_ids) > 0){
-		$search_params->{'me.observable_id'} = { '-in' => \@trait_ids };
+	if (scalar(@$trait_ids) > 0){
+		$search_params->{'me.observable_id'} = { '-in' => $trait_ids };
 	}
-	if (scalar(@pheno_ids) > 0){
-		$search_params->{'me.phenotype_id'} = { '-in' => \@pheno_ids };
+	if (scalar(@$pheno_ids) > 0){
+		$search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
 	}
-	
-	if (scalar(@pheno_ids) > 0 || scalar(@trait_ids) > 0 ){
+	$schema->storage->debug(1);
+	if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
 		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
 		$search_params,
 		{
 			join => { 'nd_experiment_phenotypes' => 'nd_experiment' },
-			'+select' => ['me.phenotype_id', 'nd_experiment.nd_experiment_id'],
-			'+as' => ['pheno_id', 'nd_expt_id'],
+			'+select' => ['nd_experiment.nd_experiment_id'],
+			'+as' => ['nd_expt_id'],
 		});
-		while( my $res = $delete_pheno_id_rs->next()){
+		while ( my $res = $delete_pheno_id_rs->next()){
+			print STDERR $res->phenotype_id." : ".$res->observable_id."\n";
 			my $nd_expt_id = $res->get_column('nd_expt_id');
 			push @nd_expt_ids, $nd_expt_id;
 			$res->delete;
 		}
-		
-		my $delete_nd_expt_id_rs = $schema->resultset("Nd_experiment::Nd_experiment")->search({
+		print STDERR Dumper(\@nd_expt_ids);
+		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});
 		while (my $res = $delete_nd_expt_id_rs->next()){
