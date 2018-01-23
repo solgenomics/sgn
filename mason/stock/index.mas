@@ -328,7 +328,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
-  <& /stock/related_stock.mas, stock_id => $stock_id &>
+  <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $uniquename, stock_type => $type_name &>
 
 </&>
 

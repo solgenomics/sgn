@@ -32,6 +32,7 @@ use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
+use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -417,6 +418,58 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	$c->stash->{rest} = { select => $html };
 }
 
+sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+        $c->dbic_schema("Bio::Chado::Schema"),
+        $c->req->param('seedlot_offset'),
+        $c->req->param('seedlot_limit'),
+        $c->req->param('seedlot_name'),
+        $c->req->param('seedlot_breeding_program_name'),
+        $c->req->param('seedlot_location'),
+        $c->req->param('seedlot_amount'),
+        $c->req->param('seedlot_content_accession_name'),
+        $c->req->param('seedlot_content_cross_name')
+    );
+    my @seedlots;
+    foreach my $sl (@$list) {
+        push @seedlots, {
+            breeding_program_id => $sl->{breeding_program_id},
+            breeding_program_name => $sl->{breeding_program_name},
+            seedlot_stock_id => $sl->{seedlot_stock_id},
+            seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
+            location => $sl->{location},
+            location_id => $sl->{location_id},
+            count => $sl->{current_count}
+        };
+    }
+    #print STDERR Dumper \@seedlots;
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my $data_related = $c->req->param("data-related") || "";
+    my @stocks;
+    foreach my $r (@seedlots) {
+        push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+    }
+    @stocks = sort { $a->[1] cmp $b->[1] } @stocks;
+
+    if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
+
+    my $html = simple_selectbox_html(
+        multiple => $multiple,
+        name => $name,
+        id => $id,
+        size => $size,
+        choices => \@stocks,
+        data_related => $data_related
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -733,6 +786,7 @@ sub _clean_inputs {
 		}
 		@$ret_val = grep {$_ ne undef} @$ret_val;
 		@$ret_val = grep {$_ ne ''} @$ret_val;
+        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
 		$params->{$_} = $ret_val;
 	}
 	return $params;
