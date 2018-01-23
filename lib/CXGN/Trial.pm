@@ -2455,6 +2455,22 @@ sub suppress_plot_phenotype {
 	
 }
 
+=head2 delete_assayed_trait
+
+ Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
+ 				if ($delete_trait_return_error) {
+   					$c->stash->{rest} = { error => $delete_trait_return_error };
+   					return;
+ 				}
+ 
+ Desc:         Delete Assayed Traits
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub delete_assayed_trait {
 	my $self = shift;
 	my $pheno_ids = shift;
