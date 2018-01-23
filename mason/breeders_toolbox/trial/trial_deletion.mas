@@ -6,3 +6,31 @@ $trial_id
 <a id="delete_phenotype_data_by_trial_id" role="button">Delete trait data</a><br />
 <a id="delete_layout_data_by_trial_id" role="button">Delete layout data</a><br />
 <a id="delete_trial_entry_by_trial_id" role="button" >Delete trial entry</a><br />
+
+<div class="modal  fade" id="delete_phenotype_data_dialog" name="delete_phenotype_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeletePhenoDataDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeletePhenoDataDialog">Delete Trial Phenotype Data </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_phenotype_data_form" name="delete_phenotype_data_form">
+                    
+                    <center>
+                    <p3> Delete all or individual traits.</p3>
+                    </center></br>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Delete Individual Traits</button>
+                <button type="button" class="btn btn-primary" name="delete_all_phenotype_data_dialog_submit" id="delete_all_phenotype_data_dialog_submit">Delete All Traits</button>
+            </div>
+        </div>
+    </div>
+</div>

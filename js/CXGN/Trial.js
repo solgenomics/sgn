@@ -422,9 +422,10 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#delete_phenotype_data_by_trial_id').click(
 	function() {
-	    var trial_id = get_trial_id();
-	    delete_phenotype_data_by_trial_id(trial_id);
-	}
+        jQuery('#delete_phenotype_data_dialog').modal("show");
+	//    var trial_id = get_trial_id();
+	//    delete_phenotype_data_by_trial_id(trial_id);
+	} 
     );
 
     jQuery('#delete_layout_data_by_trial_id').click(
