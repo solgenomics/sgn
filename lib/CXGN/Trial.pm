@@ -2460,7 +2460,7 @@ sub delete_assayed_trait {
 	my $pheno_ids = shift;
 	my $trait_ids = shift;
 	my $schema = $self->bcs_schema;
-	my $phenomeSchema = $self->
+	my $phenome_schema = $self->phenome_schema;
 	my ($error, @nd_expt_ids);
 	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 print STDERR Dumper($pheno_ids);
@@ -2487,16 +2487,24 @@ print "CVTERM FOR PHENOTYPING: $nd_experiment_type_id\n";
 			push @nd_expt_ids, $nd_expt_id;
 			$res->delete;
 		}
+		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
+			nd_experiment_id => { '-in' => \@nd_expt_ids },
+		});
+		while (my $res = $delete_nd_expt_md_files_id_rs->next()){
+			# my $q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id=?;";
+			# my $h = $phenome_schema->storage->dbh->prepare($q);
+			# $h->execute($res->value);
+			$res->delete;
+		}
 		print STDERR Dumper(\@nd_expt_ids);
 		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});
 		while (my $res = $delete_nd_expt_id_rs->next()){
-			my $q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id=?;";
-			my $h = $schema->prepare($q);
-			$h->execute($res->value);
 			$res->delete;
-		}	
+		}
+		
+		
 	}
 	else {
 		$error = "List of trait or phenotype ids was not provided for deletion.";
