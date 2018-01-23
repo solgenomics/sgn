@@ -212,6 +212,9 @@ my $start_time = time();
  <thead>
   <tr>
    <th>Cross Name</th>
+   <th>Tag Number</th>
+   <th>Pollination Date</th>
+   <th>Number of Bags</th>
    <th>Number of Flowers</th>
    <th>Number of Fruits</th>
    <th>Number of Seeds</th>
