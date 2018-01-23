@@ -1304,7 +1304,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   $c->stash->{rest} = { success => 1};
 }
 
-sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
+sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Args(0) {
     my $self = shift;
     my $c = shift;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
@@ -1332,6 +1332,49 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
     } else {
         $c->stash->{rest} = { error => "Error creating plant entries in controller." };
     	return;
+    }
+
+}
+
+sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
+    my $tissue_names = $c->req->param("tissue_samples_names");
+    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $tissues_with_treatments;
+    if($inherits_plot_treatments eq '1'){
+        $tissues_with_treatments = 1;
+    }
+
+    if (my $error = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $error };
+        $c->detach;
+    }
+
+    if (!$c->stash->{trial}->has_plant_entries){
+        $c->stash->{rest} = { error => "Trial must have plant entries before you can add tissue samples entries. Plant entries are added from the trial detail page." };
+        $c->detach;
+    }
+
+    if (!$tissue_names || scalar(@$tissue_names) < 1){
+        $c->stash->{rest} = { error => "You must provide tissue name(s) for your samples" };
+        $c->detach;
+    }
+
+    if (!$tissues_per_plant || $tissues_per_plant > 50) {
+        $c->stash->{rest} = { error => "Tissues per plant is required and must be smaller than 50." };
+        $c->detach;
+    }
+
+    my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+
+    if ($t->create_tissues_samples($tissues_per_plant, $tissue_name, $tissues_with_treatments)) {
+        $c->stash->{rest} = {success => 1};
+        $c->detach;;
+    } else {
+        $c->stash->{rest} = { error => "Error creating tissues samples in controller." };
+        $c->detach;;
     }
 
 }

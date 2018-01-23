@@ -1571,7 +1571,7 @@ sub get_harvest_date_cvterm_id {
 }
 
 
-=head2 function create_plant_entries()
+=head2 function create_plant_entities()
 
  Usage:        $trial->create_plant_entries($plants_per_plot);
  Desc:         Some trials require plant-level data. This function will
@@ -1897,6 +1897,115 @@ sub has_plant_entries {
 	}
 
 }
+
+=head2 function create_tissue_samples()
+
+ Usage:        $trial->create_tissue_samples($tissues_per_plant);
+ Desc:         Some trials require tissue_sample-level data. This function will
+               add an additional layer of tissue samples for each plant.
+ Ret:
+ Args:         the number of tissues samples per plant to add.
+ Side Effects:
+ Example:
+
+=cut
+
+sub create_tissue_samples {
+    my $self = shift;
+    my $tissues_per_plant = shift || 3;
+    my $tissue_name = shift;
+    my $inherits_plot_treatments = shift;
+
+    my $create_tissue_sample_entries_txn = sub {
+        my $chado_schema = $self->bcs_schema();
+        my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id() });
+        my $design = $layout->get_design();
+
+        my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+        my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+        my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        my $tissue_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+        my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
+        my $tissue_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_index_number', 'stock_property')->cvterm_id();
+        my $has_tissues_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id();
+        my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
+        my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+        my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+        my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
+        my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
+        #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
+
+        my $treatments;
+        my %treatment_experiments;
+        my %treatment_plots;
+        if ($inherits_plot_treatments){
+            $treatments = $self->get_treatments();
+            foreach (@$treatments){
+
+                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                    type_id => $has_tissues_cvterm,
+                    value => $tissues_per_plant,
+                    project_id => $_->[0],
+                });
+
+                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
+                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
+
+                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
+                my $plots = $treatment_trial->get_plots();
+                foreach my $plot (@$plots){
+                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
+                }
+            }
+        }
+
+        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+            type_id => $has_tissues_cvterm,
+            value => $tissues_per_plant,
+            project_id => $self->get_trial_id(),
+        });
+
+        my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
+
+        foreach my $plot (keys %$design) {
+            my $plant_names = $design->{$plot}->{plant_names};
+            foreach my $plant_name (@$plant_names){
+                print STDERR " ... creating tissues for plot $plant_name...\n";
+                my $plant_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $plant_name, type_id=>$plant_cvterm });
+
+                if (! $plant_row) {
+                    print STDERR "The plant $plant_name is not found in the database\n";
+                    return "The plant $plant_name is not yet in the database. Cannot create tissue entries.";
+                }
+
+                my $parent_plant = $plant_row->stock_id();
+                my $parent_plant_name = $plant_row->uniquename();
+                my $parent_plant_organism = $plant_row->organism_id();
+
+                foreach my $tissue_index_number (1..$tissues_per_plant) {
+                    my $tissue_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
+                    #print STDERR "... ... creating tissue $tissue_name...\n";
+                }
+            }
+        }
+
+        $layout->generate_and_cache_layout();
+    };
+
+    eval {
+        $self->bcs_schema()->txn_do($create_tissue_sample_entries_txn);
+    };
+    if ($@) {
+        print STDERR "An error occurred creating the tissue sample entities. $@\n";
+        return 0;
+    }
+
+    print STDERR "Tissue sample entities created.\n";
+    return 1;
+}
+
 
 =head2 function has_subplot_entries()
 
