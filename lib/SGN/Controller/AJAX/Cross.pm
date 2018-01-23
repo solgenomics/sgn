@@ -599,12 +599,15 @@ sub add_individual_cross {
   my $prefix = $c->req->param('prefix');
   my $suffix = $c->req->param('suffix');
   my $progeny_number = $c->req->param('progeny_number');
+  my $tag_number = $c->req->param('tag_number');
+  my $pollination_date = $c->req->param('pollination_date');
+  my $number_of_bags = $c->req->param('bag_number');
   my $number_of_flowers = $c->req->param('flower_number');
   my $number_of_fruits = $c->req->param('fruit_number');
   my $number_of_seeds = $c->req->param('seed_number');
   my $visible_to_role = $c->req->param('visible_to_role');
 
-  print STDERR Dumper "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type Number of Flowers: $number_of_flowers";
+  #print STDERR Dumper "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type Number of Flowers: $number_of_flowers";
 
   if ($female_plot_id){
       my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
@@ -760,6 +763,9 @@ if ($progeny_number) {
 #}
 
     my @cross_props = (
+      ['tag_number',$tag_number],
+      ['pollination_date',$pollination_date],
+      ['number_of_bags',$number_of_bags],
       ['number_of_flowers',$number_of_flowers],
       ['number_of_fruits',$number_of_fruits],
       ['number_of_seeds',$number_of_seeds]

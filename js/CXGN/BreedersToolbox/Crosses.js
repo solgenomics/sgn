@@ -115,6 +115,18 @@ jQuery(document).ready(function($) {
             source: '/ajax/stock/stock_autocomplete'
         });
 
+        $("#tag_number_checkbox").change(function() {
+            $("#get_tag_number").toggle(this.checked); // show if it is checked, otherwise hide
+        });
+
+        $("#pollination_date_checkbox").change(function() {
+            $("#get_pollination_date").toggle(this.checked); // show if it is checked, otherwise hide
+        });
+
+        $("#bag_number_checkbox").change(function() {
+            $("#get_bag_number").toggle(this.checked); // show if it is checked, otherwise hide
+        });
+
         $("#flower_number_checkbox").change(function() {
             $("#get_flower_number").toggle(this.checked); // show if it is checked, otherwise hide
         });
@@ -249,6 +261,9 @@ jQuery(document).ready(function($) {
     function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
 
         var progenyNumber = $("#progeny_number").val();
+        var tagNumber = $("#tag_number").val();
+        var pollinationDate = $("#pollination_date").val();
+        var bagNumber = $("#bag_number").val();
         var flowerNumber = $("#flower_number").val();
         var fruitNumber = $("#fruit_number").val();
         var seedNumber = $("#seed_number").val();
@@ -312,7 +327,7 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&location=' + location + '&female_plot=' + female_plot + '&male_plot=' + male_plot,
+            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&tag_number=' + tagNumber + '&pollination_date=' + pollinationDate+ '&bag_number=' + bagNumber+ '&flower_number=' + flowerNumber+ '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&location=' + location + '&female_plot=' + female_plot + '&male_plot=' + male_plot,
             beforeSend: function() {
                 jQuery("#create_cross").modal("hide");
                 jQuery("#working_modal").modal("show");

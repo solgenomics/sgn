@@ -208,6 +208,60 @@
             </select>
           </div>
       </div>
+        <tr>
+          <td>
+            <div class="form-group">
+                <label class="col-sm-9 control-label">Specify Tag Number: </label>
+                <div class="col-sm-3">
+                  <input id= "tag_number_checkbox" type="checkbox" />
+                </div>
+            </div>
+          </td>
+          <td>
+            <div class="form-group" id="get_tag_number" style="display: none">
+                <label class="col-sm-6 control-label">Tag Number: </label>
+                <div class="col-sm-6">
+                  <input class="form-control" type="text" id="tag_number" />
+                </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="form-group">
+                <label class="col-sm-9 control-label">Specify Pollination Date: </label>
+                <div class="col-sm-3">
+                  <input id= "pollination_date_checkbox" type="checkbox" />
+                </div>
+            </div>
+          </td>
+          <td>
+            <div class="form-group" id="get_pollination_date" style="display: none">
+                <label class="col-sm-6 control-label">Pollination Date: </label>
+                <div class="col-sm-6">
+                  <input class="form-control" type="text" id="pollination_date" />
+                </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="form-group">
+                <label class="col-sm-9 control-label">Specify Number of Bags: </label>
+                <div class="col-sm-3">
+                  <input id= "bag_number_checkbox" type="checkbox" />
+                </div>
+            </div>
+          </td>
+          <td>
+            <div class="form-group" id="get_bag_number" style="display: none">
+                <label class="col-sm-6 control-label">Number of Bags: </label>
+                <div class="col-sm-6">
+                  <input class="form-control" type="text" id="bag_number" />
+                </div>
+            </div>
+          </td>
+        </tr>
 	      <tr>
 	        <td>
 	    	  <div class="form-group">
