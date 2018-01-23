@@ -77,7 +77,7 @@ jQuery(document).ready(function ($) {
             $("#upload_trial_error_display tbody").html('');
 
             if (response.missing_accessions) {
-                var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_trial_missing_accessions' style='display:none'></div><div id='upload_trial_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
+                var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_trial_missing_accessions' style='display:none'></div><div id='upload_trial_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions. Please create a list of the missing accessions before clicking the link.</h4></div><br/>";
                 $("#upload_trial_add_missing_accessions_html").html(missing_accessions_html);
 
                 var missing_accessions_vals = '';
