@@ -112,13 +112,11 @@
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
-                            <th>plot_name</th>
                             <th>sprouting proportion|CO_334:0000008</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Plot1</td>
                             <td>20,2016-04-28 16:30:40-0500</td>
                         </tr>
                     </tbody>
@@ -128,13 +126,11 @@
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
-                            <th>plot_name</th>
                             <th>sprouting proportion|CO_334:0000008</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Plot1</td>
                             <td>20</td>
                         </tr>
                     </tbody>
