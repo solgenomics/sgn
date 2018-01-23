@@ -24,19 +24,30 @@
 
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Spreadsheet Format: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
+                            <option value="detailed">Detailed</option>
+                            <option value="simple">Simple</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Timestamps Included: </label>
                     <div class="col-sm-9" >
                         <input type="checkbox" id="upload_spreadsheet_phenotype_timestamp_checkbox" name="upload_spreadsheet_phenotype_timestamp_checkbox" />
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Data Level: </label>
-                    <div class="col-sm-9" >
-                        <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
-                            <option value="plots">Plots</option>
-                            <option value="plants">Plants</option>
-                            <option value="subplots">Subplots</option>
-                        </select>
+                <div id="upload_spreadsheet_phenotype_data_level_div">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Data Level: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
+                                <option value="plots">Plots</option>
+                                <option value="plants">Plants</option>
+                                <option value="subplots">Subplots</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
