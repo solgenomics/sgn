@@ -173,8 +173,14 @@ sub _prep_upload {
     my $image_zip;
     if ($file_type eq "spreadsheet") {
         print STDERR "Spreadsheet \n";
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed
+        if ($spreadsheet_format eq 'detailed'){
+            $validate_type = "phenotype spreadsheet";
+        }
+        if ($spreadsheet_format eq 'simple'){
+            $validate_type = "phenotype spreadsheet simple";
+        }
         $subdirectory = "spreadsheet_phenotype_upload";
-        $validate_type = "phenotype spreadsheet";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
