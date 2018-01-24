@@ -30,9 +30,15 @@ $timestamp
         </div>
     </div>
     <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Contents (Accession): </label>
+        <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
         <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_contents" type="text" />
+            <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Contents (Cross Uniquename): </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_contents_cross" type="text" />
         </div>
     </div>
     <div class="form-group form-group-sm">
@@ -89,7 +95,8 @@ jQuery(document).ready(function(){
                      d.breeding_program = jQuery('#search_seedlot_form_breeding_program').val();
                      d.minimum_count   = jQuery('#search_seedlot_form_minimum_count').val();
                      d.location     = jQuery('#search_seedlot_form_location').val();
-                     d.contents       = jQuery('#search_seedlot_form_contents').val();
+                     d.contents_accession = jQuery('#search_seedlot_form_contents_accession').val();
+                     d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();
                 }
         },
         columns: [

@@ -110,7 +110,7 @@ $breeding_programs
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
-                                    </select> 
+                                    </select>
                                     <div id="prephelp" style="display: none"> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#partial_rep_help_dialog">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button> </div>
                                 </div>
                             </div>
@@ -210,7 +210,7 @@ $breeding_programs
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                 <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                 <div class="col-sm-5" >
@@ -451,12 +451,13 @@ $breeding_programs
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p><span class="ui-icon ui-icon-info"></span>Trial Layout</p>
+                    <center><p>Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p></center>
                     <div id="trial_design_view_layout_return">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-info btn-sm" id="redo_trial_layout_button" >Redo Randomization</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -511,7 +512,7 @@ Development Core Team, 2009).</p></center>
                         <b>Design Parameters:</b>
                         </h4>
                             <center><p> The parameters will consider a sample partially replicated design trial with 200 unreplicated accessions, 119 accessions replicated 4 times, 26 rows in design, 26 columns in design, bock sequence of 13 by 2 (13, 2) i.e 2 blocks with each having 13 rows; sub-block sequence of block of 13 by 1 (13, 1) i.e 1 sub-block with each having 13 rows in each block. </p></center>
-                        
+
                         <dl>
                             <dt>List of Unreplicated Accession</dt>
                             <ul>
@@ -569,8 +570,8 @@ Development Core Team, 2009).</p></center>
                                 <dd>The sum of the unreplicated accessions and the replicated accessions (given the number of times it was replicated) should equal the total number of plots. </dd>
                             </li>
                         </ul>
-                        </dt></dl>    
-                        
+                        </dt></dl>
+
                     </p>
                 </div>
             </div>
