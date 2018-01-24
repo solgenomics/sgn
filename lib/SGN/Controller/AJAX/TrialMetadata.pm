@@ -1494,4 +1494,34 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
   $c->stash->{rest} = { success => 1};
 }
 
+sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $pheno_ids = $c->req->param('pheno_id');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+    my $phenotypes_ids = JSON::decode_json($pheno_ids);
+    print STDERR Dumper($phenotypes_ids);
+    
+    if (!$c->user()) {
+    	print STDERR "User not logged in... not deleting trait.\n";
+    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+    	return;
+    }
+    
+    if ($self->privileges_denied($c)) {
+      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+      return;
+    }
+    
+    my $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
+    if ($delete_trait_return_error) {
+      $c->stash->{rest} = { error => $delete_trait_return_error };
+      return;
+    }
+    
+    $c->stash->{rest} = { success => 1};
+}
+
 1;

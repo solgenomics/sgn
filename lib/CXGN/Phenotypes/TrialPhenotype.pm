@@ -122,7 +122,7 @@ sub get_trial_phenotypes_heatmap {
 	my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
-	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results);
+	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results, @phenoID);
 	
 	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value, $pheno_id) = $h->fetchrow_array()) {
 		if (!$row_number && !$col_number){
@@ -142,6 +142,7 @@ sub get_trial_phenotypes_heatmap {
 		push @plot_No, $plot_number;
 		push @block_No, $block_number;
 		push @rep_No, $rep;
+        push @phenoID, $pheno_id; 
 		push @msg, "plot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
     }
 	
@@ -189,7 +190,8 @@ sub get_trial_phenotypes_heatmap {
 	row_max => $max_row,
 	unique_col => \@unique_col,
 	unique_row => \@unique_row,
-    false_coord => $false_coord
+    false_coord => $false_coord,
+    phenoID => \@phenoID
 	);
     print STDERR "Search End:".localtime."\n";
 	#print STDERR Dumper($result);

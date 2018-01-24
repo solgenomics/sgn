@@ -86,6 +86,7 @@
                             <tr>
                                 <td>seedlot_name</td>
                                 <td>accession_name</td>
+                                <td>cross_name</td>
                                 <td>amount</td>
                                 <td>description</td>
                             </tr>
@@ -96,13 +97,16 @@
                     <br/>
                     seedlot_name (must be unique)
                     <br />
+                    <br/>
                     accession_name (must exist in the database)
-                    <br />
+                    <br/><b>OR</b><br/>
+                    cross_name (must exist in the database)
+                    <br /><br/>
                     <b>Optional fields:</b>
                     <br />
                     amount (number of seeds in seedlot. if not given will default to 0)
                     <br />
-                    description
+                    description (information about why this seedlot is being added)
                 </div>
             </div>
             <div class="modal-footer">
@@ -111,6 +115,32 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="upload_seedlot_error_display" name="upload_seedlot_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotErrorDialog">Errors In Uploaded File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="upload_seedlot_add_missing_accessions_html">
+                    </div>
+
+                    <h3>Seedlot Upload Error Messages</h3>
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 jQuery(document).ready(function(){
@@ -166,13 +196,34 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("hide");
 
             if (response.error_string) {
-                alert(response.error_string);
+                jQuery("#upload_trial_error_display tbody").html('');
+
+                if (response.missing_accessions) {
+                    var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_seedlot_missing_accessions' style='display:none'></div><div id='upload_seedlot_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions. Please create a list of the missing accessions before clicking the link.</h4></div><br/>";
+                    jQuery("#upload_seedlot_add_missing_accessions_html").html(missing_accessions_html);
+
+                    var missing_accessions_vals = '';
+                    for(var i=0; i<response.missing_accessions.length; i++) {
+                        missing_accessions_vals = missing_accessions_vals + response.missing_accessions[i] + '\n';
+                    }
+                    jQuery("#upload_seedlot_missing_accessions").html(missing_accessions_vals);
+                    addToListMenu('upload_seedlot_add_missing_accessions_html', 'upload_seedlot_missing_accessions', {
+                        selectText: true,
+                        listType: 'accessions'
+                    });
+                }
+
+                jQuery("#upload_seedlot_error_display tbody").append(response.error_string);
+                jQuery('#upload_seedlot_error_display').modal("show");
+
                 return;
             }
+
             if (response.success) {
                 alert("File uploaded successfully");
                 jQuery('#upload_seedlot_dialog').modal('hide');
-                seedlots_table.ajax.reload();
+                //seedlots_table.ajax.reload();
+                document.location.reload();
             }
         }
     });

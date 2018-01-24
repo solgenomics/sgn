@@ -29,7 +29,7 @@ my $seedlot_breeding_program_name = "test";
 my $seedlot_breeding_program_id = $schema->resultset('Project::Project')->find({name=>$seedlot_breeding_program_name})->project_id();
 $dest_seedlot->uniquename("test seedlot");
 $dest_seedlot->location_code("XYZ-123");
-$dest_seedlot->accession_stock_ids([$test_accession_stock_id1]);
+$dest_seedlot->accession_stock_id($test_accession_stock_id1);
 $dest_seedlot->organization_name('bti');
 $dest_seedlot->population_name('test seedlot pop');
 $dest_seedlot->breeding_program_id($seedlot_breeding_program_id);
@@ -45,7 +45,7 @@ my $source_seedlot = CXGN::Stock::Seedlot->new(
 
 $source_seedlot->uniquename("test seedlot 2");
 $source_seedlot->location_code("ABC-987");
-$source_seedlot->accession_stock_ids([$test_accession_stock_id1]);
+$source_seedlot->accession_stock_id($test_accession_stock_id1);
 $source_seedlot->organization_name('bti');
 $source_seedlot->population_name('test seedlot pop');
 $source_seedlot->breeding_program_id($seedlot_breeding_program_id);
@@ -83,7 +83,7 @@ is($source_seedlot_after_trans1->uniquename, $source_seedlot->uniquename, "check
 is($source_seedlot_after_trans1->location_code, $source_seedlot->location_code, "check location is saved");
 is($source_seedlot_after_trans1->organization_name, $source_seedlot->organization_name, "check organization is saved");
 is($source_seedlot_after_trans1->population_name, $source_seedlot->population_name, "check population is saved");
-is_deeply($source_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
+is_deeply($source_seedlot_after_trans1->accession, [$test_accession_stock_id1, 'test_accession1'], "check accession is saved");
 is($source_seedlot_after_trans1->breeding_program_name, $seedlot_breeding_program_name);
 is($source_seedlot_after_trans1->breeding_program_id, $source_seedlot->breeding_program_id);
 
@@ -96,7 +96,7 @@ is($dest_seedlot_after_trans1->uniquename, $dest_seedlot->uniquename, "check uni
 is($dest_seedlot_after_trans1->location_code, $dest_seedlot->location_code, "check location is saved");
 is($dest_seedlot_after_trans1->organization_name, $dest_seedlot->organization_name, "check organization is saved");
 is($dest_seedlot_after_trans1->population_name, $dest_seedlot->population_name, "check population is saved");
-is_deeply($dest_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
+is_deeply($dest_seedlot_after_trans1->accession, [$test_accession_stock_id1, 'test_accession1'], "check accession is saved");
 is($dest_seedlot_after_trans1->breeding_program_name, $seedlot_breeding_program_name);
 is($dest_seedlot_after_trans1->breeding_program_id, $dest_seedlot->breeding_program_id);
 
@@ -136,7 +136,7 @@ is($source_seedlot_after_trans3->uniquename, $source_seedlot->uniquename, "check
 is($source_seedlot_after_trans3->location_code, $source_seedlot->location_code, "check location is saved");
 is($source_seedlot_after_trans3->organization_name, $source_seedlot->organization_name, "check organization is saved");
 is($source_seedlot_after_trans3->population_name, $source_seedlot->population_name, "check population is saved");
-is_deeply($source_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
+is_deeply($source_seedlot_after_trans3->accession, [$test_accession_stock_id1, 'test_accession1'], "check accession is saved");
 is($source_seedlot_after_trans3->breeding_program_name, $seedlot_breeding_program_name);
 is($source_seedlot_after_trans3->breeding_program_id, $source_seedlot->breeding_program_id);
 
@@ -180,7 +180,7 @@ is($dest_seedlot_after_trans3->uniquename, $dest_seedlot->uniquename, "check uni
 is($dest_seedlot_after_trans3->location_code, $dest_seedlot->location_code, "check location is saved");
 is($dest_seedlot_after_trans3->organization_name, $dest_seedlot->organization_name, "check organization is saved");
 is($dest_seedlot_after_trans3->population_name, $dest_seedlot->population_name, "check population is saved");
-is_deeply($dest_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
+is_deeply($dest_seedlot_after_trans3->accession, [$test_accession_stock_id1, 'test_accession1'], "check accession is saved");
 is($dest_seedlot_after_trans3->breeding_program_name, $seedlot_breeding_program_name);
 is($dest_seedlot_after_trans3->breeding_program_id, $dest_seedlot->breeding_program_id);
 
