@@ -20,7 +20,7 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_phenotype_data_form" name="delete_phenotype_data_form">
                     
                     <center>
-                    <p3> Delete all or individual traits.</p3>
+                    <p3> Delete all or individual traits...</p3>
                     </center></br>
 
                     </form>
@@ -66,6 +66,31 @@ $trial_id
     </div>
 </div>
 
+<div class="modal  fade" id="delete_traits_dialog_success_message" name="delete_traits_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="TraitsDeletionDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="TraitsDeletionDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_traits_form" name="delete_traits_form">
+
+                    <p3> Trait deletion was successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_traits_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 var traits = [];
 jQuery(document).ready(function() {
@@ -81,8 +106,7 @@ jQuery(document).ready(function() {
         } else {
             delete_selected_assayed_traits();
         }
-    });
-    
+    });    
     
 });
 
@@ -108,7 +132,7 @@ function delete_selected_assayed_traits() {
           if (response.error){
               alert("Error deleting trait:" +response.error);
           }else{
-              jQuery("#delete_trait_dialog_success_message").modal("show");
+              jQuery("#delete_traits_dialog_success_message").modal("show");
           }
       },
       error: function(){

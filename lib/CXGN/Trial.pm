@@ -2502,13 +2502,14 @@ sub delete_assayed_trait {
 			push @nd_expt_ids, $nd_expt_id;
 			$res->delete;
 		}
+        print STDERR Dumper(\@nd_expt_ids);
 		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});
 		while (my $res = $delete_nd_expt_md_files_id_rs->next()){
 			$res->delete;
 		}
-		#print STDERR Dumper(\@nd_expt_ids);
+		
 		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});
