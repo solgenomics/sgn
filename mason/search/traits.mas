@@ -60,12 +60,12 @@ jQuery(document).ready(function () {
      var selected_rows = trait_table.rows({'selected':true});
      jQuery("#trait_result_count").text(selected_rows.count());
      var name_links = selected_rows.data().map(function(row){
-       return row[1];
+       return [row[2], row[1]];
      });
 
-     var names = [];     
-     for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
-       names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+     var names = [];
+     for (var i = 0; i < name_links.length; i++) { //extract and combine trait name and id from anchor tags
+       names.push(name_links[i][0].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '|' + name_links[i][1].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '\n');
      }
 
      jQuery('#trait_result_names').html(names);
