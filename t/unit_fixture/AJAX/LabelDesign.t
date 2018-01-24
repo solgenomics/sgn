@@ -187,9 +187,9 @@ $response = decode_json $mech->content;
 
 my $file = $response->{'filepath'};
 my $file_content = read_file($file);
-print STDERR "File Content is:\n$file_content";
+#print STDERR "File Content is:\n$file_content";
 $file_content = substr $file_content, 0, 399;
-print STDERR "Substring File Content is:\n$file_content";
+#print STDERR "Substring File Content is:\n$file_content";
 my $expected_content = '^XA
 ^LL254.7^PW407.52
 ^FO53.71875,14.1328125^AA,54^FDUG120054^FS

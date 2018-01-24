@@ -180,7 +180,7 @@ __PACKAGE__->config(
                        my $filled_value = $element{'value'};
                        $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
                        #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
-                       print STDERR "Writing to the PDF . . .\n";
+                       #print STDERR "Writing to the PDF . . .\n";
                        if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
                             if ( $element{'type'} eq "Code128" ) {
@@ -298,7 +298,7 @@ __PACKAGE__->config(
        print STDERR "Returning with filename . . .\n";
        $c->stash->{rest} = {
            filename => $filename,
-           filepath => $c->config->{basepath}."/".$filename 
+           filepath => $c->config->{basepath}."/".$filename
        };
 
    }
@@ -308,7 +308,7 @@ sub process_field {
     my $key_number = shift;
     my $design_info = shift;
     my %design_info = %{$design_info};
-    print STDERR "Field is $field\n";
+    #print STDERR "Field is $field\n";
     if ($field =~ m/Number:/) {
         our ($placeholder, $start_num, $increment) = split ':', $field;
         my $length = length($start_num);
