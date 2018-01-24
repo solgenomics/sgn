@@ -75,6 +75,7 @@ use Test::More;
 # my $plot_id = $stock_plot_rs->single->stock_id;
 # ok($model->map_subject_to_object($plot_id), 'map_subject_to_object...ok');
  
+ok(1); #Adding a test
 done_testing;
 
 
