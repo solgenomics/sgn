@@ -103,6 +103,12 @@
                 <li>Two or more traits can be uploaded at the same time.</li>
             </ul>
 
+            <h4>Simple and Detailed Spreadsheet Format:</h4>
+            <ul>
+                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.</li>
+                <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
+            </ul>
+
             <h4>Timestamps:</h4>
             <ul>
                 <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
