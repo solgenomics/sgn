@@ -185,7 +185,7 @@ $design_json = encode_json {
 $mech->post_ok('http://localhost:3010/tools/label_designer/download', [ 'download_type' => $download_type, 'data_type' => $data_type, 'value'=> $value, 'design_json' => $design_json ]);
 $response = decode_json $mech->content;
 
-my $file = $response->{'filepath'};
+$file = $response->{'filepath'};
 my $file_content = read_file($file);
 #print STDERR "File Content is:\n$file_content";
 $file_content = substr $file_content, 0, 399;
