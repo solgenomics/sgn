@@ -104,7 +104,7 @@ jQuery(document).ready(function ($) {
             }
         }
     });
-    
+
     $(document).on('focusout', '#list_of_unrep_accession_list_select', function() {
         if ($('#list_of_unrep_accession_list_select').val()) {
             unrep_stock_list_id = $('#list_of_unrep_accession_list_select').val();
@@ -117,7 +117,7 @@ jQuery(document).ready(function ($) {
             }
         }
     });
-    
+
     $(document).on('focusout', '#list_of_rep_accession_list_select', function() {
         if ($('#list_of_rep_accession_list_select').val()) {
             rep_stock_list_id = $('#list_of_rep_accession_list_select').val();
@@ -327,7 +327,7 @@ jQuery(document).ready(function ($) {
         if (unreplicated_accession_list_id != "") {
             unreplicated_accession_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
         }
-        
+
         var replicated_accession_list;
         if (replicated_accession_list_id != "") {
             replicated_accession_list = JSON.stringify(list.getList(replicated_accession_list_id));
@@ -735,7 +735,7 @@ jQuery(document).ready(function ($) {
             $("#num_plants_per_plot_section").hide();
             greenhouse_show_num_plants_section();
         }
-        
+
         else if (design_method == 'splitplot') {
             $("#FieldMap").show();
             $("#prephelp").hide();
@@ -949,6 +949,11 @@ jQuery(document).ready(function ($) {
     });
 
     $('#view_trial_layout_button').click(function () {
+        $('#trial_design_view_layout').modal("show");
+    });
+
+    $('#redo_trial_layout_button').click(function () {
+        generate_experimental_design();
         $('#trial_design_view_layout').modal("show");
     });
 
