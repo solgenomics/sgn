@@ -570,7 +570,12 @@ jQuery(document).ready(function ($) {
   });
 
   $('#view_multi_trial_layout_button').click(function () {
-$('#trial_multi_design_view_layout').modal("show");
+      $('#trial_multi_design_view_layout').modal("show");
+  });
+
+  $('#redo_multiloc_trial_layout_button').click(function () {
+      generate_multi_experimental_design();
+      $('#trial_multi_design_view_layout').modal("show");
   });
 
 });
