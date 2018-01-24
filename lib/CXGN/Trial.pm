@@ -2455,5 +2455,73 @@ sub suppress_plot_phenotype {
 	
 }
 
+=head2 delete_assayed_trait
+
+ Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
+ 				if ($delete_trait_return_error) {
+   					$c->stash->{rest} = { error => $delete_trait_return_error };
+   					return;
+ 				}
+ 
+ Desc:         Delete Assayed Traits
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_assayed_trait {
+	my $self = shift;
+	my $pheno_ids = shift;
+	my $trait_ids = shift;
+	my $schema = $self->bcs_schema;
+	my $phenome_schema = $self->phenome_schema;
+	my ($error, @nd_expt_ids);
+	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+	my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id };
+	if (scalar(@$trait_ids) > 0){
+		$search_params->{'me.observable_id'} = { '-in' => $trait_ids };
+	}
+	if (scalar(@$pheno_ids) > 0){
+		$search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
+	}
+	$schema->storage->debug(1);
+	if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
+		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
+		$search_params,
+		{
+			join => { 'nd_experiment_phenotypes' => 'nd_experiment' },
+			'+select' => ['nd_experiment.nd_experiment_id'],
+			'+as' => ['nd_expt_id'],
+		});
+		while ( my $res = $delete_pheno_id_rs->next()){
+			#print STDERR $res->phenotype_id." : ".$res->observable_id."\n";
+			my $nd_expt_id = $res->get_column('nd_expt_id');
+			push @nd_expt_ids, $nd_expt_id;
+			$res->delete;
+		}
+		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
+			nd_experiment_id => { '-in' => \@nd_expt_ids },
+		});
+		while (my $res = $delete_nd_expt_md_files_id_rs->next()){
+			$res->delete;
+		}
+		#print STDERR Dumper(\@nd_expt_ids);
+		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
+			nd_experiment_id => { '-in' => \@nd_expt_ids },
+		});
+		while (my $res = $delete_nd_expt_id_rs->next()){
+			$res->delete;
+		}			
+	}
+	else {
+		$error = "List of trait or phenotype ids was not provided for deletion.";
+	}
+	
+	return $error;
+	
+}
 
 1;

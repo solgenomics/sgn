@@ -1413,12 +1413,12 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
     	return;
     }
-        
+
     if ($self->privileges_denied($c)) {
       $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
       return;
     }
-    
+
     my $delete_trait_return_error;
     if ($pheno_ids){
             my $phenotypes_ids = JSON::decode_json($pheno_ids);
