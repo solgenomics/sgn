@@ -420,15 +420,12 @@ function trial_detail_page_setup_dialogs() {
     location.reload();
   });
 
-    jQuery('#delete_phenotype_data_by_trial_id').click(
-	function() {
+    jQuery('#delete_phenotype_data_by_trial_id').click(function() {
         jQuery('#delete_phenotype_data_dialog').modal("show");
 	//    var trial_id = get_trial_id();
 	//    delete_phenotype_data_by_trial_id(trial_id);
 	});
-    jQuery('#delete_single_phenotype_data_dialog_submit').click( function() {
-        jQuery('#delete_individual_phenotype_data_dialog').modal("show");
-    });
+
 
     jQuery('#delete_layout_data_by_trial_id').click(
 	function() {

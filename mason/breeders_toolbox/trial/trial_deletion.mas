@@ -47,9 +47,13 @@ $trial_id
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_individual_trait_data_form" name="delete_individual_trait_data_form">
                     
-                    <center>
-                    <p3> Delete all or individual traits...</p3>
-                    </center></br>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Traits:<br/><small>(Select traits to delete)</small></label>
+                        <div class="col-sm-9" >
+                            <div id="retrieve_assayed_trial_traits">
+                            </div>
+                        </div>
+                    </div>
 
                     </form>
                 </div>
@@ -62,3 +66,17 @@ $trial_id
     </div>
 </div>
 
+<script>
+jQuery(document).ready(function() {
+    jQuery('#delete_single_phenotype_data_dialog_submit').click( function() {
+        jQuery('#delete_individual_phenotype_data_dialog').modal("show");
+        retrieve_trial_traits();
+    });
+    
+    
+});
+
+function retrieve_trial_traits() {
+    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>' });
+}
+</script>
