@@ -27,10 +27,38 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_delete_trait_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Delete Individual Traits</button>
                 <button type="button" class="btn btn-primary" name="delete_all_phenotype_data_dialog_submit" id="delete_all_phenotype_data_dialog_submit">Delete All Traits</button>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal  fade" id="delete_individual_phenotype_data_dialog" name="delete_individual_phenotype_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeleteIndividualPhenoDataDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteIndividualPhenoDataDialog">Delete Trial Phenotype Data </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_individual_trait_data_form" name="delete_individual_trait_data_form">
+                    
+                    <center>
+                    <p3> Delete all or individual traits...</p3>
+                    </center></br>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_indiv_trait_data_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_individual_phenotype_data_dialog_submit" id="delete_individual_phenotype_data_dialog_submit">Delete Traits Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
