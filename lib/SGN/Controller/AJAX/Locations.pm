@@ -145,6 +145,7 @@ __PACKAGE__->config(
      }
 
      my $user_id = $c->user()->get_object()->get_sp_person_id();
+     my $user_role = $c->user->get_object->get_user_type();
 
      my $uploader = CXGN::UploadFile->new({
        tempfile => $upload_tempfile,
@@ -153,7 +154,7 @@ __PACKAGE__->config(
        archive_filename => $upload_original_name,
        timestamp => $timestamp,
        user_id => $user_id,
-       user_role => $c->user()->roles
+       user_role => $user_role
      });
 
      ## Store uploaded temporary file in archive

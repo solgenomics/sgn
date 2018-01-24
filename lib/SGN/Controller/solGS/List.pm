@@ -103,15 +103,16 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     {
 	 $c->stash->{combo_pops_id}  = $args->{training_pop_id};
     }
-    
+   
     $self->get_selection_genotypes_list($c);
     my $genotypes_list = $c->stash->{genotypes_list};
+    my $genotypes_ids = $c->stash->{genotypes_ids};
    
     my $data = $c->model('solGS::solGS')->genotypes_list_genotype_data($genotypes_list);
     $c->stash->{genotypes_list_genotype_data} = $data;
   
     my $selection_pop_id = $args->{selection_pop_id}; 
-
+ 
     $self->genotypes_list_genotype_data_file($c, $selection_pop_id);   
     my $genotype_file = $c->stash->{genotypes_list_genotype_data_file};
 
@@ -197,13 +198,19 @@ sub get_selection_genotypes_list {
     my $list = $c->stash->{list};
     
     my @stocks_names = ();  
+    my @stocks_ids   = ();
+
     foreach my $stock (@$list)
     {
+	push @stocks_ids, $stock->[0];;
         push @stocks_names, $stock->[1];
     }
     
+    @stocks_ids   = uniq(@stocks_ids);
     @stocks_names = uniq(@stocks_names);
+    
     $c->stash->{genotypes_list} = \@stocks_names;
+    $c->stash->{genotypes_ids}  = \@stocks_ids;
     
 }
 
@@ -536,21 +543,21 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
 sub genotypes_list_genotype_data {
     my ($self, $args) = @_;
    
-    my $list_pop_id  = $args->{model_id} || $args->{list_pop_id} || $args->{selection_pop_id};
-    my $genotypes    = $args->{genotypes_list};
-    my $tmp_dir      = $args->{list_data_dir};
-    
+    my $list_pop_id   = $args->{model_id} || $args->{list_pop_id} || $args->{selection_pop_id};
+    my $genotypes     = $args->{genotypes_list};
+    my $genotypes_ids = $args->{genotypes_ids};
+    my $tmp_dir       = $args->{list_data_dir};
+   
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
 					      });
 
     my $geno_data = $model->genotypes_list_genotype_data($genotypes);
-   
     my $files = $self->create_list_pop_tempfiles($tmp_dir, $list_pop_id);
 
     my $geno_file = $files->{geno_file};
     write_file($geno_file, $geno_data);
-      
+
 }
 
 
@@ -574,12 +581,15 @@ sub genotypes_list_genotype_file {
 	$self->get_selection_genotypes_list($c);
     }
     
-    my $genotypes = $c->stash->{genotypes_list}; 
+    my $genotypes = $c->stash->{genotypes_list};
+    my $genotypes_ids = $c->stash->{genotypes_ids};
+
     my $data_dir  = $c->stash->{solgs_prediction_upload_dir};
 
     my $args = {
 	'list_pop_id'    => $list_pop_id,
-	'genotypes_list' => $genotypes,	        
+	'genotypes_list' => $genotypes,	 
+	'genotypes_ids'  => $genotypes_ids,
 	'list_data_dir'  => $data_dir,
     };
 

@@ -1,5 +1,7 @@
 <%args>
-$timestamp
+$timestamp => localtime()
+$accession_uniquename => ''
+$cross_uniquename => ''
 </%args>
 
 <div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
@@ -31,12 +33,64 @@ $timestamp
                         <input class="form-control" id="seedlot_location" placeholder="Required">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Content (accession): </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_accession_uniquename" placeholder="Required">
+
+                <div class="well well-sm">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label">Contents: </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-9">
+% if ($accession_uniquename || $cross_uniquename){
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Accession name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="seedlot_accession_uniquename" placeholder="One Content Required" disabled value="<% $accession_uniquename %>">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <center><h4>OR</h4></center>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="seedlot_cross_uniquename" placeholder="One Content Required" disabled value="<% $cross_uniquename %>">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+% } else {
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Accession name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="seedlot_accession_uniquename" placeholder="One Content Required">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <center><h4>OR</h4></center>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" id="seedlot_cross_uniquename" placeholder="One Content Required">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+% }
+                        </div>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Amount (number of seeds): </label>
                     <div class="col-sm-9" >
@@ -71,7 +125,7 @@ $timestamp
         </div>
       </div>
       <div class="modal-footer">
-        <button id="create_new_seedlot_button" type="button" class="btn btn-default" >OK</button>
+        <button id="create_new_seedlot_button" type="button" class="btn btn-primary" >OK</button>
       </div>
     </div>
   </div>
@@ -86,6 +140,9 @@ jQuery(document).ready(function(){
     jQuery("#seedlot_accession_uniquename").autocomplete({
        source: '/ajax/stock/accession_autocomplete',
     });
+    jQuery("#seedlot_cross_uniquename").autocomplete({
+       source: '/ajax/stock/cross_autocomplete',
+    });
 
     jQuery('#add_seedlot_button').click( function() {
         jQuery('#add_seedlot_dialog').modal('show');
@@ -96,6 +153,7 @@ jQuery(document).ready(function(){
         var name = jQuery('#seedlot_name').val();
         var location = jQuery('#seedlot_location').val();
         var accession_uniquename = jQuery('#seedlot_accession_uniquename').val();
+        var cross_uniquename = jQuery('#seedlot_cross_uniquename').val();
         var population_name = jQuery('#seedlot_population_name').val();
         var organization = jQuery('#seedlot_organization').val();
         var amount = jQuery('#seedlot_amount').val();
@@ -107,7 +165,12 @@ jQuery(document).ready(function(){
         else if (location == '') { alert("Please provide a location"); return; }
         else if (amount == '') { alert("Please provide an amount"); return; }
         else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
-        else if (accession_uniquename == '') { alert("Please provide an accession name"); return; }
+        else if (accession_uniquename == '' && cross_uniquename == '') {
+            alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
+        }
+        else if (accession_uniquename != '' && cross_uniquename != '') {
+            alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
+        }
         else {
 
             jQuery.ajax({
@@ -116,6 +179,7 @@ jQuery(document).ready(function(){
                     'seedlot_name' : name,
                     'seedlot_location': location,
                     'seedlot_accession_uniquename': accession_uniquename,
+                    'seedlot_cross_uniquename': cross_uniquename,
                     'seedlot_organization': organization,
                     'seedlot_population_name': population_name,
                     'seedlot_amount':amount,
@@ -127,7 +191,8 @@ jQuery(document).ready(function(){
                     if (response.success == 1) { 
                         alert("The seedlot has been created.");
                         jQuery('#add_seedlot_dialog').modal('hide');
-                        seedlots_table.ajax.reload();
+                        //seedlots_table.ajax.reload();
+                        document.location.reload();
                     }
                     if (response.error) {
                         alert(response.error);

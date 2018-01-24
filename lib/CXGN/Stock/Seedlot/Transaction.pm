@@ -157,6 +157,26 @@ sub store {
     }
 }
 
+sub update_transaction_subject_id {
+    my $self = shift;
+    my $new_subject_id = shift;
+    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
+    $row->update({
+        subject_id => $new_subject_id
+    });
+    return $row->stock_relationship_id();
+}
+
+sub update_transaction_object_id {
+    my $self = shift;
+    my $new_object_id = shift;
+    my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
+    $row->update({
+        object_id => $new_object_id
+    });
+    return $row->stock_relationship_id();
+}
+
 sub delete {
     
 
