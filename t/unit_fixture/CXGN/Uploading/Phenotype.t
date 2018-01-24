@@ -4852,5 +4852,218 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {success=>1});
 
+########################################
+#Tests for phenotype spreadsheet parsing
+
+my $filename = "t/data/trial/trial_phenotype_upload_file_simple.xls";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $filename,
+  subdirectory => 'temp_fieldbook',
+  archive_path => '/tmp',
+  archive_filename => 'trial_phenotype_upload_file_simple.xls',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
+#Now parse phenotyping spreadsheet file using correct parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$validate_file = $parser->validate('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for phenotype file");
+
+my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
+
+#print STDERR Dumper $parsed_file;
+
+is_deeply($parsed_file, {
+          'plots' => [
+                       'test_trial21',
+                       'test_trial210',
+                       'test_trial211',
+                       'test_trial212',
+                       'test_trial213',
+                       'test_trial214',
+                       'test_trial215',
+                       'test_trial22',
+                       'test_trial23',
+                       'test_trial24',
+                       'test_trial25',
+                       'test_trial26',
+                       'test_trial27',
+                       'test_trial28',
+                       'test_trial29'
+                     ],
+          'traits' => [
+                        'number of planted stakes counting|CO:0000159',
+                        'root weight in air|CO:0000157',
+                        'root weight in water|CO:0000158',
+                        'sprout count|CO:0000213'
+                      ],
+          'data' => {
+                      'test_trial28' => {
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                               []
+                                                                             ],
+                                          'root weight in water|CO:0000158' => [
+                                                                                 '0.32',
+                                                                                 '',
+                                                                                 []
+                                                                               ],
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ],
+                                          'sprout count|CO:0000213' => [
+                                                                         '14',
+                                                                         '',
+                                                                         []
+                                                                       ]
+                                        },
+                      'test_trial27' => {
+                                          'sprout count|CO:0000213' => [
+                                                                         '14',
+                                                                         '',
+                                                                         []
+                                                                       ],
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                               []
+                                                                             ],
+                                          'root weight in water|CO:0000158' => [
+                                                                                 '0.32',
+                                                                                 '',
+                                                                                 []
+                                                                               ],
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ]
+                                        },
+                      'test_trial23' => {
+                                          'root weight in water|CO:0000158' => [
+                                                                                 '0.32',
+                                                                                 '',
+                                                                                 []
+                                                                               ],
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ],
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                               []
+                                                                             ],
+                                          'sprout count|CO:0000213' => [
+                                                                         '20',
+                                                                         '',
+                                                                        []
+                                                                       ]
+                                        },
+                      'test_trial25' => {
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ],
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                              []
+                                                                             ]
+                                        },
+                      'test_trial24' => {
+                                          'sprout count|CO:0000213' => [
+                                                                         '6',
+                                                                         '',
+                                                                         []
+                                                                       ],
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ],
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                               []
+                                                                             ]
+                                        },
+                      'test_trial22' => {
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ],
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                               []
+                                                                             ]
+                                        },
+                      'test_trial21' => {
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ],
+                                          'root weight in water|CO:0000158' => [
+                                                                                 '0.3',
+                                                                                 '',
+                                                                                 []
+                                                                               ],
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                               []
+                                                                             ],
+                                          'sprout count|CO:0000213' => [
+                                                                         '18',
+                                                                         '',
+                                                                        []
+                                                                       ]
+                                        },
+                      'test_trial26' => {
+                                          'number of planted stakes counting|CO:0000159' => [
+                                                                                              '20',
+                                                                                              '',
+                                                                                              []
+                                                                                            ],
+                                          'root weight in water|CO:0000158' => [
+                                                                                 '0.36',
+                                                                                 '',
+                                                                                 []
+                                                                               ],
+                                          'root weight in air|CO:0000157' => [
+                                                                               '3',
+                                                                               '',
+                                                                               []
+                                                                             ],
+                                          'sprout count|CO:0000213' => [
+                                                                         '18',
+                                                                         '',
+                                                                        []
+                                                                       ]
+                                        }
+                    }
+        }, 'check parse simple');
+
 
 done_testing();
