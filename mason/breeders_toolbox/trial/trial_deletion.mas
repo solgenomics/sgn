@@ -20,7 +20,7 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_phenotype_data_form" name="delete_phenotype_data_form">
                     
                     <center>
-                    <p3> Delete all or individual traits...</p3>
+                    <p3> Are you sure you want to delete assayed traits data for this trial? <br> Proceed with deletion below...</p3>
                     </center></br>
 
                     </form>
@@ -28,8 +28,8 @@ $trial_id
             </div>
             <div class="modal-footer">
                 <button id="close_delete_trait_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Delete Individual Traits</button>
-                <button type="button" class="btn btn-primary" name="delete_all_phenotype_data_dialog_submit" id="delete_all_phenotype_data_dialog_submit">Delete All Traits</button>
+                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Confirm Deletion</button>
+                <!--<button type="button" class="btn btn-primary" name="delete_all_phenotype_data_dialog_submit" id="delete_all_phenotype_data_dialog_submit">Delete All Traits</button>-->
             </div>
         </div>
     </div>
