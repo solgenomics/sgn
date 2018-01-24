@@ -262,6 +262,37 @@ sub get_cross_properties_trial {
 
 }
 
+=head2 get_cross_progenies_trial
+
+
+=cut
+
+sub get_cross_progenies_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $trial_id = $self->trial_id;
+
+    my $member_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename, COUNT (stock_relationship.subject_id) AS progeny_number
+        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id =?
+        WHERE nd_experiment_project.project_id = ? GROUP BY stock.stock_id";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($member_of_typeid, $trial_id);
+
+    my @data =();
+    while(my($cross_id, $cross_name, $progeny_number) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $progeny_number]
+            }
+
+    return \@data;
+}
+
+
 
 
 =head2 delete
