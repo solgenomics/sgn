@@ -55,6 +55,20 @@ my @image_ids = $cvterm->get_image_ids;
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
+my @secondary_accessions = ();
+foreach ( @secondary_dbxrefs) {
+  my $db =       $_->get_db_name;
+  my $acc =      $_->get_accession;
+  my $urlprefix= $_->get_urlprefix;
+  my $url =      $_->get_url;
+  my $full_acc = $db . ":" . $acc;
+  my $link = $full_acc;
+  if ( $url ) {
+    my $xref_link = $urlprefix . $url . $acc;
+    $link = qq | <a href="$xref_link">$full_acc</a> |
+  }
+  push @secondary_accessions , $link ;
+}
 
 my @qtl_pops = CXGN::Phenome::Qtl::Tools->new()->is_from_qtl( $cvterm_id );
 my @qtl_data;
@@ -64,7 +78,7 @@ if ( @qtl_pops )
     foreach my $pop (@qtl_pops)
     {
       my $pop_id   = $pop->get_population_id();
-      my $name     = $pop->get_name(); 
+      my $name     = $pop->get_name();
       my $desc     = $pop->get_description();
       my $qtl_link = qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id" onClick="Qtl.waitPage()">$name</a> |;
       push @qtl_data, [ $qtl_link, $desc ];
@@ -123,9 +137,9 @@ my $image_subtitle =
 <% $da %><br />
 % }
 
-<br /><b> Definition dbxrefs</b><br />
-% foreach my $ds (@secondary_dbxrefs) {
-<% $ds %><br />
+<br /><b> Related dbxrefs</b><br />
+% foreach my $sa (@secondary_accessions) {
+<% $sa %><br />
 %  }
 
 </&>

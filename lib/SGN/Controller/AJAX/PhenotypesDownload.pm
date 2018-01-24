@@ -62,6 +62,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   print STDERR Dumper \@trial_ids;
   my $format = $c->req->param('format') || "ExcelBasic";
   my $data_level = $c->req->param('data_level') || "plots";
+  my $file_format = $c->req->param('create_spreadsheet_phenotype_file_format') || "detailed";
   my $sample_number = $c->req->param('sample_number');
   if ($sample_number eq '') {$sample_number = undef};
   my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];

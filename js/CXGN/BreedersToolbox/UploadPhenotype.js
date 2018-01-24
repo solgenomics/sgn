@@ -30,6 +30,15 @@ jQuery( document ).ready( function() {
         }
     });
 
+    jQuery('#upload_spreadsheet_phenotype_file_format').change(function(){
+        var val = jQuery(this).val();
+        if (val == 'simple'){
+            jQuery('#upload_spreadsheet_phenotype_data_level_div').hide();
+        } else {
+            jQuery('#upload_spreadsheet_phenotype_data_level_div').show();
+        }
+    });
+
     //For Datacollector Upload
     jQuery('#upload_datacollector_phenotype_submit_verify').click( function() {
         initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Verifying Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_verify/datacollector");
