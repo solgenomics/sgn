@@ -60,7 +60,7 @@ $trial_id
 </div>
 <div id="chart"></div>
 <div class="col-sm-10" id="d_button" style="display:none";>
-  <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; 
+ <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
 </div>
 
 <div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
