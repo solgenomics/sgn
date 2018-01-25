@@ -454,6 +454,7 @@ $(document).ready(function($) {
                 'design_json': design_json
             },
             beforeSend: function() {
+                console.log("Downloading "+download_type+" file . . . ");
                 disable_ui();
             },
             complete: function() {
@@ -464,6 +465,7 @@ $(document).ready(function($) {
                     enable_ui();
                     alert(response.error);
                 } else {
+                    console.log("Got file "+response.filename);
                     enable_ui();
                     window.location.href = "/download/" + response.filename;
                 }
@@ -868,7 +870,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
         x = document.getElementById("d3-label-area").viewBox.baseVal.width/2;
         y = document.getElementById("d3-label-area").viewBox.baseVal.height/2;
     }
-    console.log(" X is: "+x+" and y is: "+y);
+    //console.log(" X is: "+x+" and y is: "+y);
 
     //count existing elements
     var label_elements = document.getElementsByClassName('label-element');
@@ -884,7 +886,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
     switch (type) {
         case "Code128":
         case "QRCode":
-            console.log("Adding barcode of type "+type);
+            //console.log("Adding barcode of type "+type);
             //add barcode specific attributes
             disable_ui();
             var page = d3.select("#page_format").node().value;
@@ -922,7 +924,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
 
         default:
             //add text specific attributes
-            console.log("Adding text of type "+type);
+            //console.log("Adding text of type "+type);
             var font_size = parseInt(size);
             if (type =="ZebraText") {
                 font_size = font_size + parseInt(font_size/9);
@@ -946,7 +948,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 "alignment-baseline": "middle",
             })
             .text(text)
-            console.log("Field is: "+field+" and size is: "+size+" and type is: "+type+" and font size is: "+font_size+" and font is: "+font+" and style is: "+font_styles[font]+" and text is: "+text);
+            //console.log("Field is: "+field+" and size is: "+size+" and type is: "+type+" and font size is: "+font_size+" and font is: "+font+" and style is: "+font_styles[font]+" and text is: "+text);
 
             break;
     }
@@ -1020,13 +1022,13 @@ function checkIfVisible(element) {
 
 function getLabelDetails(element) {
     var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
-    console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
+    //console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
     var coords = transform_attributes.translate;
     var scale = transform_attributes.scale || new Array(1,1);
     var rect = element.getBBox();
     var width = rect.width * scale[0];
     var height = rect.height * scale[1];
-    console.log("Height is: "+height+" and width is: "+width);
+    //console.log("Height is: "+height+" and width is: "+width);
     var type = element.getAttribute("type");
     var x;
     var y;
@@ -1184,7 +1186,7 @@ function saveLabelDesign() {
 }
 
 function fillInPlaceholders(match, placeholder) { // replace placeholders with actual values
-    console.log("Placeholder is "+placeholder);
+    //console.log("Placeholder is "+placeholder);
     if (placeholder.match(/Number:/)) {
         var parts = placeholder.split(':');
         return parts[1];
@@ -1224,14 +1226,14 @@ function loadDesign (list_id) {
             var element_obj = params[key];
             var value = element_obj.value;
             var text = value.replace(/\{(.*?)\}/g, fillInPlaceholders);
-            console.log("Width is "+element_obj.width);
+            //console.log("Width is "+element_obj.width);
             addToLabel(value, text, element_obj.type, element_obj.size, element_obj.font, element_obj.x, element_obj.y, element_obj.width, element_obj.height);
         }
     }
 
     var page = params['page_format'];
     document.getElementById('page_format').value = page;
-    console.log("page is "+page);
+    //console.log("page is "+page);
     switchPageDependentOptions(page);
     if (page == 'Custom') {
         document.getElementById("page_width").value = params['page_width'];
