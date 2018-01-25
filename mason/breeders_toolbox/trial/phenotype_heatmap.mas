@@ -10,6 +10,7 @@ $trial_id
     #trial_no_phenoMSG {display: none; }
     #trial_no_rowColMSG {display: none; }
     #traitdiv {display: none; }
+    #trial_heatmap_div  {display: none; }
     #chart {display: none; }
     
     #container_heatmap {
@@ -42,6 +43,24 @@ $trial_id
       }
 </style>
 
+<div class="form-group form-group-sm" id="trial_heatmap_div" >
+    <label for="heatmap_option_list_dropdown" class="col-sm-12 control-label">Select Datatype To View:</label>
+    <div class="col-sm-14">
+    
+        <select class="form-control" id="heatmap_trial_assayed_dropdown">
+            <option value="">select to view on heatmap</option>
+            <optgroup label="Field">
+                
+                <option value="fieldmap">view field layout</option>
+            </optgroup>
+            <optgroup label="Trait">
+                <option value="traitHM">view assayed trait</option>
+            </optgroup>
+        </select>
+
+    </div>
+</div>
+
 <div class="form-group form-group-sm" id="traitdiv" >
     <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label>
     <div class="col-sm-10">
@@ -60,7 +79,7 @@ $trial_id
 </div>
 <div id="chart"></div>
 <div class="col-sm-10" id="d_button" style="display:none";>
-  <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; 
+  <!--<a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
 </div>
 
 <div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
@@ -203,40 +222,59 @@ var phenotypes_id = [];
 jQuery(document).ready( function() {
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
-        jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
-            beforeSend: function() {
-              jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                if (response.traits_assayed[0][0]) {
-                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                    traits_assayed_html = traits_assayed_html + "<option value=''>select trait to show heatmap</option>";
-                    for (i=0; i<response.traits_assayed[0].length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
-                    }
-                    traits_assayed_html = traits_assayed_html +"</select>";
-                    jQuery("#trait_heatmap").css("display", "none");                    
-                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traitdiv").css("display", "inline-block");
-                    jQuery("#working_modal").modal("hide");
-                } 
-                else {
-                    jQuery("#working_modal").modal("hide");
-                    jQuery("#trait_heatmap").css("display", "none"); 
-                    jQuery("#traitdiv").css("display", "none");
-                    jQuery("#trial_no_phenoMSG").css("display", "inline-block");
-                    
-                }
-            },
-            error: function(response){
-                alert('Error retrieving traits assayed in this trial');
-            }
-
-        });
-        
+        jQuery("#trait_heatmap").css("display", "none");
+        jQuery("#trial_heatmap_div").css("display", "inline-block");
     });
-    
+
+    jQuery(document).on('change', '#heatmap_trial_assayed_dropdown', function () {
+        var view_type = jQuery("#heatmap_trial_assayed_dropdown").val();
+        if (view_type == "traitHM"){
+        
+            //jQuery('#__pheno_heatmap_onswitch').click( function() {
+                jQuery.ajax ( {
+                    url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+                    beforeSend: function() {
+                      jQuery("#working_modal").modal("show");
+                    },
+                    success: function(response){
+                        if (response.traits_assayed[0][0]) {
+                            var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
+                            traits_assayed_html = traits_assayed_html + "<option value=''>select trait to show heatmap</option>";
+                            for (i=0; i<response.traits_assayed[0].length; i++) {
+                                traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                            }
+                            traits_assayed_html = traits_assayed_html +"</select>";
+                            jQuery("#trait_heatmap").css("display", "none"); 
+                            //jQuery("#trial_heatmap_div").css("display", "none"); //newly added                   
+                            jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
+                            jQuery("#traitdiv").css("display", "inline-block");
+                            jQuery("#working_modal").modal("hide");
+                        } 
+                        else {
+                            jQuery("#working_modal").modal("hide");
+                            jQuery("#trait_heatmap").css("display", "none"); 
+                            jQuery("#traitdiv").css("display", "none");
+                            //jQuery("#trial_heatmap_div").css("display", "none"); //newly added 
+                            jQuery("#trial_no_phenoMSG").css("display", "inline-block");
+                            
+                        }
+                    },
+                    error: function(response){
+                        alert('Error retrieving traits assayed in this trial');
+                    }
+
+                });
+                
+            //});
+        }
+        else if(view_type == "fieldmap"){
+            jQuery("#traitdiv").css("display", "none");
+        }
+        else if(view_type == ""){
+            jQuery("#traitdiv").css("display", "none");
+        }
+    });
+
 
   jQuery(document).on('change', '#trait_list_dropdown', function () {
     d3.select("svg").remove(); //Remove already created heatmap.
