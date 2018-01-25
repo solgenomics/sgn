@@ -531,7 +531,8 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         }
         my $layout = CXGN::Trial::TrialLayout->new({
             schema => $schema,
-            trial_id => $c->stash->{trial_id}
+            trial_id => $c->stash->{trial_id},
+            experiment_type => 'field_layout'
         });
         $layout->generate_and_cache_layout();
     };
@@ -638,7 +639,8 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
 
         my $layout = CXGN::Trial::TrialLayout->new({
             schema => $schema,
-            trial_id => $c->stash->{trial_id}
+            trial_id => $c->stash->{trial_id},
+            experiment_type => 'field_layout'
         });
         $layout->generate_and_cache_layout();
     };
@@ -781,7 +783,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         }
         my $layout = CXGN::Trial::TrialLayout->new({
             schema => $schema,
-            trial_id => $c->stash->{trial_id}
+            trial_id => $c->stash->{trial_id},
+            experiment_type => 'field_layout'
         });
         $layout->generate_and_cache_layout();
     };
@@ -1004,7 +1007,7 @@ sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id}, experiment_type => 'field_layout' });
 
     my $design = $layout->get_design();
     $c->stash->{rest} = {design => $design};
@@ -1015,7 +1018,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id}, experiment_type => 'field_layout' });
 
     my $design = $layout->get_design();
     my $design_type = $layout->get_design_type();
@@ -1076,7 +1079,8 @@ sub retrieve_trial_info_POST : Args(0) {
 
     my $layout = CXGN::Trial::TrialLayout->new({
   		schema => $schema,
-  		trial_id => $trial_id
+  		trial_id => $trial_id,
+        experiment_type => 'field_layout'
   	});
 
   	my $design = $layout-> get_design();
@@ -1109,7 +1113,7 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, verify_layout=>1, verify_physical_map=>1});
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
     my $trial_errors = $trial_layout->generate_and_cache_layout();
     my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
     my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;
@@ -1477,7 +1481,8 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     my $trial_layout = CXGN::Trial::TrialLayout->new({
        schema => $schema,
-       trial_id => $trial_id
+       trial_id => $trial_id,
+       experiment_type => 'field_layout'
     });
     $trial_layout->generate_and_cache_layout();
 

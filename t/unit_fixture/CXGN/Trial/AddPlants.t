@@ -17,7 +17,7 @@ my $f = SGN::Test::Fixture->new();
 
 my $trial_id = 137;
 
-my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id });
+my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' });
 
 my $d = $tl->get_design();
 #print STDERR Dumper($d);
@@ -140,7 +140,7 @@ is_deeply(\@plot_names, [
 my $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id });
 $trial->create_plant_entities('2');
 
-my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id });
+my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' });
 $d = $tl->get_design();
 print STDERR Dumper($d);
 
