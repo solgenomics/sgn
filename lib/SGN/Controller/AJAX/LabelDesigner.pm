@@ -11,6 +11,7 @@ use CXGN::QRcode;
 use CXGN::ZPL;
 use PDF::API2;
 use Sort::Versions;
+use Tie::UrlEncoder; our(%urlencode);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -297,7 +298,7 @@ __PACKAGE__->config(
        close($FH);
        print STDERR "Returning with filename . . .\n";
        $c->stash->{rest} = {
-           filename => $filename,
+           filename => $urlencode{$filename},
            filepath => $c->config->{basepath}."/".$filename
        };
 
