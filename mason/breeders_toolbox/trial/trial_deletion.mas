@@ -60,7 +60,7 @@ $trial_id
             </div>
             <div class="modal-footer">
                 <button id="close_delete_indiv_trait_data_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="delete_individual_phenotype_data_dialog_submit" id="delete_individual_phenotype_data_dialog_submit">Delete Traits Data</button>
+                <button type="button" class="btn btn-danger" name="delete_individual_phenotype_data_dialog_submit" id="delete_individual_phenotype_data_dialog_submit">Delete Traits Data</button>
             </div>
         </div>
     </div>
