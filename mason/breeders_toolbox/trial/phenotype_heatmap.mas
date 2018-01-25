@@ -55,7 +55,7 @@ $trial_id
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
 <div class="container" id="trial_no_rowColMSG">
     <div class="well">
-        <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre>
+    <!--    <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre> -->
     </div>
 </div>
 <div id="chart"></div>
@@ -250,7 +250,9 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 var col_length; 
-                var row_length;        
+                var row_length;
+                var col_max =  response.phenotypes.col_max;
+                var row_max =  response.phenotypes.row_max;
                 var false_coord = response.phenotypes.false_coord;
                 phenotypes_id = response.phenotypes.phenoID;
                 for (i=0; i<response.phenotypes.col.length; i++) {
@@ -269,9 +271,10 @@ jQuery(document).ready( function() {
                     
 
                   var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-                      width = 960 - margin.left - margin.right,
-                      height = 900 - margin.top - margin.bottom,
-                      gridSize = Math.floor(width / 24),
+                      width = 38 * col_max + 30 - margin.left - margin.right,
+                      height = 38 * row_max + 150 - margin.top - margin.bottom,
+                     // gridSize = Math.floor(width / 24),
+                      gridSize = 38,
                       legendElementWidth = gridSize*2,
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
