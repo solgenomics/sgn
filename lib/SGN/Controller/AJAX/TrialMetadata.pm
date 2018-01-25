@@ -285,6 +285,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $display = $c->req->param('display');
     my $select_clause_additional = '';
     my $group_by_additional = '';
+    my $order_by_additional = '';
     my $stock_type_id;
     my $rel_type_id;
     my $total_complete_number;
@@ -313,6 +314,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
     }
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -320,6 +322,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -346,7 +349,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND plot.type_id=?
             AND accession.type_id=?
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
-        ORDER BY cvterm.name ASC;");
+        ORDER BY cvterm.name ASC
+        $order_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
