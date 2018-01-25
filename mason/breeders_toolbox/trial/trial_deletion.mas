@@ -28,7 +28,7 @@ $trial_id
             </div>
             <div class="modal-footer">
                 <button id="close_delete_trait_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Confirm Deletion</button>
+                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Select Traits For Deletion</button>
                 <!--<button type="button" class="btn btn-primary" name="delete_all_phenotype_data_dialog_submit" id="delete_all_phenotype_data_dialog_submit">Delete All Traits</button>-->
             </div>
         </div>
