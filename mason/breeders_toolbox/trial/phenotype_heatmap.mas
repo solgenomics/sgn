@@ -229,6 +229,7 @@ jQuery(document).ready( function() {
         jQuery("#trait_heatmap").css("display", "none");
         jQuery("#trial_heatmap_div").css("display", "none");
         jQuery("#traitdiv").css("display", "none");
+        jQuery("#container_heatmap").css("display", "none");
     });
 
     jQuery(document).on('change', '#heatmap_trial_assayed_dropdown', function () {
