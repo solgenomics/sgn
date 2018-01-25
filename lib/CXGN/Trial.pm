@@ -2475,12 +2475,13 @@ sub delete_assayed_trait {
 	my $self = shift;
 	my $pheno_ids = shift;
 	my $trait_ids = shift;
+    my $trial_id = $self->get_trial_id();
 	my $schema = $self->bcs_schema;
 	my $phenome_schema = $self->phenome_schema;
 	my ($error, @nd_expt_ids);
 	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-	my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id };
+	my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id, 'nd_experiment_projects.project_id' => $trial_id };
 	if (scalar(@$trait_ids) > 0){
 		$search_params->{'me.observable_id'} = { '-in' => $trait_ids };
 	}
@@ -2492,7 +2493,7 @@ sub delete_assayed_trait {
 		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
 		$search_params,
 		{
-			join => { 'nd_experiment_phenotypes' => 'nd_experiment' },
+			join => { 'nd_experiment_phenotypes' => {'nd_experiment' => 'nd_experiment_projects'} },
 			'+select' => ['nd_experiment.nd_experiment_id'],
 			'+as' => ['nd_expt_id'],
 		});

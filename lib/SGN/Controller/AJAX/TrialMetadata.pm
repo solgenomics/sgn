@@ -1493,7 +1493,6 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     my $pheno_ids = $c->req->param('pheno_id');
     my $trait_ids = $c->req->param('traits_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
     
     if (!$c->user()) {
@@ -1507,7 +1506,7 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
       return;
     }
 
-    my $delete_trait_return_error;
+    my $delete_trait_return_error; 
     if ($pheno_ids){
             my $phenotypes_ids = JSON::decode_json($pheno_ids);
          $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
