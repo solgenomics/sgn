@@ -185,8 +185,8 @@ sub _lookup_trial_id {
   $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
   $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
   $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
-  $self->_set_accession_names($self->_get_plot_info_fields_from_trial("accession_name") || [] );
-  $self->_set_control_names($self->_get_control_accession_names_from_trial || [] );
+  $self->_set_accession_names($self->_get_unique_accession_names_from_trial || [] );
+  $self->_set_control_names($self->_get_unique_control_accession_names_from_trial || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
   #print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
@@ -224,18 +224,40 @@ sub _get_control_plot_names_from_trial {
   return \@control_names;
 }
 
-sub _get_control_accession_names_from_trial {
+sub _get_unique_accession_names_from_trial {
+    my $self = shift;
+    my %design = %{$self->get_design()};
+    my @acc_names;
+    my %unique_acc;
+    foreach my $key (sort { $a <=> $b} keys %design) {
+        my %design_info = %{$design{$key}};
+        $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
+    }
+    foreach (sort keys %unique_acc){
+        push @acc_names, {accession_name=>$_, stock_id=>$unique_acc{$_}};
+    }
+    if (!scalar(@acc_names) >= 1){
+        return;
+    }
+    return \@acc_names;
+}
+
+sub _get_unique_control_accession_names_from_trial {
     my $self = shift;
     my %design = %{$self->get_design()};
     my @control_names;
+    my %unique_controls;
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         my $is_a_control = $design_info{"is_a_control"};
         if ($is_a_control) {
-            push(@control_names, $design_info{"accession_name"});
+            $unique_controls{$design_info{"accession_name"}} = $design_info{"accession_id"}
         }
     }
-    if (! scalar(@control_names) >= 1){
+    foreach (sort keys %unique_controls){
+        push @control_names, {accession_name=>$_, stock_id=>$unique_controls{$_}};
+    }
+    if (!scalar(@control_names) >= 1){
         return;
     }
     return \@control_names;
