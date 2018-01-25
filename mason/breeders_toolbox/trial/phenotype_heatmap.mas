@@ -225,6 +225,11 @@ jQuery(document).ready( function() {
         jQuery("#trait_heatmap").css("display", "none");
         jQuery("#trial_heatmap_div").css("display", "inline-block");
     });
+    jQuery('#pheno_heatmap_offswitch').click( function() {
+        jQuery("#trait_heatmap").css("display", "none");
+        jQuery("#trial_heatmap_div").css("display", "none");
+        jQuery("#traitdiv").css("display", "none");
+    });
 
     jQuery(document).on('change', '#heatmap_trial_assayed_dropdown', function () {
         var view_type = jQuery("#heatmap_trial_assayed_dropdown").val();
@@ -269,9 +274,11 @@ jQuery(document).ready( function() {
         }
         else if(view_type == "fieldmap"){
             jQuery("#traitdiv").css("display", "none");
+            jQuery("#container_heatmap").css("display", "none");
         }
         else if(view_type == ""){
             jQuery("#traitdiv").css("display", "none");
+            jQuery("#container_heatmap").css("display", "none");
         }
     });
 
