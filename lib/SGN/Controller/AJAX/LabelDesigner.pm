@@ -299,7 +299,7 @@ __PACKAGE__->config(
        close($FH);
        print STDERR "Returning with filename . . .\n";
        $c->stash->{rest} = {
-           filename => $filename,
+           filename => $urlencode{$filename},
            filepath => $c->config->{basepath}."/".$filename
        };
 
