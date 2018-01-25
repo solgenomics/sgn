@@ -222,6 +222,15 @@ my $start_time = time();
 
 % }
 
+
+<&| /page/info_section.mas, id => "pheno_heatmap", title=>"Trial Heatmap", collapsible=>1, collapsed => 1 &>
+
+    <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+
+</&>
+
+
+
 <& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>] [<a id="edit_field_map_link">Edit Field Map</a>] [<button type="button" class="btn btn-link" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>]' &>
 
@@ -350,12 +359,13 @@ my $start_time = time();
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
 </&>
-
+<%doc>
 <&| /page/info_section.mas, id => "pheno_heatmap", title=>"Phenotype Heatmap", collapsible=>1, collapsed => 1 &>
 
     <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
 
 </&>
+</%doc>
 
 <&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Trait Phenotypes', collapsible=>1, collapsed=>1, &>
 
