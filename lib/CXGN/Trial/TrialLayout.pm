@@ -8,10 +8,16 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
 
  my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $schema,
-    trial_id => $trial_id
+    trial_id => $trial_id,
+    experiment_type => $experiment_type #Either 'field_layout' or 'genotyping_layout'
  });
  my $tl = $trial_layout->get_design();
- the return is a HashRef of HashRef where the keys are the plot_number such as:
+ 
+ This module handles both retrieval of field_layout and genotyping_layout experiments.
+
+ If experiment_type is field_layout, get_design returns a hash representing
+ all the plots, with their design info and plant info and samples info. The return is
+ a HashRef of HashRef where the keys are the plot_number such as:
  
  {
     '1001' => {
@@ -35,6 +41,17 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
     }
  }
  
+ If experiment_type is genotyping_layout, get_design returns a hash representing
+ all wells in a plate, with the tissue_sample name in each well and its accession.
+ The return is a HashRef of HashRef where the keys are the well number such as:
+ 
+ {
+    'A01' => {
+        "plot_name" => "mytissuesample_A01",
+        "stock_name" => "accession1"
+    }
+ }
+ 
  By using get_design(), this module attempts to get the design from a
  projectprop called 'trial_layout_json', but if it cannot be found it calls
  generate_and_cache_layout() to generate the design, return it, and store it
@@ -49,6 +66,7 @@ by doing:
 my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $schema,
     trial_id => $c->stash->{trial_id},
+    experiment_type => $experiment_type, #Either 'field_layout' or 'genotyping_layout'
     verify_layout=>1,
     verify_physical_map=>1
 });
@@ -98,6 +116,18 @@ has 'trial_id' => (
     trigger => \&_lookup_trial_id,
     required => 1
 );
+has 'experiment_type' => (
+    is       => 'rw',
+    isa     => 'Str', #field_layot or genotyping_layout
+    required => 1,
+);
+
+# To verify that all plots in the trial have valid props and relationships. This means that the plots have plot_number and block_number properties. All plots have an accession associated. The plot's accession is in sync with any plant's accession, subplot's accession, and seedlot's containing accession. If verify_relationships is set to 1, then get_design will not return the design anymore, but will instead indicate any errors in the stored layout.
+has 'verify_layout' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_layout', reader => 'get_verify_layout');
+# verify_physical_map checks that all plot's in the trial have row and column props.
+has 'verify_physical_map' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_physical_map', reader => 'get_verify_physical_map');
+
+
 has 'project' => ( is => 'ro', isa => 'Bio::Chado::Schema::Result::Project::Project', reader => 'get_project', writer => '_set_project', predicate => 'has_project');
 has 'design_type' => (isa => 'Str', is => 'ro', predicate => 'has_design_type', reader => 'get_design_type', writer => '_set_design_type');
 has 'trial_year' => (isa => 'Str', is => 'ro', predicate => 'has_trial_year', reader => 'get_trial_year', writer => '_set_trial_year');
@@ -127,11 +157,6 @@ has 'control_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_control
 has 'row_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_row_numbers', reader => 'get_row_numbers', writer => '_set_row_numbers');
 has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbers', reader => 'get_col_numbers', writer => '_set_col_numbers');
 
-# To verify that all plots in the trial have valid props and relationships. This means that the plots have plot_number and block_number properties. All plots have an accession associated. The plot's accession is in sync with any plant's accession, subplot's accession, and seedlot's containing accession. If verify_relationships is set to 1, then get_design will not return the design anymore, but will instead indicate any errors in the stored layout.
-has 'verify_layout' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_layout', reader => 'get_verify_layout');
-# verify_physical_map checks that all plot's in the trial have row and column props.
-has 'verify_physical_map' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_physical_map', reader => 'get_verify_physical_map');
-
 sub _lookup_trial_id {
     my $self = shift;
     print STDERR "CXGN::Trial::TrialLayout ".localtime."\n";
@@ -143,27 +168,25 @@ sub _lookup_trial_id {
     return;
   }
 
-  #print STDERR "Check 2.2: ".localtime()."\n";
   if (!$self->_get_trial_year_from_project()) {return;}
 
   $self->_set_trial_year($self->_get_trial_year_from_project());
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
-  #print STDERR "Check 2.3: ".localtime()."\n";
 
   if (!$self->_get_design_type_from_project()) {
       print STDERR "Trial has no design type... not creating layout object.\n";
       return;
   }
   $self->_set_design_type($self->_get_design_type_from_project());
-  #print STDERR "Check 2.3.4: ".localtime()."\n";
   $self->_set_design($self->_get_design_from_trial());
-  #print STDERR "Check 2.4: ".localtime()."\n";
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
   $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
   $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
   $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
   $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
+  $self->_set_accession_names($self->_get_plot_info_fields_from_trial("accession_name") || [] );
+  $self->_set_control_names($self->_get_control_accession_names_from_trial || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
   #print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
@@ -201,6 +224,22 @@ sub _get_control_plot_names_from_trial {
   return \@control_names;
 }
 
+sub _get_control_accession_names_from_trial {
+    my $self = shift;
+    my %design = %{$self->get_design()};
+    my @control_names;
+    foreach my $key (sort { $a <=> $b} keys %design) {
+        my %design_info = %{$design{$key}};
+        my $is_a_control = $design_info{"is_a_control"};
+        if ($is_a_control) {
+            push(@control_names, $design_info{"accession_name"});
+        }
+    }
+    if (! scalar(@control_names) >= 1){
+        return;
+    }
+    return \@control_names;
+}
 
 sub _get_plot_info_fields_from_trial {
   my $self = shift;
@@ -262,18 +301,23 @@ sub generate_and_cache_layout {
   }
 #print STDERR "Check 2.3.4.2: ".localtime()."\n";
 
-  my $genotyping_user_id_row = $project
-      ->search_related("nd_experiment_projects")
-      ->search_related("nd_experiment")
-      ->search_related("nd_experimentprops")
-      ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
+    my $genotyping_user_id;
+    my $genotyping_project_name;
+    if ($self->get_experiment_type eq 'genotyping_trial'){
+        my $genotyping_user_id_row = $project
+            ->search_related("nd_experiment_projects")
+            ->search_related("nd_experiment")
+            ->search_related("nd_experimentprops")
+            ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
+        $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
 
-  my $genotyping_project_name_row = $project
-      ->search_related("nd_experiment_projects")
-      ->search_related("nd_experiment")
-      ->search_related("nd_experimentprops")
-      ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-#print STDERR "Check 2.3.4.3: ".localtime()."\n";
+        my $genotyping_project_name_row = $project
+            ->search_related("nd_experiment_projects")
+            ->search_related("nd_experiment")
+            ->search_related("nd_experimentprops")
+            ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
+        $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
+    }
 
   my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
   my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
@@ -299,13 +343,11 @@ sub generate_and_cache_layout {
       #print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
     my %design_info;
 
-    if ($genotyping_user_id_row) {       
-	$design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value") || "unknown";
-	#print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
-    }
-    if ($genotyping_project_name_row) { 
-	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
-	#print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
+    if ($self->get_experiment_type eq 'genotyping_trial'){    
+        $design_info{genotyping_user_id} = $genotyping_user_id;
+        #print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
+        $design_info{genotyping_project_name} = $genotyping_project_name;
+        #print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
     }
     my $plot_name = $plot->uniquename;
     my $plot_id = $plot->stock_id;
@@ -471,13 +513,6 @@ sub generate_and_cache_layout {
         push @control_names, {accession_name=>$control_name, stock_id=>$unique_controls{$control_name} };
     }
 
-    if (scalar(@accession_names)>0) {
-        $self->_set_accession_names(\@accession_names);
-    }
-    if (scalar(@control_names)>0) {
-        $self->_set_control_names(\@control_names);
-    }
-
     return \%design;
 }
 
@@ -640,132 +675,21 @@ sub _get_plots {
   }
   my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot", "stock_type")->cvterm_id();
   my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
-  @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => [$plot_cvterm_id, $tissue_cvterm_id] });
+
+  my $unit_type_id;
+  if ($self->get_experiment_type eq 'field_layout'){
+      $unit_type_id = $plot_cvterm_id;
+  }
+  if ($self->get_experiment_type eq 'genotyping_layout'){
+      $unit_type_id = $tissue_cvterm_id;
+  }
+  @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => $unit_type_id });
 
   #debug...
   #print STDERR "PLOT LIST: \n";
   #print STDERR  join "\n", map { $_->name() } @plots;
 
   return \@plots;
-}
-
-
-sub get_plant_names {
-	my $class = shift;
-	my $args = shift;
-	my @plants;
-
-	my $schema = $args->{bcs_schema};
-	my $plots = $args->{plot_rs};
-	my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship' );
-	foreach (@$plots) {
-		my $plot_id = $_->stock_id();
-		#print STDERR $plot_id;
-		my $stock_relationships =$schema->resultset("Stock::StockRelationship")->search({
-			subject_id => $plot_id,
-			#object_id => $plant->stock_id(),
-			'me.type_id' => $plant_rel_cvterm->cvterm_id(),
-		})->search_related('object');
-		if (!$stock_relationships) {
-			print STDERR "Plot ".$_->name()." does not have plants associated with it.\n";
-			return;
-		}
-		while (my $plant = $stock_relationships->next()){
-			push @plants, $plant->name();
-		}
-	}
-	#print STDERR Dumper \@plants;
-	return \@plants;
-}
-
-
-sub oldget_plot_names {
-  my $self = shift;
-  my $plots_ref;
-  my @plots;
-  my @plot_names;
-  my $plot;
-  $plots_ref = $self->_get_plots();
-  if (!$plots_ref) {
-    return;
-  }
-  @plots = @{$plots_ref};
-  foreach $plot (@plots) {
-    push(@plot_names,$plot->uniquename);
-#    print "plot: ".$plot->uniquename."\n";
-  }
-  if (!scalar(@plot_names) >= 1) {
-    return;
-  }
-  return \@plot_names;
-}
-
-sub get_plot_ids {
-  my $self = shift;
-  my $plots_ref;
-  my @plots;
-  my @plot_names;
-  my $plot;
-  $plots_ref = $self->_get_plots();
-  if (!$plots_ref) {
-    return;
-  }
-  @plots = @{$plots_ref};
-  foreach $plot (@plots) {
-    push(@plot_names,$plot->stock_id);
-  }
-  if (!scalar(@plot_names) >= 1) {
-    return;
-  }
-  return \@plot_names;
-}
-
-sub _get_trial_accession_names_and_control_names {
-  my $self = shift;
-  my $schema = shift;
-  $schema = $self->get_schema();
-  my $plots_ref;
-  my @plots;
-  my $plot;
-  my $plot_of_cv;
-  my $sample_of_cv;
-  my %unique_accessions;
-  my %unique_controls;
-  my @accession_names;
-  my @control_names;
-  $plots_ref = $self->_get_plots();
-  if (!$plots_ref) {
-    return;
-  }
-  @plots = @{$plots_ref};
-  $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
-  $sample_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'tissue_sample_of'});
-  foreach $plot (@plots) {
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cv->cvterm_id(),$sample_of_cv->cvterm_id() ]})->object;
-    my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
-    my $is_a_control;
-    if ($is_a_control_prop) {
-      $is_a_control = $is_a_control_prop->value();
-    }
-    if ($is_a_control) {
-      $unique_controls{$accession->uniquename}=$accession->stock_id;
-    }
-    else {
-      $unique_accessions{$accession->uniquename}=$accession->stock_id;
-    }
-  }
-  foreach my $accession_name (sort { lc($a) cmp lc($b)} keys %unique_accessions) {
-    push(@accession_names, {accession_name=>$accession_name, stock_id=>$unique_accessions{$accession_name} } );
-    #print STDERR "Accession: $accession_name \n";
-  }
-  if (!scalar(@accession_names) >= 1) {
-    return;
-  }
-  foreach my $control_name (sort { lc($a) cmp lc($b)} keys %unique_controls) {
-    push(@control_names, {accession_name=>$control_name, stock_id=>$unique_controls{$control_name} } );
-    #print STDERR "Control: $control_name \n";
-  }
-  return (\@accession_names, \@control_names);
 }
 
 

@@ -105,7 +105,7 @@ sub get_layout_output {
 
     my $trial_layout;
     try {
-        $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+        $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
     };
     if (!$trial_layout) {
         push @error_messages, "Trial does not have valid field design.";

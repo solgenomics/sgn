@@ -1348,7 +1348,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     my $self = shift;
     my $c = shift;
     my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
-    my $tissue_names = $c->req->param("tissue_samples_names");
+    my $tissue_names = decode_json $c->req->param("tissue_samples_names");
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
     my $tissues_with_treatments;
     if($inherits_plot_treatments eq '1'){
@@ -1377,7 +1377,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_tissues_samples($tissues_per_plant, $tissue_name, $tissues_with_treatments)) {
+    if ($t->create_tissue_samples($tissue_names, $tissues_with_treatments)) {
         $c->stash->{rest} = {success => 1};
         $c->detach;;
     } else {
