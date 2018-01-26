@@ -84,9 +84,6 @@ my $dbh = $stockref->{dbh};
 
 my @editable_stock_props = split "," , $editable_stock_props_string;
 
-my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
- 'me.name' => 'stock_property'} );
-
 
 my ($type_name, $uniquename);
 my $type = $stock_row ? $stock_row->type : undef;

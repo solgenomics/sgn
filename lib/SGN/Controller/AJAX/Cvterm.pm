@@ -181,7 +181,7 @@ sub get_synonyms : Path('/ajax/cvterm/get_synonyms') Args(0) {
 sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_stocks') Args(0) {
     my ($self, $c) = @_;
     my $cvterm = $c->stash->{cvterm};
-    my $cvterm_id = $cvterm->get_cvterm_id;
+    my $cvterm_id = $cvterm->cvterm_id;
     my $q = <<'';
 SELECT DISTINCT
     type.name,
@@ -224,7 +224,7 @@ ORDER BY stock.uniquename
 sub get_annotated_loci :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_loci') Args(0) {
     my ($self, $c) = @_;
     my $cvterm = $c->stash->{cvterm};
-    my $cvterm_id = $cvterm->get_cvterm_id;
+    my $cvterm_id = $cvterm->cvterm_id;
 
     my $q = "SELECT DISTINCT locus_id, locus_name, locus_symbol, common_name  FROM cvtermpath
              JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id)
@@ -255,7 +255,7 @@ sub get_annotated_loci :Chained('/cvterm/get_cvterm') :PathPart('datatables/anno
 sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/phenotyped_stocks') Args(0) {
     my ($self, $c) = @_;
     my $cvterm =  $c->stash->{cvterm};
-    my $cvterm_id  = $cvterm->get_cvterm_id;
+    my $cvterm_id  = $cvterm->cvterm_id;
 
     my $q = "SELECT DISTINCT stock_id,  stock.uniquename, stock.description, type.name
              FROM cvtermpath
@@ -289,7 +289,7 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
 sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direct_trials') Args(0) {
     my ($self, $c) = @_;
     my $cvterm = $c->stash->{cvterm};
-    my $cvterm_id = $cvterm->get_cvterm_id;
+    my $cvterm_id = $cvterm->cvterm_id;
     my $q = "SELECT DISTINCT project_id, project.name, project.description
              FROM public.project
               JOIN nd_experiment_project USING (project_id)
