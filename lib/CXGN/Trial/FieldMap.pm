@@ -7,7 +7,8 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
-use List::Util 'max';
+#use List::Util 'max';
+use List::MoreUtils ':all';
 use Bio::Chado::Schema;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
@@ -62,9 +63,9 @@ sub display_fieldmap {
 	});
 
 	my $design = $layout-> get_design();
-
+	
 #  print STDERR Dumper($design);
-
+	my @plot_names = ();
     my @row_numbers = ();
     my @col_numbers = ();
     my @rep_numbers = ();
@@ -84,7 +85,52 @@ sub display_fieldmap {
         my $accession_name = $v->{accession_name};
         my $plant_names = $v->{plant_names};
 
-        push @layout_info, {
+        # push @layout_info, {
+        #     plot_id => $plot_id,
+        #     plot_number => $plot_number,
+        #     row_number => $row_number,
+        #     col_number => $col_number,
+        #     block_number=> $block_number,
+        #     rep_number =>  $rep_number,
+        #     plot_name => $plot_name,
+        #     accession_name => $accession_name,
+        #     plant_names => $plant_names,
+        # };
+        #print STDERR Dumper(@layout_info);
+
+        push @plot_numbers_not_used, $plot_number;
+        if ($col_number) {
+            push @col_numbers, $col_number;
+        }
+        if ($row_number) {
+            push @row_numbers, $row_number;
+        }else{
+			#if (!$row_number && !$col_number){
+				if ($block_number){
+					$row_number = $block_number;
+					push @row_numbers, $row_number;
+				}elsif ($rep_number && !$block_number ){
+					$row_number = $rep_number;
+					push @row_numbers, $row_number;
+				}
+			#}
+		}
+		
+		
+        if ($rep_number) {
+            push @rep_numbers, $rep_number;
+        }
+        if ($block_number) {
+            push @block_numbers, $block_number;
+        }
+        if ($accession_name) {
+            push @accession_names, $accession_name;
+        }
+		if ($plot_name) {
+			push @plot_names, $plot_name;
+		}
+		
+		push @layout_info, {
             plot_id => $plot_id,
             plot_number => $plot_number,
             row_number => $row_number,
@@ -95,25 +141,26 @@ sub display_fieldmap {
             accession_name => $accession_name,
             plant_names => $plant_names,
         };
-        #print STDERR Dumper(@layout_info);
-
-        push @plot_numbers_not_used, $plot_number;
-        if ($col_number) {
-            push @col_numbers, $col_number;
-        }
-        if ($row_number) {
-            push @row_numbers, $row_number;
-        }
-        if ($rep_number) {
-            push @rep_numbers, $rep_number;
-        }
-        if ($block_number) {
-            push @block_numbers, $block_number;
-        }
-        if ($accession_name) {
-            push @accession_names, $accession_name;
-        }
+		
     }
+	print STDERR Dumper(@layout_info);
+	
+	my $false_coord;
+	if (scalar(@col_numbers) < 1){
+        @col_numbers = ();
+        $false_coord = 'false_coord';
+		my @row_instances = uniq @row_numbers;
+		my %unique_row_counts;
+		$unique_row_counts{$_}++ for @row_numbers;        
+        my @col_number2;
+        for my $key (keys %unique_row_counts){
+            push @col_number2, (1..$unique_row_counts{$key});
+        }
+        for (my $i=0; $i < scalar(@layout_info); $i++){               
+            $layout_info[$i]->{'col_number'} = $col_number2[$i];
+            push @col_numbers, $col_number2[$i];
+        }		
+	}
 
 	my @plot_name = ();
 	my @plot_id = ();
@@ -158,16 +205,44 @@ sub display_fieldmap {
 	}
 
 	my @sorted_block = sort@block_numbers;
-	#my @uniq_block = uniq(@sorted_block);
+	my @uniq_block = uniq(@sorted_block);
 
-	my $max_col = scalar(@col_numbers) > 0 ? max( @col_numbers ) : 0;
+	#my $max_col = scalar(@col_numbers) > 0 ? max( @col_numbers ) : 0;
 	#print "$max_col\n";
-	my $max_row = scalar(@row_numbers) > 0 ? max( @row_numbers ) : 0;
+	#my $max_row = scalar(@row_numbers) > 0 ? max( @row_numbers ) : 0;
 	#print "$max_row\n";
-	my $max_rep = scalar(@rep_numbers) > 0 ? max(@rep_numbers) : 0;
-	my $max_block = scalar(@block_numbers) > 0 ? max(@block_numbers) : 0;
+	#my $max_rep = scalar(@rep_numbers) > 0 ? max(@rep_numbers) : 0;
+	#my $max_block = scalar(@block_numbers) > 0 ? max(@block_numbers) : 0;
 
 	#print STDERR Dumper \@layout_info;
+	my ($min_rep, $max_rep) = minmax @rep_numbers;
+	my ($min_block, $max_block) = minmax @block_numbers;
+	my ($min_col, $max_col) = minmax @col_numbers;
+	my ($min_row, $max_row) = minmax @row_numbers;
+	my (@unique_col,@unique_row);
+	for my $x (1..$max_col){
+		push @unique_col, $x;
+	}
+	for my $y (1..$max_row){
+		push @unique_row, $y;
+	}
+	
+	# my $false_coord;
+	# if ($col_numbers[0] == ""){
+    #     @col_numbers = ();
+    #     $false_coord = 'false_coord';
+	# 	my @row_instances = uniq @row_numbers;
+	# 	my %unique_row_counts;
+	# 	$unique_row_counts{$_}++ for @row_numbers;        
+    #     my @col_number2;
+    #     for my $key (keys %unique_row_counts){
+    #         push @col_number2, (1..$unique_row_counts{$key});
+    #     }
+    #     for (my $i=0; $i < scalar(@layout_info); $i++){               
+    #         #@$result[$i]->{'col'} = $col_number2[$i];
+    #         push @col_numbers, $col_number2[$i];
+    #     }		
+	# }
 
 	my $trial = CXGN::Trial->new({
 		bcs_schema => $schema,
@@ -181,7 +256,7 @@ sub display_fieldmap {
 	foreach my $cntrl (@{$data}) {
 		push @control_name, $cntrl->{'accession_name'};
 	}
-	#print STDERR Dumper(@control_name);
+	#print STDERR Dumper(@control_name); 
 
 	my %return = (
 		coord_row =>  \@row_numbers,
@@ -202,8 +277,12 @@ sub display_fieldmap {
 		controls => \@control_name,
 		blk => \@blk_no,
 		acc => \@acc_name,
-		rep_no => \@rep_no
+		rep_no => \@rep_no,
+		unique_col => \@unique_col,
+		unique_row => \@unique_row,
+		false_coord => $false_coord,
 	);
+	print STDERR Dumper(\%return);
 	return \%return;
 }
 

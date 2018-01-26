@@ -31,6 +31,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use List::MoreUtils ':all';
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -172,6 +173,19 @@ sub get_trial_phenotypes_heatmap {
             push @col_No, $col_number2[$i];
         }		
 	}
+    
+    my $trial = CXGN::Trial->new({
+		bcs_schema => $schema,
+		trial_id => $trial_id
+	});
+	my $data = $trial->get_controls();
+
+	#print STDERR Dumper($data);
+
+	my @control_name;
+	foreach my $cntrl (@{$data}) {
+		push @control_name, $cntrl->{'accession_name'};
+	}
 	#print STDERR Dumper(\@$result);
 	#print STDERR Dumper(\@plot_No);
 
@@ -191,7 +205,8 @@ sub get_trial_phenotypes_heatmap {
 	unique_col => \@unique_col,
 	unique_row => \@unique_row,
     false_coord => $false_coord,
-    phenoID => \@phenoID
+    phenoID => \@phenoID,
+    controls => \@control_name
 	);
     print STDERR "Search End:".localtime."\n";
 	#print STDERR Dumper($result);
