@@ -1092,21 +1092,29 @@ jQuery(document).ready(function ($) {
                     } else {
                         trial[trial_treatment] = [plot_name];
                     }
-                    for(var i=0; i<plant_names.length; i++){
-                        trial[trial_treatment].push(plant_names[i]);
+                    if (plant_names != 'undefined'){
+                        for(var i=0; i<plant_names.length; i++){
+                            trial[trial_treatment].push(plant_names[i]);
+                        }
                     }
-                    for(var i=0; i<subplot_names.length; i++){
-                        trial[trial_treatment].push(subplot_names[i]);
+                    if (subplot_names != 'undefined'){
+                        for(var i=0; i<subplot_names.length; i++){
+                            trial[trial_treatment].push(subplot_names[i]);
+                        }
                     }
                     trial_treatments[trial_index] = trial;
                 } else {
                     obj = {};
                     obj[trial_treatment] = [plot_name];
-                    for(var i=0; i<plant_names.length; i++){
-                        obj[trial_treatment].push(plant_names[i]);
+                    if (plant_names != 'undefined'){
+                        for(var i=0; i<plant_names.length; i++){
+                            obj[trial_treatment].push(plant_names[i]);
+                        }
                     }
-                    for(var i=0; i<subplot_names.length; i++){
-                        obj[trial_treatment].push(subplot_names[i]);
+                    if (subplot_names != 'undefined'){
+                        for(var i=0; i<subplot_names.length; i++){
+                            obj[trial_treatment].push(subplot_names[i]);
+                        }
                     }
                     trial_treatments[trial_index] = obj;
                 }

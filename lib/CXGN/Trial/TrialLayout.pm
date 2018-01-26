@@ -341,8 +341,14 @@ sub generate_and_cache_layout {
         $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
     }
 
-  my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
-  my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "accession", "stock_type")->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot", "stock_type")->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plant", "stock_type")->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "subplot", "stock_type")->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "seedlot", "stock_type")->cvterm_id();
+    my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
+    my $plot_of_cv = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot_of", "stock_relationship")->cvterm_id();
+    my $tissue_sample_of_cv = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample_of", "stock_relationship")->cvterm_id();
   my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
   my $subplot_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' );
   my $plant_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' )->cvterm_id();
@@ -386,10 +392,21 @@ sub generate_and_cache_layout {
     my $row_number_prop = $stockprop_hash{$row_number_cvterm_id} ? join ',', @{$stockprop_hash{$row_number_cvterm_id}} : undef;
     my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
-    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
-    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {}, {order_by=>"object.stock_id"});
-	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object', {}, {order_by=>"object.stock_id"});
-	my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $seed_transaction_cvterm_id });
+    my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
+        { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
+        { 'join' => 'object' }
+    );
+    if ($accession_rs->count != 1){
+        die "There is more than one accession linked here!\n";
+    }
+    my $accession = $accession_rs->first->object;
+    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {'object.type_id' => $plant_cvterm_id}, {order_by=>"object.stock_id"});
+	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object', {'object.type_id' => $subplot_cvterm_id}, {order_by=>"object.stock_id"});
+    my $tissues = $plot->search_related('stock_relationship_objects', { 'me.type_id' => $tissue_sample_of_cv })->search_related('subject', {'subject.type_id' => $tissue_cvterm_id}, {order_by=>"subject.stock_id"});
+	my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $seed_transaction_cvterm_id, 'object.type_id' => $seedlot_cvterm_id }, {'join'=>'object', order_by=>"object.stock_id"});
+    if ($seedlot_transaction->count > 0 && $seedlot_transaction->count != 1){
+        die "There is more than one seedlot linked here!\n";
+    }
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
@@ -452,64 +469,82 @@ sub generate_and_cache_layout {
         }
     }
 
-	if ($seedlot_transaction->first()){
+    if ($seedlot_transaction->first()){
         my $val = $json->decode($seedlot_transaction->first()->value());
         my $seedlot = $seedlot_transaction->search_related('object');
         if ($self->get_verify_layout){
-            my $seedlot_accession_check = $seedlot->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.stock_id'=>$accession_id});
+            my $seedlot_accession_check = $seedlot->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.stock_id'=>$accession_id, 'subject.type_id'=>$accession_cvterm_id});
             if (!$seedlot_accession_check->first){
                 push @{$verify_errors{errors}->{layout_errors}}, "Seedlot: ".$seedlot->first->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
             }
         }
-		$design_info{"seedlot_name"} = $seedlot->first->uniquename;
-		$design_info{"seedlot_stock_id"} = $seedlot->first->stock_id;
-		$design_info{"num_seed_per_plot"} = $val->{amount};
-		$design_info{"seed_transaction_operator"} = $val->{operator};
-	}
-	if ($plants) {
-		my @plant_names;
-		my @plant_ids;
-		while (my $p = $plants->next()) {
+        $design_info{"seedlot_name"} = $seedlot->first->uniquename;
+        $design_info{"seedlot_stock_id"} = $seedlot->first->stock_id;
+        $design_info{"num_seed_per_plot"} = $val->{amount};
+        $design_info{"seed_transaction_operator"} = $val->{operator};
+    }
+    if ($plants) {
+        my @plant_names;
+        my @plant_ids;
+        while (my $p = $plants->next()) {
             if ($self->get_verify_layout){
-                my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id});
+                my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
                 if (!$plant_accession_check->first){
                     push @{$verify_errors{errors}->{layout_errors}}, "Plant: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }
             }
-			my $plant_name = $p->uniquename();
-			my $plant_id = $p->stock_id();
-			push @plant_names, $plant_name;
-			push @plant_ids, $plant_id;
-		}
-		$design_info{"plant_names"}=\@plant_names;
-		$design_info{"plant_ids"}=\@plant_ids;
-	}
-	if ($subplots) {
-		my @subplot_names;
-		my @subplot_ids;
-		my %subplots_plants_hash;
-		while (my $p = $subplots->next()) {
+            my $plant_name = $p->uniquename();
+            my $plant_id = $p->stock_id();
+            push @plant_names, $plant_name;
+            push @plant_ids, $plant_id;
+        }
+        $design_info{"plant_names"}=\@plant_names;
+        $design_info{"plant_ids"}=\@plant_ids;
+    }
+    if ($tissues) {
+        my @tissue_sample_names;
+        my @tissue_sample_ids;
+        while (my $t = $tissues->next()) {
             if ($self->get_verify_layout){
-                my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id});
+                my $tissue_accession_check = $t->search_related('stock_relationship_subjects', {'me.type_id'=>$tissue_sample_of_cv})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
+                if (!$tissue_accession_check->first){
+                    push @{$verify_errors{errors}->{layout_errors}}, "Tissue Sample: ".$t->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
+                }
+            }
+            my $tissue_name = $t->uniquename();
+            my $tissue_id = $t->stock_id();
+            push @tissue_sample_names, $tissue_name;
+            push @tissue_sample_ids, $tissue_id;
+        }
+        $design_info{"tissue_sample_names"}=\@tissue_sample_names;
+        $design_info{"tissue_sample_ids"}=\@tissue_sample_ids;
+    }
+    if ($subplots) {
+        my @subplot_names;
+        my @subplot_ids;
+        my %subplots_plants_hash;
+        while (my $p = $subplots->next()) {
+            if ($self->get_verify_layout){
+                my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
                 if (!$subplot_accession_check->first){
                     push @{$verify_errors{errors}->{layout_errors}}, "Subplot: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }
             }
-			my $subplot_name = $p->uniquename();
-			my $subplot_id = $p->stock_id();
-			my $plants_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $plant_of_subplot_rel_cvterm_id })->search_related('subject');
-			while (my $pp = $plants_of_subplot->next()){
-				push @{$subplots_plants_hash{$subplot_name}}, $pp->uniquename();
-			}
-			push @subplot_names, $subplot_name;
-			push @subplot_ids, $subplot_id;
-		}
-		if (scalar(@subplot_names)>0){
-			$design_info{"subplot_names"}=\@subplot_names;
-			$design_info{"subplot_ids"}=\@subplot_ids;
-			$design_info{"subplots_plant_names"}=\%subplots_plants_hash;
-		}
-	}
+            my $subplot_name = $p->uniquename();
+            my $subplot_id = $p->stock_id();
+            my $plants_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $plant_of_subplot_rel_cvterm_id })->search_related('subject', {'subject.type_id'=>$plant_cvterm_id});
+            while (my $pp = $plants_of_subplot->next()){
+                push @{$subplots_plants_hash{$subplot_name}}, $pp->uniquename();
+            }
+            push @subplot_names, $subplot_name;
+            push @subplot_ids, $subplot_id;
+        }
+        if (scalar(@subplot_names)>0){
+            $design_info{"subplot_names"}=\@subplot_names;
+            $design_info{"subplot_ids"}=\@subplot_ids;
+            $design_info{"subplots_plant_names"}=\%subplots_plants_hash;
+        }
+    }
     $design{$plot_number_prop}=\%design_info;
   }
 
@@ -524,15 +559,6 @@ sub generate_and_cache_layout {
 
     if ($self->get_verify_layout || $self->get_verify_physical_map){
         return \%verify_errors;
-    }
-
-    my @accession_names;
-    foreach my $accession_name (sort { lc($a) cmp lc($b)} keys %unique_accessions) {
-        push @accession_names, {accession_name=>$accession_name, stock_id=>$unique_accessions{$accession_name} };
-    }
-    my @control_names;
-    foreach my $control_name (sort { lc($a) cmp lc($b)} keys %unique_controls) {
-        push @control_names, {accession_name=>$control_name, stock_id=>$unique_controls{$control_name} };
     }
 
     return \%design;

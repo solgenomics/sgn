@@ -87,7 +87,7 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
 
     elsif ($datatype eq 'layout') {
-	$error = $c->stash->{trial}->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
+	$error = $c->stash->{trial}->delete_metadata();
 	$error = $c->stash->{trial}->delete_field_layout();
     }
     elsif ($datatype eq 'entry') {
@@ -955,6 +955,27 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     $c->stash->{rest} = { plants => \@data };
 }
 
+sub trial_has_tissue_samples : Chained('trial') PathPart('has_tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { has_tissue_samples => $trial->has_tissue_sample_entries(), trial_name => $trial->get_name };
+}
+
+sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my $data = $trial->get_tissue_samples();
+
+    $c->stash->{rest} = { trial_tissue_samples => $data };
+}
+
 sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -982,6 +1003,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $design = decode_json $c->req->param('design');
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
     my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
+    my $new_treatment_has_tissue_entries = $c->req->param('has_tissue_sample_entries');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -992,6 +1014,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
         new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
+        new_treatment_has_tissue_sample_entries => $new_treatment_has_subplot_entries,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
@@ -1377,7 +1400,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_tissue_samples($tissue_names, $tissues_with_treatments)) {
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
         $c->stash->{rest} = {success => 1};
         $c->detach;;
     } else {

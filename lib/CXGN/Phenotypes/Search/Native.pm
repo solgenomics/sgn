@@ -173,6 +173,16 @@ sub search {
                         $design_layout_hash{$p} = $val;
                     }
                 }
+                if($val->{subplot_ids}){
+                    foreach my $p (@{$val->{subplot_ids}}){
+                        $design_layout_hash{$p} = $val;
+                    }
+                }
+                if($val->{tissue_sample_ids}){
+                    foreach my $p (@{$val->{tissue_sample_ids}}){
+                        $design_layout_hash{$p} = $val;
+                    }
+                }
             }
         }
     } else {

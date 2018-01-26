@@ -854,22 +854,18 @@ sub delete_field_layout {
     #
     my $error = '';
     eval {
-	$self->bcs_schema()->txn_do(
-	    sub {
-		#print STDERR "DELETING FIELD LAYOUT FOR TRIAL $trial_id...\n";
-
-		my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
-
-		my $nd_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search( { project_id => $trial_id });
-		my @nd_experiment_ids = map { $_->nd_experiment_id } $nd_experiment_rs->all();
-
-		$self->_delete_field_layout_experiment();
-	    }
-	    );
+        $self->bcs_schema()->txn_do(
+            sub {
+                #print STDERR "DELETING FIELD LAYOUT FOR TRIAL $trial_id...\n";
+                $self->_delete_field_layout_experiment();
+                #print STDERR "DELETE MANAGEMENT FACTORS FOR TRIAL $trial_id...\n";
+                $self->_delete_management_factors_experiments();
+            }
+        );
     };
     if ($@) {
-	print STDERR "ERROR $@\n";
-	return "An error occurred: $@\n";
+        print STDERR "ERROR $@\n";
+        return "An error occurred: $@\n";
     }
 
     return '';
@@ -975,8 +971,8 @@ sub delete_phenotype_metadata {
 
 sub delete_metadata {
     my $self = shift;
-    my $metadata_schema = shift;
-    my $phenome_schema = shift;
+    my $metadata_schema = $self->metadata_schema;
+    my $phenome_schema = $self->phenome_schema;
 
     if (!$metadata_schema || !$phenome_schema) { die "Need metadata schema parameter\n"; }
 
@@ -1069,58 +1065,53 @@ sub _delete_field_layout_experiment {
     # check if there are still associated phenotypes...
     #
     if ($self->phenotype_count() > 0) {
-	print STDERR "Attempt to delete field layout that still has associated phenotype data.\n";
-	die "cannot delete because of associated phenotypes\n";
-	return { error => "Trial still has associated phenotyping experiment, cannot delete." };
+        print STDERR "Attempt to delete field layout that still has associated phenotype data.\n";
+        die "cannot delete because of associated phenotypes\n";
+        return { error => "Trial still has associated phenotyping experiment, cannot delete." };
     }
 
-    my $field_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "field_layout" })->cvterm_id();
+    my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $genotyping_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
 
-    my $genotyping_layout_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'genotyping_layout' }) ->cvterm_id();
-
-    print STDERR "Genotyping layout type id = $field_layout_type_id\n";
-
-    my $plot_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'plot' })->cvterm_id();
-    #print STDERR "Plot type id = $plot_type_id\n";
-    my $genotype_plot = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'tissue_sample' });
-
-    my $genotype_plot_id;
-    if ($genotype_plot) {
-	$genotype_plot_id = $genotype_plot->cvterm_id();
+    my $layout_design = $self->get_layout->get_design;
+    my @all_stock_ids;
+    while( my($plot_num, $design_info) = each %$layout_design){
+        my $plot_id = $design_info->{plot_id}; #this includes the "tissue_sample" in "genotyping_layout"
+        my @plant_ids = $design_info->{plant_ids} ? @{$design_info->{plant_ids}} : ();
+        my @subplot_ids = $design_info->{subplot_ids} ? @{$design_info->{subplot_ids}} : ();
+        my @tissue_sample_ids = $design_info->{tissue_sample_ids} ? @{$design_info->{tissue_sample_ids}} : ();
+        push @all_stock_ids, $plot_id;
+        push @all_stock_ids, @plant_ids;
+        push @all_stock_ids, @subplot_ids;
+        push @all_stock_ids, @tissue_sample_ids;
     }
 
-    print STDERR "Genotype plot id = $genotype_plot_id\n";
+    #print STDERR Dumper \@all_stock_ids;
+    my $stock_delete_rs = $self->bcs_schema->resultset('Stock::Stock')->search({stock_id=>{'-in'=>\@all_stock_ids}});
+    while (my $r = $stock_delete_rs->next){
+        print STDERR "Deleting associated ".$r->uniquename." (".$r->stock_id.")\n";
+        $r->delete;
+    }
 
-    my $q = "SELECT stock_id FROM nd_experiment_project JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id) JOIN stock USING(stock_id) WHERE nd_experiment.type_id in (?, ?) AND project_id=? AND stock.type_id IN (?, ?)";
-    my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id, $plot_type_id, $genotype_plot_id);
+    my $has_plants = $self->has_plant_entries();
+    my $has_subplots = $self->has_subplot_entries();
+    my $has_tissues = $self->has_tissue_sample_entries();
 
-	my $has_plants = $self->has_plant_entries();
-	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
-	my $plots_deleted = 0;
-	while (my ($plot_id) = $h->fetchrow_array()) {
-		my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
-
-		if ($has_plants) {
-			my $plant_rs = $plot->search_related('stock_relationship_subjects', {type_id=>$plot_of_cvterm_id});
-			while (my $plant_rel = $plant_rs->next()) {
-				my $plant = $plant_rel->object();
-				print STDERR "Deleting associated plant ".$plant->name(). " (".$plant->stock_id().") \n";
-				$plant->delete();
-				$plant_rel->delete();
-			}
-		}
-
-		print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
-
-		$plots_deleted++;
-		$plot->delete();
-	}
-	if ($has_plants) {
-		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_has_plant_entries', 'project_property' );
-		my $has_plants_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $has_plants_cvterm->cvterm_id(), project_id => $trial_id });
-		$has_plants_prop->delete();
-	}
+    if ($has_plants) {
+        my $has_plants_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_has_plant_entries', 'project_property' )->cvterm_id();
+        my $has_plants_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $has_plants_cvterm_id, project_id => $trial_id });
+        $has_plants_prop->delete();
+    }
+    if ($has_subplots) {
+        my $has_subplots_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_has_subplot_entries', 'project_property' )->cvterm_id();
+        my $has_subplots_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $has_subplots_cvterm_id, project_id => $trial_id });
+        $has_subplots_prop->delete();
+    }
+    if ($has_tissues) {
+        my $has_tissues_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_has_tissue_sample_entries', 'project_property' )->cvterm_id();
+        my $has_tissues_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $has_tissues_cvterm_id, project_id => $trial_id });
+        $has_tissues_prop->delete();
+    }
 
     my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trial_layout_json', 'project_property')->cvterm_id();
     my $has_cached_layout_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $trial_layout_json_cvterm_id, project_id => $trial_id });
@@ -1128,19 +1119,38 @@ sub _delete_field_layout_experiment {
         $has_cached_layout_prop->delete();
     }
 
-    $q = "SELECT nd_experiment_id FROM nd_experiment JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id in (?,?) AND project_id=?";
-    $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id);
-
-    my ($nd_experiment_id) = $h->fetchrow_array();
-    if ($nd_experiment_id) {
-	#print STDERR "Delete corresponding nd_experiment entry  ($nd_experiment_id)...\n";
-	my $nde = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->find( { nd_experiment_id => $nd_experiment_id });
-	$nde->delete();
+    my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
+    if ($nde_rs->count != 1){
+        die "Trial $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
+    }
+    while( my $r = $nde_rs->next){
+        $r->delete();
     }
 
-
     #return { success => $plots_deleted };
+    return { success => 1 };
+}
+
+sub _delete_management_factors_experiments {
+    my $self = shift;
+    my $management_factor_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
+    my $management_factors = $self->get_treatments;
+    foreach (@$management_factors){
+        my $m = CXGN::Trial->new({
+            bcs_schema => $self->bcs_schema,
+            metadata_schema => $self->metadata_schema,
+            phenome_schema => $self->phenome_schema,
+            trial_id => $_->[0]
+        });
+        my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>$management_factor_type_id, 'project.project_id'=>$m->get_trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
+        if ($nde_rs->count != 1){
+            die "Management factor ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
+        }
+        while( my $r = $nde_rs->next){
+            $r->delete();
+        }
+        $m->delete_project_entry;
+    }
     return { success => 1 };
 }
 
@@ -1170,6 +1180,7 @@ sub delete_project_entry {
     eval {
 	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
 	$row->delete();
+    print STDERR "deleted project ".$self->get_trial_id."\n";
     };
     if ($@) {
 	print STDERR "An error occurred during deletion: $@\n";
@@ -1906,11 +1917,11 @@ sub has_plant_entries {
 
 =head2 function create_tissue_samples()
 
- Usage:        $trial->create_tissue_samples($tissues_per_plant);
+ Usage:        $trial->create_tissue_samples(\@tissue_names);
  Desc:         Some trials require tissue_sample-level data. This function will
                add an additional layer of tissue samples for each plant.
  Ret:
- Args:         the number of tissues samples per plant to add.
+ Args:         an arrayref of tissue names to add to sample name e.g. ['leaf','root']
  Side Effects:
  Example:
 
@@ -1928,6 +1939,7 @@ sub create_tissue_samples {
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
         my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+        my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
         my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
         my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
         my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
@@ -1941,11 +1953,11 @@ sub create_tissue_samples {
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
-        #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
         my $treatments;
         my %treatment_experiments;
         my %treatment_plots;
+        my %treatment_subplots;
         if ($inherits_plot_treatments){
             $treatments = $self->get_treatments();
             foreach (@$treatments){
@@ -1964,6 +1976,10 @@ sub create_tissue_samples {
                 foreach my $plot (@$plots){
                     $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
                 }
+                my $subplots = $treatment_trial->get_subplots();
+                foreach my $subplot (@$subplots){
+                    $treatment_subplots{$_->[0]}->{$subplot->[0]} = 1;
+                }
             }
         }
 
@@ -1977,9 +1993,12 @@ sub create_tissue_samples {
 
         foreach my $plot (keys %$design) {
             my $plant_names = $design->{$plot}->{plant_names};
+            my $subplot_names = $design->{$plot}->{subplot_names};
+            my $subplots_plant_names = $design->{$plot}->{subplots_plant_names};
+            my %plant_tissue_hash;
             foreach my $plant_name (@$plant_names){
                 my $parent_plot_id = $design->{$plot}->{plot_id};
-                print STDERR " ... creating tissues for plot $plant_name...\n";
+                my $parent_plot_name = $design->{$plot}->{plot_name};
                 my $plant_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $plant_name, type_id=>$plant_cvterm });
 
                 if (! $plant_row) {
@@ -1994,7 +2013,7 @@ sub create_tissue_samples {
                 my $tissue_index_number = 1;
                 foreach my $tissue_name (@$tissue_names){
                     my $tissue_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
-                    #print STDERR "... ... creating tissue $tissue_name...\n";
+                    print STDERR "... ... creating tissue $tissue_name...\n";
                     $tissue_index_number++;
 
                     my $tissue = $chado_schema->resultset("Stock::Stock")->create({
@@ -2012,15 +2031,15 @@ sub create_tissue_samples {
 
                     #the tissue has a relationship to the plant
                     my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-                        subject_id => $parent_plant,
-                        object_id => $tissue->stock_id(),
+                        object_id => $parent_plant,
+                        subject_id => $tissue->stock_id(),
                         type_id => $tissue_relationship_cvterm,
                     });
 
                     #the tissue has a relationship to the plot
                     $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-                        subject_id => $parent_plot_id,
-                        object_id => $tissue->stock_id(),
+                        object_id => $parent_plot_id,
+                        subject_id => $tissue->stock_id(),
                         type_id => $tissue_relationship_cvterm,
                     });
 
@@ -2030,8 +2049,8 @@ sub create_tissue_samples {
                         die "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession.";
                     }
                     $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-                        subject_id => $tissue->stock_id(),
                         object_id => $plant_accession_rs->first->object_id,
+                        subject_id => $tissue->stock_id(),
                         type_id => $tissue_relationship_cvterm,
                     });
 
@@ -2057,6 +2076,37 @@ sub create_tissue_samples {
                         }
                     }
 
+                    push @{$plant_tissue_hash{$plant_name}}, $tissue->stock_id;
+
+                }
+            }
+
+            foreach my $subplot_name (%$subplots_plant_names){
+                my $subplot_row = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $subplot_name, type_id=>$subplot_cvterm });
+                foreach my $plant (@{$subplots_plant_names->{$subplot_name}}){
+                    foreach (@{$plant_tissue_hash{$plant}}){
+                        #the tissue has a relationship to the subplot
+                        my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
+                            object_id => $subplot_row->stock_id(),
+                            subject_id => $_,
+                            type_id => $tissue_relationship_cvterm,
+                        });
+
+                        if ($inherits_plot_treatments){
+                            if($treatments){
+                                foreach (@$treatments){
+                                    my $subplots = $treatment_subplots{$_->[0]};
+                                    if (exists($subplots->{$subplot_row->stock_id})){
+                                        my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+                                            nd_experiment_id => $treatment_experiments{$_->[0]},
+                                            type_id => $treatment_cvterm,
+                                            stock_id => $_,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2074,6 +2124,35 @@ sub create_tissue_samples {
 
     print STDERR "Tissue sample entities created.\n";
     return 1;
+}
+
+=head2 function has_tissue_sample_entries()
+
+	Usage:        $trial->has_tissue_sample_entries();
+	Desc:         Some trials require tissue_samples from plants. This function will determine if a trial has tissue_samples associated with it.
+	Ret:          Returns 1 if trial has tissue_samples, 0 if the trial does not.
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub has_tissue_sample_entries {
+	my $self = shift;
+	my $chado_schema = $self->bcs_schema();
+	my $has_tissues_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property' );
+
+	my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+		type_id => $has_tissues_cvterm->cvterm_id(),
+		project_id => $self->get_trial_id(),
+	});
+
+	if ($rs) {
+		return 1;
+	} else {
+		return 0;
+	}
+
 }
 
 
@@ -2434,6 +2513,36 @@ sub get_subplots {
 
 	return \@plots;
 
+}
+
+=head2 get_tissue_samples
+
+ Usage:        $tissues = $t->get_tissue_samples();
+ Desc:         retrieves the tissue samples that are linked to plants for this trial.
+ Ret:          an array ref containing [ tissue_sample_name, tissue_sample_stock_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_tissue_samples {
+    my $self = shift;
+    my @tissues;
+
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id;
+
+    my $trial_tissues_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$tissue_sample_cvterm_id});
+
+    my %unique_t;
+    while(my $rs = $trial_tissues_rs->next()) {
+        $unique_t{$rs->uniquename} = $rs->stock_id;
+    }
+    foreach (sort keys %unique_t) {
+        my $combine = [$unique_t{$_}, $_ ];
+        push @tissues, $combine;
+    }
+    return \@tissues;
 }
 
 =head2 get_controls
