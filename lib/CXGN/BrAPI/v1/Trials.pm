@@ -46,10 +46,8 @@ has 'status' => (
 sub trials_search {
 	my $self = shift;
 	my $search_params = shift;
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
 	my $schema = $self->bcs_schema;
+    my $data;
 	#my $auth = _authenticate_user($c);
 
 	my @location_dbids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
@@ -64,63 +62,24 @@ sub trials_search {
 		%program_id_list = map { $_ => 1} @program_dbids;
 	}
 
-	my $total_count = 0;
-
-	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
+    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
 	my $folder_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$folder_cvterm_id});
 
-	my %additional_info;
-	my @data;
-	if ($folder_rs) {
-		$total_count = $folder_rs->count();
-		my $rs_slice = $folder_rs->slice($page_size*$page, $page_size*($page+1)-1);
-		while (my $p = $rs_slice->next()) {
-			my $folder = CXGN::Trial::Folder->new({bcs_schema=>$self->bcs_schema, folder_id=>$p->project_id});
-			my @folder_studies;
-			if ($folder->is_folder) {
-				my $children = $folder->children();
-				foreach (@$children) {
-					my $passes_search = 1;
-					if (%location_id_list) {
-						if (!exists($location_id_list{$_->location_id})) {
-							$passes_search = 0;
-						}
-					}
-					if ($passes_search){
-						push @folder_studies, {
-							studyDbId=>$_->folder_id,
-							studyName=>$_->name,
-							locationDbId=>$_->location_id
-						};
-					}
-				}
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
+    my $programs = $p->get_breeding_programs();
+    my $total_count = $folder_rs->count() + scalar @{$programs};
 
-				my $passes_search = 1;
-				if (%program_id_list) {
-					if (!exists($program_id_list{$folder->breeding_program->project_id})) {
-						$passes_search = 0;
-					}
-				}
-				if ($passes_search){
-					push @data, {
-						trialDbId=>$folder->folder_id,
-						trialName=>$folder->name,
-						programDbId=>$folder->breeding_program->project_id(),
-						programName=>$folder->breeding_program->name(),
-						startDate=>'',
-						endDate=>'',
-						active=>'',
-						studies=>\@folder_studies,
-						additionalInfo=>\%additional_info
-					};
-				}
-			}
-		}
-	}
-	my %result = (data => \@data);
+    foreach my $program (@$programs) {
+        unless (%program_id_list && !exists($program_id_list{$program->[0]})) { # for each program not excluded, retrieve folders and studies using recursion.
+            $program = { "id" => $program->[0], "name" => $program->[1], "program_id" => $program->[0], "program_name" => $program->[1] };
+            $data = _get_folders($program, $schema, $data, \%location_id_list, 'breeding_program');
+        }
+    }
+
+	my %result = (data => $data);
 	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Trials-search result constructed');
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
 }
 
 sub trial_details {
@@ -166,6 +125,103 @@ sub trial_details {
 	} else {
 		return CXGN::BrAPI::JSONResponse->return_error($status, 'The given trialDbId not found.');
 	}
+}
+
+sub _get_folders {
+	my $self = shift;
+    my $schema = shift;
+    my $data = shift;
+    my $location_id_list = shift;
+    my $parent_type = shift;
+    my %location_id_list = %{$location_id_list};
+    my %additional_info;
+
+    my @folder_studies;
+	my $studies = _get_studies($self, $schema, $parent_type);
+    my %studies = %{$studies};
+	if (%studies) {
+        foreach my $study (sort keys %studies) {
+
+			if ($studies{$study}->{'folder_for_trials'}) {
+                $data = _get_folders($studies{$study}, $schema, $data, \%location_id_list, 'folder');
+            }
+            elsif (!$studies{$study}->{'folder_for_crosses'} && !$studies{$study}->{'folder_for_trials'} && $studies{$study}->{'trial_folder'}) {
+                $data = _get_folders($studies{$study}, $schema, $data, \%location_id_list, 'folder');
+            }
+            elsif ($studies{$study}->{'design'}) { #add to studies array
+
+                my $passes_search = 1;
+                if (%location_id_list) {
+                	if (!exists($location_id_list{ $studies{$study}->{'project location'}}) ) {
+                		$passes_search = 0;
+                	}
+                }
+        		if ($passes_search){
+        			push @folder_studies, {
+        				studyDbId=>$studies{$study}->{'id'},
+        				studyName=>$studies{$study}->{'name'},
+        				locationDbId=>$studies{$study}->{'project location'}
+        			};
+        		}
+			}
+		}
+	}
+
+    push @{$data}, {
+					trialDbId=>$self->{'id'},
+					trialName=>$self->{'name'},
+					programDbId=>$self->{'program_id'},
+					programName=>$self->{'program_name'},
+					startDate=>'',
+					endDate=>'',
+					active=>'',
+					studies=>\@folder_studies,
+					additionalInfo=>\%additional_info
+				};
+
+	return $data;
+
+}
+
+sub _get_studies {
+
+    my $self = shift;
+    my $schema = shift;
+    my $parent_type = shift;
+    my (@folder_contents, %studies);
+
+    if ($parent_type eq 'breeding_program') {
+        my $rs = $schema->resultset("Project::Project")->search_related(
+            'project_relationship_subject_projects',
+            {   'type.name' => 'trial_folder'
+            },
+            {   join => 'type'
+            });
+        @folder_contents = map { $_->subject_project_id() } $rs->all();
+    }
+
+    my $rs = $schema->resultset("Project::Project")->search_related(
+        'project_relationship_subject_projects',
+        {   object_project_id => $self->{'id'},
+            subject_project_id => { 'not in' => \@folder_contents }
+        },
+        {   join      => { subject_project => { projectprops => 'type' } },
+            '+select' => ['subject_project.name', 'projectprops.value', 'type.name'],
+            '+as'     => ['project_name', 'project_value', 'project_type']
+        }
+     );
+
+    while (my $row = $rs->next) {
+        my $name = $row->get_column('project_name');
+        $studies{$name}{'name'} = $name;
+        $studies{$name}{'id'} = $row->subject_project_id();
+        $studies{$name}{'program_name'} = $self->{'program_name'};
+        $studies{$name}{'program_id'} = $self->{'program_id'};
+        $studies{$name}{$row->get_column('project_value')} = 1;
+        $studies{$name}{$row->get_column('project_type')} = $row->get_column('project_value');
+    }
+
+    return \%studies
 }
 
 1;
