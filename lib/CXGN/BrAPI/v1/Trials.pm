@@ -57,25 +57,22 @@ sub trials_search {
 	if (scalar(@location_dbids)>0){
 		%location_id_list = map { $_ => 1} @location_dbids;
 	}
+
 	my %program_id_list;
 	if (scalar(@program_dbids)>0){
 		%program_id_list = map { $_ => 1} @program_dbids;
 	}
 
-    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
-	my $folder_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$folder_cvterm_id});
-
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
     my $programs = $p->get_breeding_programs();
-    my $total_count = $folder_rs->count() + scalar @{$programs};
 
     foreach my $program (@$programs) {
-        unless (%program_id_list && !exists($program_id_list{$program->[0]})) { # for each program not excluded, retrieve folders and studies using recursion.
+        unless (%program_id_list && !exists($program_id_list{$program->[0]})) { # for each program not excluded, retrieve folders and studies
             $program = { "id" => $program->[0], "name" => $program->[1], "program_id" => $program->[0], "program_name" => $program->[1] };
             $data = _get_folders($program, $schema, $data, \%location_id_list, 'breeding_program');
         }
     }
-
+    my $total_count = scalar @{$data};
 	my %result = (data => $data);
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
@@ -135,20 +132,20 @@ sub _get_folders {
     my $parent_type = shift;
     my %location_id_list = %{$location_id_list};
     my %additional_info;
-
     my @folder_studies;
+
 	my $studies = _get_studies($self, $schema, $parent_type);
     my %studies = %{$studies};
 	if (%studies) {
         foreach my $study (sort keys %studies) {
 
-			if ($studies{$study}->{'folder_for_trials'}) {
+			if ($studies{$study}->{'folder_for_trials'}) { # it's a folder, recurse a layer deeper
                 $data = _get_folders($studies{$study}, $schema, $data, \%location_id_list, 'folder');
             }
-            elsif (!$studies{$study}->{'folder_for_crosses'} && !$studies{$study}->{'folder_for_trials'} && $studies{$study}->{'trial_folder'}) {
+            elsif (!$studies{$study}->{'folder_for_crosses'} && !$studies{$study}->{'folder_for_trials'} && $studies{$study}->{'trial_folder'}) { # it's a folder, recurse a layer deeper
                 $data = _get_folders($studies{$study}, $schema, $data, \%location_id_list, 'folder');
             }
-            elsif ($studies{$study}->{'design'}) { #add to studies array
+            elsif ($studies{$study}->{'design'}) { # it's a study, add it to studies array
 
                 my $passes_search = 1;
                 if (%location_id_list) {
@@ -167,17 +164,19 @@ sub _get_folders {
 		}
 	}
 
-    push @{$data}, {
-					trialDbId=>$self->{'id'},
-					trialName=>$self->{'name'},
-					programDbId=>$self->{'program_id'},
-					programName=>$self->{'program_name'},
-					startDate=>'',
-					endDate=>'',
-					active=>'',
-					studies=>\@folder_studies,
-					additionalInfo=>\%additional_info
-				};
+    unless (%location_id_list && scalar @folder_studies < 1) { #skip empty folders if call was issued with search paramaters
+        push @{$data}, {
+    					trialDbId=>$self->{'id'},
+    					trialName=>$self->{'name'},
+    					programDbId=>$self->{'program_id'},
+    					programName=>$self->{'program_name'},
+    					startDate=>'',
+    					endDate=>'',
+    					active=>'',
+    					studies=>\@folder_studies,
+    					additionalInfo=>\%additional_info
+    				};
+    }
 
 	return $data;
 
@@ -217,7 +216,6 @@ sub _get_studies {
         $studies{$name}{'id'} = $row->subject_project_id();
         $studies{$name}{'program_name'} = $self->{'program_name'};
         $studies{$name}{'program_id'} = $self->{'program_id'};
-        $studies{$name}{$row->get_column('project_value')} = 1;
         $studies{$name}{$row->get_column('project_type')} = $row->get_column('project_value');
     }
 
