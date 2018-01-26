@@ -11,10 +11,12 @@ use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::TrialPhenotype;
 use CXGN::Login;
 use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -36,9 +38,18 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
 
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
     $c->stash->{trial_id} = $trial_id;
-    $c->stash->{schema} =  $c->dbic_schema("Bio::Chado::Schema");
-    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->stash->{schema}, trial_id => $trial_id });
+    $c->stash->{schema} =  $bcs_schema;
+    $c->stash->{trial} = CXGN::Trial->new({
+        bcs_schema => $bcs_schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        trial_id => $trial_id
+    });
 
     if (!$c->stash->{trial}) {
 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
@@ -274,6 +285,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $display = $c->req->param('display');
     my $select_clause_additional = '';
     my $group_by_additional = '';
+    my $order_by_additional = '';
     my $stock_type_id;
     my $rel_type_id;
     my $total_complete_number;
@@ -302,6 +314,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
     }
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -309,6 +322,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -335,7 +349,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND plot.type_id=?
             AND accession.type_id=?
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
-        ORDER BY cvterm.name ASC;");
+        ORDER BY cvterm.name ASC
+        $order_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
@@ -782,6 +797,82 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
+sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $upload = $c->req->upload('trial_upload_additional_file');
+    my $subdirectory = "trial_additional_file_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $md5checksum = $md5->hexdigest();
+
+    my $result = $c->stash->{trial}->add_additional_uploaded_file($user_id, $archived_filename_with_path, $md5checksum);
+    if ($result->{error}){
+        $c->stash->{rest} = {error=>$result->{error}};
+        $c->detach();
+    }
+    $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
+}
+
+sub get_trial_additional_file_uploaded : Chained('trial') PathPart('get_uploaded_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to see uploaded additional files!'};
+        $c->detach();
+    }
+
+    my $files = $c->stash->{trial}->get_additional_uploaded_files();
+    $c->stash->{rest} = {success=>1, files=>$files};
+}
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -887,6 +978,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $trial = $c->stash->{trial};
     my $design = decode_json $c->req->param('design');
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
+    my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -896,6 +988,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design_type => $trial->get_design_type(),
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
+        new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
@@ -1351,6 +1444,88 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     }
 
     $c->stash->{rest} = {success => 1};
+}
+
+sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trait_id = $c->req->param("selected");
+    
+    my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
+    	bcs_schema=>$schema,
+    	trial_id=>$trial_id,
+        trait_id=>$trait_id
+    });
+    my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
+    
+    $c->stash->{rest} = { phenotypes => $phenotype };    
+}
+
+sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $plot_name = $c->req->param('plot_name');
+  my $plot_pheno_value = $c->req->param('phenotype_value');
+  my $trait_id = $c->req->param('trait_id');
+  my $phenotype_id = $c->req->param('phenotype_id');
+  my $trial_id = $c->stash->{trial_id};
+  my $trial = $c->stash->{trial};
+  my $user_name = $c->user()->get_object()->get_username();
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
+    return;
+  }
+
+  my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id, $user_name, $timestamp);
+  if ($suppress_return_error) {
+    $c->stash->{rest} = { error => $suppress_return_error };
+    return;
+  }
+ 
+  $c->stash->{rest} = { success => 1};
+}
+
+sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $pheno_ids = $c->req->param('pheno_id');
+    my $trait_ids = $c->req->param('traits_id');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial = $c->stash->{trial};
+    
+    if (!$c->user()) {
+    	print STDERR "User not logged in... not deleting trait.\n";
+    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+    	return;
+    }
+
+    if ($self->privileges_denied($c)) {
+      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+      return;
+    }
+
+    my $delete_trait_return_error; 
+    if ($pheno_ids){
+            my $phenotypes_ids = JSON::decode_json($pheno_ids);
+         $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
+    }
+    if ($trait_ids){
+        my $traits_ids = JSON::decode_json($trait_ids);
+         $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
+    }
+    
+    if ($delete_trait_return_error) {
+      $c->stash->{rest} = { error => $delete_trait_return_error };
+      return;
+    }
+    
+    $c->stash->{rest} = { success => 1};
 }
 
 1;

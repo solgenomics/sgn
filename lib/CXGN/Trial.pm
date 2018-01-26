@@ -29,7 +29,8 @@ use SGN::Model::Cvterm;
 use Time::Piece;
 use Time::Seconds;
 use CXGN::Calendar;
-
+use JSON;
+use File::Basename qw | basename dirname|;
 
 =head2 accessor bcs_schema()
 
@@ -37,10 +38,21 @@ accessor for bcs_schema. Needs to be set when calling the constructor.
 
 =cut
 
-has 'bcs_schema' => ( isa => "Ref",
-		      is => 'rw',
-		      required => 1,
-    );
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+);
+
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+);
 
 
 
@@ -167,6 +179,34 @@ sub set_description {
 
 }
 
+
+=head2 function get_nd_experiment_id()
+
+ Usage:        my $location = $trial->get_nd_experiment_id();
+ Desc:          Every trial should have only a single nd_experiment entry of type 'field_layout'. This returns this nd_experiment_id for the trial.
+ Ret:          $nd_experiment_id
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_nd_experiment_id {
+    my $self = shift;
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $nd_experiment_rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+        { 'me.type_id' => $nd_experiment_type_id, 'project.project_id' => $self->get_trial_id },
+        { 'join' => {'nd_experiment_projects'=>'project'}}
+    );
+    if ($nd_experiment_rs->count > 1){
+        return {error => "A trial cannot have more than one nd_experiment entry of type field_layout. Please contact us."};
+    }
+    if ($nd_experiment_rs == 1){
+        return {success => 1, nd_experiment_id => $nd_experiment_rs->first->nd_experiment_id};
+    } else {
+        return {error => "This trial does not have an nd_experiment entry of type field_layout. Please contact us."}
+    }
+}
 
 =head2 function get_location()
 
@@ -1183,6 +1223,77 @@ sub total_phenotypes {
 
     my $pt_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { });
     return $pt_rs->count();
+}
+
+=head2 function add_additional_uploaded_file()
+
+ Usage:        $trial->add_additional_uploaded_file();
+ Desc:         adds metadata.md_file entry for additional_files_uploaded to trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub add_additional_uploaded_file {
+    my $self = shift;
+    my $user_id = shift;
+    my $archived_filename_with_path = shift;
+    my $md5checksum = shift;
+    my $result = $self->get_nd_experiment_id();
+    if ($result->{error}){
+        return {error => $result->{error} };
+    }
+    my $nd_experiment_id = $result->{nd_experiment_id};
+
+    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => 'trial_additional_file_upload',
+            md5checksum => $md5checksum,
+            metadata_id => $md_row->metadata_id(),
+        });
+    my $file_id = $file_row->file_id();
+    my $experiment_file = $self->phenome_schema->resultset("NdExperimentMdFiles")
+        ->create({
+            nd_experiment_id => $nd_experiment_id,
+            file_id => $file_id,
+        });
+
+    return {success => 1, file_id=>$file_id};
+}
+
+=head2 function get_additional_uploaded_files()
+
+ Usage:        $trial->get_additional_uploaded_files();
+ Desc:         retrieves metadata.md_file entries for additional_files_uploaded to trial. these entries are created from add_additional_uploaded_file
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_additional_uploaded_files {
+    my $self = shift;
+    my $trial_id = $self->get_trial_id();
+    my @file_array;
+    my %file_info;
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM project JOIN nd_experiment_project USING(project_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file_upload' ORDER BY file_id ASC";
+    my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute($trial_id);
+
+    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
+        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
+    }
+    foreach (keys %file_info){
+        push @file_array, $file_info{$_};
+    }
+    return \@file_array;
 }
 
 =head2 function get_phenotypes_for_trait($trait_id)
@@ -2294,5 +2405,125 @@ sub get_trial_contacts {
 	return \@contacts;
 }
 
+=head2 suppress_plot_phenotype
+
+ Usage:        	my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id);
+				 if ($suppress_return_error) {
+				   $c->stash->{rest} = { error => $suppress_return_error };
+				   return;
+				 }
+ 
+ Desc:         Suppresses plot phenotype
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub suppress_plot_phenotype {
+	my $self = shift;
+    my $trait_id = shift;
+    my $plot_name = shift;
+    my $phenotype_value = shift;
+	my $phenotype_id = shift;
+	my $username = shift;
+	my $timestamp = shift;
+	my $schema = $self->bcs_schema;
+    my $trial_id = $self->get_trial_id();
+	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+	my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
+	my $error;
+	my $json_string = { value => 1, username=>$username, timestamp=>$timestamp };
+	
+	my $prop_rs = $self->bcs_schema->resultset('Phenotype::Phenotypeprop')->search(
+		{ 'phenotype_id' => $phenotype_id, 'type_id'=>$phenotype_outlier_type_id }
+	);
+	
+	if ($prop_rs->count == 0) {
+		my $suppress_plot_pheno = $schema->resultset("Phenotype::Phenotypeprop")->create({
+			phenotype_id => $phenotype_id,
+			type_id       => $phenotype_outlier_type_id,
+			value => encode_json $json_string,
+		});
+	} 
+	else {
+		$error = "This plot phenotype has already been suppressed.";
+	}
+	
+	return $error;
+	
+}
+
+=head2 delete_assayed_trait
+
+ Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
+ 				if ($delete_trait_return_error) {
+   					$c->stash->{rest} = { error => $delete_trait_return_error };
+   					return;
+ 				}
+ 
+ Desc:         Delete Assayed Traits
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_assayed_trait {
+	my $self = shift;
+	my $pheno_ids = shift;
+	my $trait_ids = shift;
+    my $trial_id = $self->get_trial_id();
+	my $schema = $self->bcs_schema;
+	my $phenome_schema = $self->phenome_schema;
+	my ($error, @nd_expt_ids);
+	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+	my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id, 'nd_experiment_projects.project_id' => $trial_id };
+	if (scalar(@$trait_ids) > 0){
+		$search_params->{'me.observable_id'} = { '-in' => $trait_ids };
+	}
+	if (scalar(@$pheno_ids) > 0){
+		$search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
+	}
+	$schema->storage->debug(1);
+	if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
+		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
+		$search_params,
+		{
+			join => { 'nd_experiment_phenotypes' => {'nd_experiment' => 'nd_experiment_projects'} },
+			'+select' => ['nd_experiment.nd_experiment_id'],
+			'+as' => ['nd_expt_id'],
+		});
+		while ( my $res = $delete_pheno_id_rs->next()){
+			#print STDERR $res->phenotype_id." : ".$res->observable_id."\n";
+			my $nd_expt_id = $res->get_column('nd_expt_id');
+			push @nd_expt_ids, $nd_expt_id;
+			$res->delete;
+		}
+        print STDERR Dumper(\@nd_expt_ids);
+		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
+			nd_experiment_id => { '-in' => \@nd_expt_ids },
+		});
+		while (my $res = $delete_nd_expt_md_files_id_rs->next()){
+			$res->delete;
+		}
+		
+		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
+			nd_experiment_id => { '-in' => \@nd_expt_ids },
+		});
+		while (my $res = $delete_nd_expt_id_rs->next()){
+			$res->delete;
+		}			
+	}
+	else {
+		$error = "List of trait or phenotype ids was not provided for deletion.";
+	}
+	
+	return $error;
+	
+}
 
 1;

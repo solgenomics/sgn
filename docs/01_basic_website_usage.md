@@ -181,3 +181,11 @@ This page shows all lists that have been created, including those created by usi
 4. Clicking on the “make public” icon will make your list available for other users to view and use your list.
 
 <img src='{{"assets/images/image297.png" | relative_url }}' alt="list10.png" width="624" height="97" />
+
+
+1.5. User Permissions
+---
+
+Users are assigned into four different groups to determine the level of access they have on the database. This is to prevent data from being altered of deleted in error.
+Users are also assigned under Breeding Programs to restrict data access between different breeding programs.
+Curators can go to Manage User Roles to see user permissions and change a user's permission level.

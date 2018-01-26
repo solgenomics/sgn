@@ -1,0 +1,502 @@
+
+<%args>
+$trial_id
+</%args>
+
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
+
+<style>
+    #trait_heatmap {display: inline; }
+    #trial_no_phenoMSG {display: none; }
+    #trial_no_rowColMSG {display: none; }
+    #traitdiv {display: none; }
+    #chart {display: none; }
+    
+    #container_heatmap {
+        //border:2px dashed #000;
+        height: 390px;
+        width: 700px;
+        overflow: auto;
+        //overflow: scroll;
+        display: none;
+        margin: 10px;
+    }
+    
+    rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width:2px;   
+      }
+
+      text.mono {
+        font-size: 9pt;
+        font-family: Consolas, courier;
+        fill: #aaa;
+      }
+
+      text.axis-workweek {
+        fill: #000;
+      }
+
+      text.axis-worktime {
+        fill: #000;
+      }
+</style>
+
+<div class="form-group form-group-sm" id="traitdiv" >
+    <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label>
+    <div class="col-sm-10">
+        <div id="heatmap_traits_assayed_dropdown">
+        </div>
+    </div>
+</div>
+
+<div id="container_heatmap" ></div>
+<div id="trait_heatmap" >loading...</div>
+<div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
+<div class="container" id="trial_no_rowColMSG">
+    <div class="well">
+        <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre>
+    </div>
+</div>
+<div id="chart"></div>
+<div class="col-sm-10" id="d_button" style="display:none";>
+ <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
+</div>
+
+<div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SuppressPlotPhenoDialog">Suppress Plot Phenotype Measurement </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plot_pheno_form" name="suppress_plot_pheno_form">
+                    
+                    <center>
+                    <p3> Suppressed measurement will be seen as an outlier and can be excluded during phenotype analysis and download.</p3>
+                    </center></br>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Plot Name:</label>
+                            <div class="col-sm-8" id="myplot_name">
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Phenotype Value: </label>
+                            <div class="col-sm-8" id="pheno_value">
+                            
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Phenotype ID: </label>
+                            <div class="col-sm-8" id="mypheno_id">
+                            
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Trait ID: </label>
+                            <div class="col-sm-8" id="mytrait_id">
+                            
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="suppress_plot_pheno_dialog_submit" id="suppress_plot_pheno_dialog_submit">Suppress Phenotype</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="suppress_phenotype_dialog_success_message" name="suppress_phenotype_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="SuppressPhenoDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SuppressPhenoDialog">Suppress Phenotype For Plot </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plotPheno_form" name="suppress_plotPheno_form">
+
+                    <p3> Phenotype was suppressed successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_suppress_plot_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="delete_trait_dialog_confirm_message" name="delete_trait_dialog_confirm_message" tabindex="-1" role="dialog" aria-labelledby="DeleteAssayedTraitDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteAssayedTraitDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trait_deletion_form" name="trait_deletion_form">
+
+                    <p3><b>Please, confirm the deletion of selected trait...</b></p3> </br></br>
+                    <center><p2> ...trait is deleted permanently from the database...</p2></center>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_trait_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_selected_trait_dialog_submit" id="delete_selected_trait_dialog_submit">Delete Trait</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="delete_trait_dialog_success_message" name="delete_trait_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="TraitDeletionDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="TraitDeletionDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_trait_form" name="delete_trait_form">
+
+                    <p3> Trait deletion was successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trait_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script defer="defer" type="text/javascript" >
+var trial_id = <% $trial_id %>;
+var value = 'plot';
+var selected;
+var phenotypes_id = [];
+jQuery(document).ready( function() {
+
+    jQuery('#pheno_heatmap_onswitch').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+            beforeSend: function() {
+              jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                if (response.traits_assayed[0][0]) {
+                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
+                    traits_assayed_html = traits_assayed_html + "<option value=''>select trait to show heatmap</option>";
+                    for (i=0; i<response.traits_assayed[0].length; i++) {
+                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                    }
+                    traits_assayed_html = traits_assayed_html +"</select>";
+                    jQuery("#trait_heatmap").css("display", "none");                    
+                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
+                    jQuery("#traitdiv").css("display", "inline-block");
+                    jQuery("#working_modal").modal("hide");
+                } 
+                else {
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#trait_heatmap").css("display", "none"); 
+                    jQuery("#traitdiv").css("display", "none");
+                    jQuery("#trial_no_phenoMSG").css("display", "inline-block");
+                    
+                }
+            },
+            error: function(response){
+                alert('Error retrieving traits assayed in this trial');
+            }
+
+        });
+        
+    });
+    
+
+  jQuery(document).on('change', '#trait_list_dropdown', function () {
+    d3.select("svg").remove(); //Remove already created heatmap.
+    selected = jQuery("#trait_list_dropdown").val();
+    if (selected == ''){ }
+    else {
+        jQuery.ajax( {
+             url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected, 
+             beforeSend: function() {
+               jQuery("#working_modal").modal("show");
+             },
+             success: function(response) {
+                var col_length; 
+                var row_length;        
+                var false_coord = response.phenotypes.false_coord;
+                phenotypes_id = response.phenotypes.phenoID;
+                for (i=0; i<response.phenotypes.col.length; i++) {
+                    if (response.phenotypes.col[i] && response.phenotypes.row[i]){
+                        //console.log(response.phenotypes.col[i]);
+                        col_length = response.phenotypes.col[i];
+                        row_length = response.phenotypes.row[i];
+                    }
+                }
+                if (col_length && row_length) {
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#chart").css({"display": "inline-block"});
+                    jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
+                    jQuery("#trait_heatmap").css("display", "none");
+                    jQuery("#d_button").css("display", "inline-block");
+                    
+
+                  var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+                      width = 960 - margin.left - margin.right,
+                      height = 900 - margin.top - margin.bottom,
+                      gridSize = Math.floor(width / 24),
+                      legendElementWidth = gridSize*2,
+                      buckets = 9,
+                      colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+                      rows = response.phenotypes.unique_row,
+                      columns = response.phenotypes.unique_col;
+                      datasets = response.phenotypes.result;
+                
+                  var svg = d3.select("#container_heatmap").append("svg")
+                      .attr("width", width + margin.left + margin.right)
+                      .attr("height", height + margin.top + margin.bottom)
+                      .append("g")
+                      .attr("transform", "translate(" + margin.left + "," + 100 + ")");
+
+                  var rowLabels = svg.selectAll(".rowLabel")
+                      .data(rows)
+                      .enter().append("text")
+                        .text(function (d) { return d; })
+                        .attr("x", 0 )
+                        .attr("y", function (d, i) { return i * gridSize; })
+                        .style("text-anchor", "end")
+                        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "rowLabel mono axis axis-workweek" : "rowLabel mono axis"); });
+
+                  var columnLabels = svg.selectAll(".columnLabel")
+                      .data(columns)
+                      .enter().append("text")
+                        .text(function(d) { return d; })
+                        .attr("x", function(d, i) { return i * gridSize; })
+                        .attr("y", 0 )
+                        .style("text-anchor", "middle")
+                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
+                  
+                  var heatmapChart = function(datasets) {
+                    
+                    datasets.forEach(function(d) { 
+
+                        d.row = +d.row;
+                        d.col = +d.col;
+                        d.pheno = +d.pheno;    
+
+                      var colorScale = d3.scale.quantile()
+                          .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
+                          .range(colors);
+                                                
+                      var cards = svg.selectAll(".col")
+                          .data(datasets, function(d) {return d.row+':'+d.col;});
+
+                      cards.append("title");                  
+
+                      cards.enter().append("rect")
+                          .attr("x", function(d) { return (d.col - 1) * gridSize; })
+                          .attr("y", function(d) { return (d.row - 1) * gridSize; })
+                          .attr("rx", 4)
+                          .attr("ry", 4)
+                          .attr("class", "col bordered")
+                          .attr("width", gridSize)
+                          .attr("height", gridSize)
+                          .style("fill", colors[0])
+                          .on("click", function(d) { 
+                                                     var phenoValue = d.pheno ;
+                                                     var plotName = d.plotname ; 
+                                                     var phenoID = d.pheno_id;
+                                                     jQuery("#suppress_plot_pheno_dialog").modal("show"); 
+                                                     jQuery("#myplot_name").html(plotName);
+                                                     jQuery("#pheno_value").html(phenoValue);
+                                                     jQuery("#mytrait_id").html(selected);
+                                                     jQuery("#mypheno_id").html(phenoID);
+                                                     
+                                                        })
+                          .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); 
+                                                                            //console.log('over');
+                                                        })
+                          .on("mouseout", function(d) { 
+                                                          var cards = svg.selectAll(".col")
+                                                              .data(datasets, function(d) {return d.row+':'+d.col;});
+
+                                                          cards.append("title");
+                                                          
+                                                          cards.enter().append("rect")
+                                                            .attr("x", function(d) { return (d.col - 1) * gridSize; })
+                                                            .attr("y", function(d) { return (d.row - 1) * gridSize; })
+                                                            .attr("rx", 4)
+                                                            .attr("ry", 4)
+                                                            .attr("class", "col bordered")
+                                                            .attr("width", gridSize)
+                                                            .attr("height", gridSize)
+                                                            .style("fill", colors[0]); 
+                                                            
+                                                            cards.transition().duration(1000)
+                                                                .style("fill", function(d) { return colorScale(d.pheno); }) ;                          
+
+                                                            cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                                                            
+                                                            cards.exit().remove();
+                                                            //console.log('out');
+                                                            });
+
+                      cards.transition().duration(1000)
+                          .style("fill", function(d) { return colorScale(d.pheno); }) ;                          
+
+                      cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                      
+                      cards.exit().remove();
+             
+                      var legend = svg.selectAll(".legend")
+                          .data([0].concat(colorScale.quantiles()), function(d) { return d; });
+                     
+                      legend.enter().append("g")
+                          .attr("class", "legend");
+
+                      legend.append("rect")
+                        .attr("x", function(d, i) { return legendElementWidth * i; })
+                        .attr("y", 0 - 90)
+                        .attr("width", legendElementWidth)
+                        .attr("height", gridSize / 2)
+                        .style("fill", function(d, i) { return colors[i]; });
+
+                      legend.append("text")
+                        .attr("class", "mono")
+                        .text(function(d) { return ">= " + Math.round(d); })
+                        .attr("x", function(d, i) { return legendElementWidth * i; })
+                        .attr("y", 0 - 90 + gridSize);
+
+                      legend.exit().remove();
+                    
+                     });  
+                    } ; 
+                  
+                  heatmapChart(datasets);
+                  if (false_coord){
+                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                  }
+                }
+                else  {
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#container_heatmap").css("display", "none");
+                    jQuery("#trait_heatmap").css("display", "none");
+                    jQuery("#trial_no_rowColMSG").css("display", "inline-block");
+                }
+             },
+             error: function(reponse) {
+                alert('Error displaying traits assayed heatmap');   
+             }
+        });
+    }
+    
+  });
+
+  jQuery("#suppress_plot_pheno_dialog_submit").click(function() {
+    suppress_plot_phenotype();
+  });
+  
+  function suppress_plot_phenotype() {
+    jQuery("#suppress_plot_pheno_dialog").modal("hide");
+    var sup_plotName = jQuery('#myplot_name').html();
+    var sup_traitValue = jQuery('#pheno_value').html();
+    var sup_traitID = jQuery('#mytrait_id').html();
+    var sup_phenoID = jQuery('#mypheno_id').html();
+    //alert(sup_plotName+","+sup_traitValue+"," +sup_traitID);
+    
+    new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/breeders/trial/<% $trial_id %>/suppress_phenotype',
+        dataType: "json",
+        data: {
+                'plot_name': sup_plotName,
+                'phenotype_value': sup_traitValue,
+                'trait_id': sup_traitID,
+                'phenotype_id': sup_phenoID,
+        },
+        beforeSend: function() {
+            jQuery('#working_modal').modal("show");
+        },
+        success: function(response){
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+              alert("Error Suppressing Phenotype: "+response.error);
+            }else {
+                jQuery('#suppress_phenotype_dialog_success_message').modal("show");
+            }
+          },
+          error: function() {
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred suppressing phenotype');
+          }
+    });
+  }
+  
+  jQuery("#delete_trait").click(function() {
+    jQuery("#delete_trait_dialog_confirm_message").modal("show");
+  });
+  jQuery("#delete_selected_trait_dialog_submit").click(function() {
+    delete_selected_assayed_trait();
+  }); 
+  
+  function delete_selected_assayed_trait() {
+    var pheno_id = phenotypes_id;
+    new jQuery.ajax({
+        type: 'POST',
+        traditional: true,
+        url: '/ajax/breeders/trial/<% $trial_id %>/delete_single_trait',
+        dataType: "json",
+        data: {
+            'pheno_id': JSON.stringify(pheno_id),
+        },
+        beforeSend: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error){
+                alert("Error deleting trait:" +response.error);
+            }else{
+                jQuery("#delete_trait_dialog_success_message").modal("show");
+            }
+        },
+        error: function(){
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred deleting trait');
+        }
+    });
+  
+  }
+      
+});
+
+</script>
