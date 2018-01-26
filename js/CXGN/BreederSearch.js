@@ -231,13 +231,24 @@ function retrieve_and_display_set(categories, data, this_section, selected, data
   		    jQuery('#'+selectall_id).before(message_html);
         }
         var list = response.list || [];
-		    data_html = format_options_list(list);
+        console.log("List is: "+JSON.stringify(list));
+		    // data_html = format_options_list(list);
 		    var data_id = "c"+this_section+"_data";
 		    var count_id = "c"+this_section+"_data_count";
 		    var listmenu_id = "c"+this_section+"_to_list_menu";
 		    var select_id = "select"+this_section;
-
-		    jQuery('#'+data_id).html(data_html);
+            var column_names = [];
+            column_names.push({
+                title: 'Values',
+                // title: 'Id',
+                // title: 'Name'
+            });
+            var table = jQuery('#'+data_id).DataTable( {
+                // show link with name and id as value
+                data: list,
+                columns: column_names
+            });
+		    // jQuery('#'+data_id).html(data_html);
         if (selected) {
           for (var n=0; n<selected.length; n++) {
             jQuery("#"+data_id+" option[value='"+selected[n]+"']").prop("selected", true);

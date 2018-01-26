@@ -30,9 +30,15 @@ $dataset_id => undef;
   <select class="form-control input-sm" id="select4" name="4"></select>
 </td>
 </tr>
+
+
 <tr>
+
 <td >
-  <select multiple class="form-control" id="c1_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select>
+    <!-- <table id="c1_data" width="100%" class="table table-hover table-striped"></table> -->
+    <!-- style="margin-top: 10px;" -->
+    <div class="table-responsive"><table id="c1_data" class="table table-hover table-striped table-bordered" width="100%"></table></div>
+  <!-- <select multiple class="form-control" id="c1_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select> -->
 </td>
 <td>
   <select multiple class="form-control" id="c2_data" name="2" size="10" style="min-width: 200px;overflow:auto;"></select>
@@ -43,7 +49,10 @@ $dataset_id => undef;
 <td>
   <select multiple class="form-control" id="c4_data" name="4" size="10" style="min-width: 200px;overflow:auto;"></select>
 </td>
+
 </tr>
+
+
 <tr>
 <td>
 <button class="btn btn-default btn-sm" id="c1_select_all" name="1"/>Select All</button>
