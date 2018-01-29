@@ -17,6 +17,7 @@ use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 use File::Basename qw | basename dirname|;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -56,13 +57,18 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
 	return;
     }
 
-    my %param = ( schema => $bcs_schema, trial_id => $trial_id );
-    if ($c->stash->{trial}->get_design_type() eq 'genotyping_plate'){
-        $param{experiment_type} = 'genotyping_layout';
-    } else {
-        $param{experiment_type} = 'field_layout';
+    try {
+        my %param = ( schema => $bcs_schema, trial_id => $trial_id );
+        if ($c->stash->{trial}->get_design_type() eq 'genotyping_plate'){
+            $param{experiment_type} = 'genotyping_layout';
+        } else {
+            $param{experiment_type} = 'field_layout';
+        }
+        $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
     }
-    $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
+    catch {
+        print STDERR "Trial Layout for $trial_id does not exist.\n";
+    }
 
 }
 
