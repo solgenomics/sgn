@@ -193,45 +193,63 @@ my $start_time = time();
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <&| /page/info_section.mas, title => 'Crosses in this trial', collapsible=>1, collapsed=>0 &>
-<table id = "crosses_in_trial" class="table table-hover table-striped">
-<thead>
- <tr>
-  <th>Cross Name</th>
-  <th>Female Parent</th>
-  <th>Male Parent</th>
-  <th>Cross Type</th>
-  <th>Female Plot</th>
-  <th>Male Plot</th>
-</tr>
-</thead>
-</table>
+  <div class = "well well-sm">
+    <div class = "panel panel-default">
+      <div class = "panel-body">
+        <table id = "crosses_in_trial" class="table table-hover table-striped">
+          <thead>
+            <tr>
+              <th>Cross Name</th>
+              <th>Female Parent</th>
+              <th>Male Parent</th>
+              <th>Cross Type</th>
+              <th>Female Plot</th>
+              <th>Male Plot</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
  </&>
 
  <&| /page/info_section.mas, title => 'Crossing Experiment Info', collapsible=>1, collapsed=>0 &>
- <table id = "cross_properties_trial" class="table table-hover table-striped">
- <thead>
-  <tr>
-   <th>Cross Name</th>
-   <th>Tag Number</th>
-   <th>Pollination Date</th>
-   <th>Number of Bags</th>
-   <th>Number of Flowers</th>
-   <th>Number of Fruits</th>
-   <th>Number of Seeds</th>
- </tr>
- </thead>
- </table>
+   <div class = "well well-sm">
+     <div class = "panel panel-default">
+       <div class = "panel-body">
+         <table id = "cross_properties_trial" class="table table-hover table-striped">
+           <thead>
+             <tr>
+              <th>Cross Name</th>
+              <th>Tag Number</th>
+              <th>Pollination Date</th>
+              <th>Number of Bags</th>
+              <th>Number of Flowers</th>
+              <th>Number of Fruits</th>
+              <th>Number of Seeds</th>
+            </tr>
+          </thead>
+        </table>
+        </div>
+      </div>
+    </div>
   </&>
 
 <&| /page/info_section.mas, title => 'Progeny Info', collapsible=>1, collapsed=>0 &>
-<table id = "cross_progenies_trial" class="table table-hover table-striped">
-<thead>
-  <tr>
-  <th>Cross Name</th>
-  <th>Number of Progenies</th>
-</tr>
-</thead>
-</table>
+  <div class = "well well-sm">
+    <div class = "panel panel-default">
+      <div class = "panel-body">
+        <table id = "cross_progenies_trial" class="table table-hover table-striped">
+          <thead>
+            <tr>
+              <th>Cross Name</th>
+              <th>Number of Progenies</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>          
 </&>
 
  <script>
