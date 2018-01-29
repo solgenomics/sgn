@@ -124,13 +124,13 @@ sub list {
 
 sub detail {
 	my $self = shift;
-	my $map_id = shift;
+	my $map_id = shift; # this is really the map_version_id for SGN maps
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_id => $map_id }); 
+	my $map = $map_factory->create( { map_version_id => $map_id }); 
 
 	
 	# my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
