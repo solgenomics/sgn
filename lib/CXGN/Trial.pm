@@ -1917,7 +1917,7 @@ sub has_plant_entries {
 
 =head2 function create_tissue_samples()
 
- Usage:        $trial->create_tissue_samples(\@tissue_names);
+ Usage:        $trial->create_tissue_samples(\@tissue_names, $inherits_plot_treatments);
  Desc:         Some trials require tissue_sample-level data. This function will
                add an additional layer of tissue samples for each plant.
  Ret:

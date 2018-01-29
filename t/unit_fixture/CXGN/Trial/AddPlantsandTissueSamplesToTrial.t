@@ -1459,4 +1459,20 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[13], [
                           'fresh root weight|CO_334:0000012'
                         ], "check col13");
 
+$trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id });
+is($trial->create_tissue_samples(['leaf','root','fruit'],1), 1, 'test create tissue samples');
+
+my $trial_with_tissues_layout = CXGN::Trial::TrialLayout->new({schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout'})->get_design();
+print STDERR Dumper $trial_with_tissues_layout;
+print STDERR scalar(keys %$trial_with_tissues_layout)."\n";
+is(scalar(keys(%$trial_with_tissues_layout)), 15, 'test trial layout count');
+is_deeply($trial_with_tissues_layout->{5}->{tissue_sample_names}, [
+                                              'test_trial25_plant_1_leaf1',
+                                              'test_trial25_plant_1_root2',
+                                              'test_trial25_plant_1_fruit3',
+                                              'test_trial25_plant_2_leaf1',
+                                              'test_trial25_plant_2_root2',
+                                              'test_trial25_plant_2_fruit3'
+                                            ], 'test layout with tissue samples');
+
 done_testing();
