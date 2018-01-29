@@ -67,23 +67,21 @@ my $cvtermprops = $cvtermref->{props};
 
 my @def_accessions;
 if ( scalar (@def_dbxrefs ) > 0 ) {
-  foreach my $d ( @def_dbxrefs ) { print "**** def_dbxref = $d \n\n " ; } 
-# @def_accessions = map( $_->db->name . ":" . $_->accession , @def_dbxrefs);
+  # @def_accessions = map( $_->db->name . ":" . $_->accession , @def_dbxrefs);
 }
 
 my @secondary_accessions = ();
 foreach ( @secondary_dbxrefs) {
- # my $db =       $_->get_db_name;
- # my $acc =      $_->get_accession;
- # my $urlprefix= $_->get_urlprefix;
- # my $url =      $_->get_url;
- # my $full_acc = $db . ":" . $acc;
- # my $link = $full_acc;
- # if ( $url ) {
-  #  my $xref_link = $urlprefix . $url . $acc;
-  #  $link = qq | <a href="$xref_link">$full_acc</a> |
-  #}
-  my $link;
+  my $db_name =       $_->db->name;
+  my $acc =           $_->accession;
+  my $urlprefix=      $_->db->urlprefix;
+  my $url =           $_->db->url;
+  my $full_acc =      $db_name . ":" . $acc;
+  my $link = $full_acc;
+  if ( $url ) {
+    my $xref_link = $urlprefix . $url . $acc;
+    $link = qq | <a href="$xref_link">$full_acc</a> |
+  }
   push @secondary_accessions , $link ;
 }
 
@@ -131,7 +129,7 @@ my $edit_privs = $curator || $submitter || $sequencer;
 </script>
 
 
-<& /page/page_title.mas, title=> "$db_name:$accession '$cvterm_name' " &>
+<& /page/page_title.mas, title=> "$accession '$cvterm_name' " &>
 
 
 <&| /page/info_section.mas, title=>"Cvterm details" &>

@@ -314,4 +314,32 @@ sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direc
     $c->stash->{rest} = { data => \@data, count => $count };
 }
 
-1;
+sub get_cvtermprops : Path('/cvterm/prop/get') : ActionClass('REST') { }
+
+sub get_cvtermprops_GET {
+    my ($self, $c) = @_;
+
+    my $cvterm_id = $c->req->param("cvterm_id");
+    my $type_id = $c->req->param("type_id");
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $prop_rs = $schema->resultset("Cv::Cvtermprop")->search(
+	{
+	    'me.cvterm_id' => $cvterm_id,
+	    #type_id => $type_id,
+	}, { join => 'type', order_by => 'cvtermprop_id' } );
+
+    my @propinfo = ();
+    while (my $prop = $prop_rs->next()) {
+	push @propinfo, {cvtermprop_id => $prop->cvtermprop_id, cvterm_id => $prop->cvterm_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() };
+    }
+
+    $c->stash->{rest} = \@propinfo;
+
+
+}
+
+####
+1;##
+####

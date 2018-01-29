@@ -92,32 +92,6 @@ has 'accession' => (
 
 #########################################
 
-has 'cvtermprops' => (
-    isa => 'Maybe[ArrayRef[Str]]',
-    is => 'rw'
-);
-
-has 'synonyms' => (
-    isa => 'Maybe[ArrayRef[Str]]',
-    is => 'rw'
-);
-
-has 'def_dbxrefs' => (
-    isa => 'Maybe[ArrayRef[Str]]',
-    is => 'rw'
-);
-
-has 'secondary_dbxrefs' => (
-    isa => 'Maybe[ArrayRef[Str]]',
-    is => 'rw'
-);
-
-has 'image_ids' => (
-    isa => 'Maybe[ArrayRef[Str]]',
-    is => 'rw'
-);
-
-############################################
 
 sub BUILD {
     my $self = shift;
@@ -209,7 +183,7 @@ sub get_is_relationshiptype {
 
 =head2 synonyms
 
- Usage: my @synonyms = $sef->synonyms()
+ Usage: my @synonyms = $self->synonyms()
  Desc:  Fetch all synonym names of a cvterm. use BCS cvterm->add_synonym and $cvterm->delete_synonym to manipulate cvtermsynonyms 
  Ret:   an array of synonym strings 
  Args:  none
@@ -222,7 +196,11 @@ sub synonyms {
     my $self = shift;
     my $cvterm = $self->cvterm;
     my $synonym_rs = $cvterm->cvtermsynonyms;
-    my @synonyms = map ( $_->synonym , $synonym_rs ) ;
+    
+    my @synonyms =() ;
+    while ( my $s = $synonym_rs->next ) { 
+	push (@synonyms, $s->synonym)  ; 
+    }
     return @synonyms;
 }
 
@@ -241,9 +219,15 @@ sub synonyms {
 
 sub secondary_dbxrefs {
     my $self=shift;
-    my $cvterm = $self->cvterm;
-    return $cvterm->get_secondary_dbxrefs();
+    my $rs  =  $self->cvterm->search_related('cvterm_dbxrefs' , { is_for_definition => 0} );
+    my @list;
+    while (my $r = $rs->next) {
+	push @list , $r->dbxref;
+    }
+    return @list;
 }
+
+
 
 
 =head2 def_dbxrefs
