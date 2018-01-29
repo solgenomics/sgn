@@ -365,7 +365,7 @@ sub search {
             $person_params{last_name} = {'ilike' => '%'.$owner_last_name.'%'};
         }
 
-        $people_schema->storage->debug(1);
+        #$people_schema->storage->debug(1);
         my $p_rs = $people_schema->resultset("SpPerson")->search(\%person_params);
 
         my $stock_owner_rs = $phenome_schema->resultset("StockOwner")->search({

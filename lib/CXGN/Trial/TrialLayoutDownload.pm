@@ -105,7 +105,13 @@ sub get_layout_output {
 
     my $trial_layout;
     try {
-        $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
+        my %param = ( schema => $schema, trial_id => $trial_id );
+        if ($self->data_level eq 'plate'){
+            $param{experiment_type} = 'genotyping_layout';
+        } else {
+            $param{experiment_type} = 'field_layout';
+        }
+        $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
     };
     if (!$trial_layout) {
         push @error_messages, "Trial does not have valid field design.";
