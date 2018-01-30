@@ -132,6 +132,14 @@ $identifier => ''
                                        var bottoms_margin = 11;
                                        var rights_margin = 10;
                                        }
+                                       else if (format == "IITA-2") {
+                                       var labels_row = 20;
+                                       var labels_cols = 2; 
+                                       var tops_margin = 13;
+                                       var lefts_margin = 130;
+                                       var bottoms_margin = 11;
+                                       var rights_margin = 10;
+                                       }
                                        else if (format == "crossing") {
                                        var labels_row = 1;
                                        var labels_cols = 1; 
@@ -173,6 +181,7 @@ $identifier => ''
                                        <option value="20A4">20 label Size Sticker Paper</option>
                                        <option value="NCSU">NCSU printing format</option>
                                        <option value="IITA-3">IITA-3-barcode</option>
+                                       <option value="IITA-2">IITA-2-barcode</option>
                                        <option value="crossing">CROSS</option>
                                      </select>
                                  </div>
