@@ -347,14 +347,23 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
     my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
     my $cross_json_string = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_info_cvterm})->value();
 
-    print STDERR Dumper($cross_json_string);
+#    print STDERR Dumper($cross_json_string);
 
-    my $cross_json_hash ={};
-    $cross_json_hash = decode_json $cross_json_string;
+    my $cross_props_hash ={};
+    $cross_props_hash = decode_json $cross_json_string;
 
-    print STDERR Dumper($cross_json_hash);
+#    print STDERR Dumper($cross_props_hash);
 
-    $c->stash->{rest} = { props => $cross_json_hash };
+    my $cross_properties = $c->config->{cross_properties};
+    my @column_order = split ',',$cross_properties;
+    my @props;
+    my @row;
+    foreach my $key (@column_order){
+        push @row, $cross_props_hash->{$key};
+    }
+
+    push @props,\@row;
+    $c->stash->{rest} = {data => \@props};
 
 
 

@@ -2,7 +2,10 @@ jQuery(document).ready(function() {
 
     display_progeny(get_cross_id());
 
-    get_properties(get_cross_id(), display_properties);
+//    get_properties(get_cross_id(), display_properties);
+    get_properties(get_cross_id());
+
+//    display_properties(get_cross_id());
 
     function get_cross_id() {
 	var cross_id = jQuery('#cross_id').html();
@@ -117,25 +120,25 @@ jQuery(document).ready(function() {
 	});
     }
 
-    function display_properties(result) {
-	var props = result.props;
-	var html = "";
-	if (props) {
-	    html = "<table>";
-	    for (var k in props) {
-		html += '<tr><td>'+k+'</td><td>&nbsp;</td>';
-		var edit_link = "";
-		for (var n=0; n<props[k].length; n++) {
-		    html += '<td><b>'+props[k][n][0]+'</b></td><td>&nbsp;</td></tr>';
-		}
-	    }
-    	    html += '</table>';
-	    jQuery('#cross_properties_div').html(html);
-	}
-	else {
+//    function display_properties(result) {
+//	var props = result.props;
+//	var html = "";
+//if (props) {
+//	    html = "<table>";
+//	    for (var k in props) {
+//		html += '<tr><td>'+k+'</td><td>&nbsp;</td>';
+//		var edit_link = "";
+//		for (var n=0; n<props[k].length; n++) {
+//		    html += '<td><b>'+props[k][n][0]+'</b></td><td>&nbsp;</td></tr>';
+//		}
+//	    }
+//    	    html += '</table>';
+//	    jQuery('#cross_properties_div').html(html);
+//	}
+//	else {
 
-	}
-    }
+//	}
+//    }
 
     jQuery('#add_more_progeny_link').click( function() {
 	jQuery('#add_more_progeny_dialog').dialog("open");
@@ -181,6 +184,9 @@ jQuery(document).ready(function() {
 	    error: function(response, code, error) { alert('error: '+error); }
 	});
     }
+
+
+
 
     jQuery('#edit_properties_dialog').dialog( {
 	height: 250,
@@ -235,14 +241,22 @@ jQuery(document).ready(function() {
 	jQuery('#property_value').val(value);
     }
 
-    function get_properties(cross_id, callback) {
+//    function get_properties(cross_id, callback) {
 
-	return jQuery.ajax( {
-	    type: 'GET',
-	    url: '/cross/ajax/properties/'+cross_id,
-	    success: callback,
-	    error : error_callback
-	});
+//	return jQuery.ajax( {
+//	    type: 'GET',
+//	    url: '/cross/ajax/properties/'+cross_id,
+//	    success: callback,
+//	    error : error_callback
+//	});
+//    }
+
+    function get_properties(cross_id){
+      var property_table = jQuery('#cross_properties').DataTable({
+        'ajax': '/cross/ajax/properties/'+cross_id,
+      });
+
+      return property_table;
     }
 
     function error_callback(a, b, c) {

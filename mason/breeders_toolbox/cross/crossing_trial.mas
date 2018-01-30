@@ -213,7 +213,7 @@ my $start_time = time();
   </div>
  </&>
 
- <&| /page/info_section.mas, title => 'Crossing Experiment Info', collapsible=>1, collapsed=>0 &>
+ <&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible=>1, collapsed=>0 &>
    <div class = "well well-sm">
      <div class = "panel panel-default">
        <div class = "panel-body">
@@ -249,7 +249,7 @@ my $start_time = time();
         </table>
       </div>
     </div>
-  </div>          
+  </div>
 </&>
 
  <script>
