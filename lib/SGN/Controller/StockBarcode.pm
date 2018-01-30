@@ -109,6 +109,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $right_margin_mm = 10, $barcode_type = "2D", $labels_per_row = 2; }
     if ($cass_print_format eq 'IITA-3') {$left_margin_mm = 130, $top_margin_mm = 13, $bottom_margin_mm =  11, $right_margin_mm = 10, $labels_per_row = 3, $barcode_type = "2D"; }
+    if ($cass_print_format eq 'IITA-2') {$left_margin_mm = 130, $top_margin_mm = 13, $bottom_margin_mm =  11, $right_margin_mm = 10, $labels_per_row = 2, $barcode_type = "2D"; }
     if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $barcode_type = "2D", $labels_per_row = 2; }
     if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq '32_unique') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
@@ -427,6 +428,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
             $final_barcode_width = ($page_width - $right_margin - $left_margin) / ($labels_per_row + 1);
         }
+        elsif ($cass_print_format eq 'IITA-2'){
+     	    $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
+            $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
+            $final_barcode_width = ($page_width - $right_margin - $left_margin) / ($labels_per_row + 1.5);
+        }
         else{
             $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
         	$ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
@@ -632,6 +638,64 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+       }
+     }
+     
+     elsif ($cass_print_format eq 'IITA-2' && $barcode_type eq "2D") {
+
+         foreach my $label_count (1..$labels_per_row) {
+          my $label_text = $found[$i]->[1];
+          my $label_size =  7;
+          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 80;
+          my $label_count_15_xter_plot_name =  1-1;
+          my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
+          my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
+          if ($labels_per_page > 15){
+               $yposition_2 = $ypos - 10;
+               $yposition_3 = $ypos - 20;
+               $yposition_4 = $ypos - 30;
+               $yposition_5 = $ypos - 40;
+          }else{
+               $yposition_2 = $ypos - 20;
+               $yposition_3 = $ypos - 30;
+               $yposition_4 = $ypos - 40;
+               $yposition_5 = $ypos - 50;
+          }
+          my $plot_pedigree_text;
+
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+              if ($found[$i]->[5] eq 'plot'){
+                  $label_text_5 = "stock:".$found[$i]->[2]." ".$found[$i]->[3];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = $parents;
+                  }
+              }
+              elsif ($found[$i]->[5] eq 'accession'){
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[1];
+                  }else{
+                      $label_text_4 = $parents;
+                  }
+                  $label_text_5 = $found[$i]->[7];
+              }
+              elsif ($found[$i]->[5] eq 'plant'){
+                  $label_text_6 = "plot:".$found[$i]->[6];
+                  $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = $parents;
+                  }
+              }
+              else{
+                  $label_text_4 = '';
+              }
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
+          $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos + 60, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
 
