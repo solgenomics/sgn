@@ -64,13 +64,14 @@ sub display_fieldmap {
 
 	my $design = $layout-> get_design();
 	
-#  print STDERR Dumper($design);
+  #print STDERR Dumper($design);
 	my @plot_names = ();
     my @row_numbers = ();
     my @col_numbers = ();
     my @rep_numbers = ();
     my @block_numbers = ();
     my @accession_names = ();
+	my @plot_numbers_from_design = ();
     my @plot_numbers_not_used;
 
     my @layout_info;
@@ -84,6 +85,7 @@ sub display_fieldmap {
         my $plot_name = $v->{plot_name};
         my $accession_name = $v->{accession_name};
         my $plant_names = $v->{plant_names};
+		my $plot_number_fromDesign = $v->{plot_number};
 
         # push @layout_info, {
         #     plot_id => $plot_id,
@@ -99,24 +101,21 @@ sub display_fieldmap {
         #print STDERR Dumper(@layout_info);
 
         push @plot_numbers_not_used, $plot_number;
+		push @plot_numbers_from_design, $plot_number_fromDesign;
         if ($col_number) {
             push @col_numbers, $col_number;
         }
         if ($row_number) {
             push @row_numbers, $row_number;
-        }else{
-			#if (!$row_number && !$col_number){
-				if ($block_number){
-					$row_number = $block_number;
-					push @row_numbers, $row_number;
-				}elsif ($rep_number && !$block_number ){
-					$row_number = $rep_number;
-					push @row_numbers, $row_number;
-				}
-			#}
+        }elsif (!$row_number){
+			if ($block_number){
+				$row_number = $block_number;
+				push @row_numbers, $row_number;
+			}elsif ($rep_number && !$block_number ){
+				$row_number = $rep_number;
+				push @row_numbers, $row_number;
+			}
 		}
-		
-		
         if ($rep_number) {
             push @rep_numbers, $rep_number;
         }
@@ -143,6 +142,12 @@ sub display_fieldmap {
         };
 		
     }
+	@layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
+	print STDERR Dumper(\@plot_names);
+	print STDERR Dumper(\@row_numbers);
+	print STDERR Dumper(\@rep_numbers);
+	print STDERR Dumper(\@accession_names);
+	print STDERR Dumper(\@block_numbers);
 	print STDERR Dumper(@layout_info);
 	
 	my $false_coord;
@@ -156,12 +161,12 @@ sub display_fieldmap {
         for my $key (keys %unique_row_counts){
             push @col_number2, (1..$unique_row_counts{$key});
         }
-        for (my $i=0; $i < scalar(@layout_info); $i++){               
-            $layout_info[$i]->{'col_number'} = $col_number2[$i];
+        for (my $i=0; $i < scalar(@layout_info); $i++){            
+			$layout_info[$i]->{'col_number'} = $col_number2[$i];
             push @col_numbers, $col_number2[$i];
         }		
 	}
-
+print STDERR Dumper(\@col_numbers);
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
@@ -282,7 +287,7 @@ sub display_fieldmap {
 		unique_row => \@unique_row,
 		false_coord => $false_coord,
 	);
-	print STDERR Dumper(\%return);
+	#print STDERR Dumper(\%return);
 	return \%return;
 }
 
