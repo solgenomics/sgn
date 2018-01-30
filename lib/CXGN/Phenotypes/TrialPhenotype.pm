@@ -147,15 +147,15 @@ sub get_trial_phenotypes_heatmap {
 		push @msg, "plot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
     }
 	
-	my ($min_col, $max_col) = minmax @col_No;
-	my ($min_row, $max_row) = minmax @row_No;
-	my (@unique_col,@unique_row);
-	for my $x (1..$max_col){
-		push @unique_col, $x;
-	}
-	for my $y (1..$max_row){
-		push @unique_row, $y;
-	}
+	# my ($min_col, $max_col) = minmax @col_No;
+	# my ($min_row, $max_row) = minmax @row_No;
+	# my (@unique_col,@unique_row);
+	# for my $x (1..$max_col){
+	# 	push @unique_col, $x;
+	# }
+	# for my $y (1..$max_row){
+	# 	push @unique_row, $y;
+	# }
 	
     my $false_coord;
 	if ($col_No[0] == ""){
@@ -172,6 +172,16 @@ sub get_trial_phenotypes_heatmap {
             @$result[$i]->{'col'} = $col_number2[$i];
             push @col_No, $col_number2[$i];
         }		
+	}
+    
+    my ($min_col, $max_col) = minmax @col_No;
+	my ($min_row, $max_row) = minmax @row_No;
+	my (@unique_col,@unique_row);
+	for my $x (1..$max_col){
+		push @unique_col, $x;
+	}
+	for my $y (1..$max_row){
+		push @unique_row, $y;
 	}
     
     my $trial = CXGN::Trial->new({
