@@ -12,7 +12,7 @@ function get_select_box(type, div_id, options) {
 	success: function(response) {
       jQuery('#'+div_id).empty();
 	    jQuery('#'+div_id).html(response.select);
-        if (options.live_search) {
+        if (options && options.live_search) {
             var select = jQuery("#"+options.id);
             select.selectpicker('render');
             select.data('selectpicker').$button.focus();

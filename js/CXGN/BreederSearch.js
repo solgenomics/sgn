@@ -9,20 +9,26 @@ window.onload = function initialize() {
 
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
+
+        console.log("select changed");
+
 	    var this_section = jQuery(this).attr('name');
 	    reset_downstream_sections(this_section);
 	    update_select_categories(this_section);
 	    var category = jQuery(this).val();
 
 	    if (!category) { // reset by returning empty if no category was defined
-        var data_element = "c"+this_section+"_data";
-        jQuery("#"+data_element).html('');
-        return;
+            console.log("No category defined");
+            var data_element = "c"+this_section+"_data";
+            jQuery("#"+data_element).html('');
+            return;
 	    }
 	    var categories = get_selected_categories(this_section);
 	    var data = ''
 	    if (this_section !== "1") data = get_selected_data(this_section);
+        console.log("Data is "+data);
 	    var error = check_missing_criteria(categories, data, this_section); // make sure criteria selected in each panel
+        console.log("Error is "+error);
 	    if (error) return;
 	    if (data.length >= categories.length) data.pop(); //remove extra data array if exists
 
@@ -34,62 +40,62 @@ window.onload = function initialize() {
     	function() {
 	    var this_section = jQuery(this).attr('name');
 
-	    var data_id = jQuery(this).attr('id');
-	    var data = jQuery('#'+data_id).val() || [];;
-	    var count_id = "c"+this_section+"_data_count";
+	    // var data_id = jQuery(this).attr('id');
+	    // var data = jQuery('#'+data_id).val() || [];;
+	    // var count_id = "c"+this_section+"_data_count";
 
       var categories = get_selected_categories(this_section);
 	    reset_downstream_sections(this_section);
 	    update_select_categories(this_section, categories);
-	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+	    // show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	    update_download_options(this_section, categories);
 	});
 
-    jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel
-    	function() {
-	    var this_section = jQuery(this).attr('name');
-	    var data_id = "c"+this_section+"_data";
-        // jQuery("c"+this_section+"_data").rows().select();
-	    selectAllOptions(document.getElementById(data_id));
+    // jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel
+    // 	function() {
+	//     var this_section = jQuery(this).attr('name');
+	//     var data_id = "c"+this_section+"_data";
+    //     // jQuery("c"+this_section+"_data").rows().select();
+	//     selectAllOptions(document.getElementById(data_id));
+    //
+	//     var data = jQuery("#"+data_id).val() || [];;
+	//     var count_id = "c"+this_section+"_data_count";
+    //
+	//     show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+    //     var categories = get_selected_categories(this_section);
+	//     update_select_categories(this_section, categories);
+	//     update_download_options(this_section, categories);
+	// });
 
-	    var data = jQuery("#"+data_id).val() || [];;
-	    var count_id = "c"+this_section+"_data_count";
-
-	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-        var categories = get_selected_categories(this_section);
-	    update_select_categories(this_section, categories);
-	    update_download_options(this_section, categories);
-	});
-
-      jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click
-	  var this_section = jQuery(this).attr('name');
-	  var categories = get_selected_categories(this_section);
-	  var category = categories.pop();
-	  switch (category)
-	  {
-	  case "accessions":
-      case "plants":
-	  case "plots":
-      case "seedlots":
-	      window.open("../../stock/"+this.value+"/view");
-	      break;
-	  case "trials":
-	      window.open("../../breeders_toolbox/trial/"+this.value);
-	      break;
-	  case "breeding_programs":
-	      window.open("../../breeders/manage_programs");
-	      break;
-	  case "locations":
-	      window.open("../../breeders/locations");
-	      break;
-    case "trait_components":
-	  case "traits":
-	      window.open("../../cvterm/"+this.value+"/view");
-	      break;
-	  default:
-	      if (window.console) console.log("no link for this category");
-	  }
-      });
+    //   jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click
+	//   var this_section = jQuery(this).attr('name');
+	//   var categories = get_selected_categories(this_section);
+	//   var category = categories.pop();
+	//   switch (category)
+	//   {
+	//   case "accessions":
+    //   case "plants":
+	//   case "plots":
+    //   case "seedlots":
+	//       window.open("../../stock/"+this.value+"/view");
+	//       break;
+	//   case "trials":
+	//       window.open("../../breeders_toolbox/trial/"+this.value);
+	//       break;
+	//   case "breeding_programs":
+	//       window.open("../../breeders/manage_programs");
+	//       break;
+	//   case "locations":
+	//       window.open("../../breeders/locations");
+	//       break;
+    // case "trait_components":
+	//   case "traits":
+	//       window.open("../../cvterm/"+this.value+"/view");
+	//       break;
+	//   default:
+	//       if (window.console) console.log("no link for this category");
+	//   }
+    //   });
 
     jQuery('#open_update_dialog').on('click', function () {
 	jQuery('#update_wizard_dialog').modal("show");
@@ -234,49 +240,30 @@ function retrieve_and_display_set(categories, data, this_section, selected, data
 
             var list = response.list || [];
 		    var data_id = "c"+this_section+"_data";
-		    var count_id = "c"+this_section+"_data_count";
 		    var listmenu_id = "c"+this_section+"_to_list_menu";
 		    var select_id = "select"+this_section;
 
             create_table(this_section, list);
-
-            // console.log("List is: "+JSON.stringify(list.map(function (element) { return '<a href="/stock/'+element[0]+'/view">'+element[1]+'</a>' })));
-		    // data_html = format_options_list(list);
-
-            // var formattted_list = list.map(function (element) { return [ element[0], '<a href="/stock/'+element[0]+'/view">'+element[1]+'</a>' ]; })
-            // var table = jQuery('#'+data_id).DataTable( {
-            //     "data": formattted_list,
-            //     "columnDefs": [
-            //        {
-            //            "targets": [ 0 ],
-            //            "visible": false,
-            //        },
-            //        {
-            //            "targets": [ 1 ],
-            //        }
-            //    ]
-            // });
 
             if (selected) {
               for (var n=0; n<selected.length; n++) {
                 jQuery("#"+data_id+" option[value='"+selected[n]+"']").prop("selected", true);
               }
             }
-            var data = jQuery('#'+data_id).val() || [];;
-    		    show_list_counts(count_id, list.length, data.length);
+
             update_download_options(this_section, categories);
 
-    		    if (jQuery('#navbar_lists').length) {
-              addToListMenu(listmenu_id, data_id, {
-                selectText: true,
-                typeSourceDiv: select_id });
-            }
+    		//     if (jQuery('#navbar_lists').length) {
+            //   addToListMenu(listmenu_id, data_id, {
+            //     selectText: true,
+            //     typeSourceDiv: select_id });
+            // }
 
             if (callback) {
-              console.log("executing callback");
+              //console.log("executing callback");
               callback(dataset_id, this_section+1);
             } else {
-              console.log("finished panel"+data_id+", no more callbacks");
+              //console.log("finished panel"+data_id+", no more callbacks");
             }
 
         }
@@ -298,18 +285,27 @@ function retrieve_and_display_set(categories, data, this_section, selected, data
 	});
 }
 
-function retrieve_and_display_sets(categories, data, this_section, selected) {
-}
-
 function get_selected_data(this_section) {
     var selected_data = [];
 
     for (i=1; i <= this_section; i++) {
-	var element_id = "c"+i+"_data";
-	var data = jQuery("#"+element_id).val();
-	if (data) selected_data.push(data);
+        var element_id = "c"+i+"_data";
+
+        var data;
+        if (jQuery.fn.DataTable.isDataTable("#"+element_id)) {
+            var table = jQuery("#"+element_id).DataTable();
+            var selected_rows = table.rows({'selected':true});
+            data = selected_rows.data().map(function(row){
+                return row[1];
+            });
+        }
+        else {
+            data = '';
+        }
+
+        if (data) selected_data.push(data);
     }
-    //if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
+    if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
     return selected_data;
 }
 
@@ -438,13 +434,13 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
     for (i = 4; i > this_section; i--) {
 	var select_id = "select"+i;
 	var data_id = "c"+i+"_data";
-	var count_id = "c"+i+"_data_count";
+	// var count_id = "c"+i+"_data_count";
 	var querytype_id = "c"+i+"_querytype";
   var list_menu_id = "c"+i+"_to_list_menu";
   var replacement = '<div id="'+list_menu_id+'"></div>';
 	jQuery('#'+select_id).html('');
 	jQuery('#'+data_id).html('');
-	jQuery('#'+count_id).html('No Selection');
+	// jQuery('#'+count_id).html('No Selection');
 	jQuery('#'+querytype_id).bootstrapToggle('off');
   jQuery('#'+list_menu_id).replaceWith(replacement);
     }
@@ -528,7 +524,7 @@ function pasteList() {
     // clear and reset all other wizard parts
     var this_section = 1;
     initialize_first_select();
-    show_list_counts('c1_data_count', options.length);
+    // show_list_counts('c1_data_count', options.length);
     reset_downstream_sections(this_section);
     update_select_categories(this_section, data.type_name);
     update_download_options(this_section, data.type_name);
@@ -787,12 +783,47 @@ function replay_dataset_info(dataset_id, section_number) {
 
 function create_table(this_section, list) {
 
+    console.log("Creating table 1");
+
+    jQuery('#c'+this_section+'_data').empty();
+
     var next_section = parseInt(this_section) + 1;
-    var html='<button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button><button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button><div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><hr style="margin-top:4px;margin-bottom:4px" /><div class="well well-sm"><div id="c'+this_section+'_data_count" name="'+this_section+'">No Selection</div></div><div id="c'+this_section+'_to_list_menu"></div>';
+    var html='<button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button><button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button><div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><hr style="margin-top:4px;margin-bottom:4px" /><div id="c'+this_section+'_to_list_menu"></div><div id="c'+this_section+'_selected_names" style="display: none;"></div>';
 
     jQuery('#c'+this_section+'_select_info').html(html);
+    var categories = get_selected_categories(this_section);
+    var category = categories.pop();
 
-    var formatted_list = list.map(function (element) { return [ element[0], '<a href="/stock/'+element[0]+'/view">'+element[1]+'</a>' ]; })
+    var formatted_list = list.map(function (element) {
+        var link = '';
+      	  switch (category)
+      	  {
+      	  case "accessions":
+          case "plants":
+      	  case "plots":
+          case "seedlots":
+            link = '<a href="/stock/'+element[0]+'/view">'+element[1]+'</a>';
+            break;
+      	  case "trials":
+            link = '<a href="/breeders_toolbox/trial/'+element[0]+'">'+element[1]+'</a>';
+            break;
+      	  case "breeding_programs":
+            link = '<a href="/breeders/manage_programs">'+element[1]+'</a>';
+            break;
+      	  case "locations":
+            link = '<a href="/breeders/locations">'+element[1]+'</a>';
+            break;
+          case "trait_components":
+      	  case "traits":
+            link = '<a href="/cvterm/'+element[0]+'/view">'+element[1]+'</a>';
+            break;
+      	  default:
+            link = element[1];
+      	  }
+        return [ element[0], link ];
+
+    })
+    console.log("Creating table 2");
     var table = jQuery('#c'+this_section+'_data').DataTable( {
         "data": formatted_list,
         "columnDefs": [
@@ -809,31 +840,60 @@ function create_table(this_section, list) {
        'select': {
          'style':    'multi'
        },
-       "order": [[ 1, "asc" ]]
+       "order": [[ 1, "asc" ]],
+       destroy: true,
+       searching: false
     });
+
+    console.log("Creating toggle");
 
     jQuery('#c'+next_section+'_querytype').bootstrapToggle();
     var toggle_buttons = jQuery('#c'+next_section+'_querytype').next().children();
     toggle_buttons.first().attr( 'id', 'c'+next_section+'_querytype_and' );
     toggle_buttons.first().next().attr( 'id', 'c'+next_section+'_querytype_or' );
 
-    jQuery('#c'+this_section+'_select_all').click( // select all data
-    	function() {
-            console.log("Selecting all for section "+this_section);
-	    // var this_section = jQuery(this).attr('name');
-	    // var data_id = "c"+this_section+"_data";
+    jQuery('#c'+this_section+'_select_all').click( function() { // select all data
+
+        console.log("Selecting all for section "+this_section);
+
         table.rows().select();
-	    // selectAllOptions(document.getElementById(data_id));
 
-         var selected_rows = table.rows({'selected':true});
-
-	    // var data = jQuery("#"+data_id).val() || [];;
-	    var count_id = "c"+this_section+"_data_count";
-
-	    show_list_counts(count_id, list.length, selected_rows.length);
         var categories = get_selected_categories(this_section);
 	    update_select_categories(this_section, categories);
 	    update_download_options(this_section, categories);
 	});
+
+    jQuery('#c'+this_section+'_deselect_all').click( function() { // select all data
+
+        console.log("Deselecting all for section "+this_section);
+
+        table.rows().deselect();
+
+        var categories = get_selected_categories(this_section);
+	    update_select_categories(this_section, categories);
+	    update_download_options(this_section, categories);
+	});
+
+
+    var selection_changed = function () {
+        var selected_rows = table.rows({'selected':true});
+
+        var name_links = selected_rows.data().map(function(row){
+          return row[1];
+        });
+        var names = [];
+
+        for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+          names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
+
+        jQuery('#c'+this_section+'_selected_names').html(names);
+        addToListMenu('c'+this_section+'_to_list_menu', 'c'+this_section+'_selected_names', {
+            typeSourceDiv: "select"+this_section,
+        });
+    };
+
+    table.on( 'deselect', selection_changed);
+    table.on( 'select', selection_changed);
 
 }
