@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'SGN.GraphicalFiltering', 'd3.d3v4Min' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'brapi.GraphicalFiltering', 'd3.d3v4Min' ] &>
 
 <style>
 
