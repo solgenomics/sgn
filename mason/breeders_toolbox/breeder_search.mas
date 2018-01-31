@@ -3,7 +3,7 @@
 $dataset_id => undef;
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'jquery.dataTables-select-min' ] &>
 
 <table class="table borderless" alt="breeder search" border="0" >
 
@@ -37,10 +37,35 @@ $dataset_id => undef;
 <td >
     <!-- <table id="c1_data" width="100%" class="table table-hover table-striped"></table> -->
     <!-- style="margin-top: 10px;" -->
-    <div class="table-responsive"><table id="c1_data" class="table table-hover table-striped table-bordered" width="100%"></table></div>
+    <div class="table-responsive"><table id="c1_data" class="table table-hover table-striped table-bordered" width="100%">
+        <!-- <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+            </tr>
+        </thead> -->
+    </table></div>
   <!-- <select multiple class="form-control" id="c1_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select> -->
 </td>
-<td>
+<td >
+    <!-- <table id="c1_data" width="100%" class="table table-hover table-striped"></table> -->
+    <!-- style="margin-top: 10px;" -->
+    <div class="table-responsive"><table id="c2_data" class="table table-hover table-striped table-bordered" width="100%"></table></div>
+  <!-- <select multiple class="form-control" id="c1_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select> -->
+</td>
+<td >
+    <!-- <table id="c1_data" width="100%" class="table table-hover table-striped"></table> -->
+    <!-- style="margin-top: 10px;" -->
+    <div class="table-responsive"><table id="c3_data" class="table table-hover table-striped table-bordered" width="100%"></table></div>
+  <!-- <select multiple class="form-control" id="c1_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select> -->
+</td>
+<td >
+    <!-- <table id="c1_data" width="100%" class="table table-hover table-striped"></table> -->
+    <!-- style="margin-top: 10px;" -->
+    <div class="table-responsive"><table id="c4_data" class="table table-hover table-striped table-bordered" width="100%"></table></div>
+  <!-- <select multiple class="form-control" id="c1_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select> -->
+</td>
+<!-- <td>
   <select multiple class="form-control" id="c2_data" name="2" size="10" style="min-width: 200px;overflow:auto;"></select>
 </td>
 <td>
@@ -48,39 +73,17 @@ $dataset_id => undef;
 </td>
 <td>
   <select multiple class="form-control" id="c4_data" name="4" size="10" style="min-width: 200px;overflow:auto;"></select>
-</td>
+</td> -->
 
 </tr>
 
-
 <tr>
-<td>
-<button class="btn btn-default btn-sm" id="c1_select_all" name="1"/>Select All</button>
-<div class="pull-right"><input type="checkbox" id="c2_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div>
-<hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c1_data_count" name="1">No Selection</div></div>
-<div id="c1_to_list_menu"></div>
-</td>
-<td>
-<button class="btn btn-default btn-sm" id="c2_select_all" name="2"/>Select All</button>
-<div class="pull-right"><input type="checkbox" id="c3_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div>
-<hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c2_data_count" name="2">No Selection</div></div>
-<div id="c2_to_list_menu"></div>
-</td>
-<td>
-<button class="btn btn-default btn-sm" id="c3_select_all" name="3"/>Select All</button>
-<div class="pull-right"><input type="checkbox" id="c4_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div>
-<hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c3_data_count" name="3">No Selection</div></div>
-<div id="c3_to_list_menu"></div>
-</td>
-<td>
-<button class="btn btn-default btn-sm" id="c4_select_all" name="4"/>Select All</button>
-<hr style="margin-top:4px;margin-bottom:4px" />
-<div class="well well-sm"><div id="c4_data_count" name="4">No Selection</div></div>
-<div id="c4_to_list_menu"></div>
-</td></tr>
+<td id="c1_select_info"></td>
+<td id="c2_select_info"></td>
+<td id="c3_select_info"></td>
+<td id="c4_select_info"></td>
+</tr>
+
 </table>
 
 <div class="modal fade" id="update_wizard_dialog" name="update_wizard_dialog" tabindex="-1" role="dialog" aria-labelledby="updateWizardDialog">
@@ -132,6 +135,6 @@ jQuery(document).ready(function() {
       create_list_start('Start from a list');
       add_data_refresh();
     }
-    addToggleIds();
+
 });
 </script>

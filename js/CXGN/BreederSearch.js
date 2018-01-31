@@ -49,13 +49,14 @@ window.onload = function initialize() {
     	function() {
 	    var this_section = jQuery(this).attr('name');
 	    var data_id = "c"+this_section+"_data";
+        // jQuery("c"+this_section+"_data").rows().select();
 	    selectAllOptions(document.getElementById(data_id));
 
 	    var data = jQuery("#"+data_id).val() || [];;
 	    var count_id = "c"+this_section+"_data_count";
 
 	    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-      var categories = get_selected_categories(this_section);
+        var categories = get_selected_categories(this_section);
 	    update_select_categories(this_section, categories);
 	    update_download_options(this_section, categories);
 	});
@@ -193,13 +194,13 @@ window.onload = function initialize() {
     });
 }
 
-function addToggleIds () {
-  for (i=2; i <= 4; i++) {
-    var toggle_buttons = jQuery('#c'+i+'_querytype').next().children();
-    toggle_buttons.first().attr( 'id', 'c'+i+'_querytype_and' );
-    toggle_buttons.first().next().attr( 'id', 'c'+i+'_querytype_or' );
-  }
-}
+// function addToggleIds () {
+//   for (i=2; i <= 4; i++) {
+//     var toggle_buttons = jQuery('#c'+i+'_querytype').next().children();
+//     toggle_buttons.first().attr( 'id', 'c'+i+'_querytype_and' );
+//     toggle_buttons.first().next().attr( 'id', 'c'+i+'_querytype_or' );
+//   }
+// }
 
 function retrieve_and_display_set(categories, data, this_section, selected, dataset_id, callback) {
     if (window.console) console.log("categories = "+categories);
@@ -219,57 +220,66 @@ function retrieve_and_display_set(categories, data, this_section, selected, data
               if (!selected) {enable_ui();}
             },
 	    success: function(response) {
-		if (response.error) {
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
-		    var selectall_id = "c"+this_section+"_select_all";
-		    jQuery('#'+selectall_id).before(error_html);
-		}
-		else {
-        if (response.message) {
-          var message_html = '<div class="well well-sm" id="response_error"><center><font color="orange">'+response.message+'</font></center></div>';
-  		    var selectall_id = "c"+this_section+"_select_all";
-  		    jQuery('#'+selectall_id).before(message_html);
-        }
-        var list = response.list || [];
-        console.log("List is: "+JSON.stringify(list));
-		    // data_html = format_options_list(list);
+    		if (response.error) {
+    		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">'+response.error+'</font></div>';
+    		    var selectall_id = "c"+this_section+"_select_all";
+    		    jQuery('#'+selectall_id).before(error_html);
+    		}
+    		else {
+            if (response.message) {
+              var message_html = '<div class="well well-sm" id="response_error"><center><font color="orange">'+response.message+'</font></center></div>';
+      		    var selectall_id = "c"+this_section+"_select_all";
+      		    jQuery('#'+selectall_id).before(message_html);
+            }
+
+            var list = response.list || [];
 		    var data_id = "c"+this_section+"_data";
 		    var count_id = "c"+this_section+"_data_count";
 		    var listmenu_id = "c"+this_section+"_to_list_menu";
 		    var select_id = "select"+this_section;
-            var column_names = [];
-            column_names.push({
-                title: 'Values',
-                // title: 'Id',
-                // title: 'Name'
-            });
-            var table = jQuery('#'+data_id).DataTable( {
-                // show link with name and id as value
-                data: list,
-                columns: column_names
-            });
-		    // jQuery('#'+data_id).html(data_html);
-        if (selected) {
-          for (var n=0; n<selected.length; n++) {
-            jQuery("#"+data_id+" option[value='"+selected[n]+"']").prop("selected", true);
-          }
-        }
-        var data = jQuery('#'+data_id).val() || [];;
-		    show_list_counts(count_id, list.length, data.length);
-        update_download_options(this_section, categories);
 
-		    if (jQuery('#navbar_lists').length) {
-          addToListMenu(listmenu_id, data_id, {
-            selectText: true,
-            typeSourceDiv: select_id });
+            create_table(this_section, list);
+
+            // console.log("List is: "+JSON.stringify(list.map(function (element) { return '<a href="/stock/'+element[0]+'/view">'+element[1]+'</a>' })));
+		    // data_html = format_options_list(list);
+
+            // var formattted_list = list.map(function (element) { return [ element[0], '<a href="/stock/'+element[0]+'/view">'+element[1]+'</a>' ]; })
+            // var table = jQuery('#'+data_id).DataTable( {
+            //     "data": formattted_list,
+            //     "columnDefs": [
+            //        {
+            //            "targets": [ 0 ],
+            //            "visible": false,
+            //        },
+            //        {
+            //            "targets": [ 1 ],
+            //        }
+            //    ]
+            // });
+
+            if (selected) {
+              for (var n=0; n<selected.length; n++) {
+                jQuery("#"+data_id+" option[value='"+selected[n]+"']").prop("selected", true);
+              }
+            }
+            var data = jQuery('#'+data_id).val() || [];;
+    		    show_list_counts(count_id, list.length, data.length);
+            update_download_options(this_section, categories);
+
+    		    if (jQuery('#navbar_lists').length) {
+              addToListMenu(listmenu_id, data_id, {
+                selectText: true,
+                typeSourceDiv: select_id });
+            }
+
+            if (callback) {
+              console.log("executing callback");
+              callback(dataset_id, this_section+1);
+            } else {
+              console.log("finished panel"+data_id+", no more callbacks");
+            }
+
         }
-        if (callback) {
-          console.log("executing callback");
-          callback(dataset_id, this_section+1);
-        } else {
-          console.log("finished panel"+data_id+", no more callbacks");
-        }
-      }
     },
 	  error: function(request, status, err) {
 		if (status == "timeout") {
@@ -592,11 +602,24 @@ function show_list_counts(count_div, total_count, selected) {
     jQuery('#'+count_div).html(html);
 }
 
+
+// jQuery('.selectAll-dt').click(function(){
+//   trait_table.rows().select();
+//   return false;
+// });
+// jQuery('.deselectAll-dt').click(function(){
+//   trait_table.rows().deselect();
+//   return false;
+// });
+
+
 function selectAllOptions(obj) {
+    console.log("Selecting all . . .");
     if (!obj || obj.options.length ==0) { return; }
-    for (var i=0; i<obj.options.length; i++) {
-      obj.options[i].selected = true;
-    }
+    obj.rows().select();
+    // for (var i=0; i<obj.options.length; i++) {
+    //   obj.options[i].selected = true;
+    // }
 }
 
 function clearAllOptions(obj) {
@@ -760,4 +783,57 @@ function replay_dataset_info(dataset_id, section_number) {
     retrieve_and_display_set(categories, data, section_number, selected);
     enable_ui();
   }
+}
+
+function create_table(this_section, list) {
+
+    var next_section = parseInt(this_section) + 1;
+    var html='<button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button><button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button><div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><hr style="margin-top:4px;margin-bottom:4px" /><div class="well well-sm"><div id="c'+this_section+'_data_count" name="'+this_section+'">No Selection</div></div><div id="c'+this_section+'_to_list_menu"></div>';
+
+    jQuery('#c'+this_section+'_select_info').html(html);
+
+    var formatted_list = list.map(function (element) { return [ element[0], '<a href="/stock/'+element[0]+'/view">'+element[1]+'</a>' ]; })
+    var table = jQuery('#c'+this_section+'_data').DataTable( {
+        "data": formatted_list,
+        "columnDefs": [
+           {
+               "targets": 0,
+               "visible": false,
+           },
+           {
+               "targets": 1,
+               'orderable': false,
+               'className': 'select-checkbox',
+           }
+       ],
+       'select': {
+         'style':    'multi'
+       },
+       "order": [[ 1, "asc" ]]
+    });
+
+    jQuery('#c'+next_section+'_querytype').bootstrapToggle();
+    var toggle_buttons = jQuery('#c'+next_section+'_querytype').next().children();
+    toggle_buttons.first().attr( 'id', 'c'+next_section+'_querytype_and' );
+    toggle_buttons.first().next().attr( 'id', 'c'+next_section+'_querytype_or' );
+
+    jQuery('#c'+this_section+'_select_all').click( // select all data
+    	function() {
+            console.log("Selecting all for section "+this_section);
+	    // var this_section = jQuery(this).attr('name');
+	    // var data_id = "c"+this_section+"_data";
+        table.rows().select();
+	    // selectAllOptions(document.getElementById(data_id));
+
+         var selected_rows = table.rows({'selected':true});
+
+	    // var data = jQuery("#"+data_id).val() || [];;
+	    var count_id = "c"+this_section+"_data_count";
+
+	    show_list_counts(count_id, list.length, selected_rows.length);
+        var categories = get_selected_categories(this_section);
+	    update_select_categories(this_section, categories);
+	    update_download_options(this_section, categories);
+	});
+
 }
