@@ -19,6 +19,7 @@ __PACKAGE__->config(
 sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR "Stock search AJAX\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -38,7 +39,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 
     my $rows = $params->{length};
     my $offset = $params->{start};
-    my $limit = ($offset+$rows)-1;
+    my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
 
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
@@ -74,7 +75,9 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my ($result, $records_total) = $stock_search->search();
 
     my $draw = $params->{draw};
-    $draw =~ s/\D//g; # cast to int
+    if ($draw){
+        $draw =~ s/\D//g; # cast to int
+    }
 
     #print STDERR Dumper $result;
     my @return;
