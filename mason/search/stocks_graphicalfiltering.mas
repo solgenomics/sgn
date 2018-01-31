@@ -268,8 +268,14 @@
 
 <br/>
 
-<table id="stock_search_graphical_filter_results_div">
-</table>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div style="overflow:scroll">
+            <table id="stock_search_graphical_filter_results_div" >
+            </table>
+        </div>
+    </div>
+</div>
 
 <br/>
 

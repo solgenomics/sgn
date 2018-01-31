@@ -35,6 +35,7 @@ function GraphicalFilter(){
     
     //create the output table
     gfilter.results_table = $(table_selector).DataTable({
+        'lengthMenu': [5,10,20,50,100,1000,5000],
       data: data,
       "columns": tableCols
     });
