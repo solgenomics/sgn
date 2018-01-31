@@ -12,8 +12,18 @@ $trial_id
     #traitdiv {display: none; }
     #trial_heatmap_div  {display: none; }
     #chart {display: none; }
+    #chart_fm {display: none; }
     
     #container_heatmap {
+        //border:2px dashed #000;
+        height: 390px;
+        width: 700px;
+        overflow: auto;
+        //overflow: scroll;
+        display: none;
+        margin: 10px;
+    }
+    #container_fm {
         //border:2px dashed #000;
         height: 390px;
         width: 700px;
@@ -70,6 +80,7 @@ $trial_id
 </div>
 
 <div id="container_heatmap" ></div>
+<div id="container_fm" ></div>
 <div id="trait_heatmap" >loading...</div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
 <div class="container" id="trial_no_rowColMSG">
@@ -230,11 +241,15 @@ jQuery(document).ready( function() {
         jQuery("#trial_heatmap_div").css("display", "none");
         jQuery("#traitdiv").css("display", "none");
         jQuery("#container_heatmap").css("display", "none");
+        jQuery("#chart_fm").css("display", "none");
+        jQuery("#container_fm").css("display", "none");
     });
 
     jQuery(document).on('change', '#heatmap_trial_assayed_dropdown', function () {
         var view_type = jQuery("#heatmap_trial_assayed_dropdown").val();
         if (view_type == "traitHM"){
+        jQuery("#chart_fm").css("display", "none");
+        jQuery("#container_fm").css("display", "none");
         
             //jQuery('#__pheno_heatmap_onswitch').click( function() {
                 jQuery.ajax ( {
@@ -276,39 +291,189 @@ jQuery(document).ready( function() {
         else if(view_type == "fieldmap"){
             jQuery("#traitdiv").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
+            d3.select("svg").remove(); //Remove already created fieldmap.
             
             
             
         
 
-              jQuery.ajax( {
-                   url: '/ajax/breeders/trial/'+trial_id+'/coords',
-                   beforeSend: function() {
-                     jQuery("#working_modal").modal("show");
-                   },
-                   success: function(response) { 
-                      jQuery("#working_modal").modal("hide");
-                      var false_coord = response.false_coord;
-                  if (response.coord_col[0] && response.coord_row[0]){
-                    alert("HELLO");
-                      //jQuery("#container").css({"display": "inline-block", "overflow": "auto"});
-                      //$("#container").css({"display": "inline-block", "overflow": "auto"});
-                      //jQuery("#row_desc").css("display","inline-block");
-                      //jQuery("#col_desc").css("display","inline-block");
-                      //jQuery("#trial_coords").css("display", "none");
-                      //jQuery("#delete_button").css("display", "inline-block");
-                  }
+            jQuery.ajax( {
+                 url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+                 beforeSend: function() {
+                   jQuery("#working_modal").modal("show");
+                 },
+                 success: function(response) {
+                    var col_length; 
+                    var row_length;
+                    var col_max =  response.col_max;
+                    var row_max =  response.row_max;
+                    var false_coord = response.false_coord;
+                    for (i=0; i<response.coord_col.length; i++) {
+                        if (response.coord_col[i] && response.coord_row[i]){
+                            //console.log(response.coord_col[i]);
+                            col_length = response.coord_col[i];
+                            row_length = response.coord_row[i];
+                        }
+                    }
+                    if (col_length && row_length) {
+                        jQuery("#working_modal").modal("hide");
+                        jQuery("#chart_fm").css({"display": "inline-block"});
+                        jQuery("#container_fm").css({"display": "inline-block", "overflow": "auto"});
+                        jQuery("#trait_heatmap").css("display", "none");
+                        //jQuery("#d_button").css("display", "inline-block");
+                        jQuery("#container_heatmap").css("display", "none");
+                        jQuery("#trait_heatmap").css("display", "none");
+                        
+                      var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+                          width = 38 * col_max + 30 - margin.left - margin.right,
+                          height = 38 * row_max + 150 - margin.top - margin.bottom,
+                          gridSize = 38,
+                          legendElementWidth = gridSize*2,
+                          buckets = 9,
+                          colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+                          rows = response.unique_row,
+                          columns = response.unique_col;
+                          datasets = response.result;
+                          alert(datasets);
+                    
+                      var svg = d3.select("#container_fm").append("svg")
+                          .attr("width", width + margin.left + margin.right)
+                          .attr("height", height + margin.top + margin.bottom)
+                          .append("g")
+                          .attr("transform", "translate(" + margin.left + "," + 100 + ")");
 
-                  else  {
-                      //jQuery("#trial_coords").css("display", "none");
-                      //jQuery("#trial_no_coordsMSG").css("display", "inline-block");
-                  }
+                      var rowLabels = svg.selectAll(".rowLabel")
+                          .data(rows)
+                          .enter().append("text")
+                            .text(function (d) { return d; })
+                            .attr("x", 0 )
+                            .attr("y", function (d, i) { return i * gridSize; })
+                            .style("text-anchor", "end")
+                            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "rowLabel mono axis axis-workweek" : "rowLabel mono axis"); });
 
-                  },
-                error: function(reponse) {
-                     jQuery("#working_modal").modal("hide");
-                }
-              });
+                      var columnLabels = svg.selectAll(".columnLabel")
+                          .data(columns)
+                          .enter().append("text")
+                            .text(function(d) { return d; })
+                            .attr("x", function(d, i) { return i * gridSize; })
+                            .attr("y", 0 )
+                            .style("text-anchor", "middle")
+                            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
+                      
+                      var heatmapChart = function(datasets) {
+                        
+                        datasets.forEach(function(d) { 
+
+                            d.row = +d.row;
+                            d.col = +d.col;
+                            d.blkn = +d.blkn;    
+
+                          var colorScale = d3.scale.quantile()
+                              .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.blkn; })])
+                              .range(colors);
+                                                    
+                          var cards = svg.selectAll(".col")
+                              .data(datasets, function(d) {return d.row+':'+d.col;});
+
+                          cards.append("title");                  
+
+                          cards.enter().append("rect")
+                              .attr("x", function(d) { return (d.col - 1) * gridSize; })
+                              .attr("y", function(d) { return (d.row - 1) * gridSize; })
+                              .attr("rx", 4)
+                              .attr("ry", 4)
+                              .attr("class", "col bordered")
+                              .attr("width", gridSize)
+                              .attr("height", gridSize)
+                              .style("fill", colors[0])
+                              .on("click", function(d) { 
+                                                         var phenoValue = d.stock ;
+                                                         var plotName = d.plotname ; 
+                                                         var phenoID = d.plotname;
+                                                         jQuery("#suppress_plot_pheno_dialog").modal("show"); 
+                                                         jQuery("#myplot_name").html(plotName);
+                                                         jQuery("#pheno_value").html(phenoValue);
+                                                         jQuery("#mytrait_id").html(selected);
+                                                         jQuery("#mypheno_id").html(phenoID);
+                                                         
+                                                            })
+                              .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); 
+                                                                                //console.log('over');
+                                                            })
+                              .on("mouseout", function(d) { 
+                                                              var cards = svg.selectAll(".col")
+                                                                  .data(datasets, function(d) {return d.row+':'+d.col;});
+
+                                                              cards.append("title");
+                                                              
+                                                              cards.enter().append("rect")
+                                                                .attr("x", function(d) { return (d.col - 1) * gridSize; })
+                                                                .attr("y", function(d) { return (d.row - 1) * gridSize; })
+                                                                .attr("rx", 4)
+                                                                .attr("ry", 4)
+                                                                .attr("class", "col bordered")
+                                                                .attr("width", gridSize)
+                                                                .attr("height", gridSize)
+                                                                .style("fill", colors[0]); 
+                                                                
+                                                                cards.transition().duration(1000)
+                                                                    .style("fill", function(d) { return colorScale(d.blkn); }) ;                          
+
+                                                                cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                                                                
+                                                                cards.exit().remove();
+                                                                //console.log('out');
+                                                                });
+
+                          cards.transition().duration(1000)
+                              .style("fill", function(d) { return colorScale(d.blkn); }) ;                          
+
+                          cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                          
+                          cards.exit().remove();
+                 
+                          var legend = svg.selectAll(".legend")
+                              .data([0].concat(colorScale.quantiles()), function(d) { return d; });
+                         
+                          legend.enter().append("g")
+                              .attr("class", "legend");
+
+                          legend.append("rect")
+                            .attr("x", function(d, i) { return legendElementWidth * i; })
+                            .attr("y", 0 - 90)
+                            .attr("width", legendElementWidth)
+                            .attr("height", gridSize / 2)
+                            .style("fill", function(d, i) { return colors[i]; });
+
+                          legend.append("text")
+                            .attr("class", "mono")
+                            .text(function(d) { return ">= " + Math.round(d); })
+                            .attr("x", function(d, i) { return legendElementWidth * i; })
+                            .attr("y", 0 - 90 + gridSize);
+
+                          legend.exit().remove();
+                        
+                         });  
+                        } ; 
+                      
+                      heatmapChart(datasets);
+                      if (false_coord){
+                          alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                      }
+                    }
+                    else  {
+                        jQuery("#working_modal").modal("hide");
+                        jQuery("#container_heatmap").css("display", "none");
+                        jQuery("#trait_heatmap").css("display", "none");
+                        jQuery("#trial_no_rowColMSG").css("display", "inline-block");
+                    }
+                 },
+                 error: function(reponse) {
+                    alert('Error displaying traits assayed heatmap');   
+                 }
+            });
     
             
             
@@ -318,6 +483,8 @@ jQuery(document).ready( function() {
         else if(view_type == ""){
             jQuery("#traitdiv").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
+            jQuery("#chart_fm").css("display", "none");
+            jQuery("#container_fm").css("display", "none");
         }
     });
 

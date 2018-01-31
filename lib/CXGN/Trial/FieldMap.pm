@@ -73,6 +73,7 @@ sub display_fieldmap {
     my @accession_names = ();
 	my @plot_numbers_from_design = ();
     my @plot_numbers_not_used;
+	my $result;
 
     my @layout_info;
     while ( my ($k, $v) = (each %$design)) {
@@ -163,10 +164,23 @@ sub display_fieldmap {
         }
         for (my $i=0; $i < scalar(@layout_info); $i++){            
 			$layout_info[$i]->{'col_number'} = $col_number2[$i];
+			#my $plot_popUp = $layout_info[$i]->{'plot_name'}."\nplot_No:".$layout_info[$i]->{'plot_number'}."\nblock_No:".$layout_info[$i]->{'block_number'}."\nrep_No:".$layout_info[$i]->{'rep_number'}."\nstock:".$layout_info[$i]->{'accession_name'};
             push @col_numbers, $col_number2[$i];
+			#push @$result,  {plotname => $layout_info[$i]->{'plot_name'}, stock => $layout_info[$i]->{'accession_name'}, plotn => $layout_info[$i]->{'plot_number'}, blkn=>$layout_info[$i]->{'block_number'}, rep=>$layout_info[$i]->{'rep_number'}, row=>$layout_info[$i]->{'row_number'}, col=>$layout_info[$i]->{'col_number'}, plot_msg=>$plot_popUp} ;
         }		
 	}
+	my $plot_popUp;
+	foreach my $hash (@layout_info){
+		if (scalar(@{$hash->{"plant_names"}}) < 1) {
+			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
+		}
+		else{
+			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$hash->{"plant_names"}});
+		}
+		push @$result,  {plotname => $hash->{'plot_name'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
+	}
 print STDERR Dumper(\@col_numbers);
+print STDERR Dumper($result);
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
@@ -286,6 +300,7 @@ print STDERR Dumper(\@col_numbers);
 		unique_col => \@unique_col,
 		unique_row => \@unique_row,
 		false_coord => $false_coord,
+		result => $result,
 	);
 	#print STDERR Dumper(\%return);
 	return \%return;
