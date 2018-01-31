@@ -87,7 +87,7 @@ sub search {
         $data = $phenotypes_search->search();
     }
     catch {
-        return CXGN::BrAPI::JSONResponse->return_success($status, 'An Error Occured During Phenotype Search');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search');
     }
     #print STDERR Dumper $data;
 	my @data_window;
