@@ -307,7 +307,7 @@
 
 <br/>
 
-<&| /page/info_section.mas, title => 'Copy Filtered Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names currently showing in the search results table to a new or exisiting list</i>'&>
+<&| /page/info_section.mas, title => 'Copy Filtered Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names in table to a new or exisiting list</i>'&>
 <div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
 <div id="graphical_filter_result_names" style="display: none;"></div>
 </&>

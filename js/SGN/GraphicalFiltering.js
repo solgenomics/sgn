@@ -1,3 +1,6 @@
+// Code taken from https://github.com/solgenomics/BrAPI-Graphical-Filtering
+//
+
 ;
 
 function GraphicalFilter(){
