@@ -2084,11 +2084,11 @@ sub create_tissue_samples {
             foreach my $subplot_name (%$subplots_plant_names){
                 my $subplot_row = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $subplot_name, type_id=>$subplot_cvterm });
                 foreach my $plant (@{$subplots_plant_names->{$subplot_name}}){
-                    foreach (@{$plant_tissue_hash{$plant}}){
+                    foreach my $t (@{$plant_tissue_hash{$plant}}){
                         #the tissue has a relationship to the subplot
                         my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
                             object_id => $subplot_row->stock_id(),
-                            subject_id => $_,
+                            subject_id => $t,
                             type_id => $tissue_relationship_cvterm,
                         });
 
@@ -2100,7 +2100,7 @@ sub create_tissue_samples {
                                         my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
                                             nd_experiment_id => $treatment_experiments{$_->[0]},
                                             type_id => $treatment_cvterm,
-                                            stock_id => $_,
+                                            stock_id => $t,
                                         });
                                     }
                                 }

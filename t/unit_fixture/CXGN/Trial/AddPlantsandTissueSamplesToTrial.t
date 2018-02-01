@@ -1475,4 +1475,17 @@ is_deeply($trial_with_tissues_layout->{5}->{tissue_sample_names}, [
                                               'test_trial25_plant_2_fruit3'
                                             ], 'test layout with tissue samples');
 
+is_deeply($trial_with_tissues_layout->{5}->{plants_tissue_sample_names}, {
+                                                     'test_trial25_plant_2' => [
+                                                                                 'test_trial25_plant_2_leaf1',
+                                                                                 'test_trial25_plant_2_root2',
+                                                                                 'test_trial25_plant_2_fruit3'
+                                                                               ],
+                                                     'test_trial25_plant_1' => [
+                                                                                 'test_trial25_plant_1_leaf1',
+                                                                                 'test_trial25_plant_1_root2',
+                                                                                 'test_trial25_plant_1_fruit3'
+                                                                               ]
+                                                   }, 'test layout with tissues samples');
+
 done_testing();

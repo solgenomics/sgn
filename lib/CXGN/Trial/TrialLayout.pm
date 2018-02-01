@@ -486,6 +486,7 @@ sub generate_and_cache_layout {
     if ($plants) {
         my @plant_names;
         my @plant_ids;
+        my %plants_tissue_hash;
         while (my $p = $plants->next()) {
             if ($self->get_verify_layout){
                 my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
@@ -497,9 +498,16 @@ sub generate_and_cache_layout {
             my $plant_id = $p->stock_id();
             push @plant_names, $plant_name;
             push @plant_ids, $plant_id;
+
+            my $tissues_of_plant = $p->search_related('stock_relationship_objects', { 'me.type_id' => $tissue_sample_of_cv })->search_related('subject', {'subject.type_id'=>$tissue_cvterm_id});
+            while (my $t = $tissues_of_plant->next()){
+                push @{$plants_tissue_hash{$plant_name}}, $t->uniquename();
+            }
+
         }
         $design_info{"plant_names"}=\@plant_names;
         $design_info{"plant_ids"}=\@plant_ids;
+        $design_info{"plants_tissue_sample_names"}=\%plants_tissue_hash;
     }
     if ($tissues) {
         my @tissue_sample_names;
@@ -523,6 +531,7 @@ sub generate_and_cache_layout {
         my @subplot_names;
         my @subplot_ids;
         my %subplots_plants_hash;
+        my %subplots_tissues_hash;
         while (my $p = $subplots->next()) {
             if ($self->get_verify_layout){
                 my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
@@ -532,17 +541,25 @@ sub generate_and_cache_layout {
             }
             my $subplot_name = $p->uniquename();
             my $subplot_id = $p->stock_id();
+            push @subplot_names, $subplot_name;
+            push @subplot_ids, $subplot_id;
+
             my $plants_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $plant_of_subplot_rel_cvterm_id })->search_related('subject', {'subject.type_id'=>$plant_cvterm_id});
             while (my $pp = $plants_of_subplot->next()){
                 push @{$subplots_plants_hash{$subplot_name}}, $pp->uniquename();
             }
-            push @subplot_names, $subplot_name;
-            push @subplot_ids, $subplot_id;
+
+            my $tissues_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $tissue_sample_of_cv })->search_related('subject', {'subject.type_id'=>$tissue_cvterm_id});
+            while (my $t = $tissues_of_subplot->next()){
+                push @{$subplots_tissues_hash{$subplot_name}}, $t->uniquename();
+            }
+            
         }
         if (scalar(@subplot_names)>0){
             $design_info{"subplot_names"}=\@subplot_names;
             $design_info{"subplot_ids"}=\@subplot_ids;
             $design_info{"subplots_plant_names"}=\%subplots_plants_hash;
+            $design_info{"subplots_tissue_sample_names"}=\%subplots_tissues_hash;
         }
     }
     $design{$plot_number_prop}=\%design_info;

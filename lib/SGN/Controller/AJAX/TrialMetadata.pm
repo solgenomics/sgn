@@ -1101,8 +1101,7 @@ sub retrieve_trial_info_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_id = $c->req->param('trial_id');
-
-    my $layout = $c->stash->{trial_layout};
+    my $layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
   	my $design = $layout-> get_design();
     #print STDERR Dumper($design);
 
