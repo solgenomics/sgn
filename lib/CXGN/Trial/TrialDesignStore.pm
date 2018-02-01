@@ -4,6 +4,10 @@ package CXGN::Trial::TrialDesignStore;
 
 CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (both genotyping and phenotyping trials)
 
+This is used when storing a new design completely (plots and possibly plants and possibly subplots).
+For adding plants to a design already saved, use CXGN::Trial->create_plant_entities to auto-generate plant names or CXGN::Trial->save_plant_entries to save user defined plant names.
+For adding tissue samples to a design already saved, use CXGN::Trial->create_tissue_samples to auto-generate sample names.
+
 Store will do the following: (for genotyping trials, replace 'plot' with 'tissue_sample')
 1) Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = field_layout or genotyping_layout.
 2) Searches for the accession's stock_name.
@@ -12,13 +16,24 @@ Store will do the following: (for genotyping trials, replace 'plot' with 'tissue
 #TO BE IMPLEMENTED: Associate an owner to the plot
 4) Creates stockprops (block, rep, plot_number, etc) for plots.
 5) For each plot, creates a stock relationship between the plot and accession if not already present.
-6) For each plot, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
-7) Finds or creates a stock entry for each plant_names in the design hash.
+6) If seedlot given: for each plot, creates a seed transaction stock relationship between the plot and seedlot
+7) For each plot, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+8) Finds or creates a stock entry for each plant_names in the design hash.
 #TO BE IMPLEMENTED: Associate an owner to the plant
-8) Creates stockprops (block, rep, plot_number, plant_index_number, etc) for plants.
-8) For each plant, creates a stock_relationship between the plant and accession if not already present.
-9) For each plant, creates a stock_relationship between the plant and plot if not already present.
-10) For each plant creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+9) Creates stockprops (block, rep, plot_number, plant_index_number, etc) for plants.
+10) For each plant, creates a stock_relationship between the plant and accession if not already present.
+11) For each plant, creates a stock_relationship between the plant and plot if not already present.
+12) For each plant creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+
+If there are subplot entries (currently for splitplot design)
+13) Finds or creates a stock entry for each subplot_names in the design hash.
+#TO BE IMPLEMENTED: Associate an owner to the subplot
+9) Creates stockprops (block, rep, plot_number, plant_index_number, etc) for subplots.
+10) For each subplot, creates a stock_relationship between the subplot and accession if not already present.
+11) For each subplot, creates a stock_relationship between the subplot and plot if not already present.
+11) For each subplot, creates a stock_relationship between the subplot and plant if not already present.
+12) For each subplot creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+
 
 =head1 USAGE
 
@@ -84,6 +99,7 @@ has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+has 'new_treatment_has_tissue_sample_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
 
 sub validate_design {
@@ -243,6 +259,7 @@ sub store {
 	my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
 	my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
 	my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
+	my $has_tissues_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id();
 
 	my $nd_experiment_type_id;
 	my $stock_type_id;
@@ -624,6 +641,13 @@ sub store {
 					my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
 						type_id => $has_subplots_cvterm,
 						value => $self->get_new_treatment_has_subplot_entries,
+						project_id => $treatment_project->project_id(),
+					});
+				}
+                if ($self->get_new_treatment_has_tissue_sample_entries){
+					my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+						type_id => $has_tissues_cvterm,
+						value => $self->get_new_treatment_has_tissue_sample_entries,
 						project_id => $treatment_project->project_id(),
 					});
 				}

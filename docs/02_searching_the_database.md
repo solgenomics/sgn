@@ -101,8 +101,12 @@ From this page you can construct detailed queries for stock types. For example, 
 
 ![]({{"assets/images/search_accessions.png" | relative_url }})
 
+At the bottom of the accession search there is a phenotype graphical filtering tool. Here you can filter down accessions based on combinations of trait performance. The filtered down accessions are then able to be saved to a list.
+
+![]({{"assets/images/search_accessions_graphical_filtering.png" | relative_url }})
+
 For information on adding Accessions please see the Managing Accessions help.
-For information on how plots, plants, and subplots are added to the database, please see the Managing Field Trials help.
+For information on how field trial plots, plants, tissue samples, and subplots are added to the database, please see the Managing Field Trials help.
 
 2.3 Trials Search
 -----------------

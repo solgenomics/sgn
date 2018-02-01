@@ -256,6 +256,7 @@ has 'display_pedigree' => (
 
 sub search {
     my $self = shift;
+    print STDERR "CXGN::Stock::Search search start\n";
     my $schema = $self->bcs_schema;
     my $people_schema = $self->people_schema;
     my $phenome_schema = $self->phenome_schema;
@@ -365,7 +366,7 @@ sub search {
             $person_params{last_name} = {'ilike' => '%'.$owner_last_name.'%'};
         }
 
-        $people_schema->storage->debug(1);
+        #$people_schema->storage->debug(1);
         my $p_rs = $people_schema->resultset("SpPerson")->search(\%person_params);
 
         my $stock_owner_rs = $phenome_schema->resultset("StockOwner")->search({
@@ -581,6 +582,7 @@ sub search {
     }
 
     #print STDERR Dumper \@result;
+    print STDERR "CXGN::Stock::Search search end\n";
     return (\@result, $records_total);
 }
 
