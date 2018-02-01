@@ -13,6 +13,7 @@ $trial_id
     #trial_heatmap_div  {display: none; }
     #chart {display: none; }
     #chart_fm {display: none; }
+    #d3legend {display: none}
     
     #container_heatmap {
         //border:2px dashed #000;
@@ -51,6 +52,18 @@ $trial_id
       text.axis-worktime {
         fill: #000;
       }
+      
+
+      .legend { list-style: none; }
+      .legend li { float: left; margin-right: 10px; }
+      .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
+
+      .legend .d3block_even_number { background-color: #c7e9b4; }
+      .legend .d3block_odd_number { background-color: #41b6c4; }
+      .legend .d3checks { background-color: #081d58; }
+      .legend .d3rep_even_number { background-color: red; height: 8px; width: 18px;}
+      .legend .d3rep_odd_number { background-color: green; height: 8px; width: 18px;}
+    
 </style>
 
 <div class="form-group form-group-sm" id="trial_heatmap_div" >
@@ -69,6 +82,14 @@ $trial_id
         </select>
 
     </div>
+</div>
+
+<p></br><div class="d3legend" id="d3legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
+  <li><span class="d3block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+  <li><span class="d3block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+  <li><span class="d3checks"></span> Checks</li>
+  <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+  <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
 </div>
 
 <div class="form-group form-group-sm" id="traitdiv" >
@@ -244,6 +265,7 @@ jQuery(document).ready( function() {
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
         jQuery("#trial_no_phenoMSG").css("display", "none");
+        jQuery("#d3legend").css("display", "none");
     });
 
     jQuery(document).on('change', '#heatmap_trial_assayed_dropdown', function () {
@@ -251,6 +273,7 @@ jQuery(document).ready( function() {
         if (view_type == "traitHM"){
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
+        jQuery("#d3legend").css("display", "none");
         
             //jQuery('#__pheno_heatmap_onswitch').click( function() {
                 jQuery.ajax ( {
@@ -325,7 +348,7 @@ jQuery(document).ready( function() {
                         jQuery("#chart_fm").css({"display": "inline-block"});
                         jQuery("#container_fm").css({"display": "inline-block", "overflow": "auto"});
                         jQuery("#trait_heatmap").css("display", "none");
-                        //jQuery("#d_button").css("display", "inline-block");
+                        jQuery("#d3legend").css("display", "inline-block");
                         jQuery("#container_heatmap").css("display", "none");
                         jQuery("#trait_heatmap").css("display", "none");
 
