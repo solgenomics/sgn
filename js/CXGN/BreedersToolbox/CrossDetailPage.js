@@ -212,7 +212,7 @@ jQuery(document).ready(function() {
 	jQuery('#working').dialog("open");
 	check_property(get_cross_id(), jQuery('#properties_select').val(), jQuery('#property_value').val());
 	jQuery('#working').dialog("close");
-    });
+  });
 
 
     function draw_properties_dialog(response) {
@@ -250,11 +250,13 @@ jQuery(document).ready(function() {
 //	    error : error_callback
 //	});
 //    }
-
+    var property_table;
     function get_properties(cross_id){
-        var property_table = jQuery('#cross_properties').DataTable({
+        property_table = jQuery('#cross_properties').DataTable({
             'ajax': '/cross/ajax/properties/'+cross_id,
+            'destroy' : true
         });
+        return;
     }
 
     function error_callback(a, b, c) {
@@ -280,6 +282,7 @@ jQuery(document).ready(function() {
 	    }
 	    if (response.success) {
 		save_property(cross_id, type, value);
+    property_table.ajax.relaod();
 	    }
 	}).fail( function() {
 	    alert("The request for checking the parameters failed. Please try again.");
@@ -292,7 +295,7 @@ jQuery(document).ready(function() {
 	    data: { 'cross_id' : cross_id, 'type': type, 'value': value }
 
 	}).done( function(response) {
-	    get_properties(get_cross_id(), display_properties);
+	    get_properties(get_cross_id());
 	    save_confirm(response);
 
 
