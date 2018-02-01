@@ -243,6 +243,7 @@ jQuery(document).ready( function() {
         jQuery("#container_heatmap").css("display", "none");
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
+        jQuery("#trial_no_phenoMSG").css("display", "none");
     });
 
     jQuery(document).on('change', '#heatmap_trial_assayed_dropdown', function () {
@@ -291,6 +292,7 @@ jQuery(document).ready( function() {
         else if(view_type == "fieldmap"){
             jQuery("#traitdiv").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
+            jQuery("#trial_no_phenoMSG").css("display", "none");
             d3.select("svg").remove(); //Remove already created fieldmap.
             
             
@@ -306,8 +308,10 @@ jQuery(document).ready( function() {
                     var col_length; 
                     var row_length;
                     var block_max = response.max_block;
+                    var rep_max = response.max_rep;
                     var col_max =  response.max_col;
                     var row_max =  response.max_row;
+                    var controls = response.controls;
                     var false_coord = response.false_coord;
                     for (i=0; i<response.coord_col.length; i++) {
                         if (response.coord_col[i] && response.coord_row[i]){
@@ -324,13 +328,9 @@ jQuery(document).ready( function() {
                         //jQuery("#d_button").css("display", "inline-block");
                         jQuery("#container_heatmap").css("display", "none");
                         jQuery("#trait_heatmap").css("display", "none");
-                        var default_width = 38 * col_max;
-                        var default_Width_used;
-                        if (default_width < 684){
-                            default_Width_used = 684;
-                        }else { default_Width_used = 38 * col_max; }
+
                       var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-                          width = default_Width_used + 30 - margin.left - margin.right,
+                          width = 38 * col_max + 30 - margin.left - margin.right,
                           height = 38 * row_max + 150 - margin.top - margin.bottom,
                           gridSize = 38,
                           legendElementWidth = gridSize*2,
@@ -373,16 +373,39 @@ jQuery(document).ready( function() {
                             d.row = +d.row;
                             d.col = +d.col;
                             d.blkn = +d.blkn;    
-
-                          var colorScale = d3.scale.quantile()
-                              .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.blkn; })])
-                              .range(colors);
                                                     
                           var cards = svg.selectAll(".col")
                               .data(datasets, function(d) {return d.row+':'+d.col;});
 
                           cards.append("title");                  
+                          
+                          var colors = function (d, i){
+                              if (block_max == 1){
+                                color = '#41b6c4';
+                              }
+                              else if (block_max > 1){
+                                if (d.blkn % 2 == 0){
+                                    color = '#c7e9b4';
+                                }
+                                else{
+                                    color = '#41b6c4'
+                                }
+                              }
+                              else{
+                                color = '#c7e9b4';
+                              }
+                              if (controls) {
+                                for (var i = 0; i < controls.length; i++) {
+                                  if ( controls[i] == d.stock) {
+                                    color = '#081d58';
+                                  }
+                                }
+                              }
 
+                              return color;
+                            }
+                         
+                          
                           cards.enter().append("rect")
                               .attr("x", function(d) { return (d.col - 1) * gridSize; })
                               .attr("y", function(d) { return (d.row - 1) * gridSize; })
@@ -391,7 +414,7 @@ jQuery(document).ready( function() {
                               .attr("class", "col bordered")
                               .attr("width", gridSize)
                               .attr("height", gridSize)
-                              .style("fill", colors[0])
+                              .style("fill", colors)
                               .on("click", function(d) { 
                                                          var phenoValue = d.stock ;
                                                          var plotName = d.plotname ; 
@@ -420,10 +443,10 @@ jQuery(document).ready( function() {
                                                                 .attr("class", "col bordered")
                                                                 .attr("width", gridSize)
                                                                 .attr("height", gridSize)
-                                                                .style("fill", colors[0]); 
+                                                                .style("fill", colors); 
                                                                 
                                                                 cards.transition().duration(1000)
-                                                                    .style("fill", function(d) { return colorScale(d.blkn); }) ;                          
+                                                                    .style("fill", colors) ;                          
 
                                                                 cards.select("title").text(function(d) { return d.plot_msg; }) ;
                                                                 
@@ -432,32 +455,11 @@ jQuery(document).ready( function() {
                                                                 });
 
                           cards.transition().duration(1000)
-                              .style("fill", function(d) { return colorScale(d.blkn); }) ;                          
+                              .style("fill", colors) ;                          
 
                           cards.select("title").text(function(d) { return d.plot_msg; }) ;
                           
                           cards.exit().remove();
-                 
-                          var legend = svg.selectAll(".legend")
-                              .data([0].concat(colorScale.quantiles()), function(d) { return d; });
-                         
-                          legend.enter().append("g")
-                              .attr("class", "legend");
-
-                          legend.append("rect")
-                            .attr("x", function(d, i) { return legendElementWidth * i; })
-                            .attr("y", 0 - 90)
-                            .attr("width", legendElementWidth)
-                            .attr("height", gridSize / 2)
-                            .style("fill", function(d, i) { return colors[i]; });
-
-                          legend.append("text")
-                            .attr("class", "mono")
-                            .text(function(d) { return "BLOCK " + Math.round(d); })
-                            .attr("x", function(d, i) { return legendElementWidth * i; })
-                            .attr("y", 0 - 90 + gridSize);
-
-                          legend.exit().remove();
                         
                          });  
                         } ; 
