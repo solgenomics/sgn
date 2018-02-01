@@ -365,6 +365,8 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
     push @props,\@row;
     $c->stash->{rest} = {data => \@props};
 
+}
+
 
 
 #    my $props = {};
@@ -379,9 +381,10 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
     #$c->stash->{rest} = { props => $props };
 
 
-}
+#}
 
-sub save_property_check :Path('/cross/property/check') Args(1) {
+
+ sub save_property_check :Path('/cross/property/check') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
@@ -391,21 +394,21 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
 
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $type_row = $schema->resultset('Cv::Cvterm')->find( { name => $type } );
+#    my $type_row = $schema->resultset('Cv::Cvterm')->find( { name => $type } );
 
-    if (! $type_row) {
-	$c->stash->{rest} = { error => "The type '$type' does not exist in the database" };
-	return;
-    }
+#    if (! $type_row) {
+#	$c->stash->{rest} = { error => "The type '$type' does not exist in the database" };
+#	return;
+#    }
 
-    my $type_id = $type_row->cvterm_id();
+#    my $type_id = $type_row->cvterm_id();
 
-    if ($type =~ m/^number/ || $type =~ m/^days/) { $type = 'number';}
-    if ($type =~ m/^date/) { $type = 'date';}
+    if ($type =~ m/number/ || $type =~ m/^days/) { $type = 'number';}
+    if ($type =~ m/date/) { $type = 'date';}
 
     my %suggested_values = (
-  cross_name => '.*',
-	cross_type =>  { 'biparental'=>1, 'self'=>1, 'open'=>1, 'bulk'=>1, 'bulk_self'=>1, 'bulk_open'=>1, 'doubled_haploid'=>1 },
+#  cross_name => '.*',
+#	cross_type =>  { 'biparental'=>1, 'self'=>1, 'open'=>1, 'bulk'=>1, 'bulk_self'=>1, 'bulk_open'=>1, 'doubled_haploid'=>1 },
 	number => '\d+',
 	date => '\d{4}\\/\d{2}\\/\d{2}',
 	);
@@ -413,8 +416,8 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
     my %example_values = (
 	date => '2014/03/29',
   number => 20,
-  cross_type => 'biparental',
-	cross_name => 'nextgen_cross',
+#  cross_type => 'biparental',
+#	cross_name => 'nextgen_cross',
 	);
 
     if (ref($suggested_values{$type})) {
@@ -431,6 +434,8 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
     }
     $c->stash->{rest} = { success => 1 };
 }
+
+
 
 sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $self = shift;
@@ -450,34 +455,52 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $value    = $c->req->param("value");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $cross_name = $schema->resultset("Stock::Stock")->find({stock_id => $cross_id})->uniquename();
 
-    my $exp_id = $schema->resultset("NaturalDiversity::NdExperiment")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => 'nd_experiment_stocks' })->first()->get_column('nd_experiment_id');
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+        chado_schema => $schema,
+        cross_name => $cross_name,
+        key => $type,
+        value => $value
+    });
+    $cross_add_info->add_info();
 
-    my $type_id;
-    my $type_row = $schema->resultset("Cv::Cvterm")->find( { 'me.name' => $type, 'cv.name' => 'nd_experiment_property' }, { join => { 'cv'}});
-    if ($type_row) {
-	$type_id = $type_row->cvterm_id();
-    }
-    else {
-	$c->stash->{rest} = { error => "The type $type does not exist in the database." };
-	return;
-    }
+    if (!$cross_add_info->add_info()){
+      $c->stash->{rest} = {error_string => "Error saving info",};
 
-    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
-
-    my $row = $rs->first();
-    if (!$row) {
-	$row = $schema->resultset("NaturalDiversity::NdExperimentprop")->create( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id, 'me.value'=>$value, 'me.nd_experiment_id' => $exp_id }, { join => {'nd_experiment' => {'nd_experiment_stocks' }}});
-	$row->insert();
-    }
-    else {
-
-	$row->set_column( 'value' => $value );
-	$row->update();
+      return;
     }
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { success => 1};
 }
+
+#    my $exp_id = $schema->resultset("NaturalDiversity::NdExperiment")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => 'nd_experiment_stocks' })->first()->get_column('nd_experiment_id');
+
+#    my $type_id;
+#    my $type_row = $schema->resultset("Cv::Cvterm")->find( { 'me.name' => $type, 'cv.name' => 'nd_experiment_property' }, { join => { 'cv'}});
+#    if ($type_row) {
+#	$type_id = $type_row->cvterm_id();
+#    }
+#    else {
+#	$c->stash->{rest} = { error => "The type $type does not exist in the database." };
+#	return;
+#    }
+
+#    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
+
+#    my $row = $rs->first();
+#    if (!$row) {
+#	$row = $schema->resultset("NaturalDiversity::NdExperimentprop")->create( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id, 'me.value'=>$value, 'me.nd_experiment_id' => $exp_id }, { join => {'nd_experiment' => {'nd_experiment_stocks' }}});
+#	$row->insert();
+#    }
+#    else {
+
+#	$row->set_column( 'value' => $value );
+#	$row->update();
+#    }
+
+#    $c->stash->{rest} = { success => 1 };
+#}
 
 
 sub add_more_progeny :Path('/cross/progeny/add') Args(1) {

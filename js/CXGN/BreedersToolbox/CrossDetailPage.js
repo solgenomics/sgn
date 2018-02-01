@@ -252,11 +252,9 @@ jQuery(document).ready(function() {
 //    }
 
     function get_properties(cross_id){
-      var property_table = jQuery('#cross_properties').DataTable({
-        'ajax': '/cross/ajax/properties/'+cross_id,
-      });
-
-      return property_table;
+        var property_table = jQuery('#cross_properties').DataTable({
+            'ajax': '/cross/ajax/properties/'+cross_id,
+        });
     }
 
     function error_callback(a, b, c) {
