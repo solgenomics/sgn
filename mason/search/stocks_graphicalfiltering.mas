@@ -486,11 +486,10 @@ function useBrAPIData(response,groupByAccession){
         _make_graphical_filtering_list_select();
     });
 
-    var names = [];
     function _make_graphical_filtering_list_select(){
         var data = gfilter.results_table.context[0].aoData;
         var displayed_rows = gfilter.results_table.context[0].aiDisplay;
-        names = [];
+        var names = [];
         for (var i =0; i< displayed_rows.length; i++){
             var displayed_index = displayed_rows[i];
             names.push(data[displayed_index].nTr.firstChild.innerText+'\n');
