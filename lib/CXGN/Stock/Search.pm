@@ -256,6 +256,7 @@ has 'display_pedigree' => (
 
 sub search {
     my $self = shift;
+    print STDERR "CXGN::Stock::Search search start\n";
     my $schema = $self->bcs_schema;
     my $people_schema = $self->people_schema;
     my $phenome_schema = $self->phenome_schema;
@@ -581,6 +582,7 @@ sub search {
     }
 
     #print STDERR Dumper \@result;
+    print STDERR "CXGN::Stock::Search search end\n";
     return (\@result, $records_total);
 }
 
