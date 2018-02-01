@@ -21,7 +21,7 @@ $trial_has_plants => undef
 
                     <form class="form-horizontal" role="form" method="post" id="add_tissue_samples_dialog_form" name="add_tissue_samples_dialog_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Number of tissue samples per plant: </label>
+                            <label class="col-sm-3 control-label"><span title="You can use the same tissue name, e.g. root and root, more than once below. The tissue name will still be unique because of a tissue index e.g. 1 and 2 added to the end." </span><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Number of tissue samples per plant: </span></label>
                             <div class="col-sm-9" >
                                 <input name="add_tissue_samples_per_plant_num" id="add_tissue_samples_per_plant_num" class="form-control" type="text" autofocus/>
                             </div>
