@@ -404,6 +404,26 @@ jQuery(document).ready( function() {
 
                               return color;
                             }
+                            
+                            var strokes = function (d, i){
+                                var stroke;
+                                if (rep_max == 1){
+                                  stroke = 'green';
+                                }
+                                else if (rep_max > 1){
+                                  if (d.rep % 2 == 0){
+                                      stroke = 'red';
+                                  }
+                                  else{
+                                      stroke = 'green'
+                                  }
+                                }
+                                else{
+                                  stroke = 'red';
+                                }
+
+                                return stroke;
+                              }
                          
                           
                           cards.enter().append("rect")
@@ -414,6 +434,8 @@ jQuery(document).ready( function() {
                               .attr("class", "col bordered")
                               .attr("width", gridSize)
                               .attr("height", gridSize)
+                              .style("stroke-width", 2)
+                              .style("stroke", strokes)
                               .style("fill", colors)
                               .on("click", function(d) { 
                                                          var phenoValue = d.stock ;
@@ -443,6 +465,8 @@ jQuery(document).ready( function() {
                                                                 .attr("class", "col bordered")
                                                                 .attr("width", gridSize)
                                                                 .attr("height", gridSize)
+                                                                .style("stroke-width", 2)
+                                                                .style("stroke", strokes)
                                                                 .style("fill", colors); 
                                                                 
                                                                 cards.transition().duration(1000)
