@@ -99,14 +99,14 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
-DROP EXTENSION tablefunc CASCADE;
+DROP EXTENSION IF EXISTS tablefunc CASCADE;
 CREATE EXTENSION tablefunc;
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_stockprop CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_stockprop AS
 SELECT *
 FROM crosstab(
-  'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, stockprop.value FROM stockprop JOIN stock USING(stock_id) JOIN cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) ORDER by 1 ASC',
+  'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, string_agg(''RANK'' || stockprop.rank || '':'' || stockprop.value, '','') FROM stockprop JOIN stock USING(stock_id) JOIN cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
   'SELECT type_id FROM (VALUES
     (''$block_cvterm_id''),
     (''$col_number_cvterm_id''),
@@ -203,7 +203,8 @@ AS (stock_id int,
     introgression_start_position_bp text,
     introgression_end_position_bp text
 );
-
+CREATE UNIQUE INDEX materialized_stockprop_stock_idx ON public.materialized_stockprop(stock_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW public.materialized_stockprop OWNER TO web_usr;
 
 CREATE OR REPLACE FUNCTION public.refresh_materialized_stockprop() RETURNS VOID AS '
 REFRESH MATERIALIZED VIEW public.materialized_stockprop;'
