@@ -11,7 +11,7 @@ $timestamp
 }
 </style>
   
-  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreederSearch' ] &>
 
 
 <&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>

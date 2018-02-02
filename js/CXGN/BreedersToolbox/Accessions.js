@@ -252,6 +252,7 @@ jQuery(document).ready(function ($) {
                     for (var i=0; i<response.added.length; i++){
                         html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
                     }
+                    refresh_matviews('stockprop');
                     jQuery('#add_accessions_saved_message').html(html);
                     jQuery('#add_accessions_saved_message_modal').modal('show');
                 }

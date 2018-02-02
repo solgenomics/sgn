@@ -30,7 +30,7 @@ use Getopt::Std;
 use DBI;
 #use CXGN::DB::InsertDBH;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_m, $opt_c);
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_m, $opt_c, $refresh, $status);
 getopts('H:D:U:P:m:c');
 
 print STDERR "Connecting to database...\n";
@@ -53,7 +53,7 @@ eval {
         }
 
         $h = $dbh->prepare($refresh);
-        my $status = $h->execute();
+        $status = $h->execute();
 
         $q = "UPDATE public.matviews SET currently_refreshing=?";
         $state = 'FALSE';
@@ -69,7 +69,7 @@ eval {
         }
 
         my $h = $dbh->prepare($refresh);
-        my $status = $h->execute();
+        $status = $h->execute();
     }
 
     print STDERR "Materialized views refreshed! Status: $status" . localtime() . "\n";
