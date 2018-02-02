@@ -180,7 +180,7 @@ sub display_fieldmap {
 		push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
 	}
 print STDERR Dumper(\@col_numbers);
-print STDERR Dumper($result);
+print STDERR Dumper($result); 
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
@@ -365,7 +365,7 @@ sub substitute_accession_precheck {
 	}
 
 	if (scalar(@plots) != 0)  {
-	 $error = "Controlled (check) plots can not be substituted..";
+	 $error = "Accessions used as control/check can't be substituted between plots...";
 	}
 	return $error;
 }

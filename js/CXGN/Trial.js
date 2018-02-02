@@ -626,6 +626,10 @@ jQuery(document).ready(function ($) {
     $('#upload_trial_coords_link').click(function () {
         open_upload_trial_coord_dialog();
     });
+    
+    $('#heatmap_upload_trial_coords_link').click(function () {
+        open_upload_trial_coord_dialog();
+    });
 
     jQuery('#upload_trial_coords_ok_button').click(function(){
         upload_trial_coord_file();
