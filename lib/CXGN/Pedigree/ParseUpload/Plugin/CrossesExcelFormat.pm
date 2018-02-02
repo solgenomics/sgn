@@ -70,19 +70,20 @@ sub _validate_with_plugin {
     $male_plot_head  = $worksheet->get_cell(0,5)->value();
   }
 
-  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+#  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
+#  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
 
   for my $column ( 6 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
-    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
-    if ($matching_cross_property_row->first) {
-      my $matching_term = $matching_cross_property_row->first->name;
-      if (!$matching_term) {
-        push @errors, "Header property $header_string is not supported\n";
-      }
-    }
   }
+#    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
+#    if ($matching_cross_property_row->first) {
+#      my $matching_term = $matching_cross_property_row->first->name;
+#      if (!$matching_term) {
+#        push @errors, "Header property $header_string is not supported\n";
+#      }
+#    }
+#  }
 
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
     push @errors, "Cell A1: cross_name is missing from the header";
@@ -134,10 +135,10 @@ sub _validate_with_plugin {
       if ($worksheet->get_cell($row,$column)) {
         my $info_value = $worksheet->get_cell($row,$column)->value();
         my $info_type = $worksheet->get_cell(0,$column)->value();
-        if ( ($info_type =~ m/^days/  || $info_type =~ m/^number/) && !($info_value =~ /^\d+?$/) ) {
+        if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
           push @errors, "Cell $info_type:$row_name: is not a positive integer: $info_value";
         }
-        elsif ( $info_type =~ m/^date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
+        elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
           push @errors, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
         }
       }
@@ -170,25 +171,35 @@ sub _validate_with_plugin {
 
     #female parent must not be blank
     if (!$female_parent || $female_parent eq '') {
-      push @errors, "Cell C$row_name: female parent missing";
+        push @errors, "Cell C$row_name: female parent missing";
     } else {
       #female parent must exist in the database
-      if (!$self->_get_accession($female_parent)) {
-	push @errors, "Cell C$row_name: female parent does not exist: $female_parent";
-      }
+    if (!$self->_get_accession($female_parent)) {
+	      push @errors, "Cell C$row_name: female parent does not exist: $female_parent";
+        }
     }
 
     #male parent must not be blank if type is biparental or bulk
     if (!$male_parent || $male_parent eq '') {
-      if ($cross_type eq ( 'biparental' || 'bulk' )) {
-	push @errors, "Cell D$row_name: male parent required for biparental and bulk crosses";
-      }
+        if ($cross_type eq ( 'biparental' || 'bulk' )) {
+	          push @errors, "Cell D$row_name: male parent required for biparental and bulk crosses";
+        }
     } else {
       #male parent must exist in the database
-      if (!$self->_get_accession($male_parent)) {
-	push @errors, "Cell D$row_name: male parent does not exist: $male_parent";
+        if (!$self->_get_accession($male_parent)) {
+	          push @errors, "Cell D$row_name: male parent does not exist: $male_parent";
       }
     }
+
+      #female plot must exist in the database
+      if (!$self->_get_plot($female_plot_name)){
+          push @errors, "Cell E$row_name: female plot does not exist: $female_plot_name";
+      }
+
+      #female plot must exist in the database
+      if (!$self->_get_plot($male_plot_name)){
+          push @errors, "Cell F$row_name: male plot does not exist: $male_plot_name";
+      }
   }
   #store any errors found in the parsed file to parse_errors accessor
   if (scalar(@errors) >= 1) {
@@ -221,16 +232,16 @@ sub _parse_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
-  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+#  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
+#  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
 
   for my $column ( 6 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
-    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
-    if ($matching_cross_property_row->first) {
+#    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
+#    if ($matching_cross_property_row->first) {
       $properties_columns{$column} = $header_string;
       $additional_properties{$header_string} = ();
-    }
+#    }
   }
 
   for my $row ( 1 .. $row_max ) {
@@ -325,6 +336,29 @@ sub _get_accession {
   }
 
   if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
+    return;
+   }
+
+  return $stock;
+
+}
+
+sub _get_plot {
+  my $self = shift;
+  my $plot_name = shift;
+  my $chado_schema = $self->get_chado_schema();
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+  my $stock;
+  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type');
+
+  $stock_lookup->set_stock_name($plot_name);
+  $stock = $stock_lookup->get_stock_exact();
+
+  if (!$stock) {
+    return;
+  }
+
+  if ($stock->type_id() != $plot_cvterm->cvterm_id()) {
     return;
    }
 

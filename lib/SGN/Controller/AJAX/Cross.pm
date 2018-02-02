@@ -205,20 +205,25 @@ sub upload_cross_file_POST : Args(0) {
 }
 
   #add additional cross info to crosses
-  my $cv_id = $chado_schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-  my $cross_property_rs = $chado_schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
-  while (my $cross_property_row = $cross_property_rs->next) {
-    my $info_type = $cross_property_row->name;
-    if ($parsed_data->{$info_type}) {
-    print STDERR "Handling info type $info_type\n";
-    my %info_hash = %{$parsed_data->{$info_type}};
-    foreach my $cross_name_key (keys %info_hash) {
-      my $value = $info_hash{$cross_name_key};
-      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, info_type => $info_type, value => $value, } );
-      $cross_add_info->add_info();
+#  my $cv_id = $chado_schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
+#  my $cross_property_rs = $chado_schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+#  while (my $cross_property_row = $cross_property_rs->next) {
+#    my $info_type = $cross_property_row->name;
+
+    my $cross_properties = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties;
+
+    while (my $info_type = shift (@properties)){
+        if ($parsed_data->{$info_type}) {
+        print STDERR "Handling info type $info_type\n";
+            my %info_hash = %{$parsed_data->{$info_type}};
+            foreach my $cross_name_key (keys %info_hash) {
+                my $value = $info_hash{$cross_name_key};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
+                $cross_add_info->add_info();
+            }
+        }
     }
-  }
-  }
 
   $c->stash->{rest} = {success => "1",};
 }
@@ -403,7 +408,7 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
 
 #    my $type_id = $type_row->cvterm_id();
 
-    if ($type =~ m/number/ || $type =~ m/^days/) { $type = 'number';}
+    if ($type =~ m/number/ || $type =~ m/days/) { $type = 'number';}
     if ($type =~ m/date/) { $type = 'date';}
 
     my %suggested_values = (
