@@ -97,7 +97,7 @@ window.onload = function initialize() {
 
     jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", '.wiz-update', function () {
 	//if (window.console) console.log("refreshing materialized views . . .");
-	refresh_matviews();
+	refresh_matviews("fullview");
     });
 
     jQuery('#wizard_download_phenotypes_button').click( function () {
@@ -639,9 +639,12 @@ function add_data_refresh() {
     }
 }
 
-function refresh_matviews() {
+// matview_select is either:
+// "fullview" for refreshing materialized phenoview, genoview, and traits
+// "stockprop" for refreshing materialized stockprop
+function refresh_matviews(matview_select) {
     jQuery.ajax( {
-	url: '/ajax/breeder/refresh',
+	url: '/ajax/breeder/refresh?matviews='+matview_select,
 	timeout: 60000,
 	method: 'POST',
 	beforeSend: function() {
