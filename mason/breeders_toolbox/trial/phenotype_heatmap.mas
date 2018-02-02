@@ -483,9 +483,9 @@ jQuery(document).ready( function() {
                         jQuery("#trait_heatmap").css("display", "none");
 
                       var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-                          width = 38 * col_max + 30 - margin.left - margin.right,
-                          height = 38 * row_max + 150 - margin.top - margin.bottom,
-                          gridSize = 38,
+                          width = 50 * col_max + 30 - margin.left - margin.right,
+                          height = 50 * row_max + 150 - margin.top - margin.bottom,
+                          gridSize = 50,
                           legendElementWidth = gridSize*2,
                           buckets = 9,
                           colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
@@ -498,7 +498,9 @@ jQuery(document).ready( function() {
                           .attr("height", height + margin.top + margin.bottom)
                           .append("g")
                           .attr("transform", "translate(" + margin.left + "," + 100 + ")");
-
+                          
+                      
+                      
                       var rowLabels = svg.selectAll(".rowLabel")
                           .data(rows)
                           .enter().append("text")
@@ -525,7 +527,7 @@ jQuery(document).ready( function() {
 
                             d.row = +d.row;
                             d.col = +d.col;
-                            d.blkn = +d.blkn;    
+                            d.blkn = +d.blkn;   
                                                     
                           var cards = svg.selectAll(".col")
                               .data(datasets, function(d) {return d.row+':'+d.col;});
@@ -637,9 +639,17 @@ jQuery(document).ready( function() {
                                                                 });
 
                           cards.transition().duration(1000)
-                              .style("fill", colors) ;                          
+                              .style("fill", colors) ;  
 
-                          cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                          cards.select("title").text(function(d) { return d.plot_msg; }) ; 
+                          
+                          cards.append("text");
+                          cards.enter().append("text")
+                            .attr("x", function(d) { return (d.col - 1) * gridSize + 10; })
+                            .attr("y", function(d) { return (d.row - 1) * gridSize + 20 ; })
+                            .text(function(d) { return d.plotn; });
+                          
+                          cards.select("text").text(function(d) { return d.plotn; }) ;
                           
                           cards.exit().remove();
                         
@@ -708,17 +718,18 @@ jQuery(document).ready( function() {
                     jQuery("#trait_heatmap").css("display", "none");
                     //jQuery("#d_button").css("display", "inline-block");
                     
-                    var default_width = 38 * col_max;
+                    var default_width = 50 * col_max;
                     var default_Width_used;
                     if (default_width < 684){
                         default_Width_used = 684;
-                    }else { default_Width_used = 38 * col_max; }
+                    }else { default_Width_used = 50 * col_max; }
                   var margin = { top: 50, right: 0, bottom: 100, left: 30 },
                       width = default_Width_used + 30 - margin.left - margin.right,
-                      height = 38 * row_max + 150 - margin.top - margin.bottom,
+                      height = 50 * row_max + 150 - margin.top - margin.bottom,
                      // gridSize = Math.floor(width / 24),
-                      gridSize = 38,
-                      legendElementWidth = gridSize*2,
+                      gridSize = 50,
+                      gridSize2 = 38,
+                      legendElementWidth = gridSize2*2,
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
                       rows = response.unique_row,
@@ -833,14 +844,14 @@ jQuery(document).ready( function() {
                         .attr("x", function(d, i) { return legendElementWidth * i; })
                         .attr("y", 0 - 90)
                         .attr("width", legendElementWidth)
-                        .attr("height", gridSize / 2)
+                        .attr("height", gridSize2 / 2)
                         .style("fill", function(d, i) { return colors[i]; });
 
                       legend.append("text")
                         .attr("class", "mono")
                         .text(function(d) { return ">= " + Math.round(d); })
                         .attr("x", function(d, i) { return legendElementWidth * i; })
-                        .attr("y", 0 - 90 + gridSize);
+                        .attr("y", 0 - 90 + gridSize2);
 
                       legend.exit().remove();
                     
