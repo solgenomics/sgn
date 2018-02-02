@@ -177,7 +177,7 @@ sub display_fieldmap {
 		else{
 			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$hash->{"plant_names"}});
 		}
-		push @$result,  {plotname => $hash->{'plot_name'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
+		push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
 	}
 print STDERR Dumper(\@col_numbers);
 print STDERR Dumper($result);

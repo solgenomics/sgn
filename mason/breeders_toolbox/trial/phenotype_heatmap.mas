@@ -90,6 +90,7 @@ $trial_id
   <li><span class="d3checks"></span> Checks</li>
   <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
   <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+  <a id="hm_replace_accessions_link"><button class="btn btn-success"  type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
 <div class="form-group form-group-sm" id="traitdiv" >
@@ -244,6 +245,90 @@ $trial_id
     </div>
 </div>
 
+<div class="modal fade" id="hm_replace_plot_accessions_dialog" name="hm_replace_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="HmReplacePlotAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmReplacePlotAccessionsDialog">Replace Plot Accession</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="hm_replace_plot_accession_form" name="hm_replace_plot_accession_form">
+                      <div id="hm_edit_plot_information">
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_name">
+
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_number">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_id">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Accession: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_accession">
+                        </div>
+                      </div>
+
+                      
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+                        <div class="col-sm-9" >
+                          <input class="form-control" id="hm_accession" name="hm_accession"></input>
+                        </div>
+                      </div>
+
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="hm_replace_plot_accession_submit" id="hm_replace_plot_accession_submit">Replace Plot Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal  fade" id="hm_replace_accessions_dialog_message" name="hm_replace_accessions_dialog_message" tabindex="-1" role="dialog" aria-labelledby="HmDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b>Replace Plot Accessions</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_trait_form" name="delete_trait_form">
+
+                    <p3> Plot accession was replaced successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script defer="defer" type="text/javascript" >
@@ -252,7 +337,52 @@ var value = 'plot';
 var selected;
 var phenotypes_id = [];
 jQuery(document).ready( function() {
+    
+    jQuery("#hm_accession").autocomplete({
+        appendTo: "#hm_replace_plot_accessions_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    }); 
+    
+    jQuery('#hm_replace_plot_accession_submit').click( function() {
+      hm_replace_plotAccession_fieldMap();
+    });
 
+    function hm_replace_plotAccession_fieldMap() {
+      jQuery('#hm_replace_plot_accessions_dialog').modal("hide");
+      jQuery('#working_modal').modal("show");
+
+      var new_accession = jQuery('#hm_accession').val();
+      var old_accession = jQuery('#hm_edit_plot_accession').html();
+      var old_plot_id = jQuery('#hm_edit_plot_id').html();
+      //alert(new_accession +","+ old_accession +","+ old_plot_id);
+
+      new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/breeders/trial/<% $trial_id %>/replace_plot_accessions',
+        dataType: "json",
+        data: {
+                'new_accession': new_accession,
+                'old_accession': old_accession,
+                'old_plot_id': old_plot_id,
+        },
+
+        success: function (response) {
+          jQuery('#working_modal').modal("hide");
+
+          if (response.error) {
+            alert("Error Replacing Plot Accession: "+response.error);
+          }
+          else {
+            jQuery('#hm_replace_accessions_dialog_message').modal("show");
+          }
+        },
+        error: function () {
+          jQuery('#working_modal').modal("hide");
+          alert('An error occurred replacing plot accession');
+        }
+      });
+    }
+    
     jQuery('#pheno_heatmap_onswitch').click( function() {
         jQuery("#trait_heatmap").css("display", "none");
         jQuery("#trial_heatmap_div").css("display", "inline-block");
@@ -461,14 +591,19 @@ jQuery(document).ready( function() {
                               .style("stroke", strokes)
                               .style("fill", colors)
                               .on("click", function(d) { 
-                                                         var phenoValue = d.stock ;
-                                                         var plotName = d.plotname ; 
-                                                         var phenoID = d.plotname;
-                                                         jQuery("#suppress_plot_pheno_dialog").modal("show"); 
-                                                         jQuery("#myplot_name").html(plotName);
-                                                         jQuery("#pheno_value").html(phenoValue);
-                                                         jQuery("#mytrait_id").html(selected);
-                                                         jQuery("#mypheno_id").html(phenoID);
+
+                                                         var replace_accession = d.stock;
+                                                         var replace_plot_id = d.plot_id;
+                                                         var replace_plot_name = d.plotname;
+                                                         var replace_plot_number = d.plotn;
+                                                         jQuery('#hm_replace_accessions_link').find('button').trigger('click');
+                                                         jQuery('#hm_edit_plot_information').html('<b>Selected Plot Information: </b>');
+                                                         jQuery('#hm_edit_plot_name').html(replace_plot_name);
+                                                         jQuery('#hm_edit_plot_number').html(replace_plot_number);
+                                                         old_plot_id = jQuery('#hm_edit_plot_id').html(replace_plot_id);
+                                                         old_plot_accession = jQuery('#hm_edit_plot_accession').html(replace_accession);
+
+                                                         jQuery('#hm_replace_plot_accessions_dialog').modal('show');
                                                          
                                                             })
                               .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); 
