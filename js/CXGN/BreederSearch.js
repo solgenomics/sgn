@@ -286,27 +286,29 @@ function retrieve_and_display_set(categories, data, this_section, selected, data
 }
 
 function get_selected_data(this_section) {
-    var selected_data = [];
+    var ids = [];
 
-    for (i=1; i <= this_section; i++) {
+    for ( var i=1; i <= this_section; i++) {
         var element_id = "c"+i+"_data";
 
-        var data;
+        var selected_ids =[];
+
         if (jQuery.fn.DataTable.isDataTable("#"+element_id)) {
             var table = jQuery("#"+element_id).DataTable();
             var selected_rows = table.rows({'selected':true});
-            data = selected_rows.data().map(function(row){
-                return row[1];
-            });
-        }
-        else {
-            data = '';
+            var row_values = selected_rows.data().map(function(row){
+                return [row[0], row[1]];
+           });
+
+           for ( var j=0; j < row_values.length; j++) {
+               selected_ids.push( row_values[j][0] );
+           }
         }
 
-        if (data) selected_data.push(data);
+        if (selected_ids) ids.push(selected_ids);
     }
-    if (window.console) console.log("selected data= "+JSON.stringify(selected_data));
-    return selected_data;
+
+    return ids;
 }
 
 function get_selected_categories(this_section) {
@@ -783,12 +785,12 @@ function replay_dataset_info(dataset_id, section_number) {
 
 function create_table(this_section, list) {
 
-    console.log("Creating table 1");
+    console.log("Loading table data");
 
     jQuery('#c'+this_section+'_data').empty();
 
     var next_section = parseInt(this_section) + 1;
-    var html='<button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button><button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button><div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><hr style="margin-top:4px;margin-bottom:4px" /><div id="c'+this_section+'_to_list_menu"></div><div id="c'+this_section+'_selected_names" style="display: none;"></div>';
+    var html='<button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button><div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button><hr style="margin-top:4px;margin-bottom:4px" /><div id="c'+this_section+'_to_list_menu"></div><div id="c'+this_section+'_selected_names" style="display: none;"></div>';
 
     jQuery('#c'+this_section+'_select_info').html(html);
     var categories = get_selected_categories(this_section);
@@ -833,16 +835,21 @@ function create_table(this_section, list) {
            },
            {
                "targets": 1,
-               'orderable': false,
-               'className': 'select-checkbox',
+               "width": "100%",
+            //    'className': 'select-checkbox',
            }
        ],
        'select': {
          'style':    'multi'
        },
        "order": [[ 1, "asc" ]],
+    //    "bLengthChange": false,
+    //    "sScrollY": "200",
+    //    "bScrollCollapse": true,
+    "scrollY":        "200px",
+       "scrollCollapse": false,
+       "paging":         false,
        destroy: true,
-       searching: false
     });
 
     console.log("Creating toggle");
