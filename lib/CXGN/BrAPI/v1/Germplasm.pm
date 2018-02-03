@@ -85,18 +85,26 @@ sub germplasm_search {
 
 	my $limit = $page_size*($page+1)-1;
 	my $offset = $page_size*$page;
+
+    my %stockprops_values;
+    if (scalar(@accession_numbers)>0){
+        $stockprops_values{'accession number'} = \@accession_numbers;
+    }
+    if (scalar(@germplasm_puis)>0){
+        $stockprops_values{'PUI'} = \@germplasm_puis;
+    }
+
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$self->bcs_schema,
 		people_schema=>$self->people_schema,
 		phenome_schema=>$self->phenome_schema,
 		match_type=>$match_type,
 		uniquename_list=>\@germplasm_names,
-		accession_number_list=>\@accession_numbers,
-		pui_list=>\@germplasm_puis,
 		genus_list=>\@genus,
 		species_list=>\@species,
 		stock_id_list=>\@germplasm_ids,
 		stock_type_id=>$accession_type_cvterm_id,
+        stockprops_values=>\%stockprops_values,
 		limit=>$limit,
 		offset=>$offset,
         display_pedigree=>1

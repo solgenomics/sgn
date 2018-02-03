@@ -41,6 +41,31 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $offset = $params->{start};
     my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
 
+    my %stockprops_values;
+    if ($params->{organization}){
+        $stockprops_values{'organization'} = [$params->{organization}];
+    }
+    if ($params->{introgression_parent}){
+        $stockprops_values{'introgression_parent'} = [$params->{introgression_parent}];
+    }
+    if ($params->{introgression_backcross_parent}){
+        $stockprops_values{'introgression_backcross_parent'} = [$params->{introgression_backcross_parent}];
+    }
+    if ($params->{introgression_map_version}){
+        $stockprops_values{'introgression_map_version'} = [$params->{introgression_map_version}];
+    }
+    if ($params->{introgression_chromosome}){
+        $stockprops_values{'introgression_chromosome'} = [$params->{introgression_chromosome}];
+    }
+    if ($params->{introgression_start_position_bp}){
+        $stockprops_values{'introgression_start_position_bp'} = [$params->{introgression_start_position_bp}];
+    }
+    if ($params->{introgression_end_position_bp}){
+        $stockprops_values{'introgression_end_position_bp'} = [$params->{introgression_end_position_bp}];
+    }
+    if ($params->{property_term} && $params->{property_value}){
+        $stockprops_values{$params->{property_term}} = [$params->{property_value}];
+    }
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -58,15 +83,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         breeding_program_id_list=>$params->{breeding_program} ? [$params->{breeding_program}] : undef,
         location_name_list=>$params->{location} ? [$params->{location}] : undef,
         year_list=>$params->{year} ? [$params->{year}] : undef,
-        organization_list=>$params->{organization} ? [$params->{organization}] : undef,
-        property_term=>$params->{property_term},
-        property_value=>$params->{property_value},
-        introgression_parent=>$params->{introgression_parent},
-        introgression_backcross_parent=>$params->{introgression_backcross_parent},
-        introgression_map_version=>$params->{introgression_map_version},
-        introgression_chromosome=>$params->{introgression_chromosome},
-        introgression_start_position_bp=>$params->{introgression_start_position_bp},
-        introgression_end_position_bp=>$params->{introgression_end_position_bp},
+        stockprops_values=>\%stockprops_values,
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},

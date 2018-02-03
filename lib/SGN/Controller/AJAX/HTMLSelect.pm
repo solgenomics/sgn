@@ -356,6 +356,14 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $params = _clean_inputs($c->req->params);
     my $names_as_select = $params->{names_as_select}->[0] || 0;
 
+    my %stockprops_values;
+    if ($params->{organization_list} && scalar(@{$params->{organization_list}})>0){
+        $stockprops_values{'organization'} = $params->{organization_list};
+    }
+    if ($params->{pui_list} && scalar(@{$params->{pui_list}})>0){
+        $stockprops_values{'PUI'} = $params->{pui_list};
+    }
+
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
 		people_schema=>$c->dbic_schema("CXGN::People::Schema"),
@@ -364,7 +372,6 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		match_name=>$params->{match_type}->[0],
 		uniquename_list=>$params->{uniquename_list},
 		accession_number_list=>$params->{accession_number_list},
-		pui_list=>$params->{pui_list},
 		genus_list=>$params->{genus_list},
 		species_list=>$params->{species_list},
 		stock_id_list=>$params->{stock_id_list},
@@ -381,7 +388,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		breeding_program_id_list=>$params->{breeding_program_id_list},
 		location_name_list=>$params->{location_name_list},
 		year_list=>$params->{year_list},
-		organization_list=>$params->{organization_list},
+        stockprops_values=>\%stockprops_values,
 		limit=>$params->{limit}->[0],
 		offset=>$params->{offset}->[0],
 		minimal_info=>1,

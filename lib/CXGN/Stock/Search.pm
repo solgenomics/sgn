@@ -13,8 +13,6 @@ my $stock_search = CXGN::Stock::Search->new({
     match_type=>$match_type,
     match_name=>$match_name,
     uniquename_list=>\@uniquename_list,
-    accession_number_list=>\@accession_number_list,
-    pui_list=>\@pui_list,
     genus_list=>\@genus_list,
     species_list=>\@species_list,
     stock_id_list=>\@stock_id_list,
@@ -31,21 +29,22 @@ my $stock_search = CXGN::Stock::Search->new({
     breeding_program_id_list=>\@breeding_program_id_list,
     location_name_list=>\@location_name_list,
     year_list=>\@year_list,
-    organization_list=>\@organization_list,
-    property_term=>$property_term,
-    $property_value=>$property_value,
-    introgression_parent=>$introgression_parent,
-    introgression_backcross_parent=>$introgression_backcross_parent,
-    introgression_map_version=>$introgression_map_version,
-    introgression_chromosome=>$introgression_chromosome,
-    introgression_start_position_bp=>$introgression_start_position_bp,
-    introgression_end_position_bp=>$introgression_end_position_bp,
+    stockprops_values=>\%stockprops_values,
     limit=>$limit,
     offset=>$offset,
     minimal_info=>o  #for only returning stock_id and uniquenames
     display_pedigree=>1 #to calculate and display pedigree
 });
 my ($result, $records_total) = $stock_search->search();
+
+stockprops_values is a HashRef of ArrayRef of the form for example:
+{
+    'country of origin' => ['Uganda', 'Nigeria'],
+    'ploidy' => ['2'],
+    'introgression_start_position_bp' => ['10002'],
+    'introgression_chromosome' => ['2']
+}
+
 
 =head1 DESCRIPTION
 
@@ -93,16 +92,6 @@ has 'match_name' => (
 );
 
 has 'uniquename_list' => (
-    isa => 'ArrayRef[Str]|Undef',
-    is => 'rw',
-);
-
-has 'accession_number_list' => (
-    isa => 'ArrayRef[Str]|Undef',
-    is => 'rw',
-);
-
-has 'pui_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
@@ -187,48 +176,8 @@ has 'year_list' => (
     is => 'rw',
 );
 
-has 'organization_list' => (
-    isa => 'ArrayRef[Str]|Undef',
-    is => 'rw',
-);
-
-has 'property_term' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
-has 'property_value' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
-has 'introgression_parent' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
-has 'introgression_backcross_parent' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
-has 'introgression_map_version' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
-has 'introgression_chromosome' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
-has 'introgression_start_position_bp' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
-has 'introgression_end_position_bp' => (
-    isa => 'Str|Undef',
+has 'stockprops_values' => (
+    isa => 'HashRef[ArrayRef[Str]]|Undef',
     is => 'rw',
 );
 
@@ -270,26 +219,15 @@ sub search {
     my $minimum_phenotype_value = $self->minimum_phenotype_value;
     my $maximum_phenotype_value = $self->maximum_phenotype_value;
     my @uniquename_array = $self->uniquename_list ? @{$self->uniquename_list} : ();
-    my @accession_number_array = $self->accession_number_list ? @{$self->accession_number_list} : ();
     my @trait_name_array = $self->trait_cvterm_name_list ? @{$self->trait_cvterm_name_list} : ();
     my @trial_name_array = $self->trial_name_list ? @{$self->trial_name_list} : ();
     my @trial_id_array = $self->trial_id_list ? @{$self->trial_id_list} : ();
     my @location_name_array = $self->location_name_list ? @{$self->location_name_list} : ();
     my @year_array = $self->year_list ? @{$self->year_list} : ();
     my @program_id_array = $self->breeding_program_id_list ? @{$self->breeding_program_id_list} : ();
-    my @organization_array = $self->organization_list ? @{$self->organization_list} : ();
     my @genus_array = $self->genus_list ? @{$self->genus_list} : ();
     my @species_array = $self->species_list ? @{$self->species_list} : ();
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
-    my @pui_array = $self->pui_list ? @{$self->pui_list} : ();
-    my $property_term = $self->property_term;
-    my $property_value = $self->property_value;
-    my $introgression_parent = $self->introgression_parent;
-    my $introgression_backcross_parent = $self->introgression_backcross_parent;
-    my $introgression_map_version = $self->introgression_map_version;
-    my $introgression_chromosome = $self->introgression_chromosome;
-    my $introgression_start_position_bp = $self->introgression_start_position_bp;
-    my $introgression_end_position_bp = $self->introgression_end_position_bp;
     my $limit = $self->limit;
     my $offset = $self->offset;
 
@@ -444,54 +382,31 @@ sub search {
         }
     }
 
-    my $introgression_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_parent', 'stock_property')->cvterm_id();
-    my $introgression_backcross_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_backcross_parent', 'stock_property')->cvterm_id();
-    my $introgression_map_version_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_map_version', 'stock_property')->cvterm_id();
-    my $introgression_chromosome_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_chromosome', 'stock_property')->cvterm_id();
-    my $introgression_start_position_bp_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_start_position_bp', 'stock_property')->cvterm_id();
-    my $introgression_end_position_bp_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'introgression_end_position_bp', 'stock_property')->cvterm_id();
-    my $accession_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession number', 'stock_property')->cvterm_id();
-    my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->cvterm_id();
-    my $pui_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'PUI', 'stock_property')->cvterm_id();
+    my @stockprop_filtered_stock_ids;
+    my $using_stockprop_filter;
+    if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
+        $using_stockprop_filter = 1;
+        print STDERR Dumper $self->stockprops_values;
+        my @stockprop_wheres;
+        foreach my $term_name (keys %{$self->stockprops_values}){
+            my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
+            if ($property_term){
+                my $search_vals = $self->stockprops_values->{$term_name};
+                #jsonb obj has any keys in $search_vals
+                my $search_vals_sql = "'".join ("','" , @$search_vals)."'";
+                push @stockprop_wheres, "\"$term_name\" \\?| array[$search_vals_sql]";
+            } else {
+                print STDERR "Stockprop $term_name is not in this database! Only use stock_property in system_cvterms.txt!\n";
+            }
+        }
 
-    my @stockprops_or_conditions;
-    if ($property_term && $property_value){
-        my $property_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $property_term, 'stock_property')->cvterm_id();
-        push @stockprops_or_conditions, {'lower(stockprops.value)'=>{-like=>lc($property_value)}, 'stockprops.type_id'=>$property_term_id};
-    }
-    foreach (@organization_array){
-        if ($_){
-            push @stockprops_or_conditions, {'stockprops.value'=>$_, 'stockprops.type_id'=>$organization_type_id};
+        my $stockprop_where = join ' AND ', @stockprop_wheres;
+        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop WHERE $stockprop_where;";
+        my $h = $schema->storage->dbh()->prepare($stockprop_query);
+        $h->execute();
+        while (my $stock_id = $h->fetchrow_array()) {
+            push @stockprop_filtered_stock_ids, $stock_id;
         }
-    }
-    foreach (@accession_number_array){
-        if ($_){
-            push @stockprops_or_conditions, {'stockprops.value'=>$_, 'stockprops.type_id'=>$accession_number_type_id};
-        }
-    }
-    foreach (@pui_array){
-        if ($_){
-            push @stockprops_or_conditions, {'stockprops.value'=>$_, 'stockprops.type_id'=>$pui_type_id};
-        }
-    }
-    if ($introgression_parent){
-        push @stockprops_or_conditions, {'stockprops.value'=>$introgression_parent, 'stockprops.type_id'=>$introgression_parent_cvterm_id};
-    }
-    if ($introgression_backcross_parent){
-        push @stockprops_or_conditions, {'stockprops.value'=>$introgression_backcross_parent, 'stockprops.type_id'=>$introgression_backcross_parent_cvterm_id};
-    }
-    if ($introgression_map_version){
-        push @stockprops_or_conditions, {'stockprops.value'=>$introgression_map_version, 'stockprops.type_id'=>$introgression_map_version_cvterm_id};
-    }
-    if ($introgression_chromosome){
-        push @stockprops_or_conditions, {'stockprops.value'=>$introgression_chromosome, 'stockprops.type_id'=>$introgression_chromosome_cvterm_id};
-    }
-    if ($introgression_start_position_bp && $introgression_end_position_bp){
-        push @stockprops_or_conditions, {'stockprops.value::INT'=>{'>='=>$introgression_start_position_bp, '<='=>$introgression_end_position_bp}, 'stockprops.type_id'=>[$introgression_start_position_bp_cvterm_id, $introgression_end_position_bp_cvterm_id]};
-    } elsif ($introgression_start_position_bp){
-        push @stockprops_or_conditions, {'stockprops.value::INT'=>{'>='=>$introgression_start_position_bp}, 'stockprops.type_id'=>$introgression_start_position_bp_cvterm_id};
-    } elsif ($introgression_end_position_bp){
-        push @stockprops_or_conditions, {'stockprops.value::INT'=>{'<='=>$introgression_end_position_bp}, 'stockprops.type_id'=>$introgression_end_position_bp_cvterm_id};
     }
 
     if ($stock_type_search == $accession_cvterm_id){
@@ -501,17 +416,21 @@ sub search {
     }
 
     #$schema->storage->debug(1);
-    my $rs = $schema->resultset("Stock::Stock")->search(
-    {
-        'me.is_obsolete'   => 'f',
+    my $search_query = {
+        'me.is_obsolete' => 'f',
         -and => [
             $or_conditions,
             $and_conditions,
-            \@stockprops_or_conditions
         ],
-    },
+    };
+    if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
+        $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
+    }
+
+    my $rs = $schema->resultset("Stock::Stock")->search(
+    $search_query,
     {
-        join => ['type', 'organism', 'stockprops', $stock_join],
+        join => ['type', 'organism', $stock_join],
         '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
         '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
         order_by  => 'me.name',
