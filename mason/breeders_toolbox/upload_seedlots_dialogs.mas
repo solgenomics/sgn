@@ -220,6 +220,7 @@ jQuery(document).ready(function(){
             }
 
             if (response.success) {
+                refresh_matviews('stockprop');
                 alert("File uploaded successfully");
                 jQuery('#upload_seedlot_dialog').modal('hide');
                 //seedlots_table.ajax.reload();

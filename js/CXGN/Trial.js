@@ -43,6 +43,7 @@ function delete_layout_data_by_trial_id(trial_id) {
 		    alert(response.error);
 		    }
 		    else {
+                refresh_matviews('stockprop');
 		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
 		    }
@@ -242,6 +243,7 @@ function delete_field_map() {
       if (response.error) {
 		      alert("Error Deleting Field Map: "+response.error);
       } else {
+          refresh_matviews('stockprop');
           //alert("Field map deletion Successful...");
 		      jQuery('#delete_field_map_dialog_message').dialog("open");
           }
@@ -659,6 +661,7 @@ jQuery(document).ready(function ($) {
 		return;
             }
             if (response.success) {
+                refresh_matviews('stockprop');
 		$('#trial_coord_upload_success_dialog_message').modal("show");
 		//alert("File uploaded successfully");
             }

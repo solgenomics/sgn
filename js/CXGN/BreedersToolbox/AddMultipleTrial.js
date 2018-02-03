@@ -553,6 +553,7 @@ jQuery(document).ready(function ($) {
                   jQuery('#multi_trial_design_confirm').modal("hide");
               } else {
                   //alert('Trial design saved');
+                  refresh_matviews('stockprop');
                   jQuery('#working_modal').modal("hide");
                   jQuery('#multi_trial_saved_dialog_message').modal("show");
               }
