@@ -484,22 +484,12 @@ sub search {
                 common_name => $common_name,
                 organism_id => $organism_id,
                 owners => \@owners,
-                #organizations =>$stock_object->organization_name,
-                #accessionNumber=>$stock_object->accessionNumber,
-                #germplasmPUI=>$stock_object->germplasmPUI,
                 pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
-                #germplasmSeedSource=>$stock_object->germplasmSeedSource,
                 synonyms=> $stock_object->synonyms,
-                #instituteCode=>$stock_object->instituteCode,
-                #instituteName=>$stock_object->instituteName,
-                #biologicalStatusOfAccessionCode=>$stock_object->biologicalStatusOfAccessionCode,
-                #countryOfOriginCode=>$stock_object->countryOfOriginCode,
-                #typeOfGermplasmStorageCode=>$stock_object->typeOfGermplasmStorageCode,
                 speciesAuthority=>$stock_object->get_species_authority,
                 subtaxa=>$stock_object->get_subtaxa,
                 subtaxaAuthority=>$stock_object->get_subtaxa_authority,
                 donors=>$stock_object->donors,
-                #acquisitionDate=>$stock_object->acquisitionDate,
             };
         } else {
             $result_hash{$uniquename} = {

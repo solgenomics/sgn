@@ -363,6 +363,9 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
     if ($params->{pui_list} && scalar(@{$params->{pui_list}})>0){
         $stockprops_values{'PUI'} = $params->{pui_list};
     }
+    if ($params->{accession_number_list} && scalar(@{$params->{accession_number_list}})>0){
+        $stockprops_values{'accession number'} = $params->{accession_number_list};
+    }
 
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
@@ -371,7 +374,6 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		match_type=>$params->{match_type}->[0],
 		match_name=>$params->{match_type}->[0],
 		uniquename_list=>$params->{uniquename_list},
-		accession_number_list=>$params->{accession_number_list},
 		genus_list=>$params->{genus_list},
 		species_list=>$params->{species_list},
 		stock_id_list=>$params->{stock_id_list},
