@@ -430,7 +430,7 @@ sub search {
     my $rs = $schema->resultset("Stock::Stock")->search(
     $search_query,
     {
-        join => ['type', 'organism', $stock_join],
+        join => ['type', 'organism', 'stockprops', $stock_join],
         '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
         '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
         order_by  => 'me.name',

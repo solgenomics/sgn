@@ -85,29 +85,6 @@ my $breeding_programs_select = simple_selectbox_html(
     <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
 
     <div class="row">
-      <div class="col-sm-11">
-        <div class="form-group form-group-sm">
-      	  <label class="col-sm-3 control-label">Properties: </label>
-          <div class="col-sm-9" >
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-btn" width="20%">
-                  <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
-%  foreach my $stockprop (@$editable_stock_props){
-                    <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
-%  }
-                  </select>
-                </span>
-                  <span class="input-group-btn">
-                  <input class="form-control" name="editable_stockprop_search_value" id="editable_stockprop_search_value" value="" size="30" type="text" placeholder="Type search here..."/>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Stock Type: </label>
@@ -144,62 +121,32 @@ my $breeding_programs_select = simple_selectbox_html(
       </div>
     </div>
 
-    </&>
-    <&| /page/info_section.mas, title => 'Genetic Properties', collapsible=>1, collapsed=>1 &>
+    <hr>
+    <div class="row">
+      <div class="col-sm-11">
+        <div class="form-group form-group-sm">
+      	  <label class="col-sm-3 control-label">Search By Another Property: </label>
+          <div class="col-sm-9" >
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn">
+                  <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
+%  foreach my $stockprop (@$editable_stock_props){
+                    <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
+%  }
+                  </select>
+                </span>
+                  <span class="input-group-btn">
+                    <button class="btn btn-primary btn-sm" id="editable_stockprop_search_add">Add</button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <div class="row">
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Introgression Parent: </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="introgression_parent" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Introgession Backcross Parent: </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="introgression_backcross_parent" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Introgression Map Version: </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="introgression_map_version" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Introgression Chromosome: </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="introgression_chromosome" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Introgression Start Position (bp): </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="introgression_start_position_bp" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Introgression End Position (bp): </label>
-          <div class="col-sm-9" >
-            <input type="text" class="form-control" id="introgression_end_position_bp" placeholder="Type to Autocomplete"/>
-          </div>
-        </div>
-      </div>
+    <div id="editable_stockprop_search_div">
     </div>
 
     </&>
@@ -348,27 +295,35 @@ jQuery(document).ready(function () {
      jQuery("#year").autocomplete({
         source: '/ajax/stock/project_year_autocomplete',
      });
-     jQuery("#organization").autocomplete({
-        source: '/ajax/stock/stock_organization_autocomplete',
-     });
-     jQuery("#introgression_parent").autocomplete({
-        source: '/ajax/stock/stock_introgression_parent_autocomplete',
-     });
-     jQuery("#introgression_backcross_parent").autocomplete({
-        source: '/ajax/stock/stock_introgression_backcross_parent_autocomplete',
-     });
-     jQuery("#introgression_map_version").autocomplete({
-        source: '/ajax/stock/stock_introgression_map_version_autocomplete',
-     });
-     jQuery("#introgression_chromosome").autocomplete({
-        source: '/ajax/stock/stock_introgression_chromosome_autocomplete',
-     });
-     jQuery("#introgression_start_position_bp").autocomplete({
-        source: '/ajax/stock/stock_introgression_start_position_bp_autocomplete',
-     });
-     jQuery("#introgression_end_position_bp").autocomplete({
-        source: '/ajax/stock/stock_introgression_end_position_bp_autocomplete',
-     });
+
+    var editable_stockprops_search = {};
+    jQuery('#editable_stockprop_search_add').click( function(){
+        editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = '';
+        _draw_editable_stockprops_search_fields();
+    });
+
+    jQuery(document).on('click', 'button[name="editable_stockprop_search_remove"]', function(){
+        delete editable_stockprops_search[jQuery(this).data('property')];
+        _draw_editable_stockprops_search_fields();
+    });
+
+    jQuery(document).on("keyup", 'input[name="editable_stockprop_search_inputs"]', function(){
+        //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
+        editable_stockprops_search[jQuery(this).data('property')] = jQuery(this).val();
+    });
+
+    function _draw_editable_stockprops_search_fields(){
+        jQuery('#editable_stockprop_search_div').html('');
+        for (var property in editable_stockprops_search) {
+            if (editable_stockprops_search.hasOwnProperty(property)) {
+                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-6 control-label">'+property+': </label><div class="col-sm-6" ><div class="form-group"><div class="input-group"><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete" value="'+editable_stockprops_search[property]+'"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
+
+                jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
+                   source: '/ajax/stock/stockproperty_autocomplete?property='+property,
+                });
+            }
+        }
+    }
 
    var stock_table = jQuery('#stock_search_results').DataTable( {
 
@@ -391,15 +346,7 @@ jQuery(document).ready(function () {
                   d.location     = jQuery('#location').val();
                   d.year         = jQuery('#year').val();
                   d.breeding_program = jQuery('#breeding_program').val();
-                  d.organization = jQuery('#organization').val();
-                  d.property_term = jQuery('#editable_stockprop_search_term').val();
-                  d.property_value = jQuery('#editable_stockprop_search_value').val();
-                  d.introgression_parent = jQuery('#introgression_parent').val();
-                  d.introgression_backcross_parent = jQuery('#introgression_backcross_parent').val();
-                  d.introgression_map_version = jQuery('#introgression_map_version').val();
-                  d.introgression_chromosome = jQuery('#introgression_chromosome').val();
-                  d.introgression_start_position_bp = jQuery('#introgression_start_position_bp').val();
-                  d.introgression_end_position_bp = jQuery('#introgression_end_position_bp').val();
+                  d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
              }
          }
     });
@@ -429,6 +376,64 @@ jQuery(document).ready(function () {
                 jQuery('#submit_stock_search').click();
            }
     } );
+
+
+    // For graphical filtering, using same search params
+    var run = false;
+    jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
+        var stock_type = jQuery('#stock_type_select option:selected').text();
+        if (stock_type == 'accession'){
+            jQuery.ajax ({
+                url : '/ajax/search/stocks',
+                data : {
+                    minimal_info : 1,
+                    any_name : jQuery('#any_name').val(),
+                    any_name_matchtype : jQuery('#any_name_matchtype').val(),
+                    stock_type : jQuery('#stock_type_select').val(),
+                    organism : jQuery('#organism_select').val(),
+                    person : jQuery('#person').val(),
+                    trait : jQuery('#trait').val(),
+                    minimum_trait_value : jQuery('#minimum_trait_value').val(),
+                    maximum_trait_value : jQuery('#maximum_trait_value').val(),
+                    project : jQuery('#project').val(),
+                    location : jQuery('#location').val(),
+                    year : jQuery('#year').val(),
+                    breeding_program : jQuery('#breeding_program').val(),
+                    editable_stockprop_values : JSON.stringify(editable_stockprops_search)
+                },
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                    jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
+                },
+                success: function(response){
+                    //console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    var stock_ids = [];
+                    for (var i=0; i<response.data.length; i++){
+                        stock_ids.push(response.data[i][0]);
+                    }
+
+                    if (run) {
+                        jQuery("#stock_search_graphical_filter_results_div").DataTable().destroy();
+                        jQuery("#stock_search_graphical_filter_results_div").html("");
+                    }
+                    run = true;
+                    params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
+                    loadBrAPIData("<% $c->config->{main_production_site_url} %>",params,function(response){
+                        useBrAPIData(response,true);
+                    });
+
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert("Error retrieving accessions in graphical filtering.");
+                }
+            });
+        } else {
+            jQuery('#stock_search_graphical_filter_div').html("Graphical Filtering only configured for accessions. Currently searching across "+stock_type+". Change your search to accesions to use graphical filtering.");
+        }
+    });
+
 
 });
 

@@ -48,8 +48,10 @@ eval {
 
         if ($opt_c) {
             $refresh = 'SELECT refresh_materialized_views_concurrently()';
+            $refresh = 'SELECT refresh_materialized_stockprop_concurrently()';
         } else {
             $refresh = 'SELECT refresh_materialized_views()';
+            $refresh = 'SELECT refresh_materialized_stockprop()';
         }
 
         $h = $dbh->prepare($refresh);

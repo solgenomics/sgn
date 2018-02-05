@@ -6,7 +6,7 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 use Data::Dumper;
-use JSON::Any;
+use JSON;
 use CXGN::Stock::Search;
 
 __PACKAGE__->config(
@@ -42,29 +42,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
 
     my %stockprops_values;
-    if ($params->{organization}){
-        $stockprops_values{'organization'} = [$params->{organization}];
-    }
-    if ($params->{introgression_parent}){
-        $stockprops_values{'introgression_parent'} = [$params->{introgression_parent}];
-    }
-    if ($params->{introgression_backcross_parent}){
-        $stockprops_values{'introgression_backcross_parent'} = [$params->{introgression_backcross_parent}];
-    }
-    if ($params->{introgression_map_version}){
-        $stockprops_values{'introgression_map_version'} = [$params->{introgression_map_version}];
-    }
-    if ($params->{introgression_chromosome}){
-        $stockprops_values{'introgression_chromosome'} = [$params->{introgression_chromosome}];
-    }
-    if ($params->{introgression_start_position_bp}){
-        $stockprops_values{'introgression_start_position_bp'} = [$params->{introgression_start_position_bp}];
-    }
-    if ($params->{introgression_end_position_bp}){
-        $stockprops_values{'introgression_end_position_bp'} = [$params->{introgression_end_position_bp}];
-    }
-    if ($params->{property_term} && $params->{property_value}){
-        $stockprops_values{$params->{property_term}} = [$params->{property_value}];
+    my $stockprops_search = $params->{editable_stockprop_values} ? decode_json $params->{editable_stockprop_values} : {};
+    while (my ($property, $value) = each %$stockprops_search){
+        my @values = split ',', $value;
+        foreach (@values){
+            push @{$stockprops_values{$property}}, $_;
+        }
     }
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,

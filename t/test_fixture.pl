@@ -116,8 +116,8 @@ close($NEWCONF);
 
 # run the materialized views creation script
 #
-print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password\n";
-system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password");
+print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview\n";
+system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview");
 
 
 print STDERR "Done.\n";
