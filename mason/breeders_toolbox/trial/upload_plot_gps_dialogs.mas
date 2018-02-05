@@ -150,7 +150,6 @@ jQuery(document).ready(function () {
                 return;
             }
             if (response.success) {
-                refresh_matviews('stockprop');
                 alert("File uploaded successfully");
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }

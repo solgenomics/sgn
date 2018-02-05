@@ -185,7 +185,6 @@ jQuery(document).ready(function() {
                 return;
             }
             if (response.success) {
-                refresh_matviews('stockprop');
                 alert("File uploaded successfully");
                 window.location.replace('/breeders/trial/'+<% $trial_id %>);
             }
@@ -217,7 +216,6 @@ function add_plants_to_trial() {
           alert(response.error);
         }
         else {
-            refresh_matviews('stockprop');
           alert("Successfully created plant entries.");
           jQuery('#add_plants_dialog').modal("hide");
           window.location.replace('/breeders/trial/'+<% $trial_id %>);

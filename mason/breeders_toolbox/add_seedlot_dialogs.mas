@@ -189,7 +189,6 @@ jQuery(document).ready(function(){
                 },
                 success: function(response) { 
                     if (response.success == 1) { 
-                        refresh_matviews('stockprop');
                         alert("The seedlot has been created.");
                         jQuery('#add_seedlot_dialog').modal('hide');
                         //seedlots_table.ajax.reload();

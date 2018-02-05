@@ -100,7 +100,6 @@ function add_tissue_samples_to_trial() {
           alert(response.error);
         }
         else {
-            refresh_matviews('stockprop');
           alert("Successfully created tissue sample entries.");
           jQuery('#add_plants_dialog').modal("hide");
           window.location.replace('/breeders/trial/'+<% $trial_id %>);
