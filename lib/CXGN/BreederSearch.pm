@@ -343,7 +343,7 @@ sub refresh_matviews {
   my $refreshing = $h->fetchrow_array();
 
   if ($refreshing) {
-    return { error => 'Wizard update already in progress . . . ' };
+    return { error => $materialized_view.' update already in progress . . . ' };
   }
   else {
     try {
@@ -366,13 +366,13 @@ sub refresh_matviews {
       }
 
       if ($refresh_finished) {
-        return { message => 'Wizard update completed!' };
+        return { message => $materialized_view.' update completed!' };
       } else {
-        return { message => 'Wizard update initiated.' };
+        return { message => $materialized_view.' update initiated.' };
       }
     } catch {
-      print STDERR 'Error initiating wizard update.' . $@ . "\n";
-      return { error => 'Error initiating wizard update.' . $@ };
+      print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
+      return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
     }
   }
 }

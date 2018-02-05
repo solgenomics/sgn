@@ -105,7 +105,6 @@ jQuery(document).ready(function ($) {
             if (response.success) {
 		console.log(response);
 		//alert("uploadTrial got success response" + response.success);
-        refresh_matviews('stockprop');
 		$('#trial_upload_success_dialog_message').modal("show");
 		//alert("File uploaded successfully");
             }

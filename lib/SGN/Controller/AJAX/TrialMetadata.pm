@@ -18,6 +18,7 @@ use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 use File::Basename qw | basename dirname|;
 use Try::Tiny;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -101,8 +102,16 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
 
     elsif ($datatype eq 'layout') {
-	$error = $c->stash->{trial}->delete_metadata();
-	$error = $c->stash->{trial}->delete_field_layout();
+        $error = $c->stash->{trial}->delete_metadata();
+        $error = $c->stash->{trial}->delete_field_layout();
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
     }
     elsif ($datatype eq 'entry') {
 	$error = $c->stash->{trial}->delete_project_entry();
@@ -1189,7 +1198,15 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     return;
   }
 
-  $c->stash->{rest} = {success => 1};
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {success => 1};
 }
 
 sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
@@ -1503,6 +1520,14 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     if ($error_string){
         $c->stash->{rest} = {error_string => $error_string};
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
         $c->detach();
     }
 
