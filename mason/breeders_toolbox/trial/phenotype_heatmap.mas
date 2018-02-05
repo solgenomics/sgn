@@ -592,6 +592,9 @@ jQuery(document).ready( function() {
                               .style("stroke-width", 2)
                               .style("stroke", strokes)
                               .style("fill", colors)
+                              //.on("dblclick", function(d) {
+                                //alert(d.plot_id);
+                              //})
                               .on("click", function(d) { 
 
                                                          var replace_accession = d.stock;
