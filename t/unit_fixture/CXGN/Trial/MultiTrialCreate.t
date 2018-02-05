@@ -106,7 +106,7 @@ ok(my $trial_id = $trial->project_id());
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $trial_id,
-
+    experiment_type => 'field_layout'
 						    }), "create trial layout object");
 print STDERR Dumper($trial_layout->get_design());
 

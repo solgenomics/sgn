@@ -47,7 +47,7 @@ sub download {
     my $trial_id = $self->trial_id();
 
     my $t = CXGN::Trial->new( { bcs_schema => $self->bcs_schema(), trial_id => $trial_id });
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $trial_id });
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema(), trial_id => $trial_id, experiment_type=>'genotyping_layout' });
 
     my $layout = $layout->get_design();
     print STDERR "FILENAME: ".$self->filename()."\n";

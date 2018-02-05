@@ -159,7 +159,7 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     my $wb = Spreadsheet::WriteExcel->new($tempfile);
     die "Could not create excel file " if !$wb;
     my $ws = $wb->add_worksheet();
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     my $trial_name =  $trial_layout->get_trial_name();
 
     $ws->write(0, 0, 'plot_id');
