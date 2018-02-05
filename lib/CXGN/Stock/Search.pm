@@ -64,6 +64,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock;
 use CXGN::Chado::Stock;
 use CXGN::Chado::Organism;
+use JSON;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -178,6 +179,11 @@ has 'year_list' => (
 
 has 'stockprops_values' => (
     isa => 'HashRef[ArrayRef[Str]]|Undef',
+    is => 'rw',
+);
+
+has 'stockprop_columns_view' => (
+    isa => 'HashRef|Undef',
     is => 'rw',
 );
 
@@ -399,9 +405,9 @@ sub search {
                 print STDERR "Stockprop $term_name is not in this database! Only use stock_property in system_cvterms.txt!\n";
             }
         }
+        my $stockprop_where = 'WHERE ' . join ' AND ', @stockprop_wheres;
 
-        my $stockprop_where = join ' AND ', @stockprop_wheres;
-        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop WHERE $stockprop_where;";
+        my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
@@ -449,22 +455,25 @@ sub search {
     }
 
     my @result;
+    my %result_hash;
+    my @result_stock_ids;
     while (my $a = $rs->next()) {
         my $uniquename  = $a->uniquename;
         my $stock_id    = $a->stock_id;
-        my $type_id     = $a->type_id ;
-        my $type        = $a->get_column('cvterm_name');
-        my $organism_id = $a->organism_id;
-        my $species    = $a->get_column('species');
-        my $stock_name  = $a->name;
-        my $common_name = $a->get_column('common_name');
-        my $genus       = $a->get_column('genus');
+        push @result_stock_ids, $stock_id;
 
         if (!$self->minimal_info){
-            my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
             my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
+            my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
+            my $type_id     = $a->type_id ;
+            my $type        = $a->get_column('cvterm_name');
+            my $organism_id = $a->organism_id;
+            my $species    = $a->get_column('species');
+            my $stock_name  = $a->name;
+            my $common_name = $a->get_column('common_name');
+            my $genus       = $a->get_column('genus');
 
-            push @result, {
+            $result_hash{$uniquename} = {
                 stock_id => $stock_id,
                 uniquename => $uniquename,
                 stock_name => $stock_name,
@@ -475,29 +484,65 @@ sub search {
                 common_name => $common_name,
                 organism_id => $organism_id,
                 owners => \@owners,
-                organizations =>$stock_object->organization_name,
-                accessionNumber=>$stock_object->accessionNumber,
-                germplasmPUI=>$stock_object->germplasmPUI,
+                #organizations =>$stock_object->organization_name,
+                #accessionNumber=>$stock_object->accessionNumber,
+                #germplasmPUI=>$stock_object->germplasmPUI,
                 pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
-                germplasmSeedSource=>$stock_object->germplasmSeedSource,
+                #germplasmSeedSource=>$stock_object->germplasmSeedSource,
                 synonyms=> $stock_object->synonyms,
-                instituteCode=>$stock_object->instituteCode,
-                instituteName=>$stock_object->instituteName,
-                biologicalStatusOfAccessionCode=>$stock_object->biologicalStatusOfAccessionCode,
-                countryOfOriginCode=>$stock_object->countryOfOriginCode,
-                typeOfGermplasmStorageCode=>$stock_object->typeOfGermplasmStorageCode,
+                #instituteCode=>$stock_object->instituteCode,
+                #instituteName=>$stock_object->instituteName,
+                #biologicalStatusOfAccessionCode=>$stock_object->biologicalStatusOfAccessionCode,
+                #countryOfOriginCode=>$stock_object->countryOfOriginCode,
+                #typeOfGermplasmStorageCode=>$stock_object->typeOfGermplasmStorageCode,
                 speciesAuthority=>$stock_object->get_species_authority,
                 subtaxa=>$stock_object->get_subtaxa,
                 subtaxaAuthority=>$stock_object->get_subtaxa_authority,
                 donors=>$stock_object->donors,
-                acquisitionDate=>$stock_object->acquisitionDate,
+                #acquisitionDate=>$stock_object->acquisitionDate,
             };
         } else {
-            push @result, {
+            $result_hash{$uniquename} = {
                 stock_id => $stock_id,
                 uniquename => $uniquename
             };
         }
+    }
+
+    if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0){
+        my @stockprop_view = keys %{$self->stockprop_columns_view};
+        my $result_stock_ids_sql = join ",", @result_stock_ids;
+        my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
+
+        my $stockprop_select_sql .= ', "' . join '","', @stockprop_view;
+        $stockprop_select_sql .= '"';
+
+        my $stockprop_query = "SELECT uniquename $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
+        my $h = $schema->storage->dbh()->prepare($stockprop_query);
+        $h->execute();
+        while (my ($uniquename, @stockprop_select_return) = $h->fetchrow_array()) {
+            for my $s (0 .. scalar(@stockprop_view)-1){
+                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
+                my @stockprop_vals_string;
+                foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
+                    push @stockprop_vals_string, $_;
+                }
+                my $stockprop_vals_string = join ',', @stockprop_vals_string;
+                $result_hash{$uniquename}->{$stockprop_view[$s]} = $stockprop_vals_string;
+            }
+        }
+
+        while (my ($uniquename, $info) = each %result_hash){
+            foreach (@stockprop_view){
+                if (!$info->{$_}){
+                    $info->{$_} = '';
+                }
+            }
+        }
+    }
+
+    foreach (sort keys %result_hash){
+        push @result, $result_hash{$_};
     }
 
     #print STDERR Dumper \@result;

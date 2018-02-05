@@ -49,6 +49,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             push @{$stockprops_values{$property}}, $_;
         }
     }
+
+    my $stockprop_columns_view = $params->{extra_stockprop_columns_view} ? decode_json $params->{extra_stockprop_columns_view} : {};
+    my $stockprop_columns_view_array = $params->{stockprop_extra_columns_view_array} ? decode_json $params->{stockprop_extra_columns_view_array} : [];
+    #print STDERR Dumper $stockprop_columns_view;
+    #print STDERR Dumper $stockprop_columns_view_array;
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -67,6 +73,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         location_name_list=>$params->{location} ? [$params->{location}] : undef,
         year_list=>$params->{year} ? [$params->{year}] : undef,
         stockprops_values=>\%stockprops_values,
+        stockprop_columns_view=>$stockprop_columns_view,
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
@@ -95,12 +102,17 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
                 push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';
             }
             my $owners_string = join ', ', @owners_html;
-            push @return, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organization_string ];
+            my @return_row = ("<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
+            foreach my $property (@$stockprop_columns_view_array){
+                push @return_row, $_->{$property};
+            }
+            push @return, \@return_row;
         } else {
             push @return, [$_->{stock_id}, $_->{uniquename}];
         }
     }
 
+    #print STDERR Dumper \@return;
     $c->stash->{rest} = { data => [ @return ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }
 
