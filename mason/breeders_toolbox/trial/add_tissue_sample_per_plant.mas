@@ -1,0 +1,128 @@
+
+<%args>
+$trial_id
+$trial_name => undef
+$trial_has_plants => undef
+</%args>
+
+<div class="modal fade" id="add_tissue_samples_dialog" name="add_tissue_samples_dialog" tabindex="-1" role="dialog" aria-labelledby="addTissueSamplesDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTissueSamplesDialog">Add tissue samples to <% $trial_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+% if (!$trial_has_plants){
+                    <h3>WARNING: This trial does not have plant entries. Tissue samples are added for each plant entry, so you must add plant entries first. You can do so on the "Plant Entries" section of the trial detail page.</h3>
+% }
+
+                    <form class="form-horizontal" role="form" method="post" id="add_tissue_samples_dialog_form" name="add_tissue_samples_dialog_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"><span title="You can use the same tissue name, e.g. root and root, more than once below. The tissue name will still be unique because of a tissue index e.g. 1 and 2 added to the end." </span><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Number of tissue samples per plant: </span></label>
+                            <div class="col-sm-9" >
+                                <input name="add_tissue_samples_per_plant_num" id="add_tissue_samples_per_plant_num" class="form-control" type="text" autofocus/>
+                            </div>
+                        </div>
+
+                        <div id="add_tissue_samples_names_div">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                            <div class="col-sm-9" >
+                                <input name="add_tissue_samples_per_plant_inherit_treatments" id="add_tissue_samples_per_plant_inherit_treatments" type="checkbox" checked disabled/>
+                            </div>
+                        </div>
+                    </form><br/>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="add_tissue_samples_cancel_button" id="add_tissue_samples_cancel_button" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="add_tissue_samples_save_button" id="add_tissue_samples_save_button" title="Save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+    jQuery('#create_tissue_sample_entries_button').click( function () {
+        jQuery('#add_tissue_samples_dialog').modal("show");
+    });
+
+    jQuery('#add_tissue_samples_save_button').click( function () {
+        add_tissue_samples_to_trial();
+    });
+
+    jQuery('#add_tissue_samples_per_plant_num').keyup(function(){
+        var num_tissues = jQuery(this).val();
+        var html = '';
+        for (var i=1; i<=num_tissues; i++){
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label"><span title="The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number."><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Tissue Name '+i+': </span></label><div class="col-sm-9" ><input name="add_tissue_samples_tissue_name" id="add_tissue_samples_tissue_name_'+i+'" class="form-control" type="text" placeholder="examples: leaf or root or stem" /></div></div>';
+        }
+        jQuery('#add_tissue_samples_names_div').html(html);
+    });
+
+});
+
+function add_tissue_samples_to_trial() {
+
+    var is_checked;
+    if(jQuery('#add_tissue_samples_per_plant_inherit_treatments').is(":checked")){
+        is_checked = 1;
+    }
+
+    var tissue_names = [];
+    jQuery('input[name="add_tissue_samples_tissue_name"]').each(function() {
+        tissue_names.push(this.value);
+    });
+
+    jQuery.ajax( {
+      url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_tissue_samples/',
+      type: 'POST',
+      beforeSend: function() {
+          enable_working_modal();
+      },
+      data: {
+        'tissue_samples_per_plant' : jQuery('#add_tissue_samples_per_plant_num').val(),
+        'inherits_plot_treatments' : is_checked,
+        'tissue_samples_names' : JSON.stringify(tissue_names)
+      },
+      success: function(response) {
+        disable_working_modal();
+        if (response.error) {
+          alert(response.error);
+        }
+        else {
+          alert("Successfully created tissue sample entries.");
+          jQuery('#add_plants_dialog').modal("hide");
+          window.location.replace('/breeders/trial/'+<% $trial_id %>);
+        }
+      },
+      error: function(response) {
+        disable_working_modal();
+        alert("An error occurred creating tissue sample entries");
+      },
+    });
+
+}
+
+function enable_working_modal() {
+    jQuery("#working_modal").modal("show");
+}
+
+function disable_working_modal() {
+    jQuery("#working_modal").modal("hide");
+}
+
+function enable_plants_datatable() {
+    jQuery('#trial_plants_table_html').DataTable();
+}
+
+</script>
