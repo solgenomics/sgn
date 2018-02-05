@@ -153,41 +153,12 @@
               Optional columns (dates must be in the format YYYY-MM-DD):
             </b>
             <br>
-            number_of_flowers
+% my $cross_properties = $c->config->{cross_properties};
+% my @column_header = split ',',$cross_properties;
+% foreach my $column_header(@column_header){
+            <%$column_header%>
             <br>
-            date_of_pollination
-            <br>
-            date_of_harvest
-            <br>
-            number_of_seeds_harvested
-            <br>
-            days_to_maturity
-            <br>
-            date_of_seed_extraction
-            <br>
-            number_of_seeds_extracted
-            <br>
-            number_of_viable_seeds
-            <br>
-            number_of_nonviable_seeds
-            <br>
-            days_from_harvest_to_extraction
-            <br>
-            date_of_embryo_rescue
-            <br>
-            number_of_embryos_rescued
-            <br>
-            days_from_extraction_to_embryo_rescue
-            <br>
-            number_of_embryos_germinated
-            <br>
-            number_of_embryos_contaminated
-            <br>
-            number_of_seeds_planted
-            <br>
-            number_of_seeds_germinated
-            <br>
-            number_of_progeny
+%}
 
         </div>
       </div>
