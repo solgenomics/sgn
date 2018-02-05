@@ -66,9 +66,9 @@ $identifier_prefix => 'SGN'
 
 </&>
 
-<&| /page/info_section.mas, id => "trial_plots", title=>"Tissue Samples",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Samples",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
-<& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
 
 </&>
 

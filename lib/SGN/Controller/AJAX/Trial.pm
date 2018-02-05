@@ -61,24 +61,6 @@ has 'schema' => (
 		 lazy_build => 1,
 		);
 
-#DEPRECATED by lack of use. below functions handle saving an uploaded trial and generating/saving a new trial.
-#sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
-
-#sub get_trial_layout_POST : Args(0) {
-#  my ($self, $c) = @_;
-#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#  my $project;
-#  print STDERR "\n\ntrial layout controller\n";
-#  my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, project => $project} );
-
-  #my $trial_id = $c->req->parm('trial_id');
-  # my $project = $schema->resultset('Project::Project')->find(
-  # 							     {
-  # 							      id => $trial_id,
-  # 							     }
-  # 							    );
-#}
-
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 

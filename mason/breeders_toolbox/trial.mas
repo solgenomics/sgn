@@ -29,6 +29,7 @@ $trial_description => undef
 $user_can_modify => undef
 $has_plant_entries => undef
 $has_subplot_entries => undef
+$has_tissue_sample_entries => undef
 $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
@@ -308,6 +309,25 @@ my $start_time = time();
 % }
 
 </div><!--closes plant_entries_section -->
+
+</&>
+
+
+<&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+
+<div id="tissue_sample_entries_section">
+
+% if (!$has_tissue_sample_entries) {
+   <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
+   <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
+
+% } else {
+
+<& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
+
+% }
+
+</div><!--closes tissue_sample_entries_section -->
 
 </&>
 
