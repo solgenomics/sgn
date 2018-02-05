@@ -200,8 +200,11 @@ sub delete_fieldbook_layout : Path('/fieldbook/delete_FB_layout/') Args(1) {
 	#print STDERR Dumper($file_id);
 	print "File ID: $file_id\n";
      my $dbh = $c->dbc->dbh();
-     my $h = $dbh->prepare("delete from metadata.md_files where file_id=?;");
-     $h->execute($decoded);
+     my $h_nd_exp_md_files = $dbh->prepare("delete from phenome.nd_experiment_md_files where file_id=?;");
+     $h_nd_exp_md_files->execute($decoded);
+     
+     my $h_md_files = $dbh->prepare("delete from metadata.md_files where file_id=?;");
+     $h_md_files->execute($decoded);
      print STDERR "Layout deleted successfully.\n";
 	$c->response->redirect('/fieldbook');
 }
