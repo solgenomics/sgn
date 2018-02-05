@@ -579,7 +579,45 @@ jQuery(document).ready( function() {
 
                                 return stroke;
                               }
-                         
+                              
+                              
+                              
+                              function clickcancel() {
+                                var event = d3.dispatch('click', 'dblclick');
+                                function cc(selection) {
+                                    var down,
+                                        tolerance = 5,
+                                        last,
+                                        wait = null;
+                                    function dist(a, b) {
+                                        return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
+                                    }
+                                    selection.on('mousedown', function() {
+                                        down = d3.mouse(document.body);
+                                        last = +new Date();
+                                    });
+                                    selection.on('mouseup', function() {
+                                        if (dist(down, d3.mouse(document.body)) > tolerance) {
+                                            return;
+                                        } else {
+                                            if (wait) {
+                                                window.clearTimeout(wait);
+                                                wait = null;
+                                                event.dblclick(d3.event);
+                                            } else {
+                                                wait = window.setTimeout((function(e) {
+                                                    return function() {
+                                                        event.click(e);
+                                                        wait = null;
+                                                    };
+                                                })(d3.event), 300);
+                                            }
+                                        }
+                                    });
+                                };
+                                return d3.rebind(cc, event, 'on');
+                              }
+                            var cc = clickcancel();
                           
                           cards.enter().append("rect")
                               .attr("x", function(d) { return (d.col - 1) * gridSize; })
@@ -592,28 +630,8 @@ jQuery(document).ready( function() {
                               .style("stroke-width", 2)
                               .style("stroke", strokes)
                               .style("fill", colors)
-                              //.on("dblclick", function(d) {
-                                //alert(d.plot_id);
-                              //})
-                              .on("click", function(d) { 
-
-                                                         var replace_accession = d.stock;
-                                                         var replace_plot_id = d.plot_id;
-                                                         var replace_plot_name = d.plotname;
-                                                         var replace_plot_number = d.plotn;
-                                                         jQuery('#hm_replace_accessions_link').find('button').trigger('click');
-                                                         jQuery('#hm_edit_plot_information').html('<b>Selected Plot Information: </b>');
-                                                         jQuery('#hm_edit_plot_name').html(replace_plot_name);
-                                                         jQuery('#hm_edit_plot_number').html(replace_plot_number);
-                                                         old_plot_id = jQuery('#hm_edit_plot_id').html(replace_plot_id);
-                                                         old_plot_accession = jQuery('#hm_edit_plot_accession').html(replace_accession);
-
-                                                         jQuery('#hm_replace_plot_accessions_dialog').modal('show');
-                                                         
-                                                            })
-                              .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); 
-                                                                                //console.log('over');
-                                                            })
+                              
+                              .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); })
                               .on("mouseout", function(d) { 
                                                               var cards = svg.selectAll(".col")
                                                                   .data(datasets, function(d) {return d.row+':'+d.col;});
@@ -639,8 +657,31 @@ jQuery(document).ready( function() {
                                                                 
                                                                 cards.exit().remove();
                                                                 //console.log('out');
+                                                                })                                
+                                .call(cc);                                
+                                                           
+                                cc.on("dblclick", function(el) { var me = d3.select(el.srcElement);
+                                                                 var d = me.data()[0];
+                                                                  window.location.href = '/stock/'+d.plot_id+'/view';
                                                                 });
+                                cc.on("click", function(el) {  
+                                                               var me = d3.select(el.srcElement);
+                                                               var d = me.data()[0];
+                                                               var replace_accession = d.stock;
+                                                               var replace_plot_id = d.plot_id;
+                                                               var replace_plot_name = d.plotname;
+                                                               var replace_plot_number = d.plotn;
+                                                               jQuery('#hm_replace_accessions_link').find('button').trigger('click');
+                                                               jQuery('#hm_edit_plot_information').html('<b>Selected Plot Information: </b>');
+                                                               jQuery('#hm_edit_plot_name').html(replace_plot_name);
+                                                               jQuery('#hm_edit_plot_number').html(replace_plot_number);
+                                                               old_plot_id = jQuery('#hm_edit_plot_id').html(replace_plot_id);
+                                                               old_plot_accession = jQuery('#hm_edit_plot_accession').html(replace_accession);
 
+                                                               jQuery('#hm_replace_plot_accessions_dialog').modal('show');
+                                                           
+                                                              });
+                                                              
                           cards.transition().duration(1000)
                               .style("fill", colors) ;  
 
