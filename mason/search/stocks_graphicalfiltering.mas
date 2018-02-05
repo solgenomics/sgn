@@ -474,7 +474,7 @@ function useBrAPIData(response,groupByAccession){
 
     // use the list of shared traits to create dataTables columns
     tableCols = tableCols.concat(trait_names.map(function(d){
-    return {title:d,data:d};
+        return {title:d,data:d.replace(/\./g, "\\.")};
     }));
 
     // create the root filter object and datatable
