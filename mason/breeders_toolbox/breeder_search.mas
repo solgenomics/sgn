@@ -35,7 +35,6 @@ $dataset_id => undef;
 <tr>
 
 <td >
-    <!-- <select multiple="" class="form-control" id="c1_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select> -->
     <div style="min-width: 200px;overflow:auto;">
         <table id="c1_data" class="table table-hover table-bordered" style="empty-cells: show;"width="100%">
             <thead></thead>

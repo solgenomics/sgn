@@ -10,7 +10,7 @@ window.onload = function initialize() {
     jQuery('#select1, #select2, #select3, #select4').change(  // retrieve new data once new category is selected
     	function() {
 
-        console.log("select changed");
+        // console.log("select changed");
 
 	    var this_section = jQuery(this).attr('name');
 	    reset_downstream_sections(this_section);
@@ -26,9 +26,7 @@ window.onload = function initialize() {
 	    var categories = get_selected_categories(this_section);
 	    var data = ''
 	    if (this_section !== "1") data = get_selected_data(this_section);
-        console.log("Data is "+data);
 	    var error = check_missing_criteria(categories, data, this_section); // make sure criteria selected in each panel
-        console.log("Error is "+error);
 	    if (error) return;
 	    if (data.length >= categories.length) data.pop(); //remove extra data array if exists
 
@@ -50,52 +48,6 @@ window.onload = function initialize() {
 	    // show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
 	    update_download_options(this_section, categories);
 	});
-
-    // jQuery('#c1_select_all, #c2_select_all, #c3_select_all, #c4_select_all').click( // select all data in a wizard panel
-    // 	function() {
-	//     var this_section = jQuery(this).attr('name');
-	//     var data_id = "c"+this_section+"_data";
-    //     // jQuery("c"+this_section+"_data").rows().select();
-	//     selectAllOptions(document.getElementById(data_id));
-    //
-	//     var data = jQuery("#"+data_id).val() || [];;
-	//     var count_id = "c"+this_section+"_data_count";
-    //
-	//     show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-    //     var categories = get_selected_categories(this_section);
-	//     update_select_categories(this_section, categories);
-	//     update_download_options(this_section, categories);
-	// });
-
-    //   jQuery('select').dblclick(function() { // open detail page in new window or tab on double-click
-	//   var this_section = jQuery(this).attr('name');
-	//   var categories = get_selected_categories(this_section);
-	//   var category = categories.pop();
-	//   switch (category)
-	//   {
-	//   case "accessions":
-    //   case "plants":
-	//   case "plots":
-    //   case "seedlots":
-	//       window.open("../../stock/"+this.value+"/view");
-	//       break;
-	//   case "trials":
-	//       window.open("../../breeders_toolbox/trial/"+this.value);
-	//       break;
-	//   case "breeding_programs":
-	//       window.open("../../breeders/manage_programs");
-	//       break;
-	//   case "locations":
-	//       window.open("../../breeders/locations");
-	//       break;
-    // case "trait_components":
-	//   case "traits":
-	//       window.open("../../cvterm/"+this.value+"/view");
-	//       break;
-	//   default:
-	//       if (window.console) console.log("no link for this category");
-	//   }
-    //   });
 
     jQuery('#open_update_dialog').on('click', function () {
 	jQuery('#update_wizard_dialog').modal("show");
@@ -519,25 +471,12 @@ function pasteList() {
         options.push([ids[n], elements[n][1]]);
       }
     }
-    c1_html = format_options_list(options);
-    jQuery('#c1_data').html(c1_html);
-    jQuery('#c1_data_text').html(retrieve_sublist(options, 1).join("\n"));
 
-    // clear and reset all other wizard parts
-    var this_section = 1;
-    initialize_first_select();
-    // show_list_counts('c1_data_count', options.length);
-    reset_downstream_sections(this_section);
-    update_select_categories(this_section, data.type_name);
-    update_download_options(this_section, data.type_name);
-
-    if (jQuery('#navbar_lists').length) {
-      addToListMenu('c1_to_list_menu', 'c1_data', {
-        selectText: true,
-        listType: data.type_name
-      });
-    }
     jQuery('#paste_list_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data everytime
+
+    var this_section = 1;
+    create_table(this_section, options);
+
     enable_ui();
   }
 }
@@ -556,13 +495,13 @@ function format_options(items) {
     return html;
 }
 
-function retrieve_sublist(list, sublist_index) {
-    var new_list = new Array();
-    for(var i=0; i<list.length; i++) {
-	new_list.push(list[i][sublist_index]);
-    }
-    return new_list;
-}
+// function retrieve_sublist(list, sublist_index) {
+//     var new_list = new Array();
+//     for(var i=0; i<list.length; i++) {
+// 	new_list.push(list[i][sublist_index]);
+//     }
+//     return new_list;
+// }
 
 function format_options_list(items) {
     var html = '';
@@ -598,33 +537,6 @@ function show_list_counts(count_div, total_count, selected) {
 	html += 'Selected: '+selected;
     }
     jQuery('#'+count_div).html(html);
-}
-
-
-// jQuery('.selectAll-dt').click(function(){
-//   trait_table.rows().select();
-//   return false;
-// });
-// jQuery('.deselectAll-dt').click(function(){
-//   trait_table.rows().deselect();
-//   return false;
-// });
-
-
-function selectAllOptions(obj) {
-    console.log("Selecting all . . .");
-    if (!obj || obj.options.length ==0) { return; }
-    obj.rows().select();
-    // for (var i=0; i<obj.options.length; i++) {
-    //   obj.options[i].selected = true;
-    // }
-}
-
-function clearAllOptions(obj) {
-    if (!obj || obj.options.length ==0) { return; }
-    for (var i=0; i<obj.options.length; i++) {
-      obj.options[i].selected = false;
-    }
 }
 
 function check_missing_criteria(categories, data, this_section) {
@@ -785,7 +697,7 @@ function replay_dataset_info(dataset_id, section_number) {
 
 function create_table(this_section, list) {
 
-    console.log("Loading table data");
+    // console.log("Loading table data");
 
     jQuery('#c'+this_section+'_data').empty();
 
@@ -793,6 +705,7 @@ function create_table(this_section, list) {
     var html='<button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button><div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button><hr style="margin-top:4px;margin-bottom:4px" /><div id="c'+this_section+'_to_list_menu"></div><div id="c'+this_section+'_selected_names" style="display: none;"></div>';
 
     jQuery('#c'+this_section+'_select_info').html(html);
+
     var categories = get_selected_categories(this_section);
     var category = categories.pop();
 
@@ -825,7 +738,7 @@ function create_table(this_section, list) {
         return [ element[0], link ];
 
     })
-    console.log("Creating table 2");
+    // console.log("Creating table 2");
     var table = jQuery('#c'+this_section+'_data').DataTable( {
         "data": formatted_list,
         "columnDefs": [
@@ -852,7 +765,7 @@ function create_table(this_section, list) {
        destroy: true,
     });
 
-    console.log("Creating toggle");
+    // console.log("Creating toggle");
 
     jQuery('#c'+next_section+'_querytype').bootstrapToggle();
     var toggle_buttons = jQuery('#c'+next_section+'_querytype').next().children();
@@ -865,9 +778,9 @@ function create_table(this_section, list) {
 
         table.rows().select();
 
-        var categories = get_selected_categories(this_section);
-	    update_select_categories(this_section, categories);
-	    update_download_options(this_section, categories);
+        // var categories = get_selected_categories(this_section);
+	    // update_select_categories(this_section, categories);
+	    // update_download_options(this_section, categories);
 	});
 
     jQuery('#c'+this_section+'_deselect_all').click( function() { // select all data
@@ -876,13 +789,18 @@ function create_table(this_section, list) {
 
         table.rows().deselect();
 
-        var categories = get_selected_categories(this_section);
-	    update_select_categories(this_section, categories);
-	    update_download_options(this_section, categories);
+        // var categories = get_selected_categories(this_section);
+	    // update_select_categories(this_section, categories);
+	    // update_download_options(this_section, categories);
 	});
 
 
     var selection_changed = function () {
+
+        var categories = get_selected_categories(this_section);
+        update_select_categories(this_section, categories);
+        update_download_options(this_section, categories);
+
         var selected_rows = table.rows({'selected':true});
 
         var name_links = selected_rows.data().map(function(row){
@@ -896,7 +814,7 @@ function create_table(this_section, list) {
 
         jQuery('#c'+this_section+'_selected_names').html(names);
         addToListMenu('c'+this_section+'_to_list_menu', 'c'+this_section+'_selected_names', {
-            typeSourceDiv: "select"+this_section,
+            listType: category,
         });
     };
 
