@@ -640,7 +640,7 @@ function add_data_refresh() {
 }
 
 // matview_select is either:
-// "fullview" for refreshing materialized phenoview, genoview, and traits
+// "fullview" for refreshing materialized phenoview, genoview, traits, and stockprop
 // "stockprop" for refreshing materialized stockprop
 function refresh_matviews(matview_select) {
     jQuery.ajax( {
