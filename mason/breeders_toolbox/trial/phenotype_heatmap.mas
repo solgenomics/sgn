@@ -580,8 +580,6 @@ jQuery(document).ready( function() {
                                 return stroke;
                               }
                               
-                              
-                              
                               function clickcancel() {
                                 var event = d3.dispatch('click', 'dblclick');
                                 function cc(selection) {
