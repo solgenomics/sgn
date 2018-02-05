@@ -800,12 +800,12 @@ if ($progeny_number) {
 #}
 
     my @cross_props = (
-      ['tag_number',$tag_number],
-      ['pollination_date',$pollination_date],
-      ['number_of_bags',$number_of_bags],
-      ['number_of_flowers',$number_of_flowers],
-      ['number_of_fruits',$number_of_fruits],
-      ['number_of_seeds',$number_of_seeds]
+      ['Tag Number',$tag_number],
+      ['Pollination Date',$pollination_date],
+      ['Number of Bags',$number_of_bags],
+      ['Number of Flowers',$number_of_flowers],
+      ['Number of Fruits',$number_of_fruits],
+      ['Number_of_Seeds',$number_of_seeds]
     );
 
     foreach (@cross_props){

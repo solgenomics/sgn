@@ -14,6 +14,8 @@ $user_id => undef
 % use utf8;
 % $cross_name ||= "Untitled cross";
 % my $basename = $cross_name."P";
+% my $cross_properties = $c->config->{cross_properties};
+% my @column_header = split ',',$cross_properties;
 
 <& /page/page_title.mas, title => "Detail for cross '$cross_name'" &>
 
@@ -92,12 +94,11 @@ $user_id => undef
         <table id = "cross_properties" class="table table-hover table-striped">
           <thead>
             <tr>
-             <th>Tag Number</th>
-             <th>Pollination Date</th>
-             <th>Number of Bags</th>
-             <th>Number of Flowers</th>
-             <th>Number of Fruits</th>
-             <th>Number of Seeds</th>
+% my $cross_properties = $c->config->{cross_properties};
+% my @column_header = split ',',$cross_properties;
+% foreach my $column_header(@column_header){
+            <th><%$column_header%></th>
+%}
            </tr>
          </thead>
        </table>
@@ -116,7 +117,7 @@ $user_id => undef
     <option value="number_of_flowers">Number of flowers</option>
     <option value="number_of_fruits">Number of fruits</option>
     <option value="number_of_seeds">Number of seeds</option>
-    
+
   </select>
 
   <input id="property_value" />

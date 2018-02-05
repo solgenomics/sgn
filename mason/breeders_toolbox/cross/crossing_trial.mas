@@ -48,7 +48,6 @@ $folder_id => undef
 my $start_time = time();
 
 #print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
-
 </%perl>
 
 <br/>
@@ -221,12 +220,11 @@ my $start_time = time();
            <thead>
              <tr>
               <th>Cross Name</th>
-              <th>Tag Number</th>
-              <th>Pollination Date</th>
-              <th>Number of Bags</th>
-              <th>Number of Flowers</th>
-              <th>Number of Fruits</th>
-              <th>Number of Seeds</th>
+% my $cross_properties = $c->config->{cross_properties};
+% my @column_header = split ',',$cross_properties;
+% foreach my $column_header(@column_header){
+              <th><%$column_header%></th>
+%}
             </tr>
           </thead>
         </table>
