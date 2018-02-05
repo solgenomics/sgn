@@ -408,8 +408,8 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
 
 #    my $type_id = $type_row->cvterm_id();
 
-    if ($type =~ m/number/ || $type =~ m/days/) { $type = 'number';}
-    if ($type =~ m/date/) { $type = 'date';}
+    if ($type =~ m/Number/ || $type =~ m/Days/) { $type = 'number';}
+    if ($type =~ m/Date/) { $type = 'date';}
 
     my %suggested_values = (
 #  cross_name => '.*',

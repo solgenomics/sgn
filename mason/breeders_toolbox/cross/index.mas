@@ -15,7 +15,7 @@ $user_id => undef
 % $cross_name ||= "Untitled cross";
 % my $basename = $cross_name."P";
 % my $cross_properties = $c->config->{cross_properties};
-% my @column_header = split ',',$cross_properties;
+% my @cross_props = split ',',$cross_properties;
 
 <& /page/page_title.mas, title => "Detail for cross '$cross_name'" &>
 
@@ -94,10 +94,8 @@ $user_id => undef
         <table id = "cross_properties" class="table table-hover table-striped">
           <thead>
             <tr>
-% my $cross_properties = $c->config->{cross_properties};
-% my @column_header = split ',',$cross_properties;
-% foreach my $column_header(@column_header){
-            <th><%$column_header%></th>
+% foreach my $cross_prop(@cross_props){
+            <th><%$cross_prop%></th>
 %}
            </tr>
          </thead>
@@ -111,12 +109,9 @@ $user_id => undef
 <div id="edit_properties_dialog">
 
   <select id="properties_select">
-    <option value="tag_number">Tag number</option>
-    <option value="pollination_date">Pollination date</option>
-    <option value="number_of_bags">Number of bags</option>
-    <option value="number_of_flowers">Number of flowers</option>
-    <option value="number_of_fruits">Number of fruits</option>
-    <option value="number_of_seeds">Number of seeds</option>
+% foreach my $cross_prop(@cross_props){
+    <option value="<%$cross_prop%>"><%$cross_prop%></option>
+%}
 
   </select>
 
