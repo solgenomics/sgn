@@ -96,10 +96,18 @@ This will take just a few seconds in small databases, but may take a few hours t
 2.2 Accessions and Plot Search
 ------------------------------
 
-Accessions and their related materials (cross, plant, plot, population, tissue\_sample, training population) can be searched by using “Search Accessions and Plots” page. On this page, “accession” is the default stock type. However, you can change stock type by selecting an option from the drop-down list.
+Accessions and their related materials (cross, plant, plot, population, tissue\_sample, training population) can be searched by using “Search Accessions and Plots” page. On this page, “accession” is the default stock type; however, you can change stock type by selecting an option from the drop-down list.
 From this page you can construct detailed queries for stock types. For example, by using the "Usage" section, the "Properties" section, and the "Phenotypes" section you could search for accessions which were diploids used in a specific year and location and were also phenotyped for height. You can also search for accessions based on genetic properties, such as the location of an introgression on a specific chromosome.
 
 ![]({{"assets/images/search_accessions.png" | relative_url }})
+
+It is possible to query over any of the available properties, such as "ploidy_level", "country of origin", "introgression_chromosome", etc.
+
+![]({{"assets/images/search_accessions_properties_search.png" | relative_url }})
+
+In the search result table it is possible to select any of the available properties to view.
+
+![]({{"assets/images/search_accessions_properties_view.png" | relative_url }})
 
 At the bottom of the accession search there is a phenotype graphical filtering tool. Here you can filter down accessions based on combinations of trait performance. The filtered down accessions are then able to be saved to a list.
 
