@@ -89,19 +89,6 @@ sub display_fieldmap {
         my $plant_names = $v->{plant_names};
 		my $plot_number_fromDesign = $v->{plot_number};
 
-        # push @layout_info, {
-        #     plot_id => $plot_id,
-        #     plot_number => $plot_number,
-        #     row_number => $row_number,
-        #     col_number => $col_number,
-        #     block_number=> $block_number,
-        #     rep_number =>  $rep_number,
-        #     plot_name => $plot_name,
-        #     accession_name => $accession_name,
-        #     plant_names => $plant_names,
-        # };
-        #print STDERR Dumper(@layout_info);
-
         push @plot_numbers_not_used, $plot_number;
 		push @plot_numbers_from_design, $plot_number_fromDesign;
         if ($col_number) {
@@ -145,12 +132,6 @@ sub display_fieldmap {
 		
     }
 	@layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
-	print STDERR Dumper(\@plot_names);
-	print STDERR Dumper(\@row_numbers);
-	print STDERR Dumper(\@rep_numbers);
-	print STDERR Dumper(\@accession_names);
-	print STDERR Dumper(\@block_numbers);
-	print STDERR Dumper(@layout_info);
 	
 	my $false_coord;
 	if (scalar(@col_numbers) < 1){
@@ -165,9 +146,7 @@ sub display_fieldmap {
         }
         for (my $i=0; $i < scalar(@layout_info); $i++){            
 			$layout_info[$i]->{'col_number'} = $col_number2[$i];
-			#my $plot_popUp = $layout_info[$i]->{'plot_name'}."\nplot_No:".$layout_info[$i]->{'plot_number'}."\nblock_No:".$layout_info[$i]->{'block_number'}."\nrep_No:".$layout_info[$i]->{'rep_number'}."\nstock:".$layout_info[$i]->{'accession_name'};
             push @col_numbers, $col_number2[$i];
-			#push @$result,  {plotname => $layout_info[$i]->{'plot_name'}, stock => $layout_info[$i]->{'accession_name'}, plotn => $layout_info[$i]->{'plot_number'}, blkn=>$layout_info[$i]->{'block_number'}, rep=>$layout_info[$i]->{'rep_number'}, row=>$layout_info[$i]->{'row_number'}, col=>$layout_info[$i]->{'col_number'}, plot_msg=>$plot_popUp} ;
         }		
 	}
 	my $plot_popUp;
@@ -180,8 +159,8 @@ sub display_fieldmap {
 		}
 		push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
 	}
-print STDERR Dumper(\@col_numbers);
-print STDERR Dumper($result); 
+	#print STDERR Dumper(\@col_numbers);
+	#print STDERR Dumper($result); 
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
@@ -226,15 +205,6 @@ print STDERR Dumper($result);
 
 	my @sorted_block = sort@block_numbers;
 	my @uniq_block = uniq(@sorted_block);
-
-	#my $max_col = scalar(@col_numbers) > 0 ? max( @col_numbers ) : 0;
-	#print "$max_col\n";
-	#my $max_row = scalar(@row_numbers) > 0 ? max( @row_numbers ) : 0;
-	#print "$max_row\n";
-	#my $max_rep = scalar(@rep_numbers) > 0 ? max(@rep_numbers) : 0;
-	#my $max_block = scalar(@block_numbers) > 0 ? max(@block_numbers) : 0;
-
-	#print STDERR Dumper \@layout_info;
 	my ($min_rep, $max_rep) = minmax @rep_numbers;
 	my ($min_block, $max_block) = minmax @block_numbers;
 	my ($min_col, $max_col) = minmax @col_numbers;
@@ -246,23 +216,6 @@ print STDERR Dumper($result);
 	for my $y (1..$max_row){
 		push @unique_row, $y;
 	}
-	
-	# my $false_coord;
-	# if ($col_numbers[0] == ""){
-    #     @col_numbers = ();
-    #     $false_coord = 'false_coord';
-	# 	my @row_instances = uniq @row_numbers;
-	# 	my %unique_row_counts;
-	# 	$unique_row_counts{$_}++ for @row_numbers;        
-    #     my @col_number2;
-    #     for my $key (keys %unique_row_counts){
-    #         push @col_number2, (1..$unique_row_counts{$key});
-    #     }
-    #     for (my $i=0; $i < scalar(@layout_info); $i++){               
-    #         #@$result[$i]->{'col'} = $col_number2[$i];
-    #         push @col_numbers, $col_number2[$i];
-    #     }		
-	# }
 
 	my $trial = CXGN::Trial->new({
 		bcs_schema => $schema,
@@ -270,13 +223,10 @@ print STDERR Dumper($result);
 	});
 	my $data = $trial->get_controls();
 
-	#print STDERR Dumper($data);
-
 	my @control_name;
 	foreach my $cntrl (@{$data}) {
 		push @control_name, $cntrl->{'accession_name'};
 	}
-	#print STDERR Dumper(@control_name); 
 
 	my %return = (
 		coord_row =>  \@row_numbers,
