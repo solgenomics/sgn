@@ -214,3 +214,18 @@ There are three ways to evaluate the population structure of a set of individual
 With all the options, you will get a interactive plot of the two PCs (shown below) that explain the largest variance. Point the cursor at any data point and you will see the individual name with its corresponding PCs scores. By clicking the ‘Download all PCs’, you can also download the 10 PCs scores in the text format.
 
 <img src='{{"assets/images/image155.png" | relative_url }}' width="522" />
+
+4.5 ANOVA
+
+Currently, ANOVA is implemented for a single trial (single year and single location). You can do ANOVA for RCBD, CRD, Alpha and Augmented trial designs. ANOVA is done using linear mixed effects model, where the genotypes is fixed effect and the replications and blocks are random effects. Fixed effect significance level is computed using 'lmer' from 'lmeTest' R package.
+
+You can do ANOVA from two places: trial detail and training population detail. In both cases, if the phenotype data was from the supported trial designs,
+
+-- Go to the ANOVA section down in the trial or training population page
+
+-- Select the trait of you want to perform ANOVA
+
+-- Click the 'Run ANOVA' and wait for the result
+
+
+
