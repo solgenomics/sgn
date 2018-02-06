@@ -3,12 +3,14 @@
 $dataset_id => undef;
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'jquery.dataTables-select-min' ] &>
+/*<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'jquery.dataTables-select-min', 'buttons.bootstrap-min', ] &>*/
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'jquery.dataTables-select-min', 'buttons.bootstrap-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
 
 <table class="table borderless" alt="breeder search" border="0" >
 
 <tr>
-<td style="white-space:nowrap;">
+<td style="white-spa
+ce:nowrap;">
   <div class="form-group" id="paste_list"></div>
   <p style="margin: 0; padding: 0;" align="center"><i>or</i></p>
 </td>
@@ -35,23 +37,28 @@ $dataset_id => undef;
 <tr>
 
 <td >
-    <div style="min-width: 200px;overflow:auto;">
-        <table id="c1_data" class="table table-hover table-bordered" style="empty-cells: show;"width="100%">
+    <div style="min-width: 220px;">
+    <!-- <div style="min-width: 220px;overflow:auto;"> -->
+    <!-- style="empty-cells: show;" -->
+        <table id="c1_data" class="display" cellspacing="0" width="100%">
             <thead></thead>
             <tbody><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></tbody>
         </table>
     </div>
 </td>
 <td >
-    <div style="min-width: 200px;overflow:auto;"><table id="c2_data" class="table table-hover table-bordered" width="100%"><thead></thead>
+    <div style="min-width: 220px;">
+    <!-- <div style="min-width: 220px;overflow:auto;"> --><table id="c2_data" class="display" cellspacing="0" width="100%"><thead></thead>
     <tbody><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></tbody></table></div>
 </td>
 <td >
-    <div style="min-width: 200px;overflow:auto;"><table id="c3_data" class="table table-hover table-bordered" width="100%"><thead></thead>
+    <div style="min-width: 220px;">
+    <!-- <div style="min-width: 220px;overflow:auto;"> --><table id="c3_data" class="display" cellspacing="0" width="100%"><thead></thead>
     <tbody><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></tbody></table></div>
 </td>
 <td >
-    <div style="min-width: 200px;overflow:auto;"><table id="c4_data" class="table table-hover table-bordered" width="100%"><thead></thead>
+    <div style="min-width: 220px;">
+    <!-- <div style="min-width: 220px;overflow:auto;"> --><table id="c4_data" class="display" cellspacing="0" width="100%"><thead></thead>
     <tbody><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></tbody></table></div>
 </td>
 
@@ -93,6 +100,15 @@ $dataset_id => undef;
 .borderless tbody tr td, .borderless tbody tr th, .borderless thead tr th {
     border: none;
 }
+
+.pull-center {
+    align: center !important;
+}
+
+.pull-right {
+    text-align: right !important;
+}
+/*dt-buttons btn-group*/
 </style>
 
 <script>

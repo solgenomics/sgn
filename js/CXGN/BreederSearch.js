@@ -702,7 +702,9 @@ function create_table(this_section, list) {
     jQuery('#c'+this_section+'_data').empty();
 
     var next_section = parseInt(this_section) + 1;
-    var html='<button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button><div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button><hr style="margin-top:4px;margin-bottom:4px" /><div id="c'+this_section+'_to_list_menu"></div><div id="c'+this_section+'_selected_names" style="display: none;"></div>';
+    // <button class="btn btn-default btn-sm" id="c'+this_section+'_select_all" name="'+this_section+'">Select All</button>
+    // <button class="btn btn-default btn-sm" id="c'+this_section+'_deselect_all" name="'+this_section+'">De-select All</button>
+    var html='<div class="pull-right"><input type="checkbox" id="c'+next_section+'_querytype" data-size="small" data-toggle="toggle" data-on="AND (&cap;)" data-off="OR (&cup;)"></div><hr style="margin-top:4px;margin-bottom:4px" /><div id="c'+this_section+'_to_list_menu"></div><div id="c'+this_section+'_selected_names" style="display: none;"></div>';
 
     jQuery('#c'+this_section+'_select_info').html(html);
 
@@ -740,6 +742,8 @@ function create_table(this_section, list) {
     })
     // console.log("Creating table 2");
     var table = jQuery('#c'+this_section+'_data').DataTable( {
+        dom: 'fBti',
+        // "sDom": '<"row view-filter"<"col-sm-12"<"text-center"f><"clearfix">>>t<"row view-pager"<"col-sm-12"<"text-center"i>>>',
         "data": formatted_list,
         "columnDefs": [
            {
@@ -752,18 +756,31 @@ function create_table(this_section, list) {
             //    'className': 'select-checkbox',
            }
        ],
+       'buttons': [
+            {
+                'text': 'Select all',
+                'action': function () {
+                    table.rows().select();
+                }
+            },
+            {
+                'text': 'Select none',
+                'action': function () {
+                    table.rows().deselect();
+                }
+            }
+        ],
        'select': {
          'style':    'multi'
        },
-       "order": [[ 1, "asc" ]],
-    //    "bLengthChange": false,
-    //    "sScrollY": "200",
-    //    "bScrollCollapse": true,
-    "scrollY":        "200px",
+    //    "order": [[ 1, "asc" ]],
+       "scrollY":        "250px",
        "scrollCollapse": false,
        "paging":         false,
-       destroy: true,
+       "destroy": true,
     });
+
+    jQuery('.dataTables_filter').addClass('pull-center');
 
     // console.log("Creating toggle");
 
@@ -771,28 +788,28 @@ function create_table(this_section, list) {
     var toggle_buttons = jQuery('#c'+next_section+'_querytype').next().children();
     toggle_buttons.first().attr( 'id', 'c'+next_section+'_querytype_and' );
     toggle_buttons.first().next().attr( 'id', 'c'+next_section+'_querytype_or' );
-
-    jQuery('#c'+this_section+'_select_all').click( function() { // select all data
-
-        console.log("Selecting all for section "+this_section);
-
-        table.rows().select();
-
-        // var categories = get_selected_categories(this_section);
-	    // update_select_categories(this_section, categories);
-	    // update_download_options(this_section, categories);
-	});
-
-    jQuery('#c'+this_section+'_deselect_all').click( function() { // select all data
-
-        console.log("Deselecting all for section "+this_section);
-
-        table.rows().deselect();
-
-        // var categories = get_selected_categories(this_section);
-	    // update_select_categories(this_section, categories);
-	    // update_download_options(this_section, categories);
-	});
+    //
+    // jQuery('#c'+this_section+'_select_all').click( function() { // select all data
+    //
+    //     console.log("Selecting all for section "+this_section);
+    //
+    //     table.rows().select();
+    //
+    //     // var categories = get_selected_categories(this_section);
+	//     // update_select_categories(this_section, categories);
+	//     // update_download_options(this_section, categories);
+	// });
+    //
+    // jQuery('#c'+this_section+'_deselect_all').click( function() { // select all data
+    //
+    //     console.log("Deselecting all for section "+this_section);
+    //
+    //     table.rows().deselect();
+    //
+    //     // var categories = get_selected_categories(this_section);
+	//     // update_select_categories(this_section, categories);
+	//     // update_download_options(this_section, categories);
+	// });
 
 
     var selection_changed = function () {
@@ -816,6 +833,7 @@ function create_table(this_section, list) {
         addToListMenu('c'+this_section+'_to_list_menu', 'c'+this_section+'_selected_names', {
             listType: category,
         });
+        $('.select-info').addClass('pull-right');
     };
 
     table.on( 'deselect', selection_changed);
