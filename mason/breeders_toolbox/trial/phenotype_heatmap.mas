@@ -810,7 +810,7 @@ jQuery(document).ready( function() {
     
     jQuery('#pheno_heatmap_onswitch').click( function() {
         jQuery("#trait_heatmap").css("display", "none");
-        
+        field_map_view();
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
             beforeSend: function() {
@@ -834,7 +834,7 @@ jQuery(document).ready( function() {
                     jQuery("#working_modal").modal("hide");
                 } 
                 else {
-                    field_map_view();
+                    //field_map_view();
                     var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
                     traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
@@ -868,12 +868,13 @@ jQuery(document).ready( function() {
   jQuery(document).on('change', '#trait_list_dropdown', function () {
     selected = jQuery("#trait_list_dropdown").val();
     if (selected == ''){ }
-    if (jQuery.isNumeric(selected)){ alert(selected);
+    if (jQuery.isNumeric(selected)){
         d3.select("svg").remove();
         jQuery("#d3legend").css("display", "none");
         jQuery("#container_fm").css("display", "none");
         assayed_trait_heatmap_view(selected);
     }
+    if (selected == ''){ }
     
   });
 
