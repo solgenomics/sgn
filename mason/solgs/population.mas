@@ -75,10 +75,15 @@ $acronym
 
 </&>
 
+% if ($pop_id !~ /uploaded/)
+% {
+
 <& /anova.mas,
- pop_id => $pop_id,
+   pop_id => $pop_id,
 &>
-       
+
+% }
+     
 <& population/correlation.mas, 
      pop_id  => $pop_id,
 &>
