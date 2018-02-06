@@ -66,24 +66,6 @@ $trial_id
     
 </style>
 
-<div class="form-group form-group-sm" id="trial_heatmap_div" >
-    <label for="heatmap_option_list_dropdown" class="col-sm-12 control-label">Select Datatype To View:</label>
-    <div class="col-sm-14">
-    
-        <select class="form-control" id="heatmap_trial_assayed_dropdown">
-            <option value="">select to view on heatmap</option>
-            <optgroup label="Field">
-                
-                <option value="fieldmap">view field layout</option>
-            </optgroup>
-            <optgroup label="Trait">
-                <option value="traitHM">view assayed trait</option>
-            </optgroup>
-        </select>
-
-    </div>
-</div>
-
 <div class="form-group form-group-sm" id="traitdiv" >
     <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
     <div class="col-sm-12">
