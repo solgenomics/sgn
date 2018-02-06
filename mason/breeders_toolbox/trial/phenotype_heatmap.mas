@@ -53,7 +53,6 @@ $trial_id
         fill: #000;
       }
       
-
       .legend { list-style: none; }
       .legend li { float: left; margin-right: 10px; }
       .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
@@ -82,8 +81,6 @@ $trial_id
   <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
   <a id="hm_replace_accessions_link"><button class="btn btn-success"  type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
-
-
 
 <div id="container_heatmap" ></div>
 <div id="container_fm" ></div>
@@ -288,7 +285,6 @@ $trial_id
     </div>
 </div>
 
-
 <div class="modal  fade" id="hm_replace_accessions_dialog_message" name="hm_replace_accessions_dialog_message" tabindex="-1" role="dialog" aria-labelledby="HmDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -384,12 +380,12 @@ jQuery(document).ready( function() {
                   var columnLabels = svg.selectAll(".columnLabel")
                       .data(columns)
                       .enter().append("text")
-                        .text(function(d) { return d; })
-                        .attr("x", function(d, i) { return i * gridSize; })
-                        .attr("y", 0 )
-                        .style("text-anchor", "middle")
-                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
+                      .text(function(d) { return d; })
+                      .attr("x", function(d, i) { return i * gridSize; })
+                      .attr("y", 0 )
+                      .style("text-anchor", "middle")
+                      .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                      .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
                   
                   var heatmapChart = function(datasets) {
                     
@@ -538,7 +534,7 @@ jQuery(document).ready( function() {
 
                   var margin = { top: 50, right: 0, bottom: 100, left: 30 },
                       width = 50 * col_max + 30 - margin.left - margin.right,
-                      height = 50 * row_max + 150 - margin.top - margin.bottom,
+                      height = 50 * row_max + 100 - margin.top - margin.bottom,
                       gridSize = 50,
                       legendElementWidth = gridSize*2,
                       buckets = 9,
@@ -551,7 +547,7 @@ jQuery(document).ready( function() {
                       .attr("width", width + margin.left + margin.right)
                       .attr("height", height + margin.top + margin.bottom)
                       .append("g")
-                      .attr("transform", "translate(" + margin.left + "," + 100 + ")");
+                      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
                                         
                   var rowLabels = svg.selectAll(".rowLabel")
                       .data(rows)
@@ -848,10 +844,7 @@ jQuery(document).ready( function() {
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
                     jQuery("#traitdiv").css("display", "inline-block");
-                    //field_map_view();
-                    jQuery("#working_modal").modal("hide");
-                    //jQuery("#trait_heatmap").css("display", "none"); 
-                    //jQuery("#traitdiv").css("display", "none");                    
+                    jQuery("#working_modal").modal("hide");                 
                 }
             },
             error: function(response){
@@ -894,7 +887,6 @@ jQuery(document).ready( function() {
     var sup_traitValue = jQuery('#pheno_value').html();
     var sup_traitID = jQuery('#mytrait_id').html();
     var sup_phenoID = jQuery('#mypheno_id').html();
-    //alert(sup_plotName+","+sup_traitValue+"," +sup_traitID);
     
     new jQuery.ajax({
         type: 'POST',
