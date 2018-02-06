@@ -1166,7 +1166,6 @@ sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_comple
     $c->stash->{rest} = {has_phenotypes => $has_phenotypes};
 }
 
-#sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
   my $self = shift;
 	my $c = shift;
@@ -1189,7 +1188,10 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     return;
   }
 
-  $c->stash->{rest} = {success => 1};
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
+    $trial_layout->generate_and_cache_layout();
+
+    $c->stash->{rest} = {success => 1};
 }
 
 sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
@@ -1498,7 +1500,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
       }
     }
 
-    my $trial_layout = $c->stash->{trial_layout};
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
 
     if ($error_string){
