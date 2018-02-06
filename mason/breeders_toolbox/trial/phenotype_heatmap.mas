@@ -414,10 +414,13 @@ jQuery(document).ready( function() {
                     success: function(response){
                         if (response.traits_assayed[0][0]) {
                             var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                            traits_assayed_html = traits_assayed_html + "<option value=''>select trait to show heatmap</option>";
+                            traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
+                            traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
+                            traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
                             for (i=0; i<response.traits_assayed[0].length; i++) {
                                 traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
                             }
+                            traits_assayed_html = traits_assayed_html +"</optgroup>";
                             traits_assayed_html = traits_assayed_html +"</select>";
                             jQuery("#trait_heatmap").css("display", "none"); 
                             //jQuery("#trial_heatmap_div").css("display", "none"); //newly added                   
