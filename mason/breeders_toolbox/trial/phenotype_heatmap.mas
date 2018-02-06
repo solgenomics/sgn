@@ -332,7 +332,6 @@ $trial_id
     </div>
 </div>
 
-
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
 var value = 'plot';
@@ -355,7 +354,6 @@ jQuery(document).ready( function() {
                 phenotypes_id = response.phenoID;
                 for (i=0; i<response.col.length; i++) {
                     if (response.col[i] && response.row[i]){
-                        //console.log(response.col[i]);
                         col_length = response.col[i];
                         row_length = response.row[i];
                     }
@@ -365,7 +363,6 @@ jQuery(document).ready( function() {
                     jQuery("#chart").css({"display": "inline-block"});
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
                     jQuery("#trait_heatmap").css("display", "none");
-                    //jQuery("#d_button").css("display", "inline-block");
                     
                     var default_width = 50 * col_max;
                     var default_Width_used;
@@ -523,8 +520,7 @@ jQuery(document).ready( function() {
              error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
              }
-        });
-    
+        });    
     }
     
     function field_map_view() {
@@ -574,9 +570,7 @@ jQuery(document).ready( function() {
                       .attr("height", height + margin.top + margin.bottom)
                       .append("g")
                       .attr("transform", "translate(" + margin.left + "," + 100 + ")");
-                      
-                  
-                  
+                                        
                   var rowLabels = svg.selectAll(".rowLabel")
                       .data(rows)
                       .enter().append("text")
@@ -789,8 +783,7 @@ jQuery(document).ready( function() {
              error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
              }
-        });
-    
+        });    
     }
     
     jQuery("#hm_accession").autocomplete({
@@ -809,7 +802,6 @@ jQuery(document).ready( function() {
       var new_accession = jQuery('#hm_accession').val();
       var old_accession = jQuery('#hm_edit_plot_accession').html();
       var old_plot_id = jQuery('#hm_edit_plot_id').html();
-      //alert(new_accession +","+ old_accession +","+ old_plot_id);
 
       new jQuery.ajax({
         type: 'POST',
@@ -840,7 +832,6 @@ jQuery(document).ready( function() {
     
     jQuery('#pheno_heatmap_onswitch').click( function() {
         jQuery("#trait_heatmap").css("display", "none");
-        //jQuery("#trial_heatmap_div").css("display", "inline-block");
         
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
@@ -858,8 +849,7 @@ jQuery(document).ready( function() {
                     }
                     traits_assayed_html = traits_assayed_html +"</optgroup>";
                     traits_assayed_html = traits_assayed_html +"</select>";
-                    jQuery("#trait_heatmap").css("display", "none"); 
-                    //jQuery("#trial_heatmap_div").css("display", "none"); //newly added                   
+                    jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
                     jQuery("#traitdiv").css("display", "inline-block");
                     field_map_view();
@@ -868,18 +858,13 @@ jQuery(document).ready( function() {
                 else {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#trait_heatmap").css("display", "none"); 
-                    jQuery("#traitdiv").css("display", "none");
-                    //jQuery("#trial_heatmap_div").css("display", "none"); //newly added 
-                    //jQuery("#trial_no_phenoMSG").css("display", "inline-block");
-                    
+                    jQuery("#traitdiv").css("display", "none");                    
                 }
             },
             error: function(response){
                 alert('Error retrieving traits assayed in this trial');
             }
-
-        });
-        
+        });        
     });
     
     jQuery('#pheno_heatmap_offswitch').click( function() {
