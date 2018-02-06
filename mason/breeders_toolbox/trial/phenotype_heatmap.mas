@@ -830,7 +830,7 @@ jQuery(document).ready( function() {
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
                     jQuery("#traitdiv").css("display", "inline-block");
-                    field_map_view();
+                    //field_map_view();
                     jQuery("#working_modal").modal("hide");
                 } 
                 else {
@@ -874,7 +874,10 @@ jQuery(document).ready( function() {
         jQuery("#container_fm").css("display", "none");
         assayed_trait_heatmap_view(selected);
     }
-    if (selected == ''){ }
+    if (selected == 'fieldmap'){ 
+        d3.select("svg").remove();
+        field_map_view();
+    }
     
   });
 
