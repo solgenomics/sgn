@@ -49,9 +49,9 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $version = shift;
 	my @status;
 
-	my $page = $c->req->param("page") || 0;
-	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
-	my $session_token = $c->req->param("access_token");
+	my $page = $c->req->param("page") || $c->request->data->{"page"} || 0;
+	my $page_size = $c->req->param("pageSize") || $c->request->data->{"pageSize"} || $DEFAULT_PAGE_SIZE;
+	my $session_token = $c->req->param("access_token") || $c->request->data->{"access_token"};
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 	my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -76,8 +76,9 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
 	$c->stash->{session_token} = $session_token;
-
-	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
+	
+	my %allParams = (%{$c->request->data}, %{$c->req->params});
+	$c->stash->{clean_inputs} = _clean_inputs(\%allParams);
 }
 
 #useful because javascript can pass 'undef' as an empty value, and also standardizes all inputs as arrayrefs
