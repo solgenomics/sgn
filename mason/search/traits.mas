@@ -71,7 +71,7 @@ $trait_cv_name
 jQuery(document).ready(function () {
 
     var lo = new CXGN.List();
-    jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Select A Subset'));
+    jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits'));
 
     jQuery(document).on('change', '#trait_search_list_select', function(){
         _draw_trait_search_result_table();
