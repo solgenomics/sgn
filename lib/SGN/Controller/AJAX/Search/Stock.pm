@@ -96,11 +96,11 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             }
             my $owners_string = join ', ', @owners_html;
             if ($type eq "cross"){
-                push @return, [ '<a href="/cross/$stock_id">$uniquename</a>', $type, $organism, $synonym_string, $owners_string, $organization_string ];
+                push @return, ['<a href="/cross/$stock_id">$uniquename</a>', $type, $organism, $synonym_string, $owners_string, $organization_string ];
             } elsif ($type eq "seedlot"){
-                push @return, [ '<a href="/breeders/seedlot/$stock_id">$uniquename</a>', $type, $organism, $synonym_string, $owners_string, $organization_string ];
+                push @return, ['<a href="/breeders/seedlot/$stock_id">$uniquename</a>', $type, $organism, $synonym_string, $owners_string, $organization_string ];
             } elsif ($type ne "cross" || "seedlot") {
-                push @return, [ '<a href="/stock/$stock_id/view">$uniquename</a>', $type, $organism, $synonym_string, $owners_string, $organization_string ];
+                push @return, ['<a href="/stock/$stock_id/view">$uniquename</a>', $type, $organism, $synonym_string, $owners_string, $organization_string ];
             } else {
                 push @return, [$_->{stock_id}, $_->{uniquename}];
             }
