@@ -361,11 +361,6 @@ jQuery(document).ready(function ($) {
             }
             //console.log(greenhouse_num_plants);
         }
-
-        //alert(design_type);
-        //d3.select("svg").remove();
-        //jQuery("#d3_legend").css("display", "none");
-        //jQuery("#container_field_map_view").css("display", "none");
         
         $.ajax({
             type: 'POST',
@@ -607,11 +602,8 @@ jQuery(document).ready(function ($) {
                       jQuery("#d3_legend").css("display", "none");
                       jQuery("#container_field_map_view").css("display", "none");
                       jQuery("#no_map_view_MSG").css("display", "inline-block");
-                      // attach no map generated to html div
                   }
-                    
-                    
-                    
+
                 }
             },
             error: function () {
