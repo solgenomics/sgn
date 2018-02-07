@@ -623,7 +623,7 @@ jQuery(document).ready(function ($) {
 
     //When the user submits the form, input validation happens here before proceeding to design generation
     $(document).on('click', '#new_trial_submit', function () {
-        d3.select("svg").remove();
+        d3.selectAll("#container_field_map_view > *").remove();
         jQuery("#container_field_map_view").css("display", "none");
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
