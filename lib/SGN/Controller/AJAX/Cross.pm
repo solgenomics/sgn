@@ -809,7 +809,7 @@ sub create_cross_wishlist_POST : Args(0) {
     }
     #print STDERR Dumper \%ordered_data;
 
-    my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id });
+    my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
     my $design_layout = $trial->get_design();
     #print STDERR Dumper $design_layout;
 
@@ -953,7 +953,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $planting_date = $trial->get_planting_date() || " ";
     my $trial_year = $trial->get_year();
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id });
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
     my $design_layout = $trial_layout->get_design();
     #print STDERR Dumper $design_layout;
 

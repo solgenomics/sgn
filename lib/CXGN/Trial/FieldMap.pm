@@ -58,7 +58,8 @@ sub display_fieldmap {
 
 	my $layout = CXGN::Trial::TrialLayout->new({
 		schema => $schema,
-		trial_id => $trial_id
+		trial_id => $trial_id,
+        experiment_type => 'field_layout'
 	});
 
 	my $design = $layout-> get_design();
@@ -362,7 +363,8 @@ sub _regenerate_trial_layout_cache {
     my $self = shift;
     my $layout = CXGN::Trial::TrialLayout->new({
         schema => $self->bcs_schema,
-        trial_id => $self->trial_id
+        trial_id => $self->trial_id,
+        experiment_type => 'field_layout'
     });
     $layout->generate_and_cache_layout();
 }

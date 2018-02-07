@@ -85,6 +85,7 @@ project_property	project transplanting date					sgn database
 project_property	project year
 project_property	project_has_plant_entries				00054
 project_property	project_has_subplot_entries				00084
+project_property	project_has_tissue_sample_entries				00089
 project_property	trial_folder
 project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071
 project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071
@@ -121,6 +122,7 @@ stock_property	location_code				00052
 stock_property	organization				00052
 stock_property	plant_index_number				00054
 stock_property	subplot_index_number				00084
+stock_property	tissue_sample_index_number				00089
 stock_property	plot number				00052
 stock_property	plot_geo_json	GeoJSON string for GPS coords polygon of plots.	12/03/2017	nm529	00088
 stock_property	range				00052

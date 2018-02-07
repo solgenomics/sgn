@@ -49,7 +49,6 @@ $c->res->body($output);
 use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
-use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
 
