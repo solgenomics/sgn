@@ -201,7 +201,7 @@ function add_plants_to_trial() {
     }
 
     jQuery.ajax( {
-      url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplots/',
+      url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_plant_entries/',
       type: 'POST',
       beforeSend: function() {
           enable_working_modal();

@@ -110,7 +110,7 @@ ok(my $trial_id = $trial->project_id());
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $trial_id,
-
+    experiment_type => 'field_layout'
 						    }), "create trial layout object");
 
 ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names1");
@@ -164,7 +164,7 @@ ok(my $trial_id = $trial->project_id());
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $trial_id,
-
+    experiment_type => 'field_layout'
 						    }), "create trial layout object");
 
 ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names2");
@@ -218,7 +218,7 @@ ok(my $genotyping_trial_id = $genotyping_trial->project_id(), "retrive genotypin
 ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $genotyping_trial_id,
-
+    experiment_type => 'genotyping_layout'
 						    }), "create trial layout object for genotyping trial");
 ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names3");
 my %genotyping_stocks = map { $_ => 1 } @genotyping_stock_names;

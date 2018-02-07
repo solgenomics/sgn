@@ -45,6 +45,7 @@ sub _validate_with_plugin {
     #get column headers
     my $seedlot_name_head;
     my $accession_name_head;
+    my $cross_name_head;
     my $amount_head;
     my $description_head;
 
@@ -55,10 +56,13 @@ sub _validate_with_plugin {
         $accession_name_head  = $worksheet->get_cell(0,1)->value();
     }
     if ($worksheet->get_cell(0,2)) {
-        $amount_head  = $worksheet->get_cell(0,2)->value();
+        $cross_name_head  = $worksheet->get_cell(0,2)->value();
     }
     if ($worksheet->get_cell(0,3)) {
-        $description_head  = $worksheet->get_cell(0,3)->value();
+        $amount_head  = $worksheet->get_cell(0,3)->value();
+    }
+    if ($worksheet->get_cell(0,4)) {
+        $description_head  = $worksheet->get_cell(0,4)->value();
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
@@ -67,19 +71,24 @@ sub _validate_with_plugin {
     if (!$accession_name_head || $accession_name_head ne 'accession_name') {
         push @error_messages, "Cell B1: accession_name is missing from the header";
     }
+    if (!$cross_name_head || $cross_name_head ne 'cross_name') {
+        push @error_messages, "Cell C1: cross_name is missing from the header";
+    }
     if (!$amount_head || $amount_head ne 'amount') {
-        push @error_messages, "Cell C1: amount is missing from the header";
+        push @error_messages, "Cell D1: amount is missing from the header";
     }
     if (!$description_head || $description_head ne 'description') {
-        push @error_messages, "Cell D1: description is missing from the header";
+        push @error_messages, "Cell E1: description is missing from the header";
     }
 
     my %seen_seedlot_names;
     my %seen_accession_names;
+    my %seen_cross_names;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $seedlot_name;
         my $accession_name;
+        my $cross_name;
         my $amount = 0;
         my $description;
 
@@ -90,10 +99,13 @@ sub _validate_with_plugin {
             $accession_name = $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $amount =  $worksheet->get_cell($row,2)->value();
+            $cross_name = $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $description =  $worksheet->get_cell($row,3)->value();
+            $amount =  $worksheet->get_cell($row,3)->value();
+        }
+        if ($worksheet->get_cell($row,4)) {
+            $description =  $worksheet->get_cell($row,4)->value();
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
@@ -110,14 +122,21 @@ sub _validate_with_plugin {
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
-        if (!$accession_name || $accession_name eq '') {
-            push @error_messages, "Cell B$row_name: accession name missing";
+        if ( (!$accession_name || $accession_name eq '') && (!$cross_name || $cross_name eq '') ) {
+            push @error_messages, "In row:$row_name: you must provide either an accession_name or a cross_name for the contents of the seedlot.";
+        } elsif ( ($accession_name && $accession_name ne '') && ($cross_name && $cross_name ne '') ) {
+            push @error_messages, "In row:$row_name: you must provide either an accession_name or a cross_name for the contents of the seedlot and Not both.";
         } else {
-            $seen_accession_names{$accession_name}++;
+            if ($accession_name){
+                $seen_accession_names{$accession_name}++;
+            }
+            if ($cross_name){
+                $seen_cross_names{$cross_name}++;
+            }
         }
 
         if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell C$row_name: amount missing";
+            push @error_messages, "Cell D$row_name: amount missing";
         }
     }
 
@@ -128,6 +147,15 @@ sub _validate_with_plugin {
     if (scalar(@accessions_missing) > 0) {
         push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
         $errors{'missing_accessions'} = \@accessions_missing;
+    }
+
+    my @crosses = keys %seen_cross_names;
+    my $cross_validator = CXGN::List::Validate->new();
+    my @crosses_missing = @{$cross_validator->validate($schema,'crosses',\@crosses)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0) {
+        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        $errors{'missing_crosses'} = \@accessions_missing;
     }
 
     my @seedlots = keys %seen_seedlot_names;
@@ -169,14 +197,21 @@ sub _parse_with_plugin {
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
     my %seen_accession_names;
+    my %seen_cross_names;
     for my $row ( 1 .. $row_max ) {
         my $accession_name;
+        my $cross_name;
         if ($worksheet->get_cell($row,1)) {
             $accession_name = $worksheet->get_cell($row,1)->value();
             $seen_accession_names{$accession_name}++;
         }
+        if ($worksheet->get_cell($row,2)) {
+            $cross_name = $worksheet->get_cell($row,2)->value();
+            $seen_cross_names{$cross_name}++;
+        }
     }
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my @accessions = keys %seen_accession_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
@@ -187,10 +222,21 @@ sub _parse_with_plugin {
     while (my $r=$rs->next){
         $accession_lookup{$r->uniquename} = $r->stock_id;
     }
+    my @crosses = keys %seen_cross_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@crosses },
+        'type_id' => $cross_cvterm_id
+    });
+    my %cross_lookup;
+    while (my $r=$rs->next){
+        $cross_lookup{$r->uniquename} = $r->stock_id;
+    }
 
     for my $row ( 1 .. $row_max ) {
         my $seedlot_name;
         my $accession_name;
+        my $cross_name;
         my $amount = 0;
         my $description;
 
@@ -201,20 +247,25 @@ sub _parse_with_plugin {
             $accession_name = $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $amount =  $worksheet->get_cell($row,2)->value();
+            $cross_name = $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $description =  $worksheet->get_cell($row,3)->value();
+            $amount =  $worksheet->get_cell($row,3)->value();
+        }
+        if ($worksheet->get_cell($row,4)) {
+            $description =  $worksheet->get_cell($row,4)->value();
         }
 
         #skip blank lines
-        if (!$seedlot_name && !$accession_name && !$description) {
+        if (!$seedlot_name && !$accession_name && !$cross_name && !$description) {
             next;
         }
 
         $parsed_seedlots{$seedlot_name} = {
             accession => $accession_name,
             accession_stock_id => $accession_lookup{$accession_name},
+            cross_name => $cross_name,
+            cross_stock_id => $cross_lookup{$cross_name},
             amount => $amount,
             description => $description
         };

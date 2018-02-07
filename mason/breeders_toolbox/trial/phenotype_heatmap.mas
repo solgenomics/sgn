@@ -60,7 +60,7 @@ $trial_id
 </div>
 <div id="chart"></div>
 <div class="col-sm-10" id="d_button" style="display:none";>
- <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; --> 
+ <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
 </div>
 
 <div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
@@ -142,10 +142,64 @@ $trial_id
     </div>
 </div>
 
+<div class="modal  fade" id="delete_trait_dialog_confirm_message" name="delete_trait_dialog_confirm_message" tabindex="-1" role="dialog" aria-labelledby="DeleteAssayedTraitDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteAssayedTraitDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trait_deletion_form" name="trait_deletion_form">
+
+                    <p3><b>Please, confirm the deletion of selected trait...</b></p3> </br></br>
+                    <center><p2> ...trait is deleted permanently from the database...</p2></center>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_trait_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_selected_trait_dialog_submit" id="delete_selected_trait_dialog_submit">Delete Trait</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="delete_trait_dialog_success_message" name="delete_trait_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="TraitDeletionDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="TraitDeletionDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_trait_form" name="delete_trait_form">
+
+                    <p3> Trait deletion was successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trait_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
 var value = 'plot';
 var selected;
+var phenotypes_id = [];
 jQuery(document).ready( function() {
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
@@ -196,7 +250,9 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 var col_length; 
-                var row_length;
+                var row_length;        
+                var false_coord = response.phenotypes.false_coord;
+                phenotypes_id = response.phenotypes.phenoID;
                 for (i=0; i<response.phenotypes.col.length; i++) {
                     if (response.phenotypes.col[i] && response.phenotypes.row[i]){
                         //console.log(response.phenotypes.col[i]);
@@ -210,6 +266,7 @@ jQuery(document).ready( function() {
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
                     jQuery("#trait_heatmap").css("display", "none");
                     jQuery("#d_button").css("display", "inline-block");
+                    
 
                   var margin = { top: 50, right: 0, bottom: 100, left: 30 },
                       width = 960 - margin.left - margin.right,
@@ -345,7 +402,9 @@ jQuery(document).ready( function() {
                     } ; 
                   
                   heatmapChart(datasets);
-              
+                  if (false_coord){
+                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                  }
                 }
                 else  {
                     jQuery("#working_modal").modal("hide");
@@ -400,7 +459,43 @@ jQuery(document).ready( function() {
             alert('An error occurred suppressing phenotype');
           }
     });
-  } 
+  }
+  
+  jQuery("#delete_trait").click(function() {
+    jQuery("#delete_trait_dialog_confirm_message").modal("show");
+  });
+  jQuery("#delete_selected_trait_dialog_submit").click(function() {
+    delete_selected_assayed_trait();
+  }); 
+  
+  function delete_selected_assayed_trait() {
+    var pheno_id = phenotypes_id;
+    new jQuery.ajax({
+        type: 'POST',
+        traditional: true,
+        url: '/ajax/breeders/trial/<% $trial_id %>/delete_single_trait',
+        dataType: "json",
+        data: {
+            'pheno_id': JSON.stringify(pheno_id),
+        },
+        beforeSend: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error){
+                alert("Error deleting trait:" +response.error);
+            }else{
+                jQuery("#delete_trait_dialog_success_message").modal("show");
+            }
+        },
+        error: function(){
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred deleting trait');
+        }
+    });
+  
+  }
       
 });
 

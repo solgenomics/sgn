@@ -29,6 +29,7 @@ $trial_description => undef
 $user_can_modify => undef
 $has_plant_entries => undef
 $has_subplot_entries => undef
+$has_tissue_sample_entries => undef
 $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
@@ -311,6 +312,25 @@ my $start_time = time();
 
 </&>
 
+
+<&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+
+<div id="tissue_sample_entries_section">
+
+% if (!$has_tissue_sample_entries) {
+   <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
+   <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
+
+% } else {
+
+<& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
+
+% }
+
+</div><!--closes tissue_sample_entries_section -->
+
+</&>
+
 <& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
 <&| /page/info_section.mas, id => "trial_treatments", title=>"Field Management Factors",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_detail_page_add_treatment'>Add Management Factor</a>]" &>
 
@@ -378,29 +398,39 @@ my $start_time = time();
 
 <div class="well well-sm">
 
-  <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
-    </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">Create Field Book</a>]' &>
-    </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
-    </&>
-  </&><!-- closes create new phenotyping file section -->
-  <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
-    </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
-    </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
-    </&>
-  </&><!-- closes upload new phenotype file section -->
-  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="trial_set_phenotypes_fully_link">Phenotypes Fully Uploaded?</a>]' &>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+                <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+                </&>
+                <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">Create Field Book</a>]' &>
+                </&>
+                <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
+                </&>
+            </&><!-- closes create new phenotyping file section -->
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+                <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
+                </&>
+            </&><!-- closes upload new phenotype file section -->
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="trial_set_phenotypes_fully_link">Phenotypes Fully Uploaded?</a>]' &>
 
-  <table class="table table-bordered files_datatables" alt="">
-  <thead>
-    <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
-  </thead>
-  <tbody>
+                <table class="table table-bordered files_datatables" alt="">
+                    <thead>
+                        <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
+                    </thead>
+                    <tbody>
 % foreach my $f (@$trial_phenotype_files) {
     <tr>
       <td><% $f->[4] %></td>
@@ -410,10 +440,21 @@ my $start_time = time();
       <td><a href="/breeders/phenotyping/view/<% $f->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->[0] %>">Download</a></td>
     </tr>
 % }
-  </tbody>
-  </table>
+                    </tbody>
+                </table>
 
-  </&><!-- closes uploaded file section -->
+            </&><!-- closes uploaded file section -->
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="trial_upload_additional_files_link">Upload Additional Files</a>]' &>
+
+            <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id &>
+
+            </&><!-- closes uploaded additional file section -->
+        </div>
+    </div>
 
 </div><!-- closes well -->
 
@@ -446,6 +487,10 @@ my $start_time = time();
 
 <!-- Phenotypic correlation analysis -->
 <& /solgs/population/correlation.mas,
+   trial_id => $trial_id
+&>
+
+<& /anova.mas,
    trial_id => $trial_id
 &>
 

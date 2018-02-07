@@ -46,6 +46,7 @@ use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -60,24 +61,6 @@ has 'schema' => (
 		 isa      => 'DBIx::Class::Schema',
 		 lazy_build => 1,
 		);
-
-#DEPRECATED by lack of use. below functions handle saving an uploaded trial and generating/saving a new trial.
-#sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
-
-#sub get_trial_layout_POST : Args(0) {
-#  my ($self, $c) = @_;
-#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#  my $project;
-#  print STDERR "\n\ntrial layout controller\n";
-#  my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, project => $project} );
-
-  #my $trial_id = $c->req->parm('trial_id');
-  # my $project = $schema->resultset('Project::Project')->find(
-  # 							     {
-  # 							      id => $trial_id,
-  # 							     }
-  # 							    );
-#}
 
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
@@ -561,8 +544,17 @@ sub save_experimental_design_POST : Args(0) {
         }
     }
 }
-$c->stash->{rest} = {success => "1",}; 
-return;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {success => "1",}; 
+    return;
 }
 
 
@@ -808,6 +800,16 @@ sub upload_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => "1"};
         return;
     }
