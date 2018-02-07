@@ -126,7 +126,12 @@ Trials on the database can be searched based on trial name, description, breedin
 2.4 Trait Search
 -----------------
 
-On the Trait Search page (menu item `Search > Traits`), traits in the database can be searched by ID, name, or descripiton. Selecting traits in the results of the search allows one to add the selected results to a trait list, or create a new trait list from the select results.
+On the Trait Search page (menu item `Search > Traits`), traits in the database can be searched by ID, name, or descripiton. Optionally, a starting list of traits can be selected to filter down results.
+
+![]({{"assets/images/trait-search-default.png" | relative_url }})
+
+Selecting traits in the results of the search allows one to add the selected results to a trait list, or create a new trait list from the select results.
+
 ![]({{"assets/images/trait-search.png" | relative_url }})
 
 2.5 Ontology Browser
