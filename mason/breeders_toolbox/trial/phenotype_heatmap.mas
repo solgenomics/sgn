@@ -428,6 +428,10 @@ jQuery(document).ready( function() {
                                                                             //console.log('over');
                                                         })
                           .on("mouseout", function(d) { 
+                                                          var colorScale = d3.scale.quantile()
+                                                              .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
+                                                              .range(colors);
+                          
                                                           var cards = svg.selectAll(".col")
                                                               .data(datasets, function(d) {return d.row+':'+d.col;});
 
