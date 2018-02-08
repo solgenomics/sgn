@@ -376,7 +376,32 @@ sub add_cvtermprop_POST {
     } else {
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
-    #$c->stash->{rest} = { message => 'success' };
+}
+
+sub delete_cvtermprop : Path('/cvterm/prop/delete') : ActionClass('REST') { }
+
+sub delete_cvtermprop_GET {
+    my $self = shift;
+    my $c = shift;
+    my $cvtermprop_id = $c->req->param("cvtermprop_id");
+    if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $cvtermprop = $schema->resultset("Cv::Cvtermprop")->find( { cvtermprop_id => $cvtermprop_id });
+    if (! $cvtermprop) {
+	$c->stash->{rest} = { error => 'The specified prop does not exist' };
+	return;
+    }
+    eval {
+	$cvtermprop->delete();
+    };
+    if ($@) {
+	$c->stash->{rest} = { error => "An error occurred during deletion: $@" };
+	    return;
+    }
+    $c->stash->{rest} = { message => "The cvterm prop was removed from the database." };
 }
 
 ####
