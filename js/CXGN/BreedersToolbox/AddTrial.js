@@ -427,20 +427,20 @@ jQuery(document).ready(function ($) {
                     $('#trial_design_confirm').modal("show");
                     design_json = response.design_json;
                     
-                    var col_length; 
-                    var row_length;
+                    var col_length = response.design_map_view.coord_col[0]; 
+                    var row_length = = response.design_map_view.coord_row[0];
                     var block_max = response.design_map_view.max_block;
                     var rep_max = response.design_map_view.max_rep;
                     var col_max =  response.design_map_view.max_col;
                     var row_max =  response.design_map_view.max_row;
                     var controls = response.design_map_view.controls;
                     var false_coord = response.design_map_view.false_coord;
-                    for (i=0; i<response.design_map_view.coord_col.length; i++) {
-                        if (response.design_map_view.coord_col[i] && response.design_map_view.coord_row[i]){
-                            col_length = response.design_map_view.coord_col[i];
-                            row_length = response.design_map_view.coord_row[i];
-                        }
-                    }
+                    //for (i=0; i<response.design_map_view.coord_col.length; i++) {
+                    //    if (response.design_map_view.coord_col[i] && response.design_map_view.coord_row[i]){
+                    //        col_length = response.design_map_view.coord_col[i];
+                    //        row_length = response.design_map_view.coord_row[i];
+                    //    }
+                    //}
                     if (col_length && row_length) {
                         jQuery("#container_field_map_view").css({"display": "inline-block", "overflow": "auto"});
                         jQuery("#d3_legend").css("display", "inline-block");
