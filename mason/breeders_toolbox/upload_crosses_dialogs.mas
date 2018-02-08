@@ -131,6 +131,8 @@
                 <td>cross_type</td>
                 <td>female_parent</td>
                 <td>male_parent</td>
+                <td>female_plot</td>
+                <td>male_plot</td>
               </tr>
               </tbody>
             </table>
@@ -139,16 +141,19 @@
               Required columns:
             </b>
             <br>
-            cross_name (must not conflict with an existing cross name)
+            <b>-cross_name</b> (must not conflict with an existing cross name)
             <br>
-            cross_type (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
+            <b>-cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
             <br>
-            female_parent (must exist in the database)
+            <b>-female_parent</b> (must exist in the database)
             <br>
-            male_parent (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, must exist in the database)
+            <b>-male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, must exist in the database)
+            <br>
+            <b>-female_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)
+            <br>
+            <b>-male_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)
             <br>
             <br>
-
             <b>
               Optional columns (dates must be in the format YYYY-MM-DD):
             </b>
