@@ -19,6 +19,8 @@ use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 use File::Basename qw | basename dirname|;
+use Try::Tiny;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -58,6 +60,19 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
 	return;
     }
 
+    try {
+        my %param = ( schema => $bcs_schema, trial_id => $trial_id );
+        if ($c->stash->{trial}->get_design_type() eq 'genotyping_plate'){
+            $param{experiment_type} = 'genotyping_layout';
+        } else {
+            $param{experiment_type} = 'field_layout';
+        }
+        $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
+    }
+    catch {
+        print STDERR "Trial Layout for $trial_id does not exist.\n";
+    }
+
 }
 
 =head2 delete_trial_by_file
@@ -89,8 +104,16 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
 
     elsif ($datatype eq 'layout') {
-	$error = $c->stash->{trial}->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-	$error = $c->stash->{trial}->delete_field_layout();
+        $error = $c->stash->{trial}->delete_metadata();
+        $error = $c->stash->{trial}->delete_field_layout();
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
     }
     elsif ($datatype eq 'entry') {
 	$error = $c->stash->{trial}->delete_project_entry();
@@ -531,10 +554,7 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
 
             $sl->set_current_count_property();
         }
-        my $layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $c->stash->{trial_id}
-        });
+        my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
     };
     eval {
@@ -638,10 +658,7 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
         $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments);
 
-        my $layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $c->stash->{trial_id}
-        });
+        my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
     };
     eval {
@@ -650,6 +667,14 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
     if ($@) {
         $c->stash->{rest} = { error => $@ };
         print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
         $c->detach();
     }
 
@@ -781,10 +806,7 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
             $previous_plot_gps_rs->delete_all();
             $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
         }
-        my $layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $c->stash->{trial_id}
-        });
+        my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
     };
     eval {
@@ -793,6 +815,14 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     if ($@) {
         $c->stash->{rest} = { error => $@ };
         print STDERR "An error condition occurred, was not able to upload trial plot GPS coordinates. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
         $c->detach();
     }
 
@@ -954,6 +984,27 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     $c->stash->{rest} = { plants => \@data };
 }
 
+sub trial_has_tissue_samples : Chained('trial') PathPart('has_tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { has_tissue_samples => $trial->has_tissue_sample_entries(), trial_name => $trial->get_name };
+}
+
+sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my $data = $trial->get_tissue_samples();
+
+    $c->stash->{rest} = { trial_tissue_samples => $data };
+}
+
 sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -981,6 +1032,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $design = decode_json $c->req->param('design');
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
     my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
+    my $new_treatment_has_tissue_entries = $c->req->param('has_tissue_sample_entries');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -991,6 +1043,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
         new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
+        new_treatment_has_tissue_sample_entries => $new_treatment_has_subplot_entries,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
@@ -1006,7 +1059,7 @@ sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my $layout = $c->stash->{trial_layout};
 
     my $design = $layout->get_design();
     $c->stash->{rest} = {design => $design};
@@ -1017,7 +1070,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my $layout = $c->stash->{trial_layout};
 
     my $design = $layout->get_design();
     my $design_type = $layout->get_design_type();
@@ -1075,12 +1128,7 @@ sub retrieve_trial_info_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_id = $c->req->param('trial_id');
-
-    my $layout = CXGN::Trial::TrialLayout->new({
-  		schema => $schema,
-  		trial_id => $trial_id
-  	});
-
+    my $layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
   	my $design = $layout-> get_design();
     #print STDERR Dumper($design);
 
@@ -1111,7 +1159,7 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, verify_layout=>1, verify_physical_map=>1});
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
     my $trial_errors = $trial_layout->generate_and_cache_layout();
     my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
     my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;
@@ -1145,7 +1193,6 @@ sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_comple
     $c->stash->{rest} = {has_phenotypes => $has_phenotypes};
 }
 
-#sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
   my $self = shift;
 	my $c = shift;
@@ -1168,7 +1215,17 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     return;
   }
 
-  $c->stash->{rest} = {success => 1};
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
+    $trial_layout->generate_and_cache_layout();
+
+    $c->stash->{rest} = {success => 1};
 }
 
 sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
@@ -1310,7 +1367,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   $c->stash->{rest} = { success => 1};
 }
 
-sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
+sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Args(0) {
     my $self = shift;
     my $c = shift;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
@@ -1333,11 +1390,71 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
     if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments)) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => 1};
         return;
     } else {
         $c->stash->{rest} = { error => "Error creating plant entries in controller." };
     	return;
+    }
+
+}
+
+sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
+    my $tissue_names = decode_json $c->req->param("tissue_samples_names");
+    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $tissues_with_treatments;
+    if($inherits_plot_treatments eq '1'){
+        $tissues_with_treatments = 1;
+    }
+
+    if (my $error = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $error };
+        $c->detach;
+    }
+
+    if (!$c->stash->{trial}->has_plant_entries){
+        $c->stash->{rest} = { error => "Trial must have plant entries before you can add tissue samples entries. Plant entries are added from the trial detail page." };
+        $c->detach;
+    }
+
+    if (!$tissue_names || scalar(@$tissue_names) < 1){
+        $c->stash->{rest} = { error => "You must provide tissue name(s) for your samples" };
+        $c->detach;
+    }
+
+    if (!$tissues_per_plant || $tissues_per_plant > 50) {
+        $c->stash->{rest} = { error => "Tissues per plant is required and must be smaller than 50." };
+        $c->detach;
+    }
+
+    my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
+        $c->stash->{rest} = {success => 1};
+        $c->detach;;
+    } else {
+        $c->stash->{rest} = { error => "Error creating tissues samples in controller." };
+        $c->detach;;
     }
 
 }
@@ -1434,14 +1551,19 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
       }
     }
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({
-       schema => $schema,
-       trial_id => $trial_id
-    });
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
 
     if ($error_string){
         $c->stash->{rest} = {error_string => $error_string};
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
         $c->detach();
     }
 

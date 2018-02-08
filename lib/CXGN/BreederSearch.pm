@@ -331,6 +331,7 @@ sub refresh_matviews {
   my $dbname = shift;
   my $dbuser = shift;
   my $dbpass = shift;
+  my $materialized_view = shift || 'fullview'; #Can be 'fullview' or 'stockprop'
   my $refresh_type = shift || 'concurrent';
   my $refresh_finished = 0;
   my $async_refresh;
@@ -342,17 +343,17 @@ sub refresh_matviews {
   my $refreshing = $h->fetchrow_array();
 
   if ($refreshing) {
-    return { error => 'Wizard update already in progress . . . ' };
+    return { error => $materialized_view.' update already in progress . . . ' };
   }
   else {
     try {
       my $dbh = $self->dbh();
       if ($refresh_type eq 'concurrent') {
-        #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
       } else {
-        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view");
       }
 
       for (my $i = 1; $i < 10; $i++) {
@@ -365,13 +366,13 @@ sub refresh_matviews {
       }
 
       if ($refresh_finished) {
-        return { message => 'Wizard update completed!' };
+        return { message => $materialized_view.' update completed!' };
       } else {
-        return { message => 'Wizard update initiated.' };
+        return { message => $materialized_view.' update initiated.' };
       }
     } catch {
-      print STDERR 'Error initiating wizard update.' . $@ . "\n";
-      return { error => 'Error initiating wizard update.' . $@ };
+      print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
+      return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
     }
   }
 }

@@ -45,6 +45,7 @@ use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -545,8 +546,17 @@ sub save_experimental_design_POST : Args(0) {
         }
     }
 }
-$c->stash->{rest} = {success => "1",}; 
-return;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {success => "1",}; 
+    return;
 }
 
 
@@ -793,6 +803,16 @@ sub upload_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => "1"};
         return;
     }

@@ -54,7 +54,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    my $trial_id = shift;
 #    my $format = $c->req->param("format");
 
-#    my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+#    my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
 
 #    my $design = $trial->get_design();
 
