@@ -43,7 +43,7 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
     my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
     my $props = $self->_cvtermprops($cvterm);
-   
+    my $editable_cvterm_props = "trait_format,trait_default_value,trait_minimum,trait_maximum,trait_details,trait_categories";
    
     
     $c->stash(
@@ -56,6 +56,7 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
             sequencer => $sequencer,
             person_id => $person_id,
 	    props     => $props,
+	    editable_cvterm_props => $editable_cvterm_props,
 	}
 	);
     

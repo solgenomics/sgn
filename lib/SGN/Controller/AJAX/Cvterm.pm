@@ -340,6 +340,45 @@ sub get_cvtermprops_GET {
 
 }
 
+sub add_cvtermprop : Path('/cvterm/prop/add') : ActionClass('REST') { }
+
+sub add_cvtermprop_POST {
+    my ( $self, $c ) = @_;
+    my $response;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (!$c->user()) {
+	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+    }
+
+    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        my $req = $c->req;
+        my $cvterm_id = $c->req->param('cvterm_id');
+        my $prop  = $c->req->param('prop');
+        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+        my $prop_type = $c->req->param('prop_type');
+
+	my $cvterm = $schema->resultset("Cv::Cvterm")->find( { cvterm_id => $cvterm_id } );
+
+    if ($cvterm && $prop && $prop_type) {
+
+        try {
+            $cvterm->create_cvtermprops( { $prop_type => $prop }, { autocreate => 1 } );
+	    
+            my $dbh = $c->dbc->dbh();
+	    $c->stash->{rest} = { message => "cvterm_id $cvterm_id and type_id $prop_type have been associated with value $prop. " };
+	
+	} catch {
+            $c->stash->{rest} = { error => "Failed: $_" }
+        };
+    } else {
+	$c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with cvterm $cvterm_id " };
+	}
+    } else {
+	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+    }
+    #$c->stash->{rest} = { message => 'success' };
+}
+
 ####
 1;##
 ####

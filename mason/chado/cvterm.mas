@@ -49,7 +49,7 @@ my $cvterm_name = $cvterm->name;
 my $definition  = $cvterm->definition;
 my $comment     = '' ;#$cvterm->comment;
 #$stockref->{props} (hash of arrayrefs of cvtermprops. Keys = prop name, value = prop value)
-my $editable_cvterm_props_string = "trait_minimum, trait_maximum"; #$cvtermref->{editable_cvterm_props};
+my $editable_cvterm_props_string = $cvtermref->{editable_cvterm_props};
 my @editable_cvterm_props = split "," , $editable_cvterm_props_string;
 
 

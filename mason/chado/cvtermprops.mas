@@ -38,11 +38,10 @@ Naama Menda <nm249@cornell.edu>
 use JSON::Any;
 
 my $subset_json = JSON::Any->objToJson($subset);
-print STDERR "^^^^^^^^^^^^^^^SUBSET = $subset_json **** \n\n";
 
 $div_name ||= join("_", @$subset);
 $div_name =~ s/ +/\_/g;
-print STDERR "****div_name = $div_name *****\n\n\n";
+
 my $prop_select = prop_select($editable, $div_name);
 
 $edit_privs ||= 0;
