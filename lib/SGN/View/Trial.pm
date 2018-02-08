@@ -85,7 +85,7 @@ sub design_layout_map_view {
     my @rep_numbers = ();
     my @block_numbers = ();
     my @check_names = ();
-    
+
     foreach my $key (sort { $a <=> $b} keys %design) { 
         my $plot_name = $design{$key}->{plot_name} || '';
         my $stock_name = $design{$key}->{stock_name} || '';
@@ -129,9 +129,6 @@ sub design_layout_map_view {
             plot_name => $plot_name,
             accession_name => $stock_name,
         };
-        
-#        my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep_number."\nstock:".$stock_name;
-#        push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep_number, row=>$row_number, col=>$col_number, plot_msg=>$plot_popUp} ;
     }
     @layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
     
@@ -187,7 +184,7 @@ sub design_layout_map_view {
 		false_coord => $false_coord,
 		result => $result,
 	);
-    
+
     return  \%return;    
 }
 

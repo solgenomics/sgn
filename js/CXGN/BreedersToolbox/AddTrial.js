@@ -428,7 +428,7 @@ jQuery(document).ready(function ($) {
                     design_json = response.design_json;
                     
                     var col_length = response.design_map_view.coord_col[0]; 
-                    var row_length = = response.design_map_view.coord_row[0];
+                    var row_length = response.design_map_view.coord_row[0];
                     var block_max = response.design_map_view.max_block;
                     var rep_max = response.design_map_view.max_rep;
                     var col_max =  response.design_map_view.max_col;
