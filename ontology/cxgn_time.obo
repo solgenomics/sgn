@@ -532,3 +532,9 @@ synonym: "PHVT" EXACT []
 def: "post harvesting stage"
 is_a: TIME:0000076
 
+[Term]
+id: TIME:0000080
+name: "planting"
+synonym: "PLT" EXACT []
+def: "planting stage"
+is_a: TIME:0000076
