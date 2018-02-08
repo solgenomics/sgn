@@ -32,7 +32,10 @@ Chained off of L</get_cvterm> below.
 sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
     my $cvterm = $c->stash->{cvterm};
-    
+    my $cvterm_id = $cvterm ? $cvterm->cvterm_id : undef ;
+   
+    my $bcs_cvterm = $cvterm->cvterm;
+       
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     my $user_role = 1 if $logged_user;
@@ -40,7 +43,8 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
     my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
     my $props = $self->_cvtermprops($cvterm);
-    my $bcs_cvterm = $cvterm->cvterm;
+   
+   
     
     $c->stash(
 	template => '/chado/cvterm.mas',
@@ -73,15 +77,15 @@ sub get_cvterm : Chained('/')  PathPart('cvterm')  CaptureArgs(1) {
         || $cvterm_id =~ /[^-\d]/ ? 'accession' : 'cvterm_id';
     
     my $cvterm;
-    #if( $identifier_type eq 'cvterm_id' ) {
+    if( $identifier_type eq 'cvterm_id' ) {
 	$cvterm = CXGN::Cvterm->new({ schema=>$self->schema, cvterm_id => $cvterm_id } );
-    #} elsif ( $identifier_type eq 'accession' )  {
-	#$cvterm = CXGN::Chado::Cvterm->new_with_accession ($c->dbc->dbh , $cvterm_id) ;
-    #}
-    my $found_cvterm_id = $cvterm->cvterm_id
-	or $c->throw_404( "Cvterm not found" );
-       
-    $c->stash->{cvterm}     = $cvterm; #CXGN::Chado::Cvterm->new($c->dbc->dbh, $found_cvterm_id);
+    } elsif ( $identifier_type eq 'accession' )  {
+	$cvterm = CXGN::Cvterm->new({ schema=>$self->schema, accession=>$cvterm_id } ) ;
+    }
+    my $found_cvterm = $cvterm->cvterm 
+	or $c->throw_404( "Cvterm $cvterm_id not found" );
+    
+    $c->stash->{cvterm}     = $cvterm; 
     
     return 1;
 }
@@ -93,7 +97,9 @@ sub _cvtermprops {
 
     my $properties ;
     if ($cvterm) {
-        my $cvtermprops = $cvterm->cvterm->search_related("cvtermprops");
+	my $bcs_cvterm = $cvterm->cvterm;
+	if (!$bcs_cvterm) { return undef ; } 
+        my $cvtermprops = $bcs_cvterm->search_related("cvtermprops");
         while ( my $prop =  $cvtermprops->next ) {
             push @{ $properties->{$prop->type->name} } ,   $prop->value ;
         }

@@ -99,7 +99,7 @@ sub BUILD {
     my $cvterm;
     if ($self->cvterm_id){
         $cvterm = $self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id => $self->cvterm_id() });
-    } elsif ($self->accession && $self->cv_id )   {
+    } elsif ($self->accession )   {
 	my ($db_name, $dbxref_accession) = split "\:", $self->accession;
 	
 	#InterPro accessions have a namespace (db.name) that is different from the accession prefic
