@@ -106,6 +106,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
     $c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
     $c->stash->{expression_atlas_url} = $c->config->{expression_atlas_url};
+    $c->stash->{main_production_site_url} = $c->config->{main_production_site_url};
     $c->stash->{site_project_name} = $c->config->{project_name};
     $c->stash->{sgn_session_id} = $c->req->cookie('sgn_session_id');
     $c->stash->{user_name} = $c->user->get_object->get_username;
@@ -212,6 +213,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    if ($data_level eq 'plate'){
+        $selected_cols = {'plot_number'=>1, 'plot_name'=>1, 'accession_name'=>1, 'genotyping_project_name'=>1, 'genotyping_user_id'=>1, 'location_name'=>1, 'genus'=>1, 'species'=>1, 'trial_name'=>1, 'pedigree'=>1};
+    }
     my $selected_trait_list_id = $c->req->param('trait_list_id');
     my @selected_trait_names;
     my @trait_list;

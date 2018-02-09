@@ -716,7 +716,7 @@ my $format = 'ExcelBasic';
 my $create_spreadsheet = CXGN::Trial::Download->new( 
   { 
   bcs_schema => $f->bcs_schema,
-  trial_id => $trial_id,
+  trial_list => [$trial_id],
   trait_list => \@trait_list,
   filename => $tempfile,
   format => $format,
@@ -728,7 +728,7 @@ my @contents = ReadData ($tempfile);
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 9, "check number of col in created file.");
+ok(scalar(@$columns) == 12, "check number of col in created file.");
 
 #print STDERR Dumper @contents->[0]->[0];
 is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
@@ -738,9 +738,9 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
                             undef,
                             'Spreadsheet ID',
-                            'Trial name',
-                            'Description',
-                            'Trial location',
+                            'Trial name(s)',
+                            'Description(s)',
+                            'Trial location(s)',
                             'Predefined Columns',
                             undef,
                             'plot_name',
@@ -766,8 +766,8 @@ my $contents_col_2 = @contents->[0]->[1]->{'cell'}->[2];
 splice @$contents_col_2, 0, 2;
 #print STDERR Dumper $contents_col_2;
 is_deeply($contents_col_2, ['test_trial',
-                            'test trial',
-                            'test_location',
+                            'test_trial: test trial',
+                            'test_trial: test_location',
                             '[]',
                             undef,
                             'accession_name',
@@ -788,13 +788,14 @@ is_deeply($contents_col_2, ['test_trial',
                             'test_accession2'
                           ], "check 2nd col");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[3];
 is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                             undef,
                             'Spreadsheet format',
                             'Operator',
                             'Date',
-                            'Design Type',
-                            'Treatment',
+                            'Design Type(s)',
+                            undef,
                             undef,
                             'plot_number',
                             '1',
@@ -814,12 +815,13 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                             '15'
                           ], "check thrid col");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[4];
 is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
                             undef,
                             'BasicExcel',
                             'Enter operator here',
                             'Enter date here',
-                            'CRD',
+                            'test_trial: CRD',
                             undef,
                             undef,
                             'block_number',
@@ -877,7 +879,88 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
                             '3'
                           ], "check 6th col");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[7];
 is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'planting_date',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04'
+        ], "check 7th col");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
+is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'harvest_date',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21'
+        ], "check 8th col");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
+is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'trial_name',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial'
+        ], "check 9th col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
                             undef,
                             undef,
                             undef,
@@ -886,9 +969,9 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
                             undef,
                             undef,
                             'dry matter content percentage|CO_334:0000092'
-                          ], "check 7th col");
+                          ], "check 10th col");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
                             undef,
                             undef,
                             undef,
@@ -897,7 +980,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
                             undef,
                             undef,
                             'fresh root weight|CO_334:0000012'
-                          ], "check 8th col");
+                          ], "check 11th col");
 
 
 my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
@@ -906,7 +989,7 @@ my $format = 'ExcelBasic';
 my $create_spreadsheet = CXGN::Trial::Download->new( 
 { 
 bcs_schema => $f->bcs_schema,
-trial_id => $trial_id,
+trial_list => [$trial_id],
 trait_list => \@trait_list,
 filename => $tempfile,
 format => $format,
@@ -920,7 +1003,7 @@ my @contents = ReadData ($tempfile);
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 11, "check number of col in created file.");
+ok(scalar(@$columns) == 14, "check number of col in created file.");
 
 #print STDERR Dumper @contents->[0];
 is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
@@ -930,9 +1013,9 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
                           undef,
                           'Spreadsheet ID',
-                          'Trial name',
-                          'Description',
-                          'Trial location',
+                          'Trial name(s)',
+                          'Description(s)',
+                          'Trial location(s)',
                           'Predefined Columns',
                           undef,
                           'plant_name',
@@ -973,8 +1056,8 @@ my $contents_col_2 = @contents->[0]->[1]->{'cell'}->[2];
 splice @$contents_col_2, 0, 2;
 #print STDERR Dumper $contents_col_2;
 is_deeply($contents_col_2, ['test_trial',
-                          'test trial',
-                          'test_location',
+                          'test_trial: test trial',
+                          'test_trial: test_location',
                           '["plant_age"]',
                           undef,
                           'plot_name',
@@ -1010,13 +1093,14 @@ is_deeply($contents_col_2, ['test_trial',
                           'test_trial215'
                         ], "check col2");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[3];
 is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                           undef,
                           'Spreadsheet format',
                           'Operator',
                           'Date',
-                          'Design Type',
-                          'Treatment',
+                          'Design Type(s)',
+                          undef,
                           undef,
                           'accession_name',
                           'test_accession4',
@@ -1051,12 +1135,13 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                           'test_accession2'
                         ], "check col3");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[4];
 is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
                           undef,
                           'BasicExcel',
                           'Enter operator here',
                           'Enter date here',
-                          'CRD',
+                          'test_trial: CRD',
                           undef,
                           undef,
                           'plot_number',
@@ -1185,7 +1270,133 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
                           '3'
                         ], "check col7");
 
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
 is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'planting_date',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04',
+          '2017-July-04'
+        ], "check col8");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
+is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'harvest_date',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21',
+          '2017-July-21'
+        ], "check col9");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
+is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          undef,
+          'trial_name',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial',
+          'test_trial'
+        ], "check col10");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
                           undef,
                           undef,
                           undef,
@@ -1224,9 +1435,9 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
                           '2 weeks',
                           '2 weeks',
                           '2 weeks'
-                        ], "check col8");
+                        ], "check col11");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+is_deeply(@contents->[0]->[1]->{'cell'}->[12], [
                           undef,
                           undef,
                           undef,
@@ -1235,9 +1446,9 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
                           undef,
                           undef,
                           'dry matter content percentage|CO_334:0000092'
-                        ], "check col9");
+                        ], "check col12");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+is_deeply(@contents->[0]->[1]->{'cell'}->[13], [
                           undef,
                           undef,
                           undef,
@@ -1246,9 +1457,6 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
                           undef,
                           undef,
                           'fresh root weight|CO_334:0000012'
-                        ], "check col10");
+                        ], "check col13");
 
 done_testing();
-
-
-

@@ -47,7 +47,8 @@ retrieves a stock row
 
 sub get_stock {
   my $self = shift;
-  my $stock_rs = $self->_get_stock_resultset();
+  my $stock_type_id = shift;
+  my $stock_rs = $self->_get_stock_resultset($stock_type_id);
   my $stock;
   if ($stock_rs->count > 0) {
     $stock = $stock_rs->first;
@@ -148,19 +149,24 @@ sub get_organization_hash_lookup {
 
 sub _get_stock_resultset {
   my $self = shift;
+  my $stock_type_id = shift;
   my $schema = $self->get_schema();
   my $stock_name = $self->get_stock_name();
+  my $search_hash = {
+      'me.is_obsolete' => { '!=' => 't' },
+      -or => [
+          'lower(me.uniquename)' => { like => lc($stock_name) },
+          -and => [
+               'lower(type.name)'       => { like => '%synonym%' },
+               'lower(stockprops.value)' => { like => lc($stock_name) },
+              ],
+         ],
+  };
+  if ($stock_type_id){
+      $search_hash->{'me.type_id'} = $stock_type_id;
+  }
   my $stock_rs = $schema->resultset("Stock::Stock")
-      ->search({ 'me.is_obsolete' => { '!=' => 't' },
-	      -or => [
-		      'lower(me.uniquename)' => { like => lc($stock_name) },
-
-		      -and => [
-			       'lower(type.name)'       => { like => '%synonym%' },
-			       'lower(stockprops.value)' => { like => lc($stock_name) },
-			      ],
-		     ],
-	     },
+      ->search($search_hash,
 	     {
 	      join => { 'stockprops' => 'type'} ,
 	      distinct => 1

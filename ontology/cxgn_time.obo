@@ -506,28 +506,29 @@ def: "" []
 is_a: TIME:0000005
 
 [Term]
-id: TIME:0000072
-name: generation
-def: "Categorical plant generations." []
+id: TIME:0000076
+name: "categorical plant stage"
+def: "." []
 is_a: TIME:0000000
 
 [Term]
-id: TIME:0000073
-name: cycle 1
-synonym: "C1" EXACT []
-def: "First cycle." []
-is_a: TIME:0000072
+id: TIME:0000077
+name: "shooting"
+synonym: "SHT" EXACT []
+def: "shooting stage"
+is_a: TIME:0000076
 
 [Term]
-id: TIME:0000074
-name: cycle 2
-synonym: "C2" EXACT []
-def: "Second cycle." []
-is_a: TIME:0000072
+id: TIME:0000078
+name: "harvesting"
+synonym: "HVT" EXACT []
+def: "harvesting stage"
+is_a: TIME:0000076
 
 [Term]
-id: TIME:0000075
-name: cycle 3
-synonym: "C3" EXACT []
-def: "Third cycle." []
-is_a: TIME:0000072
+id: TIME:0000079
+name: "post-harvesting"
+synonym: "PHVT" EXACT []
+def: "post harvesting stage"
+is_a: TIME:0000076
+

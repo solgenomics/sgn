@@ -78,11 +78,11 @@ sub submit :Path('/solgs/submit/intro')  Args(0) {
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
-    $self->gs_traits_index($c);
-    my $gs_traits_index = $c->stash->{gs_traits_index};
+    #$self->gs_traits_index($c);
+    #my $gs_traits_index = $c->stash->{gs_traits_index};
           
     $c->stash(template        => $self->template('/search/solgs.mas'),               
-	      gs_traits_index => $gs_traits_index,           
+	   #   gs_traits_index => $gs_traits_index,           
             );
 
 }
@@ -148,15 +148,15 @@ sub projects_links {
 
 	unless ($dummy_name || !$pr_name )
 	{ 
-	    $self->trial_compatibility_table($c, $has_genotype);
-	    my $match_code = $c->stash->{trial_compatibility_code};
+	    #$self->trial_compatibility_table($c, $has_genotype);
+	    #my $match_code = $c->stash->{trial_compatibility_code};
 	   	    
 	    my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
-	    $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
+	    #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
 
 	    push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, 
-				   $pr_desc, $pr_location, $pr_year, $match_code
+				   $pr_desc, $pr_location, $pr_year
 		];          
 
 	  
@@ -2482,8 +2482,8 @@ sub format_selection_pops {
               my $name = $row->name;
               my $desc = $row->description;
             
-              unless ($name =~ /test/ || $desc =~ /test/)   
-              {
+             # unless ($name =~ /test/ || $desc =~ /test/)   
+             # {
                   my $id_pop_name->{id}    = $prediction_pop_id;
                   $id_pop_name->{name}     = $name;
                   $id_pop_name->{pop_type} = 'selection';
@@ -2506,7 +2506,7 @@ sub format_selection_pops {
                   my $download_prediction = $c->stash->{download_prediction};
 
                   push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
-              }
+             # }
           }
         }
     }

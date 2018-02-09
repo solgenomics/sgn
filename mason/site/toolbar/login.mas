@@ -32,6 +32,9 @@
       <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists">
         Lists <span class="glyphicon glyphicon-list-alt" ></span>
       </button>
+      <!-- button id="navbar_datasets" name="datasets_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets">
+        Datasets <span class="glyphicon glyphicon-list-alt" ></span>
+      </button -->
       <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
       </button>
       <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="location.href='/solpeople/login.pl?logout=yes';" title="Logout"></button>
