@@ -33,7 +33,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use JSON -support_by_pp;
-use SGN::View::Trial qw/design_layout_view design_info_view/;
+use SGN::View::Trial qw/design_layout_view design_info_view design_layout_map_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
@@ -78,6 +78,7 @@ sub generate_experimental_design_POST : Args(0) {
   my @stock_names;
   my $design_layout_view_html;
   my $design_info_view_html;
+  my $design_map_view;
   if ($c->req->param('stock_list')) {
       @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
   }
@@ -375,7 +376,7 @@ my $location_number = scalar(@locations);
   };
   if ($error) {return;}
   if ($trial_design->get_design()) {
-    %design = %{$trial_design->get_design()};
+    %design = %{$trial_design->get_design()}; 
     #print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
@@ -387,8 +388,9 @@ my $location_number = scalar(@locations);
   } elsif ($design_type eq 'splitplot') {
       $design_level = 'subplots';
   } else {
-      $design_level = 'plots';
+      $design_level = 'plots'; 
   }
+  $design_map_view = design_layout_map_view(\%design);
   $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
@@ -401,6 +403,7 @@ my $location_number = scalar(@locations);
         design_layout_view_html => encode_json(\@design_layout_view_html_array),
         #design_layout_view_html => $design_layout_view_html,
         design_info_view_html => $design_info_view_html,
+        design_map_view => $design_map_view,
         #design_json => $design_json,
         design_json =>  encode_json(\@design_array),
     };
