@@ -278,6 +278,7 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Image</button>
                 <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="hm_replace_plot_accession_submit" id="hm_replace_plot_accession_submit">Replace Plot Accession</button>
             </div>
