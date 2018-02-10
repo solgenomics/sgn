@@ -260,46 +260,42 @@ sub run : Path('/tools/blast/run') Args(0) {
 	    backend => $c->config->{backend},
 	    temp_base => $blast_tmp_output,
 	    queue => $c->config->{'web_cluster_queue'},
-	    #working_dir => $blast_tmp_output,
-	    
-	    # temp_base => $c->config->{'cluster_shared_tempdir'},
-	    #queue => $c->config->{'web_cluster_queue'},
-	    # working_dir => $c->config->{'cluster_shared_tempdir'},
-	    
+	    do_cleanup => 0,
 	    # don't block and wait if the cluster looks full
 	    max_cluster_jobs => 1_000_000_000,
 	    
 	};
 	    
 	$job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);
 	$job->run_cluster(@command);
    
-      $job->do_not_cleanup(1);
+	
 
    
     };
 
     if ($@) {
-      print STDERR "An error occurred! $@\n";
-      $c->stash->{rest} = { error => $@ };
+	print STDERR "An error occurred! $@\n";
+	$c->stash->{rest} = { error => $@ };
     }
     else {
-  		# write data in blast.log
-  		my $blast_log_path = $c->config->{blast_log};
-  		my $blast_log_fh;
-  		if (-e $blast_log_path) {
-  			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
-  		} else {
-  			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
-  			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
-  		}
-  		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
-
-
-  		print STDERR "Passing jobid code ".$job->jobid()."\n";
-  		$c->stash->{rest} = { jobid => $job->jobid(),
+	# write data in blast.log
+	my $blast_log_path = $c->config->{blast_log};
+	my $blast_log_fh;
+	if (-e $blast_log_path) {
+	    open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
+	} else {
+	    open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
+	    print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
+	}
+	print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
+	
+	
+	print STDERR "Passing jobid code ".$job->jobid()."\n";
+	$c->stash->{rest} = { jobid => $job->jobid(),
   	                      seq_count => $seq_count,
-  		};
+	};
     }
 }
 
