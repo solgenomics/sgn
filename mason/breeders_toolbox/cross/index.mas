@@ -42,7 +42,7 @@ $user_id => undef
 <div id="cross_id" style="visibility:hidden">
 <% $cross_id %>
 </div>
-
+<!--
 <&|  /page/info_section.mas, title => "Parents", collapsible => 1, collapsed => 0  &>
 
 <div id="parents_information_div">
@@ -50,6 +50,30 @@ $user_id => undef
 </div>
 
 </&>
+-->
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
+  <div class = "well well-sm">
+    <div class = "panel panel-default">
+      <div class = "panel-body">
+        <table id = "parent_information" class="table table-hover table-striped">
+          <thead>
+            <tr>
+              <th>Female Accession</th>
+              <th>Female Plot</th>
+              <th>Male Accession</th>
+              <th>Male Plot</th>
+              <th>Cross Type</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+ </&>
 
 % my $add_progeny_link = "[add progeny]";
 % if ($user_id) { $add_progeny_link= '<a id="add_more_progeny_link">[add progeny]</a>'; }
@@ -83,9 +107,6 @@ $user_id => undef
 
 </&>
 -->
-
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
   <div class = "well well-sm">
