@@ -25,14 +25,42 @@ solGS.waitPage = function (page, args) {
      	+ '|solgs/analyze/traits/';
   		    
     if (page.match(matchItems)) {
-
-    	askUser(page, args);
+	checkCachedResult(page, args);
+    //	askUser(page, args);
     }
     else {
 
     	blockPage(page, args);
     }
-   
+
+    function checkCachedResult(page, args) {
+
+	args = getArgsFromUrl(page, args);
+	args = JSON.stringify(args);
+	
+	jQuery.ajax({
+	    type    : 'POST',
+	    dataType: 'json',
+	    data    : {'page': page, 'args': args },
+	    url     : '/solgs/check/cached/result/',
+	    success : function(response) {
+		if (response.cached) {
+		    alert('res success 1 ' + response.cached)
+		    args = JSON.parse(args);
+		    displayAnalysisNow(page, args);
+		} else {
+		      alert('res success 0 ' + response.cached)
+		    args = JSON.parse(args);
+		    askUser(page, args);
+		}
+		
+	    },
+	    error: function() {
+		alert('Error occured checking for cached output.')		
+	    }
+	   	    
+	})
+    }
 
     function  askUser(page, args) {
 	
@@ -58,16 +86,16 @@ solGS.waitPage = function (page, args) {
 			},
 		    }, 
 		    
-		    // No: { 
-		    // 	text: 'No, I will wait...',
-		    // 	class: 'btn btn-primary',
-                    //     id   : 'no_queue',
-		    // 	click: function() { 
-		    // 	    jQuery(this).dialog("close");
+		    No: { 
+		    	text: 'No, I will wait...',
+		    	class: 'btn btn-primary',
+                        id   : 'no_queue',
+		    	click: function() { 
+		    	    jQuery(this).dialog("close");
 			    
-		    // 	    displayAnalysisNow(page, args);
-		    // 	},
-		    // },
+		    	    displayAnalysisNow(page, args);
+		    	},
+		    },
 		    
 		    Cancel: { 
 			text: 'Cancel',
@@ -723,6 +751,7 @@ jQuery(document).ready(function (){
 			 'data_set_type'   : dataSetType,
 			};
 
+	     alert(' check destination ' + page)
 	     solGS.waitPage(page, args);
 	 } else {
 	     selectTraitMessage();
@@ -732,6 +761,13 @@ jQuery(document).ready(function (){
     
 });
 
+
+// solGS.alertMessage = function (msg) {
+//      jQuery("#alert_message")
+//         .css({"padding-left": '0px'})
+//         .html(msg);
+    
+// }
 
 solGS.getTraitDetails = function (traitId) {
   
