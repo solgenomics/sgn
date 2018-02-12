@@ -55,7 +55,7 @@ my $start_time = time();
 
 <& /page/page_title.mas, title=>"Details for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '[<a id="edit_details">Edit Crossing Trial Details</a>]'&>
+<&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '<a id="edit_details"></a>'&>
 
 
 <div class="panel panel-default">

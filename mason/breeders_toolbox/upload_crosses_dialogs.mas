@@ -53,6 +53,7 @@
 	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
               </div>
 	    </div>
+<!--
 	    <hr>
       <h3>Additional options:</h3>
 
@@ -69,6 +70,7 @@
 	        <input class="form-control" id="upload_suffix" name="upload_suffix" />
               </div>
 	    </div>
+-->
     	  </form>
         </div>
       </div>
@@ -155,7 +157,7 @@
             <br>
             <br>
             <b>
-              Optional columns (dates must be in the format YYYY-MM-DD):
+              Optional columns (dates must be in the format YYYY/MM/DD):
             </b>
             <br>
 % my $cross_properties = $c->config->{cross_properties};
