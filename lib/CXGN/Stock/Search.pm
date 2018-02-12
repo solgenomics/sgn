@@ -30,6 +30,7 @@ my $stock_search = CXGN::Stock::Search->new({
     location_name_list=>\@location_name_list,
     year_list=>\@year_list,
     stockprops_values=>\%stockprops_values,
+    stockprop_columns_view=>\%stockprop_columns_view,
     limit=>$limit,
     offset=>$offset,
     minimal_info=>o  #for only returning stock_id and uniquenames
@@ -37,13 +38,30 @@ my $stock_search = CXGN::Stock::Search->new({
 });
 my ($result, $records_total) = $stock_search->search();
 
+--------------------------
+
+To search for stocks with combinations of stockprops, use "stockprops_values".
 stockprops_values is a HashRef of ArrayRef of the form for example:
 {
     'country of origin' => ['Uganda', 'Nigeria'],
-    'ploidy' => ['2'],
+    'ploidy_level' => ['2'],
     'introgression_start_position_bp' => ['10002'],
     'introgression_chromosome' => ['2']
 }
+The keys must come from system_cvterms.txt in the cv for "stock_property".
+The query will do an AND between keys and an OR between comma separated values for the same key.
+
+--------------------------
+
+To return stockprop values in your result, use "stockprop_columns_view".
+stockprop_columns_view is a HashRef of the form for example:
+{
+    'country of orogin' => 1,
+    'ploidy_level' => 1
+}
+This example would include these keys in each resulting hashref for each stock that is returned.
+The keys must come from system_cvterms.txt in the cv for "stock_property".
+If there is no value for the stockprop for the stock, then the result will still show the key, but will have '' as the value.
 
 
 =head1 DESCRIPTION
