@@ -50,6 +50,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         }
     }
 
+    #This defines the stockprops that will be returned in the results.
     my $stockprop_columns_view = $params->{extra_stockprop_columns_view} ? decode_json $params->{extra_stockprop_columns_view} : {};
     my $stockprop_columns_view_array = $params->{stockprop_extra_columns_view_array} ? decode_json $params->{stockprop_extra_columns_view_array} : [];
     #print STDERR Dumper $stockprop_columns_view;
@@ -95,7 +96,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             my $type = $_->{stock_type};
             my $organism = $_->{species};
             my $synonym_string = join ',', @{$_->{synonyms}};
-            my $organization_string = $_->{organizations};
             my @owners = @{$_->{owners}};
             my @owners_html;
             foreach (@owners){
@@ -105,11 +105,11 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 
             my @return_row;
             if ($type eq "cross"){
-                @return_row = ( "<a href=\"/cross/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organization_string );
+                @return_row = ( "<a href=\"/cross/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
             } elsif ($type eq "seedlot"){
-                @return_row = ( "<a href=\"/breeders/seedlot/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organization_string );
+                @return_row = ( "<a href=\"/breeders/seedlot/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
             } else {
-                @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organization_string );
+                @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
             }
             foreach my $property (@$stockprop_columns_view_array){
                 push @return_row, $_->{$property};
