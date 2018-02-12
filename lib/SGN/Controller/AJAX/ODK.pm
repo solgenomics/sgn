@@ -211,7 +211,7 @@ sub schedule_get_crossing_data_GET {
     my $database_user = $c->config->{dbuser};
     my $database_pass = $c->config->{dbpass};
     my $database_host = $c->config->{dbhost};
-    my $prod_user = $c->config->{production_username};
+    my $www_user = $c->config->{www_user};
     my $crontab_log = $c->config->{crontab_log_filepath};
     my $include_path = 'export PERL5LIB="$PERL5LIB:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/local-lib/lib/perl5"';
     my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -r $user_role -a $archive_path -d $basepath.$tempfiles_dir -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -w $cross_wishlist_id -f $progress_tree_dir -l $ODK_url -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
@@ -234,7 +234,7 @@ sub schedule_get_crossing_data_GET {
         }
     close $F;
 
-    my $enable_new_crontab = "crontab -u $prod_user $crontab_file";
+    my $enable_new_crontab = "crontab -u $www_user $crontab_file";
     system($enable_new_crontab);
 
     $c->stash->{rest} = { success => 1 };
