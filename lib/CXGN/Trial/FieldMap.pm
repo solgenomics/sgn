@@ -10,6 +10,7 @@ use CXGN::Trial::TrialLayout;
 #use List::Util 'max';
 use List::MoreUtils ':all';
 use Bio::Chado::Schema;
+use CXGN::Stock;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -75,6 +76,7 @@ sub display_fieldmap {
 	my @plot_numbers_from_design = ();
     my @plot_numbers_not_used;
 	my $result;
+#	my @plot_image_ids;
 
     my @layout_info;
     while ( my ($k, $v) = (each %$design)) {
@@ -88,6 +90,12 @@ sub display_fieldmap {
         my $accession_name = $v->{accession_name};
         my $plant_names = $v->{plant_names};
 		my $plot_number_fromDesign = $v->{plot_number};
+		
+		my $image_id = CXGN::Stock->new({
+			schema => $schema,
+			stock_id => $plot_id,
+		});
+		my @plot_image_ids = $image_id->get_image_ids();
 
         push @plot_numbers_not_used, $plot_number;
 		push @plot_numbers_from_design, $plot_number_fromDesign;
@@ -128,6 +136,7 @@ sub display_fieldmap {
             plot_name => $plot_name,
             accession_name => $accession_name,
             plant_names => $plant_names,
+			plot_image_ids => \@plot_image_ids, 
         };
 		
     }
@@ -157,10 +166,10 @@ sub display_fieldmap {
 		else{
 			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$hash->{"plant_names"}});
 		}
-		push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
+		push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, plot_image_ids=>$hash->{'plot_image_ids'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
 	}
 	#print STDERR Dumper(\@col_numbers);
-	#print STDERR Dumper($result); 
+	print STDERR Dumper($result); 
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
