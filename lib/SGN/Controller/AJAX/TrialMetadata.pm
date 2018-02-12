@@ -17,7 +17,9 @@ use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 use File::Basename qw | basename dirname|;
+use List::MoreUtils ':all';
 use Try::Tiny;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -101,8 +103,16 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
 
     elsif ($datatype eq 'layout') {
-	$error = $c->stash->{trial}->delete_metadata();
-	$error = $c->stash->{trial}->delete_field_layout();
+        $error = $c->stash->{trial}->delete_metadata();
+        $error = $c->stash->{trial}->delete_field_layout();
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
     }
     elsif ($datatype eq 'entry') {
 	$error = $c->stash->{trial}->delete_project_entry();
@@ -659,6 +669,14 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         $c->detach();
     }
 
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
     $c->stash->{rest} = { success => 1 };
 }
 
@@ -796,6 +814,14 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     if ($@) {
         $c->stash->{rest} = { error => $@ };
         print STDERR "An error condition occurred, was not able to upload trial plot GPS coordinates. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
         $c->detach();
     }
 
@@ -1188,6 +1214,13 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     return;
   }
 
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
     my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
 
@@ -1356,6 +1389,15 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
     if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments)) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => 1};
         return;
     } else {
@@ -1399,6 +1441,14 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
     if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => 1};
         $c->detach;;
     } else {
@@ -1508,6 +1558,14 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         $c->detach();
     }
 
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
     $c->stash->{rest} = {success => 1};
 }
 
@@ -1518,16 +1576,112 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->req->param("selected");
     
-    my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
-    	bcs_schema=>$schema,
-    	trial_id=>$trial_id,
-        trait_id=>$trait_id
-    });
-    my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
-    
-    $c->stash->{rest} = { phenotypes => $phenotype };    
-}
+    # my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
+    # 	bcs_schema=>$schema,
+    # 	trial_id=>$trial_id,
+    #     trait_id=>$trait_id
+    # });
+    # my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
 
+    my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
+    print STDERR Dumper(\@items);
+    my @trait_ids = ($trait_id);
+    
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        "MaterializedView",
+        {
+            bcs_schema=> $schema,
+            data_level=> 'plot',
+            trait_list=> \@trait_ids,
+            plot_list=>  \@items,
+            include_row_and_column_numbers=> 1
+        }
+    );
+    my $data = $phenotypes_search->search();
+    my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, $result, @phenoID);
+    foreach my $d (@$data) {
+        my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count) = @$d;
+        if (!$row_number && !$col_number){
+			if ($block_number){
+				$row_number = $block_number;
+			}elsif ($rep && !$block_number ){
+				$row_number = $rep;
+			}
+		}
+        
+        my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
+        push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$phenotype_id} ;
+		if ($col_number){
+            push @col_No, $col_number;
+        }
+		push @row_No, $row_number;
+		push @pheno_val, $value;
+		push @plot_Name, $plot_name;
+		push @stock_Name, $stock_name;
+		push @plot_No, $plot_number;
+		push @block_No, $block_number;
+		push @rep_No, $rep;
+        push @phenoID, $phenotype_id; 
+    }
+    
+    my $false_coord;
+	if ($col_No[0] == ""){
+        @col_No = ();
+        $false_coord = 'false_coord';
+		my @row_instances = uniq @row_No;
+		my %unique_row_counts;
+		$unique_row_counts{$_}++ for @row_No;        
+        my @col_number2;
+        for my $key (keys %unique_row_counts){
+            push @col_number2, (1..$unique_row_counts{$key});
+        }
+        for (my $i=0; $i < scalar(@$result); $i++){               
+            @$result[$i]->{'col'} = $col_number2[$i];
+            push @col_No, $col_number2[$i];
+        }		
+	}
+    
+    my ($min_col, $max_col) = minmax @col_No;
+	my ($min_row, $max_row) = minmax @row_No;
+	my (@unique_col,@unique_row);
+	for my $x (1..$max_col){
+		push @unique_col, $x;
+	}
+	for my $y (1..$max_row){
+		push @unique_row, $y;
+	}
+    
+    my $trial = CXGN::Trial->new({
+		bcs_schema => $schema,
+		trial_id => $trial_id
+	});
+	my $data_check = $trial->get_controls();
+	my @control_name;
+	foreach my $cntrl (@{$data_check}) {
+		push @control_name, $cntrl->{'accession_name'};
+	}
+
+    $c->stash->{rest} = { #phenotypes => $phenotype, 
+                            col => \@col_No,
+                            row => \@row_No,
+                            pheno => \@pheno_val,
+                            plotName => \@plot_Name,
+                            stock => \@stock_Name,
+                            plot => \@plot_No,
+                            block => \@block_No,
+                            rep => \@rep_No,
+                            result => $result,
+                            plot_msg => \@msg,
+                            col_max => $max_col,
+                            row_max => $max_row,
+                            unique_col => \@unique_col,
+                            unique_row => \@unique_row,
+                            false_coord => $false_coord,
+                            phenoID => \@phenoID,
+                            controls => \@control_name
+                        };
+}
+  
 sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
   my $self = shift;
   my $c = shift;
