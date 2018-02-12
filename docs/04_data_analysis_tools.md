@@ -216,6 +216,7 @@ With all the options, you will get a interactive plot of the two PCs (shown belo
 <img src='{{"assets/images/image155.png" | relative_url }}' width="522" />
 
 4.5 ANOVA
+--------------
 
 Currently, ANOVA is implemented for a single trial (single year and single location). You can do ANOVA for RCBD, CRD, Alpha and Augmented trial designs. ANOVA is done using linear mixed effects model, where the genotypes is fixed effect and the replications and blocks are random effects. Fixed effect significance level is computed using 'lmer' from 'lmeTest' R package.
 

@@ -324,18 +324,18 @@ jQuery(document).ready( function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                var col_length; 
-                var row_length;
+                var col_length = response.col[0]; 
+                var row_length = response.row[0];
                 var col_max =  response.col_max;
                 var row_max =  response.row_max;
                 var false_coord = response.false_coord;
                 phenotypes_id = response.phenoID;
-                for (i=0; i<response.col.length; i++) {
-                    if (response.col[i] && response.row[i]){
-                        col_length = response.col[i];
-                        row_length = response.row[i];
-                    }
-                }
+                //for (i=0; i<response.col.length; i++) {
+                //    if (response.col[i] && response.row[i]){
+                //        col_length = response.col[i];
+                //        row_length = response.row[i];
+                    //}
+                //}
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#chart").css({"display": "inline-block"});
@@ -428,6 +428,10 @@ jQuery(document).ready( function() {
                                                                             //console.log('over');
                                                         })
                           .on("mouseout", function(d) { 
+                                                          var colorScale = d3.scale.quantile()
+                                                              .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
+                                                              .range(colors);
+                          
                                                           var cards = svg.selectAll(".col")
                                                               .data(datasets, function(d) {return d.row+':'+d.col;});
 
@@ -508,21 +512,21 @@ jQuery(document).ready( function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                var col_length; 
-                var row_length;
+                var col_length = response.coord_col[0]; 
+                var row_length = response.coord_row[0];
                 var block_max = response.max_block;
                 var rep_max = response.max_rep;
                 var col_max =  response.max_col;
                 var row_max =  response.max_row;
                 var controls = response.controls;
                 var false_coord = response.false_coord;
-                for (i=0; i<response.coord_col.length; i++) {
-                    if (response.coord_col[i] && response.coord_row[i]){
+                //for (i=0; i<response.coord_col.length; i++) {
+                //    if (response.coord_col[i] && response.coord_row[i]){
                         //console.log(response.coord_col[i]);
-                        col_length = response.coord_col[i];
-                        row_length = response.coord_row[i];
-                    }
-                }
+                //        col_length = response.coord_col[i];
+                //        row_length = response.coord_row[i];
+                //    }
+                //}
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#chart_fm").css({"display": "inline-block"});

@@ -498,8 +498,9 @@ sub search {
             };
         }
     }
+    #print STDERR Dumper \%result_hash;
 
-    if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0){
+    if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
         my @stockprop_view = keys %{$self->stockprop_columns_view};
         my $result_stock_ids_sql = join ",", @result_stock_ids;
         my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
