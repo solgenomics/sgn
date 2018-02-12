@@ -79,13 +79,17 @@ var trial_id = <% $trial_id %>;
 	     success: function(response) {
 	        jQuery("#working_modal").modal("hide");
 			//alert("coordfile: "+response.coord_row);
+            var false_coord = response.false_coord;
 		if (response.coord_col[0] && response.coord_row[0]){
 			jQuery("#container").css({"display": "inline-block", "overflow": "auto"});
 			//$("#container").css({"display": "inline-block", "overflow": "auto"});
 			jQuery("#row_desc").css("display","inline-block");
 			jQuery("#col_desc").css("display","inline-block");
-      jQuery("#trial_coords").css("display", "none");
-      jQuery("#delete_button").css("display", "inline-block");
+            jQuery("#trial_coords").css("display", "none");
+            jQuery("#delete_button").css("display", "inline-block");
+            if (false_coord){
+                alert("Psudo row and column numbers have been used in displaying the field map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+            }
 		}
 
 		else  {
@@ -96,8 +100,8 @@ var trial_id = <% $trial_id %>;
 
 		var width = 65;
 		var plot_counter = 0;
-	     	var max_row = response.max_row;
-	    	var max_col = response.max_col;
+	    var max_row = response.max_row;
+	    var max_col = response.max_col;
         var max_rep = response.max_rep;
         var max_block = response.max_block;
 
