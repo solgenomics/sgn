@@ -19,6 +19,7 @@
   <link rel="stylesheet" type="text/css" href="/css/buttons/buttons.bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="/css/bootstrap3-xl-class.css">
   <link rel="stylesheet" type="text/css" href="/css/bootstrap-select.min.css">
+  <link rel="stylesheet" href="/css/font-awesome.min.css">
 
   <% $c->assets->export() %>
 
