@@ -617,7 +617,19 @@ jQuery(document).ready( function() {
                       var cards = svg.selectAll(".col")
                           .data(datasets, function(d) {return d.row+':'+d.col;});
 
-                      cards.append("title");                  
+                      cards.append("title"); 
+                      
+                      var image_icon = function (d, i){
+                          image = d.plot_image_ids; 
+                          var plot_image;
+                          if (image.length > 0){
+                            alert(image);
+                            plot_image = '\uf083';
+                          }else{
+                            plot_image = "";
+                          }
+                          return plot_image;
+                      }                 
                       
                       var colors = function (d, i){
                           if (block_max == 1){
@@ -770,8 +782,6 @@ jQuery(document).ready( function() {
 
                       cards.select("title").text(function(d) { return d.plot_msg; }) ;
                       
-                    
-                      
                       cards.append("text");
                       cards.enter().append("text")
                         .attr("x", function(d) { return (d.col - 1) * gridSize + 10; })
@@ -780,22 +790,13 @@ jQuery(document).ready( function() {
                       
                       cards.select("text").text(function(d) { return d.plotn; }) ;
                       
-                      image = d.plot_image_ids; 
-                      if (image.length > 0){
-                         // var image = d.plot_image_ids;
-                          alert(image);
-                          
-                          cards.append("text");
-                          cards.enter().append("text")
-                          .attr("x", function(d) { return (d.col - 1) * gridSize + 4; })
-                          .attr("y", function(d) { return (d.row - 1) * gridSize + 10 ; })
-                          .attr("font-family","FontAwesome")
-                          .attr('font-size', function(d) { return '10px';} )
-                          .text(function(d) { return '\uf302'; });
-                          
-                         //  cards.select("text").text(function(d) { return '\uf302'; });
-
-                      }else if (image.length == 0){ }
+                      cards.append("text");
+                      cards.enter().append("text")
+                         .attr("x", function(d) { return (d.col - 1) * gridSize + 2; })
+                         .attr("y", function(d) { return (d.row - 1) * gridSize + 10 ; })
+                         .attr("font-family","FontAwesome")
+                         .attr('font-size', '10px' )
+                         .text(image_icon);
                       
                       cards.exit().remove();
                     
