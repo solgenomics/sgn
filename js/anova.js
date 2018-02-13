@@ -206,14 +206,20 @@ function listAnovaTraits ()  {
         dataType: 'json',
 	data: {'trial_id': trialId},
         url: '/anova/traits/list/',      
-        success: function(response) {
-	    formatAnovaTraits(response.anova_traits);
-	    jQuery("#run_anova").show();	
+         success: function(response) {
+	     var traits = response.anova_traits;
 	  
+	     if (traits.length) {
+		 formatAnovaTraits(traits);
+		 jQuery("#run_anova").show();
+	     } else {
+		 showMessage('This trial has no phenotyped traits.');
+		 jQuery("#run_anova").hide();		 
+	     }	  
         },
         error: function(response) {                          
             showMessage("Error occured listing anova traits.");	    	
-	    jQuery("#run_anova").show();
+	    jQuery("#run_anova").hide();
         }                
     });
 
