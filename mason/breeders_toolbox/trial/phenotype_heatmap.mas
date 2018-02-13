@@ -85,6 +85,7 @@ my $image_ids =  $stockref->{image_ids} || [] ;
   <li><span class="d3checks"></span> Checks</li>
   <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
   <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+  <li> <i class="fa fa-camera-retro fa-1x"></i> Plot has image</li>
   <a id="hm_replace_accessions_link"><button class="btn btn-success"  type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
@@ -623,7 +624,6 @@ jQuery(document).ready( function() {
                           image = d.plot_image_ids; 
                           var plot_image;
                           if (image.length > 0){
-                            alert(image);
                             plot_image = '\uf083';
                           }else{
                             plot_image = "";
@@ -653,7 +653,6 @@ jQuery(document).ready( function() {
                               }
                             }
                           }
-
                           return color;
                         }
                         
