@@ -1,13 +1,7 @@
 
 <%args>
 $trial_id
-$stockref => undef
 </%args>
-
-<%perl>
-my $dbh = $stockref->{dbh};
-my $image_ids =  $stockref->{image_ids} || [] ;
-</%perl>
 
  <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
 
@@ -330,7 +324,6 @@ my $image_ids =  $stockref->{image_ids} || [] ;
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="view_plot_image_form" name="view_plot_image_form">
 
-                    <& ../../image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
 
                     </form>
                 </div>
