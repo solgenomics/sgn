@@ -4063,11 +4063,10 @@ sub analyzed_traits {
     {  
         if (-s $trait_file > 1) 
         { 
-            my $trait = $trait_file;
-            $trait =~ s/gebv_kinship_//;
+            my $trait = basename($trait_file);	   
+            $trait =~ s/gebv_kinship_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
-            $trait =~ s/$dir|\///g;
-
+        
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
             {

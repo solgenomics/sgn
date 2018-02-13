@@ -368,7 +368,10 @@ jQuery(document).ready( function() {
                 //        row_length = response.row[i];
                     //}
                 //}
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#chart").css({"display": "inline-block"});
