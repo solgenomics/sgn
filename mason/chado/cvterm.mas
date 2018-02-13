@@ -28,6 +28,7 @@ Naama Menda <nm249@cornell.edu>
 
 <%args>
   $cvterm
+  $cvtermref
 </%args>
 
 <%once>
@@ -40,28 +41,42 @@ use CXGN::Phenome::Qtl::Tools;
 </%once>
 
 <%perl>
-my $cvterm_id   = $cvterm->get_cvterm_id;
-my $db_name     = $cvterm->get_db_name;
-my $accession   = $cvterm->get_accession;
-my $cvterm_name = $cvterm->get_cvterm_name;
-my $definition  = $cvterm->get_definition;
-my $comment     = $cvterm->comment;
 
-my $is_obsolete = $cvterm->get_obsolete();
-my @synonyms    = $cvterm->get_synonyms();
-my @def_dbxrefs = $cvterm->get_def_dbxref();
-my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
+my $cvterm_id   = $cvterm->cvterm_id;
+my $db_name     = $cvterm->db->name;
+my $accession   = $cvterm->accession;
+my $cvterm_name = $cvterm->name;
+my $definition  = $cvterm->definition;
+my $comment     = '' ;#$cvterm->comment;
+#$stockref->{props} (hash of arrayrefs of cvtermprops. Keys = prop name, value = prop value)
+my $editable_cvterm_props_string = $cvtermref->{editable_cvterm_props};
+my @editable_cvterm_props = split "," , $editable_cvterm_props_string;
+
+
+my $is_obsolete = $cvterm->is_obsolete();
+my @synonyms    = $cvterm->synonyms();
+my @def_dbxrefs = $cvterm->def_dbxrefs();
+my @secondary_dbxrefs = $cvterm->secondary_dbxrefs();
 my @image_ids = $cvterm->get_image_ids;
 
-my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
+my $curator   = $cvtermref->{curator};
+my $submitter = $cvtermref->{submitter};
+my $sequencer = $cvtermref->{sequencer};
+my $cvtermprops = $cvtermref->{props};
+
+
+my @def_accessions;
+if ( scalar (@def_dbxrefs ) > 0 ) {
+  # @def_accessions = map( $_->db->name . ":" . $_->accession , @def_dbxrefs);
+}
 
 my @secondary_accessions = ();
 foreach ( @secondary_dbxrefs) {
-  my $db =       $_->get_db_name;
-  my $acc =      $_->get_accession;
-  my $urlprefix= $_->get_urlprefix;
-  my $url =      $_->get_url;
-  my $full_acc = $db . ":" . $acc;
+  my $db_name =       $_->db->name;
+  my $acc =           $_->accession;
+  my $urlprefix=      $_->db->urlprefix;
+  my $url =           $_->db->url;
+  my $full_acc =      $db_name . ":" . $acc;
   my $link = $full_acc;
   if ( $url ) {
     my $xref_link = $urlprefix . $url . $acc;
@@ -90,6 +105,8 @@ my $image_subtitle =
    " <a href=\"/image/add?type_id=$cvterm_id&type=cvterm&refering_page=$this_page\">[Add image]</a>" ;
 
 
+my $edit_privs = $curator || $submitter || $sequencer;
+
 </%perl>
 
 
@@ -112,7 +129,7 @@ my $image_subtitle =
 </script>
 
 
-<& /page/page_title.mas, title=> "$db_name:$accession '$cvterm_name' " &>
+<& /page/page_title.mas, title=> "$accession '$cvterm_name' " &>
 
 
 <&| /page/info_section.mas, title=>"Cvterm details" &>
@@ -144,6 +161,19 @@ my $image_subtitle =
 
 </&>
 <br />
+
+
+% my $props_subtitle = $edit_privs ? "[<a id=\"cvterm_add_props\" href=\"javascript:cvtermprops_addPropDialog()\">Add...</a>]" : "[Add]";
+
+<&| /page/info_section.mas, title => "Trait Properties" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
+      <& /chado/cvtermprops.mas,
+       cvterm_id  =>$cvterm_id,
+       props      => $cvtermprops,
+        div_name   => 'cvtermprops',
+	edit_privs => $edit_privs,
+	subset     => \@editable_cvterm_props,
+	editable   => \@editable_cvterm_props  &>
+</&>
 
 <h4>Add this term to a list</h4>
 

@@ -137,8 +137,10 @@ sub check_trial_design {
 				 trial_id => $trial_id);
 
     my $design    = $trial->get_design_type();
-    my $supported = $self->check_support($design);
-  
+
+    my $supported;
+    $supported = $self->check_support($design) if $design;
+
     if (!$design) 
     {
 	$c->stash->{rest}{'Error'} = 'This trial has no design to apply ANOVA.'; 
@@ -159,8 +161,9 @@ sub check_support {
     my ($self, $design) = @_;
 
     my $supported_designs = $self->supported_designs;
-    my $match = $design ~~ $supported_designs;
-
+   
+    my ($match) = grep(/$design/, @$supported_designs);
+ 
     return $match;
     
 }
