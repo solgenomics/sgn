@@ -1751,7 +1751,6 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
                             phenoID => \@phenoID,
                             controls => \@control_name
                         };
-
 }
 
 sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
