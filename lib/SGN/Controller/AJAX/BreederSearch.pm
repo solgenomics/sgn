@@ -135,12 +135,13 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;
   my $c = shift;
+  my $matviews = $c->req->param('matviews') || 'fullview'; #can be "fullview" or "stockprop"
 
   print STDERR "dbname=" . $c->config->{dbname} ."\n";
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews);
 
   if ($refresh->{error}) {
     print STDERR "Returning with error . . .\n";

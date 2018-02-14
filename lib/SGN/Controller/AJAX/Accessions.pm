@@ -29,6 +29,7 @@ use CXGN::List;
 use Data::Dumper;
 use Try::Tiny;
 use CXGN::Stock::ParseUpload;
+use CXGN::BreederSearch;
 #use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -432,6 +433,15 @@ sub add_accession_list_POST : Args(0) {
         print STDERR "Transaction error storing stocks: $transaction_error $transaction_error_phenome\n";
         return;
     }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
     #print STDERR Dumper \@added_fullinfo_stocks;
     $c->stash->{rest} = {
         success => "1",

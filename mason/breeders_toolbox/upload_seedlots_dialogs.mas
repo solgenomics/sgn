@@ -195,11 +195,15 @@ jQuery(document).ready(function(){
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
+            if (response.error){
+                alert(response.error);
+            }
+
             if (response.error_string) {
                 jQuery("#upload_trial_error_display tbody").html('');
 
                 if (response.missing_accessions) {
-                    var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_seedlot_missing_accessions' style='display:none'></div><div id='upload_seedlot_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions. Please create a list of the missing accessions before clicking the link.</h4></div><br/>";
+                    var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_seedlot_add_missing_accessions_div_html'></div><div id='upload_seedlot_missing_accessions' style='display:none'></div><div id='upload_seedlot_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions. Please create a list of the missing accessions before clicking the link.</h4></div><br/>";
                     jQuery("#upload_seedlot_add_missing_accessions_html").html(missing_accessions_html);
 
                     var missing_accessions_vals = '';
@@ -207,7 +211,7 @@ jQuery(document).ready(function(){
                         missing_accessions_vals = missing_accessions_vals + response.missing_accessions[i] + '\n';
                     }
                     jQuery("#upload_seedlot_missing_accessions").html(missing_accessions_vals);
-                    addToListMenu('upload_seedlot_add_missing_accessions_html', 'upload_seedlot_missing_accessions', {
+                    addToListMenu('upload_seedlot_add_missing_accessions_div_html', 'upload_seedlot_missing_accessions', {
                         selectText: true,
                         listType: 'accessions'
                     });

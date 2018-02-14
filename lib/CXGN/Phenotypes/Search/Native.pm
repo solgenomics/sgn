@@ -164,12 +164,22 @@ sub search {
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         $using_layout_hash = 1;
         foreach (@{$self->trial_list}){
-            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_});
+            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>'field_layout'});
             my $tl = $trial_layout->get_design();
             while(my($key,$val) = each %$tl){
                 $design_layout_hash{$val->{plot_id}} = $val;
                 if($val->{plant_ids}){
                     foreach my $p (@{$val->{plant_ids}}){
+                        $design_layout_hash{$p} = $val;
+                    }
+                }
+                if($val->{subplot_ids}){
+                    foreach my $p (@{$val->{subplot_ids}}){
+                        $design_layout_hash{$p} = $val;
+                    }
+                }
+                if($val->{tissue_sample_ids}){
+                    foreach my $p (@{$val->{tissue_sample_ids}}){
                         $design_layout_hash{$p} = $val;
                     }
                 }

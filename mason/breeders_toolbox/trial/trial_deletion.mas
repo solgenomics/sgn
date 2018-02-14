@@ -6,3 +6,140 @@ $trial_id
 <a id="delete_phenotype_data_by_trial_id" role="button">Delete trait data</a><br />
 <a id="delete_layout_data_by_trial_id" role="button">Delete layout data</a><br />
 <a id="delete_trial_entry_by_trial_id" role="button" >Delete trial entry</a><br />
+
+<div class="modal  fade" id="delete_phenotype_data_dialog" name="delete_phenotype_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeletePhenoDataDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeletePhenoDataDialog">Delete Trial Phenotype Data </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_phenotype_data_form" name="delete_phenotype_data_form">
+                    
+                    <center>
+                    <p3> Are you sure you want to delete assayed traits data for this trial? <br> Proceed with deletion below...</p3>
+                    </center></br>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_trait_pheno_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_single_phenotype_data_dialog_submit" id="delete_single_phenotype_data_dialog_submit">Select Traits For Deletion</button>
+                <!--<button type="button" class="btn btn-primary" name="delete_all_phenotype_data_dialog_submit" id="delete_all_phenotype_data_dialog_submit">Delete All Traits</button>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="delete_individual_phenotype_data_dialog" name="delete_individual_phenotype_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeleteIndividualPhenoDataDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteIndividualPhenoDataDialog">Delete Trial Phenotype Data </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_individual_trait_data_form" name="delete_individual_trait_data_form">
+                    
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Traits:<br/><small>(Select traits to delete)</small></label>
+                        <div class="col-sm-9" >
+                            <div id="retrieve_assayed_trial_traits">
+                            </div>
+                        </div>
+                    </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_indiv_trait_data_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" name="delete_individual_phenotype_data_dialog_submit" id="delete_individual_phenotype_data_dialog_submit">Delete Traits Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="delete_traits_dialog_success_message" name="delete_traits_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="TraitsDeletionDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="TraitsDeletionDialog"><b>Assayed Trait Deletion</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_traits_form" name="delete_traits_form">
+
+                    <p3> Trait deletion was successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_traits_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var traits = [];
+jQuery(document).ready(function() {
+    jQuery('#delete_single_phenotype_data_dialog_submit').click( function() {
+        jQuery('#delete_individual_phenotype_data_dialog').modal("show");
+        retrieve_trial_traits();
+    });
+    
+    jQuery('#delete_individual_phenotype_data_dialog_submit').click( function() {
+        traits = jQuery('#retrieve_assayed_trial_traits_select').val();
+        if (!traits){
+            alert("No trait selected");
+        } else {
+            delete_selected_assayed_traits();
+        }
+    });    
+    
+});
+
+function retrieve_trial_traits() {
+    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>' });
+}
+
+function delete_selected_assayed_traits() {
+  var traits_id = traits;
+  new jQuery.ajax({
+      type: 'POST',
+      traditional: true,
+      url: '/ajax/breeders/trial/<% $trial_id %>/delete_single_trait',
+      dataType: "json",
+      data: {
+          'traits_id': JSON.stringify(traits),
+      },
+      beforeSend: function(){
+          jQuery("#working_modal").modal("show");
+      },
+      success: function(response){
+          jQuery("#working_modal").modal("hide");
+          if (response.error){
+              alert("Error deleting trait:" +response.error);
+          }else{
+              jQuery("#delete_traits_dialog_success_message").modal("show");
+          }
+      },
+      error: function(){
+          jQuery('#working_modal').modal("hide");
+          alert('An error occurred deleting trait');
+      }
+  });
+
+}
+</script>

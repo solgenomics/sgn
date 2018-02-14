@@ -420,12 +420,12 @@ function trial_detail_page_setup_dialogs() {
     location.reload();
   });
 
-    jQuery('#delete_phenotype_data_by_trial_id').click(
-	function() {
-	    var trial_id = get_trial_id();
-	    delete_phenotype_data_by_trial_id(trial_id);
-	}
-    );
+    jQuery('#delete_phenotype_data_by_trial_id').click(function() {
+        jQuery('#delete_phenotype_data_dialog').modal("show");
+	//    var trial_id = get_trial_id();
+	//    delete_phenotype_data_by_trial_id(trial_id);
+	});
+
 
     jQuery('#delete_layout_data_by_trial_id').click(
 	function() {
@@ -624,6 +624,10 @@ var $j = jQuery.noConflict();
 jQuery(document).ready(function ($) {
 
     $('#upload_trial_coords_link').click(function () {
+        open_upload_trial_coord_dialog();
+    });
+    
+    $('#heatmap_upload_trial_coords_link').click(function () {
         open_upload_trial_coord_dialog();
     });
 

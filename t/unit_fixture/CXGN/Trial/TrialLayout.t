@@ -12,7 +12,7 @@ my $f = SGN::Test::Fixture->new();
 
 my $trial_id = 139;
 
-my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id });
+my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' });
 
 my $d = $tl->get_design();
 
