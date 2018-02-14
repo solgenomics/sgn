@@ -18,7 +18,7 @@ sub excel_download_trial : Path('/barcode/trial_excel_download') Args(1) {
     my $c = shift;
     my $trial_id=shift;
 
-    my $tl = CXGN::Trial::TrialLayout->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+    my $tl = CXGN::Trial::TrialLayout->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
 
     my $trial_data = $tl->get_design();
 

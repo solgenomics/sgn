@@ -53,7 +53,7 @@ sub download {
     my $trial_id = $self->trial_id();
     my @trait_list = @{$self->trait_list()};
     my $spreadsheet_metadata = $self->file_metadata();
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'} );
 
     my $design = $trial_layout->get_design();
 

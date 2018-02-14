@@ -101,6 +101,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
     $c->stash->{has_subplot_entries} = $trial->has_subplot_entries();
+    $c->stash->{has_tissue_sample_entries} = $trial->has_tissue_sample_entries();
     $c->stash->{phenotypes_fully_uploaded} = $trial->get_phenotypes_fully_uploaded();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};

@@ -12,6 +12,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::Seedlot::ParseUpload;
 use CXGN::Login;
 use JSON;
+use CXGN::BreederSearch;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -317,6 +318,14 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
 	return;
     }
 
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
     $c->stash->{rest} = { success => 1, seedlot_id => $seedlot_id };
 }
 
@@ -448,6 +457,14 @@ sub upload_seedlots_POST : Args(0) {
             stock_id     => $stock_id,
             sp_person_id =>  $user_id,
         });
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
     }
 
     $c->stash->{rest} = { success => 1 };

@@ -85,18 +85,27 @@ sub germplasm_search {
 
 	my $limit = $page_size*($page+1)-1;
 	my $offset = $page_size*$page;
+
+    my %stockprops_values;
+    if (scalar(@accession_numbers)>0){
+        $stockprops_values{'accession number'} = \@accession_numbers;
+    }
+    if (scalar(@germplasm_puis)>0){
+        $stockprops_values{'PUI'} = \@germplasm_puis;
+    }
+
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$self->bcs_schema,
 		people_schema=>$self->people_schema,
 		phenome_schema=>$self->phenome_schema,
 		match_type=>$match_type,
 		uniquename_list=>\@germplasm_names,
-		accession_number_list=>\@accession_numbers,
-		pui_list=>\@germplasm_puis,
 		genus_list=>\@genus,
 		species_list=>\@species,
 		stock_id_list=>\@germplasm_ids,
 		stock_type_id=>$accession_type_cvterm_id,
+        stockprops_values=>\%stockprops_values,
+        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1},
 		limit=>$limit,
 		offset=>$offset,
         display_pedigree=>1
@@ -109,24 +118,24 @@ sub germplasm_search {
 			germplasmDbId=>$_->{stock_id},
 			defaultDisplayName=>$_->{stock_name},
 			germplasmName=>$_->{uniquename},
-			accessionNumber=>$_->{accessionNumber},
-			germplasmPUI=>$_->{germplasmPUI},
+			accessionNumber=>$_->{'accession number'},
+			germplasmPUI=>$_->{'PUI'},
 			pedigree=>$_->{pedigree},
-			germplasmSeedSource=>$_->{germplasmSeedSource},
+			germplasmSeedSource=>$_->{'seed source'},
 			synonyms=> $_->{synonyms},
 			commonCropName=>$_->{common_name},
-			instituteCode=>$_->{instituteCode},
-			instituteName=>$_->{instituteName},
-			biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
-			countryOfOriginCode=>$_->{countryOfOriginCode},
-			typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
+			instituteCode=>$_->{'institute code'},
+			instituteName=>$_->{'institute name'},
+			biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'},
+			countryOfOriginCode=>$_->{'country of origin'},
+			typeOfGermplasmStorageCode=>$_->{'type of germplasm storage code'},
 			genus=>$_->{genus},
 			species=>$_->{species},
 			speciesAuthority=>$_->{speciesAuthority},
 			subtaxa=>$_->{subtaxa},
 			subtaxaAuthority=>$_->{subtaxaAuthority},
 			donors=>$_->{donors},
-			acquisitionDate=>$_->{acquisitionDate},
+			acquisitionDate=>$_->{'acquisition date'},
 		};
 	}
 
@@ -154,7 +163,8 @@ sub germplasm_detail {
 		match_type=>'exactly',
 		stock_id_list=>[$stock_id],
 		stock_type_id=>$accession_cvterm_id,
-        display_pedigree=>1
+        display_pedigree=>1,
+        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1},
 	});
 	my ($result, $total_count) = $stock_search->search();
 
@@ -165,24 +175,24 @@ sub germplasm_detail {
 		germplasmDbId=>$result->[0]->{stock_id},
 		defaultDisplayName=>$result->[0]->{uniquename},
 		germplasmName=>$result->[0]->{stock_name},
-		accessionNumber=>$result->[0]->{accessionNumber},
-		germplasmPUI=>$result->[0]->{germplasmPUI},
+		accessionNumber=>$result->[0]->{'accession number'},
+		germplasmPUI=>$result->[0]->{'PUI'},
 		pedigree=>$result->[0]->{pedigree},
-		germplasmSeedSource=>$result->[0]->{germplasmSeedSource},
+		germplasmSeedSource=>$result->[0]->{'seed source'},
 		synonyms=> $result->[0]->{synonyms},
 		commonCropName=>$result->[0]->{common_name},
-		instituteCode=>$result->[0]->{instituteCode},
-		instituteName=>$result->[0]->{instituteName},
-		biologicalStatusOfAccessionCode=>$result->[0]->{biologicalStatusOfAccessionCode},
-		countryOfOriginCode=>$result->[0]->{countryOfOriginCode},
-		typeOfGermplasmStorageCode=>$result->[0]->{typeOfGermplasmStorageCode},
+		instituteCode=>$result->[0]->{'institute code'},
+		instituteName=>$result->[0]->{'institute name'},
+		biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'},
+		countryOfOriginCode=>$result->[0]->{'country of origin'},
+		typeOfGermplasmStorageCode=>$result->[0]->{'type of germplasm storage code'},
 		genus=>$result->[0]->{genus},
 		species=>$result->[0]->{species},
 		speciesAuthority=>$result->[0]->{speciesAuthority},
 		subtaxa=>$result->[0]->{subtaxa},
 		subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
 		donors=>$result->[0]->{donors},
-		acquisitionDate=>$result->[0]->{acquisitionDate},
+		acquisitionDate=>$result->[0]->{'acquisition date'},
 	);
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');

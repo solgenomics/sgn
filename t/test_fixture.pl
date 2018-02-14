@@ -114,16 +114,16 @@ open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf f
 print $NEWCONF $new_conf;
 close($NEWCONF);
 
+#run fixture and db patches.
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} -d $dbname -e janedoe");
+
 # run the materialized views creation script
 #
-print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password\n";
-system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password");
+print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview\n";
+system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview");
 
 
 print STDERR "Done.\n";
-
-#run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} -d $dbname -e janedoe");
 
 # start the test web server
 #

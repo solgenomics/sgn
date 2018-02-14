@@ -4063,11 +4063,10 @@ sub analyzed_traits {
     {  
         if (-s $trait_file > 1) 
         { 
-            my $trait = $trait_file;
-            $trait =~ s/gebv_kinship_//;
+            my $trait = basename($trait_file);	   
+            $trait =~ s/gebv_kinship_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
-            $trait =~ s/$dir|\///g;
-
+        
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
             {
@@ -4480,8 +4479,13 @@ sub prep_genotype_file {
 
 
 sub phenotype_file {
-    my ($self, $c) = @_;
-    my $pop_id     = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+    my ($self, $c, $pop_id) = @_;
+
+    if (!$pop_id) {
+	$pop_id = $c->stash->{pop_id} 
+	|| $c->stash->{training_pop_id} 
+	|| $c->stash->{trial_id};
+    }
    
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
@@ -4519,6 +4523,7 @@ sub phenotype_file {
 	}	    
     }
 
+    $self->get_all_traits($c);
    
     $c->stash->{phenotype_file} = $pheno_file;   
 
@@ -4965,7 +4970,9 @@ sub create_cluster_acccesible_tmp_files {
 
     my $temp_file_template = $c->stash->{r_temp_file};
 
-    CXGN::Tools::Run->temp_base($c->stash->{solgs_tempfiles_dir});
+    my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
+   
+    CXGN::Tools::Run->temp_base($temp_dir);
     my ( $in_file_temp, $out_file_temp, $err_file_temp) =
         map 
     {
@@ -5077,7 +5084,7 @@ sub run_r_script {
     my $r_script     = $c->stash->{r_script};
     my $input_files  = $c->stash->{input_files};
     my $output_files = $c->stash->{output_files};
-  
+
     $self->create_cluster_acccesible_tmp_files($c);
     my $in_file_temp   = $c->stash->{in_file_temp};
     my $out_file_temp  = $c->stash->{out_file_temp};
@@ -5086,6 +5093,8 @@ sub run_r_script {
     my $dependency      = $c->stash->{dependency};
     my $dependency_type = $c->stash->{dependency_type};
     my $background_job  = $c->stash->{background_job};
+
+    my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
   
     {
         my $r_cmd_file = $c->path_to($r_script);
@@ -5098,7 +5107,6 @@ sub run_r_script {
 	$c->stash->{r_commands_file}    = $in_file_temp;
 	$c->stash->{r_script_args}      = [$input_files, $output_files];
 
-	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
 	$c->stash->{gs_model_args_file} = $self->create_tempfile($temp_dir, 'gs_model_args');
 	
 	if ($r_script =~ /combine_populations/) 
@@ -5137,7 +5145,7 @@ sub run_r_script {
 						  $in_file_temp,
 						  $out_file_temp,
 						  {
-						      working_dir => $c->stash->{solgs_tempfiles_dir},
+						      working_dir => $temp_dir,
 						      max_cluster_jobs => 1_000_000_000,
 						  });
 	try 
@@ -5195,11 +5203,14 @@ sub get_solgs_dirs {
     my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
     my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
+    my $anova_cache       = catdir($tmp_dir, 'anova', 'cache');
+    my $anova_temp       = catdir($tmp_dir, 'anova', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir
+	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
+	 $anova_temp,
 	], 
 	0, 0755
 	);
@@ -5211,7 +5222,9 @@ sub get_solgs_dirs {
               correlation_dir             => $correlation_dir,
 	      pca_dir                     => $pca_dir,
 	      histogram_dir               => $histogram_dir,
-	      analysis_log_dir            => $log_dir
+	      analysis_log_dir            => $log_dir,
+              anova_cache_dir             => $anova_cache,
+	      anova_temp_dir              => $anova_temp,
         );
 
 }

@@ -133,7 +133,7 @@ sub download {
         my $trial_name = $trial->get_name;
         my $planting_date = $trial->get_planting_date;
         my $harvest_date = $trial->get_harvest_date;
-        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_} );
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>'field_layout'});
         my $design = $trial_layout->get_design();
 
         if (!$design) {
