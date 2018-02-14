@@ -121,13 +121,13 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{design_name} = $design_type;
 
     if ($design_type eq "genotyping_plate") {
-	if ($format eq "as_table") {
-	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
-	}
-	else {
-	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
-	}
-
+        $c->stash->{plate_id} = $c->stash->{trial_id};
+        if ($format eq "as_table") {
+            $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
+        }
+        else {
+            $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
+        }
     }
     elsif ($design_type eq "treatment"){
         $c->stash->{template} = '/breeders_toolbox/treatment.mas';

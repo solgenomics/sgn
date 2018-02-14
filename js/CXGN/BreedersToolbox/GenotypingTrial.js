@@ -22,13 +22,13 @@ var $j = jQuery.noConflict();
 jQuery(document).ready(function ($) {
 
     // defined in CXGN.BreedersToolbox.HTMLSelect
-    get_select_box("locations", "location_select_div");
-    get_select_box("breeding_programs", "breeding_program_select_div");
-    get_select_box("years", "year_select_div");
+    get_select_box("locations", "location_select_div", {});
+    get_select_box("breeding_programs", "breeding_program_select_div", {});
+    get_select_box("years", "year_select_div", {});
 
-    get_select_box("locations", "location_select_div");
-    get_select_box("breeding_programs", "breeding_program_select_div");
-    get_select_box("years", "year_select_div");
+    get_select_box("locations", "location_select_div", {});
+    get_select_box("breeding_programs", "breeding_program_select_div", {});
+    get_select_box("years", "year_select_div", {});
 
     $(function() {
 	$( "#genotyping_trials_accordion" )
