@@ -6,7 +6,7 @@ $stockref => undef
 
 
 
- <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -83,7 +83,7 @@ $stockref => undef
   <li><span class="d3checks"></span> Checks</li>
   <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
   <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-  <li> <i class="fa fa-camera-retro fa-1x"></i> Plot has image</li>
+  <li> <i class="fa fa-camera-retro fa-1x"></i> Plot Has Image</li>
   <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
@@ -335,10 +335,7 @@ my $image_ids =  $stockref->{image_ids} || [] ;
                     
                     <div class="col-sm-9" id="plot_image_ids"></div>
                     
-                    <&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", collapsible=>1, collapsed=>1 &>
-                      <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
-
-                    </&>
+                    <div class="col-sm-9" id="show_plot_image_ids"></div>
                     
                     </form>
                 </div>
@@ -542,7 +539,6 @@ jQuery(document).ready( function() {
     }
     var image = [];
     var image_ids = [];
-    
     function btnClick(n){                        
       if (n.length == 0){
          jQuery("#hm_view_plot_image_submit").addClass("disabled");
@@ -782,8 +778,34 @@ jQuery(document).ready( function() {
                                                            jQuery('#hm_edit_plot_number').html(replace_plot_number);
                                                            old_plot_id = jQuery('#hm_edit_plot_id').html(replace_plot_id);
                                                            old_plot_accession = jQuery('#hm_edit_plot_accession').html(replace_accession);
-
                                                            jQuery('#hm_replace_plot_accessions_dialog').modal('show');
+                                                           
+                                                           new jQuery.ajax({
+                                                             type: 'POST',
+                                                             url: '/ajax/breeders/trial/<% $trial_id %>/retrieve_plot_images',
+                                                             dataType: "json",
+                                                             data: {
+                                                                     'image_ids': JSON.stringify(image_ids),
+                                                                     'plot_name': replace_plot_name,
+                                                                     'plot_id': replace_plot_id,
+                                                             },
+                                                             success: function (response) {
+                                                               jQuery('#working_modal').modal("hide");
+                                                               var images = response.image_html;
+                                                               if (response.error) {
+                                                                 alert("Error Retrieving Plot Images: "+response.error);
+                                                               }
+                                                               else {
+                                                                 jQuery("#show_plot_image_ids").html(images);
+                                                                
+                                                                // jQuery('#view_plot_image_dialog').modal("show"); 
+                                                               }
+                                                             },
+                                                             error: function () {
+                                                               jQuery('#working_modal').modal("hide");
+                                                               alert('An error occurred retrieving plot images');
+                                                             }
+                                                           });
                                                        
                                                           });
                                                           
