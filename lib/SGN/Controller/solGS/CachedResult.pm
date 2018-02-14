@@ -18,7 +18,7 @@ use namespace::autoclean;
 use JSON;
 
 #use File::Basename;
-use File::Spec::Functions;
+#use File::Spec::Functions;
 
 
 
@@ -55,22 +55,15 @@ sub _check_cached_output {
     if ($req_page =~ /solgs\/population\//)
     { 
 	my $pop_id = $args->{training_pop_id}[0];
-	if ($pop_id !~ /uploaded/)
-	{
-	    $c->stash->{rest}{cached} = $self->check_training_pop_data($c, $pop_id);
-	}
+	$self->_check_training_pop_data($c, $pop_id);
+
     } 
     elsif ($req_page =~ /solgs\/trait\//)
     {
 	my $pop_id = $args->{training_pop_id}[0];
 	my $trait_id = $args->{trait_id}[0];
 
-	my $cached_pop_data  = $self->check_training_pop_data($c, $pop_id);
-
-	if ($cached_pop_data)
-	{
-	   $c->stash->{rest}{cached} =  $self->check_model_output($c, $pop_id, $trait_id);
-	}	
+	$self->_check_training_model_output($c, $pop_id, $trait_id);
     }
     elsif ($req_page =~ /solgs\/model\//)
     {
@@ -78,18 +71,49 @@ sub _check_cached_output {
 	my $sel_pop_id = $args->{selection_pop_id}[0];
 	my $trait_id   = $args->{trait_id}[0];
 
-	my $cached_pop_data = $self->check_training_pop_data($c, $tr_pop_id);
-
-	if ($cached_pop_data)
-	{
-	    my $cached_model_out = $self->check_model_output($c, $tr_pop_id, $trait_id);
-  
-	    if ($cached_model_out) 
-	    {
-		$c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);		
-	    }	    
-	}		
+	$self->_check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
     }   
+}
+
+
+sub _check_training_pop_data {
+    my ($self, $c, $pop_id) = @_;
+
+    if ($pop_id !~ /uploaded/)
+    {
+	    $c->stash->{rest}{cached} = $self->check_training_pop_data($c, $pop_id);
+    }
+    
+}
+
+
+sub _check_training_model_output {
+    my ($self, $c, $pop_id, $trait_id) =@_;
+    
+    my $cached_pop_data  = $self->check_training_pop_data($c, $pop_id);
+
+    if ($cached_pop_data)
+    {
+	$c->stash->{rest}{cached} =  $self->check_training_model_output($c, $pop_id, $trait_id);
+    }	    
+}
+
+
+sub _check_selection_pop_output {
+    my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
+	
+    my $cached_pop_data = $self->check_training_pop_data($c, $tr_pop_id);
+
+    if ($cached_pop_data)
+    {
+	my $cached_model_out = $self->check_training_model_output($c, $tr_pop_id, $trait_id);
+  
+	if ($cached_model_out) 
+	{
+	    $c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);		
+	}	    
+    }		
+    
 }
 
 
@@ -115,7 +139,7 @@ sub check_training_pop_data {
 }
 
 
-sub check_model_output {
+sub check_training_model_output {
     my ($self, $c, $pop_id, $trait_id) = @_;
 
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
