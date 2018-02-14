@@ -202,6 +202,40 @@ sub create_correlation_phenodata_file {
 }
 
 
+# sub create_correlation_phenodata_file {
+#     my ($self, $c)  = @_;
+#     my $referer = $c->req->referer;
+    
+#     if ($referer =~ /qtl/) 
+#     {
+#         my $pop_id = $c->stash->{pop_id};
+       
+#         my $pheno_exp = "phenodata_${pop_id}";
+#         my $dir       = catdir($c->config->{solqtl}, 'cache');
+       
+#         my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
+       
+#         unless ($phenotype_file) 
+# 	{           
+#             my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
+#             $phenotype_file =  $pop->phenotype_file($c);
+#         }
+        
+#         my $new_file = catfile($c->stash->{correlation_dir}, "phenotype_data_${pop_id}.csv");
+      
+#         copy($phenotype_file, $new_file) 
+#             or die "could not copy $phenotype_file to $new_file";
+       
+#         $c->stash->{phenotype_file} = $new_file;       
+#     } 
+#     else
+#     {           
+#       $c->controller("solGS::solGS")->phenotype_file($c);  
+#     }
+        
+# }
+
+
 sub create_correlation_dir {
     my ($self, $c) = @_;
     

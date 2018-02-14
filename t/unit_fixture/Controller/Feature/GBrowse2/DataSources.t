@@ -32,4 +32,5 @@ $mech->with_test_level( local => sub {
     }
 });
 
+ok(1); #Adding a test 
 done_testing;

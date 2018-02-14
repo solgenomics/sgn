@@ -8,6 +8,7 @@ use CXGN::Trait;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use Try::Tiny;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -83,7 +84,13 @@ sub search {
             exclude_phenotype_outlier=>$exclude_phenotype_outlier
         }
     );
-    my $data = $phenotypes_search->search();
+    my $data;
+    try {
+        $data = $phenotypes_search->search();
+    }
+    catch {
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search');
+    }
     #print STDERR Dumper $data;
 	my @data_window;
 	my %obs_units;

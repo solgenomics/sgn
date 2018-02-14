@@ -33,7 +33,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use JSON -support_by_pp;
-use SGN::View::Trial qw/design_layout_view design_info_view/;
+use SGN::View::Trial qw/design_layout_view design_info_view design_layout_map_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
@@ -46,6 +46,7 @@ use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -60,24 +61,6 @@ has 'schema' => (
 		 isa      => 'DBIx::Class::Schema',
 		 lazy_build => 1,
 		);
-
-#DEPRECATED by lack of use. below functions handle saving an uploaded trial and generating/saving a new trial.
-#sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
-
-#sub get_trial_layout_POST : Args(0) {
-#  my ($self, $c) = @_;
-#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#  my $project;
-#  print STDERR "\n\ntrial layout controller\n";
-#  my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, project => $project} );
-
-  #my $trial_id = $c->req->parm('trial_id');
-  # my $project = $schema->resultset('Project::Project')->find(
-  # 							     {
-  # 							      id => $trial_id,
-  # 							     }
-  # 							    );
-#}
 
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
@@ -95,6 +78,7 @@ sub generate_experimental_design_POST : Args(0) {
   my @stock_names;
   my $design_layout_view_html;
   my $design_info_view_html;
+  my $design_map_view;
   if ($c->req->param('stock_list')) {
       @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
   }
@@ -392,7 +376,7 @@ my $location_number = scalar(@locations);
   };
   if ($error) {return;}
   if ($trial_design->get_design()) {
-    %design = %{$trial_design->get_design()};
+    %design = %{$trial_design->get_design()}; 
     #print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
@@ -404,8 +388,9 @@ my $location_number = scalar(@locations);
   } elsif ($design_type eq 'splitplot') {
       $design_level = 'subplots';
   } else {
-      $design_level = 'plots';
+      $design_level = 'plots'; 
   }
+  $design_map_view = design_layout_map_view(\%design);
   $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
@@ -418,6 +403,7 @@ my $location_number = scalar(@locations);
         design_layout_view_html => encode_json(\@design_layout_view_html_array),
         #design_layout_view_html => $design_layout_view_html,
         design_info_view_html => $design_info_view_html,
+        design_map_view => $design_map_view,
         #design_json => $design_json,
         design_json =>  encode_json(\@design_array),
     };
@@ -561,8 +547,17 @@ sub save_experimental_design_POST : Args(0) {
         }
     }
 }
-$c->stash->{rest} = {success => "1",}; 
-return;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {success => "1",}; 
+    return;
 }
 
 
@@ -808,6 +803,16 @@ sub upload_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => "1"};
         return;
     }

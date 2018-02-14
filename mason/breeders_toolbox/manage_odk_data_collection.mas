@@ -1,0 +1,496 @@
+
+<%args>
+$odk_crossing_data_service_name => undef
+$odk_crossing_data_service_url => undef
+$odk_crossing_data_form_name => undef
+$odk_phenotyping_data_service_name => undef
+$odk_phenotyping_data_service_url => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'd3.d3Min', 'SGN.Scatterplot' ] &>
+
+<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+
+
+<& /page/page_title.mas, title=>"Manage ODK Data Collection" &>
+
+<div class="container-fluid">
+
+<div class="well">
+<h4>What is ODK?</h4>
+<ul><li>ODK is an application that allows mobile data collection using user defined forms on Android or IOS devices. Data collected on the device can be instantaneously synched to the ODK server. To find out more go to the <a href="https://opendatakit.org/">ODK site</a>. Many services have developed web interfaces to better streamline the ODK experience. These services assist in creating forms, deploying forms to your mobile application, and visualizing data uploaded back from the mobile device. Currently we are working with <a href="http://www.smap.com.au">SMAP</a> and <a href="https://ona.io/home/">ONA</a> as two ODK services.</li></ul>
+<h4>What do I do from this page?</h4>
+<ul>
+<li>ONA is currently being used for collecting crossing information. This requires exporting a crossing plan from here to the ONA server. The crossing plan guides collection of cross information and this data is synched with ONA using ODK. From here, we run a script twice a day, which pulls data on ONA into our database.
+</li>
+<li>SMAP is currently being used for collecting phenotype information. The user collects phenotypes using a form they previously created. The questions in the form map directly to terms in the ontology. As they collect data on the mobile device, the data is synched to SMAP. From here, we run a script twice a day, which pulls data on SMAP into our database.
+</li>
+</ul>
+</div>
+
+<div class="well">
+
+<& /breeders_toolbox/cross_wishlist.mas &>
+<&| /page/info_section.mas, title=>'Crossing Data: ONA ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <form class="form-horizontal" id="odk_cross_data_form_wishlist_select" name="odk_cross_data_form_wishlist_select">
+            <div class="form-group">
+                <label class="col-sm-4 control-label">Select A Cross Wishlist: </label>
+                <div class="col-sm-8" >
+                    <div id="odk_cross_data_available_wishlists">LOADING...</div>
+                </div>
+            </div>
+        </form>
+        <form class="form-horizontal" id="import_odk_cross_data_form" name="import_odk_cross_data_form">
+            <div class="form-group">
+                <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
+                <div class="col-sm-8" >
+                    <div id="import_odk_cross_data_available_forms">LOADING...</div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<&| /page/info_section.mas, title=>'Management', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-sm-1">
+                <span style="font-size:3em;" class="glyphicon glyphicon-transfer"></span>
+            </div>
+            <div class="col-sm-11">
+                <button class="pull-right btn btn-primary btn-sm" id="create_cross_wishlist" >Export Cross Wishlist (Crossing Plan) to Selected Form on ONA</button>
+                <br/><br/>
+                <button class="pull-right btn btn-info btn-sm" id="import_odk_cross_data" >Import Crossing Data from Selected Form on ONA</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-sm-1">
+                <span style="font-size:3em;" class="glyphicon glyphicon-time"></span>
+            </div>
+            <div class="col-sm-11">
+                <form class="form-horizontal" id="schedule_import_odk_cross_data_form" name="schedule_import_odk_cross_data_form">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Schedule Import For Selected Form: </label>
+                        <div class="col-sm-4" >
+                            <select class="form-control" id="schedule_import_odk_crossing_form_data">
+                                <option value="everyday">Once per day at midnight</option>
+                                <option value="twicedaily">Twice daily at midnight and noon</option>
+                                <option value="everyhour">Once per hour</option>
+                                <option value="everyminute">Once per minute</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-2" >
+                            <button class="btn btn-info btn-sm" id="schedule_import_odk_cross_data" >Confirm</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Scheduled Time: </label>
+                        <div class="col-sm-6" >
+                            <div id="scheduled_odk_cross_import_time">
+                                <input type="text" disabled value="Not Set" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Progress', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
+
+<div id="testing_div"></div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h3>Summary of Received Plant Status</h3>
+        <div id="odk_cross_plant_status_progress_summary_div">
+        [LOADING...]
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h3>Summary of Received Cross Data</h3>
+        <div id="odk_cross_progress_summary_div">
+        [LOADING...]
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div id="odk_cross_progress_div">
+
+            <h3>Progress Tree</h3>
+            <input type="text" class="form-control input-sm" id="odk_cross_progress_tree_search" placeholder="Search Across Tree" /><br/>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>All Cross Wishlist Entries-- Crosses Completed -- Lab Actions Completed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div id="odk_cross_progress_tree_div" >[loading...]</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+</&>
+
+
+</&>
+
+</div>
+
+<div class="well">
+
+<&| /page/info_section.mas, title=>'Phenotype Data: SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
+
+<button class="btn btn-primary btn-sm" id="import_odk_phenotype_data" >Import Phenotype Data from SMAP</button>
+
+</&>
+
+</div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery.ajax ( {
+        url : '/ajax/odk/get_crossing_available_forms',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+                var form_dropdown_select_html = '<select class="form-control" id="availabe_odk_crossing_forms">';
+                for(var i=0; i<response.forms.length; i++){
+                    if (response.forms[i].id_string == '<% $odk_crossing_data_form_name %>'){
+                        form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';
+                    }
+                }
+                form_dropdown_select_html = form_dropdown_select_html + '</select>';
+                jQuery('#import_odk_cross_data_available_forms').html(form_dropdown_select_html);
+            }
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving available ODK crossing forms");
+        }
+    });
+
+    jQuery.ajax ( {
+        url : '/ajax/odk/get_crossing_available_wishlists',
+        success: function(response){
+            console.log(response);
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+                var wishlist_dropdown_select_html = '<select class="form-control" id="odk_cross_data_available_wishlists_select">';
+                for(var i=0; i<response.wishlists.length; i++){
+                    wishlist_dropdown_select_html = wishlist_dropdown_select_html + '<option value="'+response.wishlists[i][0]+'">'+response.wishlists[i][1]+'</option>';
+                }
+                wishlist_dropdown_select_html = wishlist_dropdown_select_html + '</select>';
+                jQuery('#odk_cross_data_available_wishlists').html(wishlist_dropdown_select_html);
+
+
+                jQuery.ajax ({
+                    url : '/ajax/odk/get_odk_cross_summary_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
+                    success: function(response){
+                        console.log(response);
+                        jQuery("#working_modal").modal("hide");
+                        summary = response.summary;
+                        plot_data_fill = [];
+                        html = '<table id="odk_cross_info_status_table" class="table table-hover table-bordered"><thead><tr><th>Cross Information</th><th>Seeds Produced Graphs</th></tr></thead><tbody>';
+                        for (var top_level in summary) {
+                            if (summary.hasOwnProperty(top_level)) {
+                                for (var cross_name in summary[top_level]){
+                                    if (summary[top_level].hasOwnProperty(cross_name)){
+                                        html = html + '<tr><td><h3>'+cross_name+'</h3>';
+                                        var cross = summary[top_level][cross_name];
+                                        //console.log(cross);
+                                        var plot_data = [];
+                                        for (var activity in cross){
+                                            if (cross.hasOwnProperty(activity)){
+                                                html = html + '<b>'+activity + ' ('+cross[activity].length+')</b>: <br/>';
+                                                for (var i=0; i<cross[activity].length; i++){
+                                                    var action = cross[activity][i];
+                                                    for (var attr in action){
+                                                        if (action.hasOwnProperty(attr)){
+                                                            html = html + '&nbsp;&nbsp;&nbsp;&nbsp;<small>'+attr + ': ' +action[attr]+"</small><br/>";
+                                                        }
+                                                    }
+                                                    html = html + '&nbsp;&nbsp;&nbsp;&nbsp;----</br>';
+
+                                                    if (activity == 'seedExtraction'){
+                                                        var date = action['extraction_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Total Seeds Extracted", "x_pos":parseInt(date), "y_pos":parseInt(action['total_seeds_extracted']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'embryoRescue'){
+                                                        var date = action['embryorescue_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Good Seeds", "x_pos":parseInt(date), "y_pos":parseInt(action['good_seeds']) };
+                                                        plot_data.push(datum);
+                                                        var datum = { "type":activity, "label":"Bad Seeds", "x_pos":parseInt(date), "y_pos":parseInt(action['bad_seeds']) };
+                                                        plot_data.push(datum);
+                                                        var datum = { "type":activity, "label":"Embryo Rescued Seeds", "x_pos":parseInt(date), "y_pos":parseInt(action['embryorescue_seeds']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'screenhouse_humiditychamber'){
+                                                        var date = action['screenhse_transfer_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Screenhouse Humidity Chamber", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'rooting'){
+                                                        var date = action['rooting_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Rooting", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'hardening'){
+                                                        var date = action['hardening_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Hardening", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'contamination'){
+                                                        var date = action['lab_contamination_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Contamination", "x_pos":parseInt(date), "y_pos":1 };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'subculture'){
+                                                        var date = action['subculture_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Subcultures Count", "x_pos":parseInt(date), "y_pos":parseInt(action['subcultures_count']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'germinating_after_2wks'){
+                                                        var date = action['germinating_2wks_date'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Active Seeds 2weeks", "x_pos":parseInt(date), "y_pos":parseInt(action['actively_2wks']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                    if (activity == 'germinating_after_8weeks'){
+                                                        var date = action['germinating_8wksdate'].replace('-','').replace('-','').replace('/','').replace('/','');
+                                                        var datum = { "type":activity, "label":"Active Seeds 8weeks", "x_pos":parseInt(date), "y_pos":parseInt(action['active_8weeks']) };
+                                                        plot_data.push(datum);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        //console.log(plot_data);
+                                        cross_name_clean = cross_name.replace('/', '').replace('(', '').replace(')','');
+                                        var div_id = encodeURI(cross_name_clean)+'_plot_div';
+                                        plot_data_fill.push([plot_data, div_id]);
+                                        html = html + '</td><td><div id="'+div_id+'"></div></td></tr>';
+                                    }
+                                }
+                            }
+                        }
+                        html = html + '</tbody></table>';
+                        jQuery('#odk_cross_progress_summary_div').html(html);
+                        for (var i=0; i<plot_data_fill.length; i++){
+                            if (plot_data_fill[i][0].length > 0){
+                                SGND3ScatterPlot(plot_data_fill[i][0], plot_data_fill[i][1], "Date of Activity");
+                            }
+                        }
+                        jQuery('#odk_cross_info_status_table').DataTable({
+                            "order": [[ 0, "desc" ]]
+                        });
+
+                        var plant_status_html = '<table id="odk_cross_plant_status_table" class="table table-hover table-bordered"><thead><tr><th>Plot Name</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+                        var plant_status_summary = response.plant_status_summary;
+                        console.log(plant_status_summary);
+                        for (var plot_name in plant_status_summary){
+                            if (plant_status_summary.hasOwnProperty(plot_name)){
+                                var has_status = 0;
+                                for (var status_type in plant_status_summary[plot_name]){
+                                    has_status = 1;
+                                    if (plant_status_summary[plot_name].hasOwnProperty(status_type)){
+                                        var status = plant_status_summary[plot_name][status_type];
+                                        //console.log(status);
+                                        if (status_type == 'status'){
+                                            plant_status_html = plant_status_html + '<tr><td>' + plot_name + '</td><td>' + status['status_date'] + '</td><td><b>Status:</b><br/>Accession Name: ' + status['status_accession_name'] + '<br/>Trial Name: ' + status['status_trial_name'] + '<br/>User: ' + status['status_user'] + '<br/>Status Location: ' + status['status_location'] + '<br/>Status: ' + status['status_message'] + '<br/>Note: ' + status['status_note'] + '<br/>Image: ' + status['attachment_display_thumb'] + '<br/></td></tr>';
+                                        }
+                                        if (status_type == 'flowering'){
+                                            plant_status_html = plant_status_html + '<tr><td>' + plot_name + '</td><td>' + status['FieldActivities/Flowering/flowering_date'] + '</td><td><b>Flowering:</b><br/>Accession Name: ' + status['FieldActivities/Flowering/flowerName'] + '<br/>Plant Sex: ' + status['FieldActivities/Flowering/plantSex'] + '<br/></td></tr>';
+                                        }
+                                    }
+                                }
+                                if (has_status == 0){
+                                    plant_status_html = plant_status_html+ '<tr><td>' + plot_name + '</td><td></td><td></td></tr>';
+                                }
+                            }
+                        }
+                        plant_status_html = plant_status_html + '</tbody></thead>';
+                        jQuery('#odk_cross_plant_status_progress_summary_div').html(plant_status_html);
+                        jQuery('#odk_cross_plant_status_table').DataTable({
+                            "order": [[ 1, "desc" ]]
+                        });
+                    },
+                    error: function(response){
+                        jQuery("#working_modal").modal("hide");
+                        alert("Error retrieving available ODK crossing forms");
+                    }
+                });
+
+                //Load ODK Cross Progress Tree
+                jQuery('#odk_cross_progress_tree_div').jstree({
+                    "core": {
+                        'data' : {
+                            'url' : '/ajax/odk/get_odk_cross_progress_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
+                            'data' : function (node) {
+                                return { 'id' : node.id };
+                            }
+                        },
+                        'themes': { 'name': 'proton', 'responsive': true}
+                    },
+                    "search" : {
+                        "case_insensitive" : true,
+                    },
+                    "plugins" : ["html_data","search","sort"],
+                });
+
+                jQuery("#odk_cross_progress_tree_search").keyup(function() {
+                    var v = jQuery("#odk_cross_progress_tree_search").val();
+                    jQuery("#odk_cross_progress_tree_div").jstree(true).search(v);
+                });
+
+            }
+        },
+        error: function(response){
+            alert("Error retrieving available ODK crossing forms");
+        }
+    });
+
+    jQuery.ajax ( {
+        url : '/ajax/odk/get_crossing_data_cronjobs',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+
+            if (response.error){
+                alert(response.error);
+            }
+            if (response.success){
+                var html = 'Not Set';
+                if (response.entries[0] == '0-59/1 * * * * '){
+                    html = '<input type="text" disabled value="Once per minute" class="form-control" />';
+                }
+                if (response.entries[0] == '1 0 * * * '){
+                    html = '<input type="text" disabled value="Once per day at midnight" class="form-control" />';
+                }
+                if (response.entries[0] == '0 * * * * '){
+                    html = '<input type="text" disabled value="Once per hour" class="form-control" />';
+                }
+                if (response.entries[0] == '0 0,12 * * * '){
+                    html = '<input type="text" disabled value="Twice daily at midnight and noon" class="form-control" />';
+                }
+                jQuery('#scheduled_odk_cross_import_time').html(html);
+            }
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving available scheduled ODK cross import cronjobs");
+        }
+    });
+
+    jQuery('#import_odk_phenotype_data').click( function(){
+        jQuery.ajax ( {
+            url : '/ajax/odk/get_phenotyping_data?form_id='+jQuery('#availabe_odk_phenotyping_forms').val(),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error){
+                    alert(response.error);
+                }
+                alert('Not currently working.');
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving ODK phenotyping data.");
+            }
+        });
+    });
+    
+    jQuery('#import_odk_cross_data').click( function(){
+        jQuery.ajax ( {
+            url : '/ajax/odk/get_crossing_data?cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val(),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error){
+                    alert(response.error);
+                }
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving ODK crossing data.");
+            }
+        });
+    });
+
+    jQuery('#schedule_import_odk_cross_data').click( function(){
+        jQuery.ajax ( {
+            url : '/ajax/odk/schedule_get_crossing_data?cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val()+'&timing='+jQuery('#schedule_import_odk_crossing_form_data').val(),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error){
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error scheduling import of ODK crossing data.");
+            }
+        });
+    });
+
+});
+
+</script>
