@@ -16,7 +16,7 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->post_ok('http://localhost:3010/ajax/search/traits?limit=5&offset=1' );
+$mech->post_ok('http://localhost:3010/ajax/search/traits?trait_cv_name=cassava_trait&limit=5&offset=1' );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 

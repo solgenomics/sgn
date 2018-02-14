@@ -369,7 +369,7 @@ sub studies_layout {
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
-	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id });
+	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id, experiment_type=>'field_layout' });
 	my $design = $tl->get_design();
 
 	my $plot_data = [];

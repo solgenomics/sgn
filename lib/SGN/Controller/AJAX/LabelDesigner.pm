@@ -11,6 +11,8 @@ use CXGN::QRcode;
 use CXGN::ZPL;
 use PDF::API2;
 use Sort::Versions;
+use Tie::UrlEncoder; our(%urlencode);
+use CXGN::Trial::TrialLayout;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -180,7 +182,7 @@ __PACKAGE__->config(
                        my $filled_value = $element{'value'};
                        $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
                        #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
-                       print STDERR "Writing to the PDF . . .\n";
+                       #print STDERR "Writing to the PDF . . .\n";
                        if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
                             if ( $element{'type'} eq "Code128" ) {
@@ -297,8 +299,8 @@ __PACKAGE__->config(
        close($FH);
        print STDERR "Returning with filename . . .\n";
        $c->stash->{rest} = {
-           filename => $filename,
-           filepath => $c->config->{basepath}."/".$filename 
+           filename => $urlencode{$filename},
+           filepath => $c->config->{basepath}."/".$filename
        };
 
    }
@@ -308,7 +310,7 @@ sub process_field {
     my $key_number = shift;
     my $design_info = shift;
     my %design_info = %{$design_info};
-    print STDERR "Field is $field\n";
+    #print STDERR "Field is $field\n";
     if ($field =~ m/Number:/) {
         our ($placeholder, $start_num, $increment) = split ':', $field;
         my $length = length($start_num);
@@ -372,7 +374,7 @@ sub get_plot_data {
         $num_trials = scalar keys %trials;
         print STDERR "Count is $num_trials\n";
         $trial_id = $trial_rs->first->project_id();
-        my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
+        my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
         print STDERR "Full Design is: ".Dumper($full_design);
         # reduce design hash, removing plots that aren't in list
         my %full_design = %{$full_design};
@@ -389,7 +391,7 @@ sub get_plot_data {
 
     } elsif ($data_type =~ m/Trial/) {
         $trial_id = $value;
-        $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id })->get_design();
+        $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
     }
     return ($num_trials, $trial_id, $design);
 }
