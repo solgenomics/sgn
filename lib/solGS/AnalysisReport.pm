@@ -268,7 +268,8 @@ sub check_selection_prediction {
 	    { 
 		if ($output_details->{$k}->{trait_id})
 		{
-		    $gebv_file = $output_details->{$k}->{gebv_file}; 
+		    my $trait = $output_details->{$k}->{trait_id};
+		    $gebv_file = $output_details->{$k}->{gebv_file};
 		}
 
 		if ($gebv_file) 
@@ -399,27 +400,45 @@ sub check_population_download {
 		{ 
 		    $pheno_file = $output_details->{$k}->{phenotype_file}; 
 		    $geno_file  = $output_details->{$k}->{genotype_file}; 
+		   
+		    if (!$pheno_file) 
+		    {
+			$output_details->{$k}->{pheno_message} = 'Could not find the phenotype file for this dataset.';
+		    }
+		    
+		    if (!$geno_file) 
+		    {
+			$output_details->{$k}->{geno_message} = 'Could not find the genotype file for this dataset.';
+		    }
 
 		    if ($pheno_file && $geno_file) 
 		    {
 			my $pheno_size;
 			my $geno_size;
 			my $died_file;
-			
+		
 			while (1) 
 			{
 			    sleep 60;
 			    $pheno_size = -s $pheno_file;
 			    $geno_size  = -s $geno_file;
 
-			    unless (!$pheno_size) 
+			    if ($pheno_size) 
 			    {
-				$output_details->{$k}->{pheno_success} = 1;	
+				$output_details->{$k}->{pheno_success} = 1;
+			    } 
+			    else 
+			    {
+				$output_details->{$k}->{pheno_message} = 'There is no phenotype data for this dataset.';
 			    }
 
-			    unless (!$geno_size) 
+			    if ($geno_size) 
 			    {
 				$output_details->{$k}->{geno_success} = 1;		
+			    }
+			    else 
+			    {
+				$output_details->{$k}->{geno_message} = 'There is no genotype data for this dataset.';
 			    }
 
 			    if ($pheno_size && $geno_size) 
@@ -439,10 +458,11 @@ sub check_population_download {
 					$output_details->{$k}->{geno_success}    = 0;
 					$output_details->{$k}->{success} = 0;
 					$output_details->{status} = 'Failed';
+					
 					last;
 				    }
 				}
-			    }	    
+			    }
 			}	   	    
 		    }
 		    else 
@@ -547,7 +567,7 @@ sub report_status {
 	    From    => $email_from,
 	    To      => $email_to,
 	    Cc      => $email_cc,
-	    Subject => "Analysis result of $analysis_name",
+	    Subject => "solGS Report: $analysis_name",
 	],
 	body => $body,
 	);
@@ -572,13 +592,14 @@ sub multi_modeling_message {
     	    if (ref $output_details->{$k} eq 'HASH')
     	    {
     		if ($output_details->{$k}->{trait_id})
-    		{	  
+    		{
+		    my $trait_name = uc($output_details->{$k}->{trait_name});
+		    my $trait_page = $output_details->{$k}->{trait_page};
+
     		    if ($output_details->{$k}->{success})
     		    {
     			$cnt++;
     			$all_success = 1;
-    			my $trait_name = uc($output_details->{$k}->{trait_name});
-    			my $trait_page = $output_details->{$k}->{trait_page};
     			$message .= "The analysis for $trait_name is done."
     			    ." You can view the model output here:"
     			    ."\n\n$trait_page\n\n";
@@ -586,8 +607,8 @@ sub multi_modeling_message {
     		    else 
     		    {  
     			$all_success = 0; 
-    			my $trait_name = uc($output_details->{$k}->{trait_name});
-    			$message .= "The analysis for $trait_name failed.\n\n";	 
+    			$message .= "The analysis for $trait_name failed.\n\n";	
+			$message .= 'Refering page: ' . $trait_page . "\n\n";
     		    }		
     		}
     	    }
@@ -632,9 +653,9 @@ sub single_modeling_message {
 		    }
 		    else 
 		    {  
-			$message = "The analysis for $trait_name failed."
-			    ."\n\nWe are troubleshooting the cause. " 
-			    . "We will contact you when we find out more.";	 
+			$message  = "The analysis for $trait_name failed.\n\n";
+			$message .= 'Refering page: ' . $trait_page . "\n\n";
+			$message .= "We will troubleshoot the cause and contact you when we find out more.";	 
 		    }		
 		}
 	    }
@@ -661,26 +682,27 @@ sub selection_prediction_message {
     		{
     		    my $trait_name          = uc($output_details->{$k}->{trait_name});
     		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-    		    my $model_page          = $output_details->{$k}->{model_page};
+    		    my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
     		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
-		    
+		    $prediction_pop_name =~ s/^\s+|\s+$//g;
+
     		    if ($output_details->{$k}->{success})		
-    		    {		
+    		    {	
+			
     			$cnt++;	
     			if($cnt == 1) 
     			{
     			    $message .= "The prediction of selection population $prediction_pop_name is done."
-    				. "\nYou can view the prediction output by clicking the trait name "
-    				. "\nat the bottom of the model page(s):\n\n";
+    				. "\nYou can view the prediction output here:\n\n"
     			}
-       
-    			$message .= "$model_page\n\n";
+		
+    			$message .= "$prediction_pop_page\n\n";
     		    }
     		    else 
     		    {  
-    			$message .= "The analysis for $trait_name failed."
-    			    ."\n\nWe are troubleshooting the cause. " 
-    			    . "We will contact you when we find out more.";	 
+			$message  = "The analysis for $trait_name failed.\n\n";
+			$message .= 'Refering page: ' . $prediction_pop_page . "\n\n";
+			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";		 
     		    }
 
     		    if ($cnt > 1) 
@@ -721,10 +743,15 @@ sub population_download_message {
 			    ."\n$pop_page.\n\n";
 		    }
 		    else 
-		    {  
-			$message = "Downloading phenotype and genotype data for $pop_name failed."
-			    ."\nWe are troubleshooting the cause. " 
-			    . "We will contact you when we find out more.";	 
+		    {   
+			no warnings 'uninitialized';
+			my $msg_geno  = $output_details->{$k}->{geno_message};
+			my $msg_pheno = $output_details->{$k}->{pheno_message};
+
+			$message  = "Downloading phenotype and genotype data for $pop_name failed.\n";
+			$message .= "\nPossible causes are:\n$msg_geno\n$msg_pheno\n";
+			$message .= 'Refering page: ' . $pop_page . "\n\n";
+			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	 
 		    }
 		}		
 	    }
@@ -750,7 +777,6 @@ sub combine_populations_message {
 	    . "with different marker sets or querying the data for one or more of the\n"
 	    . "populations failed. See details below:\n\n";
 
-	my $troost_mededeling;
 	
     	foreach my $k (keys %{$output_details}) 
 	{
@@ -772,15 +798,14 @@ sub combine_populations_message {
 			else 
 			{  		    
 			    $message .= "Downloading phenotype and genotype data for $pop_name failed.";
-			    $troost_mededeling = "\n\nWe are troubleshooting the cause. " 
-				. "We will contact you when we find out more.";				    
+			    $message .= 'Refering page: ' . $pop_page . "\n\n";
+			    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	    
 			}
 		    }		
 		}
 	    }
 	}
 	
-	$message .= $troost_mededeling; 
     }
     else 
     {

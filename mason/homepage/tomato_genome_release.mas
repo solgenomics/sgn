@@ -35,7 +35,7 @@ if ($@) { print "ERROR $@\n"; }
 </%perl>
 
 <div class="boxbgcolor1" style="margin:0px;">
-<div class="boxheading">Current Tomato Genome version SL3.0 and Annotation ITAG3.0 <font color="red">       [ New ]</font>  </div>
+<div class="boxheading">Current Tomato Genome version SL3.0 and Annotation ITAG3.10 <font color="red">       [ New ]</font>  </div>
 
 <div class="boxcontent"><% $publication %>
 

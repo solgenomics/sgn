@@ -89,7 +89,7 @@ jQuery(document).ready(function() {
                 //console.log(response);
                 jQuery("#working_modal").modal("hide");
                 if (response.error) {
-                    alert('Not logged in with permissions.');
+                    alert('Error: '+response.error);
                 } else {
                     alert('Role Added for User!');
                 }

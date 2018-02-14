@@ -1,0 +1,389 @@
+
+<%args>
+$object_select => undef
+$attribute_select => undef
+$method_select => undef
+$unit_select => undef
+$trait_select => undef
+$composable_cvs => undef
+$composable_cvs_allowed_combinations => undef
+$composable_tod_root_cvterm => undef
+$composable_toy_root_cvterm => undef
+$composable_gen_root_cvterm => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ['CXGN.BreederSearch', 'CXGN.ComposeTrait'] &>
+
+<& /page/page_title.mas, title=>"Compose a new trait" &>
+</br>
+
+<div class="panel panel-default">
+    <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse0">
+        <div class="panel-title"><a href="#form" class="accordion-toggle">Trait Combinations</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    </div>
+    <div id="collapse0" class="panel-collapse collapse in">
+        <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+            <div class="col-sm-12 col-md-12 col-lg-12">
+                <div id="cv_combination_allowed_select_div">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
+    <div class="panel-title"><a href="#form" class="accordion-toggle">Base Trait</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+  </div>
+  <div id="collapse1" class="panel-collapse collapse in">
+    <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+        <div class="col-sm-12 col-md-12 col-lg-12">
+        <div id="object_div" class="col-md-6" style="display: none;">
+            <label for="object_select_div" class="control-label">Object</label>
+            <p class="help-block"><small>Pick the object on which the new trait is measured</small></p>
+            <div id="object_select_div"></div><br>
+            <button class="btn btn-default btn-sm" id="object_select_all" name="object_select_all"/>Select All</button>
+            <button class="btn btn-default btn-sm" id="object_select_clear" name="object_select_clear"/>Clear</button>
+        </div>
+        <div id="attribute_div" class="col-md-6" style="display: none;">
+            <label for="attribute_select_div" class="control-label">Attribute</label>
+            <p class="help-block"><small>Pick the attribute the new trait measures</small></p>
+            <div id="attribute_select_div"></div><br>
+            <button class="btn btn-default btn-sm" id="attribute_select_all" name="attribute_select_all"/>Select All</button>
+            <button class="btn btn-default btn-sm" id="attribute_select_clear" name="attribute_select_clear"/>Clear</button>
+        </div>
+
+        <div id="method_div" class="col-md-6" style="display: none;">
+            <label for="method_select_div" class="control-label">Method</label>
+            <p class="help-block"><small>Pick the method by which the new trait is measured</small></p>
+            <div id="method_select_div"></div><br>
+            <button class="btn btn-default btn-sm" id="method_select_all" name="method_select_all"/>Select All</button>
+            <button class="btn btn-default btn-sm" id="method_select_clear" name="method_select_clear"/>Clear</button>
+        </div>
+        <div id="unit_div" class="col-md-6" style="display: none;">
+            <label for="unit_select_div" class="control-label">Unit</label>
+            <p class="help-block"><small>Pick the units in which the new trait is measured</small></p>
+            <div id="unit_select_div"></div><br>
+            <button class="btn btn-default btn-sm" id="unit_select_all" name="unit_select_all"/>Select All</button>
+            <button class="btn btn-default btn-sm" id="unit_select_clear" name="unit_select_clear"/>Clear</button>
+        </div>
+
+        <div id="trait_div" class="col-md-6" style="display: none;">
+            <label for="trait_select_div" class="control-label">Trait</label>
+            <p class="help-block"><small>Pick an existing trait</small></p>
+            <div id="trait_select_div"></div><br>
+            <button class="btn btn-default btn-sm" id="trait_select_all" name="trait_select_all"/>Select All</button>
+            <button class="btn btn-default btn-sm" id="trait_select_clear" name="trait_select_clear"/>Clear</button>
+        </div>
+        </div>
+</div>
+</div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
+    <div class="panel-title"><a href="#form" class="accordion-toggle">Time Terms</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+  </div>
+  <div id="collapse2" class="panel-collapse collapse in">
+    <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+    <div class="col-sm-12 col-md-12 col-lg-12">
+    <div id="tod_div" class="col-md-6" style="display: none;">
+      <label for="tod_select_div" class="control-label">Time of Day</label>
+      <p class="help-block"><small><i>Optional</i> Pick the time of day at which the new trait is measured</small></p>
+      <div id="tod_select_div"></div><br>
+      <button class="btn btn-default btn-sm" id="tod_select_all" name="tod_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="tod_select_clear" name="tod_select_clear"/>Clear</button>
+    </div>
+    <div id="toy_div" class="col-md-6" style="display: none;">
+      <label for="toy_select_div" class="control-label">Time of Year</label>
+      <p class="help-block"><small><i>Optional</i> Pick the week or month in which the new trait is measured</small></p>
+      <div id="toy_select_div"></div><br>
+      <button class="btn btn-default btn-sm" id="toy_select_all" name="toy_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="toy_select_clear" name="toy_select_clear"/>Clear</button>
+    </div>
+    <div id="gen_div" class="col-md-6" style="display: none;">
+      <label for="gen_select_div" class="control-label">Generation</label>
+      <p class="help-block"><small><i>Optional</i> Pick the generation on which the new trait is measured</small></p>
+      <div id="gen_select_div"></div><br>
+      <button class="btn btn-default btn-sm" id="gen_select_all" name="gen_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="gen_select_clear" name="gen_select_clear"/>Clear</button>
+    </div>
+    </div>
+  </div>
+  </div>
+  </div>
+
+
+  <div class="panel panel-default">
+    <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse3">
+      <div class="panel-title"><a href="#form" class="accordion-toggle">Combinations</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    </div>
+    <div id="collapse3" class="panel-collapse collapse in">
+      <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+<div class="col-sm-12 col-md-12 col-lg-12">
+<div class="col-md-6">
+  <center><label class="control-label">Existing Traits</label></center>
+  <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
+  <select multiple class="form-control" id="existing_traits"></select>
+  </br>
+  <div id="existing_traits_to_list"></div>
+</div>
+<div class="col-md-6">
+  <center><label class="control-label">New Traits</label></center>
+  <center><p class="help-block"><small>New traits that can be made from the current selections</small></p></center>
+  <select multiple class="form-control" id="new_traits"></select></br>
+  <center><button id="compose_trait" title="Select at least one new trait to create before submitting" class="btn btn-primary">Submit</button></center>
+</div>
+</div>
+
+
+
+  </div>
+  </div>
+</div>
+
+<div class="modal fade" id="traits_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="traitsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="traitsSavedDialog">Results</h4>
+            </div>
+            <div id="traits_saved_body" class="container-fluid">
+            </div>
+            <div class="modal-footer">
+                <button id="traits_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%perl>
+use JSON;
+my $encoder = JSON->new();
+
+my $object_json = $encoder->allow_nonref->encode($object_select);
+my $attribute_json = $encoder->allow_nonref->encode($attribute_select);
+my $method_json = $encoder->allow_nonref->encode($method_select);
+my $unit_json = $encoder->allow_nonref->encode($unit_select);
+my $trait_json = $encoder->allow_nonref->encode($trait_select);
+
+</%perl>
+
+<script>
+// retrieve composable cvtypes an only load them as multiselects
+
+var object_html = <% $object_json %>;
+if (object_html) {
+    jQuery("#object_select_div").html(object_html);
+    jQuery("#object_div").show();
+}
+var attribute_html = <% $attribute_json %>;
+if (attribute_html) {
+    jQuery("#attribute_select_div").html(attribute_html);
+    jQuery("#attribute_div").show();
+}
+var method_html = <% $method_json %>;
+if (method_html) {
+    jQuery("#method_select_div").html(method_html);
+    jQuery("#method_div").show();
+}
+var unit_html = <% $unit_json %>;
+if (unit_html) {
+    jQuery("#unit_select_div").html(unit_html);
+    jQuery("#unit_div").show();
+}
+var trait_html = <% $trait_json %>;
+if (trait_html) {
+    jQuery("#trait_select_div").html(trait_html);
+    jQuery("#trait_div").show();
+}
+
+addToListMenu('existing_traits_to_list', 'existing_traits', {
+  selectText: true,
+  listType: 'traits'
+});
+
+jQuery(document).on('change','#object_root_select, #attribute_root_select, #method_root_select, #unit_root_select, #trait_root_select', function() { // retrieve multi select once specific onto is picked
+var cv_id = jQuery(this).val();
+var name = jQuery(this).attr('name');
+name = name.replace('_root_select', '');
+get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_id': cv_id, 'size':'10' });
+});
+
+jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #toy_select, #gen_select', function() { // retrieve matching traits each time component selection changes
+  if (jQuery(this).attr('name') == 'trait_select') {
+    //console.log("trait select changed");
+    //clearAllOptions(document.getElementById('object_select'));
+    //clearAllOptions(document.getElementById('attribute_select'));
+    //clearAllOptions(document.getElementById('method_select'));
+    //clearAllOptions(document.getElementById('unit_select'));
+  }
+  else if ((jQuery(this).attr('name') == 'object_select') || (jQuery(this).attr('name') == 'attribute_select') || (jQuery(this).attr('name') == 'method_select') || (jQuery(this).attr('name') == 'unit_select')) {
+    //console.log("component select changed");
+    //clearAllOptions(document.getElementById('trait_select'));
+  }
+  display_matching_traits();
+});
+
+jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_select_all, #trait_select_all, #tod_select_all, #toy_select_all, #gen_select_all').click( // select all data in a panel
+  function() {
+  var name = jQuery(this).attr('name');
+  var select_id = name.substring(0, name.length - 4);
+  selectAllOptions(document.getElementById(select_id));
+  display_matching_traits();
+});
+
+jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #unit_select_clear, #trait_select_clear, #gen_select_clear, #tod_select_clear, #toy_select_clear').click( // clear all selections in a panel
+  function() {
+  var name = jQuery(this).attr('name');
+  var select_id = name.substring(0, name.length - 6);
+  clearAllOptions(document.getElementById(select_id));
+  display_matching_traits();
+});
+
+jQuery('#existing_traits').dblclick(function() { // open trait detail page in new window on double-click
+    window.open("../../cvterm/"+this.value+"/view");
+});
+
+jQuery("#new_traits").change(function() {
+var selected = jQuery("#new_traits").val();
+if (selected && selected.length > 0) {
+    jQuery('#compose_trait').prop('disabled', false);
+}
+else {
+    jQuery('#compose_trait').prop('disabled', true);
+}
+});
+
+jQuery('#compose_trait').on('click', function () {
+
+    //console.log("just disabled ui");
+    var new_traits = jQuery("#new_traits").val();
+    var new_trait_names = {};
+    jQuery("#new_traits option:selected").each(function () {
+        if (jQuery(this).length) {
+            new_trait_names[jQuery.trim(jQuery(this).text())] = jQuery(this).val();
+        }
+    });
+    //console.log(new_trait_names);
+
+    jQuery.ajax( {
+        url: '/ajax/onto/store_composed_term',
+        timeout: 60000,
+        method: 'POST',
+        beforeSend : function() {
+            disable_ui();
+        },
+        data: {'new_trait_names': JSON.stringify(new_trait_names)},
+        success: function(response) {
+            //console.log(response);
+            var results_html = '';
+            var names = [];
+            enable_ui();
+            if (response.success) {
+                results_html += '<div class="modal-body col-sm-12" id="traits_saved"><label id="success_label" class="control-label">Traits saved</label><ul class="list-group" id="traits_saved_message"><li class="list-group-item list-group-item-success">'+response.success+'</li></ul></div><label id="list_label" class="control-label">Copy new traits to a list</label><div class="modal-body col-sm-12" id="results_to_list_menu"></div><div id="new_trait_names" style="display: none;"></div>';
+                for(var i=0; i<response.names.length; i++){
+                    names.push(response.names[i]+"\n");
+                }
+            }
+            if (response.error){
+                results_html += '<div class="modal-body col-sm-12" id="traits_error"><label id="error_label" class="control-label">Traits Not Saved</label><ul class="list-group" id="traits_error_message"><li class="list-group-item list-group-item-danger">'+response.error+'</li></ul></div>';
+            }
+
+            document.getElementById('traits_saved_body').innerHTML = results_html;
+            jQuery('#new_trait_names').html(names);
+            addToListMenu('results_to_list_menu', 'new_trait_names', {
+                listType: 'traits'
+            });
+
+            jQuery('#traits_saved_dialog').modal("show");
+            refresh_matviews('fullview');
+
+        },
+        error: function(request, status, err) {
+            enable_ui();
+            var results_html = '<div class="modal-body col-sm-12" id="traits_error"><label id="error_label" class="control-label">Traits Not Saved</label><ul class="list-group" id="traits_error_message"><li class="list-group-item list-group-item-danger">There was an error storing the composed terms. None were saved.</li></ul></div>';
+            document.getElementById('traits_saved_body').innerHTML = results_html;
+      }
+    });
+
+});
+
+function create_multi_selects(allowed_names) {
+    jQuery('#compose_trait').prop('disabled', true);
+    jQuery('#tod_div').hide();
+    jQuery('#toy_div').hide();
+    jQuery('#gen_div').hide();
+    jQuery('#object_div').hide();
+    jQuery('#trait_div').hide();
+    jQuery('#attribute_div').hide();
+    jQuery('#unit_div').hide();
+    jQuery('#method_div').hide();
+    jQuery('#tod_select').val([]);
+    jQuery('#toy_select').val([]);
+    jQuery('#gen_select').val([]);
+    jQuery('#object_select').val([]);
+    jQuery('#trait_select').val([]);
+    jQuery('#attribute_select').val([]);
+    jQuery('#unit_select').val([]);
+    jQuery('#method_select').val([]);
+    console.log(allowed_names);
+    for(i = 0; i < allowed_names.length; i++){
+        var cv_name = allowed_names[i];
+        var name = cv_name.trim();
+
+        switch (name) {
+            case "object":
+                jQuery('#object_div').show();
+                break;
+            case "trait":
+                jQuery('#trait_div').show();
+                break;
+            case "attribute":
+                jQuery('#attribute_div').show();
+                break;
+            case "unit":
+                jQuery('#unit_div').show();
+                break;
+            case "method":
+                jQuery('#method_div').show();
+                break;
+            case "time":
+                jQuery("#tod_div,#toy_div,#gen_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_toy_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "tod":
+                jQuery("#tod_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "toy":
+                jQuery("#toy_div").show();
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_toy_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "gen":
+                jQuery("#gen_div").show();
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            default:
+                if (window.console) console.log("Did not recognize "+name+" category");
+        }
+    }
+}
+
+jQuery(document).ready(function() {
+    get_select_box('composable_cvs_allowed_combinations', 'cv_combination_allowed_select_div', { 'id' : 'cv_combination_allowed_select', 'name' : 'cv_combination_allowed_select' });
+    jQuery(document).on('change', '#cv_combination_allowed_select', function(){
+        var names = jQuery('#cv_combination_allowed_select').val();
+        var allowed_names = names.split('+');
+        create_multi_selects(allowed_names);
+    });
+    var allowed_combinations = '<% $composable_cvs_allowed_combinations %>';
+    var allowed_combo = allowed_combinations.split(',');
+    var allowed_combo_first = allowed_combo[0].split('|');
+    create_multi_selects(allowed_combo_first[1].split('+'));
+});
+
+</script>

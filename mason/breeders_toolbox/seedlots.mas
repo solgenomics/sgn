@@ -1,0 +1,167 @@
+
+<%args>
+$timestamp
+</%args>
+
+<& /page/page_title.mas, title=>"Available Seedlots" &>
+
+<style>
+.ui-autocomplete {
+    z-index: 5000;
+}
+</style>
+  
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
+
+
+<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>
+
+<form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Seedlot Name: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_seedlot_name" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Breeding Program: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_breeding_program" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Contents (Cross Uniquename): </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_contents_cross" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Location: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_location" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Minimum Count: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
+        </div>
+    </div>
+</form>
+<center>
+<button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
+</center>
+
+</&>
+
+
+<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add Seedlot</a>]  [<a id="seedlot_bulk_upload">Upload Seedlots</a>]'&>
+
+<br/>
+
+<table id="available_seedlots_table" class="table table-hover table-striped table-bordered">
+</table>
+
+<hr>
+
+<div id="available_seedlots_to_list" style="display:none">
+</div>
+<div id="available_seedlots_add_to_list">
+</div>
+
+</&>
+
+<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+
+<script>
+jQuery(document).ready(function(){
+
+    var seedlots_table = jQuery('#available_seedlots_table').DataTable({
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'lengthMenu': [10,20,50,100,1000],
+        'ajax': { 'url': '/ajax/breeders/seedlots',
+                  'data': function(d) {
+                     d.seedlot_name  = jQuery('#search_seedlot_form_seedlot_name').val();
+                     d.breeding_program = jQuery('#search_seedlot_form_breeding_program').val();
+                     d.minimum_count   = jQuery('#search_seedlot_form_minimum_count').val();
+                     d.location     = jQuery('#search_seedlot_form_location').val();
+                     d.contents_accession = jQuery('#search_seedlot_form_contents_accession').val();
+                     d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();
+                }
+        },
+        columns: [
+            { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
+            { title: "Breeding Program", "data": "breeding_program_name" },
+            { title: "Contents", "data": "contents_html" },
+            { title: "Seedlot Location", "data": "location" },
+            { title: "Count", "data": "count" },
+            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
+        ],
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i].seedlot_stock_uniquename+"\n";
+                }
+                jQuery("#available_seedlots_to_list").html(html);
+                addToListMenu("available_seedlots_add_to_list", "available_seedlots_to_list", {
+                    selectText: true,
+                    listType: 'seedlots',
+                    listName: 'seedlots'
+                });
+            }
+        }
+    });
+
+    jQuery('#submit_seedlot_search').click( function() {
+        seedlots_table.search("available_seedlots_table").draw();
+    });
+
+    jQuery('#search_seedlot_form').keypress( function( e ) {
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+            jQuery('#submit_seedlot_search').click();
+        }
+    });
+
+});
+
+function removeSeedlot(seedlot_stock_id){
+    if (confirm("Are you sure you want to delete this seedlot?")){
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot/'+seedlot_stock_id+'/delete',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The seedlot has been deleted.");
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred deleting seed lot');
+            }
+        });
+    }
+}
+
+</script>

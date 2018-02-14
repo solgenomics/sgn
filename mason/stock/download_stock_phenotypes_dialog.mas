@@ -21,8 +21,8 @@ $stock_name => undef
                 <label class="col-sm-3 control-label">Format: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_stock_phenotypes_format">
-                        <option value="xls">Excel (xls)</option>
                         <option value="csv">CSV</option>
+                        <option value="xls">Excel (xls)</option>
                     </select>
                 </div>
 	        </div>
@@ -52,13 +52,15 @@ $stock_name => undef
                     </div>
                 </div>
             </div>
+<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Download Type: </label>
                 <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="stock_search_type" id="stock_search_type" value="fast" checked>Fast (plots only)</label>
                     <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="stock_search_type" id="stock_search_type" value="complete">Complete</label>
+                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="stock_search_type" id="stock_search_type" value="fast" checked>Fast (plots only)</label>
                 </div>
             </div>
+</&>
 
         </form><br/>
 

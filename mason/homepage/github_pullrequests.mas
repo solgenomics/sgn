@@ -1,0 +1,45 @@
+<%args>
+$phenotype_files => undef
+</%args>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">Recent Changes to Database</div>
+                <div class="panel-body">
+                    <div id="homepage_github_pullrequests_div"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+    
+    var pr_body_begin = "Description <!-- Describe your changes in detail. -->\r\n-----------------------------------------------------";
+    var pr_body_end = "Checklist <!-- Put an `x` in all the boxes that apply, or check them once submitted.-->";
+
+    jQuery.ajax( {
+      'url': 'https://api.github.com/repos/solgenomics/sgn/pulls?state=closed&sort=updated&direction=desc&per_page=5',
+      'method': 'GET',
+      'success': function(response) {
+        //console.log(response);
+        var html = '<table class="table table-bordered table-hover" id="homepage_github_pullrequests" alt=""><thead><tr><th>Title</th><th>Description</th><th>Date</th></tr></thead><tbody>';
+        for (var i=0; i<response.length; i++){
+            pr_body = response[i].body;
+            trim1 = pr_body.split(pr_body_end)[0];
+            body = trim1.split(pr_body_begin).slice(-1)[0];
+            html = html + '<tr><td><a href="'+response[i].html_url+'" >'+response[i].title+'</a></td><td>'+body+'</td><td>'+response[i].merged_at+'</td></tr>';
+        }
+        html = html + '</tbody></table>';
+        jQuery('#homepage_github_pullrequests_div').html(html);
+      },
+      error: function(response) {
+        //alert('An error occurred fetching github pull requests.');
+      }
+    });
+
+});
+</script>

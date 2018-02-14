@@ -135,7 +135,7 @@ $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
 $phenotype_metadata{'operator'} = $opt_u;
 $phenotype_metadata{'date'} = $timestamp;
 
-my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
+my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
 if (!$validate_file) {
     die "Input file itself not valid.\n";
 }
@@ -147,7 +147,7 @@ if ($validate_file == 1){
     }
 }
 
-my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included);
+my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
 if (!$parsed_file) {
     die "Error parsing file.\n";
 }
@@ -188,9 +188,9 @@ if ($verified_warning && !$opt_o) {
 
 print STDERR "Done validating. Now storing\n";
 
-my $stored_phenotype_error = $store_phenotypes->store();
+my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
 if ($stored_phenotype_error) {
     die $stored_phenotype_error."\n";
 }
-
+print STDERR $stored_Phenotype_success."\n";
 print STDERR "Script Complete.\n";

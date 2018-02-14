@@ -84,9 +84,6 @@ my $dbh = $stockref->{dbh};
 
 my @editable_stock_props = split "," , $editable_stock_props_string;
 
-my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
- 'me.name' => 'stock_property'} );
-
 
 my ($type_name, $uniquename);
 my $type = $stock_row ? $stock_row->type : undef;
@@ -214,8 +211,10 @@ function jqueryStuff() {
   &>
 
   </div>
+  <br /><br />
   <div class="col-sm-6">
-<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
+<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &><br /><br />
+%#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
 %# <& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
 %#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"qrcode" &>
   </div>
@@ -232,19 +231,19 @@ function jqueryStuff() {
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
       <& /stock/stockprops.mas,
        stock_id    => $stock_id,
-	props      => $stockprops ,
-	div_name   =>'synonyms',
-	subset     =>$resources,
-	editable   => [ 'stock_synonym' ],
-	edit_privs => $edit_privs   &>
+       props      => $stockprops ,
+       div_name   =>'synonyms',
+       subset     =>$resources,
+       editable   => [ 'stock_synonym' ],
+       edit_privs => $edit_privs   &>
 </&>
 %  $div_name = join("_", @editable_stock_props);
 % my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /stock/stockprops.mas,
-	 stock_id  =>$stock_id,
-	props      => $stockprops,
+       stock_id  =>$stock_id,
+       props      => $stockprops,
         div_name   => 'stockprops',
 	edit_privs => $edit_privs,
 	subset     => \@editable_stock_props,
@@ -279,11 +278,21 @@ function jqueryStuff() {
 </&>
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
-<&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
 
-  <& /stock/traits.mas, stock_id => $stock_id &>
+% if ($type_name eq 'plot'){
+    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>] [<a target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>]" &>
 
-</&>
+        <& /stock/traits.mas, stock_id => $stock_id &>
+
+  </&>
+% }
+% else {
+    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
+        <& /stock/traits.mas, stock_id => $stock_id &>
+
+  </&>
+% }
+
 
 <%perl>
  my $collapsible = 0;
@@ -306,43 +315,19 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 % if ($type_name eq 'accession'){
 
-<&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
+<&| /page/info_section.mas, title=>"Pedigree and Descendants" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
 </&>
-
-% my $maximum_descendants = 50;
-% if ($has_descendants > $maximum_descendants) {
-
-  <&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
-    <& /generic_message.mas, message => "This accession has a total of $has_descendants direct descendants in the database. Descendants are shown only if there are fewer than $maximum_descendants direct descendants in the database. You can see all the direct descendants in the 'Related stocks' section below." &>
-</&>
-
-% }
-% elsif ($has_descendants > 0) {
-
-<&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
-  <& /pedigree/stock_descendants.mas, stock_id => $stock_id &>
-</&>
-
-% } else {
-
-<&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>1 &>
-</&>
-
-% }
 
 <& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
 
 % }
 
-% if ($type) {
+
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
-  <& /stock/related_stocks.mas, stock => $stock_row &>
+  <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $uniquename, stock_type => $type_name &>
 
 </&>
-
-% }
-
 
 <&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
   <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
@@ -473,12 +458,12 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
       url: "<% $test_url %>",
       success: function(response) {
         if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
-		      jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
-	      }
+	         jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
+		       }
         else { // if not found, display message that dataset doesn't exist
-		      jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
-     		}
-	    },
+	           jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
+     		   				   }
+						       },
       error: function() {
         jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
       }

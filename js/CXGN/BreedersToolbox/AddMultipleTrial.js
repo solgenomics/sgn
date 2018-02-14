@@ -123,7 +123,6 @@ jQuery(document).ready(function ($) {
       else {
          use_same_layout = "";
       }
-    //  alert(use_same_layout);
 
       var rep_count = $('#rep_count_multi').val();
       var block_size = $('#block_size_multi').val();
@@ -195,7 +194,7 @@ jQuery(document).ready(function ($) {
         var year = $('#add_multi-project_year').val();
         var desc = $('textarea#add_multi-project_description').val();
         var method_to_use = $('.format_type:checked').val();
-        //alert(method_to_use);
+
         if (name == '') {
           alert('Trial name required');
           return;
@@ -268,6 +267,25 @@ jQuery(document).ready(function ($) {
           $("#other_parameter_section_multi").hide();
           $("#design_info_multi").show();
           $("#greenhouse_num_plants_per_accession_section_multi").hide();
+      } else if (design_method == "Lattice") {
+          $("#FieldMap").show();
+          $("#trial_design_more_info").show();
+          $("#trial_multi-design_more_info").show();
+          $("#crbd_show_list_of_checks_section").show();
+          $("#show_list_of_checks_section").hide();
+          $("#rep_count_section").show();
+          $("#block_number_section").hide();
+          $("#block_size_section").hide();
+          $("#max_block_size_section").hide();
+          $("#row_number_section").hide();
+          $("#row_number_per_block_section").hide();
+          $("#col_number_per_block_section").hide();
+          $("#col_number_section").hide();
+          $("#row_number_per_block_section").hide();
+          $("#other_parameter_section").hide();
+          $("#design_info").show();
+          $("#greenhouse_num_plants_per_accession_section").hide();
+          $('#greenhouse_default_num_plants_per_accession').hide();
       } else if (design_method == "Augmented") {
           $("#trial_multi-design_more_info").show();
           $("#show_list_of_checks_section_multi").show();
@@ -370,15 +388,16 @@ jQuery(document).ready(function ($) {
       }
   });
 
+  $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list", 'refresh' ));
 
   function open_multilocation_project_dialog() {
     $('#add_multilocation_project_dialog').modal("show");
     $("#select_list_multi_list_select").remove();
+    $("#select_seedlot_list_multi_list_select").remove();
     $("#list_of_checks_section_multi_list_select").remove();
-    $("#select_list_multi_list_select").remove();
     $("#crbd_list_of_checks_section_multi_list_select").remove();
-    $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list" ));
     $("#select_list_multi").append(list.listSelect("select_list_multi", [ 'accessions' ], '', 'refresh' ));
+    $("#select_seedlot_list_multi").append(list.listSelect("select_seedlot_list_multi", [ 'seedlots' ], '', 'refresh'));
     $("#list_of_checks_section_multi").append(list.listSelect("list_of_checks_section_multi", [ 'accessions' ], '', 'refresh'));
     $("#crbd_list_of_checks_section_multi").append(list.listSelect("crbd_list_of_checks_section_multi", [ 'accessions' ], "select optional check list", 'refresh'));
 
@@ -391,6 +410,12 @@ jQuery(document).ready(function ($) {
     //add a blank line to list select dropdown that dissappears when dropdown is opened
     $("#select_list_multi_list_select").prepend("<option value=''></option>").val('');
     $("#select_list_multi_list_select").one('mousedown', function () {
+              $("option:first", this).remove();
+    });
+
+    //add a blank line to list select dropdown that dissappears when dropdown is opened
+    $("#select_seedlot_list_multi_list_select").prepend("<option value=''></option>").val('');
+    $("#select_seedlot_list_multi_list_select").one('mousedown', function () {
               $("option:first", this).remove();
     });
 
@@ -440,6 +465,7 @@ jQuery(document).ready(function ($) {
 
   $('#add_multiloc_project_link').click(function () {
       get_select_box('years', 'add_multi_project_year', {'auto_generate': 1 });
+      get_select_box('trial_types', 'add_multi_project_type', {'empty':1} );
       open_multilocation_project_dialog();
 
   });
@@ -457,21 +483,18 @@ jQuery(document).ready(function ($) {
       var stock_list_id = jQuery('#select_list_multi_list_select').val();
       var control_list_id = jQuery('#list_of_checks_section_multi_list_select').val();
       var location_list_id = jQuery('#select_list_locations_multi_list_select').val();
-
       var location_list;
+      var num_plants_per_plot = 0;
+      var num_subplots_per_plot = 0;
+
+      var locations;
+      var location_list_id = jQuery('#select_list_locations_multi_list_select').val();
       if (location_list_id != "") {
           location_list = JSON.stringify(list.getList(location_list_id));
       } else {
           location_list = JSON.stringify(trial_location);
       }
-  //    var stock_list;
-  //    if (stock_list_id != "") {
-  //       stock_list = JSON.stringify(list.getList(stock_list_id));
-  //    }
-  //    var control_list;
-  //    if (control_list_id != "") {
-  //       control_list = JSON.stringify(list.getList(control_list_id));
-  //    }
+
       var design_type = jQuery('#select_multi-design_method').val();
       var greenhouse_num_plants = [];
       if (stock_list_id != "" && design_type == 'greenhouse') {
@@ -485,7 +508,6 @@ jQuery(document).ready(function ($) {
           //console.log(greenhouse_num_plants);
       }
 
-      //alert(design_type);
       var use_same_layout;
       if ($('#use_same_layout').is(':checked')) {
          use_same_layout = $('#use_same_layout').val();
@@ -493,13 +515,9 @@ jQuery(document).ready(function ($) {
       else {
          use_same_layout = "";
       }
-  //    var rep_count = jQuery('#rep_count_multi').val();
-  //    var block_size = jQuery('#block_size_multi').val();
-  //    var max_block_size = jQuery('#max_block_size_multi').val();
-  //    var plot_prefix = jQuery('#plot_prefix_multi').val();
-  //    var start_number = jQuery('#start_number_multi').val();
-  //    var increment = jQuery('#increment_multi').val();
+
       var breeding_program_name = jQuery('#select_breeding_program_multi').val();
+      var trial_type = jQuery('#add_multi_project_type').val();
 
       //var stock_verified = verify_stock_list(stock_list);
       if (desc == '' || year == '') {
@@ -519,21 +537,14 @@ jQuery(document).ready(function ($) {
               'project_description': desc,
               'use_same_layout': use_same_layout,
               'year': year,
+              'trial_type': trial_type,
               'trial_location': location_list,
-            //  'stock_list': stock_list,
-            //  'control_list': control_list,
               'design_type': design_type,
-          //    'rep_count': rep_count,
-          //    'block_number': block_number,
-          //    'block_size': block_size,
-            //  'max_block_size': max_block_size,
-          //    'plot_prefix': plot_prefix,
-          //    'start_number': start_number,
-            //  'increment': increment,
-              //'design_json': design_json,
               'design_json': design_json,
               'breeding_program_name': breeding_program_name,
               'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
+              'has_plant_entries': num_plants_per_plot,
+              'has_subplot_entries': num_subplots_per_plot,
           },
           success: function (response) {
               if (response.error) {
@@ -559,7 +570,12 @@ jQuery(document).ready(function ($) {
   });
 
   $('#view_multi_trial_layout_button').click(function () {
-$('#trial_multi_design_view_layout').modal("show");
+      $('#trial_multi_design_view_layout').modal("show");
+  });
+
+  $('#redo_multiloc_trial_layout_button').click(function () {
+      generate_multi_experimental_design();
+      $('#trial_multi_design_view_layout').modal("show");
   });
 
 });

@@ -20,14 +20,14 @@
   use JSON::Any;
 
   my $menus = {};
-  foreach my $d (keys(%$databases)) { 
+  foreach my $d (keys(%$databases)) {
      $menus->{$d} = $m->scomp('/page/html_select.mas', name=>"database", params=>"class\=\"form-control input-sm blast_select_box\"", id=>"database", choices => [ @{$databases->{$d}} ], selected=> $preselected_database );
   }
 
-  my $substitution_matrix_select = $m->scomp('/page/html_select.mas', 
-     name=>"matrix", 
+  my $substitution_matrix_select = $m->scomp('/page/html_select.mas',
+     name=>"matrix",
      params=>"class\=\"form-control input-sm blast_select_box\"",
-     id=>"matrix", 
+     id=>"matrix",
      choices => [  [ 'BLOSUM62', 'BLOSUM62 (default)' ],
                    [ 'BLOSUM80', 'BLOSUM80 (recent divergence)' ],
   		 [ 'BLOSUM45', 'BLOSUM45 (ancient divergence)' ],
@@ -42,25 +42,25 @@
 
   # array with the preselected output formats
   my @parse_options_selected = ();
-  foreach my $po (@parse_options) { 
-    if ($po->[0] eq "SGN") { 
-      push @parse_options_selected, $po;
-    }
-    # if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) {
-    #   push @parse_options_selected, $po;
+  # foreach my $po (@parse_options) {
+    # if ($po->[0] eq "SGN") {
+      # push @parse_options_selected, $po;
     # }
-  }
+    # if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) {
+      # push @parse_options_selected, $po;
+    # }
+  # }
 
   # output formats alphabetically sorted
-  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"6\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
+  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"5\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
   # print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
   # print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
 
   my $db_type = {};
-  
+
   foreach my $g (keys %$databases) {
-    foreach my $d (@{$databases->{$g}}) {  
+    foreach my $d (@{$databases->{$g}}) {
        $db_type->{$d->[0]} = $d->[2];
     }
   }
@@ -70,22 +70,22 @@
 
   my $q_type = {};
   my $q_example = {};
-  
+
   foreach my $t (@input_options) {
     $q_type->{$t->[1]} = $t->[2];
     $q_example->{$t->[1]} = $t->[3];
   }
-  
+
   #print STDERR Data::Dumper::Dumper($q_type);
   my $input_option_json = JSON::Any->encode($q_type);
   my $input_example_json = JSON::Any->encode($q_example);
 
   my $preload = "";
-  if ($preload_id && $preload_type) { 
+  if ($preload_id && $preload_type) {
     $preload = $preload_id;
   }
-  
-  if ($preload_seq) { 
+
+  if ($preload_seq) {
     $preload = $preload_seq;
   }
 
@@ -93,16 +93,18 @@
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.Blast' , 'jqueryui'] &>
+<script src="/js/kinetic-v5.1.0/kinetic-v5.1.0.min.js"></script>
+<& /util/import_javascript.mas, classes => [ 'tools.blast_canvas_graph', 'CXGN.Blast' , 'jqueryui'] &>
+
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
-  
+
   <div class="form-group form-inline">
         <label class="blast_select_label" for="dataset_select">Categories &nbsp; </label>
-  
+
     <& /page/html_select.mas, name=>'Datasets', choices=> $dataset_groups, id=>"dataset_select", name=>"dataset_select", params=>"class\=\"form-control input-sm blast_select_box\"", selected=>"$preselected_category" &>
 
 % if ($blast_db_icons) {
@@ -120,18 +122,18 @@
 
     <span id='database_select' ></span><a style="font-size: 80%" title="View details of each database" href="/tools/blast/dbinfo">db details</a>
     <br>
-    
+
     <label class="blast_select_label" for="program_select">Program &nbsp; </label>
     <& /page/html_select.mas, name=>'program_select', id=>'program_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>$programs &>
     <br>
-    
+
     <label class="blast_select_label" for="input_example">Query &nbsp; </label>
     <% $input_options_select %><a id="input_example" style="font-size: 80%;cursor:pointer;">Show example</a>
   </div>
 
     <textarea name="sequence" id="sequence" class="form-control" rows="8" cols="80"><% $preload %></textarea></td></tr>
     <br>
-  
+
         <div style="text-align: center">
           <button class="btn btn-primary" id="submit_blast_button" type="submit" name="search" value="Search">BLAST</button>
         </div>
@@ -139,7 +141,7 @@
 
 <&| /page/info_section.mas, title=>"Advanced Options", collapsible=>1, collapsed =>1, is_subsection=>"1" &>
 
-	<& /page/info_table.mas, title=>'', data => [ 
+	<& /page/info_table.mas, title=>'', data => [
 	  'Expect (e-value) Threshold' => '<input id="evalue" class="blast_select_box form-control" type="text" size="6" value="1e-10" name="expect" />',
 	  'Substitution Matrix' => $substitution_matrix_select,
 		'Output Options' => $parse_options_select,
@@ -150,7 +152,7 @@
 	  __tableattrs => 'width="80%"',
 	]
 	&>
-	
+
 </&>
 
 </&>
@@ -165,22 +167,34 @@
 </&>
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-<table>
-  <tr><td><div id="prereqs"></div></td></tr>
-  <tr><td><div id="Overview_output"></div></td></tr>
-  <tr><td><div id="Coverage_output"></div></td></tr>
-  <tr><td><div id="Table_output" style="min-width:900px;"></div></td></tr>
-  <tr><td><div id="SGN_output"></div></td></tr>
-  <tr><td><div id="Bioperl_output"></div></td></tr>
-  <tr><td><div id="Basic_output"></div></td></tr>
-</table>
+
+  <div id="prereqs"></div>
+
+  <center>
+    <div id="sgn_blast_graph" style="display:none">
+        <div id="myCanvas">
+          Your browser does not support the HTML5 canvas
+        </div>
+    </div>
+  </center>
+  <br>
+  <div id="SGN_output"></div>
+  
+  <div id="Overview_output"></div>
+  <div id="Coverage_output"></div>
+  <div id="Table_output" style="min-width:900px;"></div>
+  <div id="Bioperl_output"></div>
+  <div id="Basic_output"></div>
+
 </&>
+
+
 
 <div id="jobid" style="display:none;"></div>
 
 <div class="modal fade" id="myModal" role="dialog">
   <div class="modal-dialog modal-sm">
-  
+
     <!-- Modal content-->
     <div class="modal-content">
       <div class="modal-header">
@@ -193,30 +207,30 @@
         </center>
       </div>
     </div>
-    
+
   </div>
 </div>
 
 
 <div class="modal fade" id="search_modal" role="dialog">
   <div class="modal-dialog modal-lg">
-  
+
     <!-- Modal content-->
   <div class="modal-content">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal">&times;</button>
       <h4 class="modal-title">Search Result</h4>
     </div>
-    
+
     <div class="modal-body">
       <p id="search_output" style="max-height:300px;overflow:scroll;"></p>
     </div>
-    
+
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
     </div>
   </div>
-    
+
   </div>
 </div>
 
@@ -226,7 +240,7 @@
 
 
 jQuery(document).ready(function() {
-	
+
 	//function to select category and database when click on fruit images
 	jQuery('.fruit_icon').click( function() {
 		var db_id = jQuery(this).attr('db_id');
@@ -234,12 +248,12 @@ jQuery(document).ready(function() {
 		jQuery('#dataset_select').val(db_id);
 		swap_menu(db_id);
 	});
-	
+
 	swap_menu(jQuery('#dataset_select').find(':selected').attr('value'));
 
 	jQuery('#sequence').attr('spellcheck',false);
 
-	jQuery('#dataset_select').change( function() { 
+	jQuery('#dataset_select').change( function() {
 	  var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
 	  swap_menu(selectedId);
 	});
@@ -248,16 +262,16 @@ jQuery(document).ready(function() {
 	var database_types = eval (<% $database_type_json %>);
 	var input_option_types = eval(<% $input_option_json %>);
 
-	jQuery('#input_example').click( function() { 
+	jQuery('#input_example').click( function() {
 	  jQuery('#sequence').html( input_examples[jQuery('#input_options').val() ] );
 	});
 
-	jQuery('#submit_blast_button').click( function() { 
+	jQuery('#submit_blast_button').click( function() {
 		var pasted_seq = jQuery('#sequence').val();
-		
+
 		if (pasted_seq.match(/>/)) {
 			var seq_num = pasted_seq.match(/>/g);
-		
+
 			if (seq_num.length <= 20 ) {
 			  run_blast(database_types, input_option_types);
 			} else {
@@ -267,14 +281,14 @@ jQuery(document).ready(function() {
 			run_blast(database_types, input_option_types);
 		}
 	});
-	
+
 	//search blastdb by description
-	jQuery('#search_by_desc').click( function() { 
+	jQuery('#search_by_desc').click( function() {
 		var database = jQuery('#database').val();
 		var blast_desc = jQuery('#blast_desc').val();
 		// alert("db: "+database+", blast_desc: "+blast_desc);
     disable_ui();
-		
+
 		jQuery.ajax( {
 			url: '/tools/blast/desc_search/',
 			method: 'POST',
@@ -283,7 +297,7 @@ jQuery(document).ready(function() {
         enable_ui();
         $('#search_output').html(response.output_seq);
         $('#search_modal').modal("show");
-        
+
 			},
 			error: function(response) {
 				alert("An error occurred. The service may not be available right now.");
@@ -291,14 +305,14 @@ jQuery(document).ready(function() {
 				return;
 			}
 		});
-		
+
 	});
-	
-	function swap_menu(group_id) { 
+
+	function swap_menu(group_id) {
 	  var menu_html = eval( <% JSON::Any->encode($menus) %>);
 	  jQuery('#database_select').html(menu_html[group_id]);
 	}
-	
+
 });
 
 </script>
@@ -363,9 +377,31 @@ h1 {
   max-width: 98%;
 }
 
-
 .download_tag {
   display:none;
 }
+
+/* BLAST canvas Graph */
+
+.width-1000 {
+  width: 1000px;
+  text-align: center;
+}
+
+#sgn_blast_graph {
+  overflow:hidden;
+}
+
+#myCanvas {
+/*  border-style: solid;*/
+/*  border-width: 1px;*/
+/*  border-color: #ddd;*/
+/*  border-width:0px 1px 1px 1px;*/
+  height:450px;
+  width:1020px;
+  overflow:scroll;
+  overflow-x: hidden;
+}
+
 
 </style>

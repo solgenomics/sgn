@@ -7,7 +7,9 @@ use CXGN::Trial;
 use CXGN::Trial::Search;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trait;
+use CXGN::Stock;
 use CXGN::Phenotypes::SearchFactory;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
@@ -69,7 +71,7 @@ sub seasons {
 
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@sorted_years, $page_size, $page);
 	foreach (@$data_window){
-		my ($year, $season) = split '|', $_->[0];
+		my ($year, $season) = split '\|', $_->[0];
 		push @data, {
 			seasonsDbId=>$_->[1],
 			season=>$season,
@@ -157,8 +159,8 @@ sub studies_search {
 			locationName => $_->{location_name},
 			programDbId => $_->{breeding_program_id},
 			programName => $_->{breeding_program_name},
-			startDate => $_->{harvest_date},
-			endDate => $_->{planting_date},
+			startDate => $_->{project_harvest_date},
+			endDate => $_->{project_planting_date},
 			active=>'',
 			additionalInfo=>\%additional_info
 		);
@@ -186,16 +188,16 @@ sub studies_germplasm {
 	my @germplasm_data;
 
 	foreach (@$data_window){
-		my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $_->{stock_id})->get_stockprop_hash();
+		my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$_->{stock_id}});
 		push @germplasm_data, {
 			germplasmDbId=>$_->{stock_id},
 			germplasmName=>$_->{accession_name},
-			entryNumber=>$stockprop_hash->{'entry number'} ? join ',', @{$stockprop_hash->{'entry number'}} : '',
-			accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : '',
-			germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : '',
-			pedigree=>$self->germplasm_pedigree_string($_->{stock_id}),
-			seedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : '',
-			synonyms=>$stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : '',
+			entryNumber=>$stock_object->entryNumber,
+			accessionNumber=>$stock_object->accessionNumber,
+			germplasmPUI=>$stock_object->germplasmPUI,
+			pedigree=>$stock_object->get_pedigree_string,
+			seedSource=>$stock_object->germplasmSeedSource,
+			synonyms=>$stock_object->synonyms,
 		};
 	}
 
@@ -359,11 +361,15 @@ sub studies_observation_variables {
 
 sub studies_layout {
 	my $self = shift;
-	my $study_id = shift;
+	my $inputs = shift;
+    my $study_id = $inputs->{study_id};
+    my $format = $inputs->{format} || 'json';
+	my $file_path = $inputs->{file_path};
+	my $file_uri = $inputs->{file_uri};
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
-	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id });
+	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id, experiment_type=>'field_layout' });
 	my $design = $tl->get_design();
 
 	my $plot_data = [];
@@ -406,10 +412,32 @@ sub studies_layout {
 		}
 		$count++;
 	}
-	my %result = (data=>$plot_data);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies layout result constructed');
+	my %result;
+    my @data_files;
+    if ($format eq 'json'){
+        %result = (data=>$plot_data);
+    } elsif ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls') {
+       # if xls or csv or tsv, create tempfile name and place to save it
+
+       my @header_row = ('studyDbId', 'observationUnitDbId', 'observationUnitName', 'observationLevel', 'replicate', 'blockNumber', 'X', 'Y', 'entryType', 'germplasmName', 'germplasmDbId');
+       my @data_out;
+       push @data_out, \@header_row;
+       foreach (@$plot_data){
+           my @row = ($_->{studyDbId}, $_->{observationUnitDbId}, $_->{observationUnitName}, $_->{observationLevel}, $_->{replicate}, $_->{blockNumber}, $_->{X}, $_->{Y}, $_->{entryType}, $_->{germplasmName}, $_->{germplasmDbId});
+           push @data_out, \@row;
+       }
+
+       my $file_response = CXGN::BrAPI::FileResponse->new({
+           absolute_file_path => $file_path,
+           absolute_file_uri => $inputs->{main_production_site_url}.$file_uri,
+           format => $format,
+           data => \@data_out
+       });
+       @data_files = $file_response->get_datafiles();
+
+    }
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies layout result constructed');
 }
 
 
@@ -514,6 +542,8 @@ sub studies_table {
 	my $file_path = $inputs->{file_path};
 	my $file_uri = $inputs->{file_uri};
 	my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
+	my @trial_ids_array = $inputs->{trial_ids} ? @{$inputs->{trial_ids}} : ();
+	push @trial_ids_array, $study_id;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -525,17 +555,15 @@ sub studies_table {
 	if ($search_type eq 'fast'){
 		$factory_type = 'MaterializedView';
 	}
-	my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-		$factory_type,    #can be either 'MaterializedView', or 'Native'
-		{
-			bcs_schema=>$self->bcs_schema,
-			data_level=>$data_level,
-			trial_list=>[$study_id],
-			trait_list=>\@trait_ids_array,
-			include_timestamp=>1,
-		}
+	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+		search_type=>$factory_type,
+		bcs_schema=>$self->bcs_schema,
+		data_level=>$data_level,
+		trial_list=>\@trial_ids_array,
+		trait_list=>\@trait_ids_array,
+		include_timestamp=>1,
 	);
-	my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+	my @data = $phenotypes_search->get_phenotype_matrix();
 	#print STDERR Dumper \@data;
 
 	my %result;
@@ -543,7 +571,7 @@ sub studies_table {
 	my $total_count = 0;
 	if ($format eq 'json') {
 		$total_count = scalar(@data)-1;
-		my @header_names = split /\t/, $data[0];
+		my @header_names = @{$data[0]};
 		#print STDERR Dumper \@header_names;
 		my @trait_names = @header_names[15 .. $#header_names];
 		#print STDERR Dumper \@trait_names;
@@ -557,9 +585,8 @@ sub studies_table {
 		my @data_window;
 		for (my $line = $start; $line < $end; $line++) {
 			if ($data[$line]) {
-				my @columns = split /\t/, $data[$line], -1;
-
-				push @data_window, \@columns;
+				my $columns = $data[$line];
+				push @data_window, $columns;
 			}
 		}
 
@@ -576,17 +603,11 @@ sub studies_table {
 	} elsif ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls') {
 		# if xls or csv or tsv, create tempfile name and place to save it
 
-		my @data_out;
-		foreach (@data){
-			my @line = split /\t/, $_;
-			push @data_out, \@line;
-		}
-
 		my $file_response = CXGN::BrAPI::FileResponse->new({
 			absolute_file_path => $file_path,
 			absolute_file_uri => $inputs->{main_production_site_url}.$file_uri,
 			format => $format,
-			data => \@data_out
+			data => \@data
 		});
 		@data_files = $file_response->get_datafiles();
 
@@ -653,9 +674,8 @@ sub observation_units_granular {
 sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;
-	my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+	my $s = CXGN::Stock->new( schema => $self->bcs_schema, stock_id => $stock_id);
+	my $pedigree_string = $s->get_pedigree_string('Parents');
 	return $pedigree_string;
 }
 

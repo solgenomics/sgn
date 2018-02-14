@@ -10,7 +10,7 @@ library(randomForest)
 library(plyr)
 library(lme4)
 library(data.table)
-
+library(phenoAnalysis)
 
 allArgs <- commandArgs()
 
@@ -90,162 +90,32 @@ popIds            <- c()
 combinedPhenoPops <- c()
 
 for (popPhenoNum in 1:popsPhenoSize) {
-  popId <- str_extract(allPhenoFiles[[popPhenoNum]], "\\d+")
-  popIds <- append(popIds, popId)
+  popId <- str_extract_all(allPhenoFiles[[popPhenoNum]], "\\d+")
+ 
+  popId <- popId[[1]][2]
+  popIds <- c(popIds, popId)
 
   phenoData <- fread(allPhenoFiles[[popPhenoNum]],
                             na.strings = c("NA", " ", "--", "-", "."),
                            )
-  phenoTrait <- subset(phenoData,
-                       select = c("object_name", "object_id", "design", "block", "replicate", traitName)
-                       )
-  phenoTrait  <- as.data.frame(phenoTrait)
+  phenoData <- data.frame(phenoData)
   
-  experimentalDesign <- phenoTrait[2, 'design']
-    
-  if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
+  phenoTrait <- getAdjMeans(phenoData, traitName)
+ 
+  newTraitName <- paste(traitName, popId, sep = "_")
+  colnames(phenoTrait)[2] <- newTraitName
 
-  if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  length(phenoTrait$block) > 1) { 
-
-    message("experimental design: ", experimentalDesign)
-
-    augData <- subset(phenoTrait,
-                      select = c("object_name", "object_id",  "block",  traitName)
-                      )
-
-    colnames(augData)[1] <- "genotypes"
-    colnames(augData)[4] <- "trait"
-
-    model <- try(lmer(trait ~ 0 + genotypes + (1|block),
-                      augData,
-                      na.action = na.omit
-                      ))
-     
-    if (class(model) != "try-error") {
-      phenoTrait <- data.frame(fixef(model))
-        
-      colnames(phenoTrait) <- traitName
-
-      nn <- gsub('genotypes', '', rownames(phenoTrait))  
-      rownames(phenoTrait) <- nn
-      
-      phenoTrait <- round(phenoTrait,  2)
-    }      
-  } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoData$replicate)) > 1) {
-
-    message("GS experimental design: ", experimentalDesign)
-
-    crdData <- subset(phenoData, select = c("object_name", "object_id",  "replicate",  trait))
-
-    colnames(crdData)[1] <- "genotypes"
-    colnames(crdData)[4] <- "trait"
-
-    model <- try(lmer(trait ~ 0 + genotypes + (1|replicate),
-                        crdData,
-                        na.action = na.omit))
-
-    if (class(model) != "try-error") {
-      phenoTrait <- data.frame(fixef(model))
-        
-      colnames(phenoTrait) <- trait
-
-      nn <- gsub('genotypes', '', rownames(phenoTrait))  
-      rownames(phenoTrait) <- nn
-      
-      phenoTrait           <- round(phenoTrait, 2)       
-  
-    }
-  } else if (experimentalDesign == 'Alpha') {
-
-    message("experimental design: ", experimentalDesign)
-     
-    alphaData <- subset(phenoData,
-                        select = c("object_name", "object_id", "block", "replicate", traitName)
-                        )
-      
-    colnames(alphaData)[1] <- "genotypes"
-    colnames(alphaData)[5] <- "trait"
-   
-    model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
-                      alphaData,
-                      na.action = na.omit
-                      ))
-        
-    if (class(model) != "try-error") {
-      phenoTrait <- data.frame(fixef(model))
-      
-      colnames(phenoTrait) <- traitName
-        
-      nn <- gsub('genotypes', '', rownames(phenoTrait))     
-      rownames(phenoTrait) <- nn
-      
-      phenoTrait <- round(phenoTrait, 2)
-    }      
-  } else {
-
-    phenoTrait <- subset(phenoData,
-                         select = c("object_name", "stock_id", traitName)
-                         )
-    
-    if (sum(is.na(phenoTrait)) > 0) {
-      message("No. of pheno missing values: ", sum(is.na(phenoTrait))) 
-     
-      phenoTrait <- na.omit(phenoTrait)
-       
-      #calculate mean of reps/plots of the same accession and
-      #create new df with the accession means
-      phenoTrait$stock_id <- NULL
-      phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
-   
-      print('phenotyped lines before averaging')
-      print(length(row.names(phenoTrait)))
-        
-      phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-        
-      print('phenotyped lines after averaging')
-      print(length(row.names(phenoTrait)))
-   
-      row.names(phenoTrait) <- phenoTrait[, 1]
-      phenoTrait[, 1] <- NULL
-
-      phenoTrait <- round(phenoTrait, 2)
+  if (popPhenoNum == 1 )
+    {
+      print('no need to combine, yet')       
+      combinedPhenoPops <- phenoTrait
 
     } else {
-      print ('No missing data')
-      phenoTrait$stock_id <- NULL
-      phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
-   
-      print('phenotyped lines before averaging')
-      print(length(row.names(phenoTrait)))
+      print('combining...')
       
-      phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-      
-      print('phenotyped lines after averaging')
-      print(length(row.names(phenoTrait)))
-
-      row.names(phenoTrait) <- phenoTrait[, 1]
-      phenoTrait[, 1] <- NULL
-
-      phenoTrait <- round(phenoTrait, 2)    
-    }
-  }    
-    newTraitName = paste(traitName, popId, sep = "_")
-    colnames(phenoTrait)[1] <- newTraitName
-
-    if (popPhenoNum == 1 )
-      {
-        print('no need to combine, yet')       
-        combinedPhenoPops <- phenoTrait
-        
-      } else {
-      print('combining...') 
-      combinedPhenoPops <- merge(combinedPhenoPops, phenoTrait,
-                            by = 0,
-                            all=TRUE,
-                            )
-
+      combinedPhenoPops <- merge(combinedPhenoPops, phenoTrait, all=TRUE)
       rownames(combinedPhenoPops) <- combinedPhenoPops[, 1]
-      combinedPhenoPops$Row.names <- NULL
+      combinedPhenoPops[, 1] <- NULL
       
     }   
 }

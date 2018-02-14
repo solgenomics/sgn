@@ -10,10 +10,15 @@ options(echo = FALSE)
 library(rrBLUP)
 library(plyr)
 library(stringr)
-library(lme4)
+#library(lme4)
 library(randomForest)
 library(data.table)
 library(parallel)
+library(genoDataFilter)
+library(phenoAnalysis)
+library(caret)
+library(dplyr)
+
 
 allArgs <- commandArgs()
 
@@ -67,8 +72,8 @@ formattedPhenoData <- c()
 phenoData          <- c()
 
 genoFile <- grep("genotype_data_", inputFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
-
 message('geno file ', genoFile)
+
 if (is.null(genoFile)) {
   stop("genotype data file is missing.")
 }
@@ -88,6 +93,7 @@ if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
 genoData <- c()
 if (is.null(filteredGenoData)) {
   genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  genoData <- unique(genoData, by='V1')
   message('read in unfiltered geno data')
 }
 
@@ -106,7 +112,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
   if (file.info(phenoFile)$size == 0) {
     stop("phenotype data file is empty.")
   }
-  
+
   phenoData <- fread(phenoFile, na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
 }
 
@@ -136,168 +142,23 @@ if (datasetInfo == 'combined populations') {
     colnames(phenoTrait)[1] <- 'genotypes'
    
   } else {
-    dropColumns <- c("uniquename", "stock_name")
-    phenoData   <- phenoData[, !(names(phenoData) %in% dropColumns)]
-    
-    phenoTrait <- subset(phenoData, select = c("object_name", "object_id", "design", "block", "replicate", trait))
-   
-    experimentalDesign <- phenoTrait[2, 'design']
-  
-    if (class(phenoTrait[, trait]) != 'numeric') {
-      phenoTrait[, trait] <- as.numeric(as.character(phenoTrait[, trait]))
-    }
-      
-    if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
-   
-    if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  length(unique(phenoTrait$block)) > 1) {
 
-      message("GS experimental design: ", experimentalDesign)
+    phenoTrait <- getAdjMeans(phenoData, trait)
 
-      augData <- subset(phenoTrait, select = c("object_name", "object_id",  "block",  trait))
-
-      colnames(augData)[1] <- "genotypes"
-      colnames(augData)[4] <- "trait"
-
-      model <- try(lmer(trait ~ 0 + genotypes + (1|block),
-                        augData,
-                        na.action = na.omit))
-
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
-        
-        colnames(phenoTrait) <- trait
-
-        nn <- gsub('genotypes', '', rownames(phenoTrait))  
-        rownames(phenoTrait) <- nn
-      
-        phenoTrait           <- round(phenoTrait, 2)       
-        phenoTrait$genotypes <- rownames(phenoTrait)
-        phenoTrait           <- phenoTrait[, c(2,1)]
-      }            
-    } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoTrait$replicate)) > 1) {
-
-      message("GS experimental design: ", experimentalDesign)
-
-      crdData <- subset(phenoTrait, select = c("object_name", "object_id",  "replicate",  trait))
-
-      colnames(crdData)[1] <- "genotypes"
-      colnames(crdData)[4] <- "trait"
-
-      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate),
-                        crdData,
-                        na.action = na.omit))
-
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
-        
-        colnames(phenoTrait) <- trait
-
-        nn <- gsub('genotypes', '', rownames(phenoTrait))  
-        rownames(phenoTrait) <- nn
-      
-        phenoTrait           <- round(phenoTrait, 2)       
-        phenoTrait$genotypes <- rownames(phenoTrait)
-        phenoTrait           <- phenoTrait[, c(2,1)]
-      }
-    } else if (experimentalDesign == 'Alpha') {
-   
-      message("Experimental desgin: ", experimentalDesign)
-      
-      alphaData <- subset(phenoData,
-                            select = c("object_name", "object_id","block", "replicate", trait)
-                            )
-      
-      colnames(alphaData)[1] <- "genotypes"
-      colnames(alphaData)[5] <- "trait"
-         
-      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
-                        alphaData,
-                        na.action = na.omit))
-        
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
-      
-        colnames(phenoTrait) <- trait
-
-        nn <- gsub('genotypes', '', rownames(phenoTrait))     
-        rownames(phenoTrait) <- nn
-      
-        phenoTrait           <- round(phenoTrait, 2)
-        phenoTrait$genotypes <- rownames(phenoTrait)
-        phenoTrait           <- phenoTrait[, c(2,1)]     
-      }     
-    } else {
-
-      phenoTrait <- subset(phenoData,
-                           select = c("object_name", "object_id",  trait))
-       
-      if (sum(is.na(phenoTrait)) > 0) {
-        message("No. of pheno missing values: ", sum(is.na(phenoTrait)))      
-        phenoTrait <- na.omit(phenoTrait)
-      }
-
-        #calculate mean of reps/plots of the same accession and
-        #create new df with the accession means    
-     
-      phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
-      phenoTrait   <- data.frame(phenoTrait)
-      message('phenotyped lines before averaging: ', length(row.names(phenoTrait)))
-   
-      phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-      message('phenotyped lines after averaging: ', length(row.names(phenoTrait)))
-        
-      phenoTrait <- subset(phenoTrait, select = c("object_name", trait))
-      
-      colnames(phenoTrait)[1] <- 'genotypes'
-    }
   }
 }
 
-phenoTrait <- as.data.frame(phenoTrait)
-
-### MAF calculation ###
-calculateMAF <- function(x) {
-  a0 <-  length(x[x==0])
-  a1 <-  length(x[x==1])
-  a2 <-  length(x[x==2])
-  aT <- a0 + a1 + a2
-
-  p <- ((2*a0)+a1)/(2*aT)
-  q <- 1- p
-
-  maf <- min(p, q)
-  
-  return (maf)
-
-}
-
-
 if (is.null(filteredGenoData)) {
+ 
+  #genoDataFilter::filterGenoData
+  genoData <- filterGenoData(genoData, maf=0)
+  genoData <- roundAlleleDosage(genoData)
 
-  #remove markers with > 60% missing marker data
-  message('no of markers before filtering out: ', ncol(genoData))
-  genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
-  message('no of markers after filtering out 60% missing: ', ncol(genoData))
-
-  #remove indls with > 80% missing marker data
-  genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-  genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
-  genoData[, noMissing := NULL]
-  message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
-
-  #remove monomorphic markers
-  message('marker no before monomorphic markers cleaning ', ncol(genoData))
-  genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-  message('marker no after monomorphic markers cleaning ', ncol(genoData))
-
-  #remove markers with MAF < 5%
-  genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
-  message('marker no after MAF cleaning ', ncol(genoData))
-
-  genoData           <- as.data.frame(genoData)
+  genoData <- as.data.frame(genoData)
   rownames(genoData) <- genoData[, 1]
   genoData[, 1]      <- NULL
-  filteredGenoData   <- genoData 
+  filteredGenoData   <- genoData
+  
 } else {
   genoData           <- as.data.frame(filteredGenoData)
   rownames(genoData) <- genoData[, 1]
@@ -345,27 +206,15 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
 } else if (length(predictionFile) != 0) {
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
-  message('selection population: no of markers before filtering out: ', ncol(predictionData))
-    
-  predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
-
-  #remove indls with > 80% missing marker data
-  predictionData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-  predictionData <- predictionData[noMissing <= ncol(predictionData) * 0.8]
-  predictionData[, noMissing := NULL]
-
-  #remove monomorphic markers
-  message('marker no before monomorphic markers cleaning ', ncol(predictionData))
-  predictionData[, which(apply(predictionData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-  message('marker no after monomorphic markers cleaning ', ncol(predictionData))
-
-  predictionData[, which(apply(predictionData, 2,  calculateMAF) < 0.05) := NULL ]
-  message('selection pop marker no after MAF cleaning ', ncol(predictionData))
-
-  predictionData           <- as.data.frame(predictionData)
+  predictionData <- unique(predictionData, by='V1')
+  
+  predictionData <- filterGenoData(predictionData, maf=0)
+  predictionData <- roundAlleleDosage(predictionData)
+  
+  predictionData  <- as.data.frame(predictionData)
   rownames(predictionData) <- predictionData[, 1]
   predictionData[, 1]      <- NULL
-  filteredPredGenoData     <- predictionData
+  filteredPredGenoData <- predictionData
 }
 
 
@@ -550,76 +399,76 @@ if (length(predictionData) == 0) {
 #cross-validation
 
   if (is.null(predictionFile)) {
-    genoNum <- nrow(phenoTraitMarker)
+    genoNum <- nrow(phenoTrait)
     if (genoNum < 20 ) {
       warning(genoNum, " is too small number of genotypes.")
     }
-  
-    reps <- round_any(genoNum, 10, f = ceiling) %/% 10
 
-    genotypeGroups <-c()
+    set.seed(4567)
+   
+    k <- 10
+    times <- 2
+    cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
 
-    if (genoNum %% 10 == 0) {
-      genotypeGroups <- rep(1:10, reps)
-    } else {
-      genotypeGroups <- rep(1:10, reps) [- (genoNum %% 10) ]
-    }
-
-    set.seed(4567)                                   
-    genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
-
-    for (i in 1:10) {
-      tr <- paste("trPop", i, sep = ".")
-      sl <- paste("slPop", i, sep = ".")
- 
-      trG <- which(genotypeGroups != i)
-      slG <- which(genotypeGroups == i)
-  
-      assign(tr, trG)
-      assign(sl, slG)
-
-      kblup <- paste("rKblup", i, sep = ".")
-
-      result <- kin.blup(data  = phenoTrait[trG,],
-                         geno  = 'genotypes',
-                         pheno = trait,
-                         K     = relationshipMatrixFiltered,
-                         n.core = nCores,
-                         )
-  
-      assign(kblup, result)
-      #calculate cross-validation accuracy
-      valBlups   <- result$g
-      valBlups   <- data.frame(valBlups) 
-      slGDf      <- data.frame(phenoTraitMarker[slG, ])  
-      valBlups   <- valBlups[(rownames(valBlups) %in% rownames(data.frame(phenoTraitMarker[slG, ]))), ]
-      valBlups   <- data.frame(valBlups) 
-      valCorData <- merge(slGDf, valBlups, by=0, all=FALSE)
-
-      rownames(valCorData) <- valCorData[, 1]
-      valCorData[, 1]      <- NULL
-
-      accuracy   <- try(cor(valCorData))
-      validation <- paste("validation", i, sep = ".")
-
-      cvTest <- paste("Validation test", i, sep = " ")
-
-      if ( class(accuracy) != "try-error")
-        {
-          accuracy <- round(accuracy[1,2], digits = 3)
-          accuracy <- data.matrix(accuracy)
-    
-          colnames(accuracy) <- c("correlation")
-          rownames(accuracy) <- cvTest
-
-          assign(validation, accuracy)
+    for ( r in 1:times) {
+      re <- paste0('Rep', r)
+         
+      for (i in 1:k) {
+        fo <- ifelse(i < 10, 'Fold0', 'Fold')
+       
+        trFoRe <- paste0(fo, i, '.', re)
+        trG <- cvFolds[[trFoRe]]
+        slG <- as.numeric(rownames(phenoTrait[-trG,]))
       
-          if (!is.na(accuracy[1,1])) {
-            validationAll <- rbind(validationAll, accuracy)
-          }    
-        }
-    }
+        kblup <- paste("rKblup", i, sep = ".")
 
+        result <- kin.blup(data  = phenoTrait[trG,],
+                           geno  = 'genotypes',
+                           pheno = trait,
+                           K     = relationshipMatrixFiltered,
+                           n.core = nCores,
+                           )
+        
+        assign(kblup, result)
+ 
+        #calculate cross-validation accuracy
+        valBlups   <- result$g
+        valBlups   <- data.frame(valBlups)
+
+        slG <- slG[which(slG <= nrow(phenoTrait))]   
+ 
+        slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
+        rownames(slGDf) <- slGDf[, 1]     
+        slGDf[, 1] <- NULL
+      
+        valBlups   <- valBlups[(rownames(valBlups) %in% rownames(slGDf)), ]  
+        valCorData <- merge(slGDf, valBlups, by=0) 
+        rownames(valCorData) <- valCorData[, 1]
+        valCorData[, 1]      <- NULL
+     
+        accuracy   <- try(cor(valCorData))
+   
+        validation <- paste("validation", trFoRe, sep = ".")
+
+        cvTest <- paste("CV", trFoRe, sep = " ")
+
+        if ( class(accuracy) != "try-error")
+          {
+            accuracy <- round(accuracy[1,2], digits = 3)
+            accuracy <- data.matrix(accuracy)
+    
+            colnames(accuracy) <- c("correlation")
+            rownames(accuracy) <- cvTest
+
+            assign(validation, accuracy)
+      
+            if (!is.na(accuracy[1,1])) {
+              validationAll <- rbind(validationAll, accuracy)
+            }    
+          }
+      }
+    }
+    
     validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
      
     if (!is.null(validationAll)) {
@@ -630,8 +479,9 @@ if (length(predictionData) == 0) {
       validationAll <- rbind(validationAll, validationMean)
       colnames(validationAll) <- c("Correlation")
     }
-  
+ 
     validationAll <- data.frame(validationAll)
+    
   }
 }
 

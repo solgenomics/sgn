@@ -1,4 +1,4 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/tools/">Tools</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >Tools</a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
     <li class="dropdown-header">Sequence Analysis</li>
@@ -17,6 +17,7 @@
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Molecular Biology</li>
     <li><a href="/tools/in_silico_pcr">In Silico PCR</a></li>
+    <li><a href="http://tea.solgenomics.net/">Tomato Expression Atlas (TEA)</a></li>    
     <li><a href="http://ted.bti.cornell.edu/">Tomato Expression Database (TED)</a></li>
 
     <li role="separator" class="divider"></li>

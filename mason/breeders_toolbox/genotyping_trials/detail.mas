@@ -47,7 +47,7 @@ $identifier_prefix => 'SGN'
 </div>
 </div>
 
-<center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"code128"  &></center><br />
+<center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &></center><br />
 
 <center>
 <div id="genotyping_trial_status_info">
@@ -61,11 +61,7 @@ $identifier_prefix => 'SGN'
 
 <center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
 
-<&| /page/info_section.mas,
-    title => "Design",
-  collapsible => 1,
-  collapsed => 0,
-  subtitle => "Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
+<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">csv</a>]"  &>
 
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
@@ -81,9 +77,9 @@ $identifier_prefix => 'SGN'
 
 </&>
 
-<&| /page/info_section.mas, id => "trial_plots", title=>"Tissue Samples",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Samples",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
-<& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
 
 </&>
 

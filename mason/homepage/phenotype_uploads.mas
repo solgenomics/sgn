@@ -1,0 +1,45 @@
+<%args>
+$phenotype_files => undef
+</%args>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">Phenotype Files Uploaded</div>
+                    <div class="panel-body">
+                        <table class="table table-bordered" id="homepage_phenotype_uploads" alt="">
+                            <thead>
+                                <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th><th>Trial</th></tr>
+                            </thead>
+                            <tbody>
+% foreach my $f (@$phenotype_files) {
+                                <tr>
+                                    <td><% $f->{metadata}->[4] %></td>
+                                    <td><% $f->{metadata}->[1] %></td>
+                                    <td><a href="/solpeople/profile/<% $f->{metadata}->[2] %>"><% $f->{metadata}->[3] %></a></td>
+                                    <td><% $f->{metadata}->[6] %></td>
+                                    <td><a href="/breeders/phenotyping/view/<% $f->{metadata}->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->{metadata}->[0] %>">Download</a></td>
+                                    <td>
+% foreach my $p (keys %{$f->{project_ids}}) {
+                                        <a href='/breeders/trial/<% $p %>'><% $f->{project_ids}->{$p} %></a>&nbsp;&nbsp;
+% }
+                                    </td>
+                                </tr>
+% }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+    jQuery('#homepage_phenotype_uploads').DataTable({
+        "ordering": false,
+    });
+});
+</script>

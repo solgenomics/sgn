@@ -8,6 +8,7 @@ use CXGN::Trait;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use Try::Tiny;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -73,57 +74,64 @@ sub search {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level,
             trial_list=>\@study_ids_array,
-			trait_list=>\@trait_ids_array,
+            trait_list=>\@trait_ids_array,
             include_timestamp=>1,
-	        year_list=>\@years_array,
-	        location_list=>\@location_ids_array,
-	        accession_list=>\@accession_ids_array,
+            year_list=>\@years_array,
+            location_list=>\@location_ids_array,
+            accession_list=>\@accession_ids_array,
+            include_row_and_column_numbers=>1
         }
     );
-    my $data = $phenotypes_search->search();
+    my $data;
+    try {
+        $data = $phenotypes_search->search();
+    }
+    catch {
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search');
+    }
     #print STDERR Dumper $data;
 	my @data_window;
 	my %obs_units;
 	foreach (@$data){
-		if (exists($obs_units{$_->[14]})){
-			my $observations = $obs_units{$_->[14]}->{observations};
+		if (exists($obs_units{$_->[16]})){
+			my $observations = $obs_units{$_->[16]}->{observations};
 			push @$observations, {
-				observationDbId => $_->[19],
-				observationVariableDbId => $_->[10],
+				observationDbId => $_->[21],
+				observationVariableDbId => $_->[12],
 				observationVariableName => $_->[4],
-				observationTimestamp => $_->[15],
+				observationTimestamp => $_->[17],
 				season => $_->[0],
 				collector => '',
 				value => $_->[5],
 			};
-			$obs_units{$_->[14]}->{observations} = $observations;
+			$obs_units{$_->[16]}->{observations} = $observations;
 		} else {
-			$obs_units{$_->[14]} = {
-				observationUnitDbId => $_->[14],
-				observationLevel => $_->[18],
-				observationLevels => $_->[18],
+			$obs_units{$_->[16]} = {
+				observationUnitDbId => $_->[16],
+				observationLevel => $_->[20],
+				observationLevels => $_->[20],
 				plotNumber => $_->[9],
 				plantNumber => '',
 				blockNumber => $_->[8],
 				replicate => $_->[7],
 				observationUnitName => $_->[6],
-				germplasmDbId => $_->[13],
+				germplasmDbId => $_->[15],
 				germplasmName => $_->[2],
-				studyDbId => $_->[11],
+				studyDbId => $_->[13],
 				studyName => $_->[1],
-				studyLocationDbId => $_->[12],
+				studyLocationDbId => $_->[14],
 				studyLocation => $_->[3],
 				programName => '',
-				X => '',
-				Y => '',
+				X => $_->[10],
+				Y => $_->[11],
 				entryType => '',
 				entryNumber => '',
 				treatments => [],
 				observations => [{
-					observationDbId => $_->[19],
-					observationVariableDbId => $_->[10],
+					observationDbId => $_->[21],
+					observationVariableDbId => $_->[12],
 					observationVariableName => $_->[4],
-					observationTimestamp => $_->[15],
+					observationTimestamp => $_->[17],
 					season => $_->[0],
 					collector => '',
 					value => $_->[5],
@@ -139,6 +147,7 @@ sub search {
 		if ($count >= $offset && $count <= ($offset+$limit)){
 			push @data_window, $obs_units{$obs_unit_id};
 		}
+        $count++;
 	}
 	my %result = (data=>\@data_window);
 	my @data_files;

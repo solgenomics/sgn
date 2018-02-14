@@ -1,0 +1,90 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="manage_populations_add_population_dialog" name="manage_populations_add_population_dialog" tabindex="-1" role="dialog" aria-labelledby="addPopulationDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPopulationDialog">Create A Population</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" name="create_population_form" id="create_population_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Population Name: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" id="create_population_name" name="create_population_name" type="text" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
+                            <div class="col-sm-8" id="create_population_list_div" name="create_population_list_div">
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="create_population_submit" id="create_population_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="manage_populations_add_accessions_dialog" name="manage_populations_add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsToPopulationsDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAccessionsToPopulationsDialog">Add Accessions to Population <div id="add_accession_population_name"></div></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" name="add_accession_to_population_form" id="add_accession_to_population_form">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Choose a List of Accessions to Add: </label>
+                            <div class="col-sm-6" id="add_accession_to_population_list_div" name="list_div">
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="add_accessions_to_population_submit" id="add_accessions_to_population_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="manage_populations_delete_dialog" name="manage_populations_delete_dialog" tabindex="-1" role="dialog" aria-labelledby="deletePopulationsDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deletePopulationsDialog">Delete Population <div id="delete_population_name"></div></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Are You Sure?</label>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_population_submit" id="delete_population_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>

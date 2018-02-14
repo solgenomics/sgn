@@ -39,7 +39,7 @@ function getPopIds () {
    
     jQuery("#selected_trials").show();  
     jQuery("#combine_trials_div").show();
-    jQuery("#search_again_div").show();
+    jQuery("#search_again_div").hide();
    
 }
 
@@ -73,19 +73,19 @@ function removeSelectedTrial() {
             jQuery("#search_again_div").hide();
             jQuery("#done_selecting").val('Select');            
             
-            searchAgain();           
+          //  searchAgain();           
         }
     });
 
 }
 
 
-jQuery(document).ready(function() {
-    jQuery('#search_again').on('click', function() {
-	searchAgain();
-    });  
+// jQuery(document).ready(function() {
+//     jQuery('#search_again').on('click', function() {
+// 	searchAgain();
+//     });  
 
-});
+// });
 
 
 function searchAgain () {
@@ -235,7 +235,8 @@ function getCombinedPopsId(comboPopsList) {
 	    page = '/solgs/trait/' + traitId + '/population/' + popId;
 		    
 	} else {
-	    page = '/solgs/population/' + popId;
+	    var hostName = window.location.protocol + '//' + window.location.host;  
+	    page = hostName +  '/solgs/population/' + popId;
 	}
 	
 	var args = {'population_id'   : [ popId ],

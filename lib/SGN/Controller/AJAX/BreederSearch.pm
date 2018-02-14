@@ -36,8 +36,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   print STDERR "Validating criteria_list\n";
   foreach my $select (@criteria_list) { #ensure criteria list arguments are one of the possible categories
     chomp($select);
-    if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'locations', 'plants', 'plots', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
-      $error = "Valid keys are accessions, breeding_programs, 'genotyping_protocols', locations, 'plants', plots, traits, trials, trial_designs, trial_types and years or undef";
+    if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'locations', 'plants', 'plots', 'seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
+      $error = "Valid keys are accessions, breeding_programs, genotyping_protocols, locations, plants, plots, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
       $c->stash->{rest} = { error => $error };
       return;
     }
@@ -135,12 +135,13 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;
   my $c = shift;
+  my $matviews = $c->req->param('matviews') || 'fullview'; #can be "fullview" or "stockprop"
 
   print STDERR "dbname=" . $c->config->{dbname} ."\n";
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $matviews);
 
   if ($refresh->{error}) {
     print STDERR "Returning with error . . .\n";

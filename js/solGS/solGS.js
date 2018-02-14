@@ -30,14 +30,14 @@ solGS.waitPage = function (page, args) {
     }
     else {
 
-    	blockPage(page);
+    	blockPage(page, args);
     }
    
 
     function  askUser(page, args) {
 	
-	var t = '<p>This analysis may take longer than 20 min. ' 
-	    + 'Would you like to be emailed when it is done?</p>';
+	var t = '<p>This analysis takes long time. ' 
+	    + 'You can request the analysis and you will be emailed when it completes.</p>';
 	
 	jQuery('<div />')
 	    .html(t)
@@ -47,8 +47,8 @@ solGS.waitPage = function (page, args) {
 		modal  : true,
 		title  : "Analysis job submission",
  		buttons: {	
-		    Yes: {
-			text: 'Yes',
+		    OK: {
+			text: 'OK',
 			class: 'btn btn-success',
                         id   : 'queue_job',
 			click: function() {
@@ -58,16 +58,16 @@ solGS.waitPage = function (page, args) {
 			},
 		    }, 
 		    
-		    No: { 
-			text: 'No, I will wait...',
-			class: 'btn btn-primary',
-                        id   : 'no_queue',
-			click: function() { 
-			    jQuery(this).dialog("close");
+		    // No: { 
+		    // 	text: 'No, I will wait...',
+		    // 	class: 'btn btn-primary',
+                    //     id   : 'no_queue',
+		    // 	click: function() { 
+		    // 	    jQuery(this).dialog("close");
 			    
-			    displayAnalysisNow(page, args);
-			},
-		    },
+		    // 	    displayAnalysisNow(page, args);
+		    // 	},
+		    // },
 		    
 		    Cancel: { 
 			text: 'Cancel',
@@ -164,9 +164,9 @@ solGS.waitPage = function (page, args) {
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
 	jQuery.blockUI({message: 'Please wait..'});
         
-	jQuery(window).unload(function()  {
-	    jQuery.unblockUI();            
-	}); 
+	// jQuery(window).unload(function()  {
+	//     jQuery.unblockUI();            
+	// }); 
 
     }
 
@@ -174,9 +174,7 @@ solGS.waitPage = function (page, args) {
 
 	var matchItems = 'solgs/confirm/request'
 	    + '|solgs/trait/'
-	    + '|solgs/model/combined/trials/'
-	    + '|solgs/model/\\w+_\\d+/prediction/'
-	    + '|solgs/model/\\d+/prediction/';
+	    + '|solgs/model/combined/trials/';
 	
 	var multiTraitsUrls = 'solgs/analyze/traits/population/'
 	    + '|solgs/models/combined/trials/';
@@ -237,6 +235,12 @@ solGS.waitPage = function (page, args) {
 	    } else {
 		window.location = page;
 	    }	   
+	} else if (page.match(/solgs\/model\//)) {	    
+	    if (page.match(/solgs\/model\/\d+\/prediction\/\w+_|solgs\/model\/\w+_\d+\/prediction\/\w+_/)) {	
+		loadGenotypesListTypeSelectionPop(args);
+	    } else {
+		window.location = page;
+	    }			
 	}
 	else {
 	    window.location = window.location.href;
@@ -370,7 +374,7 @@ solGS.waitPage = function (page, args) {
 	    if (args === undefined) {
 		
 		args = {'trait_id'      : [ urlStr[4] ], 
-			'population_id' : [ urlStr[6] ], 
+			'training_pop_id' : [ urlStr[6] ], 
 			'analysis_type' : 'single model',
 			'data_set_type' : 'single population',
 		       };
@@ -378,7 +382,7 @@ solGS.waitPage = function (page, args) {
 	    else {
 
 		args['trait_id']      = [ urlStr[4] ];
-		args['population_id'] = [ urlStr[6] ];
+		args['training_pop_id'] = [ urlStr[6] ];
 		args['analysis_type'] = 'single model';
 		args['data_set_type'] = 'single population';
 		
@@ -409,14 +413,14 @@ solGS.waitPage = function (page, args) {
 	    if (args === undefined) {
 		
 		args = {'trait_id'      : traitId, 
-			'population_id' : populationId, 
+			'training_pop_id' : populationId, 
 			'combo_pops_id' : comboPopsId,
 			'analysis_type' : 'single model',
 			'data_set_type' : 'combined populations'};
 	    } else {
 
 		args['trait_id']      = traitId;
-		args['population_id'] = populationId;
+		args['training_pop_id'] = populationId;
 		args['combo_pops_id'] = comboPopsId;
 		args['analysis_type'] = 'single model';
 		args['data_set_type'] = 'combined populations';	
@@ -424,27 +428,27 @@ solGS.waitPage = function (page, args) {
 	} else if (url.match(/solgs\/population\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-
+	 
 	    if (args === undefined) {
 		args = { 
-		    'population_id' : [ urlStr[3] ], 
+		    'training_pop_id' : [ urlStr[4] ], 
 		    'analysis_type' : 'population download',
 		    'data_set_type' : 'single population'
 		};
 	    } else {
-		args['population_id'] = [ urlStr[3] ];
+		args['training_pop_id'] = [ urlStr[4] ];
 		args['analysis_type'] = 'population download';
 		args['data_set_type'] = 'single population';	
 	    }
-	} else if (url.match(/solgs\/model\/\d+\/prediction\//)) {
+	} else if (url.match(/solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\//)) {
 
 	    var traitId = jQuery('#trait_id').val();
 	    var modelId = jQuery('#model_id').val();
 	    var urlStr  = url.split(/\/+/);
-
+	   
 	    var dataSetType;
 
-	    if (window.location.href.match(/solgs\/model\/combined\/populations\//)) {
+	    if (window.location.href.match(/solgs\/model\/combined\/populations\/|solgs\/models\/combined\//)) {
 		dataSetType = 'combined populations';
 	    } else if (window.location.href.match(/solgs\/trait\/|solgs\/traits\/all\/population\//)) {
 		dataSetType = 'single population';
@@ -468,7 +472,7 @@ solGS.waitPage = function (page, args) {
 		args['data_set_type']    = dataSetType;	
 	    }
 	}
-
+ 
 	return args;
 
     }
@@ -519,7 +523,7 @@ solGS.waitPage = function (page, args) {
 	    success : function(response) {
 		if (response.result) {
 		    runAnalysis(profile);
-		    confirmRequest();
+		    ////confirmRequest();
 		    
 		} else { 
 		    jQuery('<div />', {id: 'error-message'})
@@ -566,6 +570,42 @@ solGS.waitPage = function (page, args) {
 	    type    : 'POST',
  	    data    : profile,
 	    url     : '/solgs/run/saved/analysis/',
+	    success : function(response) {
+		if (response.result.match(/Submitted/)) {
+		    confirmRequest();
+		} else {
+		    jQuery('<div />')
+			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
+			.dialog({
+			    height : 200,
+			    width  : 250,
+			    modal  : true,
+			    title  : 'Error message',
+			    buttons: {
+				OK: function () {
+				    jQuery(this).dialog('close');
+				    window.location = window.location.href;
+				}
+			    }			
+			});	     
+		}
+	    },
+	    error: function (response) {
+		 jQuery('<div />')
+			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
+			.dialog({
+			    height : 200,
+			    width  : 250,
+			    modal  : true,
+			    title  : 'Error message',
+			    buttons: {
+				OK: function () {
+				    jQuery(this).dialog('close');
+				    window.location = window.location.href;
+				}
+			    }			
+			});	     
+	    }
 	});
 	
     }
@@ -610,6 +650,9 @@ function selectTraitMessage () {
 jQuery(document).ready(function (){
  
      jQuery('#runGS').on('click',  function() {
+	 if (window.Prototype) {
+	     delete Array.prototype.toJSON;
+	 }
 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
 	 var popId    = jQuery('#population_id').val(); 
@@ -674,10 +717,10 @@ jQuery(document).ready(function (){
 		 }	    
 	     }
 	 
-	     var args = {'trait_id'      : traitIds, 
-			 'population_id' : [ popId ], 
-			 'analysis_type' : analysisType,
-			 'data_set_type' : dataSetType,
+	     var args = {'trait_id'        : traitIds, 
+			 'training_pop_id' : [ popId ], 
+			 'analysis_type'   : analysisType,
+			 'data_set_type'   : dataSetType,
 			};
 
 	     solGS.waitPage(page, args);
@@ -733,7 +776,7 @@ solGS.getPopulationDetails = function () {
         populationId = jQuery("#combo_pops_id").val();
     }
    
-    return {'population_id'     : populationId,
+    return {
 	    'training_pop_id'   : populationId,
             'population_name'   : populationName,
 	    'training_pop_name' : populationName,

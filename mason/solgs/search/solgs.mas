@@ -14,7 +14,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$gs_traits_index
+$gs_traits_index => undef
 
 </%args>
 
@@ -32,17 +32,19 @@ $gs_traits_index
 <div class="container">
 
 <& /page/page_title.mas, 
-   title => "solGS: start building a GS model by searching for a trait or selecting a training population" 
+   title => "solGS: start building a GS model by searching for a training population or trait" 
   &>
 
-<& /solgs/search/trait_search_form.mas,
-   gs_traits_index => $gs_traits_index
- &>
 
 <& /solgs/search/trial_search_form.mas &>
 
 
 <& /solgs/search/list_type_training_population.mas &>
+
+
+<& /solgs/search/trait_search_form.mas,
+   gs_traits_index => $gs_traits_index
+ &>
    
 </div>
 

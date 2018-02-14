@@ -16,69 +16,185 @@
 </p>
 <p>The text above was extracted from Sierro, N. et al. 2014</p>
 
+<center>
+<img src="/documents/img/homepage_carousel/tobacco_field.jpg" style="width:800px"><br>
+<i>Nicotiana tabacum</i> plants in the field.
+</center>
+
 <br>
 <p>
-The <i>Nicotiana tabacum</i> genome as well as the <i>N. sylvestris</i> and <i>N. tomentosiformis</i> genomes have been sequenced by Philip Morris International:
+Two versions of the <i>Nicotiana tabacum</i> genome (Sierro, N. et al. 2014 and Edwards, K. et al. 2017) and the genomes from <i>N. sylvestris</i> and <i>N. tomentosiformis</i> have been sequenced:
 </p>
 
 <ul>
   <li>
+    Edwards, K. et al. <a href="#">A reference genome for <i>Nicotiana tabacum</i> enables map-based cloning of homeologous loci implicated in nitrogen utilization efficiency</a>. <br>BMC Genomics (2017)
+  </li>
+  <li>
     Sierro, N. et al. <a href="http://www.nature.com/ncomms/2014/140508/ncomms4833/full/ncomms4833.html">The tobacco genome sequence and its comparison with those of tomato and potato</a>. <br>Nature Communications 5 (2014).
   </li>
   <li>
-    Sierro, N. et al. <a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2013-14-6-r60">Reference genomes and transcriptomes of Nicotiana sylvestris and Nicotiana tomentosiformis</a>. <br>Genome Biology 14, R60 (2013).
+    Sierro, N. et al. <a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2013-14-6-r60">Reference genomes and transcriptomes of <i>Nicotiana sylvestris</i> and <i>Nicotiana tomentosiformis</i></a>. <br>Genome Biology 14, R60 (2013).
   </li>
 </ul>
 
 <br>
 <br>
-<&| /page/info_section.mas, title => 'Nicotiana tabacum and related genomes' &>
+<&| /page/info_section.mas, title => 'Nicotiana tabacum and related genomes datasets' &>
+  
+  <div class="container-fluid">
+    <div class="row">
+    
+    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b>Genome sequence and Annotation</b><br>
+        <ul>
+          <li>
+            <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/edwards_et_al_2017">Edwards 2017</a>
+          </li>
+          <li>
+            <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/sierro_et_al_2014">Sierro 2014</a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b>Genome browser (JBrowse)</b><br>
+        <ul>
+          <li>
+            <a href="https://solgenomics.net/jbrowse_solgenomics/?data=data/json/NitabEd17_chr">Nitab v1.0 Chr Edwards 2017</a>
+          </li>
+          <li>
+            <a href="https://solgenomics.net/jbrowse_solgenomics/?data=data/json/NitabEd17">Nitab v1.0 Scf Edwards 2017</a>
+          </li>
+          <li>
+            <a href="/jbrowse_solgenomics/?data=data/json/Ntab_TN90/">TN90 Scf Sierro 2014</a>
+          </li>
+      </div>
+        
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b><i>N. tabacum</i> v1.0 Edwards 2017 BLAST</b><br>
+        <ul>
+          <li>
+          <a href="/tools/blast/?db_id=289" target="blank">Genome (Chr)</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=290" target="blank">Genome (Scf)</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=288" target="blank">cDNA</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=291" target="blank">Proteins</a>
+          </li>
+        </ul>
+      </div>
 
-  <% info_table_html(
-                     __border   => 0,
-                     __multicol => 2,
-  '<i>N. tabacum</i> bulk datasets (via FTP)' =>
-  '<a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/">Genome sequence and Annotation</a>',
-  '<i>N. tabacum TN90</i> BLAST' => '<a href="/tools/blast/?db_id=227">Genome</a> | <a href="/tools/blast/?db_id=228">CDS</a> | <a href="/tools/blast/?db_id=229">cDNA</a> | <a href="/tools/blast/?db_id=230">Proteins</a>',
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b><i>N. tabacum</i> TN90 Sierro 2014 BLAST</b><br>
+        <ul>
+          <li>
+          <a href="/tools/blast/?db_id=227">Genome (Scf)</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=228">CDS</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=229">cDNA</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=230">Proteins</a>
+          </li>
+        </ul>
+      </div>
 
-  '<i>N. tabacum BX</i> BLAST' => '<a href="/tools/blast/?db_id=231">Genome</a> | <a href="/tools/blast/?db_id=232">CDS</a> | <a href="/tools/blast/?db_id=233">cDNA</a> | <a href="/tools/blast/?db_id=234">Proteins</a>',
-  '<i>N. tabacum K326</i> BLAST' => '<a href="/tools/blast/?db_id=235">Genome</a> | <a href="/tools/blast/?db_id=236">CDS</a> | <a href="/tools/blast/?db_id=237">cDNA</a> | <a href="/tools/blast/?db_id=238">Proteins</a>',
-  '<i>N. sylvestris</i> BLAST' => '<a href="/tools/blast/?db_id=239">Genome</a> | <a href="/tools/blast/?db_id=240">CDS</a> | <a href="/tools/blast/?db_id=241">cDNA</a> | <a href="/tools/blast/?db_id=242">Proteins</a>',
-  '<i>N. tomentosiformis</i> BLAST' => '<a href="/tools/blast/?db_id=243">Genome</a> | <a href="/tools/blast/?db_id=244">CDS</a> | <a href="/tools/blast/?db_id=245">cDNA</a>',
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b><i>N. tabacum</i> BX Sierro 2014 BLAST</b><br>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=231">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=232">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=233">cDNA</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=234">Proteins</a>
+          </li>
+        </ul>
+      </div>
 
-  '<i>N. tabacum</i> Genome browser' => '<a href="/jbrowse_solgenomics/?data=data/json/Ntab_TN90/">Jbrowse</a>'
-                    )
-  %>
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b><i>N. tabacum</i> K326 Sierro 2014 BLAST</b><br>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=235">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=236">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=237">cDNA</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=238">Proteins</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b><i>N. sylvestris</i> BLAST</b><br>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=239">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=240">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=241">cDNA</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=242">Proteins</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b><i>N. tomentosiformis</i> BLAST</b><br>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=243">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=244">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=245">cDNA</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b>SGN VIGS Tool</b><br>
+        <ul>
+          <li>
+            <a href="http://vigs.solgenomics.net/">VIGS Tool</a>
+          </li>
+        </ul>
+      </div>
+        
+      </div>
+    </div>
+  </div>
 </&>
 
-<&| /page/info_section.mas,
-      title       => 'Sequence datasets',
-      collapsible => 1,
-      hide_if_empty => 1
- &>
-  <& /genomes/default/genome_builds.mas, %ARGS &>
-</&>
-
-
-<&| /page/info_section.mas,
-      title       => 'Browsable annotations',
-      collapsible => 1,
-      hide_if_empty => 1,
- &>
-
-  <& /gbrowse/list_sources.mas, organism => $organism &>
-
-</&>
-
-<&| /page/info_section.mas,
-      title       => 'Annotation datasets',
-      collapsible => 1,
-      hide_if_empty => 1,
- &>
-
-  <& /genomes/default/annotation_sets.mas, %ARGS &>
-
-</&>
+<style>
+  .dataset-title{
+    margin-bottom: 10px;
+  }
+</style>
 
 <%init>
   use CXGN::Page::FormattingHelpers qw/info_table_html/;

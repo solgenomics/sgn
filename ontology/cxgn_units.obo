@@ -1,0 +1,996 @@
+format-version: 1.0
+data-version: 1
+date: 03:24:2017 03:00
+saved-by: sgn
+default-namespace: cxgn_units_ontology
+remark: none
+ontology: cxgn_units
+
+[Term]
+id: UO:0000000
+name: Units
+
+[Term]
+id: UO:0100000
+name: volume
+def: "Terms used to measure a quantity of bounded three dimensional space." []
+is_a: UO:0000000
+
+[Term]
+id: UO:0100001
+name: L
+def: "Liter. One Liter." []
+is_a: UO:0100000
+synonym: "liter" EXACT [UO]
+synonym: "litre" EXACT [UO]
+
+[Term]
+id: UO:0100002
+name: dL
+def: "Deciliter. One-tenth of a Liter." []
+is_a: UO:0100000
+synonym: "deciliter" EXACT [UO]
+synonym: "decilitre" EXACT [UO]
+
+[Term]
+id: UO:0100003
+name: cL
+def: "Centiliter. One-hundredth of a Liter." []
+is_a: UO:0100000
+synonym: "centiliter" EXACT [UO]
+synonym: "centilitre" EXACT [UO]
+
+[Term]
+id: UO:0100004
+name: mL
+def: "Milliliter. One-thousandth of a Liter." []
+is_a: UO:0100000
+synonym: "cc" EXACT [UO]
+synonym: "ccm" EXACT [UO]
+synonym: "cubic centimeter" EXACT [UO]
+synonym: "cubic centimetre" EXACT [UO]
+synonym: "cm^3" EXACT [UO]
+synonym: "cm3" EXACT [UO]
+synonym: "milliliter" EXACT [UO]
+synonym: "millilitre" EXACT [UO]
+
+[Term]
+id: UO:0100005
+name: uL
+def: "Microliter. 1E-6 of a Liter." []
+is_a: UO:0100000
+synonym: "microliter" EXACT [UO]
+synonym: "microlitre" EXACT [UO]
+
+[Term]
+id: UO:0100006
+name: nL
+def: "Nanoliter. 1E-9 of a Liter." []
+is_a: UO:0100000
+synonym: "nanoliter" EXACT [UO]
+synonym: "nanolitre" EXACT [UO]
+
+[Term]
+id: UO:0100007
+name: pL
+def: "Picoliter. 1E-12 of a Liter." []
+is_a: UO:0100000
+synonym: "picoliter" EXACT [UO]
+synonym: "picolitre" EXACT [UO]
+
+[Term]
+id: UO:0100008
+name: fL
+def: "Femtoliter. 1E-15 of a Liter." []
+is_a: UO:0100000
+synonym: "femtoliter" EXACT [UO]
+synonym: "femtolitre" EXACT [UO]
+
+
+[Term]
+id: UO:0100009
+name: kL
+def: "Kilo-liter. One thousand Liters." []
+is_a: UO:0100000
+synonym: "cubic meter" EXACT [UO]
+synonym: "cubic metre" EXACT [UO]
+synonym: "cu m" EXACT [UO]
+synonym: "m3" EXACT [UO]
+synonym: "m^3" EXACT [UO]
+synonym: "cbm" EXACT [UO]
+
+[Term]
+id: UO:0100010
+name: cord
+def: "A cord is the amount of wood that occupies a volume of 128 cubic feet (3.62 m3)." []
+is_a: UO:0100000
+
+[Term]
+id: UO:0100011
+name: cu ft
+def: "Cubic feet." []
+is_a: UO:0100000
+synonym: "cubic feet" EXACT [UO]
+synonym: "cubic foot" EXACT [UO]
+synonym: "cubic ft" EXACT [UO]
+synonym: "cuft" EXACT [UO]
+synonym: "cb ft" EXACT [UO]
+synonym: "cu.ft" EXACT [UO]
+synonym: "cbft" EXACT [UO]
+synonym: "cb.ft" EXACT [UO]
+synonym: "cbf" EXACT [UO]
+synonym: "cu feet" EXACT [UO]
+synonym: "ft3" EXACT [UO]
+synonym: "feet^3" EXACT [UO]
+synonym: "foot^3" EXACT [UO]
+synonym: "feet3" EXACT [UO]
+synonym: "foot3" EXACT [UO]
+
+[Term]
+id: UO:0100012
+name: cu in
+def: "Cubic inch." []
+is_a: UO:0100000
+synonym: "cubic in" EXACT [UO]
+synonym: "cubic inch" EXACT [UO]
+synonym: "cu inch" EXACT [UO]
+synonym: "in3" EXACT [UO]
+synonym: "in^3" EXACT [UO]
+synonym: "inch^3" EXACT [UO]
+synonym: "inch3" EXACT [UO]
+synonym: "cui" EXACT [UO]
+synonym: "CI" EXACT [UO]
+synonym: "c.i." EXACT [UO]
+
+[Term]
+id: UO:0100013
+name: cu mi
+def: "Cubic mile." []
+is_a: UO:0100000
+synonym: "cubic mile" EXACT [UO]
+synonym: "cu mile" EXACT [UO]
+synonym: "mile3" EXACT [UO]
+synonym: "mile^3" EXACT [UO]
+synonym: "mi3" EXACT [UO]
+synonym: "mi^3" EXACT [UO]
+
+[Term]
+id: UO:0100014
+name: cu yd
+def: "Cubic yard." []
+is_a: UO:0100000
+synonym: "cubic yard" EXACT [UO]
+synonym: "cu yard" EXACT [UO]
+synonym: "yard3" EXACT [UO]
+synonym: "yard^3" EXACT [UO]
+synonym: "cubic yd" EXACT [UO]
+
+[Term]
+id: UO:0100015
+name: fl oz
+def: "One fluid ounce." []
+is_a: UO:0100000
+synonym: "fl ounce" EXACT [UO]
+synonym: "f oz" EXACT [UO]
+synonym: "oz fl" EXACT [UO]
+synonym: "oz" EXACT [UO]
+
+[Term]
+id: UO:0100016
+name: gal
+def: "One US gallon." []
+is_a: UO:0100000
+synonym: "gallon" EXACT [UO]
+
+[Term]
+id: UO:0200000
+name: mass
+def: "Terms used to measure a quantity of mass." []
+is_a: UO:0000000
+
+[Term]
+id: UO:0200001
+name: kg
+def: "Kilogram. One thousand grams." []
+is_a: UO:0200000
+synonym: "kilogram" EXACT [UO]
+synonym: "kilo" EXACT [UO]
+
+[Term]
+id: UO:0200002
+name: g
+def: "Gram. One gram." []
+is_a: UO:0200000
+synonym: "gram" EXACT [UO]
+synonym: "gr" EXACT [UO]
+
+[Term]
+id: UO:0200003
+name: mg
+def: "Milligram. One thousandth of a gram." []
+is_a: UO:0200000
+synonym: "milligram" EXACT [UO]
+
+[Term]
+id: UO:0200004
+name: ug
+def: "Microgram. 1E-6 of a gram." []
+is_a: UO:0200000
+synonym: "microgram" EXACT [UO]
+
+[Term]
+id: UO:0200005
+name: ng
+def: "Nanogram. 1E-9 of a gram." []
+is_a: UO:0200000
+synonym: "nanogram" EXACT [UO]
+
+[Term]
+id: UO:0200006
+name: pg
+def: "Picogram. 1E-12 of a gram." []
+is_a: UO:0200000
+synonym: "picogram" EXACT [UO]
+
+[Term]
+id: UO:0200007
+name: fg
+def: "Femtogram. 1E-15 of a gram." []
+is_a: UO:0200000
+synonym: "femtogram" EXACT [UO]
+
+[Term]
+id: UO:0200008
+name: earth mass
+def: "Mass of the planet Earth." []
+is_a: UO:0200000
+
+[Term]
+id: UO:0200009
+name: lb
+def: "One pound mass." []
+is_a: UO:0200000
+synonym: "pound" EXACT [UO]
+synonym: "lbm" EXACT [UO]
+
+[Term]
+id: UO:0300000
+name: length
+def: "Terms used to measure a distance between points in space." []
+is_a: UO:0000000
+
+[Term]
+id: UO:0300001
+name: m
+def: "One meter." []
+is_a: UO:0300000
+synonym: "meter" EXACT [UO]
+synonym: "metre" EXACT [UO]
+
+[Term]
+id: UO:0300002
+name: dm
+def: "Decimeter. One tenth of a meter." []
+is_a: UO:0300000
+synonym: "decimeter" EXACT [UO]
+synonym: "decimetre" EXACT [UO]
+
+[Term]
+id: UO:0300003
+name: cm
+def: "Centimeter. One hundredth of a meter." []
+is_a: UO:0300000
+synonym: "centimeter" EXACT [UO]
+synonym: "centimetre" EXACT [UO]
+
+[Term]
+id: UO:0300004
+name: mm
+def: "Millimeter. One thousandth of a meter." []
+is_a: UO:0300000
+synonym: "millimeter" EXACT [UO]
+synonym: "millimetre" EXACT [UO]
+
+[Term]
+id: UO:0300005
+name: um
+def: "Micrometer. 1E-6 of a meter." []
+is_a: UO:0300000
+synonym: "micrometer" EXACT [UO]
+synonym: "micrometre" EXACT [UO]
+
+[Term]
+id: UO:0300006
+name: nm
+def: "Nanometer. 1E-9 of a meter." []
+is_a: UO:0300000
+synonym: "nanometer" EXACT [UO]
+synonym: "nanometre" EXACT [UO]
+
+[Term]
+id: UO:0300007
+name: pm
+def: "Picometer. 1E-12 of a meter." []
+is_a: UO:0300000
+synonym: "picometer" EXACT [UO]
+synonym: "picometre" EXACT [UO]
+
+[Term]
+id: UO:0300008
+name: fm
+def: "Femtometer." []
+is_a: UO:0300000
+synonym: "femtometer" EXACT [UO]
+synonym: "femtometre" EXACT [UO]
+
+[Term]
+id: UO:0300009
+name: km
+def: "Kilometer. One thousand meters." []
+is_a: UO:0300000
+synonym: "kilometer" EXACT [UO]
+synonym: "kilometre" EXACT [UO]
+
+[Term]
+id: UO:0300010
+name: mile
+def: "One mile." []
+is_a: UO:0300000
+
+[Term]
+id: UO:0300011
+name: in
+def: "One inch." []
+is_a: UO:0300000
+synonym: "inch" EXACT [UO]
+
+[Term]
+id: UO:0300012
+name: ft
+def: "One foot." []
+is_a: UO:0300000
+synonym: "foot" EXACT [UO]
+synonym: "feet" EXACT [UO]
+
+[Term]
+id: UO:0300013
+name: yd
+def: "One yard." []
+is_a: UO:0300000
+synonym: "yard" EXACT [UO]
+
+[Term]
+id: UO:0400000
+name: area
+def: "Terms used to measure a quantity of a two dimensional surface." []
+is_a: UO:0000000
+
+[Term]
+id: UO:0400001
+name: sq m
+def: "Square meter." []
+is_a: UO:0400000
+synonym: "square meter" EXACT [UO]
+synonym: "square metre" EXACT [UO]
+
+[Term]
+id: UO:0400002
+name: sq dm
+def: "Square decimeter." []
+is_a: UO:0400000
+synonym: "square decimeter" EXACT [UO]
+synonym: "square decimetre" EXACT [UO]
+
+[Term]
+id: UO:0400003
+name: sq cm
+def: "Square centimeter." []
+is_a: UO:0400000
+synonym: "square centimeter" EXACT [UO]
+synonym: "square centimetre" EXACT [UO]
+
+[Term]
+id: UO:0400004
+name: sq mm
+def: "Square millimeter." []
+is_a: UO:0400000
+synonym: "square millimeter" EXACT [UO]
+synonym: "square millimetre" EXACT [UO]
+
+[Term]
+id: UO:0400005
+name: sq ft
+def: "Square feet." []
+is_a: UO:0400000
+synonym: "square feet" EXACT [UO]
+synonym: "square foot" EXACT [UO]
+synonym: "sq feet" EXACT [UO]
+synonym: "sq foot" EXACT [UO]
+synonym: "square ft" EXACT [UO]
+
+[Term]
+id: UO:0400006
+name: sq in
+def: "Square inch." []
+is_a: UO:0400000
+synonym: "square inch" EXACT [UO]
+synonym: "square in" EXACT [UO]
+synonym: "sq inch" EXACT [UO]
+
+[Term]
+id: UO:0400007
+name: sq mile
+def: "Square mile." []
+is_a: UO:0400000
+synonym: "square mile" EXACT [UO]
+synonym: "square mi" EXACT [UO]
+synonym: "sq mile" EXACT [UO]
+synonym: "sq mi" EXACT [UO]
+
+[Term]
+id: UO:0400008
+name: ac
+def: "Acre." []
+is_a: UO:0400000
+synonym: "acre" EXACT [UO]
+
+[Term]
+id: UO:0400009
+name: ha
+def: "Hectare." []
+is_a: UO:0400000
+synonym: "hectare" EXACT [UO]
+
+[Term]
+id: UO:0400010
+name: sq km
+def: "Square kilometer." []
+is_a: UO:0400000
+synonym: "square kilometer" EXACT [UO]
+synonym: "square kilometre" EXACT [UO]
+synonym: "sq kilometer" EXACT [UO]
+synonym: "sq kilometre" EXACT [UO]
+
+[Term]
+id: UO:0500000
+name: time
+def: "Terms used to quantify time." []
+is_a: UO:0000000
+
+[Term]
+id: UO:0501000
+name: hours
+def: "Number of hours." []
+is_a: UO:0500000
+
+[Term]
+id: UO:0501001
+name: days
+def: "Number of days." []
+is_a: UO:0500000
+
+[Term]
+id: UO:0502000
+name: weeks
+def: "Number of weeks." []
+is_a: UO:0500000
+
+[Term]
+id: UO:0503000
+name: months
+def: "Number of months." []
+is_a: UO:0500000
+
+[Term]
+id: UO:0600000
+name: rna seq
+def: "Terms used to quantify rna seq expression values." []
+is_a: UO:0000000
+
+[Term]
+id: UO:0600001
+name: TPM
+def: "TPM. Transcripts per million reads." []
+is_a: UO:0600000
+
+[Term]
+id: UO:0600002
+name: RPKM
+def: "RPKM." []
+is_a: UO:0600000
+
+[Term]
+id: UO:0600003
+name: FPKM
+def: "FPKM." []
+is_a: UO:0600000
+
+[Term]
+id: UO:0700000
+name: concentration
+def: "Terms used to quantify a quantity of proportional abundance." []
+is_a: UO:0000000
+
+[Term]
+id: UO:0700001
+name: g/kg
+def: "Grams per kilogram." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700002
+name: mg/g
+def: "Milligrams per gram." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700003
+name: ug/g
+def: "Micrograms per gram." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700004
+name: ng/g
+def: "Nanograms per gram." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700005
+name: pg/g
+def: "Picograms per gram." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700006
+name: fg/g
+def: "Femtograms per gram." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700007
+name: mol
+def: "One Molar." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700008
+name: mmol
+def: "Millimolar. One thousandth of a Molar." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700009
+name: umol
+def: "Micromolar. 1E-6 Molar." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700010
+name: nmol
+def: "Nanomolar. 1E-9 Molar." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700011
+name: pmol
+def: "Picomolar. 1E-12 Molar." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0700012
+name: fmol
+def: "Femtomolar. 1E-15 Molar." []
+is_a: UO:0700000
+
+[Term]
+id: UO:0800000
+name: density
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:0800001
+name: g/mL
+def: "Grams per milliliter." []
+is_a: UO:0800000
+synonym: "kg/L" EXACT [UO]
+synonym: "grams per cubic centimeter" EXACT [UO]
+synonym: "grams per milliliter" EXACT [UO]
+synonym: "g/cm^3" EXACT [UO]
+
+[Term]
+id: UO:0800002
+name: g/L
+def: "Grams per liter." []
+is_a: UO:0800000
+synonym: "grams per liter" EXACT [UO]
+synonym: "kilograms per cubic meter" EXACT [UO]
+synonym: "kg/m^3" EXACT [UO]
+
+[Term]
+id: UO:0800003
+name: dpi
+def: "Dots per inch." []
+is_a: UO:0800000
+
+[Term]
+id: UO:0800004
+name: ppi
+def: "Pixels per inch." []
+is_a: UO:0800000
+
+[Term]
+id: UO:0900000
+name: viscosity
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:0900001
+name: cP
+def: "Centipoise. One hundredth of a Poise." []
+is_a: UO:0900000
+
+[Term]
+id: UO:0900002
+name: P
+def: "One Poise." []
+is_a: UO:0900000
+
+[Term]
+id: UO:0900003
+name: cSt
+def: "Centistoke. One hundredth of a Stoke." []
+is_a: UO:0900000
+
+[Term]
+id: UO:0900004
+name: St
+def: "One Stoke." []
+is_a: UO:0900000
+
+[Term]
+id: UO:1000000
+name: acceleration
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1000001
+name: m/s2
+def: "Meter per second per second." []
+is_a: UO:1000000
+synonym: "m/s^2" EXACT [UO]
+synonym: "meters per seconds squared" EXACT [UO]
+synonym: "ms^-2" EXACT [UO]
+
+[Term]
+id: UO:1100000
+name: velocity
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1100001
+name: m/s
+def: "Meter per second." []
+is_a: UO:1100000
+synonym: "meters per second" EXACT [UO]
+synonym: "ms^-1" EXACT [UO]
+
+[Term]
+id: UO:1200000
+name: angle
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1200001
+name: deg
+def: "Angle in degrees." []
+is_a: UO:1200000
+synonym: "degree" EXACT [UO]
+synonym: "degrees" EXACT [UO]
+
+[Term]
+id: UO:1200002
+name: rad
+def: "Angle in radians." []
+is_a: UO:1200000
+synonym: "radian" EXACT [UO]
+synonym: "radians" EXACT [UO]
+
+[Term]
+id: UO:1300000
+name: electromagnetic
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1300001
+name: A
+def: "Ampere. Unit of electric current." []
+is_a: UO:1300000
+synonym: "ampere" EXACT [UO]
+synonym: "amp" EXACT [UO]
+
+[Term]
+id: UO:1300004
+name: H
+def: "Henry. Unit of electrical inductance." []
+is_a: UO:1300000
+synonym: "henry" EXACT [UO]
+
+[Term]
+id: UO:1300005
+name: Ohm
+def: "Ohm. Unit of electrical resistance." []
+is_a: UO:1300000
+synonym: "ohm" EXACT [UO]
+
+[Term]
+id: UO:1300006
+name: S
+def: "Siemens. Unit of electrical conductance." []
+is_a: UO:1300000
+synonym: "siemens" EXACT [UO]
+
+[Term]
+id: UO:1300007
+name: T
+def: "Tesla. Unit of strength of magnetic field." []
+is_a: UO:1300000
+synonym: "tesla" EXACT [UO]
+
+[Term]
+id: UO:1300008
+name: V
+def: "Volt. Unit of electrical potential." []
+is_a: UO:1300000
+synonym: "volt" EXACT [UO]
+
+[Term]
+id: UO:1300009
+name: Wb
+def: "Weber. Unit of magnetic flux." []
+is_a: UO:1300000
+synonym: "weber" EXACT [UO]
+
+[Term]
+id: UO:1400000
+name: force
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1400001
+name: N
+def: "One Newton." []
+is_a: UO:1400000
+synonym: "newton" EXACT [UO]
+synonym: "kg m/s2" EXACT [UO]
+
+[Term]
+id: UO:1400002
+name: lbf
+def: "One pound force." []
+is_a: UO:1400000
+synonym: "pound force" EXACT [UO]
+synonym: "lb f" EXACT [UO]
+
+[Term]
+id: UO:1400003
+name: pf
+def: "One Plank force." []
+is_a: UO:1400000
+synonym: "plank force" EXACT [UO]
+
+[Term]
+id: UO:1400004
+name: dyn
+def: "One dyne." []
+is_a: UO:1400000
+synonym: "dyne" EXACT [UO]
+
+[Term]
+id: UO:1500000
+name: energy
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1500001
+name: BTU
+def: "One British thermal unit." []
+is_a: UO:1500000
+synonym: "Btu" EXACT [UO]
+synonym: "British thermal unit" EXACT [UO]
+
+[Term]
+id: UO:1500002
+name: cal
+def: "One calorie." []
+is_a: UO:1500000
+synonym: "calorie" EXACT [UO]
+
+[Term]
+id: UO:1500003
+name: kcal
+def: "Kilocalorie. One thousand calories." []
+is_a: UO:1500000
+synonym: "kilocalorie" EXACT [UO]
+
+[Term]
+id: UO:1500004
+name: BOE
+def: "Barrel of oil equivalent." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500005
+name: CMO
+def: "Cubic mile of oil." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500006
+name: eV
+def: "Electronvolt." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500007
+name: erg
+def: "One erg." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500008
+name: J
+def: "One Joule." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500009
+name: mJ
+def: "Millijoule. One thousandth of a Joule." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500009
+name: uJ
+def: "Microjoule. 1E-6 of a Joule." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500010
+name: nJ
+def: "Nanojoule. 1E-9 of a Joule." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500011
+name: kWh
+def: "One kilowatt-hour." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1500012
+name: Ep
+def: "One Plank energy." []
+is_a: UO:1500000
+
+[Term]
+id: UO:1600000
+name: power
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1600001
+name: W
+def: "One Watt." []
+is_a: UO:1600000
+
+[Term]
+id: UO:1600002
+name: hp
+def: "One horsepower." []
+is_a: UO:1600000
+
+[Term]
+id: UO:1700000
+name: frequency‎
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1700001
+name: Hz
+def: "One Hertz." []
+is_a: UO:1700000
+
+[Term]
+id: UO:1700002
+name: rpm
+def: "Revolutions per minute." []
+is_a: UO:1700000
+
+[Term]
+id: UO:1800000
+name: illuminance‎
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1800001
+name: lm
+def: "One Lumen." []
+is_a: UO:1800000
+
+[Term]
+id: UO:1800002
+name: cd
+def: "One candela." []
+is_a: UO:1800000
+
+[Term]
+id: UO:1800003
+name: lx
+def: "One lux." []
+is_a: UO:1800000
+
+[Term]
+id: UO:1900000
+name: pressure
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:1900001
+name: Pa
+def: "One Pascal." []
+is_a: UO:1900000
+
+[Term]
+id: UO:1900002
+name: bar
+def: "One bar." []
+is_a: UO:1900000
+
+[Term]
+id: UO:1900003
+name: psi
+def: "One pound per square inch." []
+is_a: UO:1900000
+
+[Term]
+id: UO:1900004
+name: atm
+def: "One atmosphere." []
+is_a: UO:1900000
+
+[Term]
+id: UO:2200000
+name: temperature
+def: "" []
+is_a: UO:0000000
+
+[Term]
+id: UO:2200001
+name: K
+def: "One Kelvin." []
+is_a: UO:2200000
+
+[Term]
+id: UO:2200002
+name: C
+def: "One Celcius." []
+is_a: UO:2200000
+
+[Term]
+id: UO:2200003
+name: F
+def: "One Fahrenheit." []
+is_a: UO:2200000

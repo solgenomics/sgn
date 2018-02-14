@@ -6,7 +6,7 @@ $trial_name => undef
 
 
 <div class="modal fade" id="create_spreadsheet_dialog" name="create_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="createSpreadsheetDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -22,7 +22,7 @@ $trial_name => undef
                     <div class="col-sm-9" >
                         <div id="select_trial_for_create_spreadsheet">
 % if ($trial_id) {
-                            <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
+                            <input type="text" class="form-control" value="<% $trial_name %>" text="<% $trial_name %>" disabled/>
                             <input type="hidden" id="html_select_trial_for_create_spreadsheet" name="html_select_trial_for_create_spreadsheet" value="<% $trial_id %>" />
 % } else {
                         [Loading...]
@@ -38,12 +38,25 @@ $trial_name => undef
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Data Level: </label>
+                    <label class="col-sm-3 control-label">Spreadsheet Format: </label>
                     <div class="col-sm-9" >
-                        <select class="form-control" id="create_spreadsheet_data_level">
-                            <option value="plots">Plots</option>
-                            <option value="plants">Plants</option>
+                        <select class="form-control" id="create_spreadsheet_phenotype_file_format" name="create_spreadsheet_phenotype_file_format">
+                            <option value="ExcelBasic">Detailed</option>
+                            <option value="ExcelBasicSimple">Simple</option>
                         </select>
+                    </div>
+                </div>
+                <div id="create_spreadsheet_phenotype_data_level_div">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Data Level: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="create_spreadsheet_data_level">
+                                <option value="plots">Plots</option>
+                                <option value="plants">Plants</option>
+                                <option value="subplots">Subplots</option>
+                                <option value="plants_subplots">Plants and Subplots</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -52,7 +65,7 @@ $trial_name => undef
                 <div class="form-group">
                     <label class="col-sm-5 control-label "><small>Sample Number: </small></label>
                     <div class="col-sm-7" >
-                        <input type="text" class="form-control" id="create_spreadsheet_sample_number" placeholder="All Plants"/>
+                        <input type="text" class="form-control" id="create_spreadsheet_sample_number" placeholder="Leave blank for all"/>
                     </div>
                 </div>
             </div>
@@ -74,7 +87,7 @@ $trial_name => undef
 jQuery(document).ready(function() {
 
     if(jQuery("#html_select_trial_for_create_spreadsheet").length == 0) {
-        get_select_box('trials', 'select_trial_for_create_spreadsheet', { 'name' : 'html_select_trial_for_create_spreadsheet', 'id' : 'html_select_trial_for_create_spreadsheet' });
+        get_select_box('trials', 'select_trial_for_create_spreadsheet', { 'name' : 'html_select_trial_for_create_spreadsheet', 'id' : 'html_select_trial_for_create_spreadsheet', 'multiple':1, 'size':10 });
     }
 
     jQuery("[name='create_spreadsheet_link']").click( function () {
@@ -83,12 +96,60 @@ jQuery(document).ready(function() {
         jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
     });
 
+    jQuery(document).on('change', '#create_spreadsheet_data_level', function(){
+%  if ($trial_id){
+        var selected_trial_ids = [<% $trial_id %>];
+        var selected_trial_names = ["<% $trial_name %>"];
+%  } else {
+        var selected_trial_ids = jQuery("#html_select_trial_for_create_spreadsheet").val();
+        var selected_trial_names = [];
+        jQuery("#html_select_trial_for_create_spreadsheet").find('option:selected').each(function(){
+            selected_trial_names.push(jQuery(this).text());
+        });
+%  }
+        console.log(selected_trial_names);
+        var level = jQuery('#create_spreadsheet_data_level').val();
+        var url = '';
+        if (level == 'plants'){
+            url = 'has_plants';
+        }
+        if (level == 'subplots' || level == 'plants_subplots'){
+            url = 'has_subplots';
+        }
+
+        for (var i=0; i<selected_trial_ids.length; i++){
+            if (level == 'plants' || level == 'subplots' || level == 'plants_subplots'){
+                new jQuery.ajax({
+                    type: 'POST',
+                    url: '/ajax/breeders/trial/'+selected_trial_ids[i]+'/'+url,
+                    dataType: "json",
+                    beforeSend: function() {
+                        jQuery("#working_modal").modal("show");
+                    },
+                    success: function (response) {
+                        //console.log(response);
+                        jQuery("#working_modal").modal("hide");
+                        if(response.has_plants == 0 || response.has_subplots == 0){
+                            alert('The trial '+response.trial_name+' does not have '+level);
+                            jQuery('#create_spreadsheet_data_level').val('plots');
+                            jQuery('#create_spreadsheet_plant_options').hide();
+                        }
+                    },
+                    error: function () {
+                        jQuery("#working_modal").modal("hide");
+                        alert('An error occurred checking trial '+selected_trial_names[i]+' for plants or subplots.');
+                    }
+                });
+            }
+        }
+    });
 
     jQuery('#create_spreadsheet_data_level').change(function() {
-        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' ) {
+        jQuery("#create_spreadsheet_sample_number").val('');
+        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' || jQuery('#create_spreadsheet_data_level').val() == 'subplots' ) {
             jQuery('#create_spreadsheet_plant_options').show();
         } else {
-            jQuery("#create_spreadsheet_sample_number").val('');
+            jQuery('#create_spreadsheet_plant_options').hide();
         }
     });
 
@@ -106,15 +167,21 @@ function create_phenotype_spreadsheet() {
     if (! trait_list_id == "") {
         trait_list = JSON.stringify(list.getList(trait_list_id));
     }
+%  if ($trial_id){
+        var trial_ids = [<% $trial_id %>];
+%  } else {
+        var trial_ids = jQuery("#html_select_trial_for_create_spreadsheet").val();
+%  }
     new jQuery.ajax({
         type: 'POST',
         url: '/ajax/phenotype/create_spreadsheet',
         dataType: "json",
         data: {
-            'trial_id': parseInt(jQuery("#html_select_trial_for_create_spreadsheet").val()),
+            'trial_ids': JSON.stringify(trial_ids),
             'trait_list': trait_list,
             'data_level': jQuery("#create_spreadsheet_data_level").val(),
             'sample_number': jQuery("#create_spreadsheet_sample_number").val(),
+            'format': jQuery('#create_spreadsheet_phenotype_file_format').val()
         },
         beforeSend: function() {
             jQuery('#working_modal').modal("show");
@@ -123,10 +190,8 @@ function create_phenotype_spreadsheet() {
             jQuery('#working_modal').modal("hide");
             if (response.error) {
                 alert(response.error);
-                jQuery('#create_spreadsheet_dialog').modal("hide");
             } else {
                 //alert(response.filename);
-                jQuery('#create_spreadsheet_dialog').modal("hide");
                 jQuery('#working_modal').modal("hide");
                 window.location.href = "/download/"+response.filename;
             }

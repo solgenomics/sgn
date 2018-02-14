@@ -1,0 +1,98 @@
+
+<%doc>
+</%doc>
+
+<%args>
+@trial_names => ()
+$cvterm_id => undef
+</%args>
+
+<%perl>
+
+use JSON::Any;
+use URI::Encode qw| uri_encode |;
+
+print STDERR "trial names = ".(join ",",@trial_names)."\n";
+my $url_params = "";
+
+if (@trial_names) { 
+   my @trial_name_params = map { 'trial_name='.uri_encode($_) } @trial_names;
+   my $trial_names_url = join "&", @trial_name_params;
+   $url_params = $trial_names_url;
+}
+
+</%perl>
+
+<& '/page/page_title.mas', title => "Compare trials" &>
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login' ] &>
+
+Comparison of trials <b><% join ",",@trial_names %></b>
+<br /><br />
+Total accession count: <span id="total_accession_count"></span><br />
+Common accession count: <span id="common_accession_count"></span><br />
+Common traits: <span id="common_trait_count"></span><br />
+
+Trait: <select id="trait_select"><option disabled="1">select trials first</option></select>
+
+<center>
+<div id="result_div">
+   <img id="result_image" />
+</div>
+</center>
+
+<script>
+
+  jQuery('#trait_select').change( function() { 
+  var trait_id = jQuery('#trait_select').val();
+    compare(trait_id);
+  });
+  
+  jQuery.ajax( { 
+    beforeSend: function() { working_modal_show(); },
+    url: '/ajax/trial/common_traits?<% $url_params %>',
+    success: function(response) { 
+      working_modal_hide();
+      if (response.error) { jQuery('#trait_select').val('error'); }
+      else {
+        var option_html = '';
+        for (var i =0 ; i < response.options.length; i++) {
+        var selected = "";
+	var cvterm_id = '<% $cvterm_id %>';
+        if (response.options[i][0]== cvterm_id) { selected="selected"; }
+          option_html += '<option value="'+response.options[i][0]+'" '+selected+'>'+(response.options[i][1])+'</option>\n';
+        }
+        jQuery('#trait_select').html(option_html);
+        jQuery('#total_accession_count').html(response.total_accession_count);
+        jQuery('#common_accession_count').html(response.common_accession_count);
+        jQuery('#common_trait_count').html(response.common_trait_count);  
+        compare(jQuery('#trait_select').val);
+        
+      }
+    },
+    error: function(response) { 
+       //alert("An error occurred, the service may temporarily be unavailable");
+    }
+    
+  } );
+
+  jQuery(document).ready( function() { 
+    compare(<% $cvterm_id %>);
+  });
+    
+function compare(cvterm_id) { 
+
+   jQuery.ajax( { 
+      url: '/ajax/trial/compare?<% $url_params %>&cvterm_id='+cvterm_id,
+      success: function(response) { 
+         if (response.error) { 
+            alert(response.error);
+         }
+         else { 
+            jQuery('#result_image').attr('src', response.png);
+         }
+      }
+   });
+}
+
+</script>

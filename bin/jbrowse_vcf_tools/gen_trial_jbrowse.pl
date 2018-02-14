@@ -100,7 +100,7 @@ while (my ($trial_id, $trial_name) = $h->fetchrow_array) {
 # extract list of accessions associated with trial from database
 #-----------------------------------------------------------------------
 
-my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'} );
 my $accession_names_ref = $trial_layout->get_accession_names();
 my $control_names_ref = $trial_layout->get_control_names();
 

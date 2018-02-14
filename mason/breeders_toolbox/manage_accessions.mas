@@ -2,17 +2,24 @@
 <%args>
 $accessions
 $preferred_species => ""
+$list_id => undef
+$editable_stock_props => {}
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
+
 
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
+<div class="well">
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Accessions Or Upload Accession Info</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_pedigrees_dialogs.mas &>
+<& /breeders_toolbox/manage_populations_dialogs.mas &>
 
 <div>
   </br>
@@ -20,277 +27,23 @@ $preferred_species => ""
 </div>
 
 </&>
+</div><!-- closes well -->
 
+<div class="well">
 <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
 
 <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
 
 </&>
+</div><!-- closes well -->
 
-<&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<i>Maximize to see population info</i>"&>
+<div class="well">
+<&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<a id='manage_accessions_populations_new'>[Create Population]</a>"&>
 <div class="panel-group" id="accordion"></div>
 </&>
+</div><!-- closes well -->
 
 </div>
-
-<& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
-
-<!-- Modal Dialogs Below Here -->
-
-<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addAccessionsDialog">Add Accessions</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <form class="form-horizontal" role="form" name="new_accessions_form" id="new_accessions_form">
-	    <div class="form-group">
-      	      <label class="col-sm-6 control-label">Choose a List of Accessions to Add: </label>
-      	      <div class="col-sm-6" id="list_div" name="list_div">
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-6 control-label"></label>
-      	      <div class="col-sm-6">
-	        <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button>
-              </div>
-	    </div>
-	    <!--div class="form-group">
-      	      <label class="col-sm-6 control-label">Use Fuzzy Search: </label>
-      	      <div class="col-sm-6">
-	        <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
-		<br/>
-		<small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</small>
-              </div>
-	    </div-->
-        <input type="hidden" id="fuzzy_check" name="fuzzy_check" value="true" checked></input>
-	  </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit">Continue</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content ui-front">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewAbsentDialog">Accessions to be Added</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <label for="species_name_input">Species name for added accessions</label>
-  	  <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
-  	  <br><br>
-    	  <label for="population_name_input">Population name for added accessions (optional)</label>
-  	  <input class="form-control" type="text" id="population_name_input"></input>
-  	  <br><br>
-          <label for="organization_name_input">Organization name for added accessions (optional)</label>
-      <input class="form-control" type="text" id="organization_name_input"></input>
-      <br><br>
-  	  <b>The following accessions will be added to the database:</b>
-  	  <div id="count_of_absent_accessions"></div>
-  	  <br>
-  	  <div id="view_absent"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit">Add Accessions</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <b>Accessions were found with similar names.</b>
-  	  <br/><br/>
-  	  <div id="view_fuzzy_matches"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFoundDialog">Found Accessions</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <b>The following accessions already exist and cannot be added:</b>
-  	  <div id="count_of_found_accessions"></div>
-  	  <br/>
-  	  <div id="view_found_matches"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal">Continue</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!--
-<div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
-  <b>Accessions were found with similar names.</b>
-  <br><br>
-  <div id="view_fuzzy_matches">
-  </div>
-</div>
--->
-
-<!--
-<div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
-  <b>The following accessions already exist and cannot be added:</b>
-  <div id="count_of_found_accessions"></div>
-  <br>
-  <div class="left"> <b>Searched name</b> </div>
-  <div class="right"> <b>Unique name for synonym</b> </div>
-  <div id="view_found_matches">
-  </div>
-</div>
--->
-
-<!--
-<div id="review_absent_dialog" class="ui-widget" title="Accessions to be added">
-  <label for="species_name_input">Species name for added accessions</label>
-  <input type="text" id="species_name_input"></input>
-  <br><br>
-  <b>The following accessions will be added to the database:</b>
-  <div id="count_of_absent_accessions"></div>
-  <br>
-  <div id="view_absent">
-  </div>
-</div>
--->
-
-<div class="modal fade" id="upload_pedigrees_error_display" name="upload_pedigrees_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesErrorDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesErrorDialog">Errors During Upload</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
- 	  <table class="table table-hover">
-    	    <tbody></tbody>
-  	  </table>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!--
-<div id="upload_pedigrees_error_display" class="ui-widget">
-  <table>
-    <tbody></tbody>
-  </table>
-</div>
--->
-
-<div class="modal fade" id="pedigrees_upload_success_dialog_message" name="pedigrees_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesSuccessDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesSuccessDialog">Upload Successful</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
- 	  <h2>The Pedigree Upload Finished With No Errors.</h2>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="pedigrees_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!--
-<div id="pedigrees_upload_success_dialog_message" class="ui-widget">
-  The pedigree upload finished.
-</div>
--->
-
-<div class="modal fade" id="upload_pedigrees_dialog" name="upload_pedigrees_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesDialog">Upload Pedigrees</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <&| /page/explanation.mas, title=>'Template Information' &>
-    	  <p>
-      	  <b>File format information</b>
-      	  <br>
-      	  <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet Format</a>
-    	  </p>
-  	  </&>
-
-  	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_pedigrees_form" name="upload_pedigrees_form">
-    	    <label for="pedigrees_uploaded_file" style="display: inline-block; width: 100px;">Upload Pedigree File:</label>
-    	    <input type="file" name="pedigrees_uploaded_file" id="pedigrees_uploaded_file" encoding="multipart/form-data" />
-    	  </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Submit File</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!--
-<div id="upload_pedigrees_dialog" title="Upload pedigrees">
-
-  <&| /page/explanation.mas, title=>'Template information' &>
-    <p>
-      <b>File format information</b>
-      <br>
-      <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet format</a>
-    </p>
-  </&>
-
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_pedigrees_form" name="upload_pedigrees_form">
-
-    <label for="pedigrees_uploaded_file" style="display: inline-block; width: 100px;">Upload pedigree file:</label>
-    <input type="file" name="pedigrees_uploaded_file" id="pedigrees_uploaded_file" encoding="multipart/form-data" />
-
-    </form>
-</div>
--->
 
 <style>
   div.left {
@@ -311,3 +64,11 @@ $preferred_species => ""
   height: 100px;
 }
 </style>
+
+<script>
+jQuery(document).ready(function (){
+%  if ($list_id){
+    verify_accession_list(<% $list_id %>);
+%  }
+});
+</script>

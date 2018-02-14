@@ -7,11 +7,11 @@ $locations
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
 <div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
-    <div class="modal-dialog " role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTrialDialog">Upload Trial</h4>
+                <h4 class="modal-title" id="uploadTrialDialog">Upload Existing Trial</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -105,7 +105,7 @@ $locations
 </div>
 
 <div class="modal fade" id="trial_upload_spreadsheet_info_dialog" name="trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -135,31 +135,43 @@ $locations
                                 <td>range_number</td>
                                 <td>row_number</td>
                                 <td>col_number</td>
+                                <td>seedlot_name</td>
+                                <td>num_seed_per_plot</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <b>Required fields:</b>
-                    plot_name (must be unique)
+                    <br/>
+                    plot_name (must be unique across entire database)
                     <br />
                     accession_name (must exist in the database)
+                    <br/>
+                    plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002))
                     <br />
-                    plot_number
-                    <br />
-                    block_number
+                    block_number (a design parameter indicating which block the plot is in)
                     <br />
                     <br/>
                     <b>Optional fields:</b>
                     <br />
-                    is_a_control (type 1 or yes in this field if the plot is a control)
+                    is_a_control (type 1 in this field if the plot is a control, otherwise leave blank)
                     <br />
                     rep_number (replicate number, numeric)
                     <br />
-                    range_number (range number, numeric)
+                    range_number (range number. often synonymous with col_number, numeric)
                     <br />
-                    row_number (row number, numeric, required for field map generation)
+                    row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation)
                     <br />
-                    col_number (column number, numeric, required for field map generation)
+                    col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation)
+                    <br />
+                    seedlot_name (the seedlot from where the planted seed originated. must exist in the database)
+                    <br />
+                    num_seed_per_plot (number seeds per plot. seed comes from seedlot. numeric)
+                    <br/>
+                    <br/>
+                    <b>Treatments:</b>
+                    <br/>
+                    treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty.)
                 </div>
             </div>
             <div class="modal-footer">

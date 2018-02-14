@@ -161,8 +161,8 @@ sub search {
     my $location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
     my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
-    my $harvest_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'harvest_date', 'project_property')->cvterm_id();
-    my $planting_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'planting_date', 'project_property')->cvterm_id();
+    my $harvest_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_harvest_date', 'project_property')->cvterm_id();
+    my $planting_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_planting_date', 'project_property')->cvterm_id();
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $project_type_cv_id = $schema->resultset("Cv::Cv")->find( { name => "project_type" } )->cv_id();
@@ -258,14 +258,15 @@ sub search {
                 $trials{$trial_name}->{design} = $value;
             }
             if ( $type_id == $planting_cvterm_id ) {
-                $trials{$trial_name}->{planting_date} = $calendar_funcs->display_start_date($value);
+                $trials{$trial_name}->{project_planting_date} = $calendar_funcs->display_start_date($value);
             }
             if ( $type_id == $harvest_cvterm_id ) {
-                $trials{$trial_name}->{harvest_date} = $calendar_funcs->display_start_date($value);
+                $trials{$trial_name}->{project_harvest_date} = $calendar_funcs->display_start_date($value);
             }
 
-            #print "$type_id corresponds to project type $trial_types{$type_id}\n";
-            $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
+            if (exists($trial_types{$type_id})){
+                $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
+            }
         }
 
         $trials{$trial_name}->{breeding_program} = $breeding_programs{$trial_id};
@@ -313,6 +314,10 @@ sub search {
             }
         }
 
+        if ($trials{$t}->{design} eq 'treatment'){
+            next();
+        }
+
         push @result, {
             trial_id => $trials{$t}->{trial_id},
             trial_name => $t,
@@ -324,8 +329,8 @@ sub search {
             location_name => $trials{$t}->{location}->[1],
             breeding_program_id => $trials{$t}->{breeding_program}->[0],
             breeding_program_name => $trials{$t}->{breeding_program}->[1],
-            harvest_date => $trials{$t}->{harvest_date},
-            planting_date => $trials{$t}->{planting_date},
+            project_harvest_date => $trials{$t}->{project_harvest_date},
+            project_planting_date => $trials{$t}->{project_planting_date},
             description => $trials{$t}->{trial_description},
             design => $trials{$t}->{design}
         };

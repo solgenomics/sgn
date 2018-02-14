@@ -183,10 +183,10 @@ sub avg_phenotypes_query {
   my $allow_missing = shift;
 
   my $select = "SELECT table0.accession_id, table0.accession_name";
-  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
   for (my $i = 1; $i <= scalar @trait_ids; $i++) {
     $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
-    $from .= " JOIN (SELECT accession_id, accession_name, AVG(phenotype_value::REAL) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
   }
   my $query = $select . $from . " ORDER BY 2";
   if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
@@ -304,7 +304,7 @@ sub test_matviews {
 
   if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
     print STDERR "Populated views, now proceeding with query . . . .\n";
-    return { success => "Populated views, query can proceed." };
+    return { status => "Populated views, query can proceed." };
   } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
     return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
   } elsif (%response_hash && $response_hash{'error'}) {
@@ -331,6 +331,7 @@ sub refresh_matviews {
   my $dbname = shift;
   my $dbuser = shift;
   my $dbpass = shift;
+  my $materialized_view = shift || 'fullview'; #Can be 'fullview' or 'stockprop'
   my $refresh_type = shift || 'concurrent';
   my $refresh_finished = 0;
   my $async_refresh;
@@ -342,17 +343,17 @@ sub refresh_matviews {
   my $refreshing = $h->fetchrow_array();
 
   if ($refreshing) {
-    return { error => 'Wizard update already in progress . . . ' };
+    return { error => $materialized_view.' update already in progress . . . ' };
   }
   else {
     try {
       my $dbh = $self->dbh();
       if ($refresh_type eq 'concurrent') {
-        #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
       } else {
-        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view");
       }
 
       for (my $i = 1; $i < 10; $i++) {
@@ -365,13 +366,13 @@ sub refresh_matviews {
       }
 
       if ($refresh_finished) {
-        return { message => 'Wizard update completed!' };
+        return { message => $materialized_view.' update completed!' };
       } else {
-        return { message => 'Wizard update initiated.' };
+        return { message => $materialized_view.' update initiated.' };
       }
     } catch {
-      print STDERR 'Error initiating wizard update.' . $@ . "\n";
-      return { error => 'Error initiating wizard update.' . $@ };
+      print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
+      return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
     }
   }
 }
@@ -401,7 +402,7 @@ sub matviews_status {
     return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
   }
   else {
-    print STDERR "materialized fullview last updated $timestamp\n";
+    print STDERR "materialized views last updated $timestamp\n";
     return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
   }
 }

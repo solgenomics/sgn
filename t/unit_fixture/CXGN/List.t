@@ -15,6 +15,7 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
 my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
 
+print STDERR Dumper \@lists_sorted;
  is_deeply(\@lists_sorted,  [
 	       [
             '3',
@@ -51,6 +52,24 @@ my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
             undef,
             undef,
 	    '0'
+          ],
+          [
+            12,
+            'desynonymize_test_list',
+            undef,
+            6,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            13,
+            'traits',
+            undef,
+            10,
+            76455,
+            'traits',
+            0
           ],
 	  [
             '809',
@@ -126,10 +145,14 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
 #print STDERR Dumper($lists);
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-#print STDERR Dumper \@lists_sorted;
-is_deeply(\@lists_sorted, [
+my @lists_minus_ids;
+foreach (@lists_sorted){
+    shift(@$_);
+    push @lists_minus_ids, $_;
+}
+print STDERR Dumper \@lists_minus_ids;
+is_deeply(\@lists_minus_ids, [
           [
-            3,
             'test_stocks',
             undef,
             5,
@@ -138,7 +161,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            5,
             'accessions_for_solgs_tests',
             undef,
             374,
@@ -147,7 +169,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            6,
             'accessions_for_trial2',
             undef,
             307,
@@ -156,7 +177,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            7,
             'selection_acc',
             undef,
             20,
@@ -165,7 +185,22 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            11,
+            'desynonymize_test_list',
+            undef,
+            6,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            'traits',
+            undef,
+            10,
+            76455,
+            'traits',
+            0
+          ],
+          [
             'new_test_name',
             'new description',
             1,
@@ -174,7 +209,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            809,
             'janedoe_1_public',
             undef,
             2,
@@ -183,7 +217,6 @@ is_deeply(\@lists_sorted, [
             1
           ],
           [
-            811,
             'janedoe_1_private',
             undef,
             2,
@@ -203,11 +236,15 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 #print STDERR Dumper($lists);
 
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-#print STDERR Dumper \@lists_sorted;
-
-is_deeply(\@lists_sorted, [
+@lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
+my @lists_minus_ids;
+foreach (@lists_sorted){
+    shift(@$_);
+    push @lists_minus_ids, $_;
+}
+print STDERR Dumper \@lists_minus_ids;
+is_deeply(\@lists_minus_ids, [
           [
-            3,
             'test_stocks',
             undef,
             5,
@@ -216,7 +253,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            6,
             'accessions_for_trial2',
             undef,
             307,
@@ -225,7 +261,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            7,
             'selection_acc',
             undef,
             20,
@@ -234,7 +269,22 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            11,
+            'desynonymize_test_list',
+            undef,
+            6,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            'traits',
+            undef,
+            10,
+            76455,
+            'traits',
+            0
+          ],
+          [
             'new_test_name',
             'new description',
             1,
@@ -243,7 +293,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            809,
             'janedoe_1_public',
             undef,
             2,
@@ -252,7 +301,6 @@ is_deeply(\@lists_sorted, [
             1
           ],
           [
-            811,
             'janedoe_1_private',
             undef,
             2,

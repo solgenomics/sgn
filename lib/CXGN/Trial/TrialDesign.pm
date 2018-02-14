@@ -1,5 +1,5 @@
 package CXGN::Trial::TrialDesign;
-
+ 
 =head1 NAME
 
 CXGN::Trial::TrialDesign - a module to create a trial design using the R CRAN package Agricolae.
@@ -28,9 +28,11 @@ use Data::Dumper;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use POSIX;
+use List::Util 'max';
 
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
+has 'seedlot_hash' => (isa => 'HashRef', is => 'rw', predicate => 'has_seedlot_hash', clearer => 'clear_seedlot_hash');
 has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
 has 'control_list_crbd' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list_crbd', clearer => 'clear_control_list_crbd');
 has 'number_of_blocks' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_blocks', clearer => 'clear_number_of_blocks');
@@ -51,6 +53,16 @@ has 'blank' => ( isa => 'Str', is => 'rw', predicate=> 'has_blank' );
 has 'fieldmap_col_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_col_number',clearer => 'clear_fieldmap_col_number');
 has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_row_number',clearer => 'clear_fieldmap_row_number');
 has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
+has 'treatments' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
+has 'num_plants_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_plants_per_plot',clearer => 'clear_num_plants_per_plot');
+has 'num_seed_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_seed_per_plot',clearer => 'clear_num_seed_per_plot');
+has 'replicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_replicated_accession_no',clearer => 'clear_replicated_accession_no');
+has 'unreplicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_unreplicated_accession_no',clearer => 'clear_unreplicated_accession_no');
+has 'num_of_replicated_times' => (isa => 'Int',is => 'rw',predicate => 'has_num_of_replicated_times',clearer => 'clear_num_of_replicated_times');
+has 'sub_block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_sub_block_sequence', clearer => 'clear_sub_block_sequence');
+has 'block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_block_sequence', clearer => 'clear_block_sequence');
+has 'col_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_col_in_design_number',clearer => 'clear_col_in_design_number');
+has 'row_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_row_in_design_number',clearer => 'clear_row_in_design_number');
 
 subtype 'RandomizationMethodType',
   as 'Str',
@@ -62,7 +74,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -94,9 +106,15 @@ sub calculate_design {
     elsif ($self->get_design_type() eq "Alpha") {
       $design = _get_alpha_lattice_design($self);
     }
+    elsif ($self->get_design_type() eq "Lattice") {
+      $design = _get_lattice_design($self);
+    }
     elsif ($self->get_design_type() eq "Augmented") {
        $design = _get_augmented_design($self);
     #  $design = _get_alpha_lattice_design($self);
+    }
+    elsif ($self->get_design_type() eq "p-rep") {
+      $design = _get_p_rep_design($self);
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -114,6 +132,9 @@ sub calculate_design {
 #    }
     elsif($self->get_design_type() eq "greenhouse") {
         $design = _get_greenhouse_design($self);
+    }
+    elsif($self->get_design_type() eq "splitplot") {
+        $design = _get_splitplot_design($self);
     }
     else {
       die "Trial design" . $self->get_design_type() ." not supported\n";
@@ -263,7 +284,6 @@ sub _get_crd_design {
     my $number_of_stocks;
     my @control_list_crbd;
     my %control_names_lookup;
-    my $stock_name_iter;
     my $fieldmap_row_number;
     my @fieldmap_row_numbers;
     my $fieldmap_col_number;
@@ -278,11 +298,7 @@ sub _get_crd_design {
     if ($self->has_control_list_crbd()) {
       @control_list_crbd = @{$self->get_control_list_crbd()};
       %control_names_lookup = map { $_ => 1 } @control_list_crbd;
-      foreach $stock_name_iter (@stock_names) {
-        if (exists($control_names_lookup{$stock_name_iter})) {
-  	die "Names in stock list cannot be used also as controls\n";
-        }
-      }
+      $self->_check_controls_and_accessions_lists;
     }
     if ($self->has_number_of_reps()) {
         $number_of_reps = $self->get_number_of_reps();
@@ -329,10 +345,10 @@ sub _get_crd_design {
 
         if ($self->has_randomization_seed()){
             $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method, seed=randomization_seed)');
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=3,kinds=randomization_method, seed=randomization_seed)');
         }
         else {
-            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method)');
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=3,kinds=randomization_method)');
         }
         $r_block->add_command('crd<-crd$book'); #added for agricolae 1.1-8 changes in output
         $r_block->add_command('crd<-as.matrix(crd)');
@@ -392,10 +408,18 @@ sub _get_crd_design {
       @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
         my %plot_info;
 
         $plot_info{'stock_name'} = $stock_names[$i];
+        $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+        if ($plot_info{'seedlot_name'}){
+            $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        }
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
@@ -411,6 +435,163 @@ sub _get_crd_design {
 
     %crd_design = %{_build_plot_names($self,\%crd_design)};
     return \%crd_design;
+}
+
+sub _get_p_rep_design {
+    my $self = shift;
+    my %prep_design;
+    my $rbase = R::YapRI::Base->new();
+    my @stock_list;
+    my $stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @stock_names;
+    my @block_numbers;
+    my @converted_plot_numbers;
+    my $number_of_replicated_accession;
+    my $number_of_unreplicated_accession;
+    my $num_of_replicated_times;
+    my $sub_block_sequence;
+    my $block_sequence;
+    my $col_in_design_number;
+    my $row_in_design_number;
+    
+    if ($self->has_stock_list()) {
+      @stock_list = @{$self->get_stock_list()};
+    } else {
+      die "No stock list specified\n";
+    }
+    if ($self->has_replicated_accession_no()) {
+      $number_of_replicated_accession = $self->get_replicated_accession_no();
+    } 
+    if ($self->has_unreplicated_accession_no()) {
+      $number_of_unreplicated_accession = $self->get_unreplicated_accession_no();
+    } 
+    if ($self->has_num_of_replicated_times()) {
+      $num_of_replicated_times = $self->get_num_of_replicated_times();
+    } 
+    if ($self->has_sub_block_sequence()) {
+      $sub_block_sequence = $self->get_sub_block_sequence();
+    }
+    if ($self->has_block_sequence()) {
+      $block_sequence = $self->get_block_sequence();
+    }
+    if ($self->has_col_in_design_number()) {
+      $col_in_design_number = $self->get_col_in_design_number();
+    }   
+    if ($self->has_row_in_design_number()) {
+      $row_in_design_number = $self->get_row_in_design_number();
+    }
+    
+    $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+  						       {
+  							name => 'stock_data_matrix',
+  							rown => 1,
+  							coln => scalar(@stock_list),
+  							data => \@stock_list,
+  						       }
+  						      );
+                              
+    my %stock_data_hash;
+    my $count = 0;
+    my @counts;
+    foreach my $x (@stock_list){
+        $count ++;
+        push @counts, $count;
+    }
+    for (my $n=0; $n<scalar(@stock_list); $n++) {
+        $stock_data_hash{$counts[$n]} = $stock_list[$n];
+    }
+    my ($no_row_in_block,$no_block_in_design) = split(',', $block_sequence);
+    $no_row_in_block = $no_row_in_block * $col_in_design_number;
+    
+    $r_block = $rbase->create_block('r_block');
+    $stock_data_matrix->send_rbase($rbase, 'r_block'); 
+    $r_block->add_command('library(DiGGer)');
+    $r_block->add_command('library(R.methodsS3)'); 
+    $r_block->add_command('library(reshape)');
+    $r_block->add_command('library(R.oo)');
+    $r_block->add_command('numberOfTreatments <- ' .$stock_data_matrix->{coln}); 
+    $r_block->add_command('rowsInDesign <- '.$row_in_design_number); 
+    $r_block->add_command('columnsInDesign <- '.$col_in_design_number);
+    $r_block->add_command('blockSequence <- list(c('.$block_sequence.'), c('.$sub_block_sequence.'))'); 
+    $r_block->add_command('treatRepPerRep <- rep(c(1,'.$num_of_replicated_times.'), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
+    $r_block->add_command('treatGroup <- rep(c(1, 2), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
+    $r_block->add_command('rngSeeds <- c(156, 444)');
+    $r_block->add_command('runSearch <- TRUE');
+    $r_block->add_command('pRepDesign <- prDiGGer(numberOfTreatments = numberOfTreatments,
+                                                rowsInDesign = rowsInDesign,
+                                                columnsInDesign = columnsInDesign,
+                                                blockSequence = blockSequence,
+                                                treatRepPerRep = treatRepPerRep, 
+                                                treatGroup = treatGroup, 
+                                                rngSeeds = rngSeeds, 
+                                                runSearch = runSearch )');
+    #$r_block->add_command('pRepDesign <- run(pRepDesign)');                                            
+    #$r_block->add_command('designBlock <- desTab(getDesign(pRepDesign), '.$block_sequence.')');  print "PARAMETER: 13\n";
+    $r_block->add_command('field_map <- getDesign(pRepDesign)');
+    $r_block->add_command('field_map_t <- t(field_map)');
+    $r_block->add_command('field_map_melt <- melt(field_map_t)');
+    $r_block->add_command('colnames(field_map_melt) <- c("col_number","row_number","trt")');
+    $r_block->add_command('rownames(field_map_melt) <- rownames(field_map_melt, do.NULL = FALSE, prefix = "Obs.")');
+    $r_block->add_command('dim_trt <- dim(field_map_melt)[1]');
+    $r_block->add_command('blockNo <- rep(1:'.$no_block_in_design.', each='.$no_row_in_block.')');
+    $r_block->add_command('blockNo <- melt(blockNo)');
+    $r_block->add_command('colnames(blockNo) <- c("block")');
+    $r_block->add_command('rownames(blockNo) <- rownames(blockNo, do.NULL = FALSE, prefix = "Obs.")');
+    $r_block->add_command('blockNo_merge <- match(rownames(field_map_melt), rownames(blockNo) )');
+    $r_block->add_command('blockNo_merge <- cbind( field_map_melt, blockNo[blockNo_merge,] )');
+    $r_block->add_command('colnames(blockNo_merge) <- c("col_number","row_number","trt","block")');
+    $r_block->add_command('rownames(blockNo_merge) <- rownames(blockNo_merge, do.NULL = FALSE, prefix = "Obs.")');
+    $r_block->add_command('plot_num <- c(1:dim_trt)');
+    $r_block->add_command('plot_num <- t(plot_num)');
+    $r_block->add_command('plot_num <- melt(plot_num)');
+    $r_block->add_command('colnames(plot_num) <- c("p2","p1","plots")');
+    $r_block->add_command('rownames(plot_num) <- rownames(plot_num, do.NULL = FALSE, prefix = "Obs.")');
+    #$r_block->add_command('layout_merge <- match(rownames(field_map_melt), rownames(plot_num) )');
+    #$r_block->add_command('layout_merge <- cbind( field_map_melt, plot_num[layout_merge,] )');
+    $r_block->add_command('layout_merge <- match(rownames(blockNo_merge), rownames(plot_num) )');
+    $r_block->add_command('layout_merge <- cbind( blockNo_merge, plot_num[layout_merge,] )');
+    $r_block->add_command('layout <- subset(layout_merge, select = c(plots, block, row_number, col_number, trt))');
+    $r_block->add_command('pRepDesign <- as.matrix(layout)');
+    #$r_block->run_block();
+    
+    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','pRepDesign');
+     @plot_numbers = $result_matrix->get_column("plots");
+     @stock_names = $result_matrix->get_column("trt");
+     my @row_numbers = $result_matrix->get_column("row_number");
+     my @col_numbers = $result_matrix->get_column("col_number");
+     @block_numbers = $result_matrix->get_column("block");
+     @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+     
+     my $counting = 0;
+     my %seedlot_hash;
+     if($self->get_seedlot_hash){
+         %seedlot_hash = %{$self->get_seedlot_hash};
+     }
+     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+       my %plot_info;
+       $counting++;
+       foreach my $key (keys %stock_data_hash){
+           if ($stock_names[$i] == $key && $plot_numbers[$i] eq $counting){
+               $plot_info{'stock_name'} = $stock_data_hash{$key};
+           }
+       }
+       $plot_info{'seedlot_name'} = $seedlot_hash{$plot_info{'stock_name'}}->[0];
+       if ($plot_info{'seedlot_name'}){
+           $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+       }
+       $plot_info{'block_number'} = $block_numbers[$i];
+       $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+       $plot_info{'row_number'} = $row_numbers[$i];
+       $plot_info{'col_number'} = $col_numbers[$i];
+
+       $prep_design{$converted_plot_numbers[$i]} = \%plot_info;
+     }
+     %prep_design = %{_build_plot_names($self,\%prep_design)};
+     return \%prep_design;
+
 }
 
 sub _get_rcbd_design {
@@ -429,7 +610,6 @@ sub _get_rcbd_design {
   my @converted_plot_numbers;
   my @control_list_crbd;
   my %control_names_lookup;
-  my $stock_name_iter;
   my $fieldmap_row_number;
   my @fieldmap_row_numbers;
   my $fieldmap_col_number;
@@ -444,11 +624,7 @@ sub _get_rcbd_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   }
   if ($self->has_number_of_blocks()) {
     $number_of_blocks = $self->get_number_of_blocks();
@@ -485,16 +661,18 @@ sub _get_rcbd_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=3,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=1,kinds=randomization_method)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=3,kinds=randomization_method)');
   }
   $r_block->add_command('rcbd<-rcbd$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','rcbd');
+  #print STDERR Dumper $result_matrix;
   @plot_numbers = $result_matrix->get_column("plots");
+  #print STDERR Dumper \@plot_numbers;
   @block_numbers = $result_matrix->get_column("block");
   @stock_names = $result_matrix->get_column("trt");
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
@@ -536,14 +714,24 @@ sub _get_rcbd_design {
       @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $block_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
-    if ($fieldmap_row_numbers[$i]){
+    #$plot_info_per_block{}
+      if ($fieldmap_row_numbers[$i]){
       $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
       $plot_info{'col_number'} = $col_number_fieldmaps[$i];
     }
@@ -571,7 +759,6 @@ sub _get_alpha_lattice_design {
   my @converted_plot_numbers;
   my @control_list_crbd;
   my %control_names_lookup;
-  my $stock_name_iter;
   my $fieldmap_row_number;
   my @fieldmap_row_numbers;
   my $fieldmap_col_number;
@@ -585,11 +772,7 @@ sub _get_alpha_lattice_design {
   if ($self->has_control_list_crbd()) {
     @control_list_crbd = @{$self->get_control_list_crbd()};
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   }
 
   if ($self->has_number_of_reps()) {
@@ -613,25 +796,26 @@ sub _get_alpha_lattice_design {
     }
     #	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
     if (scalar(@stock_list) % $block_size != 0) {
-      #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
+      die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
 	}
-    else {
-		my $dummy_var = scalar(@stock_list) % $block_size;
-		my $stocks_to_add = $block_size - $dummy_var;
-#		print "$stock_list\n";
-		foreach my $stock_list_rep(1..$stocks_to_add) {
-			push(@stock_list, $stock_list[0]);
-		}
-		$self->set_stock_list(\@stock_list);
-	}
+#     else {
+# 		my $dummy_var = scalar(@stock_list) % $block_size;
+# 		my $stocks_to_add = $block_size - $dummy_var;
+# #		print "$stock_list\n";
+# 		foreach my $stock_list_rep(1..$stocks_to_add) {
+# 			push(@stock_list, $stock_list[0]);
+# 		}
+#         print STDERR Dumper(\@stock_list);
+# 		$self->set_stock_list(\@stock_list);
+# 	}
 
     $number_of_blocks = scalar(@stock_list)/$block_size;
-    if ($number_of_blocks < $block_size) {
-      die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
-    }
-  } else {
-    die "No block size specified\n";
-  }
+     if ($number_of_blocks < $block_size) {
+       die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
+     }
+    } else {
+     die "No block size specified\n";
+   }
 
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
@@ -660,10 +844,10 @@ sub _get_alpha_lattice_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=3,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=1,kinds=randomization_method)');
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=3,kinds=randomization_method)');
   }
   $r_block->add_command('alpha_book<-alpha$book');
   $r_block->add_command('alpha_book<-as.matrix(alpha_book)');
@@ -685,7 +869,7 @@ sub _get_alpha_lattice_design {
   if ($plot_layout_format eq "zigzag") {
     if (!$fieldmap_col_number){
       @col_number_fieldmaps = ((1..$number_of_blocks) x ($number_of_blocks * $number_of_reps));
-      print STDERR Dumper(\@col_number_fieldmaps);
+      #print STDERR Dumper(\@col_number_fieldmaps);
     } else {
         @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
       }
@@ -718,9 +902,17 @@ sub _get_alpha_lattice_design {
       @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
@@ -733,6 +925,172 @@ sub _get_alpha_lattice_design {
   }
   %alpha_design = %{_build_plot_names($self,\%alpha_design)};
   return \%alpha_design;
+}
+
+sub _get_lattice_design {
+  my $self = shift;
+  my %lattice_design;
+  my $rbase = R::YapRI::Base->new();
+  my @stock_list;
+  my $number_of_blocks;
+  my $number_of_reps;
+  my $stock_data_matrix;
+  my $r_block;
+  my $result_matrix;
+  my @plot_numbers;
+  my @stock_names;
+  my @block_numbers;
+  my @rep_numbers;
+  my @converted_plot_numbers;
+  my @control_list_crbd;
+  my %control_names_lookup;
+  my $fieldmap_row_number;
+  my @fieldmap_row_numbers;
+  my $fieldmap_col_number;
+  my $plot_layout_format;
+  my @col_number_fieldmaps;
+  if ($self->has_stock_list()) {
+    @stock_list = @{$self->get_stock_list()};
+  } else {
+    die "No stock list specified\n";
+  }
+
+  my $block_number_calculated = sqrt(scalar(@stock_list));
+  if ($block_number_calculated =~ /^\d+$/ ){
+      $number_of_blocks = $block_number_calculated;
+  } else {
+    die "Square root of Number of stocks (".scalar(@stock_list).") for lattice design should give a whole number.\n";
+  }
+
+  if ($self->has_control_list_crbd()) {
+    @control_list_crbd = @{$self->get_control_list_crbd()};
+    %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    $self->_check_controls_and_accessions_lists;
+  }
+
+   if ($self->has_number_of_reps()) {
+     $number_of_reps = $self->get_number_of_reps();
+     if ($number_of_reps == 2 || $number_of_reps == 3){
+      } else {
+          die "Number of reps should be 2 for SIMPLE and 3 for TRIPLE lattice design.\n";
+      }
+   } else {
+     die "Number of reps not specified\n";
+   }
+
+  if ($self->has_fieldmap_col_number()) {
+    $fieldmap_col_number = $self->get_fieldmap_col_number();
+  }
+
+  if ($self->has_fieldmap_row_number()) {
+    $fieldmap_row_number = $self->get_fieldmap_row_number();
+      my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
+      $fieldmap_col_number = _validate_field_colNumber($colNumber);
+  }
+  if ($self->has_plot_layout_format()) {
+    $plot_layout_format = $self->get_plot_layout_format();
+  }
+
+  $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+						       {
+							name => 'stock_data_matrix',
+							rown => 1,
+							coln => scalar(@stock_list),
+							data => \@stock_list,
+						       }
+						      );
+  $r_block = $rbase->create_block('r_block');
+  $stock_data_matrix->send_rbase($rbase, 'r_block');
+  $r_block->add_command('library(agricolae)');
+  $r_block->add_command('trt <- stock_data_matrix[1,]');
+  #$r_block->add_command('block_size <- '.$block_size);
+  $r_block->add_command('number_of_reps <- '.$number_of_reps);
+  #$r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+  if ($self->has_randomization_seed()){
+    $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+    $r_block->add_command('lattice<-design.lattice(trt,r=number_of_reps,serie=3,kinds="Super-Duper", seed=randomization_seed)');
+  }
+  else {
+    $r_block->add_command('lattice<-design.lattice(trt,r=number_of_reps,serie=3,kinds="Super-Duper")');
+  }
+  $r_block->add_command('lattice_book<-lattice$book');
+  $r_block->add_command('lattice_book<-as.matrix(lattice_book)');
+
+ my @commands = $r_block->read_commands();
+    print STDERR join "\n", @commands;
+    print STDERR "\n";
+
+
+  $r_block->run_block();
+
+  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','lattice_book');
+  @plot_numbers = $result_matrix->get_column("plots");
+  #print STDERR Dumper(@plot_numbers);
+  @block_numbers = $result_matrix->get_column("block");
+  my $max = max( @block_numbers );
+  @rep_numbers = $result_matrix->get_column("r");
+  @stock_names = $result_matrix->get_column("trt");
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+
+  if ($plot_layout_format eq "zigzag") {
+    if (!$fieldmap_col_number){
+      @col_number_fieldmaps = ((1..$number_of_blocks) x ($number_of_blocks * $number_of_reps));
+      #print STDERR Dumper(\@col_number_fieldmaps);
+    } else {
+        @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
+      }
+  }
+  elsif ($plot_layout_format eq "serpentine") {
+    if (!$fieldmap_row_number)  {
+      for my $rep (1 .. ($number_of_blocks * $number_of_reps)){
+        if ($rep % 2){
+          push @col_number_fieldmaps, (1..$number_of_blocks);
+        } else {
+          push @col_number_fieldmaps, (reverse 1..$number_of_blocks);
+        }
+      }
+    } else {
+        for my $rep (1 .. $fieldmap_row_number){
+          if ($rep % 2){
+            push @col_number_fieldmaps, (1..$fieldmap_col_number);
+          } else {
+              push @col_number_fieldmaps, (reverse 1..$fieldmap_col_number);
+          }
+        }
+      }
+  }
+
+  if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+    @fieldmap_row_numbers = (@block_numbers);
+  }
+  elsif ($plot_layout_format && $fieldmap_row_number){
+      @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
+      @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
+    }
+
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
+  for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+    my %plot_info;
+    $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
+    $plot_info{'block_number'} = $block_numbers[$i];
+    $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'rep_number'} = $rep_numbers[$i];
+    $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    if ($fieldmap_row_numbers[$i]){
+      $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
+      $plot_info{'col_number'} = $col_number_fieldmaps[$i];
+    }
+    $lattice_design{$converted_plot_numbers[$i]} = \%plot_info;
+  }
+  %lattice_design = %{_build_plot_names($self,\%lattice_design)};
+  return \%lattice_design;
 }
 
 sub _get_augmented_design {
@@ -752,7 +1110,6 @@ sub _get_augmented_design {
   my @block_numbers;
   my @converted_plot_numbers;
   my %control_names_lookup;
-  my $stock_name_iter;
 
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
@@ -763,11 +1120,7 @@ sub _get_augmented_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -812,10 +1165,10 @@ sub _get_augmented_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=3,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=3,kinds=randomization_method)');
   }
   $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('augmented<-as.matrix(augmented)');
@@ -827,9 +1180,17 @@ sub _get_augmented_design {
   @stock_names = $result_matrix->get_column("trt");
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
@@ -860,7 +1221,6 @@ sub _get_madii_design {
     my @block_numbers;
     my @converted_plot_numbers;
     my %control_names_lookup;
-    my $stock_name_iter;
     my @row_numbers;
     my @check_names;
     my @col_numbers;
@@ -880,11 +1240,7 @@ sub _get_madii_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -1038,6 +1394,10 @@ sub _get_madii_design {
 
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
 
@@ -1045,6 +1405,10 @@ sub _get_madii_design {
     $plot_info{'col_number'} =$col_numbers[$i];
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1092,7 +1456,6 @@ sub _get_madiii_design {
     my @block_numbers;
     my @converted_plot_numbers;
     my %control_names_lookup;
-    my $stock_name_iter;
     my @row_numbers;
     my @check_names;
 
@@ -1110,11 +1473,7 @@ sub _get_madiii_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -1278,6 +1637,10 @@ sub _get_madiii_design {
 
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
 
@@ -1285,6 +1648,10 @@ sub _get_madiii_design {
     $plot_info{'col_number'} =$col_numbers[$i];
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1332,7 +1699,6 @@ sub _get_madiv_design {
     my @block_numbers;
     my @converted_plot_numbers;
     my %control_names_lookup;
-    my $stock_name_iter;
     my @row_numbers;
     my @check_names;
 
@@ -1350,11 +1716,7 @@ sub _get_madiv_design {
   if ($self->has_control_list()) {
     @control_list = @{$self->get_control_list()};
     %control_names_lookup = map { $_ => 1 } @control_list;
-    foreach $stock_name_iter (@stock_names) {
-      if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
-      }
-    }
+    $self->_check_controls_and_accessions_lists;
   } else {
     die "No list of control stocks specified.  Required for augmented design.\n";
   }
@@ -1518,6 +1880,10 @@ sub _get_madiv_design {
 
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
 
@@ -1525,6 +1891,10 @@ sub _get_madiv_design {
     $plot_info{'col_number'} =$col_numbers[$i];
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    if ($plot_info{'seedlot_name'}){
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+    }
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1552,16 +1922,21 @@ sub _convert_plot_numbers {
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my $plot_number;
     my $first_plot_number;
-    if ($self->has_plot_start_number()){
-      $first_plot_number = $self->get_plot_start_number();
-    } else {
-      $first_plot_number = 1;
-    }
-    if ($self->has_plot_number_increment()){
-      $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
+    if($self->has_plot_start_number || $self->has_plot_number_increment){
+        if ($self->has_plot_start_number()){
+          $first_plot_number = $self->get_plot_start_number();
+        } else {
+          $first_plot_number = 1;
+        }
+        if ($self->has_plot_number_increment()){
+          $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
+        }
+        else {
+          $plot_number = $first_plot_number + $i;
+        }
     }
     else {
-      $plot_number = $first_plot_number + $i;
+        $plot_number = $plot_numbers[$i];
     }
     $plot_numbers[$i] = $plot_number;
   }
@@ -1585,19 +1960,32 @@ sub _build_plot_names {
 
     foreach my $key (keys %design) {
 	$trial_name ||="";
+  my $block_number = $design{$key}->{block_number};
 	my $stock_name = $design{$key}->{stock_name};
 	my $rep_number = $design{$key}->{rep_number};
+  $design{$key}->{plot_number} = $key;
+
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name.$suffix.$key;
+      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+      $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
+	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
+        $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name.$suffix;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;
 	}
 	else {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
 	}
 
-	$design{$key}->{plot_number} = $key;
+        if($design{$key}->{subplots_names}){
+            my $nums = $design{$key}->{subplots_names};
+            my @named_subplots;
+            foreach (@$nums){
+                push @named_subplots, $design{$key}->{plot_name}."_subplot_".$_;
+            }
+            $design{$key}->{subplots_names} = \@named_subplots;
+        }
     }
 
     #print STDERR Dumper(\%design);
@@ -1616,9 +2004,17 @@ sub _get_greenhouse_design {
     @num_accession_hash{@accession_list} = @num_plants;
 
     my @plot_numbers = (1..scalar(@accession_list));
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
     for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
         my %plot_info;
         $plot_info{'stock_name'} = $accession_list[$i];
+        $plot_info{'seedlot_name'} = $seedlot_hash{$accession_list[$i]}->[0];
+        if ($plot_info{'seedlot_name'}){
+            $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        }
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = 1;
         $plot_info{'plot_name'} = $plot_numbers[$i];
@@ -1639,6 +2035,245 @@ sub _get_greenhouse_design {
 
     #print STDERR Dumper \%greenhouse_design;
     return \%greenhouse_design;
+}
+
+sub _get_splitplot_design {
+    my $self = shift;
+    my %splitplot_design;
+    my $rbase = R::YapRI::Base->new();
+    my @stock_list;
+    my $number_of_blocks;
+    my $number_of_reps;
+    my $stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @subplots_numbers;
+    my @treatments;
+    my @stock_names;
+    my @block_numbers;
+    my @rep_numbers;
+    my @converted_plot_numbers;
+    my $number_of_stocks;
+    my $fieldmap_row_number;
+    my @fieldmap_row_numbers;
+    my $fieldmap_col_number;
+    my $plot_layout_format;
+    my @col_number_fieldmaps;
+    my $treatments;
+    my $num_plants_per_plot;
+    if ($self->has_stock_list()) {
+        @stock_list = @{$self->get_stock_list()};
+        $number_of_stocks = scalar(@stock_list);
+    } else {
+        die "No stock list specified\n";
+    }
+    if ($self->has_treatments()) {
+        $treatments = $self->get_treatments();
+    } else {
+        die "treatments not specified\n";
+    }
+    if ($self->has_number_of_blocks()) {
+        $number_of_blocks = $self->get_number_of_blocks();
+        $number_of_reps = $number_of_blocks;
+    } else {
+        die "Number of blocks not specified\n";
+    }
+
+    if ($self->has_fieldmap_col_number()) {
+        $fieldmap_col_number = $self->get_fieldmap_col_number();
+    }
+    if ($self->has_fieldmap_row_number()) {
+        $fieldmap_row_number = $self->get_fieldmap_row_number();
+        my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
+        $fieldmap_col_number = _validate_field_colNumber($colNumber);
+    }
+
+    if ($self->has_plot_layout_format()) {
+        $plot_layout_format = $self->get_plot_layout_format();
+    }
+    if($self->has_num_plants_per_plot()){
+        $num_plants_per_plot = $self->get_num_plants_per_plot();
+    }
+
+    $stock_data_matrix =  R::YapRI::Data::Matrix->new({
+        name => 'stock_data_matrix',
+        rown => 1,
+        coln => scalar(@stock_list),
+        data => \@stock_list,
+    });
+    #print STDERR Dumper $stock_data_matrix;
+    my $treatment_data_matrix =  R::YapRI::Data::Matrix->new({
+        name => 'treatment_data_matrix',
+        rown => 1,
+        coln => scalar(@$treatments),
+        data => $treatments,
+    });
+    #print STDERR Dumper $treatment_data_matrix;
+
+    $r_block = $rbase->create_block('r_block');
+    $stock_data_matrix->send_rbase($rbase, 'r_block');
+    $treatment_data_matrix->send_rbase($rbase, 'r_block');
+
+    $r_block->add_command('library(agricolae)');
+    $r_block->add_command('accessions <- stock_data_matrix[1,]');
+    $r_block->add_command('treatments <- treatment_data_matrix[1,]');
+    $r_block->add_command('r <- '.$number_of_reps);
+    $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+
+    if ($self->has_randomization_seed()){
+        $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=3,kinds=randomization_method, seed=randomization_seed)');
+    }
+    else {
+        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=3,kinds=randomization_method)');
+    }
+    $r_block->add_command('split<-splitplot$book'); #added for agricolae 1.1-8 changes in output
+    $r_block->add_command('split<-as.matrix(split)');
+    $r_block->run_block();
+    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','split');
+    #print STDERR Dumper $result_matrix;
+
+    @plot_numbers = $result_matrix->get_column("plots");
+    @subplots_numbers = $result_matrix->get_column("splots");
+    @rep_numbers = $result_matrix->get_column("block");
+    @stock_names = $result_matrix->get_column("accessions");
+    @treatments = $result_matrix->get_column("treatments");
+    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+    #print STDERR Dumper \@converted_plot_numbers;
+
+    if ($plot_layout_format eq "zigzag") {
+        if (!$fieldmap_col_number){
+            for (1..$number_of_reps){
+                for my $s (1..(scalar(@stock_list))){
+                    for (1..scalar(@$treatments)){
+                        push @col_number_fieldmaps, $s;
+                    }
+                }
+            }
+        } else {
+            for (1..$fieldmap_row_number){
+                for my $s (1..$fieldmap_col_number){
+                    for (1..scalar(@$treatments)){
+                        push @col_number_fieldmaps, $s;
+                    }
+                }
+            }
+        }
+    }
+    elsif ($plot_layout_format eq "serpentine") {
+        if (!$fieldmap_row_number)  {
+            for my $rep (1 .. $number_of_reps){
+                if ($rep % 2){
+                    for my $s (1..(scalar(@stock_list))){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                } else {
+                    for my $s (reverse 1..(scalar(@stock_list))){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                }
+            }
+        } else {
+            for my $rep (1 .. $fieldmap_row_number){
+                if ($rep % 2){
+                    for my $s (1..$fieldmap_col_number){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                } else {
+                    for my $s (reverse 1..$fieldmap_col_number){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+        @fieldmap_row_numbers = sort(@rep_numbers);
+    }
+    elsif ($plot_layout_format && $fieldmap_row_number){
+        @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
+        @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
+    }
+    #print STDERR Dumper \@fieldmap_row_numbers;
+    #print STDERR Dumper \@col_number_fieldmaps;
+
+    my %subplot_plots;
+    my %treatment_plots;
+    my %treatment_subplot_hash;
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
+    for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+        my %plot_info;
+
+        $plot_info{'stock_name'} = $stock_names[$i];
+        $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+        if ($plot_info{'seedlot_name'}){
+            $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
+        }
+        $plot_info{'block_number'} = 1;
+        $plot_info{'rep_number'} = $rep_numbers[$i];
+        $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+        $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+        if ($fieldmap_row_numbers[$i]){
+            $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
+            $plot_info{'col_number'} = $col_number_fieldmaps[$i];
+        }
+        push @{$subplot_plots{$converted_plot_numbers[$i]}}, $subplots_numbers[$i];
+        $plot_info{'subplots_names'} = $subplot_plots{$converted_plot_numbers[$i]};
+        push @{$treatment_plots{$converted_plot_numbers[$i]}}, $treatments[$i];
+        $plot_info{'treatments'} = $treatment_plots{$converted_plot_numbers[$i]};
+        $splitplot_design{$converted_plot_numbers[$i]} = \%plot_info;
+    }
+    #print STDERR Dumper \%splitplot_design;
+    %splitplot_design = %{_build_plot_names($self,\%splitplot_design)};
+
+    while(my($plot,$val) = each(%splitplot_design)){
+        my $subplots = $val->{'subplots_names'};
+        my $treatments = $val->{'treatments'};
+        my $num_plants_per_subplot = $num_plants_per_plot/scalar(@$subplots);
+        my %subplot_plants_hash;
+        my @plant_names;
+        my $plant_index = 1;
+        for(my $i=0; $i<scalar(@$subplots); $i++){
+            push @{$treatment_subplot_hash{$treatments->[$i]}}, $subplots->[$i];
+            for(my $j=0; $j<$num_plants_per_subplot; $j++){
+                my $plant_name = $subplots->[$i]."_plant_$plant_index";
+                push @{$subplot_plants_hash{$subplots->[$i]}}, $plant_name;
+                push @{$treatment_subplot_hash{$treatments->[$i]}}, $plant_name;
+                push @plant_names, $plant_name;
+                $plant_index++;
+            }
+        }
+        $val->{plant_names} = \@plant_names;
+        $val->{subplots_plant_names} = \%subplot_plants_hash;
+    }
+    $splitplot_design{'treatments'} = \%treatment_subplot_hash;
+    #print STDERR Dumper \%splitplot_design;
+    return \%splitplot_design;
+}
+
+sub _check_controls_and_accessions_lists {
+    my $self = shift;
+    my @stock_list = $self->get_stock_list() ? @{$self->get_stock_list()} : ();
+    my @control_list_crbd = $self->get_control_list_crbd() ? @{$self->get_control_list_crbd()} : ();
+    my %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    foreach my $stock_name_iter (@stock_list) {
+        if (exists($control_names_lookup{$stock_name_iter})) {
+            #die "Names in accessions list cannot be used also as controls. Please use separate lists for your controls and your accessions. The following accession is in both lists and is a problem: $stock_name_iter\n";
+        }
+    }
 }
 
 1;

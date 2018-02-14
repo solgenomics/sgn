@@ -125,10 +125,10 @@ sub blue_section_html {
         is_empty      => (optional) if true, forces this info_section to be drawn in the empty
                          state, content will not be shown.
         is_subsection => (optional) if true, renders this section with sub-section styles,
-	id         => (optional) collapsible_id for the collbpsible javascript div. Default "sgnc" . int(rand(10000) 
+	id         => (optional) collapsible_id for the collbpsible javascript div. Default "sgnc" . int(rand(10000)
         collapsible => (optional) if true, this section is collapsible.  default false.
         collapsed   => (optional) if true, this section should be shown initially collapsed.  default false.
-        align       => 
+        align       =>
       )
   Side Effects: none
 
@@ -191,7 +191,7 @@ sub html_optional_show {
 
     Args: unique identifier for the item on the page (no whitespace),
           title of the item to hide or show OR ['text to show when hidden','text to show when shown']
-          html contents to be shown, html contents to replace the first one. 
+          html contents to be shown, html contents to replace the first one.
     Returns: HTML
 
 =cut
@@ -422,9 +422,9 @@ sub modesel {
         "\n",
         (
             map { "  $_  " } (
-                join( $spacer, ( map { $_->{contents}[0] } @buttons ) ),
-                join( $spacer, ( map { $_->{contents}[1] } @buttons ) ),
-                join( $spacer, ( map { $_->{contents}[2] } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[0] ? $_->{contents}[0] : '' } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[1] ? $_->{contents}[1] : '' } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[2] ? $_->{contents}[2] : '' } @buttons ) ),
             )
         )
     );
@@ -448,7 +448,11 @@ EOH
                      choices  => [array of choices],
                      selected => (optional) the selected value (from choices), either
                                  single value or listref (for multiple select box),
+                     selected_params => (optional) any additional HTML parameters to be attached
+                                to the selected option as a string ( 'hidden' ),
                      multiple => (optional) anything true here makes it a multiple-select
+                                 box
+                     live_search => (optional) anything true here adds a live-search to the select
                                  box
                      id       => (optional) a specific HTML id to be given to this <select>
                      params   => (optional) any additional HTML parameters to be attached to the <select> tag,
@@ -494,14 +498,20 @@ sub simple_selectbox_html {
     }
     $params{params} ||= '';
     $params{name}   ||= '';
+    my $data_related = $params{data_related} ? "data-related=".$params{data_related} : '';
     my $size = $params{size};
-    $retstring = qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}"!;
+    $retstring = qq!<select class="form-control" $id $data_related $params{multiple} $params{params} name="$params{name}"!;
     if ($size) {
         $retstring .= qq!size="$params{size}"!;
     }
     $retstring .= qq!>!;
     $retstring =~ s/ +/ /;    #collapse spaces
+    print STDERR "Retstring is $retstring\n";
     my $in_group = 0;
+    if ($params{default}){
+        my $default = $params{default};
+        $retstring .= qq{<option title="$default" value="$default" disabled>$default</option>};
+    }
     foreach ( @{ $params{choices} } ) {
         no warnings 'uninitialized';
         if ( !ref && s/^__// ) {
@@ -514,23 +524,23 @@ sub simple_selectbox_html {
 	    my $selected = '';
 
             my ( $name, $text ) = ref $_ ? @$_ : ( $_, $_ );
-	    
-	    if (defined($params{selected}) && !ref($params{selected})) { 
+
+	    if (defined($params{selected}) && !ref($params{selected})) {
 		@selected = ( $params{selected} );
 	    }
-	    elsif (ref($params{selected})) { 
+	    elsif (ref($params{selected})) {
 		@selected = @{$params{selected}};
 
-	    
+
 	    }
 
-	    foreach my $s (@selected) { 
-		if (defined($s) && ($s eq $name)) { 
-		    $selected = ' selected="selected" '; 
+	    foreach my $s (@selected) {
+		if (defined($s) && ($s eq $name)) {
+		    $selected = ' selected="selected" ';
 		    last();
 		}
 	    }
-	    $retstring .= qq{<option title="$text" value="$name"$selected>$text</option>};
+	    $retstring .= qq{<option title="$text" value="$name"$selected $params{selected_params}>$text</option>};
 	}
     }
     $retstring .= qq{</optgroup>} if $in_group;
@@ -545,7 +555,7 @@ sub simple_selectbox_html {
 
 =head2 info_table_html
 
-  Desc:	
+  Desc:
   Args:	an ordered list of value names => values
   Ret :	html to produce an attractive table laying out these values
   Used in:  clone_info.pl, clone_read_info.pl
@@ -704,7 +714,7 @@ EOH
         in list context:     (truncated string,
 			      boolean telling whether string was truncated)
 
-  Example: 	
+  Example:
     truncate_string('Honk if you love ducks',6);
     #would return
     'Honk i&hellip;'
@@ -762,20 +772,20 @@ sub truncate_string {
   |   head1    |  head2     |   head3   |  head4    | head5    |
   +------------+------------+-----------+-----------+----------+
   |   test1    |  test2     |   test3               |  test4   |
-  +------------+------------+-----------------------+----------+      
+  +------------+------------+-----------------------+----------+
 
   The code will be:
 
-  columnar_table_html( headings => ['head1' , 
-                                    'head2' , 
-                                    'head3' , 
-                                    'head4' , 
-                                    'head5' 
+  columnar_table_html( headings => ['head1' ,
+                                    'head2' ,
+                                    'head3' ,
+                                    'head4' ,
+                                    'head5'
                                    ],
-                       data     => [ [ 'test1', 
-                                       'test2', 
-                                       { colspan => 2, content => 'test3'}, 
-                                       undef, 
+                       data     => [ [ 'test1',
+                                       'test2',
+                                       { colspan => 2, content => 'test3'},
+                                       undef,
                                        'test4'
                                    ] ]
                       );

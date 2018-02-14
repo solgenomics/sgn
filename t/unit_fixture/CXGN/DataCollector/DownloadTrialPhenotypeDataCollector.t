@@ -16,7 +16,7 @@ my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 
 my $trial_id = $schema->resultset("Project::Project")->find({ name => 'test_trial'})->project_id();
-my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_datacollector.xls";
 my $format = 'DataCollectorExcel';
 
@@ -846,11 +846,11 @@ is_deeply($columns_8,  [
                           ],
                           [
                             undef,
-                            'dry matter content percentage|CO:0000092'
+                            'dry matter content percentage|CO_334:0000092'
                           ],
                           [
                             undef,
-                            'fresh root weight|CO:0000012'
+                            'fresh root weight|CO_334:0000012'
                           ]
                         ], "check contents of eigth page");
 

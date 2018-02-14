@@ -9,6 +9,17 @@ use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
+use JSON;
+use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::TrialPhenotype;
+use CXGN::Login;
+use CXGN::UploadFile;
+use CXGN::Stock::Seedlot;
+use CXGN::Stock::Seedlot::Transaction;
+use File::Basename qw | basename dirname|;
+use List::MoreUtils ':all';
+use Try::Tiny;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -30,13 +41,35 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     my $c = shift;
     my $trial_id = shift;
 
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
     $c->stash->{trial_id} = $trial_id;
-    $c->stash->{schema} =  $c->dbic_schema("Bio::Chado::Schema");
-    $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->stash->{schema}, trial_id => $trial_id });
+    $c->stash->{schema} =  $bcs_schema;
+    $c->stash->{trial} = CXGN::Trial->new({
+        bcs_schema => $bcs_schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        trial_id => $trial_id
+    });
 
     if (!$c->stash->{trial}) {
 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
 	return;
+    }
+
+    try {
+        my %param = ( schema => $bcs_schema, trial_id => $trial_id );
+        if ($c->stash->{trial}->get_design_type() eq 'genotyping_plate'){
+            $param{experiment_type} = 'genotyping_layout';
+        } else {
+            $param{experiment_type} = 'field_layout';
+        }
+        $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
+    }
+    catch {
+        print STDERR "Trial Layout for $trial_id does not exist.\n";
     }
 
 }
@@ -70,8 +103,16 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
 
     elsif ($datatype eq 'layout') {
-	$error = $c->stash->{trial}->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-	$error = $c->stash->{trial}->delete_field_layout();
+        $error = $c->stash->{trial}->delete_metadata();
+        $error = $c->stash->{trial}->delete_field_layout();
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
     }
     elsif ($datatype eq 'entry') {
 	$error = $c->stash->{trial}->delete_project_entry();
@@ -85,6 +126,31 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
 	return;
     }
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
+}
+
+sub trial_phenotypes_fully_uploaded : Chained('trial') PathPart('phenotypes_fully_uploaded') Args(0) ActionClass('REST') {};
+
+sub trial_phenotypes_fully_uploaded_GET   {
+    my $self = shift;
+    my $c = shift;
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { phenotypes_fully_uploaded => $trial->get_phenotypes_fully_uploaded() };
+}
+
+sub trial_phenotypes_fully_uploaded_POST  {
+    my $self = shift;
+    my $c = shift;
+    my $value = $c->req->param("phenotypes_fully_uploaded");
+    my $trial = $c->stash->{trial};
+    eval {
+        $trial->set_phenotypes_fully_uploaded($value);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred setting phenotypes_fully_uploaded: $@" };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
 }
 
 sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
@@ -178,6 +244,59 @@ sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
     $c->stash->{rest} = { traits_assayed => \@traits_assayed };
 }
 
+sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    #get userinfo from db
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $user = $c->user();
+    if (! $c->user) {
+      $c->stash->{rest} = {
+        status => "not logged in"
+      };
+      return;
+    }
+    my $display = $c->req->param('display');
+    my $trait = $c->req->param('trait');
+    my @trait_list = ($trait);
+    print STDERR 'DUMP'.Dumper( @trait_list).'\n';
+    my $phenotypes_search;
+    if ($display eq 'plot') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plot_list=>  \@items
+        );
+    }
+    if ($display eq 'plant') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plants()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plant_list=>  \@items
+        );
+    }
+    if ($display eq 'subplot') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_subplots()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plant_list=>  \@items
+        );
+    }
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    $c->stash->{rest} = { 
+      status => "success",
+      data => \@data 
+   };
+}
 
 sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $self = shift;
@@ -190,27 +309,44 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $display = $c->req->param('display');
     my $select_clause_additional = '';
     my $group_by_additional = '';
+    my $order_by_additional = '';
     my $stock_type_id;
     my $rel_type_id;
+    my $total_complete_number;
     if ($display eq 'plots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        my $plots = $c->stash->{trial}->get_plots();
+        $total_complete_number = scalar (@$plots);
     }
     if ($display eq 'plants') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        my $plants = $c->stash->{trial}->get_plants();
+        $total_complete_number = scalar (@$plants);
     }
+    if ($display eq 'subplots') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+        my $subplots = $c->stash->{trial}->get_subplots();
+        $total_complete_number = scalar (@$subplots);
+    }
+    my $stocks_per_accession;
     if ($display eq 'plots_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
     }
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -236,7 +372,9 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
-        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional;");
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        ORDER BY cvterm.name ASC
+        $order_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
@@ -257,9 +395,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         my @return_array;
         if ($stock_name && $stock_id) {
+            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
-        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+        my $percent_missing = '';
+        if ($total_complete_number){
+            $percent_missing = 100 - sprintf("%.2f", ($count/$total_complete_number)*100)."%";
+        }
+
+        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
 
@@ -292,6 +436,13 @@ sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) {
 
 }
 
+sub get_trial_location :Chained('trial') PathPart('location') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $location = $c->stash->{trial}->get_location;
+    $c->stash->{rest} = { location => $location };
+}
+
 sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -302,6 +453,462 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_seedlots();
+
+    $c->stash->{rest} = { seedlots => \@data };
+}
+
+sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $upload = $c->req->upload('trial_upload_used_seedlot_file');
+    my $subdirectory = "trial_used_seedlot_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialUsedSeedlotsXLS');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_seedlots => $parse_errors->{'missing_seedlots'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
+    }
+
+    my $upload_used_seedlots_txn = sub {
+        while (my ($key, $val) = each(%$parsed_data)){
+            my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_stock_id});
+
+            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+            $transaction->factor(1);
+            $transaction->from_stock([$val->{seedlot_stock_id}, $val->{seedlot_name}]);
+            $transaction->to_stock([$val->{plot_stock_id}, $val->{plot_name}]);
+            $transaction->amount($val->{amount});
+            $transaction->timestamp($timestamp);
+            $transaction->description($val->{description});
+            $transaction->operator($user_name);
+            $transaction->store();
+
+            $sl->set_current_count_property();
+        }
+        my $layout = $c->stash->{trial_layout};
+        $layout->generate_and_cache_layout();
+    };
+    eval {
+        $schema->txn_do($upload_used_seedlots_txn);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload trial used seedlots. ($@).\n";
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $upload = $c->req->upload('trial_upload_plants_file');
+    my $inherits_plot_treatments = $c->req->param('upload_plants_per_plot_inherit_treatments');
+    my $plants_per_plot = $c->req->param('upload_plants_per_plot_number');
+
+    my $subdirectory = "trial_plants_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialPlantsXLS');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
+    }
+
+    my $upload_plants_txn = sub {
+        my %plot_plant_hash;
+        while (my ($key, $val) = each(%$parsed_data)){
+            $plot_plant_hash{$val->{plot_stock_id}}->{plot_name} = $val->{plot_name};
+            push @{$plot_plant_hash{$val->{plot_stock_id}}->{plant_names}}, $val->{plant_name};
+        }
+        my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments);
+
+        my $layout = $c->stash->{trial_layout};
+        $layout->generate_and_cache_layout();
+    };
+    eval {
+        $schema->txn_do($upload_plants_txn);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload trial plants. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    #Check that trial has a location set
+    my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $nd_geolocation_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search(
+        {'nd_experiments.type_id'=>$field_experiment_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}},
+        { 'join' => { 'nd_experiments' => {'nd_experiment_projects'=>'project'} } }
+    );
+    my $nd_geolocation = $nd_geolocation_rs->first;
+    if (!$nd_geolocation){
+        $c->stash->{rest} = {error=>'This trial has no location set!'};
+        $c->detach();
+    }
+
+    my $upload = $c->req->upload('trial_upload_plot_gps_file');
+    my $subdirectory = "trial_plot_gps_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialPlotGPSCoordinatesXLS');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
+    }
+
+    my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
+
+    my $upload_plot_gps_txn = sub {
+        my %plot_stock_ids_hash;
+        while (my ($key, $val) = each(%$parsed_data)){
+            $plot_stock_ids_hash{$val->{plot_stock_id}} = $val;
+        }
+        my @plot_stock_ids = keys %plot_stock_ids_hash;
+        my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>\@plot_stock_ids}});
+        while (my $plot=$plots_rs->next){
+            my $coords = $plot_stock_ids_hash{$plot->stock_id};
+            my $geo_json = {
+                "type"=> "Feature",
+                "geometry"=> {
+                    "type"=> "Polygon",
+                    "coordinates"=> [
+                        [
+                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                            [$coords->{WGS84_bottom_right_x}, $coords->{WGS84_bottom_right_y}],
+                            [$coords->{WGS84_top_right_x}, $coords->{WGS84_top_right_y}],
+                            [$coords->{WGS84_top_left_x}, $coords->{WGS84_top_left_y}],
+                            [$coords->{WGS84_bottom_left_x}, $coords->{WGS84_bottom_left_y}],
+                        ]
+                    ]
+                },
+                "properties"=> {
+                    "format"=> "WGS84",
+                }
+            };
+            my $geno_json_string = encode_json $geo_json;
+            #print STDERR $geno_json_string."\n";
+            my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
+            $previous_plot_gps_rs->delete_all();
+            $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+        }
+        my $layout = $c->stash->{trial_layout};
+        $layout->generate_and_cache_layout();
+    };
+    eval {
+        $schema->txn_do($upload_plot_gps_txn);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload trial plot GPS coordinates. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $upload = $c->req->upload('trial_upload_additional_file');
+    my $subdirectory = "trial_additional_file_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $md5checksum = $md5->hexdigest();
+
+    my $result = $c->stash->{trial}->add_additional_uploaded_file($user_id, $archived_filename_with_path, $md5checksum);
+    if ($result->{error}){
+        $c->stash->{rest} = {error=>$result->{error}};
+        $c->detach();
+    }
+    $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
+}
+
+sub get_trial_additional_file_uploaded : Chained('trial') PathPart('get_uploaded_additional_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to see uploaded additional files!'};
+        $c->detach();
+    }
+
+    my $files = $c->stash->{trial}->get_additional_uploaded_files();
+    $c->stash->{rest} = {success=>1, files=>$files};
 }
 
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
@@ -334,11 +941,41 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plots();
 
     $c->stash->{rest} = { plots => \@data };
+}
+
+sub trial_has_subplots : Chained('trial') PathPart('has_subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { has_subplots => $trial->has_subplot_entries(), trial_name => $trial->get_name };
+}
+
+sub trial_subplots : Chained('trial') PathPart('subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my @data = $trial->get_subplots();
+
+    $c->stash->{rest} = { subplots => \@data };
+}
+
+sub trial_has_plants : Chained('trial') PathPart('has_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { has_plants => $trial->has_plant_entries(), trial_name => $trial->get_name };
 }
 
 sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
@@ -346,11 +983,92 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plants();
 
     $c->stash->{rest} = { plants => \@data };
+}
+
+sub trial_has_tissue_samples : Chained('trial') PathPart('has_tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { has_tissue_samples => $trial->has_tissue_sample_entries(), trial_name => $trial->get_name };
+}
+
+sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my $data = $trial->get_tissue_samples();
+
+    $c->stash->{rest} = { trial_tissue_samples => $data };
+}
+
+sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my $data = $trial->get_treatments();
+
+    $c->stash->{rest} = { treatments => $data };
+}
+
+sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = {error => "You must be logged in to add a treatment"};
+        $c->detach();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+    my $design = decode_json $c->req->param('design');
+    my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
+    my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
+    my $new_treatment_has_tissue_entries = $c->req->param('has_tissue_sample_entries');
+
+    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+		bcs_schema => $schema,
+		trial_id => $trial_id,
+        trial_name => $trial->get_name(),
+		nd_geolocation_id => $trial->get_location()->[0],
+		design_type => $trial->get_design_type(),
+		design => $design,
+        new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
+        new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
+        new_treatment_has_tissue_sample_entries => $new_treatment_has_subplot_entries,
+        operator => $c->user()->get_object()->get_username()
+	});
+    my $error = $trial_design_store->store();
+    if ($error){
+        $c->stash->{rest} = {error => "Treatment not added: ".$error};
+    } else {
+        $c->stash->{rest} = {success => 1};
+    }
+}
+
+sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $layout = $c->stash->{trial_layout};
+
+    my $design = $layout->get_design();
+    $c->stash->{rest} = {design => $design};
 }
 
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
@@ -358,7 +1076,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+    my $layout = $c->stash->{trial_layout};
 
     my $design = $layout->get_design();
     my $design_type = $layout->get_design_type();
@@ -409,7 +1127,78 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     $c->stash->{rest} = $return;
 }
 
-#sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
+sub retrieve_trial_info :  Path('/ajax/breeders/trial_phenotyping_info') : ActionClass('REST') { }
+sub retrieve_trial_info_POST : Args(0) {
+#sub retrieve_trial_info : chained('trial') Pathpart("trial_phenotyping_info") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+    my $layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
+  	my $design = $layout-> get_design();
+    #print STDERR Dumper($design);
+
+    my @layout_info;
+  	foreach my $plot_number (keys %{$design}) {
+  		push @layout_info, {
+        plot_id => $design->{$plot_number}->{plot_id},
+  		plot_number => $plot_number,
+  		row_number => $design->{$plot_number}->{row_number},
+  		col_number => $design->{$plot_number}->{col_number},
+  		block_number=> $design->{$plot_number}-> {block_number},
+  		rep_number =>  $design->{$plot_number}-> {rep_number},
+  		plot_name => $design->{$plot_number}-> {plot_name},
+  		accession_name => $design->{$plot_number}-> {accession_name},
+  		plant_names => $design->{$plot_number}-> {plant_names},
+  		};
+        @layout_info = sort { $a->{plot_number} <=> $b->{plot_number} } @layout_info;
+  	}
+
+    #print STDERR Dumper(@layout_info);
+    $c->stash->{rest} = {trial_info => \@layout_info};
+    #$c->stash->{layout_info} = \@layout_info;
+}
+
+
+sub trial_completion_layout_section : Chained('trial') PathPart('trial_completion_layout_section') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+    my $trial_errors = $trial_layout->generate_and_cache_layout();
+    my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
+    my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;
+    my $has_seedlots = $trial_errors->{errors}->{seedlot_errors} || $trial_errors->{error} ? 0 : 1;
+    my $error_string = $trial_errors->{error} ? $trial_errors->{error} : '';
+    my $layout_error_string = $trial_errors->{errors}->{layout_errors} ? join ', ', @{$trial_errors->{errors}->{layout_errors}} : '';
+    my $map_error_string = $trial_errors->{errors}->{physical_map_errors} ? join ', ', @{$trial_errors->{errors}->{physical_map_errors}} : '';
+    my $seedlot_error_string = $trial_errors->{errors}->{seedlot_errors} ? join ', ', @{$trial_errors->{errors}->{seedlot_errors}} : '';
+
+    $c->stash->{rest} = {
+        has_layout => $has_layout_check,
+        layout_errors => $error_string." ".$layout_error_string,
+        has_physical_map => $has_physical_map_check,
+        physical_map_errors => $error_string." ".$map_error_string,
+        has_seedlots => $has_seedlots,
+        seedlot_errors => $error_string." ".$seedlot_error_string
+    };
+}
+
+sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_completion_phenotype_section') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $has_phenotype_check = $schema->resultset('Phenotype::Phenotype')->search({'stock.type_id'=> [$plot_type_id, $plant_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    my $has_phenotypes = $has_phenotype_check->first ? 1 : 0;
+
+    $c->stash->{rest} = {has_phenotypes => $has_phenotypes};
+}
+
 sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
   my $self = shift;
 	my $c = shift;
@@ -432,7 +1221,17 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     return;
   }
 
-  $c->stash->{rest} = {success => 1};
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
+    $trial_layout->generate_and_cache_layout();
+
+    $c->stash->{rest} = {success => 1};
 }
 
 sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
@@ -542,8 +1341,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   }
 
   my @controls;
-  my @ids, $plot_1_id;
-	@ids, $plot_2_id;
+  my @ids;
 
   my $fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
@@ -575,10 +1373,15 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   $c->stash->{rest} = { success => 1};
 }
 
-sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
+sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Args(0) {
     my $self = shift;
     my $c = shift;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
+    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $plants_with_treatments;
+    if($inherits_plot_treatments eq '1'){
+        $plants_with_treatments = 1;
+    }
 
     if (my $error = $self->privileges_denied($c)) {
 	$c->stash->{rest} = { error => $error };
@@ -586,18 +1389,78 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
     }
 
     if (!$plants_per_plot || $plants_per_plot > 50) {
-	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
+	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 50." };
 	return;
     }
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot)) {
+    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments)) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => 1};
         return;
     } else {
         $c->stash->{rest} = { error => "Error creating plant entries in controller." };
     	return;
+    }
+
+}
+
+sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
+    my $tissue_names = decode_json $c->req->param("tissue_samples_names");
+    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $tissues_with_treatments;
+    if($inherits_plot_treatments eq '1'){
+        $tissues_with_treatments = 1;
+    }
+
+    if (my $error = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $error };
+        $c->detach;
+    }
+
+    if (!$c->stash->{trial}->has_plant_entries){
+        $c->stash->{rest} = { error => "Trial must have plant entries before you can add tissue samples entries. Plant entries are added from the trial detail page." };
+        $c->detach;
+    }
+
+    if (!$tissue_names || scalar(@$tissue_names) < 1){
+        $c->stash->{rest} = { error => "You must provide tissue name(s) for your samples" };
+        $c->detach;
+    }
+
+    if (!$tissues_per_plant || $tissues_per_plant > 50) {
+        $c->stash->{rest} = { error => "Tissues per plant is required and must be smaller than 50." };
+        $c->detach;
+    }
+
+    my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
+        $c->stash->{rest} = {success => 1};
+        $c->detach;;
+    } else {
+        $c->stash->{rest} = { error => "Error creating tissues samples in controller." };
+        $c->detach;;
     }
 
 }
@@ -646,6 +1509,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'trial_coords_upload';
     my $upload = $c->req->upload('trial_coordinates_uploaded_file');
+    my $trial_id = $c->req->param('trial_coordinates_upload_trial_id');
     my $upload_tempfile  = $upload->tempname;
     my $upload_original_name  = $upload->filename();
     my $md5;
@@ -672,6 +1536,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
 
+    my $error_string = '';
    # open file and remove return of line
     open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -688,10 +1553,205 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
       }
       else {
       	print STDERR "WARNING! $plot was not found in the database.\n";
+        $error_string .= "WARNING! $plot was not found in the database.";
       }
     }
 
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
+    $trial_layout->generate_and_cache_layout();
+
+    if ($error_string){
+        $c->stash->{rest} = {error_string => $error_string};
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
     $c->stash->{rest} = {success => 1};
+}
+
+sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trait_id = $c->req->param("selected");
+    
+    # my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
+    # 	bcs_schema=>$schema,
+    # 	trial_id=>$trial_id,
+    #     trait_id=>$trait_id
+    # });
+    # my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
+
+    my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
+    print STDERR Dumper(\@items);
+    my @trait_ids = ($trait_id);
+    
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        "MaterializedView",
+        {
+            bcs_schema=> $schema,
+            data_level=> 'plot',
+            trait_list=> \@trait_ids,
+            plot_list=>  \@items,
+            include_row_and_column_numbers=> 1
+        }
+    );
+    my $data = $phenotypes_search->search();
+    my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, $result, @phenoID);
+    foreach my $d (@$data) {
+        my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count) = @$d;
+        if (!$row_number && !$col_number){
+			if ($block_number){
+				$row_number = $block_number;
+			}elsif ($rep && !$block_number ){
+				$row_number = $rep;
+			}
+		}
+        
+        my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
+        push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$phenotype_id} ;
+		if ($col_number){
+            push @col_No, $col_number;
+        }
+		push @row_No, $row_number;
+		push @pheno_val, $value;
+		push @plot_Name, $plot_name;
+		push @stock_Name, $stock_name;
+		push @plot_No, $plot_number;
+		push @block_No, $block_number;
+		push @rep_No, $rep;
+        push @phenoID, $phenotype_id; 
+    }
+    
+    my $false_coord;
+	if ($col_No[0] == ""){
+        @col_No = ();
+        $false_coord = 'false_coord';
+		my @row_instances = uniq @row_No;
+		my %unique_row_counts;
+		$unique_row_counts{$_}++ for @row_No;        
+        my @col_number2;
+        for my $key (keys %unique_row_counts){
+            push @col_number2, (1..$unique_row_counts{$key});
+        }
+        for (my $i=0; $i < scalar(@$result); $i++){               
+            @$result[$i]->{'col'} = $col_number2[$i];
+            push @col_No, $col_number2[$i];
+        }		
+	}
+    
+    my ($min_col, $max_col) = minmax @col_No;
+	my ($min_row, $max_row) = minmax @row_No;
+	my (@unique_col,@unique_row);
+	for my $x (1..$max_col){
+		push @unique_col, $x;
+	}
+	for my $y (1..$max_row){
+		push @unique_row, $y;
+	}
+    
+    my $trial = CXGN::Trial->new({
+		bcs_schema => $schema,
+		trial_id => $trial_id
+	});
+	my $data_check = $trial->get_controls();
+	my @control_name;
+	foreach my $cntrl (@{$data_check}) {
+		push @control_name, $cntrl->{'accession_name'};
+	}
+
+    $c->stash->{rest} = { #phenotypes => $phenotype, 
+                            col => \@col_No,
+                            row => \@row_No,
+                            pheno => \@pheno_val,
+                            plotName => \@plot_Name,
+                            stock => \@stock_Name,
+                            plot => \@plot_No,
+                            block => \@block_No,
+                            rep => \@rep_No,
+                            result => $result,
+                            plot_msg => \@msg,
+                            col_max => $max_col,
+                            row_max => $max_row,
+                            unique_col => \@unique_col,
+                            unique_row => \@unique_row,
+                            false_coord => $false_coord,
+                            phenoID => \@phenoID,
+                            controls => \@control_name
+                        };
+}
+  
+sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $plot_name = $c->req->param('plot_name');
+  my $plot_pheno_value = $c->req->param('phenotype_value');
+  my $trait_id = $c->req->param('trait_id');
+  my $phenotype_id = $c->req->param('phenotype_id');
+  my $trial_id = $c->stash->{trial_id};
+  my $trial = $c->stash->{trial};
+  my $user_name = $c->user()->get_object()->get_username();
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to suppress this phenotype." };
+    return;
+  }
+
+  my $suppress_return_error = $trial->suppress_plot_phenotype($trait_id, $plot_name, $plot_pheno_value, $phenotype_id, $user_name, $timestamp);
+  if ($suppress_return_error) {
+    $c->stash->{rest} = { error => $suppress_return_error };
+    return;
+  }
+ 
+  $c->stash->{rest} = { success => 1};
+}
+
+sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $pheno_ids = $c->req->param('pheno_id');
+    my $trait_ids = $c->req->param('traits_id');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial = $c->stash->{trial};
+    
+    if (!$c->user()) {
+    	print STDERR "User not logged in... not deleting trait.\n";
+    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+    	return;
+    }
+
+    if ($self->privileges_denied($c)) {
+      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+      return;
+    }
+
+    my $delete_trait_return_error; 
+    if ($pheno_ids){
+            my $phenotypes_ids = JSON::decode_json($pheno_ids);
+         $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
+    }
+    if ($trait_ids){
+        my $traits_ids = JSON::decode_json($trait_ids);
+         $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
+    }
+    
+    if ($delete_trait_return_error) {
+      $c->stash->{rest} = { error => $delete_trait_return_error };
+      return;
+    }
+    
+    $c->stash->{rest} = { success => 1};
 }
 
 1;

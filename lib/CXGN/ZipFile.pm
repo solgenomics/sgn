@@ -25,7 +25,8 @@ my $archived_zip = Archive::Zip->new();
 sub BUILD {
 	my $self = shift;
 	unless ( $archived_zip->read( $self->archived_zipfile_path() ) == AZ_OK ) {
-		die "cannot read given zipfile";
+		print STDERR "cannot read given zipfile\n";
+        return;
 	}
 	$self->archived_zip($archived_zip);
 }
@@ -34,6 +35,9 @@ sub BUILD {
 #Assuming that zipfile is a flat list of files. 
 sub file_names {
 	my $self = shift;
+    if (!$self->archived_zip){
+        return;
+    }
 	my @file_names = $self->archived_zip()->memberNames();
 	my @file_names_stripped;
 	my @file_names_full;
@@ -54,6 +58,9 @@ sub file_names {
 sub file_members {
 	my $self = shift;
 	my @ret_members;
+    if (!$self->archived_zip){
+        return;
+    }
 	my @file_members = $self->archived_zip()->members();
 	#print STDERR Dumper \@file_members;
 	my %seen_files;

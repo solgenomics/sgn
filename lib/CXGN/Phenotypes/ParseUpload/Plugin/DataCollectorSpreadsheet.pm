@@ -11,6 +11,9 @@ sub name {
 sub validate {
     my $self = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
+    my $data_level = shift;
+    my $schema = shift;
     my @file_lines;
     my $delimiter = ',';
     my $header;
@@ -119,6 +122,8 @@ sub parse {
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
+    my $data_level = shift;
+    my $schema = shift;
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
@@ -195,10 +200,11 @@ sub parse {
                     return \%parse_result;
                 }
             }
-            
+
+            my @treatments;
             if ( defined($trait_value) && defined($timestamp) ) {
                 if ($trait_value ne '.'){
-                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
+                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp, \@treatments];
                 }
             } else {
                 $parse_result{'error'} = "Value or timestamp missing.";

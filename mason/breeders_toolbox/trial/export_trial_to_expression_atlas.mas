@@ -1,0 +1,197 @@
+<%args>
+$trial_id => undef
+$trial_name => undef
+$expression_atlas_url
+$site_project_name
+$sgn_session_id
+$user_name
+$main_production_site_url
+</%args>
+
+<div class="well">
+    <h3>Export to Expression Atlas</h3>
+    <button class="btn btn-primary" id="export_trial_to_expression_atlas" name="export_trial_to_expression_atlas">Export</button>
+    <a href="<% $expression_atlas_url %>/expression_viewer/input" target="_blank" class="btn btn-primary" >Go To Expression Atlas</a>
+</div>
+
+
+<div class="modal fade" id="export_to_expression_atlas_dialog" name="export_to_expression_atlas_dialog" tabindex="-1" role="dialog" aria-labelledby="expressionAtlasExportDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="expressionAtlasExportDialog">Export <% $trial_name %> Phenotypes to Expression Atlas</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <form class="form-horizontal" >
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Project Name: </label>
+                    <div class="col-sm-9" >
+                        <input type="text" class="form-control" id="expression_atlas_export_name" value="<% $trial_name %>" />
+                    </div>
+                </div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label">Trial Name(s): </label>
+					<div class="col-sm-9" >
+						<div id="expression_atlas_trial_select_div">
+% if ($trial_id) {
+						<input type="text" class="form-control" value="<% $trial_id %>" disabled/>
+						<input type="hidden" id="expression_atlas_trial_id" name="expression_atlas_trial_id" value="<% $trial_id %>" />
+% } else {
+[Loading...]
+% }
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label">Trait Name(s): <br/><small>Select None for All</small></label>
+					<div class="col-sm-9" >
+						<div id="expression_atlas_trait_select_div">
+							<p>First Select One or More Trials</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-3 control-label">Accession Name(s): <br/><small>Select None for All</small></label>
+					<div class="col-sm-9" >
+						<div id="expression_atlas_accession_select_div">
+							<p>First Select One or More Trials</p>
+						</div>
+					</div>
+				</div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Export Options: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="expression_atlas_export_type">
+                            <option value="6">3 Dimensions are: Traits, Row Number, Col Number</option>
+%  if ($site_project_name eq 'CassBase'){
+                            <option value="1">3 Dimensions are: Metabolites, Accessions + Plant Age + Sampling Time of Day, Tissues</option>
+                            <option value="2">2 Dimensions are: Metabolites + Tissues and Agronomic Traits, Accessions + Plant Age</option>
+                            <option value="3">2 Dimensions are: Metabolites + Tissues (Week 16) and Agronomic Traits (Week 16), Accessions</option>
+                            <option value="4">2 Dimensions are: Metabolites + Tissues (Week 16) and Agronomic Traits (Week 52), Accessions</option>
+                            <option value="5">2 Dimensions are: Metabolites + Tissues (Week 16) and Agronomic Traits (Week 52), Accessions (EXCLUDING TMEB419)</option>
+%  }
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="expression_atlas_export_cancel_button" id="expression_atlas_export_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="expression_atlas_export_ok_button" id="expression_atlas_export_ok_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="submit_export_to_expression_atlas_modal" name="submit_export_to_expression_atlas_modal" tabindex="-1" role="dialog" aria-labelledby="submitExpressionAtlasDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submitExpressionAtlasDialog">Expression Atlas</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="submit_export_to_expression_atlas_message">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function() {
+
+    jQuery("#export_trial_to_expression_atlas").click( function () {
+        jQuery('#export_to_expression_atlas_dialog').modal('show');
+        if(jQuery("#expression_atlas_trial_id").length == 0) {
+            get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7, 'multiple':1 });
+        } else {
+            expression_atlas_change_trials();
+        }
+    });
+
+    jQuery("#export_trial_to_expression_atlas").click( function () {
+        jQuery('#export_to_expression_atlas_dialog').modal('show');
+    });
+
+    jQuery(document).on('change', '#expression_atlas_trial_id', function() {
+        expression_atlas_change_trials();
+    });
+
+    jQuery("#expression_atlas_export_ok_button").click( function () {
+        var trial_id_array = [<% $trial_id %>];
+        var accession_id_array = [];
+        var trait_id_array = [];
+        var selected_trial_ids = jQuery('#expression_atlas_trial_id').val();
+        var selected_accession_ids = jQuery('#expression_atlas_accession_ids').val();
+        var selected_trait_ids = jQuery('#expression_atlas_trait_ids').val();
+        var combined_trial_ids = trial_id_array.concat(selected_trial_ids);
+        var combined_accession_ids = accession_id_array.concat(selected_accession_ids);
+        var combined_trait_ids = trait_id_array.concat(selected_trait_ids);
+        combined_trial_ids = combined_trial_ids.filter(function(n){ return n != undefined });
+        combined_accession_ids = combined_accession_ids.filter(function(n){ return n != undefined });
+        combined_trait_ids = combined_trait_ids.filter(function(n){ return n != undefined });
+        var export_name = jQuery('#expression_atlas_export_name').val();
+        var export_type = jQuery('#expression_atlas_export_type').val();
+        if (export_name == '' || !export_name){
+            jQuery('#submit_export_to_expression_atlas_message').html("Project Name is required. This is the project name that will appear in the expression atlas.");
+            jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+        } else if (export_type == '' || !export_type){
+            jQuery('#submit_export_to_expression_atlas_message').html("Export type is required.");
+            jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+        } else if (combined_trial_ids.length < 1 || !combined_trial_ids){
+            jQuery('#submit_export_to_expression_atlas_message').html("Please select at least one trial.");
+            jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+        } else {
+
+            new jQuery.ajax({
+                type: 'GET',
+                url: "<% $expression_atlas_url %>/expression_viewer/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(combined_trial_ids)+"&trait_id_list="+JSON.stringify(combined_trait_ids)+"&accession_id_list="+JSON.stringify(combined_accession_ids)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type+"&<% $sgn_session_id %>&user_name=<% $user_name %>&main_production_site_url=<% $main_production_site_url %>",
+                beforeSend: function() {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function (response) {
+                    jQuery('#working_modal').modal("hide");
+                    jQuery('#submit_export_to_expression_atlas_message').html("Succesfully exported trial to Expression Atlas!");
+                    jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+                },
+                error: function () {
+                    jQuery('#working_modal').modal("hide");
+                    jQuery('#submit_export_to_expression_atlas_message').html('An error occurred exporting trial to Expression Atlas.');
+                    jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+                }
+            });
+
+        }
+    });
+
+});
+
+function expression_atlas_change_trials () {
+	var trial_ids = jQuery('#expression_atlas_trial_id').val();
+	var trial_ids_array = [];
+	var trial_ids_string = '';
+	if ( jQuery.isArray(trial_ids) ) {
+		trial_ids_array = trial_ids;
+		trial_ids_string = trial_ids.join();
+	} else {
+		trial_ids_array = [trial_ids];
+		trial_ids_string = trial_ids;
+	}
+	get_select_box('stocks', 'expression_atlas_accession_select_div', { 'name' : 'expression_atlas_accession_ids', 'id' : 'expression_atlas_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids_array });
+	get_select_box('traits', 'expression_atlas_trait_select_div', { 'name' : 'expression_atlas_trait_ids', 'id' : 'expression_atlas_trait_ids', 'size' : 7, 'trial_ids':trial_ids_string });
+};
+
+</script>

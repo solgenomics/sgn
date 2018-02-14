@@ -14,6 +14,7 @@ sub validate {
     my $filename = shift;
     my $timestamp_included = shift;
     my $data_level = shift;
+    my $schema = shift;
     my $delimiter = ',';
     my %parse_result;
 
@@ -115,6 +116,9 @@ sub validate {
 sub parse {
     my $self = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
+    my $data_level = shift;
+    my $schema = shift;
     my $delimiter = ',';
     my %parse_result;
 
@@ -182,9 +186,10 @@ sub parse {
                 }
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
+                my @treatments;
                 if ( defined($value) && defined($timestamp) ) {
                     if ($value ne '.'){
-                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
+                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp, \@treatments];
                     }
                 } else {
                     $parse_result{'error'} = "Value or timestamp missing.";

@@ -35,6 +35,25 @@ The root page (/)
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
 
+    if ($c->config->{homepage_display_phenotype_uploads}){
+        my @file_array;
+        my %file_info;
+        my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping')";
+        my $h = $schema->storage()->dbh()->prepare($q);
+        $h->execute();
+
+        while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype, $project_id, $project_name) = $h->fetchrow_array()) {
+            $file_info{$file_id}->{project_ids}->{$project_id} = $project_name;
+            $file_info{$file_id}->{metadata} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype, $project_id];
+        }
+        foreach (sort {$b <=> $a} keys %file_info){
+            push @file_array, $file_info{$_};
+        }
+        #print STDERR Dumper \@file_array;
+        $c->stash->{phenotype_files} = \@file_array;
+    }
+
     # Hello World
     $c->stash->{template} = '/index.mas';
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
@@ -165,6 +184,7 @@ sub auto : Private {
     CatalystX::GlobalContext->set_context( $c );
     $c->stash->{c} = $c;
     weaken $c->stash->{c};
+    $c->assets->set_base_uri($c->config->{main_production_site_url});
 
     # gluecode for logins
     #

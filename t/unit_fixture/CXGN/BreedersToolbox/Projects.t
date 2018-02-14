@@ -32,7 +32,7 @@ ok($bp_project_id);
 
 my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($bp_project_id->project_id);
 my @sorted_field_trials = sort {$a->[0] cmp $b->[0]} @$field_trials;
-#print STDERR Dumper \@sorted_field_trials;
+print STDERR Dumper \@sorted_field_trials;
 is_deeply(\@sorted_field_trials, [
           [
             '137',
@@ -53,6 +53,11 @@ is_deeply(\@sorted_field_trials, [
             '144',
             'test_t',
             'test tets'
+          ],
+          [
+            '165',
+            'CASS_6Genotypes_Sampling_2015',
+            'Copy of trial with postcomposed phenotypes from cassbase.'
           ]
         ], 'test get trials');
 #print STDERR Dumper $cross_trials;
@@ -168,22 +173,21 @@ is_deeply(\@sorted_cross_trials, [
 #print STDERR Dumper $genotyping_trials;
 is_deeply($genotyping_trials, undef, 'test get geno trials');
 
-my $locations = $p->get_locations_by_breeding_program($bp_project_id->project_id);
-#print STDERR Dumper $locations;
-is_deeply($locations,[
-          [
-            23,
-            'test_location',
-            4
-          ]
-        ], 'get locations by bp');
+my $locations = $p->get_location_geojson();
+print STDERR Dumper $locations;
+is($locations,'[{"geometry":{"coordinates":[-76.4735,42.4534],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":274,"Code":"USA","Country":"United States","Id":24,"Latitude":42.4534,"Longitude":-76.4735,"Name":"Cornell Biotech","Program":null,"Trials":"<a href=\\"/search/trials?nd_geolocation=Cornell Biotech\\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":25,"Latitude":null,"Longitude":null,"Name":"NA","Program":null,"Trials":"<a href=\"/search/trials?nd_geolocation=NA\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[-115.864,32.6136],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":109,"Code":"USA","Country":"United States","Id":23,"Latitude":32.6136,"Longitude":-115.864,"Name":"test_location","Program":"test","Trials":"<a href=\\"/search/trials?nd_geolocation=test_location\\">5 trials</a>","Type":null},"type":"Feature"}]', 'get locations by bp');
 
 my $all_locations = $p->get_all_locations();
-#print STDERR Dumper $all_locations;
+print STDERR Dumper $all_locations;
+is(scalar(@$all_locations), 3);
 is_deeply($all_locations,[
           [
             24,
             'Cornell Biotech'
+          ],
+          [
+            25,
+            'NA'
           ],
           [
             23,
@@ -192,19 +196,27 @@ is_deeply($all_locations,[
         ], 'get all locations');
 
 my $all_locations = $p->get_locations();
-#print STDERR Dumper $all_locations;
+print STDERR Dumper $all_locations;
 is_deeply($all_locations, [
-          [
-            23,
-            'test_location',
-            undef,
-            undef,
-            undef,
-            5239
-          ],
           [
             24,
             'Cornell Biotech',
+            '42.4534',
+            '-76.4735',
+            '274',
+            0
+          ],
+          [
+            23,
+            'test_location',
+            '32.6136',
+            '-115.864',
+            '109',
+            5458
+          ],
+          [
+            25,
+            'NA',
             undef,
             undef,
             undef,
@@ -213,8 +225,9 @@ is_deeply($all_locations, [
         ], 'get all locations');
 
 my @all_years = $p->get_all_years();
-#print STDERR Dumper \@all_years;
+print STDERR Dumper \@all_years;
 is_deeply(\@all_years, [
+          '2017',
           '2016',
           '2015',
           '2014'

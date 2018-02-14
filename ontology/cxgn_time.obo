@@ -1,0 +1,534 @@
+format-version: 1.0
+data-version: 1
+date: 05:23:2016 03:00
+saved-by: sgn
+default-namespace: cxgn_time_ontology
+remark: none
+ontology: cxgn_time
+
+[Term]
+id: TIME:0000000
+name: Time
+
+[Term]
+id: TIME:0000001
+name: time of day
+def: "Categorical day periods." []
+is_a: TIME:0000000
+
+[Term]
+id: TIME:0000002
+name: end of night
+synonym: "EoN" EXACT []
+def: "Half an hour before sunrise." []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000003
+name: end of day
+synonym: "EoD" EXACT []
+def: "Late afternoon daylight." []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000004
+name: mid day
+synonym: "MD" EXACT []
+def: "Between 11:00 in the morning and 14:00 in the afternoon." []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000005
+name: time of year
+def: "Weeks and months." []
+is_a: TIME:0000000
+
+[Term]
+id: TIME:0000006
+name: week 1
+synonym: "Wk1" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000007
+name: week 2
+synonym: "Wk2" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000008
+name: week 3
+synonym: "Wk3" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000009
+name: week 4
+synonym: "Wk4" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000010
+name: week 5
+synonym: "Wk5" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000011
+name: week 6
+synonym: "Wk6" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000012
+name: week 7
+synonym: "Wk7" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000013
+name: week 8
+synonym: "Wk8" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000014
+name: week 9
+synonym: "Wk9" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000015
+name: week 10
+synonym: "Wk10" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000016
+name: week 11
+synonym: "Wk11" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000017
+name: week 12
+synonym: "Wk12" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000018
+name: week 13
+synonym: "Wk13" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000019
+name: week 14
+synonym: "Wk14" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000020
+name: week 15
+synonym: "Wk15" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000021
+name: week 16
+synonym: "Wk16" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000022
+name: week 17
+synonym: "Wk17" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000023
+name: week 18
+synonym: "Wk18" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000024
+name: week 19
+synonym: "Wk19" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000025
+name: week 20
+synonym: "Wk20" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000026
+name: week 21
+synonym: "Wk21" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000027
+name: week 22
+synonym: "Wk22" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000028
+name: week 23
+synonym: "Wk23" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000029
+name: week 24
+synonym: "Wk24" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000030
+name: week 25
+synonym: "Wk25" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000031
+name: week 26
+synonym: "Wk26" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000032
+name: week 27
+synonym: "Wk27" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000033
+name: week 28
+synonym: "Wk28" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000034
+name: week 29
+synonym: "Wk29" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000035
+name: week 30
+synonym: "Wk30" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000036
+name: week 31
+synonym: "Wk31" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000037
+name: week 32
+synonym: "Wk32" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000038
+name: week 33
+synonym: "Wk33" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000039
+name: week 34
+synonym: "Wk34" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000040
+name: week 35
+synonym: "Wk35" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000041
+name: week 36
+synonym: "Wk36" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000042
+name: week 37
+synonym: "Wk37" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000043
+name: week 38
+synonym: "Wk38" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000044
+name: week 39
+synonym: "Wk39" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000045
+name: week 40
+synonym: "Wk40" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000046
+name: week 41
+synonym: "Wk41" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000047
+name: week 42
+synonym: "Wk42" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000048
+name: week 43
+synonym: "Wk43" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000049
+name: week 44
+synonym: "Wk44" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000050
+name: week 45
+synonym: "Wk45" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000051
+name: week 46
+synonym: "Wk46" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000052
+name: week 47
+synonym: "Wk47" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000053
+name: week 48
+synonym: "Wk48" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000054
+name: week 49
+synonym: "Wk49" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000055
+name: week 50
+synonym: "Wk50" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000056
+name: week 51
+synonym: "Wk51" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000057
+name: week 52
+synonym: "Wk52" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000058
+name: week 53
+synonym: "Wk53" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000059
+name: week 54
+synonym: "Wk54" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000060
+name: month 1
+synonym: "Mo1" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000061
+name: month 2
+synonym: "Mo2" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000062
+name: month 3
+synonym: "Mo3" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000063
+name: month 4
+synonym: "Mo4" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000064
+name: month 5
+synonym: "Mo5" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000065
+name: month 6
+synonym: "Mo6" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000066
+name: month 7
+synonym: "Mo7" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000067
+name: month 8
+synonym: "Mo8" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000068
+name: month 9
+synonym: "Mo9" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000069
+name: month 10
+synonym: "Mo10" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000070
+name: month 11
+synonym: "Mo11" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000071
+name: month 12
+synonym: "Mo12" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000076
+name: "categorical plant stage"
+def: "." []
+is_a: TIME:0000000
+
+[Term]
+id: TIME:0000077
+name: "shooting"
+synonym: "SHT" EXACT []
+def: "shooting stage"
+is_a: TIME:0000076
+
+[Term]
+id: TIME:0000078
+name: "harvesting"
+synonym: "HVT" EXACT []
+def: "harvesting stage"
+is_a: TIME:0000076
+
+[Term]
+id: TIME:0000079
+name: "post-harvesting"
+synonym: "PHVT" EXACT []
+def: "post harvesting stage"
+is_a: TIME:0000076
+

@@ -12,12 +12,14 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         bcs_schema=>$schema,
         data_level=>$data_level,
         trait_list=>$trait_list,
+        trait_component_list=>$trait_component_list,
         trial_list=>$trial_list,
         year_list=>$year_list,
         location_list=>$location_list,
         accession_list=>$accession_list,
         plot_list=>$plot_list,
         plant_list=>$plant_list,
+        subplot_list=>$subplot_list,
         include_timestamp=>$include_timestamp,
         trait_contains=>$trait_contains,
         phenotype_min_value=>$phenotype_min_value,
@@ -26,7 +28,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         offset=>$offset
     }
 );
-my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+my @data = $phenotypes_search->search();
 
 =head1 DESCRIPTION
 
