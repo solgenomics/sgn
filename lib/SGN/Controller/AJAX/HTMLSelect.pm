@@ -386,7 +386,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		minimum_phenotype_value=>$params->{minimum_phenotype_value}->[0],
 		maximum_phenotype_value=>$params->{maximum_phenotype_value}->[0],
 		trial_name_list=>$params->{trial_name_list},
-		trial_id_list=>$params->{'trial_id_list[]'},
+		trial_id_list=>$params->{trial_id_list},
 		breeding_program_id_list=>$params->{breeding_program_id_list},
 		location_name_list=>$params->{location_name_list},
 		year_list=>$params->{year_list},

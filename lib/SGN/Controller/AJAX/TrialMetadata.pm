@@ -436,6 +436,13 @@ sub get_trial_folder :Chained('trial') PathPart('folder') Args(0) {
 
 }
 
+sub get_trial_location :Chained('trial') PathPart('location') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $location = $c->stash->{trial}->get_location;
+    $c->stash->{rest} = { location => $location };
+}
+
 sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my $self = shift;
     my $c = shift;

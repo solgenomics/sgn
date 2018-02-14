@@ -20,6 +20,8 @@ package SGN::Controller::AJAX::Cross;
 use Moose;
 use Try::Tiny;
 use DateTime;
+use Time::HiRes qw(time);
+use POSIX qw(strftime);
 use Data::Dumper;
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -781,10 +783,10 @@ sub create_cross_wishlist_POST : Args(0) {
     my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     my $location = $t->get_location();
     my $location_name = $location->[1];
-    if ($location_name ne 'Arusha'){
-        $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
-        $c->detach();
-    }
+    #if ($location_name ne 'Arusha'){
+    #    $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
+    #    $c->detach();
+    #}
 
     my %selected_cross_hash;
     my %selected_females;
@@ -884,7 +886,6 @@ sub create_cross_wishlist_submit : Path('/ajax/cross/create_cross_wishlist_submi
 
 sub create_cross_wishlist_submit_POST : Args(0) {
     my ($self, $c) = @_;
-    my $time = DateTime->now();
 
     if (!$c->user){
         $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
@@ -894,6 +895,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $user_name = $c->user()->get_object()->get_username();
     my $site_name = $c->config->{project_name};
 
+    my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
@@ -901,6 +903,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
     my $trial_id = $c->req->param('trial_id');
+    my $ona_form_id = $c->req->param('form_id');
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
     #print STDERR Dumper $data;
     #print STDERR Dumper $selected_plot_ids;
@@ -994,7 +997,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $seedlot_name = $female->{seedlot_name} || '';
             my $seedlot_transaction_operator = $female->{seed_transaction_operator} || '';
             my $seedlot_num_seed_per_plot = $female->{num_seed_per_plot} || '';
-            my $line = '"'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.localtime().'","'.$user_name.'","';
+            my $t = time;
+            my $entry_timestamp = strftime '%F %T', localtime $t;
+            $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+            my $line = '"'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.$entry_timestamp.'","'.$user_name.'","';
 
             if (!exists($seen_info_plots{$plot_id})){
                 my $female_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$female->{accession_id}});
@@ -1024,7 +1030,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     push @descendents_array, $v->{name};
                 }
                 my $descendents_string = join ',', @descendents_array;
-                push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.localtime().'","'.$user_name.'"';
+                my $t = time;
+                my $entry_timestamp = strftime '%F %T', localtime $t;
+                $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+                push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
                 $seen_info_plots{$plot_id}++;
             }
 
@@ -1078,7 +1087,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                                 push @descendents_array, $v->{name};
                             }
                             my $descendents_string = join ',', @descendents_array;
-                            push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.localtime().'","'.$user_name.'"';
+                            my $t = time;
+                            my $entry_timestamp = strftime '%F %T', localtime $t;
+                            $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+                            push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
                             $seen_info_plots{$plot_id}++;
                         }
                     }
@@ -1185,9 +1197,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path2,
-       subdirectory => 'cross_wishlist',
+       subdirectory => 'cross_wishlist_'.$site_name,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'cross_wishlist_'.$site_name.'_'.$location_name.'.csv',
+       archive_filename => 'cross_wishlist_'.$location_name.'.csv',
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1245,9 +1257,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path3,
-       subdirectory => 'cross_wishlist',
+       subdirectory => 'cross_wishlist_'.$site_name,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'germplasm_info_'.$site_name.'_'.$location_name.'.csv',
+       archive_filename => 'germplasm_info_'.$location_name.'.csv',
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1255,9 +1267,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $germplasm_info_uploaded_file = $uploader->archive();
     my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
 
-    my $ona_form_id = $c->config->{ona_form_id};
+    my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
+    my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
+
     my $ua = LWP::UserAgent->new;
-    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
     my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
 
     my $server_endpoint = "https://api.ona.io/api/v1/metadata";
