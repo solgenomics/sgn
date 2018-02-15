@@ -1493,28 +1493,28 @@ sub add_crossingtrial_POST :Args(0) {
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
-    my $folder_name = $c->req->param('crossingtrial_folder_name');
-    my $folder_id = $c->req->param('crossingtrial_folder_id');
-    my $folder;
+#    my $folder_name = $c->req->param('crossingtrial_folder_name');
+#    my $folder_id = $c->req->param('crossingtrial_folder_id');
+#    my $folder;
 
-    if ($folder_name && !$folder_id) {
-      eval {
-        $folder = CXGN::Trial::Folder->create({
-          bcs_schema => $schema,
-          parent_folder_id => '',
-          name => $folder_name,
-          breeding_program_id => $breeding_program_id,
-          folder_for_crosses =>1
-        });
-      };
+#    if ($folder_name && !$folder_id) {
+#      eval {
+#        $folder = CXGN::Trial::Folder->create({
+#          bcs_schema => $schema,
+#          parent_folder_id => '',
+#          name => $folder_name,
+#          breeding_program_id => $breeding_program_id,
+#          folder_for_crosses =>1
+#        });
+#      };
 
-      if ($@) {
-        $c->stash->{rest} = {error => $@ };
-        return;
-      }
+#      if ($@) {
+#        $c->stash->{rest} = {error => $@ };
+#        return;
+#      }
 
-      $folder_id = $folder->folder_id();
-    }
+#      $folder_id = $folder->folder_id();
+#    }
 
 
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
@@ -1544,7 +1544,7 @@ sub add_crossingtrial_POST :Args(0) {
             breeding_program_id => $breeding_program_id,
             year => $c->req->param('year'),
             project_description => $c->req->param('project_description'),
-            location => $location,
+#            location => $location,
             crossingtrial_name => $crossingtrial_name,
             nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
         });
