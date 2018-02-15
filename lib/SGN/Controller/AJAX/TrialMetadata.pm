@@ -1778,7 +1778,6 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
     $image_objects = \@image_object_list;
   }
 
-
   if ($image_objects)  { # don't display anything for empty list of images
     $image_html .= qq|<table cellpadding="5">|;
     foreach my $image_ob (@$image_objects) {
@@ -1789,11 +1788,9 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
       my $image_img  = $image_ob->get_image_url("medium");
       my $small_image = $image_ob->get_image_url("thumbnail");
       my $image_page  = "/image/view/$image_id";
-
-      ##$image_html .=  qq { $(".stock_image_group").colorbox({rel:'stock_image_group'}); };
-
-      my $colorbox =
-        qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" /></a> |;
+      
+      my $colorbox = 
+        qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
       my $fhtml =
         qq|<tr><td width=120>|
           . $colorbox

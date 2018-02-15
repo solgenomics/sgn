@@ -853,7 +853,6 @@ jQuery(document).ready( function() {
         });    
     }
     
-    
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
     });
