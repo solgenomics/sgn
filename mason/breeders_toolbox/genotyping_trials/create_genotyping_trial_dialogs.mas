@@ -8,22 +8,22 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addGenoTrialDialog">Add IGD Genotyping Trial</h4>
+                <h4 class="modal-title" id="addGenoTrialDialog">Add Genotyping Trial</h4>
+                <br/>
+                <ul class="nav nav-tabs">
+                    <li role="presentation" class="active"><a data-toggle="tab" href="#add_genotyping_trial_home"><span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;&nbsp;Plate Information</a></li>
+                    <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_wells"><span class="glyphicon glyphicon-th"></span>&nbsp;&nbsp;&nbsp;Well Information</a></li>
+                    <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_confirm"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;&nbsp;Confirm</a></li>
+                </ul>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form" action="/ajax/breeders/genotypetrial">
 
-                        <ul class="nav nav-tabs">
-                            <li role="presentation" class="active"><a data-toggle="tab" href="#add_genotyping_trial_home"><span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;&nbsp;Plate Information</a></li>
-                            <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_wells"><span class="glyphicon glyphicon-th"></span>&nbsp;&nbsp;&nbsp;Well Information</a></li>
-                            <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_confirm"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;&nbsp;Confirm</a></li>
-                        </ul>
 
                         <div class="tab-content">
                             <div id="add_genotyping_trial_home" class="tab-pane fade in active">
-                                <br/>
 
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Genotyping Project Name: </label>
@@ -90,7 +90,6 @@
                                 </div>
                             </div>
                             <div id="add_genotyping_trial_wells" class="tab-pane fade in">
-                                <br/>
                                 <h3>1. Do you already have a plate layout created?<h3>
 
                                 <div class="well well-sm">
@@ -122,10 +121,33 @@
                                             <span id="accession_select_box_span">[loading...]</span>
                                         </div>
                                     </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Blank Well <small>Cornell IGD requires a specific well to be blank.</small>: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" id="genotyping_well_concentration" name="genotyping_well_concentration" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" id="genotyping_well_volume" name="genotyping_well_volume" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Tissue: <small>(If used the same tissue for all wells)</small> </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" id="genotyping_well_tissue" name="genotyping_well_tissue" type="text" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div id="add_genotyping_trial_confirm" class="tab-pane fade in">
-                                <br/>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Along with saving this information to this database, I want to submit to the Genotyping Facility: </label>
                                     <div class="col-sm-9">

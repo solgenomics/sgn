@@ -128,9 +128,9 @@ sub validate_design {
         @valid_properties = (
             'stock_name',
             'plot_name',
-            'row',
+            'row_number',
             'well',
-            'column',
+            'col_number',
             'is_blank'
         );
         #plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
@@ -259,6 +259,8 @@ sub store {
     my $range_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'range', 'stock_property');
     my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property');
     my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property');
+    my $well_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'well', 'stock_property');
+    my $is_blank_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is_blank', 'stock_property');
     my $treatment_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
@@ -426,6 +428,14 @@ sub store {
             if ($design{$key}->{range_number}) {
                 $range_number = $design{$key}->{range_number};
             }
+            my $well;
+            if ($design{$key}->{well}) {
+                $well = $design{$key}->{well};
+            }
+            my $well_is_blank;
+            if ($design{$key}->{is_blank}) {
+                $well_is_blank = $design{$key}->{is_blank};
+            }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
             if ($stock_data{$stock_name}) {
@@ -472,6 +482,12 @@ sub store {
                 }
                 if ($col_number) {
                     $plot->create_stockprops({$col_number_cvterm->name() => $col_number});
+                }
+                if ($well) {
+                    $plot->create_stockprops({$well_cvterm->name() => $well});
+                }
+                if ($well_is_blank) {
+                    $plot->create_stockprops({$is_blank_cvterm->name() => $well_is_blank});
                 }
 
                 my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({

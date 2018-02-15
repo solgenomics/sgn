@@ -15,47 +15,49 @@ Will do the following:
 
 =head1 USAGE
 
- FOR FIELD PHENOTYPING TRIALS:
- my $trial_create = CXGN::Trial::TrialCreate->new({
-	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	dbh => $c->dbc->dbh(),
-	user_name => $user_name, #not implemented,
-	design_type => 'CRD',
-	design => $design_hash,
-	program => $breeding_program->name(),
-	trial_year => $year,
-	trial_description => $project_description,
-	trial_location => $location->name(),
-	trial_name => $trial_name,
-	trial_type => $trialtype
- });
- try {
-   $trial_create->save_trial();
- } catch {
-   print STDERR "ERROR SAVING TRIAL!\n";
- };
+    FOR FIELD PHENOTYPING TRIALS:
+    my $trial_create = CXGN::Trial::TrialCreate->new({
+        chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        dbh => $c->dbc->dbh(),
+        user_name => $user_name, #not implemented,
+        operator => $c->user()->get_object()->get_username(),
+        design_type => 'CRD',
+        design => $design_hash,
+        program => $breeding_program->name(),
+        trial_year => $year,
+        trial_description => $project_description,
+        trial_location => $location->name(),
+        trial_name => $trial_name,
+        trial_type => $trialtype
+    });
+    try {
+        $trial_create->save_trial();
+    } catch {
+        print STDERR "ERROR SAVING TRIAL!\n";
+    };
 
- FOR GENOTYPING TRIALS:
- my $ct = CXGN::Trial::TrialCreate->new( {
-	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	dbh => $c->dbc->dbh(),
-	user_name => $c->user()->get_object()->get_username(), #not implemented
-	trial_year => $year,
-	trial_location => $location->name(),
-	program => $breeding_program->name(),
-	trial_description => $description,
-	design_type => 'genotyping_plate',
-	design => $design_hash,
-	trial_name => $trial_name,
-	is_genotyping => 1,
-	genotyping_user_id => $user_id,
-	genotyping_project_name => $project_name
- });
- try {
-   $ct->save_trial();
- } catch {
-   print STDERR "ERROR SAVING TRIAL!\n";
- };
+    FOR GENOTYPING TRIALS:
+    my $ct = CXGN::Trial::TrialCreate->new( {
+        chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        dbh => $c->dbc->dbh(),
+        user_name => $c->user()->get_object()->get_username(), #not implemented
+        operator => $c->user()->get_object()->get_username(),
+        trial_year => $year,
+        trial_location => $location->name(),
+        program => $breeding_program->name(),
+        trial_description => $description,
+        design_type => 'genotyping_plate',
+        design => $design_hash,
+        trial_name => $trial_name,
+        is_genotyping => 1,
+        genotyping_user_id => $user_id,
+        genotyping_project_name => $project_name
+    });
+    try {
+        $ct->save_trial();
+    } catch {
+        print STDERR "ERROR SAVING TRIAL!\n";
+    };
 
 
 =head1 DESCRIPTION

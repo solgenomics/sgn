@@ -147,104 +147,81 @@ sub calculate_design {
   }
 }
 
-# sub _get_genotyping_plate {
-#     my $self = shift;
-#     my %gt_design;
-#     my @stock_list;
-#     my $number_of_stocks;
-#     if ($self->has_stock_list()) {
-# 	@stock_list = @{$self->get_stock_list()};
-# 	$number_of_stocks = scalar(@stock_list);
-# 	if ($number_of_stocks > 95) {
-# 	    die "Need fewer than 96 stocks per plate (at least one blank!)";
-# 	}
-#     }
-#     else {
-# 	die "No stock list specified\n";
-#     }
-
-#     my $blank = "";
-#     if ($self->has_blank()) {
-# 	$blank = $self->get_blank();
-# 	print STDERR "Using previously set blank $blank\n";
-#     }
-#     else {
-# 	my $well_no = int(rand() * $number_of_stocks)+1;
-# 	my $well_row = chr(int(($well_no-1) / 12) + 65);
-# 	my $well_col = ($well_no -1) % 12 +1;
-# 	$blank = sprintf "%s%02d", $well_row, $well_col;
-# 	print STDERR "Using randomly assigned blank $blank\n";
-#     }
-
-#     my $count = 0;
-
-#     foreach my $row ("A".."H") {
-# 	foreach my $col (1..12) {
-# 	    $count++;
-# 	    my $well= sprintf "%s%02d", $row, $col;
-# 	    #my $well = $row.$col;
-
-# 	    if ($well eq $blank) {
-# 		$gt_design{$well} = {
-# 		    plot_name => $self->get_trial_name()."_".$well."_BLANK",
-# 		    stock_name => "BLANK",
-# 		};
-# 	    }
-# 	    elsif (@stock_list) {
-# 		$gt_design{$well} =
-# 		{ plot_name => $self->get_trial_name()."_".$well,
-# 		  stock_name => shift(@stock_list),
-# 		};
-# 	    }
-# 	    #print STDERR Dumper(\%gt_design);
-# 	}
-#     }
-#     return \%gt_design;
-
-# }
-
 sub _get_genotyping_plate {
     my $self = shift;
     my %gt_design;
     my @stock_list;
-    my $number_of_stocks;
 
-    my $plate;
-    if ($self->has_plate()) {
-        $plate = JSON::Any->decode($self->get_plate());
+    if ($self->has_stock_list()) {
+        @stock_list = @{$self->get_stock_list()};
+        my $number_of_stocks = scalar(@stock_list);
+        if ($number_of_stocks > $self->get_block_size) {
+            die "Too many to fit on one plate! $number_of_stocks > ".$self->get_block_size;
+        }
     }
     else {
-	die "No plate specified using plate accessor.\n";
+        die "No stock list specified\n";
     }
-    
 
-# plates:[ { 'project_id' : 'project x', 
-#            'plate_name' : 'required',
-#            'plate_format': 'Plate_96' | 'tubes',
-#            'sample_type' : 'DNA' | 'RNA' | 'Tissue'
-#            'samples':[
-# {
-#    		'name': 'sample_name1', 
-#     		'well': 'optional'
-#               'concentration:
-#'              'volume': 
-#               'taxomony_id' : 
-#               'tissue_type' : 
-#               }
-# ] 
-#                                   		}
-# 			]
-    
-    my $samples = $plate->{samples};
-    foreach my $sample (@$samples) { 
-	$gt_design{$sample->{well}} =
-	{ plot_name => $plate->{plate_name}."_".$sample->{name},
-	  stock_name => $sample->{name},
-	  volume => $sample->{volume},
-	  taxonomy_id => $sample->{taxonomy_id},
-	  tissue_type => $sample->{tissue_type},
-	};
+    my $blank = $self->get_blank ? $self->get_blank : ' ';
+
+    if ($self->get_block_size == '96'){
+        foreach my $row ("A".."H") {
+            foreach my $col (1..12) {
+                my $well= sprintf "%s%02d", $row, $col;
+
+                if ($well eq $blank) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well."_BLANK",
+                        stock_name => "BLANK",
+                        well => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 1
+                    };
+                }
+                elsif (@stock_list) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well,
+                        stock_name => shift(@stock_list),
+                        well => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 0
+                    };
+                }
+            }
+        }
     }
+    if ($self->get_block_size == '384'){
+        foreach my $row ("A".."P") {
+            foreach my $col (1..24) {
+                my $well= sprintf "%s%02d", $row, $col;
+
+                if ($well eq $blank) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well."_BLANK",
+                        stock_name => "BLANK",
+                        well => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 1
+                    };
+                }
+                elsif (@stock_list) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well,
+                        stock_name => shift(@stock_list),
+                        well => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 0
+                    };
+                }
+            }
+        }
+    }
+
     return \%gt_design;
 }
 
