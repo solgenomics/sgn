@@ -19,8 +19,11 @@ $trials_by_breeding_project => ()
 <br />
 
 <div id="new_submission_process_explanation">
-<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all database users): 
-The system will now contact the genotyping facility server directly, obviating the need for downloading the facility sample spreadsheet in a separate step. To submit samples, simply click on the "Create Genotyping Trial" link and follow the instructions. You will need a list containing 95 or fewer accessions to define the set to be genotyped.
+<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all database users):
+<ul>
+<li>If you choose to, the system will submit your plate information to a Genotyping Facility directly.</li>
+<li>Clicking on "Add Genotyping Trial" allows you to either submit an XLS file with your own plate layout information or you can allow the database to create a plate layout for you. Please note the Genotyping Facility Requirements before submitting your own plate layout, such as required BLANK wells.</li>
+</ul>
 
 </div>
 <br />

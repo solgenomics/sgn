@@ -322,18 +322,18 @@ sub genotype_trial_old_POST : Args(0) {
 sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentials') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
+
     if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) { 
-	$c->stash->{rest} = { 
-	    host => $c->config->{genotyping_server_host},
-	    username => $c->config->{genotyping_server_username},
-	    password => $c->config->{genotyping_server_password}
-	};
+        $c->stash->{rest} = { 
+            host => $c->config->{genotyping_server_host},
+            username => $c->config->{genotyping_server_username},
+            password => $c->config->{genotyping_server_password}
+        };
     }
     else { 
-	$c->stash->{rest} = { 
-	    error => "Insufficient privileges for this operation." 
-	};
+        $c->stash->{rest} = { 
+            error => "Insufficient privileges for this operation." 
+        };
     }
 }
 

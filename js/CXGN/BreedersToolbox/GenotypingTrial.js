@@ -54,14 +54,8 @@ jQuery(document).ready(function ($) {
     });
 
     $('#add_geno_trial_submit').click(function () {
-        submit_genotype_trial();
+        submit_genotype_trial_create();
     });
-
-//    $('#genotyping_trial_dialog').dialog( {
-//	width: 400,
-//	height: 400,
-//	autoOpen: false
-//    });
 
     $('#genotyping_trial_dialog').on('show.bs.modal', function (e) {
 	var l = new CXGN.List();
@@ -127,212 +121,200 @@ jQuery(document).ready(function ($) {
     });
 
 
-    function submit_genotype_trial(gdf_username, gdf_password, host) {
-	var plate_data = new Object();
-	plate_data.breeding_program = $('#breeding_program_select').val();
-	plate_data.year = $('#year_select').val();
-	plate_data.location = $('#location_select').val();
-	plate_data.description = $('#genotyping_trial_description').val();
-	plate_data.name = $('#genotyping_trial_name').val();
-	plate_data.list_id = $('#accession_select_box_list_select').val();
-	
-	if (plate_data.name == '') { 
-	    alert("A name is required and it should be unique in the database. Please try again.");
-	    jQuery('#working_modal').modal("hide");
-	    return;
-	}
-	
-	var l = new CXGN.List();
-	if (! l.validate(plate_data.list_id, 'accessions', true)) { 
-	    alert('The list contains elements that are not accessions.');
-	    jQuery('#working_modal').modal("hide");
-	    return;
-	}
-	
-	var elements = l.getList(plate_data.list_id);
-	if (typeof elements == 'undefined' ) { 
-	    alert("There are no elements in the list provided.");
-	    jQuery('#working_modal').modal("hide");
-	    return;
-	}
-	
-	if (elements.length > 95) { 
-	    $('#working').dialog("close");
-	    alert("The list needs to have less than 96 elements (one well is reserved for the BLANK). Please use another list.");
-	    jQuery('#working_modal').modal("hide");
-	    return;
-	}
-	
-	plate_data.elements = elements;
+    function submit_genotype_trial_create() {
+        var plate_data = new Object();
+        plate_data.breeding_program = $('#breeding_program_select').val();
+        plate_data.year = $('#year_select').val();
+        plate_data.location = $('#location_select').val();
+        plate_data.description = $('#genotyping_trial_description').val();
+        plate_data.name = $('#genotyping_trial_name').val();
+        plate_data.list_id = $('#accession_select_box_list_select').val();
 
-	//$('#working').dialog("open");
-	
-	// get the genotyping data from GDF
-	// login
-	//
-	var auth_data = new Object();
-	auth_data = get_genotyping_server_credentials();
+        if (plate_data.name == '') {
+            alert("A name is required and it should be unique in the database. Please try again.");
+            jQuery('#working_modal').modal("hide");
+            return;
+        }
 
-	if (auth_data.error) { 
-	    alert("Genotyping server credentials are not available. Stop.");
-	    return;
-	}
-	
-	alert("Click to login at gdf using "+auth_data.host+" "+auth_data.username);
-	
-	var access_token = genotyping_facility_login(auth_data);
-	if (access_token) { 
-	    auth_data.access_token = access_token;
-	    alert('token='+auth_data.access_token);
-	    submit_plate_to_gdf(auth_data, plate_data);	
-	}
+        var l = new CXGN.List();
+        if (! l.validate(plate_data.list_id, 'accessions', true)) {
+            alert('The list contains elements that are not accessions.');
+            jQuery('#working_modal').modal("hide");
+            return;
+        }
+
+        var elements = l.getList(plate_data.list_id);
+        if (typeof elements == 'undefined' ) {
+            alert("There are no elements in the list provided.");
+            jQuery('#working_modal').modal("hide");
+            return;
+        }
+
+        if (elements.length > 95) {
+            jQuery('#working_modal').modal("hide");
+            alert("The list needs to have less than 96 elements (one well is reserved for the BLANK). Please use another list.");
+            return;
+        }
+
+        plate_data.elements = elements;
+
+        var auth_data = new Object();
+        auth_data = get_genotyping_server_credentials();
+
+        if (auth_data.error) {
+            alert("Genotyping server credentials are not available. Stop.");
+            return;
+        }
+
+        var access_token = genotyping_facility_login(auth_data);
+        if (access_token) {
+            auth_data.access_token = access_token;
+            alert('token='+auth_data.access_token);
+            store_plate(plate_data);
+        }
     }
 
-    function genotyping_facility_login(auth_data) { 
-	var access_token;
-	$.ajax( { 
-	    url: auth_data.host+'/brapi/v2/token',
-	    method: 'POST',
-	    async: false,
-	    data: { username: auth_data.username,
-		    password: auth_data.password,
-		  },
-	    success: function(response) { 
-		if (response.metadata.status[0].message) { 
-		    alert('Login failed. '+JSON.stringify(response.metadata.status[0].message));
-		}
-		else { 
-		    alert("Success!"+ JSON.stringify(response)+" which is "+response.result.access_token);
-
-		    access_token = response.result.access_token;
-		}
-	    },
-	    error: function(response) { 
-		alert("An error occurred trying to log into the sequencing facility server. Please try again later.");
-	    }
-	});
-	return access_token;
+    function genotyping_facility_login(auth_data) {
+        var access_token;
+        $.ajax({
+            url: auth_data.host+'/brapi/v1/token',
+            method: 'POST',
+            async: false,
+            data: {
+                username: auth_data.username,
+                password: auth_data.password,
+            },
+            success: function(response) {
+                if (response.metadata.status[0].message) {
+                    alert('Login failed. '+JSON.stringify(response.metadata.status[0].message));
+                }
+                else {
+                    alert("Success!"+ JSON.stringify(response)+" which is "+response.result.access_token);
+                    access_token = response.result.access_token;
+                }
+            },
+            error: function(response) {
+                alert("An error occurred trying to log into the sequencing facility server. Please try again later.");
+            }
+        });
+        return access_token;
     }
 
-    
-    function submit_plate_to_gdf(auth_data, plate_data) { 
-	
-	var formatted_elements = new Array(); 
+    function submit_plate_to_gdf(auth_data, plate_data) {
+        var formatted_elements = new Array();
 
-	for(var i=0; i< plate_data.elements.length; i++) { 
-	    formatted_elements.push( { name: plate_data.elements[i] });
-	}
-	
-	alert("Creating genotyping experiment entry...");
+        for(var i=0; i< plate_data.elements.length; i++) {
+            formatted_elements.push( { name: plate_data.elements[i] });
+        }
 
-	store_plate(auth_data, plate_data);
-	alert("Now submitting the plate..."+JSON.stringify(formatted_elements)+" to "+auth_data.host);
-	$.ajax( { 
-	    url: auth_data.host+'/brapi/v2/plate-register',
-	    method: 'POST',
-	    data: { 
-		token: auth_data.access_token,
-		plates: [ 
-		    { 
-			project_id: plate_data.breeding_program,
-			plate_name: plate_data.name,
-			plate_format: "Plate_96",
-			sample_type: 'DNA',
-			samples: [
-			    formatted_elements
-			]
-		    }
-		]
-	    },
-	    success: function(response) { 
-		if (response.metadata.status) { 
-		    alert(response.metadata.status);
-		}
-		else { 
-		    //store_plate(auth_data, plate_data);
-		    alert("Successfully submitted the plate to GDF.");
-		}
-	    }
-	});						
-    }
-    
-    function load_genotyping_status_info(auth_data, plate_id) { 
-	$.ajax( { 
-	    url: auth_data.host+'/brapi/v2/plate/'+plate_id,
-	    success: function(response) { 
-		
-	    }
-	});
+        alert("Sending genotyping experiment entry to genotyping facility...");
+
+        alert("Now submitting the plate..."+JSON.stringify(formatted_elements)+" to "+auth_data.host);
+        $.ajax( { 
+            url: auth_data.host+'/brapi/v2/plate-register',
+            method: 'POST',
+            data: {
+                token: auth_data.access_token,
+                plates: [
+                    {
+                        project_id: plate_data.breeding_program,
+                        plate_name: plate_data.name,
+                        plate_format: "Plate_96",
+                        sample_type: 'DNA',
+                        samples: [
+                            formatted_elements
+                        ]
+                    }
+                ]
+            },
+            success: function(response) {
+                if (response.metadata.status) {
+                    alert(response.metadata.status);
+                }
+                else {
+                    alert("Successfully submitted the plate to GDF.");
+                }
+            }
+        });
     }
 
-    function shipping_label_pdfs(plate_ids) { 
-	$.ajax( { 
-	    url: '/brapi/v2/plate_pdf',
-	    data: { 'plate_ids' : plate_ids },
-	    success: function(response) { 
-		if (response.metadata.status) { 
-		    alert(response.metadata.status);
-		}
-		else { 
-		    $('#download_trial_pdf').html(response.results.url)
-		}
-	    },
-	    error: function(response) { 
-		alert("An error occurred. Please try again later.");
-	    }
-	});
-    }
-    
-    function store_plate(auth_data, plate_data) { 
-	$.ajax( { 
-	    url: '/ajax/breeders/genotypetrial',
-	    method: 'POST',
-	    data: { location: plate_data.location, 
-		    breeding_program: plate_data.breeding_program, 
-		    year: plate_data.year, 
-		    description: plate_data.description, 
-		    
-		    list_id : plate_data.list_id,
-		    plate_json: { trial_name : plate_data.name }
-		  },
-	    success : function(response) { 
-		if (response.error) { 
-		    alert(response.error);
-		    $('#working').dialog("close");
-		}
-		else { 
-		    alert(response.message);
-		    $('#genotyping_trial_dialog').dialog("close");
-		    $('#working').dialog("close");
-		    window.location.href = "/breeders/trial/"+response.trial_id;
-		}
-	    },
-	    error: function(response) { 
-		alert('An error occurred trying the create the layout.');
-		$('#working').dialog("close");
-	    }
-	});
-    }
-    
-    function get_genotyping_server_credentials() { 
-	var auth_data;
-	jQuery.ajax( { 
-	    url: '/ajax/breeders/genotyping_credentials',
-	    async: false,
-	    success: function(response) { 
-		auth_data =  { 
-		    host : response.host,
-		    username : response.username,
-		    password : response.password
-		};
+    function load_genotyping_status_info(auth_data, plate_id) {
+        $.ajax({
+            url: auth_data.host+'/brapi/v1/plate/'+plate_id,
+            success: function(response) {
 
-	    },
-	    error: function(response) { 
-		return { 
-		    error : "An error occurred",
-		};
-	    }
-	});
-	return auth_data;
+            }
+        });
+    }
+
+    function shipping_label_pdfs(plate_ids) {
+        $.ajax({
+            url: '/brapi/v2/plate_pdf',
+            data: { 'plate_ids' : plate_ids },
+            success: function(response) {
+                if (response.metadata.status) {
+                    alert(response.metadata.status);
+                }
+                else {
+                    $('#download_trial_pdf').html(response.results.url)
+                }
+            },
+            error: function(response) {
+                alert("An error occurred. Please try again later.");
+            }
+        });
+    }
+
+    function store_plate(auth_data, plate_data) {
+        $.ajax({
+            url: '/ajax/breeders/genotypetrial',
+            method: 'POST',
+            data: {
+                location: plate_data.location,
+                breeding_program: plate_data.breeding_program,
+                year: plate_data.year,
+                description: plate_data.description,
+                list_id : plate_data.list_id,
+                plate_json: {
+                    trial_name : plate_data.name
+                }
+            },
+            success : function(response) {
+                $("working_modal").modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert(response.message);
+                    $('#genotyping_trial_dialog').dialog("close");
+                    window.location.href = "/breeders/trial/"+response.trial_id;
+                }
+            },
+            error: function(response) {
+                alert('An error occurred trying the create the layout.');
+                $("working_modal").modal('hide');
+            }
+        });
+    }
+
+    function get_genotyping_server_credentials() {
+        var auth_data;
+        jQuery.ajax({
+            url: '/ajax/breeders/genotyping_credentials',
+            async: false,
+            success: function(response) {
+                auth_data =  { 
+                    host : response.host,
+                    username : response.username,
+                    password : response.password
+                };
+            },
+            error: function(response) {
+                return {
+                    error : "An error occurred",
+                };
+            }
+        });
+        return auth_data;
     }
 });
