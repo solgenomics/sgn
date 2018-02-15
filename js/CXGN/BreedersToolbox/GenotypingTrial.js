@@ -30,8 +30,8 @@ jQuery(document).ready(function ($) {
     get_select_box("breeding_programs", "breeding_program_select_div", {});
     get_select_box("years", "year_select_div", {});
 
-    $(function() {
-        $( "#genotyping_trials_accordion" ).accordion({
+    jQuery(function() {
+        jQuery( "#genotyping_trials_accordion" ).accordion({
             header: "> div > h3",
             collapsible: true,
             active: false,
@@ -47,78 +47,75 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    $('#create_genotyping_trial_link').click(function () {
+    jQuery('#create_genotyping_trial_link').click(function () {
         open_genotyping_trial_dialog();
     });
 
-    $('#add_geno_trial_submit').click(function () {
-        submit_genotype_trial_create();
-    });
-
-    $('#genotyping_trial_dialog').on('show.bs.modal', function (e) {
-        var l = new CXGN.List();
-        var html = l.listSelect('accession_select_box', [ 'accessions', 'plots' ]);
-        $('#accession_select_box_span').html(html);
-    })
-
-    function open_genotyping_trial_dialog () {
-        $('#genotyping_trial_dialog').modal("show");
-    }
-
-    $('#create_genotyping_trial_link').click(function() {
-        open_genotyping_trial_dialog();
-    });
-
-    function submit_genotype_trial_create() {
+    jQuery('#add_geno_trial_submit').click(function () {
         var plate_data = new Object();
-        plate_data.breeding_program = $('#breeding_program_select').val();
-        plate_data.year = $('#year_select').val();
-        plate_data.location = $('#location_select').val();
-        plate_data.description = $('#genotyping_trial_description').val();
-        plate_data.name = $('#genotyping_trial_name').val();
-        plate_data.list_id = $('#accession_select_box_list_select').val();
+        plate_data.breeding_program = jQuery('#breeding_program_select').val();
+        plate_data.year = jQuery('#year_select').val();
+        plate_data.location = jQuery('#location_select').val();
+        plate_data.description = jQuery('#genotyping_trial_description').val();
+        plate_data.project_name = jQuery('#genotyping_project_name').val();
+        plate_data.name = jQuery('#genotyping_trial_name').val();
+        plate_data.plate_format = jQuery('#genotyping_trial_plate_format').val();
+        plate_data.sampe_type = jQuery('#genotyping_trial_plate_sample_type').val();
+        plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();
+        plate_data.genotyping_facility_submit = jQuery('#genotyping_trial_facility_submit_select').val();
 
         if (plate_data.name == '') {
             alert("A name is required and it should be unique in the database. Please try again.");
-            jQuery('#working_modal').modal("hide");
             return;
         }
 
+        var uploadFile = jQuery("#genotyping_trial_layout_upload").val();
+        if(uploadFile === ''){
+            submit_genotype_trial_create(plate_data);
+        } else {
+            submit_genotype_trial_upload(plate_data);
+        }
+    });
+
+    jQuery('#genotyping_trial_dialog').on('show.bs.modal', function (e) {
         var l = new CXGN.List();
-        if (! l.validate(plate_data.list_id, 'accessions', true)) {
-            alert('The list contains elements that are not accessions.');
-            jQuery('#working_modal').modal("hide");
+        var html = l.listSelect('accession_select_box', [ 'accessions', 'plots', 'plants', 'tissue_samples' ]);
+        jQuery('#accession_select_box_span').html(html);
+    })
+
+    function open_genotyping_trial_dialog () {
+        jQuery('#genotyping_trial_dialog').modal("show");
+    }
+
+    jQuery('#create_genotyping_trial_link').click(function() {
+        open_genotyping_trial_dialog();
+    });
+
+    function submit_genotype_trial_create(plate_data) {
+        plate_data.list_id = jQuery('#accession_select_box_list_select').val();
+
+        var l = new CXGN.List();
+        if (! l.validate(plate_data.list_id, 'accessions', true) && ! l.validate(plate_data.list_id, 'plots', true) && ! l.validate(plate_data.list_id, 'plants', true) && ! l.validate(plate_data.list_id, 'tissue_samples', true)) {
+            alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
             return;
         }
 
         var elements = l.getList(plate_data.list_id);
         if (typeof elements == 'undefined' ) {
             alert("There are no elements in the list provided.");
-            jQuery('#working_modal').modal("hide");
             return;
         }
 
-        if (elements.length > 95) {
-            jQuery('#working_modal').modal("hide");
-            alert("The list needs to have less than 96 elements (one well is reserved for the BLANK). Please use another list.");
+        if (elements.length > plate_data.plate_format) {
+            alert("The list needs to have less than 96 or 384 elements depending on the plate format you selected");
             return;
         }
 
         plate_data.elements = elements;
+        var complete_plate_data = store_plate(plate_data);
 
-        var auth_data = new Object();
-        auth_data = get_genotyping_server_credentials();
-
-        if (auth_data.error) {
-            alert("Genotyping server credentials are not available. Stop.");
-            return;
-        }
-
-        var access_token = genotyping_facility_login(auth_data);
-        if (access_token) {
-            auth_data.access_token = access_token;
-            alert('token='+auth_data.access_token);
-            store_plate(plate_data);
+        if (plate_data.genotyping_facility_submit == 'yes'){
+            submit_plate_to_gdf(complete_plate_data);
         }
     }
 
@@ -148,42 +145,46 @@ jQuery(document).ready(function ($) {
         return access_token;
     }
 
-    function submit_plate_to_gdf(auth_data, plate_data) {
-        var formatted_elements = new Array();
+    function submit_plate_to_gdf(plate_data) {
+        var auth_data = new Object();
+        auth_data = get_genotyping_server_credentials();
 
-        for(var i=0; i< plate_data.elements.length; i++) {
-            formatted_elements.push( { name: plate_data.elements[i] });
+        if (auth_data.error) {
+            alert("Genotyping server credentials are not available. Stop.");
+            return;
         }
 
-        alert("Sending genotyping experiment entry to genotyping facility...");
+        var access_token = genotyping_facility_login(auth_data);
+        if (access_token) {
+            auth_data.access_token = access_token;
 
-        alert("Now submitting the plate..."+JSON.stringify(formatted_elements)+" to "+auth_data.host);
-        $.ajax( { 
-            url: auth_data.host+'/brapi/v2/plate-register',
-            method: 'POST',
-            data: {
-                token: auth_data.access_token,
-                plates: [
-                    {
-                        project_id: plate_data.breeding_program,
-                        plate_name: plate_data.name,
-                        plate_format: "Plate_96",
-                        sample_type: 'DNA',
-                        samples: [
-                            formatted_elements
-                        ]
+            alert("Sending genotyping experiment entry to genotyping facility...");
+
+            $.ajax( { 
+                url: auth_data.host+'/brapi/v1/vendor/plates',
+                method: 'POST',
+                data: {
+                    token: auth_data.access_token,
+                    plates: [
+                        {
+                            vendorProjectDbId: plate_data.breeding_program,
+                            clientPlateDbId: plate_data.name,
+                            plateFormat: plate_data.plate_format,
+                            sampleType: plate_data.sample_type,
+                            samples: plate_data.samples
+                        }
+                    ]
+                },
+                success: function(response) {
+                    if (response.metadata.status) {
+                        alert(response.metadata.status);
                     }
-                ]
-            },
-            success: function(response) {
-                if (response.metadata.status) {
-                    alert(response.metadata.status);
+                    else {
+                        alert("Successfully submitted the plate to GDF.");
+                    }
                 }
-                else {
-                    alert("Successfully submitted the plate to GDF.");
-                }
-            }
-        });
+            });
+        }
     }
 
     function load_genotyping_status_info(auth_data, plate_id) {
@@ -213,36 +214,33 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    function store_plate(auth_data, plate_data) {
+    function store_plate(plate_data) {
+        var complete_plate_data = new Object();
         $.ajax({
             url: '/ajax/breeders/genotypetrial',
             method: 'POST',
+            beforeSend: function(){
+                jQuery("working_modal").modal('show');
+            },
             data: {
-                location: plate_data.location,
-                breeding_program: plate_data.breeding_program,
-                year: plate_data.year,
-                description: plate_data.description,
-                list_id : plate_data.list_id,
-                plate_json: {
-                    trial_name : plate_data.name
-                }
+                plate_data: plate_data
             },
             success : function(response) {
-                $("working_modal").modal('hide');
+                jQuery("working_modal").modal('hide');
                 if (response.error) {
                     alert(response.error);
                 }
                 else {
                     alert(response.message);
-                    $('#genotyping_trial_dialog').dialog("close");
-                    window.location.href = "/breeders/trial/"+response.trial_id;
+                    complete_plate_data = response.plate_data;
                 }
             },
             error: function(response) {
                 alert('An error occurred trying the create the layout.');
-                $("working_modal").modal('hide');
+                jQuery("working_modal").modal('hide');
             }
         });
+        return complete_plate_data;
     }
 
     function get_genotyping_server_credentials() {

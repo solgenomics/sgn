@@ -1,6 +1,8 @@
 <%args>
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
 <div class="modal fade" id="genotyping_trial_dialog" name="genotyping_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="addGenoTrialDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -41,6 +43,14 @@
                                         <select class="form-control" id="genotyping_trial_plate_format">
                                             <option value="96">96 Well</option>
                                             <option value="384">384 Well</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Sample Type: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="genotyping_trial_plate_sample_type">
+                                            <option value="DNA">DNA</option>
                                         </select>
                                     </div>
                                 </div>
