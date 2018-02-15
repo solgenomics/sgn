@@ -71,56 +71,6 @@ jQuery(document).ready(function ($) {
         open_genotyping_trial_dialog();
     });
 
-    $('#delete_layout_data_by_trial_id').click(function() { 
-	var trial_id = get_trial_id();
-	var yes = confirm("Are you sure you want to delete this experiment with id "+trial_id+" ? This action cannot be undone.");
-	if (yes) { 
-	    jQuery('#working_modal').modal("show");
-	    var html = jQuery('#working_msg').html();
-	    jQuery('#working_msg').html(html+"Deleting genotyping experiment...<br />");
-	    jQuery.ajax( { 
-		async: false,
-		url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
-		success: function(response) { 
-		    if (response.error) { 
-			jQuery('#working_modal').modal("hide");
-			alert(response.error);
-		    }
-		    else { 
-			//Do nothing, as the process continues...
-		    }
-		},
-		error: function(response) { 
-		    jQuery('#working_modal').modal("hide");
-		    alert("An error occurred.");
-		}
-	    });
-	    html = jQuery('#working_msg').html();
-	    jQuery('#working_msg').html(html+"Removing the project entry...");
-	    jQuery.ajax( { 
-		async: false,
-		url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-		success: function(response) { 
-                    if (response.error) { 
-			jQuery('#working_modal').modal("hide");
-			alert(response.error);
-                    }
-                    else { 
-			jQuery('#working_modal').modal("hide");
-			alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-			window.location.href="/breeders/trial/"+trial_id;
-                    }
-		},
-		error: function(response) { 
-                    jQuery('#working_modal').modal("hide");
-                    alert("An error occurred.");
-		}
-            });
-	    
-	}
-    });
-
-
     function submit_genotype_trial_create() {
         var plate_data = new Object();
         plate_data.breeding_program = $('#breeding_program_select').val();
@@ -317,4 +267,54 @@ jQuery(document).ready(function ($) {
         });
         return auth_data;
     }
+
+    $('#delete_layout_data_by_trial_id').click(function() {
+        var trial_id = get_trial_id();
+        var yes = confirm("Are you sure you want to delete this experiment with id "+trial_id+" ? This action cannot be undone.");
+        if (yes) {
+            jQuery('#working_modal').modal("show");
+            var html = jQuery('#working_msg').html();
+            jQuery('#working_msg').html(html+"Deleting genotyping experiment...<br />");
+            jQuery.ajax({
+                async: false,
+                url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
+                success: function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal("hide");
+                        alert(response.error);
+                    }
+                    else {
+                        //Do nothing, as the process continues...
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred.");
+                }
+            });
+            html = jQuery('#working_msg').html();
+            jQuery('#working_msg').html(html+"Removing the project entry...");
+
+            jQuery.ajax({
+                async: false,
+                url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
+                success: function(response) {
+                    if (response.error) {
+                        jQuery('#working_modal').modal("hide");
+                        alert(response.error);
+                    }
+                    else {
+                        jQuery('#working_modal').modal("hide");
+                        alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
+                        window.location.href="/breeders/trial/"+trial_id;
+                    }
+                },
+                error: function(response) { 
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred.");
+                }
+            });
+        }
+    });
+
 });
