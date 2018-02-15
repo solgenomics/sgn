@@ -2,7 +2,7 @@
 </%args>
 
 <div class="modal fade" id="genotyping_trial_dialog" name="genotyping_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="addGenoTrialDialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -10,54 +10,209 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
+
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form" action="/ajax/breeders/genotypetrial">
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Genotyping trial name </label>
-                            <div class="col-sm-9">
-                                <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" />
+
+                        <ul class="nav nav-tabs">
+                            <li role="presentation" class="active"><a data-toggle="tab" href="#add_genotyping_trial_home"><span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;&nbsp;Plate Information</a></li>
+                            <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_wells"><span class="glyphicon glyphicon-th"></span>&nbsp;&nbsp;&nbsp;Well Information</a></li>
+                            <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_confirm"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;&nbsp;Confirm</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div id="add_genotyping_trial_home" class="tab-pane fade in active">
+                                <br/>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Genotyping Project Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="e.g. NextGenCassava"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Genotyping Plate ID: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" placeholder=" e.g. 18DNA00001"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plate Format: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="genotyping_trial_plate_format">
+                                            <option value="96">96 Well</option>
+                                            <option value="384">384 Well</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9">
+                                        <span id="breeding_program_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Location: </label>
+                                    <div class="col-sm-9">
+                                        <span id="location_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Year: </label>
+                                    <div class="col-sm-9">
+                                        <span id="year_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Description: </label>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description" ></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Genotyping Facility: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="genotyping_trial_facility_select">
+                                            <option value="none">None</option>
+                                            <option value="igd">Cornell IGD</option>
+                                            <option value="bgi">BGI</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
-                            <div class="col-sm-9">
-                                <span id="breeding_program_select_div"></span>
+                            <div id="add_genotyping_trial_wells" class="tab-pane fade in">
+                                <br/>
+                                <h3>1. Do you already have a plate layout created?<h3>
+
+                                <div class="well well-sm">
+                                    <&| /page/explanation.mas, title=>'Template information' &>
+                                        <p>
+                                            <b>File format information</b>
+                                            <br>
+                                            <a id="genotyping_trial_layout_upload_spreadsheet_info_format">Spreadsheet format</a>
+                                        </p>
+                                    </&>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Plate Layout XLS File: </label>
+                                        <div class="col-sm-9">
+                                            <input type="file" name="genotyping_trial_layout_upload" id="genotyping_trial_layout_upload" encoding="multipart/form-data" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <h3>2. Or do you want us to generate a plate layout for you?</h3>
+
+                                <div class="well well-sm">
+                                    <ul>
+                                        <li>Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill 95 wells you should supply a list of 95 elements.</li>
+                                        <li>Note: From the most desirable to least desirable list type you can choose: tissue samples, plants, plots, or accessions</li>
+                                    </ul>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Source Observation Unit List: </label>
+                                        <div class="col-sm-9">
+                                            <span id="accession_select_box_span">[loading...]</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Location: </label>
-                            <div class="col-sm-9">
-                                <span id="location_select_div"></span>
+                            <div id="add_genotyping_trial_confirm" class="tab-pane fade in">
+                                <br/>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Along with saving this information to this database, I want to submit to the Genotyping Facility: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="genotyping_trial_facility_submit_select">
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <hr>
+                                <center>
+                                <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
+                                </center>
                             </div>
+
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Year: </label>
-                            <div class="col-sm-9">
-                                <span id="year_select_div"></span>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Description: </label>
-                            <div class="col-sm-9">
-                                <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description" ></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-sm-9">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Accession List: </label>
-                            <div class="col-sm-9">
-                                <span id="accession_select_box_span">[loading...]</span>
-                            </div>
-                        </div>
-                    </form>      
-                </div>
+
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="genotyping_trial_layout_upload_spreadsheet_info_format_dialog" name="genotyping_trial_layout_upload_spreadsheet_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypingTrialInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading a pre-existing genotyping plate layout.</b>
+                    <br/>
+                    <b>File must be Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>date</td>
+                                <td>project_name</td>
+                                <td>plate_id</td>
+                                <td>sample_id</td>
+                                <td>well_A01</td>
+                                <td>source_observation_unit_name</td>
+                                <td>dna_person</td>
+                                <td>notes</td>
+                                <td>tissue_type</td>
+                                <td>extraction</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>date (should be YYYY/MM/DD)</li>
+                    <li>project_name (the project for which this plate is registered under. e.g. NextGen Cassava)</li>
+                    <li>plate_id (the unique identifier for the plate e.g. 18DNA00001)</li>
+                    <li>sample_id (the unique identifier for the sample in the well)</li>
+                    <li>well_A01 (the position of the sample in the plate)</li>
+                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name)</li>
+                    </ul>
+                    
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>dna_person (the name of the person who prepared the well)</li>
+                    <li>notes (any additional notes on the well)</li>
+                    <li>tissue_type (free-text for what type of tissue is present in the well)</li>
+                    <li>extraction (free-text for the extraction method e.g. CTAB)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_plot_gps_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#genotyping_trial_layout_upload_spreadsheet_info_format').click(function(){
+        jQuery('#genotyping_trial_layout_upload_spreadsheet_info_format_dialog').modal('show');
+    });
+
+});
+</script>
