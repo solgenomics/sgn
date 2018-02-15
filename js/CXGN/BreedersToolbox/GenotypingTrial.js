@@ -31,24 +31,22 @@ jQuery(document).ready(function ($) {
     get_select_box("years", "year_select_div", {});
 
     $(function() {
-	$( "#genotyping_trials_accordion" )
-	    .accordion({
-		header: "> div > h3",
-		collapsible: true,
-		active: false,
-		heightStyle: "content"
-	    })
-	    .sortable({
-		axis: "y",
-		handle: "h3",
-		stop: function( event, ui ) {
-		    // IE doesn't register the blur when sorting
-		    // so trigger focusout handlers to remove .ui-state-focus
-		    ui.item.children( "h3" ).triggerHandler( "focusout" );
-		}
-	    });
+        $( "#genotyping_trials_accordion" ).accordion({
+            header: "> div > h3",
+            collapsible: true,
+            active: false,
+            heightStyle: "content"
+        }).sortable({
+            axis: "y",
+            handle: "h3",
+            stop: function( event, ui ) {
+                // IE doesn't register the blur when sorting
+                // so trigger focusout handlers to remove .ui-state-focus
+                ui.item.children( "h3" ).triggerHandler( "focusout" );
+            }
+        });
     });
-    
+
     $('#create_genotyping_trial_link').click(function () {
         open_genotyping_trial_dialog();
     });
@@ -58,13 +56,13 @@ jQuery(document).ready(function ($) {
     });
 
     $('#genotyping_trial_dialog').on('show.bs.modal', function (e) {
-	var l = new CXGN.List();
-	var html = l.listSelect('accession_select_box', [ 'accessions', 'plots' ]);
-	$('#accession_select_box_span').html(html);
+        var l = new CXGN.List();
+        var html = l.listSelect('accession_select_box', [ 'accessions', 'plots' ]);
+        $('#accession_select_box_span').html(html);
     })
-    
+
     function open_genotyping_trial_dialog () {
-	$('#genotyping_trial_dialog').modal("show");
+        $('#genotyping_trial_dialog').modal("show");
     }
 
     $('#create_genotyping_trial_link').click(function() {
