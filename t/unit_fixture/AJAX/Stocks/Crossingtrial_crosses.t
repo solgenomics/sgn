@@ -11,6 +11,7 @@ use LWP::UserAgent;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
+use LWP::UserAgent;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -51,10 +52,24 @@ $mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_i
     'fruit_number' => '15', 'seed_number' => '30']);
 
 $response = decode_json $mech->content;
-#print STDERR Dumper $response;
 is($response->{'success'}, '1');
 
 # test uploading crosses
+my $file = $f->config->{basepath}."/t/data/cross/upload_cross.xls";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_crosses_file',
+    Content_Type => 'form-data',
+    Content => [
+        crosses_upload_file => [ $file, 'cross_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
+        'cross_upload_crossing_trial' => $crossing_trial_id,
+        'cross_upload_location' => 'test_location',
+    ]
+);
+
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
 
 
 
