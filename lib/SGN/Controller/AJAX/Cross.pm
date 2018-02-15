@@ -841,7 +841,7 @@ if ($progeny_number) {
       ['Pollination Date',$pollination_date],
       ['Number of Flowers',$number_of_flowers],
       ['Number of Fruits',$number_of_fruits],
-      ['Number_of_Seeds',$number_of_seeds]
+      ['Number of Seeds',$number_of_seeds]
     );
 
     foreach (@cross_props){
