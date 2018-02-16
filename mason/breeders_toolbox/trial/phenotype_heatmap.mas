@@ -826,7 +826,7 @@ jQuery(document).ready( function() {
                       cards.enter().append("text")
                          .attr("x", function(d) { return (d.col - 1) * gridSize + 2; })
                          .attr("y", function(d) { return (d.row - 1) * gridSize + 10 ; })
-                         .attr("font-family","FontAwesome")
+                         .attr("style", "font-family: FontAwesome;")
                          .attr('font-size', '10px' )
                          .text(image_icon);
                       

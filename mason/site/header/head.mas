@@ -19,17 +19,18 @@
   <link rel="stylesheet" type="text/css" href="/css/buttons/buttons.bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="/css/bootstrap3-xl-class.css">
   <link rel="stylesheet" type="text/css" href="/css/bootstrap-select.min.css">
-  <link rel="stylesheet" type="text/css" href="/css/font-awesome.min.css">
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  <!--<link rel="stylesheet" type="text/css" href="/css/fontawesome-all.min.css" > -->
+ <!-- <link rel="stylesheet" type="text/css" href="/css/fontawesome-all.min.css" /> -->
+  <!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"> -->
   <% $c->assets->export() %>
 
-<script language="javascript" type="text/javascript">
+<script language="javascript" type="text/javascript"> 
    JSAN = {};
    JSAN.use = function() {};
    MochiKit = {__export__: false};
 </script>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquery.dataTables-min", "jquerymigrate", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min" ] &>
+<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquery.dataTables-min", "jquerymigrate", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
 
 <& /site/header/local_head.mas &>
 <& /site/header/analytics.mas &>
