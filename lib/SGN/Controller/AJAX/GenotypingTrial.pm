@@ -114,31 +114,42 @@ sub store_genotype_trial_POST : Args(0) {
 
     print STDERR "Creating the trial...\n";
 
-    my $ct = CXGN::Trial::TrialCreate->new( {
-        chado_schema => $schema,
-        dbh => $c->dbc->dbh(),
-        user_name => $c->user()->get_object()->get_username(), #not implemented,
-        operator => $c->user()->get_object()->get_username(),
-        trial_year => $plate_info->{year},
-        trial_location => $location->description(),
-        program => $breeding_program->name(),
-        trial_description => $plate_info->{description},
-        design_type => 'genotyping_plate',
-        design => $plate_info->{design},
-        trial_name => $plate_info->{name},
-        is_genotyping => 1,
-        genotyping_user_id => $c->user()->get_object()->get_sp_person_id(),
-        genotyping_project_name => $plate_info->{project_name},
-    });
-
     my $message;
-    my $error;
-    try {
+    my $coderef = sub {
+
+        my $ct = CXGN::Trial::TrialCreate->new( {
+            chado_schema => $schema,
+            dbh => $c->dbc->dbh(),
+            user_name => $c->user()->get_object()->get_username(), #not implemented,
+            operator => $c->user()->get_object()->get_username(),
+            trial_year => $plate_info->{year},
+            trial_location => $location->description(),
+            program => $breeding_program->name(),
+            trial_description => $plate_info->{description},
+            design_type => 'genotyping_plate',
+            design => $plate_info->{design},
+            trial_name => $plate_info->{name},
+            is_genotyping => 1,
+            genotyping_user_id => $c->user()->get_object()->get_sp_person_id(),
+            genotyping_project_name => $plate_info->{project_name},
+            genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
+            genotyping_facility => $plate_info->{genotyping_facility},
+            genotyping_plate_format => $plate_info->{plate_format},
+            genotyping_plate_sample_type => $plate_info->{sample_type},
+        });
+
         $message = $ct->save_trial();
-    } catch {
-        $error = $_;
     };
 
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        print STDERR "Transaction Error: $_\n";
+        $c->stash->{rest} = {error => "Error saving genotyping trial in the database: $_"};
+        $c->detach;
+    };
+
+    my $error;
     if ($message->{'error'}) {
         $error = $message->{'error'};
     }

@@ -749,8 +749,132 @@ sub remove_planting_date {
 
 sub get_phenotypes_fully_uploaded {
     my $self = shift;
+    return $self->_get_projectprop('phenotypes_fully_uploaded');
+}
 
-    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotypes_fully_uploaded', 'project_property')->cvterm_id;
+sub set_phenotypes_fully_uploaded {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('phenotypes_fully_uploaded', $value);
+}
+
+
+=head2 accessors get_genotyping_facility(), set_genotyping_facility()
+
+ Usage: For genotyping trials, a genotyping facility can be set as a projectprop value e.g. 'igd'
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_facility {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_facility');
+}
+
+sub set_genotyping_facility {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_facility', $value);
+}
+
+=head2 accessors get_genotyping_facility_submitted(), set_genotyping_facility_submitted()
+
+ Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility and the plate is stored in out system, this stockprop can be set to 'yes'
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_facility_submitted {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_facility_submitted');
+}
+
+sub set_genotyping_facility_submitted {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_facility_submitted', $value);
+}
+
+=head2 accessors get_genotyping_facility_status(), set_genotyping_facility_status()
+
+ Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility, the status of that plate can be set here
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_facility_status {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_facility_status');
+}
+
+sub set_genotyping_facility_status {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_facility_status', $value);
+}
+
+=head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
+
+ Usage: For genotyping trials, this records if it is 96 wells or 384 or other
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_plate_format {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_plate_format');
+}
+
+sub set_genotyping_plate_format {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_plate_format', $value);
+}
+
+=head2 accessors get_genotyping_plate_sample_type(), set_genotyping_plate_sample_type()
+
+ Usage: For genotyping trials, this records sample type of plate e.g. DNA
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_plate_sample_type {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_plate_sample_type');
+}
+
+sub set_genotyping_plate_sample_type {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_plate_sample_type', $value);
+}
+
+
+
+sub _get_projectprop {
+    my $self = shift;
+    my $term = shift;
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $term, 'project_property')->cvterm_id;
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
         project_id => $self->get_trial_id(),
         type_id => $cvterm_id,
@@ -763,12 +887,11 @@ sub get_phenotypes_fully_uploaded {
     }
 }
 
-sub set_phenotypes_fully_uploaded {
+sub _set_projectprop {
     my $self = shift;
+    my $term = shift;
     my $value = shift;
-
-    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotypes_fully_uploaded', 'project_property')->cvterm_id;
-
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $term, 'project_property')->cvterm_id;
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
         project_id => $self->get_trial_id(),
         type_id => $cvterm_id,
@@ -776,7 +899,6 @@ sub set_phenotypes_fully_uploaded {
     $row->value($value);
     $row->update();
 }
-
 
 =head2 function delete_phenotype_data()
 

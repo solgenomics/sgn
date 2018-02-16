@@ -122,6 +122,13 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     if ($design_type eq "genotyping_plate") {
         $c->stash->{plate_id} = $c->stash->{trial_id};
+        $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
+        $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
+        $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
+        $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
+        if ($trial->get_genotyping_plate_format){
+            $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
+        }
         if ($format eq "as_table") {
             $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
         }

@@ -62,8 +62,14 @@ sub patch {
 
     my $terms = {
         'stock_property' => [
-            'well',
             'is_blank'
+        ],
+        'project_property' => [
+            'genotyping_facility',
+            'genotyping_facility_status',
+            'genotyping_facility_submitted',
+            'genotyping_plate_format',
+            'genotyping_plate_sample_type'
         ]
     };
 

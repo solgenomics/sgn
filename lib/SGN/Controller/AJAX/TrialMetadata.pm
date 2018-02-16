@@ -69,7 +69,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
         $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
     }
     catch {
-        print STDERR "Trial Layout for $trial_id does not exist.\n";
+        print STDERR "Trial Layout for $trial_id does not exist. @_\n";
     }
 
 }

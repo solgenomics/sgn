@@ -122,7 +122,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Blank Well <small>Cornell IGD requires a specific well to be blank.</small>: </label>
+                                        <label class="col-sm-3 control-label">Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small>: </label>
                                         <div class="col-sm-9">
                                             <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
                                         </div>

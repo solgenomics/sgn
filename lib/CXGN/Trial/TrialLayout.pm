@@ -48,7 +48,11 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
  {
     'A01' => {
         "plot_name" => "mytissuesample_A01",
-        "stock_name" => "accession1"
+        "stock_name" => "accession1",
+        "plot_number" => "A01",
+        "row_number" => "A",
+        "col_number" => "1",
+        "is_blank" => 0
     }
  }
  
@@ -229,6 +233,7 @@ sub _get_unique_accession_names_from_trial {
     my %design = %{$self->get_design()};
     my @acc_names;
     my %unique_acc;
+    no warnings 'numeric'; #for genotyping trial so that wells don't give warning
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
@@ -247,6 +252,7 @@ sub _get_unique_control_accession_names_from_trial {
     my %design = %{$self->get_design()};
     my @control_names;
     my %unique_controls;
+    no warnings 'numeric'; #for genotyping trial so that wells don't give warning
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         my $is_a_control = $design_info{"is_a_control"};
@@ -363,6 +369,7 @@ sub generate_and_cache_layout {
   my $is_a_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'is a control', 'stock_property' )->cvterm_id();
   my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'row_number', 'stock_property' )->cvterm_id();
   my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'col_number', 'stock_property' )->cvterm_id();
+  my $is_blank_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'is_blank', 'stock_property' )->cvterm_id();
   my $plot_geo_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot_geo_json', 'stock_property' )->cvterm_id();
   my $json = JSON->new();
 
@@ -391,6 +398,7 @@ sub generate_and_cache_layout {
     my $is_a_control_prop = $stockprop_hash{$is_a_control_cvterm_id} ? join ',', @{$stockprop_hash{$is_a_control_cvterm_id}} : undef;
     my $row_number_prop = $stockprop_hash{$row_number_cvterm_id} ? join ',', @{$stockprop_hash{$row_number_cvterm_id}} : undef;
     my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
+    my $is_blank_prop = $stockprop_hash{$is_blank_cvterm_id} ? join ',', @{$stockprop_hash{$is_blank_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
         { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
@@ -429,6 +437,11 @@ sub generate_and_cache_layout {
     }
 	if ($col_number_prop) {
       $design_info{"col_number"}=$col_number_prop;
+    }
+    if ($is_blank_prop) {
+      $design_info{"is_blank"}=1;
+    } else {
+      $design_info{"is_blank"}=0;
     }
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop;

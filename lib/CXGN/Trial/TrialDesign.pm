@@ -174,7 +174,7 @@ sub _get_genotyping_plate {
                     $gt_design{$well} = {
                         plot_name => $self->get_trial_name()."_".$well."_BLANK",
                         stock_name => "BLANK",
-                        well => $well,
+                        plot_number => $well,
                         row_number => $row,
                         col_number => $col,
                         is_blank => 1
@@ -184,7 +184,7 @@ sub _get_genotyping_plate {
                     $gt_design{$well} = {
                         plot_name => $self->get_trial_name()."_".$well,
                         stock_name => shift(@stock_list),
-                        well => $well,
+                        plot_number => $well,
                         row_number => $row,
                         col_number => $col,
                         is_blank => 0
@@ -202,7 +202,7 @@ sub _get_genotyping_plate {
                     $gt_design{$well} = {
                         plot_name => $self->get_trial_name()."_".$well."_BLANK",
                         stock_name => "BLANK",
-                        well => $well,
+                        plot_number => $well,
                         row_number => $row,
                         col_number => $col,
                         is_blank => 1
@@ -212,7 +212,7 @@ sub _get_genotyping_plate {
                     $gt_design{$well} = {
                         plot_name => $self->get_trial_name()."_".$well,
                         stock_name => shift(@stock_list),
-                        well => $well,
+                        plot_number => $well,
                         row_number => $row,
                         col_number => $col,
                         is_blank => 0

@@ -3,6 +3,8 @@
 $trial_id
 $trial_name
 $plate_id
+$breeding_program_name
+$breeding_program_id
 $location_data => undef
 $year => undef
 $trial_type => undef
@@ -12,6 +14,11 @@ $trial_description => undef
 $design_layout_view => undef
 $user_can_modify => undef
 $identifier_prefix => 'SGN'
+$genotyping_facility => undef
+$genotyping_facility_status => undef
+$genotyping_facility_submitted => undef
+$genotyping_plate_format => '96'
+$genotyping_plate_sample_type => undef
 </%args>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;"><% $trial_id %></div>
@@ -23,31 +30,33 @@ $identifier_prefix => 'SGN'
 <br/>
 
 <div class="well">
-<div class="row">
-<div class="col-sm-6">
+    <div class="row">
+        <div class="col-sm-9">
 
-<&| /page/info_section.mas, title=>"Breeding program" &>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table class="table table-bordered table-hover">
+                    <tbody>
+                    <tr><td><b>Breeding Program</b></td><td><div id="breeding_programs"></div></td></tr>
+                    <tr><td><b>Trial Type</b></td><td>Genotyping Trial</td></tr>
+                    <tr><td><b>Plate Format</b></td><td><% $genotyping_plate_format %></td></tr>
+                    <tr><td><b>Plate Sample Type</b></td><td><% $genotyping_plate_sample_type %></td></tr>
+                    <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
+                    <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
+                    <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr>
+                    </tbody>
+                    </table>
+                </div>
+            </div>
 
-<div id="breeding_programs">
-  [loading...]
+        </div>
+        <div class="col-sm-3">
+
+            <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &></center><br />
+
+        </div>
+    </div>
 </div>
-
-</&>
-
-</div>
-<div class="col-sm-6">
-
-<&| /page/info_section.mas, title=>"Trial type" &>
-  <div id="trial_type">
-    Genotyping trial
-  </div>
-</&>
-
-</div>
-</div>
-</div>
-
-<center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &></center><br />
 
 <center>
 <div id="genotyping_trial_status_info">
@@ -59,7 +68,10 @@ $identifier_prefix => 'SGN'
 [loading...]
 </div>
 
+<!--
+DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 <center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
+-->
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">csv</a>]"  &>
 
@@ -88,9 +100,11 @@ $identifier_prefix => 'SGN'
 <br />
 
 % my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
-<&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>1, is_subsection=>1,subtitle=> qq{ [<a href=$plate_view_link>Plate View</a>] } &>
+<&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ [<a href=$plate_view_link>Plate View</a>] } &>
 
-  <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id &>
+     <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>
+
+     <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id, genotyping_plate_format => $genotyping_plate_format &>
 
 </&>
 

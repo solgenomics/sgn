@@ -51,7 +51,11 @@ Will do the following:
         trial_name => $trial_name,
         is_genotyping => 1,
         genotyping_user_id => $user_id,
-        genotyping_project_name => $project_name
+        genotyping_project_name => $project_name,
+        genotyping_facility_submit => $plate_info->{genotyping_facility_submit},
+        genotyping_facility => $plate_info->{genotyping_facility},
+        genotyping_plate_format => $plate_info->{plate_format},
+        genotyping_plate_sample_type => $plate_info->{sample_type},
     });
     try {
         $ct->save_trial();
@@ -106,6 +110,10 @@ has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', requir
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
+has 'genotyping_facility_submitted' => (isa => 'Str', is => 'rw');
+has 'genotyping_facility' => (isa => 'Str', is => 'rw');
+has 'genotyping_plate_format' => (isa => 'Str', is => 'rw');
+has 'genotyping_plate_sample_type' => (isa => 'Str', is => 'rw');
 
 
 sub trial_name_already_exists {
@@ -179,6 +187,10 @@ sub save_trial {
 	my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
 	my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
 	my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
+	my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility', 'project_property');
+	my $genotyping_facility_submitted_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility_submitted', 'project_property');
+	my $genotyping_plate_format_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_format', 'project_property');
+	my $genotyping_plate_sample_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_sample_type', 'project_property');
 	my $genotyping_user_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_user_id', 'nd_experiment_property');
 	my $genotyping_project_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_name', 'nd_experiment_property');
 
@@ -207,6 +219,13 @@ sub save_trial {
 			$genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
 			$genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
 		});
+
+        $project->create_projectprops({
+            $genotyping_facility_cvterm->name() => $self->get_genotyping_facility(),
+            $genotyping_facility_submitted_cvterm->name() => $self->get_genotyping_facility_submitted(),
+            $genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
+            $genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
+        });
 	}
 
 	my $t = CXGN::Trial->new({
