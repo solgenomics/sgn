@@ -13,7 +13,7 @@ use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_
 use CXGN::Trial::Download;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
-use CXGN::List;
+use CXGN::List; 
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -133,7 +133,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/treatment.mas';
     }
     else {
-        $c->assets->include('/static/css/fontawesome-all.min.css');
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
