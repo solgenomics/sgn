@@ -83,19 +83,33 @@ sub upload_cross_file_POST : Args(0) {
   my %upload_metadata;
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
+  my $user_role;
   my $user_id;
+  my $user_name;
   my $owner_name;
   my $upload_file_type = "crosses excel";#get from form when more options are added
+  my $session_id = $c->req->param("sgn_session_id");
 
-  if (!$c->user()) {
-    print STDERR "User not logged in... not adding a crosses.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
-    return;
-  }
-
-  $user_id = $c->user()->get_object()->get_sp_person_id();
-
-  $owner_name = $c->user()->get_object()->get_username();
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
 
   my $uploader = CXGN::UploadFile->new({
     tempfile => $upload_tempfile,
@@ -104,10 +118,11 @@ sub upload_cross_file_POST : Args(0) {
     archive_filename => $upload_original_name,
     timestamp => $timestamp,
     user_id => $user_id,
-    user_role => $c->user()->roles
+    user_role => $user_role
+
   });
 
-  ## Store uploaded temporary file in archive
+  ## Store uploaded temporary file in arhive
   $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
   if (!$archived_filename_with_path) {
@@ -155,7 +170,7 @@ sub upload_cross_file_POST : Args(0) {
 	   location => $location,
      crossing_trial_id => $crossing_trial_id,
 	   crosses =>  $parsed_data->{crosses},
-	   owner_name => $owner_name
+	   owner_name => $user_name
 	  });
 
   #validate the crosses
@@ -242,15 +257,15 @@ sub add_cross_POST :Args(0) {
     #print STDERR "Female Plot=".Dumper($female_plot)."\n";
 
     if (!$c->user()) {
-  print STDERR "User not logged in... not adding a cross.\n";
-  $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
-  return;
+        print STDERR "User not logged in... not adding a cross.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+        return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-  print STDERR "User does not have sufficient privileges.\n";
-  $c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
-  return;
+        print STDERR "User does not have sufficient privileges.\n";
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
+        return;
     }
 
     if ($cross_type eq "polycross") {
