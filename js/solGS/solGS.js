@@ -751,7 +751,6 @@ jQuery(document).ready(function (){
 			 'data_set_type'   : dataSetType,
 			};
 
-	     alert(' check destination ' + page)
 	     solGS.waitPage(page, args);
 	 } else {
 	     selectTraitMessage();

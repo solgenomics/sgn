@@ -1668,7 +1668,7 @@ sub prediction_pop_analyzed_traits {
 	    my @copy_files = @files;
    
 	    @trait_ids = map { s/prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
- 
+
 	    my @traits = ();
 	    if(@trait_ids) 
 	    {
@@ -2992,19 +2992,28 @@ sub traits_with_valid_models {
     
     my @analyzed_traits = @{$c->stash->{analyzed_traits}};  
     my @filtered_analyzed_traits;
+    my @valid_traits_ids;
 
     foreach my $analyzed_trait (@analyzed_traits) 
     {   
         $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
-        my $accuracy_value = $c->stash->{accuracy_value};            
-        if ($accuracy_value > 0)
+        my $av = $c->stash->{accuracy_value};            
+        if ($av && $av =~ m/\d+/ && $av > 0)
         { 
             push @filtered_analyzed_traits, $analyzed_trait;
+
+	    
+	    $c->stash->{trait_abbr} = $analyzed_trait;
+	    $self->get_trait_details_of_trait_abbr($c);
+	    push @valid_traits_ids, $c->stash->{trait_id};
         }     
     }
 
     @filtered_analyzed_traits = uniq(@filtered_analyzed_traits);
+    @valid_traits_ids = uniq(@valid_traits_ids);
+   
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
+    $c->stash->{traits_ids_with_valid_models} = \@valid_traits_ids;
 
 }
 
@@ -4058,7 +4067,7 @@ sub analyzed_traits {
     my @traits_ids;
     my @si_traits;
     my @valid_traits_files;
- 
+   
     foreach my $trait_file  (@traits_files) 
     {  
         if (-s $trait_file > 1) 
@@ -4068,6 +4077,7 @@ sub analyzed_traits {
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
 
+	    my $trait_id;
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
             {
@@ -4077,7 +4087,7 @@ sub analyzed_traits {
                     {
                         my $trait_name =  $r->[1];
                         $trait_name    =~ s/\n//g;                                                       
-                        my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+                        $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
                        
                         push @traits_ids, $trait_id;                                               
                     }
@@ -4105,8 +4115,7 @@ sub analyzed_traits {
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
     $c->stash->{analyzed_traits_files}  = \@traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
-    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;
-   
+    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;   
 }
 
 
