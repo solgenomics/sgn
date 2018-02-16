@@ -400,12 +400,24 @@ sub generate_and_cache_layout {
     my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
     my $is_blank_prop = $stockprop_hash{$is_blank_cvterm_id} ? join ',', @{$stockprop_hash{$is_blank_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
-    my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-        { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
-        { 'join' => 'object' }
-    );
-    if ($accession_rs->count != 1){
-        die "There is more than one accession linked here!\n";
+    my $accession_rs;
+    if ($self->get_experiment_type eq 'field_layout'){
+        $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
+            { 'me.type_id' => { -in => [ $plot_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
+            { 'join' => 'object' }
+        );
+        if ($accession_rs->count != 1){
+            die "There is more than one or no accession linked here!\n";
+        }
+    }
+    if ($self->get_experiment_type eq 'genotyping_layout'){
+        $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
+            { 'me.type_id' => { -in => [ $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
+            { 'join' => 'object' }
+        );
+        if ($accession_rs->count != 1){
+            die "There is more than one or no source stock linked here!\n";
+        }
     }
     my $accession = $accession_rs->first->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {'object.type_id' => $plant_cvterm_id}, {order_by=>"object.stock_id"});

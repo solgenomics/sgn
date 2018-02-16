@@ -51,8 +51,9 @@ jQuery(document).ready(function ($) {
         open_genotyping_trial_dialog();
     });
 
+    var plate_data = new Object();
     jQuery('#add_geno_trial_submit').click(function () {
-        var plate_data = new Object();
+        plate_data = new Object();
         plate_data.breeding_program = jQuery('#breeding_program_select').val();
         plate_data.year = jQuery('#year_select').val();
         plate_data.location = jQuery('#location_select').val();
@@ -209,6 +210,7 @@ jQuery(document).ready(function ($) {
     }
 
     function generate_plate(plate_data) {
+        console.log('generating genotype tirial plate');
         $.ajax({
             url: '/ajax/breeders/generategenotypetrial',
             method: 'POST',
@@ -235,19 +237,44 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    function submit_genotype_trial_upload(plate_data) {
+        console.log('uploading genotype trial file');
+        plate_data = plate_data;
+        jQuery('#upload_genotyping_trials_form').attr("action", "/ajax/breeders/parsegenotypetrial");
+        jQuery("#upload_genotyping_trials_form").submit();
+    }
+
+    jQuery('#upload_genotyping_trials_form').iframePostForm({
+        json: true,
+        post: function () {
+        },
+        complete: function (response) {
+
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                plate_data.design = response.design;
+                store_plate(plate_data);
+            }
+        }
+    });
+
     function store_plate(plate_data) {
+        //console.log(plate_data);
         var brapi_plate_data = new Object();
         $.ajax({
             url: '/ajax/breeders/storegenotypetrial',
             method: 'POST',
             beforeSend: function(){
-                jQuery("working_modal").modal('show');
+                jQuery("#working_modal").modal('show');
             },
             data: {
                 'plate_data': JSON.stringify(plate_data)
             },
             success : function(response) {
-                jQuery("working_modal").modal('hide');
+                jQuery("#working_modal").modal('hide');
                 if (response.error) {
                     alert(response.error);
                 }
@@ -261,7 +288,7 @@ jQuery(document).ready(function ($) {
             },
             error: function(response) {
                 alert('An error occurred trying the create the layout.');
-                jQuery("working_modal").modal('hide');
+                jQuery("#working_modal").modal('hide');
             }
         });
         return brapi_plate_data;

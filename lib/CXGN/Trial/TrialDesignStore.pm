@@ -131,7 +131,14 @@ sub validate_design {
             'row_number',
             'col_number',
             'is_blank',
-            'plot_number'
+            'plot_number',
+            'extraction',
+            'dna_person',
+            'concentration',
+            'volume',
+            'tissue_type',
+            'notes',
+            'acquisition_date'
         );
         #plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
     } elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot' || $design_type eq 'Lattice' || $design_type eq 'MAD' || $design_type eq 'greenhouse'){
@@ -209,6 +216,7 @@ sub validate_design {
         $error .= "You cannot create a trial with less than one accession.";
     }
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
@@ -225,10 +233,26 @@ sub validate_design {
     if (scalar(@seedlots_missing) > 0) {
         $error .=  "The following seedlots are not in the database as uniquenames or synonyms: ".join(',',@seedlots_missing);
     }
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($chado_schema,'accessions',\@accession_names)->{'missing'}};
-    if (scalar(@accessions_missing) > 0) {
-        $error .=  "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+
+    my @source_stock_types;
+    if ($self->get_is_genotyping) {
+        @source_stock_types = ($accession_type_id, $plot_type_id, $plant_type_id, $tissue_type_id);
+    } else {
+        @source_stock_types = ($accession_type_id);
+    }
+    my $rs = $chado_schema->resultset('Stock::Stock')->search({
+        'is_obsolete' => { '!=' => 't' },
+        'type_id' => {-in=>\@source_stock_types},
+        'uniquename' => {-in=>\@accession_names}
+    });
+    my %found_data;
+    while (my $s = $rs->next()) {
+        $found_data{$s->uniquename} = 1;
+    }
+    foreach (@accession_names){
+        if (!$found_data{$_}){
+            $error .= "The following name is not in the database: $_ .";
+        }
     }
 
     return $error;
@@ -245,6 +269,9 @@ sub store {
 
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type');
     my $subplot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship');
     my $plant_of_subplot = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship');
@@ -260,6 +287,13 @@ sub store {
     my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property');
     my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property');
     my $is_blank_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is_blank', 'stock_property');
+    my $concentration_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'concentration', 'stock_property');
+    my $volume_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'volume', 'stock_property');
+    my $dna_person_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'dna_person', 'stock_property');
+    my $extraction_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'extraction', 'stock_property');
+    my $tissue_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property');
+    my $acquisition_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'acquisition date', 'stock_property');
+    my $notes_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property');
     my $treatment_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
@@ -270,14 +304,17 @@ sub store {
     my $nd_experiment_type_id;
     my $stock_type_id;
     my $stock_rel_type_id;
+    my @source_stock_types;
     if (!$self->get_is_genotyping) {
         $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+        $stock_type_id = $plot_cvterm_id;
         $stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        @source_stock_types = ($accession_cvterm_id);
     } else {
         $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        $stock_type_id = $tissue_sample_cvterm_id;
         $stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+        @source_stock_types = ($accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id);
     }
 
     my $nd_experiment_id;
@@ -340,7 +377,7 @@ sub store {
 
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },
-        'type_id' => $accession_cvterm_id,
+        'type_id' => {-in=>\@source_stock_types},
         'uniquename' => {-in=>\@seen_accessions}
     });
     my %stock_data;
@@ -431,6 +468,34 @@ sub store {
             if ($design{$key}->{is_blank}) {
                 $well_is_blank = $design{$key}->{is_blank};
             }
+            my $well_concentration;
+            if ($design{$key}->{concentration}) {
+                $well_concentration = $design{$key}->{concentration};
+            }
+            my $well_volume;
+            if ($design{$key}->{volume}) {
+                $well_volume = $design{$key}->{volume};
+            }
+            my $well_dna_person;
+            if ($design{$key}->{dna_person}) {
+                $well_dna_person = $design{$key}->{dna_person};
+            }
+            my $well_extraction;
+            if ($design{$key}->{extraction}) {
+                $well_extraction = $design{$key}->{extraction};
+            }
+            my $well_tissue_type;
+            if ($design{$key}->{tissue_type}) {
+                $well_tissue_type = $design{$key}->{tissue_type};
+            }
+            my $acquisition_date;
+            if ($design{$key}->{acquisition_date}) {
+                $acquisition_date = $design{$key}->{acquisition_date};
+            }
+            my $notes;
+            if ($design{$key}->{notes}) {
+                $notes = $design{$key}->{notes};
+            }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
             if ($stock_data{$stock_name}) {
@@ -480,6 +545,27 @@ sub store {
                 }
                 if ($well_is_blank) {
                     $plot->create_stockprops({$is_blank_cvterm->name() => $well_is_blank});
+                }
+                if ($well_concentration) {
+                    $plot->create_stockprops({$concentration_cvterm->name() => $well_concentration});
+                }
+                if ($well_volume) {
+                    $plot->create_stockprops({$volume_cvterm->name() => $well_volume});
+                }
+                if ($well_extraction) {
+                    $plot->create_stockprops({$extraction_cvterm->name() => $well_extraction});
+                }
+                if ($well_tissue_type) {
+                    $plot->create_stockprops({$tissue_type_cvterm->name() => $well_tissue_type});
+                }
+                if ($well_dna_person) {
+                    $plot->create_stockprops({$dna_person_cvterm->name() => $well_dna_person});
+                }
+                if ($acquisition_date) {
+                    $plot->create_stockprops({$acquisition_date_cvterm->name() => $acquisition_date});
+                }
+                if ($notes) {
+                    $plot->create_stockprops({$notes_cvterm->name() => $notes});
                 }
 
                 my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({

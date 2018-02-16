@@ -6,6 +6,7 @@ use JSON;
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
 use Try::Tiny;
+use List::MoreUtils qw /any /;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -81,6 +82,117 @@ sub generate_genotype_trial_POST : Args(0) {
 }
 
 
+sub parse_genotype_trial_file : Path('/ajax/breeders/parsegenotypetrial') : ActionClass('REST') { }
+sub parse_genotype_trial_file_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('genotyping_trial_layout_upload');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "genotyping_trial_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $error;
+
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not uploading a trial.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user->get_object->get_user_type()
+    });
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('GenotypeTrialXLS');
+    $parsed_data = $parser->parse();
+
+    if (!$parsed_data) {
+        my $return_error = '';
+
+        if (! $parser->has_parse_errors() ){
+            $return_error = "Could not get parsing errors";
+            $c->stash->{rest} = {error_string => $return_error,};
+        }
+        else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error=$return_error.$error_string."<br>";
+            }
+        }
+
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
+        return;
+    }
+    #print STDERR Dumper $parsed_data;
+
+    #Turn parased data into same format as generate_genotype_trial above
+    my %design;
+    foreach (values %$parsed_data){
+        $design{$_->{well}} = {
+            plot_name => $_->{sample_id},
+            stock_name => $_->{source_stock_uniquename},
+            plot_number => $_->{well},
+            row_number => $_->{row},
+            col_number => $_->{column},
+            is_blank => $_->{is_blank},
+            concentration => $_->{concentration},
+            volume => $_->{volume},
+            tissue_type => $_->{tissue_type},
+            dna_person => $_->{dna_person},
+            extraction => $_->{extraction},
+            acquisition_date => $_->{date},
+            notes => $_->{notes},
+        };
+    }
+
+    $c->stash->{rest} = {success => "1", design=>\%design};
+}
+
 sub store_genotype_trial : Path('/ajax/breeders/storegenotypetrial') ActionClass('REST') {}
 sub store_genotype_trial_POST : Args(0) {
     my $self = shift;
@@ -95,7 +207,7 @@ sub store_genotype_trial_POST : Args(0) {
     my $plate_info = decode_json $c->req->param("plate_data");
     print STDERR Dumper $plate_info;
 
-    if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
+    if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
         $c->stash->{rest} = { error => "Please provide all parameters" };
         $c->detach();
     }

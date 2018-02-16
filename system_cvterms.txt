@@ -165,6 +165,11 @@ stock_property	introgression_chromosome	For indicating chromosome number of intr
 stock_property	introgression_start_position_bp	For indicating introgression start position in bp	12/20/2017	nm529	00088
 stock_property	introgression_end_position_bp	For indicating introgression end position in bp	12/20/2017	nm529	00088
 stock_property	is_blank	For indicating blank well in genotype plate	2/15/2018	nm529	00091
+stock_property	concentration	For indicating concentration in genotype plate well	2/15/2018	nm529	00091
+stock_property	volume	For indicating volume in genotype plate well	2/15/2018	nm529	00091
+stock_property	dna_person	For indicating dna_person in genotype plate well	2/15/2018	nm529	00091
+stock_property	extraction	For indicating extraction in genotype plate well	2/15/2018	nm529	00091
+stock_property	tissue_type	For indicating tissue type in genotype plate well	2/15/2018	nm529	00091
 stock_relationship	cross_relationship				00052
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052

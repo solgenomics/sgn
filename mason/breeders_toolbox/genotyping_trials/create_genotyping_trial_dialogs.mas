@@ -133,7 +133,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small>: </label>
+                                        <label class="col-sm-6 control-label">Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small></label>
                                         <div class="col-sm-6">
                                             <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
                                         </div>
@@ -210,15 +210,18 @@
                         <tbody>
                             <tr>
                                 <td>date</td>
-                                <td>project_name</td>
-                                <td>plate_id</td>
                                 <td>sample_id</td>
                                 <td>well_A01</td>
+                                <td>row</td>
+                                <td>column</td>
                                 <td>source_observation_unit_name</td>
                                 <td>dna_person</td>
                                 <td>notes</td>
                                 <td>tissue_type</td>
                                 <td>extraction</td>
+                                <td>concentration</td>
+                                <td>volume</td>
+                                <td>is_blank</td>
                             </tr>
                         </tbody>
                     </table>
@@ -226,10 +229,10 @@
                     <b>Required fields:</b>
                     <ul>
                     <li>date (should be YYYY/MM/DD)</li>
-                    <li>project_name (the project for which this plate is registered under. e.g. NextGen Cassava)</li>
-                    <li>plate_id (the unique identifier for the plate e.g. 18DNA00001)</li>
                     <li>sample_id (the unique identifier for the sample in the well)</li>
                     <li>well_A01 (the position of the sample in the plate)</li>
+                    <li>row (the row position of the sample in the plate e.g. A)</li>
+                    <li>column (the column position of the sample in the plate e.g. 10)</li>
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name)</li>
                     </ul>
                     
@@ -239,6 +242,9 @@
                     <li>notes (any additional notes on the well)</li>
                     <li>tissue_type (free-text for what type of tissue is present in the well)</li>
                     <li>extraction (free-text for the extraction method e.g. CTAB)</li>
+                    <li>concentration (concentration in ng/ul)</li>
+                    <li>volume (volume in ul)</li>
+                    <li>is_blank (indicates if well is blank. write 1 if blank, otherwise leave empty.)</li>
                     </ul>
 
                 </div>
