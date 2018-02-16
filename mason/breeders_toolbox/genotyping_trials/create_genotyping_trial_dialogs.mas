@@ -90,21 +90,32 @@
                                 </div>
                             </div>
                             <div id="add_genotyping_trial_wells" class="tab-pane fade in">
-                                <h3>1. Do you already have a plate layout created?<h3>
+                                <h3>1. Do you already have a plate layout created?</h3>
 
                                 <div class="well well-sm">
-                                    <&| /page/explanation.mas, title=>'Template information' &>
-                                        <p>
-                                            <b>File format information</b>
-                                            <br>
-                                            <a id="genotyping_trial_layout_upload_spreadsheet_info_format">Spreadsheet format</a>
-                                        </p>
-                                    </&>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="genotyping_trial_layout_upload_spreadsheet_info_format">Spreadsheet format</a>
+                                                </p>
+                                            </&>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select Plate Layout XLS File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="genotyping_trial_layout_upload" id="genotyping_trial_layout_upload" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Plate Layout XLS File: </label>
-                                        <div class="col-sm-9">
-                                            <input type="file" name="genotyping_trial_layout_upload" id="genotyping_trial_layout_upload" encoding="multipart/form-data" />
                                         </div>
                                     </div>
                                 </div>
@@ -116,32 +127,32 @@
                                         <li>Note: From the most desirable to least desirable list type you can choose: tissue samples, plants, plots, or accessions</li>
                                     </ul>
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Source Observation Unit List: </label>
-                                        <div class="col-sm-9">
+                                        <label class="col-sm-6 control-label">Source Observation Unit List: </label>
+                                        <div class="col-sm-6">
                                             <span id="accession_select_box_span">[loading...]</span>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small>: </label>
-                                        <div class="col-sm-9">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small>: </label>
+                                        <div class="col-sm-6">
                                             <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
-                                        <div class="col-sm-9">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
+                                        <div class="col-sm-6">
                                             <input class="form-control" id="genotyping_well_concentration" name="genotyping_well_concentration" type="text" />
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
-                                        <div class="col-sm-9">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
+                                        <div class="col-sm-6">
                                             <input class="form-control" id="genotyping_well_volume" name="genotyping_well_volume" type="text" />
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Tissue: <small>(If used the same tissue for all wells)</small> </label>
-                                        <div class="col-sm-9">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Tissue: <small>(If used the same tissue for all wells)</small> </label>
+                                        <div class="col-sm-6">
                                             <input class="form-control" id="genotyping_well_tissue" name="genotyping_well_tissue" type="text" />
                                         </div>
                                     </div>

@@ -49,6 +49,17 @@ $genotyping_plate_sample_type => undef
                 </div>
             </div>
 
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table class="table table-bordered table-hover">
+                    <tbody>
+                    <tr><td><b>Live Status From Genotyping Facility</b></td><td><div id="genotyping_trial_status_info"></div></td></tr>
+                    <tr><td><b>Download PDF</b></td><td><div id="download_trial_pdf"></div></td></tr>
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
         <div class="col-sm-3">
 
@@ -58,15 +69,6 @@ $genotyping_plate_sample_type => undef
     </div>
 </div>
 
-<center>
-<div id="genotyping_trial_status_info">
-[loading...]
-</div>
-</center>
-
-<div id="download_trial_pdf">
-[loading...]
-</div>
 
 <!--
 DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
@@ -75,7 +77,6 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">csv</a>]"  &>
 
-<& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
 <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
