@@ -133,6 +133,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/treatment.mas';
     }
     else {
+        $c->assets->include('/static/css/fontawesome-all.min.css');
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
