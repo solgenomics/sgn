@@ -83,7 +83,7 @@ $stockref => undef
   <li><span class="d3checks"></span> Checks</li>
   <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
   <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-  <li> <i class="fa fa-camera-retro fa-1x"></i> Plot Has Image</li>
+  <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
   <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
@@ -627,7 +627,7 @@ jQuery(document).ready( function() {
                           image = d.plot_image_ids; 
                           var plot_image;
                           if (image.length > 0){
-                            plot_image = '\uf083';
+                            plot_image = "/static/css/images/plot_images.png"; 
                           }else{
                             plot_image = "";
                           }
@@ -821,15 +821,15 @@ jQuery(document).ready( function() {
                         .text(function(d) { return d.plotn; });
                       
                       cards.select("text").text(function(d) { return d.plotn; }) ;
-                      
-                      cards.append("text");
-                      cards.enter().append("text")
-                         .attr("x", function(d) { return (d.col - 1) * gridSize + 2; })
-                         .attr("y", function(d) { return (d.row - 1) * gridSize + 10 ; })
-                         .attr("style", "font-family: FontAwesome;")
-                         .attr('font-size', '10px' )
-                         .text(image_icon);
-                      
+                         
+                      cards.append("image");
+                      cards.enter().append("image")
+                        .attr("xlink:href", image_icon)
+                        .attr("x", function(d) { return (d.col - 1) * gridSize + 2; })
+                        .attr("y", function(d) { return (d.row - 1) * gridSize + 3 ; })
+                        .attr('width', 10)
+                        .attr('height', 10)
+                                                  
                       cards.exit().remove();
                     
                      });  
