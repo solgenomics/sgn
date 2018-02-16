@@ -392,7 +392,6 @@ sub _parse_with_plugin {
         $design{$key}->{extraction} = $extraction;
         $design{$key}->{concentration} = $concentration;
         $design{$key}->{volume} = $volume;
-        $design{$key}->{column} = $sample_id;
         if ($is_blank) {
             $design{$key}->{is_blank} = 1;
         } else {

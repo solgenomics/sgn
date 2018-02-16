@@ -64,6 +64,9 @@ jQuery(document).ready(function ($) {
         plate_data.sample_type = jQuery('#genotyping_trial_plate_sample_type').val();
         plate_data.blank_well = jQuery('#genotyping_blank_well').val();
         plate_data.well_concentration = jQuery('#genotyping_well_concentration').val();
+        plate_data.well_extraction = jQuery('#genotyping_well_extraction').val();
+        plate_data.well_date = jQuery('#genotyping_well_date').val();
+        plate_data.well_dna_person = jQuery('#genotyping_well_dna_person').val();
         plate_data.well_volume = jQuery('#genotyping_well_volume').val();
         plate_data.well_tissue = jQuery('#genotyping_well_tissue').val();
         plate_data.genotyping_facility = jQuery('#genotyping_trial_facility_select').val();

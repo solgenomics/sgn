@@ -76,6 +76,16 @@ sub generate_genotype_trial_POST : Args(0) {
         $c->stash->{rest} = $design;
         $c->detach();
     }
+
+    #Add common answers from form to all wells
+    foreach (values %$design){
+        $_->{concentration} = $plate_info->{well_concentration};
+        $_->{volume} = $plate_info->{well_volume};
+        $_->{tissue_type} = $plate_info->{well_tissue};
+        $_->{dna_person} = $plate_info->{well_dna_person};
+        $_->{extraction} = $plate_info->{well_extraction};
+        $_->{acquisition_date} = $plate_info->{well_date};
+    }
     print STDERR Dumper($design);
 
     $c->stash->{rest} = {success => 1, design=>$design};
