@@ -49,7 +49,8 @@ is($response->{'success'}, '1');
 
 
 # test adding cross and info
-my $crossing_trial_id = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial'})->project_id();
+my $crossing_trial_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial'});
+my $crossing_trial_id = $crossing_trial_rs->project_id();
 my $female_plot_id = $schema->resultset('Stock::Stock')->find({name =>'KASESE_TP2013_842'})->stock_id();
 my $male_plot_id = $schema->resultset('Stock::Stock')->find({name =>'KASESE_TP2013_1591'})->stock_id();
 
@@ -64,7 +65,8 @@ is($response->{'success'}, '1');
 
 
 # test uploading crosses
-my $crossing_trial2_id = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial2'})->project_id();
+my $crossing_trial2_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial2'});
+my $crossing_trial2_id = $crossing_trial2_rs->project_id();
 my $file = $f->config->{basepath}."/t/data/cross/cross_upload.xls";
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
@@ -86,7 +88,8 @@ is_deeply($message_hash, {'success' => 1});
 
 
 # test retrieving crosses in a trial
-my $test_add_cross_id = $schema->resultset('Stock::Stock')->find({name =>'test_add_cross'})->stock_id();
+my $test_add_cross_rs = $schema->resultset('Stock::Stock')->find({name =>'test_add_cross'});
+my $test_add_cross_id = $test_add_cross_rs->stock_id();
 my $UG120001_id = $schema->resultset('Stock::Stock')->find({name =>'UG120001'})->stock_id();
 my $UG120002_id = $schema->resultset('Stock::Stock')->find({name =>'UG120002'})->stock_id();
 
@@ -96,7 +99,6 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
     [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, 'biparental', qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}]
-
 ]}, 'crosses in a trial');
 
 
@@ -108,9 +110,13 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
     [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, undef, "2018/02/15", undef, "20", "15", "30"]
-
 ]}, 'crossing experiment info');
 
+
+
+# remove added crossing trials after test so that they don't affect downstream tests
+$crossing_trial_rs->delete();
+$crossing_trial2_rs->delete();
 
 
 
