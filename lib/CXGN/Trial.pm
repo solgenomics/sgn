@@ -2369,7 +2369,6 @@ sub get_accessions {
 
 	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
@@ -2389,8 +2388,6 @@ sub get_accessions {
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
 
-#Removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
-
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());
 	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
@@ -2398,6 +2395,45 @@ sub get_accessions {
 	}
 
 	return \@accessions;
+}
+
+=head2 get_tissue_sources
+
+    Usage:        my $tissue_sources = $t->get_tissue_sources();
+    Desc:         retrieves the sources for the tisue_samples in a trial. in field_layout trials this can only be plants. In genotyping_layout trials the source of a tissue_sample can be tissue_samples, plants, plots, or accessions
+    Ret:          an arrayref of { uniquename => acc_name, type=>'plant', stock_id => stock_id }
+    Args:         none
+    Side Effects:
+    Example:
+
+=cut
+
+sub get_tissue_sources {
+    my $self = shift;
+    my @tissue_samples;
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type' )->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+    my $q = "SELECT DISTINCT(stock.stock_id), stock.uniquename, cvterm.name
+        FROM stock
+        JOIN cvterm on (stock.type_id = cvterm.cvterm_id)
+        JOIN stock_relationship on (stock.stock_id = stock_relationship.object_id)
+        JOIN stock as tissue_sample on (tissue_sample.stock_id = stock_relationship.subject_id)
+        JOIN nd_experiment_stock on (tissue_sample.stock_id=nd_experiment_stock.stock_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_project using(nd_experiment_id)
+        JOIN project using(project_id)
+        WHERE tissue_sample.type_id = $tissue_sample_cvterm_id
+        AND stock_relationship.type_id = $tissue_sample_of_cvterm_id
+        AND project.project_id = ?
+        GROUP BY (stock.stock_id, cvterm.name)
+        ORDER BY (stock.stock_id);";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    while (my ($stock_id, $uniquename, $type) = $h->fetchrow_array()) {
+        push @tissue_samples, {uniquename=>$uniquename, type=>$type, stock_id=>$stock_id };
+    }
+    return \@tissue_samples;
 }
 
 =head2 get_plants
