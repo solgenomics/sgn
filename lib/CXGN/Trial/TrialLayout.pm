@@ -370,6 +370,13 @@ sub generate_and_cache_layout {
   my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'row_number', 'stock_property' )->cvterm_id();
   my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'col_number', 'stock_property' )->cvterm_id();
   my $is_blank_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'is_blank', 'stock_property' )->cvterm_id();
+  my $concentration_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'concentration', 'stock_property')->cvterm_id();
+  my $volume_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'volume', 'stock_property')->cvterm_id();
+  my $dna_person_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'dna_person', 'stock_property')->cvterm_id();
+  my $extraction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'extraction', 'stock_property')->cvterm_id();
+  my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'tissue_type', 'stock_property')->cvterm_id();
+  my $acquisition_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'acquisition date', 'stock_property')->cvterm_id();
+  my $notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'notes', 'stock_property')->cvterm_id();
   my $plot_geo_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot_geo_json', 'stock_property' )->cvterm_id();
   my $json = JSON->new();
 
@@ -399,6 +406,13 @@ sub generate_and_cache_layout {
     my $row_number_prop = $stockprop_hash{$row_number_cvterm_id} ? join ',', @{$stockprop_hash{$row_number_cvterm_id}} : undef;
     my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
     my $is_blank_prop = $stockprop_hash{$is_blank_cvterm_id} ? join ',', @{$stockprop_hash{$is_blank_cvterm_id}} : undef;
+    my $well_concentration_prop = $stockprop_hash{$concentration_cvterm_id} ? join ',', @{$stockprop_hash{$concentration_cvterm_id}} : undef;
+    my $well_volume_prop = $stockprop_hash{$volume_cvterm_id} ? join ',', @{$stockprop_hash{$volume_cvterm_id}} : undef;
+    my $well_dna_person_prop = $stockprop_hash{$dna_person_cvterm_id} ? join ',', @{$stockprop_hash{$dna_person_cvterm_id}} : undef;
+    my $well_extraction_prop = $stockprop_hash{$extraction_cvterm_id} ? join ',', @{$stockprop_hash{$extraction_cvterm_id}} : undef;
+    my $well_tissue_type_prop = $stockprop_hash{$tissue_type_cvterm_id} ? join ',', @{$stockprop_hash{$tissue_type_cvterm_id}} : undef;
+    my $well_acquisition_date_prop = $stockprop_hash{$acquisition_date_cvterm_id} ? join ',', @{$stockprop_hash{$acquisition_date_cvterm_id}} : undef;
+    my $well_notes_prop = $stockprop_hash{$notes_cvterm_id} ? join ',', @{$stockprop_hash{$notes_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
     my $accession_rs;
     if ($self->get_experiment_type eq 'field_layout'){
@@ -454,6 +468,27 @@ sub generate_and_cache_layout {
       $design_info{"is_blank"}=1;
     } else {
       $design_info{"is_blank"}=0;
+    }
+    if ($well_concentration_prop){
+        $design_info{"concentration"} = $well_concentration_prop;
+    }
+    if ($well_volume_prop){
+        $design_info{"volume"} = $well_volume_prop;
+    }
+    if ($well_dna_person_prop){
+        $design_info{"dna_person"} = $well_dna_person_prop;
+    }
+    if ($well_extraction_prop){
+        $design_info{"extraction"} = $well_extraction_prop;
+    }
+    if ($well_tissue_type_prop){
+        $design_info{"tissue_type"} = $well_tissue_type_prop;
+    }
+    if ($well_acquisition_date_prop){
+        $design_info{"acquisition_date"} = $well_acquisition_date_prop;
+    }
+    if ($well_notes_prop){
+        $design_info{"notes"} = $well_notes_prop;
     }
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop;

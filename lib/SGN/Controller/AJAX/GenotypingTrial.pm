@@ -85,8 +85,9 @@ sub generate_genotype_trial_POST : Args(0) {
         $_->{dna_person} = $plate_info->{well_dna_person};
         $_->{extraction} = $plate_info->{well_extraction};
         $_->{acquisition_date} = $plate_info->{well_date};
+        $_->{notes} = $plate_info->{well_notes};
     }
-    print STDERR Dumper($design);
+    #print STDERR Dumper($design);
 
     $c->stash->{rest} = {success => 1, design=>$design};
 }

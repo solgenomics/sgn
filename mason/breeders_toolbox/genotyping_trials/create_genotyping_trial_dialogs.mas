@@ -169,9 +169,15 @@
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">Date: <small>(If plated on same date.)</small> </label>
+                                        <label class="col-sm-6 control-label">Date: <small>(If plated on same date. YYYY/MM/DD)</small> </label>
                                         <div class="col-sm-6">
-                                            <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" />
+                                            <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" placeholder="YYYY/MM/DD"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Notes: <small>(Additional notes for these wells.)</small> </label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" id="genotyping_well_notes" name="genotyping_well_notes" type="text" />
                                         </div>
                                     </div>
                                 </div>
