@@ -201,7 +201,7 @@ sub get_layout_output {
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plate') {
-        @possible_cols = ('plot_number','plot_name','accession_name','pedigree','genus','species','trial_name','genotyping_project_name','genotyping_user_id','location_name');
+        @possible_cols = ('trial_name', 'acquisition_date', 'plot_name', 'plot_number', 'row', 'column', 'source_observation_unit_name', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank');
     }
 
     my @header;
@@ -653,26 +653,13 @@ sub _construct_ouput_for_wells_in_plate {
     my $location_name = shift;
     my $trial_name = shift;
 
-    my $acc_pedigree = '';
-    if (exists($selected_cols->{'pedigree'})){
-        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_pedigree = $accession->get_pedigree_string('Parents');
-    }
     my $line;
     foreach (@$possible_cols){
         if ($selected_cols->{$_}){
-            if ($_ eq 'location_name'){
-                push @$line, $location_name;
-            } elsif ($_ eq 'trial_name'){
+            if ($_ eq 'trial_name'){
                 push @$line, $trial_name;
-            } elsif ($_ eq 'pedigree'){
-                push @$line, $acc_pedigree;
-            } elsif ($_ eq 'genus'){
-                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                push @$line, $accession->genus;
-            } elsif ($_ eq 'species'){
-                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                push @$line, $accession->species;
+            } elsif ($_ eq 'source_observation_unit_name'){
+                push @$line, $design_info->{'accession_name'};
             } else {
                 push @$line, $design_info->{$_};
             }

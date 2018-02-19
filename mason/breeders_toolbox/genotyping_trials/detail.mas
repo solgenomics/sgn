@@ -97,13 +97,20 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 % my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
 <&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ [<a href=$plate_view_link>Plate View</a>] } &>
 
-     <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>
+    <div class="well well-sm">
+        <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>
+        <br/>
 
-     <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id, genotyping_plate_format => $genotyping_plate_format &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id, genotyping_plate_format => $genotyping_plate_format &>
+            </div>
+        </div>
+    </div>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Delete", collapsible=>1, subtitle=>"<font color=\"red\">Deletion cannot be undone</font>" &>
+<&| /page/info_section.mas, title=>"Delete", collapsible=>1, collapsed=>1, subtitle=>"<font color=\"red\">Deletion cannot be undone</font>" &>
 
 <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
 <br />

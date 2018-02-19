@@ -38,7 +38,7 @@ jQuery(document).ready(function () {
         success: function(response){
             console.log(response);
             jQuery("#working_modal").modal("hide");
-            var trial_plate_view_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_view_table'><thead><tr><th>&nbsp;</th>";
+            var trial_plate_view_html = "<div style='overflow:scroll'><table class='table table-hover table-condensed table-bordered' id='trial_plate_view_table'><thead><tr><th>&nbsp;</th>";
 
             var col_max = 1;
             if (<% $genotyping_plate_format %> == '96'){
@@ -85,7 +85,7 @@ jQuery(document).ready(function () {
                 trial_plate_view_html = trial_plate_view_html + "</tr>";
             });
 
-            trial_plate_view_html = trial_plate_view_html + "</tbody></table>";
+            trial_plate_view_html = trial_plate_view_html + "</tbody></table></div>";
             jQuery('#trial_plate_view_html').empty();
             jQuery('#trial_plate_view_html').html(trial_plate_view_html);
         },
