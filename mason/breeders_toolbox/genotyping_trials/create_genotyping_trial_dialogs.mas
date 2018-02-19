@@ -26,7 +26,7 @@
                             <div id="add_genotyping_trial_home" class="tab-pane fade in active">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Genotyping Project Name: </label>
+                                    <label class="col-sm-3 control-label">Genotyping Project Name: <small>Should match Vendor Project</small></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="e.g. NextGenCassava"/>
                                     </div>

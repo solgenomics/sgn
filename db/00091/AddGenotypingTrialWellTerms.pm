@@ -74,7 +74,8 @@ sub patch {
             'genotyping_facility_status',
             'genotyping_facility_submitted',
             'genotyping_plate_format',
-            'genotyping_plate_sample_type'
+            'genotyping_plate_sample_type',
+            'genotyping_facility_plate_id'
         ]
     };
 

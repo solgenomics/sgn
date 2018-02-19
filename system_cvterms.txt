@@ -99,6 +99,7 @@ project_property	genotyping_facility_submitted	For genotyping trials to indicate
 project_property	genotyping_facility_status	For genotyping trials to indicate the status of a plate submitted to geno facility	2/16/2017	nm529	00091
 project_property	genotyping_plate_format	For genotyping trials to indicate if 96 well or other	2/16/2017	nm529	00091
 project_property	genotyping_plate_sample_type	For genotyping trials to indicate the type of sample in plate e.g. DNA	2/16/2017	nm529	00091
+project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_type	Advanced Yeld Trials				00052
