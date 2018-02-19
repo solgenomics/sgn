@@ -661,9 +661,10 @@ sub store {
                         subject_id => $plot->stock_id()
                     });
                     my $parent_plot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
-                        subject_id=>$stock_id_checked,
-                        type_id=>$plot_of_cvterm_id
-                    });
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$plot_of_cvterm_id,
+                        'object.type_id'=>$accession_cvterm_id
+                    }, {join => 'object'});
                     if ($parent_plot_accession_rs->count > 1){
                         die "Plot $stock_id_checked is linked to more than one accession!\n"
                     }
