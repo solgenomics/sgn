@@ -19,61 +19,45 @@ var $j = jQuery.noConflict();
 jQuery(document).ready(function($) {
 
     $("#create_crossingtrial_link").click(function() {
-
-
         var lo = new CXGN.List();
-
         get_select_box('years', 'add_project_year', {'auto_generate':1});
-
         $("#create_crossingtrial_dialog").modal("show");
+    });
 
-      });
+    $('#create_crossingtrial_submit').click(function() {
+        var crossingtrial_name = $("#crossingtrial_name").val();
+        if (!crossingtrial_name) {
+            alert("Crossing trial name is required");
+            return;
+        }
 
-      $('#create_crossingtrial_submit').click(function() {
+        var crossingtrial_program_id = $("#crossingtrial_program").val();
+        if (!crossingtrial_program_id) {
+            alert("Breeding program is required");
+            return;
+        }
 
-          var crossingtrial_name = $("#crossingtrial_name").val();
-          if (!crossingtrial_name) {
-              alert("Crossing trial name is required");
-              return;
-          }
+        var crossingtrial_location = $("#crossingtrial_location").val();
+        if (!crossingtrial_location) {
+            alert ("Location is required");
+            return;
+        }
 
-          var crossingtrial_program_id = $("#crossingtrial_program").val();
-          if (!crossingtrial_program_id) {
-              alert("Breeding program is required");
-              return;
-          }
+        var year = $("#add_project_year").val();
+        if (!year) {
+            alert ("Year is required");
+            return;
+        }
 
-          var crossingtrial_location = $("#crossingtrial_location").val();
-          if (!crossingtrial_location) {
-              alert ("Location is required");
-              return;
-          }
+        var project_description = $('textarea#add_project_description').val();
+        if (!project_description) {
+            alert ("Description is required");
+            return;
+        }
 
-          var year = $("#add_project_year").val();
-          if (!year) {
-              alert ("Year is required");
-              return;
-          }
+        add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description);
 
-          var project_description = $('textarea#add_project_description').val();
-          if (!project_description) {
-              alert ("Description is required");
-              return;
-          }
-
-          add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description);
-
-      });
-
-  //  $('#program').change(function(){
-  //      get_select_box('folders', 'add_cross_folder_select_div', {
-  //          'name': 'add_cross_folder_id',
-  //          'id': 'add_cross_folder_id',
-  //          'folder_for_crosses' : true,
-  //          'empty': 1,
-  //          'breeding_program_id': jQuery('#program').val()
-  //      });
-  //  });
+    });
 
     $("#create_cross_link").click(function() {
 
@@ -191,12 +175,11 @@ jQuery(document).ready(function($) {
     });
 
     $("#upload_crosses_submit").click(function() {
-
-      var crossing_trial_id = $("#cross_upload_crossing_trial").val();
-          if (!crossing_trial_id) {
-              alert("A crossing trial is required");
-              return;
-          }
+        var crossing_trial_id = $("#cross_upload_crossing_trial").val();
+            if (!crossing_trial_id) {
+                alert("A crossing trial is required");
+                return;
+            }
 
         $("#upload_crosses_dialog").modal("hide");
         upload_crosses_file();
@@ -389,33 +372,33 @@ jQuery(document).ready(function($) {
             dataType: "json",
             type: 'POST',
             data:{
-              'crossingtrial_name': crossingtrial_name,
-              'crossingtrial_program_id': crossingtrial_program_id,
-              'crossingtrial_location': crossingtrial_location,
-              'year': year,
-              'project_description': project_description,
+                'crossingtrial_name': crossingtrial_name,
+                'crossingtrial_program_id': crossingtrial_program_id,
+                'crossingtrial_location': crossingtrial_location,
+                'year': year,
+                'project_description': project_description,
             },
-          beforeSend: function() {
-              jQuery("#create_crossingtrial_dialog").modal("hide");
-              jQuery("#working_modal").modal("show");
-          },
-          error: function(response) {
-              alert("An error occurred!" + JSON.stringify(response));
-              return;
-          },
-          parseerror: function(response) {
-              alert("A parse error occurred!" + response);
-              return;
-          },
-          success: function(response) {
-              if (response.error) {
-                  alert(response.error);
-              } else {
-                  jQuery("#working_modal").modal("hide");
-                  $('#cross_saved_dialog_message').modal("show");
-              }
-          },
-      });
+            beforeSend: function() {
+                jQuery("#create_crossingtrial_dialog").modal("hide");
+                jQuery("#working_modal").modal("show");
+            },
+            error: function(response) {
+                alert("An error occurred!" + JSON.stringify(response));
+                return;
+            },
+            parseerror: function(response) {
+                alert("A parse error occurred!" + response);
+                return;
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#working_modal").modal("hide");
+                    $('#cross_saved_dialog_message').modal("show");
+                }
+            },
+        });
 
   }
 
