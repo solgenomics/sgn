@@ -201,7 +201,7 @@ sub get_layout_output {
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plate') {
-        @possible_cols = ('trial_name', 'acquisition_date', 'plot_name', 'plot_number', 'row', 'column', 'source_observation_unit_name', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank');
+        @possible_cols = ('trial_name', 'acquisition_date', 'plot_name', 'plot_number', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank');
     }
 
     my @header;
@@ -658,8 +658,6 @@ sub _construct_ouput_for_wells_in_plate {
         if ($selected_cols->{$_}){
             if ($_ eq 'trial_name'){
                 push @$line, $trial_name;
-            } elsif ($_ eq 'source_observation_unit_name'){
-                push @$line, $design_info->{'accession_name'};
             } else {
                 push @$line, $design_info->{$_};
             }

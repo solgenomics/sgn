@@ -430,14 +430,20 @@ sub generate_and_cache_layout {
             if ($r->type_id == $plot_cvterm_id){
                 $design_info{"source_plot_id"} = $r->stock_id;
                 $design_info{"source_plot_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_id"} = $r->stock_id;
             }
             if ($r->type_id == $plant_cvterm_id){
                 $design_info{"source_plant_id"} = $r->stock_id;
                 $design_info{"source_plant_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_id"} = $r->stock_id;
             }
             if ($r->type_id == $tissue_cvterm_id){
                 $design_info{"source_tissue_id"} = $r->stock_id;
                 $design_info{"source_tissue_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_id"} = $r->stock_id;
             }
         }
     }
