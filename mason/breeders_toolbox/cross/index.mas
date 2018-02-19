@@ -56,23 +56,23 @@ $user_id => undef
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
-  <div class = "well well-sm">
-    <div class = "panel panel-default">
-      <div class = "panel-body">
-        <table id = "parent_information" class="table table-hover table-striped">
-          <thead>
-            <tr>
-              <th>Female Accession</th>
-              <th>Female Plot</th>
-              <th>Male Accession</th>
-              <th>Male Plot</th>
-              <th>Cross Type</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "parent_information" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Female Accession</th>
+                            <th>Female Plot</th>
+                            <th>Male Accession</th>
+                            <th>Male Plot</th>
+                            <th>Cross Type</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
  </&>
 
 % my $add_progeny_link = "[add progeny]";
@@ -80,17 +80,17 @@ $user_id => undef
 
 <&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => $add_progeny_link   &>
 
-  <div id="progeny_information_div">
-    [loading...]
-  </div>
+    <div id="progeny_information_div">
+        [loading...]
+    </div>
 
-  <div id="add_more_progeny_dialog">
-    <table>
-    <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
-    <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
-    <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
-    </table>
-  </div>
+    <div id="add_more_progeny_dialog">
+        <table>
+            <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
+            <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
+            <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
+        </table>
+    </div>
 
 
 </&>
@@ -98,49 +98,38 @@ $user_id => undef
 % my $edit_link = "[Edit]";
 % if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
 
-<!--
-<&| /page/info_section.mas, title => "Properties", subtitle=> $edit_link &>
-
-<div id="cross_properties_div" >
-[none]
-</div>
-
-</&>
--->
-
 <&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
-  <div class = "well well-sm">
-    <div class = "panel panel-default">
-      <div class = "panel-body">
-        <table id = "cross_properties" class="table table-hover table-striped">
-          <thead>
-            <tr>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "cross_properties" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
 % foreach my $cross_prop(@cross_props){
-            <th><%$cross_prop%></th>
+                        <th><%$cross_prop%></th>
 %}
-           </tr>
-         </thead>
-       </table>
-       </div>
-     </div>
-   </div>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
  </&>
 
 
 <div id="edit_properties_dialog">
 
-  <select id="properties_select">
+    <select id="properties_select">
 % foreach my $cross_prop(@cross_props){
-    <option value="<%$cross_prop%>"><%$cross_prop%></option>
+        <option value="<%$cross_prop%>"><%$cross_prop%></option>
 %}
+    </select>
 
-  </select>
+    <input id="property_value" />
 
-  <input id="property_value" />
+    <button id="property_submit" >Save</button>
 
-  <button id="property_submit" >Save</button>
-
-  <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
+    <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
 
 </div>
 
