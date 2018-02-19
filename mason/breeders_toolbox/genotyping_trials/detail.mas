@@ -78,6 +78,12 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">csv</a>]"  &>
 
 
+<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
+
+</&>
+
 <&| /page/info_section.mas, id => "trial_tissue_sources", title=>"Tissue Sources", is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
 <& /breeders_toolbox/trial/trial_tissue_sources.mas, trial_id => $trial_id &>
