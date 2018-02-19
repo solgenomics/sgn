@@ -10,8 +10,8 @@ Will do the following:
 3) Will associate the location to the project through the nd_experiment as well as through a projectprop. Location lookup happens based on location name that is provided. Assumes locations already stored in database.
 4) Will associate the trial to its breeding program. Lookup is by breeding program name that is provided and assumes bp already exists in database. Will return an error if breeding program name not found.
 5) Creates a single nd_experiment_project entry, linking project to nd_experiment.
-6) Creates a year and design projectprop. Also a project_type projectprop if provided.
-7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (plots and plants) and stockprops (rep, block, etc)
+6) Creates a year and design projectprop. Also a project_type projectprop if provided. For genotyping trials also creates others like, genotyping_facility and plate_format projectprops
+7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (tissue_samples, or plots and plants and subplots) and stockprops (rep, block, well, etc)
 
 =head1 USAGE
 
@@ -63,6 +63,46 @@ Will do the following:
         print STDERR "ERROR SAVING TRIAL!\n";
     };
 
+---------------------------------------------------------------------------------
+
+For field_layout trials, the design should be a HasfRef of HashRefs like:
+
+{
+   '1001' => {
+       "plot_name" => "plot1",
+       "plot_number" => 1001,
+       "accession_name" => "accession1",
+       "block_number" => 1,
+       "row_number" => 2,
+       "col_number" => 3,
+       "rep_number" => 1,
+       "is_a_control" => 1,
+       "seedlot_name" => "seedlot1",
+       "num_seed_per_plot" => 12,
+       "plot_geo_json" => {},
+       "plant_names" => ["plant1", "plant2"],
+   }
+}
+
+For genotyping_layout trials, the design should be a HashRef of HashRefs like:
+
+{
+   'A01' => {
+       "plot_name" => "mytissuesample_A01",
+       "stock_name" => "accession1",
+       "plot_number" => "A01",
+       "row_number" => "A",
+       "col_number" => "1",
+       "is_blank" => 0,
+       "concentration" => "5",
+       "volume" => "2",
+       "tissue_type" => "leaf",
+       "dna_person" => "nmorales",
+       "extraction" => "ctab",
+       "acquisition_date" => "2018/02/16",
+       "notes" => "test notes",
+   }
+}
 
 =head1 DESCRIPTION
 

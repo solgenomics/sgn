@@ -5,12 +5,70 @@ package CXGN::Trial::TrialDesignStore;
 CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (both genotyping and phenotyping trials)
 
 This is used when storing a new design completely (plots and possibly plants and possibly subplots).
-For adding plants to a design already saved, use CXGN::Trial->create_plant_entities to auto-generate plant names or CXGN::Trial->save_plant_entries to save user defined plant names.
-For adding tissue samples to a design already saved, use CXGN::Trial->create_tissue_samples to auto-generate sample names.
+- Used from CXGN::Trial::TrialCreate for saving newly designed field trials in SGN::Controller::AJAX::Trial->save_experimental_design_POST
+- Used from CXGN::Trial::TrialCreate for saving uploaded field trials in SGN::Controller::AJAX::Trial->upload_trial_file_POST
+- Used from CXGN::Trial::TrialCreate for saving newly designed genotyping trial OR saving uploaded genotyping trial in SGN::Controller::AJAX::GenotypingTrial->store_genotype_trial
 
-Store will do the following: (for genotyping trials, replace 'plot' with 'tissue_sample')
-1) Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = field_layout or genotyping_layout.
-2) Searches for the accession's stock_name.
+This is used for storing new treatment (field management factor) trials.
+- Used from CXGN::Trial::TrialCreate for saving or uploading field trials with treatments in SGN::Controller::AJAX::Trial->save_experimental_design_POST and SGN::Controller::AJAX::Trial->upload_trial_file_POST
+- Used from CXGN::Trial::TrialMetadata->trial_add_treatment for adding a new treatment to a trial
+- To add new treatments, There should be a key in the design called "treatments" specifying which stocks to include in the treatment like:
+    {
+        "treatments" =>
+            {
+                "fertilizer_10ml" => ["plot1", "plot2", "plot1_plant1", "plot2_plant1"],
+                "water" => ["plot1", "plot2"]
+            }
+    }
+
+This is NOT used for adding plants or tissue_samples to existing trials.
+- Note: For adding plants to a design already saved, use CXGN::Trial->create_plant_entities to auto-generate plant names or CXGN::Trial->save_plant_entries to save user defined plant names.
+- For adding tissue samples to a design already saved, use CXGN::Trial->create_tissue_samples to auto-generate sample names.
+
+--------------------------------------------------------------------------------------------------------
+
+For field_layout trials, the design should be a HasfRef of HashRefs like:
+{
+   '1001' => {
+       "plot_name" => "plot1",
+       "plot_number" => 1001,
+       "accession_name" => "accession1",
+       "block_number" => 1,
+       "row_number" => 2,
+       "col_number" => 3,
+       "rep_number" => 1,
+       "is_a_control" => 1,
+       "seedlot_name" => "seedlot1",
+       "num_seed_per_plot" => 12,
+       "plot_geo_json" => {},
+       "plant_names" => ["plant1", "plant2"],
+   }
+}
+
+For genotyping_layout trials, the design should be a HashRef of HashRefs like:
+{
+   'A01' => {
+       "plot_name" => "mytissuesample_A01",
+       "stock_name" => "accession1",
+       "plot_number" => "A01",
+       "row_number" => "A",
+       "col_number" => "1",
+       "is_blank" => 0,
+       "concentration" => "5",
+       "volume" => "2",
+       "tissue_type" => "leaf",
+       "dna_person" => "nmorales",
+       "extraction" => "ctab",
+       "acquisition_date" => "2018/02/16",
+       "notes" => "test notes",
+   }
+}
+
+----------------------------------------------------------------------------------------------------------
+
+Store() will do the following for FIELD LAYOUT trials:
+1) Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = field_layout.
+2) Foreach plot in the design hash, searches for the accession's stock_name.
 # TO BE IMPLEMENTED: A boolean option to allow stock_names to be added to the database on the fly. Normally this would be set to 0, but for certain loading scripts this could be set to 1.
 3) Finds or creates a stock entry for each plot_name in the design hash.
 #TO BE IMPLEMENTED: Associate an owner to the plot
@@ -33,6 +91,19 @@ If there are subplot entries (currently for splitplot design)
 11) For each subplot, creates a stock_relationship between the subplot and plot if not already present.
 11) For each subplot, creates a stock_relationship between the subplot and plant if not already present.
 12) For each subplot creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+
+----------------------------------------------------------------------------------------------------------
+
+Store() will do the following for GENOTYPING LAYOUT trials:
+1) Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = genotyping_layout.
+2) Foreach tissue_sample in the design hash, searches for the source_observation_unit's stock_name. The source_observation_unit can be in order of descending desireability: tissue_sample, plant, plot, or accession
+3) Finds or creates a stock entry for each tissue in the design hash.
+4) Creates stockprops (col_number, row_number, plot_number, notes, dna_person, etc) for tissue_sample.
+5) For each tissue_sample, creates a stock relationship between the tissue_sample and source_observation_unit if not already present.
+6) If the source_observation_unit is a tissue_sample, it will create stock relationships to the tissue_sample's parent plant, plot, and accession if they exist.
+6) If the source_observation_unit is a plant, it will create stock relationships to the plant's parent plot and accession if they exist.
+6) If the source_observation_unit is a plot, it will create stock relationships to the plot's parent accession if it exists.
+7) For each tissue_sample, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
 
 =head1 USAGE
@@ -270,7 +341,9 @@ sub store {
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type');
     my $subplot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship');
@@ -308,12 +381,12 @@ sub store {
     if (!$self->get_is_genotyping) {
         $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         $stock_type_id = $plot_cvterm_id;
-        $stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        $stock_rel_type_id = $plot_of_cvterm_id;
         @source_stock_types = ($accession_cvterm_id);
     } else {
         $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
         $stock_type_id = $tissue_sample_cvterm_id;
-        $stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+        $stock_rel_type_id = $tissue_sample_of_cvterm_id;
         @source_stock_types = ($accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id);
     }
 
@@ -382,12 +455,13 @@ sub store {
     });
     my %stock_data;
     while (my $s = $rs->next()) {
-        $stock_data{$s->uniquename} = [$s->stock_id, $s->organism_id];
+        $stock_data{$s->uniquename} = [$s->stock_id, $s->organism_id, $s->type_id];
     }
 
     my $stock_id_checked;
     my $stock_name_checked;
     my $organism_id_checked;
+    my $stock_type_checked;
     my $timestamp = localtime();
 
     my $coderef = sub {
@@ -501,6 +575,7 @@ sub store {
             if ($stock_data{$stock_name}) {
                 $stock_id_checked = $stock_data{$stock_name}[0];
                 $organism_id_checked = $stock_data{$stock_name}[1];
+                $stock_type_checked = $stock_data{$stock_name}[2];
                 $stock_name_checked = $stock_name;
             } else {
                 my $parent_stock;
@@ -514,6 +589,7 @@ sub store {
 
                 $stock_id_checked = $parent_stock->stock_id();
                 $stock_name_checked = $parent_stock->uniquename;
+                $stock_type_checked = $parent_stock->type_id;
                 $organism_id_checked = $parent_stock->organism_id();
             }
 
@@ -568,11 +644,128 @@ sub store {
                     $plot->create_stockprops({$notes_cvterm->name() => $notes});
                 }
 
-                my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-                    object_id => $stock_id_checked,
-                    type_id => $stock_rel_type_id,
-                    subject_id => $plot->stock_id()
-                });
+                my $parent_stock;
+                # For field_layout trials this will always be accession; however, for genotyping layout this could be a tissue_sample, plant, plot, or accession
+                if ($stock_type_checked == $accession_cvterm_id ){
+                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+                        object_id => $stock_id_checked,
+                        type_id => $stock_rel_type_id,
+                        subject_id => $plot->stock_id()
+                    });
+                }
+                # For genotyping trial, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
+                if ($stock_type_checked == $plot_cvterm_id){
+                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+                        object_id => $stock_id_checked,
+                        type_id => $stock_rel_type_id,
+                        subject_id => $plot->stock_id()
+                    });
+                    my $parent_plot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        subject_id=>$stock_id_checked,
+                        type_id=>$plot_of_cvterm_id
+                    });
+                    if ($parent_plot_accession_rs->count > 1){
+                        die "Plot $stock_id_checked is linked to more than one accession!\n"
+                    }
+                    if ($parent_plot_accession_rs->count == 1){
+                        my $parent_plot_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
+                            object_id => $parent_plot_accession_rs->first->object_id,
+                            type_id => $stock_rel_type_id,
+                            subject_id => $plot->stock_id()
+                        });
+                    }
+                }
+                # For genotyping trial, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
+                if ($stock_type_checked == $plant_cvterm_id){
+                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+                        object_id => $stock_id_checked,
+                        type_id => $stock_rel_type_id,
+                        subject_id => $plot->stock_id()
+                    });
+                    my $parent_plant_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$plant_of->cvterm_id,
+                        'object.type_id'=>$accession_cvterm_id
+                    }, {join => "object"});
+                    if ($parent_plant_accession_rs->count > 1){
+                        die "Plant $stock_id_checked is linked to more than one accession!\n"
+                    }
+                    if ($parent_plant_accession_rs->count == 1){
+                        my $parent_plant_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
+                            object_id => $parent_plant_accession_rs->first->object_id,
+                            type_id => $stock_rel_type_id,
+                            subject_id => $plot->stock_id()
+                        });
+                    }
+                    my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$plant_of->cvterm_id,
+                        'object.type_id'=>$plot_cvterm_id
+                    }, {join => "object"});
+                    if ($parent_plot_of_plant_rs->count > 1){
+                        die "Plant $stock_id_checked is linked to more than one plot!\n"
+                    }
+                    if ($parent_plot_of_plant_rs->count == 1){
+                        my $parent_plot_of_plant_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
+                            object_id => $parent_plot_of_plant_rs->first->object_id,
+                            type_id => $stock_rel_type_id,
+                            subject_id => $plot->stock_id()
+                        });
+                    }
+                }
+                # For genotyping trial, if the well tissue_sample is sourced from another tissue_sample, then we store relationships between the new tissue_sample and the source tissue_sample, and the new tissue_sample and the tissue_sample's plant if it exists, and the new tissue_sample and the tissue_sample's plot if it exists, and the new tissue sample and the tissue_sample's accession if it exists.
+                if ($stock_type_checked == $tissue_sample_cvterm_id){
+                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+                        object_id => $stock_id_checked,
+                        type_id => $stock_rel_type_id,
+                        subject_id => $plot->stock_id()
+                    });
+                    my $parent_tissue_sample_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$accession_cvterm_id
+                    }, {join => "object"});
+                    if ($parent_tissue_sample_accession_rs->count > 1){
+                        die "Tissue_sample $stock_id_checked is linked to more than one accession!\n"
+                    }
+                    if ($parent_tissue_sample_accession_rs->count == 1){
+                        my $parent_plant_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
+                            object_id => $parent_tissue_sample_accession_rs->first->object_id,
+                            type_id => $stock_rel_type_id,
+                            subject_id => $plot->stock_id()
+                        });
+                    }
+                    my $parent_plot_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$plot_cvterm_id
+                    }, {join => "object"});
+                    if ($parent_plot_of_tissue_sample_rs->count > 1){
+                        die "Tissue_sample $stock_id_checked is linked to more than one plot!\n"
+                    }
+                    if ($parent_plot_of_tissue_sample_rs->count == 1){
+                        my $parent_plot_of_tissue_sample = $chado_schema->resultset("Stock::StockRelationship")->create({
+                            object_id => $parent_plot_of_tissue_sample_rs->first->object_id,
+                            type_id => $stock_rel_type_id,
+                            subject_id => $plot->stock_id()
+                        });
+                    }
+                    my $parent_plant_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$plant_cvterm_id
+                    }, {join => "object"});
+                    if ($parent_plant_of_tissue_sample_rs->count > 1){
+                        die "Tissue_sample $stock_id_checked is linked to more than one plant!\n"
+                    }
+                    if ($parent_plant_of_tissue_sample_rs->count == 1){
+                        my $parent_plant_of_tissue_sample = $chado_schema->resultset("Stock::StockRelationship")->create({
+                            object_id => $parent_plant_of_tissue_sample_rs->first->object_id,
+                            type_id => $stock_rel_type_id,
+                            subject_id => $plot->stock_id()
+                        });
+                    }
+                }
 
                 my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
                     nd_experiment_id => $nd_experiment_id,

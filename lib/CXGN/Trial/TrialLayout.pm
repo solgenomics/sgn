@@ -414,23 +414,31 @@ sub generate_and_cache_layout {
     my $well_acquisition_date_prop = $stockprop_hash{$acquisition_date_cvterm_id} ? join ',', @{$stockprop_hash{$acquisition_date_cvterm_id}} : undef;
     my $well_notes_prop = $stockprop_hash{$notes_cvterm_id} ? join ',', @{$stockprop_hash{$notes_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
-    my $accession_rs;
-    if ($self->get_experiment_type eq 'field_layout'){
-        $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-            { 'me.type_id' => { -in => [ $plot_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
-            { 'join' => 'object' }
-        );
-        if ($accession_rs->count != 1){
-            die "There is more than one or no accession linked here!\n";
-        }
+    my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
+        { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
+        { 'join' => 'object' }
+    );
+    if ($accession_rs->count != 1){
+        die "There is more than one or no (".$accession_rs->count.") accession linked here!\n";
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
-        $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-            { 'me.type_id' => { -in => [ $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
+        my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
+            { 'me.type_id' => { -in => [ $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
             { 'join' => 'object' }
-        );
-        if ($accession_rs->count != 1){
-            die "There is more than one or no source stock linked here!\n";
+        )->search_related('object');
+        while (my $r=$source_rs->next){
+            if ($r->type_id == $plot_cvterm_id){
+                $design_info{"source_plot_id"} = $r->stock_id;
+                $design_info{"source_plot_name"} = $r->uniquename;
+            }
+            if ($r->type_id == $plant_cvterm_id){
+                $design_info{"source_plant_id"} = $r->stock_id;
+                $design_info{"source_plant_name"} = $r->uniquename;
+            }
+            if ($r->type_id == $tissue_cvterm_id){
+                $design_info{"source_tissue_id"} = $r->stock_id;
+                $design_info{"source_tissue_name"} = $r->uniquename;
+            }
         }
     }
     my $accession = $accession_rs->first->object;

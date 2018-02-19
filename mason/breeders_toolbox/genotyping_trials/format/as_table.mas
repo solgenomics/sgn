@@ -77,7 +77,17 @@ jQuery(document).ready(function () {
                             } else {
                                 bgcolor="#FFFFFF";
                             }
-                            cell = "<br/>Sample: <a href='/stock/" + response.design[well].plot_id +"/view'>" + response.design[well].plot_name + "</a> <br/>Tissue Source: <a href='/stock/" + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a> <br/><br/>";
+                            cell = "<br/>Sample: <a href='/stock/" + response.design[well].plot_id +"/view'>" + response.design[well].plot_name + "</a> <br/>Accession: <a href='/stock/" + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>";
+                            if(response.design[well].source_plot_id){
+                                cell = cell + "<br/>Source Plot: <a href='/stock/" + response.design[well].source_plot_id +"/view'>" + response.design[well].source_plot_name + "</a>";
+                            }
+                            if(response.design[well].source_plant_id){
+                                cell = cell + "<br/>Source Plant: <a href='/stock/" + response.design[well].source_plant_id +"/view'>" + response.design[well].source_plant_name + "</a>";
+                            }
+                            if(response.design[well].source_tissue_id){
+                                cell = cell + "<br/>Source Tissue: <a href='/stock/" + response.design[well].source_tissue_id +"/view'>" + response.design[well].source_tissue_name + "</a>";
+                            }
+                            cell = cell + "<br/><br/>";
                         }
                     }
                     trial_plate_view_html = trial_plate_view_html + "<td bgcolor=" + bgcolor + ">" + cell + "</td>";
