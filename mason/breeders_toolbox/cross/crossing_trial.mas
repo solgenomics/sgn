@@ -175,12 +175,12 @@ my $start_time = time();
 <div class="well well-sm">
 
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
-  subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
+    subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
 
-  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
-  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+<& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+<& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 
-  <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+<span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
 
 </&>
 
@@ -192,80 +192,80 @@ my $start_time = time();
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <&| /page/info_section.mas, title => 'Crosses in this trial', collapsible=>1, collapsed=>0 &>
-  <div class = "well well-sm">
-    <div class = "panel panel-default">
-      <div class = "panel-body">
-        <table id = "crosses_in_trial" class="table table-hover table-striped">
-          <thead>
-            <tr>
-              <th>Cross Name</th>
-              <th>Female Parent</th>
-              <th>Male Parent</th>
-              <th>Cross Type</th>
-              <th>Female Plot</th>
-              <th>Male Plot</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "crosses_in_trial" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Cross Name</th>
+                            <th>Female Parent</th>
+                            <th>Male Parent</th>
+                            <th>Cross Type</th>
+                            <th>Female Plot</th>
+                            <th>Male Plot</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
  </&>
 
  <&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible=>1, collapsed=>0 &>
-   <div class = "well well-sm">
-     <div class = "panel panel-default">
-       <div class = "panel-body">
-         <table id = "cross_properties_trial" class="table table-hover table-striped">
-           <thead>
-             <tr>
-              <th>Cross Name</th>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "cross_properties_trial" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Cross Name</th>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
 % foreach my $column_header(@column_header){
-              <th><%$column_header%></th>
+                            <th><%$column_header%></th>
 %}
-            </tr>
-          </thead>
-        </table>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
-      </div>
     </div>
-  </&>
-
-<&| /page/info_section.mas, title => 'Progeny Info', collapsible=>1, collapsed=>0 &>
-  <div class = "well well-sm">
-    <div class = "panel panel-default">
-      <div class = "panel-body">
-        <table id = "cross_progenies_trial" class="table table-hover table-striped">
-          <thead>
-            <tr>
-              <th>Cross Name</th>
-              <th>Number of Progenies</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
-    </div>
-  </div>
 </&>
 
- <script>
+<&| /page/info_section.mas, title => 'Progeny Info', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "cross_progenies_trial" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Cross Name</th>
+                            <th>Number of Progenies</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
 
- jQuery(document).ready(function(){
+<script>
+
+jQuery(document).ready(function(){
 
     jQuery('#crosses_in_trial').DataTable({
-     'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
     });
 
     jQuery('#cross_properties_trial').DataTable({
-      'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
     });
 
     jQuery('#cross_progenies_trial').DataTable({
-      'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
     });
 
- });
+});
 
- </script>
+</script>
