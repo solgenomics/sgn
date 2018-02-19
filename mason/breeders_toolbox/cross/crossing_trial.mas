@@ -255,10 +255,12 @@ my $start_time = time();
 jQuery(document).ready(function(){
 
     jQuery('#crosses_in_trial').DataTable({
+        'scrollX': true,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
     });
 
     jQuery('#cross_properties_trial').DataTable({
+        'scrollX': true,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
     });
 

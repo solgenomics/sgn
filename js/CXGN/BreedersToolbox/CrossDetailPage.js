@@ -103,7 +103,8 @@ jQuery(document).ready(function() {
             'ajax': '/ajax/cross/accession_plot_parents/'+cross_id,
             'paging' : false,
             'searching' : false,
-            'bInfo' : false
+            'bInfo' : false,
+            'scrollX': true
         });
     return;
       }
@@ -269,7 +270,8 @@ jQuery(document).ready(function() {
             'paging' : false,
             'searching' : false,
             'bInfo' : false,
-            'destroy' : true
+            'destroy' : true,
+            'scrollX': true
         });
         return;
     }
