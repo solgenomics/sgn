@@ -265,5 +265,41 @@ sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
 }
 
 
+sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $field_trial = $c->req->param("field_trial");
+    my $parent_accession = $c->req->param("parent_accession");
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $field_layout_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "field_layout", "experiment_type")->cvterm_id();
+    my $dbh = $schema->storage->dbh();
+
+    my $trial = $schema->resultset("Project::Project")->find ({name => $field_trial});
+    my $trial_id = $trial->project_id();
+
+    my $cross_accession = $schema->resultset("Stock::Stock")->find ({uniquename => $parent_accession});
+    my $cross_accession_id = $cross_accession->stock_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+            FROM nd_experiment_project join nd_experiment on (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) AND nd_experiment.type_id= ?
+            JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+            JOIN stock_relationship on (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.object_id = ?
+            JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+            WHERE nd_experiment_project.project_id= ? ";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($field_layout_typeid, $cross_accession_id, $trial_id, );
+
+    my @plots=();
+    while(my ($plot_id, $plot_name) = $h->fetchrow_array()){
+
+      push @plots, [$plot_id, $plot_name];
+    }
+    #print STDERR Dumper \@plots;
+    $c->stash->{rest} = {data=>\@plots};
+
+}
+
 
 1;
