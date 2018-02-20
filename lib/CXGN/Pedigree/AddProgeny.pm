@@ -75,7 +75,7 @@ sub add_progeny {
 
     my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 
-    my $cross_name_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_relationship', 'stock_relationship');
+    my $cross_name_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
 
     #Get stock of type cross matching cross name
     $cross_stock = $self->_get_cross($self->get_cross_name());
@@ -88,35 +88,35 @@ sub add_progeny {
     $organism_id = $cross_stock->organism_id();
 
     #get experiment
-    my $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
-      ->find({
-	      'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
-	     },
-	     {
-	      join => 'nd_experiment_stocks',
-	     });
-    if (!$experiment) {
-      print STDERR "\n\n\nCross experiment could not be found\n";
-      return;
-    }
+    #my $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
+    #  ->find({
+	  #    'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
+	  #   },
+	  #   {
+	  #    join => 'nd_experiment_stocks',
+	  #   });
+    #if (!$experiment) {
+    #  print STDERR "\n\n\nCross experiment could not be found\n";
+    #  return;
+    #}
 
-    $female_parent = $chado_schema->resultset("Stock::Stock")
-      ->find({
-	      'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
-	      'nd_experiment_stocks.type_id'  =>  $female_parent_cvterm->cvterm_id(),
-	     },
-	     {
-	      join => 'nd_experiment_stocks',
-	     });
+    #$female_parent = $chado_schema->resultset("Stock::Stock")
+    #  ->find({
+	  #    'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
+	  #    'nd_experiment_stocks.type_id'  =>  $female_parent_cvterm->cvterm_id(),
+	  #   },
+	  #   {
+	  #    join => 'nd_experiment_stocks',
+	  #   });
 
-    $male_parent = $chado_schema->resultset("Stock::Stock")
-      ->find({
-	      'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
-	      'nd_experiment_stocks.type_id'  =>  $male_parent_cvterm->cvterm_id(),
-	     },
-	     {
-	      join => 'nd_experiment_stocks',
-	     });
+    #$male_parent = $chado_schema->resultset("Stock::Stock")
+    #  ->find({
+	  #    'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
+	  #    'nd_experiment_stocks.type_id'  =>  $male_parent_cvterm->cvterm_id(),
+	  #   },
+	  #   {
+	  #    join => 'nd_experiment_stocks',
+	  #   });
 
     foreach my $progeny_name (@progeny_names) {
 
@@ -196,7 +196,7 @@ sub _get_cross {
   my $chado_schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
   my $stock;
-  my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');   
+  my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
 
   $stock_lookup->set_stock_name($cross_name);
   $stock = $stock_lookup->get_stock_exact();
