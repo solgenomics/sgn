@@ -42,15 +42,7 @@ $user_id => undef
 <div id="cross_id" style="visibility:hidden">
 <% $cross_id %>
 </div>
-<!--
-<&|  /page/info_section.mas, title => "Parents", collapsible => 1, collapsed => 0  &>
 
-<div id="parents_information_div">
-[loading...]
-</div>
-
-</&>
--->
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
@@ -75,25 +67,6 @@ $user_id => undef
     </div>
  </&>
 
-% my $add_progeny_link = "[add progeny]";
-% if ($user_id) { $add_progeny_link= '<a id="add_more_progeny_link">[add progeny]</a>'; }
-
-<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => $add_progeny_link   &>
-
-    <div id="progeny_information_div">
-        [loading...]
-    </div>
-
-    <div id="add_more_progeny_dialog">
-        <table>
-            <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
-            <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
-            <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
-        </table>
-    </div>
-
-
-</&>
 
 % my $edit_link = "[Edit]";
 % if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
@@ -135,3 +108,23 @@ $user_id => undef
 
 
 <& /breeders_toolbox/seedlots_section.mas, stock_id=>$cross_id, stock_type=>'cross', stock_uniquename=>$cross_name &>
+
+% my $add_progeny_link = "[add progeny]";
+% if ($user_id) { $add_progeny_link= '<a id="add_more_progeny_link">[add progeny]</a>'; }
+
+<&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => $add_progeny_link   &>
+
+    <div id="progeny_information_div">
+        [loading...]
+    </div>
+
+    <div id="add_more_progeny_dialog">
+        <table>
+            <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
+            <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
+            <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
+        </table>
+    </div>
+
+
+</&>
