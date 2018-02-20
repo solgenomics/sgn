@@ -183,6 +183,11 @@ function open_derived_trait_dialog() {
 
 }
 
+function close_view_plot_image_dialog() {
+    jQuery("#view_plot_image_dialog").modal("hide"); 
+    jQuery("#hm_replace_plot_accessions_dialog").modal("hide"); 
+}
+
 function compute_derived_trait() {
     jQuery('#working_modal').modal("show");
     var trait = jQuery('#derived_trait_select').val();

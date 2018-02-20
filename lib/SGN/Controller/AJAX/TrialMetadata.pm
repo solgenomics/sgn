@@ -20,6 +20,8 @@ use File::Basename qw | basename dirname|;
 use List::MoreUtils ':all';
 use Try::Tiny;
 use CXGN::BreederSearch;
+use CXGN::Page::FormattingHelpers qw / html_optional_show /;
+use SGN::Image;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1753,5 +1755,85 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     
     $c->stash->{rest} = { success => 1};
 }
+
+sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $image_ids =  decode_json $c->req->param('image_ids');
+  my $plot_name = $c->req->param('plot_name');
+  my $plot_id = $c->req->param('plot_id');
+  my $trial_id = $c->stash->{trial_id};
+  my $stockref;
+  my $image_objects;
+  my $dbh = $c->dbc->dbh;
+  $stockref->{dbh} = $dbh;
+  $stockref->{image_ids} =  $image_ids || [] ;
+  my $images = $stockref->{image_ids};
+  $dbh = $stockref->{dbh};
+
+  print STDERR Dumper($stockref);
+  print "$plot_name and $plot_id and $image_ids\n";
+  
+  my $image_html     = "";
+  my $m_image_html   = "";
+  my $count;
+  my @more_is; 
+
+  if ($images && !$image_objects) {
+    my @image_object_list = map { SGN::Image->new( $dbh , $_ ) }  @$images ;
+    $image_objects = \@image_object_list;
+  }
+
+  if ($image_objects)  { # don't display anything for empty list of images
+    $image_html .= qq|<table cellpadding="5">|;
+    foreach my $image_ob (@$image_objects) {
+      $count++;
+      my $image_id = $image_ob->get_image_id;
+      my $image_name = $image_ob->get_name();
+      my $image_description = $image_ob->get_description();
+      my $image_img  = $image_ob->get_image_url("medium");
+      my $small_image = $image_ob->get_image_url("thumbnail");
+      my $image_page  = "/image/view/$image_id";
+      
+      my $colorbox = 
+        qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
+      my $fhtml =
+        qq|<tr><td width=120>|
+          . $colorbox
+            . $image_name
+              . "</td><td>"
+                . $image_description
+                  . "</td></tr>";
+      if ( $count < 3 ) { $image_html .= $fhtml; }
+      else {
+        push @more_is, $fhtml;
+      }    #more than 3 figures- show these in a hidden div
+        }
+    $image_html .= "</table>";  #close the table tag or the first 3 figures
+
+    $image_html .= "<script> jQuery(document).ready(function() { jQuery('a.stock_image_group').colorbox(); }); </script>\n";
+
+  }
+  $m_image_html .=
+    "<table cellpadding=5>";  #open table tag for the hidden figures #4 and on
+  my $more = scalar(@more_is);
+  foreach (@more_is) { $m_image_html .= $_; }
+
+  $m_image_html .= "</table>";    #close tabletag for the hidden figures
+
+  if (@more_is) {    #html_optional_show if there are more than 3 figures
+    $image_html .= html_optional_show(
+  				    "Images",
+  				    "<b>See $more more images...</b>",
+  				    qq| $m_image_html |,
+  				    0, #< do not show by default
+  				    'abstract_optional_show', #< don't use the default button-like style
+  				   );
+  }
+ 
+  $c->stash->{rest} = { image_html => $image_html};
+}
+
 
 1;
