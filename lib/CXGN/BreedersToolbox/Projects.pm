@@ -118,7 +118,7 @@ sub get_trials_by_breeding_program {
     my $cross_trials;
     my $genotyping_trials;
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
-    my $cross_cvterm_id = $self->get_cross_cvterm_id();
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
 
     my %projects_that_are_crosses;
@@ -137,7 +137,7 @@ sub get_trials_by_breeding_program {
 	$project_description{$id} = $desc;
       }
       if ($prop) {
-	if ($prop == $cross_cvterm_id) {
+	if ($prop == $crossing_trial_cvterm_id) {
 	  $projects_that_are_crosses{$id} = 1;
 	  $project_year{$id} = '';
 	  #print STDERR Dumper "Cross Trial: ".$name;
@@ -225,16 +225,16 @@ sub get_genotyping_trials_by_breeding_program {
 sub get_all_locations {
      my $self = shift;
      my $c = shift;
- 		 
+
      my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
      my @locations = ();
-     
+
      foreach my $loc ($rs->all()) {
          push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
      }
-     
+
      return \@locations;
- 		 
+
  }
 
 
@@ -450,6 +450,21 @@ sub get_breeding_program_with_trial {
     return $breeding_projects;
 }
 
+sub get_crossing_trials {
+    my $self = shift;
+
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
+
+    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$crossing_trial_cvterm_id }, { join => 'projectprops' }  );
+
+    my @crossing_trials;
+    while (my $row = $rs->next()) {
+	push @crossing_trials, [ $row->project_id, $row->name, $row->description ];
+    }
+
+    return \@crossing_trials;
+}
+
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
@@ -484,6 +499,14 @@ sub get_cross_cvterm_id {
     return $cross_cvterm->cvterm_id();
 }
 
+sub get_crossing_trial_cvterm_id {
+  my $self = shift;
+
+  my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'crossing_trial',  'project_type');
+  return $crossing_trial_cvterm_id->cvterm_id();
+}
+
+
 sub _get_design_trial_cvterm_id {
     my $self = shift;
      my $cvterm = $self->schema->resultset("Cv::Cvterm")
@@ -513,5 +536,6 @@ sub get_gt_protocols {
     }
     return \@protocols;
 }
+
 
 1;

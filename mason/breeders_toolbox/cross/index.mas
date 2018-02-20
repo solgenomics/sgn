@@ -14,6 +14,8 @@ $user_id => undef
 % use utf8;
 % $cross_name ||= "Untitled cross";
 % my $basename = $cross_name."P";
+% my $cross_properties = $c->config->{cross_properties};
+% my @cross_props = split ',',$cross_properties;
 
 <& /page/page_title.mas, title => "Detail for cross '$cross_name'" &>
 
@@ -41,80 +43,92 @@ $user_id => undef
 <% $cross_id %>
 </div>
 
-<&|  /page/info_section.mas, title => "Parents", collapsible => 1, collapsed => 0  &>
 
-<div id="parents_information_div">
-[loading...]
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "parent_information" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Cross Type</th>
+                                <th>Female Accession</th>
+                                <th>Male Accession</th>
+                                <th>Female Plot</th>
+                                <th>Male Plot</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+
+% my $edit_link = "[Edit]";
+% if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
+
+<&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                <table id = "cross_properties" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+% foreach my $cross_prop(@cross_props){
+                        <th><%$cross_prop%></th>
+%}
+                        </tr>
+                    </thead>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+
+<div id="edit_properties_dialog">
+
+    <select id="properties_select">
+% foreach my $cross_prop(@cross_props){
+        <option value="<%$cross_prop%>"><%$cross_prop%></option>
+%}
+    </select>
+
+    <input id="property_value" />
+
+    <button id="property_submit" >Save</button>
+
+    <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
+
 </div>
 
-</&>
+
+<& /breeders_toolbox/seedlots_section.mas, stock_id=>$cross_id, stock_type=>'cross', stock_uniquename=>$cross_name &>
 
 % my $add_progeny_link = "[add progeny]";
 % if ($user_id) { $add_progeny_link= '<a id="add_more_progeny_link">[add progeny]</a>'; }
 
 <&|  /page/info_section.mas, title => "Progeny", collapsible => 1, collapsed => 0, subtitle => $add_progeny_link   &>
 
-  <div id="progeny_information_div">
-    [loading...]
-  </div>
+    <div id="progeny_information_div">
+        [loading...]
+    </div>
 
-  <div id="add_more_progeny_dialog">
-    <table>
-    <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
-    <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
-    <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
-    </table>
-  </div>
+    <div id="add_more_progeny_dialog">
+        <table>
+            <tr><td>Basename</td><td><input type="input" id="basename" name="basename" value="<% $basename %>" /></td></tr>
+            <tr><td>Start number</td><td><input type="input" id="start_number" name="start_number" size="5" value="<% $progeny_count + 1 %>" /></td></tr>
+            <tr><td>How many?</td><td><input type="input" id="progeny_count" name="progeny_count" size="5" /></td></tr>
+        </table>
+    </div>
 
-
-</&>
-
-<& /breeders_toolbox/seedlots_section.mas, stock_id=>$cross_id, stock_type=>'cross', stock_uniquename=>$cross_name &>
-
-% my $edit_link = "[Edit]";
-% if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
-
-<&| /page/info_section.mas, title => "Properties", subtitle=> $edit_link &>
-
-<div id="cross_properties_div" >
-[none]
-</div>
 
 </&>
-
-<div id="edit_properties_dialog">
-
-  <select id="properties_select">
-    <option value="cross_name">Cross name</option>
-    <option value="cross_type">Cross type</option>
-    <option value="number_of_flowers">Number of flowers</option>
-    <option value="number_of_fruits">Number of fruits</option>
-    <option value="number_of_seeds_planted">Number of seeds planted</option>
-    <option value="number_of_seedlings_transplanted">Number of seedlings transplanted</option>
-    <option value="date_of_pollination">Date of pollination</option>
-    <option value="date_of_harvest">Date of harvest</option>
-    <option value="number_of_seeds_harvested">Number of seeds harvested</option>
-    <option value="days_to_maturity">Days to maturity</option>
-    <option value="date_of_seed_extraction">Date of seed extraction</option>
-    <option value="number_of_seeds_extracted">Number of seeds extracted</option>
-    <option value="number_of_viable_seeds">Number of viable seeds</option>
-    <option value="number_of_nonviable_seeds">Number of nonviable seeds</option>
-    <option value="days_from_harvest_to_extraction">Days from harvest to extraction</option>
-    <option value="date_of_embryo_rescue">Date of embryo rescue</option>
-    <option value="number_of_embryos_rescued">Number of embryos rescued</option>
-    <option value="days_from_extraction_to_embryo_rescue">Days from extraction to embryo rescue</option>
-    <option value="number_of_embryos_germinated">Number of embryos germinated</option>
-    <option value="number_of_embryos_contaminated">Number of embryos contaminated</option>
-    <option value="number_of_seeds_planted">Number of embryos planted</option>
-    <option value="number_of_seeds_germinated">Number of seeds germinated</option>
-    <option value="number_of_progeny">Number of progeny</option>
-    <option value="number_of_seeds_distributed">Number of seeds distributed</option>
-  </select>
-
-  <input id="property_value" />
-
-  <button id="property_submit" >Save</button>
-
-  <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
-
-</div>
