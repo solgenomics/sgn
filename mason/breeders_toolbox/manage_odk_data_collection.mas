@@ -3,6 +3,7 @@
 $odk_crossing_data_service_name => undef
 $odk_crossing_data_service_url => undef
 $odk_crossing_data_form_name => undef
+$odk_crossing_data_test_form_name => undef
 $odk_phenotyping_data_service_name => undef
 $odk_phenotyping_data_service_url => undef
 </%args>
@@ -196,6 +197,7 @@ jQuery(document).ready(function () {
                 var form_dropdown_select_html = '<select class="form-control" id="availabe_odk_crossing_forms">';
                 var allowed_forms_string = '<% $odk_crossing_data_form_name %>';
                 var allowed_forms = allowed_forms_string.split(',');
+                allowed_forms.push('<% $odk_crossing_data_test_form_name %>');
                 for(var i=0; i<response.forms.length; i++){
                     if (jQuery.inArray(response.forms[i].id_string, allowed_forms) != -1){
                         form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';

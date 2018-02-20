@@ -61,6 +61,7 @@ is_deeply(\@sorted_field_trials, [
           ]
         ], 'test get trials');
 #print STDERR Dumper $cross_trials;
+=begin
 my @sorted_cross_trials = sort {$a->[0] cmp $b->[0]} @$cross_trials;
 #print STDERR Dumper \@sorted_cross_trials;
 is_deeply(\@sorted_cross_trials, [
@@ -170,6 +171,10 @@ is_deeply(\@sorted_cross_trials, [
             'TestCross14'
           ]
         ], 'test get crosses');
+=end
+
+=cut
+
 #print STDERR Dumper $genotyping_trials;
 is_deeply($genotyping_trials, undef, 'test get geno trials');
 
