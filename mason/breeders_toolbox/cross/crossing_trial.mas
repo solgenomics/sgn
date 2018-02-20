@@ -195,18 +195,20 @@ my $start_time = time();
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
-                <table id = "crosses_in_trial" class="table table-hover table-striped">
-                    <thead>
-                        <tr>
-                            <th>Cross Name</th>
-                            <th>Female Parent</th>
-                            <th>Male Parent</th>
-                            <th>Cross Type</th>
-                            <th>Female Plot</th>
-                            <th>Male Plot</th>
-                        </tr>
-                    </thead>
-                </table>
+                <div style="overflow:scroll">
+                    <table id = "crosses_in_trial" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Cross Name</th>
+                                <th>Female Parent</th>
+                                <th>Male Parent</th>
+                                <th>Cross Type</th>
+                                <th>Female Plot</th>
+                                <th>Male Plot</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -216,6 +218,7 @@ my $start_time = time();
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
+                <div style="overflow:scroll">
                 <table id = "cross_properties_trial" class="table table-hover table-striped">
                     <thead>
                         <tr>
@@ -228,6 +231,7 @@ my $start_time = time();
                         </tr>
                     </thead>
                 </table>
+                </div>
             </div>
         </div>
     </div>
@@ -255,12 +259,10 @@ my $start_time = time();
 jQuery(document).ready(function(){
 
     jQuery('#crosses_in_trial').DataTable({
-        'scrollX': true,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
     });
 
     jQuery('#cross_properties_trial').DataTable({
-        'scrollX': true,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
     });
 

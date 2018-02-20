@@ -104,7 +104,6 @@ jQuery(document).ready(function() {
             'paging' : false,
             'searching' : false,
             'bInfo' : false,
-            'scrollX': true
         });
     return;
       }
@@ -271,7 +270,6 @@ jQuery(document).ready(function() {
             'searching' : false,
             'bInfo' : false,
             'destroy' : true,
-            'scrollX': true
         });
         return;
     }

@@ -378,10 +378,11 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_parents') Args(1) {
 
     my @cross_parents = ();
     while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $cross_type) = $h->fetchrow_array()){
-        push @cross_parents, [ qq{<a href="/stock/$female_accession_id/view">$female_accession_name</a>},
-            qq{<a href="/stock/$female_plot_id/view">$female_plot_name</a>},
+        push @cross_parents, [ $cross_type,
+            qq{<a href="/stock/$female_accession_id/view">$female_accession_name</a>},
             qq{<a href="/stock/$male_accession_id/view">$male_accession_name</a>},
-            qq{<a href="/stock/$male_plot_id/view">$male_plot_name</a>}, $cross_type];
+            qq{<a href="/stock/$female_plot_id/view">$female_plot_name</a>},
+            qq{<a href="/stock/$male_plot_id/view">$male_plot_name</a>}];
     }
 
     $c->stash->{rest} = {data => \@cross_parents}

@@ -225,7 +225,6 @@ sub get_crosses_in_trial {
     while(my($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name) = $h->fetchrow_array()){
         push @data, [$cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name]
     }
-
     return \@data;
 }
 
