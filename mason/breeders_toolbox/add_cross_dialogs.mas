@@ -1,6 +1,6 @@
 <%args>
-@programs => ()
 @locations => ()
+@crossing_trials => ()
 </%args>
 
 <style>
@@ -38,15 +38,16 @@
 	  <form class="form-horizontal" role="form" name="create_cross_form" id="create_cross_form">
     <h3>Required:</h3>
     <div class="form-group">
-            <label class="col-sm-2 control-label">Breeding Program: </label>
+        <label class="col-sm-2 control-label">Crossing Trial: </label>
             <div class="col-sm-10">
-        <select class="form-control" id="program" name="program">
-    <%perl>
-        foreach my $program (@programs) {
-          print "<option value=".'"'.@$program[0].'"'.">".@$program[1]."</option>";
-        }
-          </%perl>
-        </select>
+                <select class="form-control" id="crossing_trial" name="crossing_trial">
+                    <option value="">Select Crossing Trial</option>
+                    <%perl>
+                        foreach my $crossing_trial (@crossing_trials) {
+                        print "<option value=".'"'.@$crossing_trial[0].'"'.">".@$crossing_trial[1]."</option>";
+                        }
+                    </%perl>
+                </select>
             </div>
     </div>
     <div class="form-group">
@@ -178,34 +179,53 @@
       <br>
       <h3>Optional:</h3>
 	    <table>
-      <tr>
-        <td>
-        <div class="form-group">
-                  <label class="col-sm-9 control-label">Specify a Folder: </label>
-                  <div class="col-sm-3">
-              <input id= "use_folders_checkbox" type="checkbox" />
-                  </div>
-        </div>
-      </td>
-      </tr>
-      <tr id="folder_section" style="display: none">
-      <td><p>Put cross/crosses together in a new folder:</p><p>Or add to an existing folder:</p></td>
-      <td><div class="form-group">
-            <label class="col-sm-2 control-label">Folder Name: </label>
-            <div class="col-sm-10">
-        <input class="form-control" type="text" id="add_cross_folder_name" name="add_cross_folder_name"/>
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Field Trial: </label>
+          <div class="col-sm-10">
+            <div class="input-group">
+              <input type ="text" class ="form-control" id ="field_trial">
+                <div class ="input-group-btn">
+                <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
+                </div>
             </div>
-            </div>
+          </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Female Plot: </label>
+          <div class="col-sm-10">
+            <select class="form-control" id="female_plot" name="female_plot">
+            <option value="">Choose trial first</option>
+            </select>
+            </select>
+          </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Male Plot: </label>
+          <div class="col-sm-10">
+            <select class="form-control" id="male_plot" name="male_plot">
+            <option value="">Choose trial first</option>
+            </select>
+            </select>
+          </div>
+      </div>
+        <tr>
+          <td>
             <div class="form-group">
-            <label class="col-sm-2 control-label">Folder: </label>
-            <div class="col-sm-10" >
-              <div id="add_cross_folder_select_div">
-                [Loading...]
-              </div>
+                <label class="col-sm-9 control-label">Specify Pollination Date: </label>
+                <div class="col-sm-3">
+                  <input id= "pollination_date_checkbox" type="checkbox" />
+                </div>
             </div>
+          </td>
+          <td>
+            <div class="form-group" id="get_pollination_date" style="display: none">
+                <label class="col-sm-6 control-label">Pollination Date (YYYY/MM/DD): </label>
+                <div class="col-sm-6">
+                  <input class="form-control" type="text" id="pollination_date" />
+                </div>
             </div>
-            </td>
-            </tr>
+          </td>
+        </tr>
 	      <tr>
 	        <td>
 	    	  <div class="form-group">
@@ -368,3 +388,97 @@
     </div>
   </div>
 </div>
+
+<script>
+
+jQuery.noConflict();
+
+jQuery(document).ready(function($) {
+
+    jQuery("#field_trial").autocomplete({
+        source:'/ajax/stock/project_autocomplete',
+    });
+
+    $("#search_plots").click(function(e){
+        e.preventDefault();
+
+        var maternal_parent;
+        if ($('#maternal_parent').val() != ''){
+            maternal_parent = $('#maternal_parent').val();
+        }
+
+        if ($('#selfed_parent').val() != ''){
+            maternal_parent = $('#selfed_parent').val();
+        }
+
+        if ($('#open_maternal_parent').val() != ''){
+            maternal_parent = $('#open_maternal_parent').val();
+        }
+
+        console.log(maternal_parent);
+
+        jQuery.ajax({
+            url:'/ajax/breeders/get_accession_plots',
+            data:{'field_trial':$('#field_trial').val(),
+                  'parent_accession':maternal_parent,
+                  },
+            success: function(response){
+            console.log(response);
+            var html = '<select id = "female_plot" >';
+            for (var i=0; i<response.data.length; i++) {
+            html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
+            }
+            html = html + "</select>";
+            console.log(html);
+
+            if(i ==''){
+            alert("No plot");
+            return;
+            }
+
+            jQuery('#female_plot').html(html);
+
+            },
+            error:function(response){
+            alert("An error occurred getting female plots.");
+            }
+        });
+
+        var paternal_parent;
+
+        if ($('#paternal_parent').val() != ''){
+        paternal_parent = $('#paternal_parent').val();
+        }
+
+        if ($('#selfed_parent').val() != ''){
+        paternal_parent = $('#selfed_parent').val();
+        }
+
+
+        jQuery.ajax({
+            url:'/ajax/breeders/get_accession_plots',
+            data:{'field_trial':$('#field_trial').val(),
+                  'parent_accession':paternal_parent,
+                  },
+            success: function(response){
+            console.log(response);
+            var html = '<select id = "male_plot" >';
+            for (var i=0; i<response.data.length; i++) {
+            html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
+            }
+            html = html + "</select>";
+            console.log(html);
+
+            if(i ==''){
+            alert("No plot");
+            return;
+            }
+
+            jQuery('#male_plot').html(html);
+
+            },
+        });
+    });
+});
+
+</script>

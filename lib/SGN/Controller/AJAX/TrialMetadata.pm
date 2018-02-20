@@ -11,6 +11,8 @@ use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Cross;
+
 use CXGN::Phenotypes::TrialPhenotype;
 use CXGN::Login;
 use CXGN::UploadFile;
@@ -20,6 +22,8 @@ use File::Basename qw | basename dirname|;
 use List::MoreUtils ':all';
 use Try::Tiny;
 use CXGN::BreederSearch;
+use CXGN::Page::FormattingHelpers qw / html_optional_show /;
+use SGN::Image;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -292,9 +296,9 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
         );
     }
     my @data = $phenotypes_search->get_phenotype_matrix();
-    $c->stash->{rest} = { 
+    $c->stash->{rest} = {
       status => "success",
-      data => \@data 
+      data => \@data
    };
 }
 
@@ -1576,13 +1580,82 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     $c->stash->{rest} = {success => 1};
 }
 
+sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_in_trial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>},
+        qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
+        qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type,
+        qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
+        qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>}];
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+}
+
+sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_cross_properties_trial();
+
+    my $cross_properties = $c->config->{cross_properties};
+    my @column_order = split ',', $cross_properties;
+
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $cross_props_hash) =@$r;
+
+        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>} );
+        foreach my $key (@column_order){
+          push @row, $cross_props_hash->{$key};
+        }
+
+        push @crosses, \@row;
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+}
+
+sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_cross_progenies_trial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $progeny_number) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number];
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+}
+
+
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->req->param("selected");
-    
+
     # my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
     # 	bcs_schema=>$schema,
     # 	trial_id=>$trial_id,
@@ -1593,7 +1666,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
     print STDERR Dumper(\@items);
     my @trait_ids = ($trait_id);
-    
+
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         "MaterializedView",
         {
@@ -1615,7 +1688,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
 				$row_number = $rep;
 			}
 		}
-        
+
         my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
         push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$phenotype_id} ;
 		if ($col_number){
@@ -1628,26 +1701,26 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
 		push @plot_No, $plot_number;
 		push @block_No, $block_number;
 		push @rep_No, $rep;
-        push @phenoID, $phenotype_id; 
+        push @phenoID, $phenotype_id;
     }
-    
+
     my $false_coord;
 	if ($col_No[0] == ""){
         @col_No = ();
         $false_coord = 'false_coord';
 		my @row_instances = uniq @row_No;
 		my %unique_row_counts;
-		$unique_row_counts{$_}++ for @row_No;        
+		$unique_row_counts{$_}++ for @row_No;
         my @col_number2;
         for my $key (keys %unique_row_counts){
             push @col_number2, (1..$unique_row_counts{$key});
         }
-        for (my $i=0; $i < scalar(@$result); $i++){               
+        for (my $i=0; $i < scalar(@$result); $i++){
             @$result[$i]->{'col'} = $col_number2[$i];
             push @col_No, $col_number2[$i];
-        }		
+        }
 	}
-    
+
     my ($min_col, $max_col) = minmax @col_No;
 	my ($min_row, $max_row) = minmax @row_No;
 	my (@unique_col,@unique_row);
@@ -1657,7 +1730,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
 	for my $y (1..$max_row){
 		push @unique_row, $y;
 	}
-    
+
     my $trial = CXGN::Trial->new({
 		bcs_schema => $schema,
 		trial_id => $trial_id
@@ -1668,7 +1741,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
 		push @control_name, $cntrl->{'accession_name'};
 	}
 
-    $c->stash->{rest} = { #phenotypes => $phenotype, 
+    $c->stash->{rest} = { #phenotypes => $phenotype,
                             col => \@col_No,
                             row => \@row_No,
                             pheno => \@pheno_val,
@@ -1688,7 +1761,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
                             controls => \@control_name
                         };
 }
-  
+
 sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype') Args(0) {
   my $self = shift;
   my $c = shift;
@@ -1713,7 +1786,7 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
     $c->stash->{rest} = { error => $suppress_return_error };
     return;
   }
- 
+
   $c->stash->{rest} = { success => 1};
 }
 
@@ -1724,7 +1797,7 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     my $trait_ids = $c->req->param('traits_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial = $c->stash->{trial};
-    
+
     if (!$c->user()) {
     	print STDERR "User not logged in... not deleting trait.\n";
     	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
@@ -1736,7 +1809,7 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
       return;
     }
 
-    my $delete_trait_return_error; 
+    my $delete_trait_return_error;
     if ($pheno_ids){
             my $phenotypes_ids = JSON::decode_json($pheno_ids);
          $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
@@ -1745,13 +1818,93 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
         my $traits_ids = JSON::decode_json($trait_ids);
          $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
     }
-    
+
     if ($delete_trait_return_error) {
       $c->stash->{rest} = { error => $delete_trait_return_error };
       return;
     }
-    
+
     $c->stash->{rest} = { success => 1};
 }
+
+sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $image_ids =  decode_json $c->req->param('image_ids');
+  my $plot_name = $c->req->param('plot_name');
+  my $plot_id = $c->req->param('plot_id');
+  my $trial_id = $c->stash->{trial_id};
+  my $stockref;
+  my $image_objects;
+  my $dbh = $c->dbc->dbh;
+  $stockref->{dbh} = $dbh;
+  $stockref->{image_ids} =  $image_ids || [] ;
+  my $images = $stockref->{image_ids};
+  $dbh = $stockref->{dbh};
+
+  print STDERR Dumper($stockref);
+  print "$plot_name and $plot_id and $image_ids\n";
+  
+  my $image_html     = "";
+  my $m_image_html   = "";
+  my $count;
+  my @more_is; 
+
+  if ($images && !$image_objects) {
+    my @image_object_list = map { SGN::Image->new( $dbh , $_ ) }  @$images ;
+    $image_objects = \@image_object_list;
+  }
+
+  if ($image_objects)  { # don't display anything for empty list of images
+    $image_html .= qq|<table cellpadding="5">|;
+    foreach my $image_ob (@$image_objects) {
+      $count++;
+      my $image_id = $image_ob->get_image_id;
+      my $image_name = $image_ob->get_name();
+      my $image_description = $image_ob->get_description();
+      my $image_img  = $image_ob->get_image_url("medium");
+      my $small_image = $image_ob->get_image_url("thumbnail");
+      my $image_page  = "/image/view/$image_id";
+      
+      my $colorbox = 
+        qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
+      my $fhtml =
+        qq|<tr><td width=120>|
+          . $colorbox
+            . $image_name
+              . "</td><td>"
+                . $image_description
+                  . "</td></tr>";
+      if ( $count < 3 ) { $image_html .= $fhtml; }
+      else {
+        push @more_is, $fhtml;
+      }    #more than 3 figures- show these in a hidden div
+        }
+    $image_html .= "</table>";  #close the table tag or the first 3 figures
+
+    $image_html .= "<script> jQuery(document).ready(function() { jQuery('a.stock_image_group').colorbox(); }); </script>\n";
+
+  }
+  $m_image_html .=
+    "<table cellpadding=5>";  #open table tag for the hidden figures #4 and on
+  my $more = scalar(@more_is);
+  foreach (@more_is) { $m_image_html .= $_; }
+
+  $m_image_html .= "</table>";    #close tabletag for the hidden figures
+
+  if (@more_is) {    #html_optional_show if there are more than 3 figures
+    $image_html .= html_optional_show(
+  				    "Images",
+  				    "<b>See $more more images...</b>",
+  				    qq| $m_image_html |,
+  				    0, #< do not show by default
+  				    'abstract_optional_show', #< don't use the default button-like style
+  				   );
+  }
+ 
+  $c->stash->{rest} = { image_html => $image_html};
+}
+
 
 1;

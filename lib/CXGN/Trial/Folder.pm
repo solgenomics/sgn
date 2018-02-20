@@ -497,7 +497,7 @@ sub get_jstree_html {
         $folder_type_of_interest = 'folder_for_trials';
     }
     elsif ($project_type_of_interest eq 'cross') {
-        $local_type_of_interest = 'cross';
+        $local_type_of_interest = 'crossing_trial';
         $folder_type_of_interest = 'folder_for_crosses';
     }
     elsif ($project_type_of_interest eq 'genotyping_trial') {
