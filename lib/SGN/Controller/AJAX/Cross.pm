@@ -904,7 +904,15 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $data = decode_json $c->req->param('crosses');
     my $trial_id = $c->req->param('trial_id');
     my $ona_form_id = $c->req->param('form_id');
+    my $ona_form_name = $c->req->param('form_name');
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
+    my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
+
+    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists are separated by location
+    my $is_test_form;
+    if ($ona_form_name eq $test_ona_form_name){
+        $is_test_form = 1;
+    }
     #print STDERR Dumper $data;
     #print STDERR Dumper $selected_plot_ids;
 
@@ -1140,8 +1148,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $urlencoded_filename1;
     #$c->stash->{rest}->{filename} = $urlencoded_filename1;
 
-
-    my $file_type = 'cross_wishlist_'.$location_name.'_'.$ona_form_id;
+    my $file_type;
+    if ($is_test_form){
+        $file_type = 'cross_wishlist_test_'.$ona_form_id;
+    } else {
+        $file_type = 'cross_wishlist_'.$location_name.'_'.$ona_form_id;
+    }
     my $previously_saved_metadata_id;
     my $previous_wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $file_type});
     my @previous_file_lines;
@@ -1194,12 +1206,19 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $urlencoded_filename2;
     #$c->stash->{rest}->{filename} = $urlencoded_filename2;
 
+    my $archive_name;
+    if ($is_test_form){
+        $archive_name = 'cross_wishlist_test.csv';
+    } else {
+        $archive_name = 'cross_wishlist_'.$location_name.'.csv';
+    }
+
     my $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path2,
-       subdirectory => 'cross_wishlist_'.$site_name,
+       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'cross_wishlist_'.$location_name.'_'.$ona_form_id.'.csv',
+       archive_filename => $archive_name,
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1207,7 +1226,14 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $uploaded_file = $uploader->archive();
     my $md5 = $uploader->get_md5($uploaded_file);
 
-    my $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$location_name.'_'.$ona_form_id;
+
+    my $germplasm_info_file_type;
+    if ($is_test_form){
+        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_test_'.$ona_form_id;
+    } else {
+        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$location_name.'_'.$ona_form_id;
+    }
+
     my $previously_saved_germplasm_info_metadata_id;
     my $previous_germplasm_info_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $germplasm_info_file_type});
     my @previous_germplasm_info_lines;
@@ -1254,12 +1280,19 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $urlencoded_filename3;
     #$c->stash->{rest}->{filename} = $urlencoded_filename3;
 
+    my $germplasm_info_archive_name;
+    if ($is_test_form){
+        $germplasm_info_archive_name = 'germplasm_info_test.csv';
+    } else {
+        $germplasm_info_archive_name = 'germplasm_info_'.$location_name.'.csv';
+    }
+
     $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path3,
-       subdirectory => 'cross_wishlist_'.$site_name,
+       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'germplasm_info_'.$location_name.'_'.$ona_form_id.'.csv',
+       archive_filename => $germplasm_info_archive_name,
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
