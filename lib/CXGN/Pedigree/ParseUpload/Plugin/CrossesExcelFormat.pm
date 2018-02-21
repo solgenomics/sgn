@@ -186,21 +186,25 @@ sub _validate_with_plugin {
         }
     } else {
       #male parent must exist in the database
-        if (!$self->_get_accession($male_parent)) {
+    if (!$self->_get_accession($male_parent)) {
 	          push @errors, "Cell D$row_name: male parent does not exist: $male_parent";
       }
     }
 
       #female plot must exist in the database
-      if (!$self->_get_plot($female_plot_name)){
-          push @errors, "Cell E$row_name: female plot does not exist: $female_plot_name";
-      }
+    if ($female_plot_name){
+        if (!$self->_get_plot($female_plot_name)){
+            push @errors, "Cell E$row_name: female plot does not exist: $female_plot_name";
+        }
+    }
 
       #female plot must exist in the database
-      if (!$self->_get_plot($male_plot_name)){
-          push @errors, "Cell F$row_name: male plot does not exist: $male_plot_name";
-      }
-  }
+    if ($male_plot_name){
+        if (!$self->_get_plot($male_plot_name)){
+            push @errors, "Cell F$row_name: male plot does not exist: $male_plot_name";
+        }
+    }
+}
   #store any errors found in the parsed file to parse_errors accessor
   if (scalar(@errors) >= 1) {
     $self->_set_parse_errors(\@errors);
