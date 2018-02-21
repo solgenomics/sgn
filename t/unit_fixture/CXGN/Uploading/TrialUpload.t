@@ -330,32 +330,56 @@ my $design;
 $td->calculate_design();
 $design = $td->get_design();
 
-#print STDERR Dumper $design;
+print STDERR Dumper $design;
 
 my $igd_design_check = {
-          'A01' => {
-                     'stock_name' => 'test_accession1',
-                     'plot_name' => 'CASSAVA_GS_74_A01'
-                   },
-          'A03' => {
-                     'stock_name' => 'test_accession3',
-                     'plot_name' => 'CASSAVA_GS_74_A03'
-                   },
-          'F05' => {
-                     'stock_name' => 'BLANK',
-                     'plot_name' => 'CASSAVA_GS_74_F05_BLANK'
-                   },
           'A05' => {
                      'stock_name' => 'test_accession5',
+                     'col_number' => 5,
+                     'is_blank' => 0,
+                     'row_number' => 'A',
+                     'plot_number' => 'A05',
                      'plot_name' => 'CASSAVA_GS_74_A05'
                    },
-          'A02' => {
-                     'stock_name' => 'test_accession2',
-                     'plot_name' => 'CASSAVA_GS_74_A02'
-                   },
           'A04' => {
+                     'plot_number' => 'A04',
+                     'plot_name' => 'CASSAVA_GS_74_A04',
+                     'col_number' => 4,
                      'stock_name' => 'test_accession4',
-                     'plot_name' => 'CASSAVA_GS_74_A04'
+                     'is_blank' => 0,
+                     'row_number' => 'A'
+                   },
+          'A02' => {
+                     'is_blank' => 0,
+                     'row_number' => 'A',
+                     'col_number' => 2,
+                     'stock_name' => 'test_accession2',
+                     'plot_name' => 'CASSAVA_GS_74_A02',
+                     'plot_number' => 'A02'
+                   },
+          'A01' => {
+                     'stock_name' => 'test_accession1',
+                     'col_number' => 1,
+                     'row_number' => 'A',
+                     'is_blank' => 0,
+                     'plot_name' => 'CASSAVA_GS_74_A01',
+                     'plot_number' => 'A01'
+                   },
+          'F05' => {
+                     'plot_name' => 'CASSAVA_GS_74_F05_BLANK',
+                     'plot_number' => 'F05',
+                     'is_blank' => 1,
+                     'row_number' => 'F',
+                     'stock_name' => 'BLANK',
+                     'col_number' => 5
+                   },
+          'A03' => {
+                     'plot_name' => 'CASSAVA_GS_74_A03',
+                     'plot_number' => 'A03',
+                     'stock_name' => 'test_accession3',
+                     'col_number' => 3,
+                     'row_number' => 'A',
+                     'is_blank' => 0
                    }
         };
 
@@ -377,6 +401,10 @@ my $trial_create = CXGN::Trial::TrialCreate
 	is_genotyping => 1,
 	genotyping_user_id => $meta->{user_id} || "unknown",
 	genotyping_project_name => $meta->{project_name} || "unknown",
+    genotyping_facility_submitted => 'no',
+    genotyping_facility => 'igd',
+    genotyping_plate_format => '96',
+    genotyping_plate_sample_type => 'DNA',
 	operator => "janedoe"
 	  });
 
@@ -413,7 +441,7 @@ ok($post2_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post2_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post2_project_prop_diff."\n";
-ok($post2_project_prop_diff == 6, "check projectprop table after upload igd trial");
+ok($post2_project_prop_diff == 10, "check projectprop table after upload igd trial");
 
 $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post2_stock_diff = $post_stock_count - $pre_stock_count;
@@ -423,7 +451,7 @@ ok($post2_stock_diff == 14, "check stock table after upload igd trial");
 $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post2_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post2_stock_prop_diff."\n";
-ok($post2_stock_prop_diff == 71, "check stockprop table after upload igd trial");
+ok($post2_stock_prop_diff == 84, "check stockprop table after upload igd trial");
 
 $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post2_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -639,7 +667,7 @@ ok($post1_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 9, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 13, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -649,7 +677,7 @@ ok($post1_stock_diff == 22, "check stock table after upload excel trial");
 my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post1_stock_prop_diff."\n";
-ok($post1_stock_prop_diff == 119, "check stockprop table after upload excel trial");
+ok($post1_stock_prop_diff == 132, "check stockprop table after upload excel trial");
 
 my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;

@@ -478,10 +478,12 @@ sub generate_and_cache_layout {
 	if ($col_number_prop) {
       $design_info{"col_number"}=$col_number_prop;
     }
-    if ($is_blank_prop) {
-      $design_info{"is_blank"}=1;
-    } else {
-      $design_info{"is_blank"}=0;
+    if ($self->get_experiment_type eq 'genotyping_layout'){
+        if ($is_blank_prop) {
+          $design_info{"is_blank"}=1;
+        } else {
+          $design_info{"is_blank"}=0;
+        }
     }
     if ($well_concentration_prop){
         $design_info{"concentration"} = $well_concentration_prop;

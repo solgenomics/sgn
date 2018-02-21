@@ -79,12 +79,6 @@ subtype 'DesignType',
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
 
-# the json describing the plate, as obtained from the GDF ajax request. 
-# This is converted to a CXGN::Trial::TrialDesign design which can be stored
-# in the database
-#
-has 'plate' => (isa => 'Str', is => 'rw', predicate => 'has_plate', clearer => 'clear_plate');
-
 my $design;
 
 sub get_design {

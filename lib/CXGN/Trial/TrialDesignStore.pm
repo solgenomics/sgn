@@ -296,7 +296,7 @@ sub validate_design {
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= "Name $_ already exists in the database.";
+        $error .= "Name $s already exists in the database.";
     }
 
     my $seedlot_validator = CXGN::List::Validate->new();
