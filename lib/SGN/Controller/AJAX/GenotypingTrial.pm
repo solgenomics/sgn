@@ -7,6 +7,8 @@ use Data::Dumper;
 use CXGN::Trial::TrialDesign;
 use Try::Tiny;
 use List::MoreUtils qw /any /;
+use CXGN::People::Person;
+use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -124,18 +126,36 @@ sub parse_genotype_trial_file_POST : Args(0) {
         return;
     }
 
-    if (!$c->user()) {
-        print STDERR "User not logged in... not uploading a trial.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
-        return;
-    }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
-        return;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping trial!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping trial!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
     }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $user_name = $c->user()->get_object()->get_username();
+    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping trial." };
+        $c->detach();
+    }
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
@@ -145,7 +165,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $c->user->get_object->get_user_type()
+        user_role => $user_role
     });
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -209,8 +229,34 @@ sub store_genotype_trial_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping trial!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping trial!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping trial." };
         $c->detach();
     }
 
@@ -243,8 +289,8 @@ sub store_genotype_trial_POST : Args(0) {
         my $ct = CXGN::Trial::TrialCreate->new( {
             chado_schema => $schema,
             dbh => $c->dbc->dbh(),
-            user_name => $c->user()->get_object()->get_username(), #not implemented,
-            operator => $c->user()->get_object()->get_username(),
+            user_name => $user_name, #not implemented,
+            operator => $user_name,
             trial_year => $plate_info->{year},
             trial_location => $location->description(),
             program => $breeding_program->name(),
@@ -253,7 +299,7 @@ sub store_genotype_trial_POST : Args(0) {
             design => $plate_info->{design},
             trial_name => $plate_info->{name},
             is_genotyping => 1,
-            genotyping_user_id => $c->user()->get_object()->get_sp_person_id(),
+            genotyping_user_id => $user_id,
             genotyping_project_name => $plate_info->{project_name},
             genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
             genotyping_facility => $plate_info->{genotyping_facility},

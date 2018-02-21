@@ -15,6 +15,9 @@ use CXGN::Stock::StockLookup;
 use CXGN::List;
 use CXGN::Trial::TrialDesign;
 use DateTime;
+use Test::WWW::Mechanize;
+use LWP::UserAgent;
+use JSON;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -694,5 +697,104 @@ my $post1_project_relationship_diff = $post_project_relationship_count - $pre_pr
 print STDERR "ProjectRelationship: ".$post1_project_relationship_diff."\n";
 ok($post1_project_relationship_diff == 3, "check projectrelationship table after upload excel trial");
 
+
+
+my $mech = Test::WWW::Mechanize->new;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+print STDERR Dumper $response;
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
+my $file = $f->config->{basepath}."/t/data/genotype_trial_upload/NewGenotypeUpload";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/parsegenotypetrial',
+        Content_Type => 'form-data',
+        Content => [
+            genotyping_trial_layout_upload => [ $file, 'genotype_trial_upload', Content_Type => 'application/vnd.ms-excel', ],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+
+is_deeply($message_hash, {
+          'design' => {
+                        'A01' => {
+                                   'plot_name' => '2018TestPlate02_A01',
+                                   'row_number' => 'A',
+                                   'is_blank' => 0,
+                                   'dna_person' => 'nmorales',
+                                   'concentration' => '5',
+                                   'col_number' => '1',
+                                   'acquisition_date' => '2018/02/16',
+                                   'notes' => 'test well A01',
+                                   'extraction' => 'CTAB',
+                                   'tissue_type' => 'leaf',
+                                   'stock_name' => 'KASESE_TP2013_885',
+                                   'volume' => '10',
+                                   'plot_number' => 'A01'
+                                 },
+                        'A02' => {
+                                   'volume' => undef,
+                                   'plot_number' => 'A02',
+                                   'notes' => 'test blank',
+                                   'extraction' => undef,
+                                   'tissue_type' => undef,
+                                   'stock_name' => 'BLANK',
+                                   'plot_name' => '2018TestPlate02_A02',
+                                   'row_number' => 'A',
+                                   'is_blank' => 1,
+                                   'dna_person' => 'nmorales',
+                                   'concentration' => undef,
+                                   'col_number' => '2',
+                                   'acquisition_date' => '2018/02/16'
+                                 },
+                        'A03' => {
+                                   'col_number' => '3',
+                                   'acquisition_date' => '2018/02/16',
+                                   'plot_name' => '2018TestPlate02_A03',
+                                   'is_blank' => 0,
+                                   'row_number' => 'A',
+                                   'concentration' => '5',
+                                   'dna_person' => 'nmorales',
+                                   'stock_name' => 'KASESE_TP2013_1671',
+                                   'extraction' => 'CTAB',
+                                   'notes' => 'test well A03',
+                                   'tissue_type' => 'leaf',
+                                   'volume' => '10',
+                                   'plot_number' => 'A03'
+                                 }
+                      },
+          'success' => '1'
+        });
+
+my $project = $c->bcs_schema()->resultset("Project::Project")->find( { name => 'test' } );
+my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => 'test_location' } );
+
+my $plate_data = {
+    design => $message_hash->{design},
+    genotyping_facility_submit => 'yes',
+    project_name => 'NextGenCassava',
+    description => 'test geno trial upload',
+    location => $location->nd_geolocation_id,
+    year => '2018',
+    name => 'test_genotype_upload_trial1',
+    breeding_program => $project->project_id,
+    genotyping_facility => 'igd',
+    sample_type => 'DNA',
+    plate_format => '96'
+};
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+ok($response->{trial_id});
 
 done_testing();
