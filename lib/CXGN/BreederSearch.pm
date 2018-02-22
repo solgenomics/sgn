@@ -349,10 +349,12 @@ sub refresh_matviews {
       my $dbh = $self->dbh();
       if ($refresh_type eq 'concurrent') {
         #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
+        $async_refresh = CXGN::Tools::Run->new();
+	$async_refresh->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
       } else {
         print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+        $async_refresh = CXGN::Tools::Run->new();
+	$async_refresh->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
       }
 
       for (my $i = 1; $i < 10; $i++) {
