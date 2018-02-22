@@ -124,7 +124,7 @@ sub get_trait_from_exact_components {
 sub get_trait_from_cvterm_id {
     my $schema = shift;
     my $cvterm_id = shift;
-    my $format = shift;
+    my $format = shift; #can be 'concise' for just the name or 'extended' for name|DB:0000001
     if ($format eq 'concise'){
         $q = "SELECT name FROM cvterm WHERE cvterm_id=?;";
     }
