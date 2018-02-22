@@ -24,7 +24,16 @@
 
                         <div class="tab-content">
                             <div id="add_genotyping_trial_home" class="tab-pane fade in active">
-
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Genotyping Facility: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="genotyping_trial_facility_select">
+                                            <option value="none">None</option>
+                                            <option value="igd">Cornell IGD</option>
+                                            <option value="bgi">BGI</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Genotyping Project Name: <small>Should match Vendor Project</small></label>
                                     <div class="col-sm-9">
@@ -76,16 +85,6 @@
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description" ></textarea>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Genotyping Facility: </label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="genotyping_trial_facility_select">
-                                            <option value="none">None</option>
-                                            <option value="igd">Cornell IGD</option>
-                                            <option value="bgi">BGI</option>
-                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -154,6 +153,12 @@
                                         <label class="col-sm-6 control-label">Tissue: <small>(If used the same tissue for all wells)</small> </label>
                                         <div class="col-sm-6">
                                             <input class="form-control" id="genotyping_well_tissue" name="genotyping_well_tissue" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">NCBI Taxonomy ID: <small>(Official NCBI ID.)</small> </label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" id="genotyping_well_ncbi_taxonomy_id" name="genotyping_well_ncbi_taxonomy_id" type="text" />
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
@@ -239,6 +244,7 @@
                                 <td>row</td>
                                 <td>column</td>
                                 <td>source_observation_unit_name</td>
+                                <td>ncbi_taxonomy_id</td>
                                 <td>dna_person</td>
                                 <td>notes</td>
                                 <td>tissue_type</td>
@@ -262,6 +268,7 @@
                     
                     <b>Optional fields:</b>
                     <ul>
+                    <li>ncbi_taxonomy_id (NCBI taxonomy identifier)</li>
                     <li>dna_person (the name of the person who prepared the well)</li>
                     <li>notes (any additional notes on the well)</li>
                     <li>tissue_type (free-text for what type of tissue is present in the well)</li>

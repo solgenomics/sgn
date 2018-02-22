@@ -52,7 +52,16 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
         "plot_number" => "A01",
         "row_number" => "A",
         "col_number" => "1",
-        "is_blank" => 0
+        "is_blank" => 0,
+        "concentration" => "2",
+        "volume" => "4",
+        "dna_person" => "nmorales",
+        "acquisition_date" => "2018/01/09",
+        "tissue_type" => "leaf",
+        "extraction" => "ctab",
+        "ncbi_taxonomy_id" => "1001",
+        "source_observation_unit_name" => "plant1",
+        "source_observation_unit_id" => "9091"
     }
  }
  
@@ -377,6 +386,7 @@ sub generate_and_cache_layout {
   my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'tissue_type', 'stock_property')->cvterm_id();
   my $acquisition_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'acquisition date', 'stock_property')->cvterm_id();
   my $notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'notes', 'stock_property')->cvterm_id();
+  my $ncbi_taxonomy_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'ncbi_taxonomy_id', 'stock_property')->cvterm_id();
   my $plot_geo_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot_geo_json', 'stock_property' )->cvterm_id();
   my $json = JSON->new();
 
@@ -413,6 +423,7 @@ sub generate_and_cache_layout {
     my $well_tissue_type_prop = $stockprop_hash{$tissue_type_cvterm_id} ? join ',', @{$stockprop_hash{$tissue_type_cvterm_id}} : undef;
     my $well_acquisition_date_prop = $stockprop_hash{$acquisition_date_cvterm_id} ? join ',', @{$stockprop_hash{$acquisition_date_cvterm_id}} : undef;
     my $well_notes_prop = $stockprop_hash{$notes_cvterm_id} ? join ',', @{$stockprop_hash{$notes_cvterm_id}} : undef;
+    my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$ncbi_taxonomy_id_cvterm_id} ? join ',', @{$stockprop_hash{$ncbi_taxonomy_id_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
         { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
@@ -505,6 +516,9 @@ sub generate_and_cache_layout {
     }
     if ($well_notes_prop){
         $design_info{"notes"} = $well_notes_prop;
+    }
+    if ($well_ncbi_taxonomy_id_prop){
+        $design_info{"ncbi_taxonomy_id"} = $well_ncbi_taxonomy_id_prop;
     }
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop;

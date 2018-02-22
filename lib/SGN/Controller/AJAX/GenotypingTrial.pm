@@ -88,6 +88,7 @@ sub generate_genotype_trial_POST : Args(0) {
         $_->{extraction} = $plate_info->{well_extraction};
         $_->{acquisition_date} = $plate_info->{well_date};
         $_->{notes} = $plate_info->{well_notes};
+        $_->{ncbi_taxonomy_id} = $plate_info->{ncbi_taxonomy_id};
     }
     #print STDERR Dumper($design);
 
@@ -218,6 +219,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
             extraction => $_->{extraction},
             acquisition_date => $_->{date},
             notes => $_->{notes},
+            ncbi_taxonomy_id => $_->{ncbi_taxonomy_id}
         };
     }
 
@@ -343,7 +345,10 @@ sub store_genotype_trial_POST : Args(0) {
             concentration => $_->{concentration},
             volume => $_->{volume},
             tissueType => $_->{tissue_type},
-            taxonId => { sourceName => '', taxonId => '' }
+            taxonId => {
+                sourceName => 'NCBI',
+                taxonId => $_->{ncbi_taxonomy_id}
+            }
         };
     }
 

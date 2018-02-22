@@ -52,6 +52,7 @@ sub _validate_with_plugin {
     my $row_head;
     my $column_head;
     my $source_observation_unit_name_head;
+    my $ncbi_taxonomy_id_head;
     my $dna_person_head;
     my $notes_head;
     my $tissue_type_head;
@@ -79,25 +80,28 @@ sub _validate_with_plugin {
         $source_observation_unit_name_head  = $worksheet->get_cell(0,5)->value();
     }
     if ($worksheet->get_cell(0,6)) {
-        $dna_person_head  = $worksheet->get_cell(0,6)->value();
+        $ncbi_taxonomy_id_head  = $worksheet->get_cell(0,6)->value();
     }
     if ($worksheet->get_cell(0,7)) {
-        $notes_head  = $worksheet->get_cell(0,7)->value();
+        $dna_person_head  = $worksheet->get_cell(0,7)->value();
     }
     if ($worksheet->get_cell(0,8)) {
-        $tissue_type_head  = $worksheet->get_cell(0,8)->value();
+        $notes_head  = $worksheet->get_cell(0,8)->value();
     }
     if ($worksheet->get_cell(0,9)) {
-        $extraction_head  = $worksheet->get_cell(0,9)->value();
+        $tissue_type_head  = $worksheet->get_cell(0,9)->value();
     }
     if ($worksheet->get_cell(0,10)) {
-        $concentration_head = $worksheet->get_cell(0,10)->value();
+        $extraction_head  = $worksheet->get_cell(0,10)->value();
     }
     if ($worksheet->get_cell(0,11)) {
-        $volume_head = $worksheet->get_cell(0,11)->value();
+        $concentration_head = $worksheet->get_cell(0,11)->value();
     }
     if ($worksheet->get_cell(0,12)) {
-        $is_blank_head = $worksheet->get_cell(0,12)->value();
+        $volume_head = $worksheet->get_cell(0,12)->value();
+    }
+    if ($worksheet->get_cell(0,13)) {
+        $is_blank_head = $worksheet->get_cell(0,13)->value();
     }
 
     if (!$date_head || $date_head ne 'date' ) {
@@ -118,26 +122,29 @@ sub _validate_with_plugin {
     if (!$source_observation_unit_name_head || $source_observation_unit_name_head ne 'source_observation_unit_name') {
         push @error_messages, "Cell F1: source_observation_unit_name is missing from the header.";
     }
+    if (!$ncbi_taxonomy_id_head || $ncbi_taxonomy_id_head ne 'ncbi_taxonomy_id') {
+        push @error_messages, "Cell G1: ncbi_taxonomy_id is missing from the header. (Header is required, but values are optional)";
+    }
     if (!$dna_person_head || $dna_person_head ne 'dna_person') {
-        push @error_messages, "Cell G1: dna_person is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, "Cell H1: dna_person is missing from the header. (Header is required, but values are optional)";
     }
     if (!$notes_head || $notes_head ne 'notes') {
-        push @error_messages, "Cell H1: notes is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, "Cell I1: notes is missing from the header. (Header is required, but values are optional)";
     }
     if (!$tissue_type_head || $tissue_type_head ne 'tissue_type') {
-        push @error_messages, "Cell I1: tissue_type is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, "Cell J1: tissue_type is missing from the header. (Header is required, but values are optional)";
     }
     if (!$extraction_head || $extraction_head ne 'extraction') {
-        push @error_messages, "Cell J1: col_number is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, "Cell K1: col_number is missing from the header. (Header is required, but values are optional)";
     }
     if (!$concentration_head || $concentration_head ne 'concentration') {
-        push @error_messages, "Cell K1: concentration is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, "Cell L1: concentration is missing from the header. (Header is required, but values are optional)";
     }
     if (!$volume_head || $volume_head ne 'volume') {
-        push @error_messages, "Cell L1: volume is missing from the header. (Header is required, but values are optional)";
+        push @error_messages, "Cell M1: volume is missing from the header. (Header is required, but values are optional)";
     }
     if (!$is_blank_head || $is_blank_head ne 'is_blank') {
-        push @error_messages, "Cell M1: is_blank is missing from the header.";
+        push @error_messages, "Cell N1: is_blank is missing from the header.";
     }
 
     my %seen_sample_ids;
@@ -151,6 +158,7 @@ sub _validate_with_plugin {
         my $row_val;
         my $column;
         my $source_observation_unit_name;
+        my $ncbi_taxonomy_id;
         my $dna_person;
         my $notes;
         my $tissue_type;
@@ -178,25 +186,28 @@ sub _validate_with_plugin {
             $source_observation_unit_name  = $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $dna_person  = $worksheet->get_cell($row,6)->value();
+            $ncbi_taxonomy_id  = $worksheet->get_cell($row,6)->value();
         }
         if ($worksheet->get_cell($row,7)) {
-            $notes  = $worksheet->get_cell($row,7)->value();
+            $dna_person  = $worksheet->get_cell($row,7)->value();
         }
         if ($worksheet->get_cell($row,8)) {
-            $tissue_type  = $worksheet->get_cell($row,8)->value();
+            $notes  = $worksheet->get_cell($row,8)->value();
         }
         if ($worksheet->get_cell($row,9)) {
-            $extraction  = $worksheet->get_cell($row,9)->value();
+            $tissue_type  = $worksheet->get_cell($row,9)->value();
         }
         if ($worksheet->get_cell($row,10)) {
-            $concentration = $worksheet->get_cell($row,10)->value();
+            $extraction  = $worksheet->get_cell($row,10)->value();
         }
         if ($worksheet->get_cell($row,11)) {
-            $volume = $worksheet->get_cell($row,11)->value();
+            $concentration = $worksheet->get_cell($row,11)->value();
         }
         if ($worksheet->get_cell($row,12)) {
-            $is_blank = $worksheet->get_cell($row,12)->value();
+            $volume = $worksheet->get_cell($row,12)->value();
+        }
+        if ($worksheet->get_cell($row,13)) {
+            $is_blank = $worksheet->get_cell($row,13)->value();
         }
 
         #skip blank lines
@@ -322,6 +333,7 @@ sub _parse_with_plugin {
         my $row_val;
         my $column;
         my $source_observation_unit_name;
+        my $ncbi_taxonomy_id;
         my $dna_person;
         my $notes;
         my $tissue_type;
@@ -349,25 +361,28 @@ sub _parse_with_plugin {
             $source_observation_unit_name  = $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $dna_person  = $worksheet->get_cell($row,6)->value();
+            $ncbi_taxonomy_id  = $worksheet->get_cell($row,6)->value();
         }
         if ($worksheet->get_cell($row,7)) {
-            $notes  = $worksheet->get_cell($row,7)->value();
+            $dna_person  = $worksheet->get_cell($row,7)->value();
         }
         if ($worksheet->get_cell($row,8)) {
-            $tissue_type  = $worksheet->get_cell($row,8)->value();
+            $notes  = $worksheet->get_cell($row,8)->value();
         }
         if ($worksheet->get_cell($row,9)) {
-            $extraction  = $worksheet->get_cell($row,9)->value();
+            $tissue_type  = $worksheet->get_cell($row,9)->value();
         }
         if ($worksheet->get_cell($row,10)) {
-            $concentration = $worksheet->get_cell($row,10)->value();
+            $extraction  = $worksheet->get_cell($row,10)->value();
         }
         if ($worksheet->get_cell($row,11)) {
-            $volume = $worksheet->get_cell($row,11)->value();
+            $concentration = $worksheet->get_cell($row,11)->value();
         }
         if ($worksheet->get_cell($row,12)) {
-            $is_blank = $worksheet->get_cell($row,12)->value();
+            $volume = $worksheet->get_cell($row,12)->value();
+        }
+        if ($worksheet->get_cell($row,13)) {
+            $is_blank = $worksheet->get_cell($row,13)->value();
         }
 
         #skip blank lines
@@ -386,6 +401,7 @@ sub _parse_with_plugin {
         $design{$key}->{row} = $row_val;
         $design{$key}->{column} = $column;
         $design{$key}->{source_stock_uniquename} = $source_observation_unit_name;
+        $design{$key}->{ncbi_taxonomy_id} = $ncbi_taxonomy_id;
         $design{$key}->{dna_person} = $dna_person;
         $design{$key}->{notes} = $notes;
         $design{$key}->{tissue_type} = $tissue_type;

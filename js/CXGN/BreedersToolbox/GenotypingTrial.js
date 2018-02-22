@@ -64,6 +64,7 @@ jQuery(document).ready(function ($) {
         plate_data.sample_type = jQuery('#genotyping_trial_plate_sample_type').val();
         plate_data.blank_well = jQuery('#genotyping_blank_well').val();
         plate_data.well_concentration = jQuery('#genotyping_well_concentration').val();
+        plate_data.ncbi_taxonomy_id = jQuery('#genotyping_well_ncbi_taxonomy_id').val();
         plate_data.well_extraction = jQuery('#genotyping_well_extraction').val();
         plate_data.well_date = jQuery('#genotyping_well_date').val();
         plate_data.well_dna_person = jQuery('#genotyping_well_dna_person').val();
@@ -173,7 +174,7 @@ jQuery(document).ready(function ($) {
             alert("Sending genotyping experiment entry to genotyping facility...");
 
             $.ajax( { 
-                url: auth_data.host+'/brapi/v1/vendor/plates',
+                url: auth_data.host+'/brapi/v2/plate-register',
                 method: 'POST',
                 data: {
                     token: auth_data.token,
@@ -327,6 +328,21 @@ jQuery(document).ready(function ($) {
         });
         return auth_data;
     }
+
+    jQuery('#genotyping_trial_facility_select').change(function(){
+        var selected = jQuery('#genotyping_trial_facility_select').val();
+        if (selected == 'igd'){
+            jQuery.ajax({
+                url: 'https://slimstest.biotech.cornell.edu/brapi/v2/vendor-specifications',
+                success: function(response) {
+                    console.log(response);
+                },
+                error: function(response) {
+                    alert("BrAPI vendor specifications call to IGD did not work.");
+                }
+            });
+        }
+    });
 
     $('#delete_layout_data_by_trial_id').click(function() {
         var trial_id = get_trial_id();

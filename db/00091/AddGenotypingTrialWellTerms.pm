@@ -67,7 +67,8 @@ sub patch {
             'volume',
             'dna_person',
             'extraction',
-            'tissue_type'
+            'tissue_type',
+            'ncbi_taxonomy_id'
         ],
         'project_property' => [
             'genotyping_facility',

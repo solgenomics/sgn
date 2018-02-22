@@ -209,7 +209,8 @@ sub validate_design {
             'volume',
             'tissue_type',
             'notes',
-            'acquisition_date'
+            'acquisition_date',
+            'ncbi_taxonomy_id'
         );
         #plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
     } elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot' || $design_type eq 'Lattice' || $design_type eq 'MAD' || $design_type eq 'greenhouse'){
@@ -366,6 +367,7 @@ sub store {
     my $extraction_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'extraction', 'stock_property');
     my $tissue_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property');
     my $acquisition_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'acquisition date', 'stock_property');
+    my $ncbi_taxonomy_id_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'ncbi_taxonomy_id', 'stock_property');
     my $notes_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property');
     my $treatment_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
@@ -570,6 +572,10 @@ sub store {
             if ($design{$key}->{notes}) {
                 $notes = $design{$key}->{notes};
             }
+            my $ncbi_taxonomy_id;
+            if ($design{$key}->{ncbi_taxonomy_id}) {
+                $ncbi_taxonomy_id = $design{$key}->{ncbi_taxonomy_id};
+            }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
             if ($stock_data{$stock_name}) {
@@ -642,6 +648,9 @@ sub store {
                 }
                 if ($notes) {
                     $plot->create_stockprops({$notes_cvterm->name() => $notes});
+                }
+                if ($ncbi_taxonomy_id) {
+                    $plot->create_stockprops({$ncbi_taxonomy_id_cvterm->name() => $ncbi_taxonomy_id});
                 }
 
                 my $parent_stock;
