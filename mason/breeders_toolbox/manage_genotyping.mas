@@ -9,8 +9,8 @@ $breeding_programs
 
 <div class="container-fluid">
 
-  <&| /page/info_section.mas, title=>'Genotyping Trials', collapsible=>1, collapsed=>0, subtitle => '[<a id="create_genotyping_trial_link">Add Genotyping Trial</a>]' &>
-    <& /breeders_toolbox/genotyping_trials/trials.mas, trials_by_breeding_project=>$genotyping_trials_by_breeding_project,locations=>$locations, breeding_programs=>$breeding_programs &>
+    <&| /page/info_section.mas, title=>'Genotyping Trials', collapsible=>1, collapsed=>0, subtitle => '[<a id="create_genotyping_trial_link">Add Genotyping Trial</a>]' &>
+        <& /breeders_toolbox/genotyping_trials/trials.mas, trials_by_breeding_project=>$genotyping_trials_by_breeding_project, locations=>$locations,  breeding_programs=>$breeding_programs &>
 </&>
 
 </div>

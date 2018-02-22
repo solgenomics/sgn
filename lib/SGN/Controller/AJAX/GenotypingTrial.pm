@@ -262,7 +262,7 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("plate_data");
-    print STDERR Dumper $plate_info;
+    #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
         $c->stash->{rest} = { error => "Please provide all parameters" };
@@ -281,7 +281,7 @@ sub store_genotype_trial_POST : Args(0) {
         $c->detach();
     }
 
-    print STDERR "Creating the trial...\n";
+    print STDERR "Creating the genotyping trial...\n";
 
     my $message;
     my $coderef = sub {
@@ -328,9 +328,38 @@ sub store_genotype_trial_POST : Args(0) {
     }
     #print STDERR Dumper(%message);
 
+    my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'genotyping_layout'});
+    my $saved_design = $saved_layout->get_design();
+    #print STDERR Dumper $saved_design;
+
+    my @brapi_samples;
+    foreach (values %$saved_design){
+        push @brapi_samples, {
+            sampleDbId => $_->{plot_id},
+            sampleName => $_->{plot_name},
+            well => $_->{plot_number},
+            row => $_->{row_number},
+            column => $_->{col_number},
+            concentration => $_->{concentration},
+            volume => $_->{volume},
+            tissueType => $_->{tissue_type},
+            taxonId => { sourceName => '', taxonId => '' }
+        };
+    }
+
+    my $brapi_plate_data = {
+        vendorProjectDbId => $plate_info->{project_name},
+        clientPlateDbId => $message->{trial_id},
+        clientPlateName => $plate_info->{name},
+        plateFormat => $plate_info->{plate_format},
+        sampleType => $plate_info->{sample_type},
+        samples => \@brapi_samples
+    };
+
     $c->stash->{rest} = {
         message => "Successfully stored the genotyping trial.",
         trial_id => $message->{trial_id},
+        plate_data => $brapi_plate_data
     };
 }
 
@@ -342,7 +371,8 @@ sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentia
         $c->stash->{rest} = { 
             host => $c->config->{genotyping_server_host},
             username => $c->config->{genotyping_server_username},
-            password => $c->config->{genotyping_server_password}
+            password => $c->config->{genotyping_server_password},
+            token => $c->config->{genotyping_server_token},
         };
     }
     else { 

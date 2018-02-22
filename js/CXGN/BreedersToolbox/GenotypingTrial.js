@@ -151,6 +151,7 @@ jQuery(document).ready(function ($) {
     }
 
     function submit_plate_to_gdf(brapi_plate_data) {
+        console.log(brapi_plate_data);
         var auth_data = new Object();
         auth_data = get_genotyping_server_credentials();
 
@@ -159,9 +160,15 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        var access_token = genotyping_facility_login(auth_data);
+        var access_token;
+        if (auth_data.token){
+            access_token = auth_data.token;
+        } else {
+            access_token = genotyping_facility_login(auth_data);
+        }
+
         if (access_token) {
-            auth_data.access_token = access_token;
+            auth_data.token = access_token;
 
             alert("Sending genotyping experiment entry to genotyping facility...");
 
@@ -169,12 +176,13 @@ jQuery(document).ready(function ($) {
                 url: auth_data.host+'/brapi/v1/vendor/plates',
                 method: 'POST',
                 data: {
-                    token: auth_data.access_token,
+                    token: auth_data.token,
                     plates: [
                         brapi_plate_data
                     ]
                 },
                 success: function(response) {
+                    console.log(response);
                     if (response.metadata.status) {
                         alert(response.metadata.status);
                     }
@@ -307,7 +315,8 @@ jQuery(document).ready(function ($) {
                 auth_data =  { 
                     host : response.host,
                     username : response.username,
-                    password : response.password
+                    password : response.password,
+                    token : response.token
                 };
             },
             error: function(response) {
