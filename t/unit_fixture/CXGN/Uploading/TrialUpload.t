@@ -724,54 +724,57 @@ my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 
 is_deeply($message_hash, {
+          'success' => '1',
           'design' => {
                         'A01' => {
-                                   'plot_name' => '2018TestPlate02_A01',
-                                   'row_number' => 'A',
-                                   'is_blank' => 0,
-                                   'dna_person' => 'nmorales',
                                    'concentration' => '5',
-                                   'col_number' => '1',
                                    'acquisition_date' => '2018/02/16',
-                                   'notes' => 'test well A01',
-                                   'extraction' => 'CTAB',
-                                   'tissue_type' => 'leaf',
-                                   'stock_name' => 'KASESE_TP2013_885',
-                                   'volume' => '10',
-                                   'plot_number' => 'A01'
-                                 },
-                        'A02' => {
-                                   'volume' => undef,
-                                   'plot_number' => 'A02',
-                                   'notes' => 'test blank',
-                                   'extraction' => undef,
-                                   'tissue_type' => undef,
-                                   'stock_name' => 'BLANK',
-                                   'plot_name' => '2018TestPlate02_A02',
-                                   'row_number' => 'A',
-                                   'is_blank' => 1,
                                    'dna_person' => 'nmorales',
-                                   'concentration' => undef,
-                                   'col_number' => '2',
-                                   'acquisition_date' => '2018/02/16'
+                                   'volume' => '10',
+                                   'col_number' => '1',
+                                   'plot_name' => '2018TestPlate02_A01',
+                                   'ncbi_taxonomy_id' => '9001',
+                                   'stock_name' => 'KASESE_TP2013_885',
+                                   'notes' => 'test well A01',
+                                   'is_blank' => 0,
+                                   'extraction' => 'CTAB',
+                                   'plot_number' => 'A01',
+                                   'row_number' => 'A',
+                                   'tissue_type' => 'leaf'
                                  },
                         'A03' => {
-                                   'col_number' => '3',
-                                   'acquisition_date' => '2018/02/16',
-                                   'plot_name' => '2018TestPlate02_A03',
-                                   'is_blank' => 0,
-                                   'row_number' => 'A',
-                                   'concentration' => '5',
-                                   'dna_person' => 'nmorales',
-                                   'stock_name' => 'KASESE_TP2013_1671',
-                                   'extraction' => 'CTAB',
                                    'notes' => 'test well A03',
+                                   'is_blank' => 0,
+                                   'stock_name' => 'KASESE_TP2013_1671',
+                                   'ncbi_taxonomy_id' => '9001',
+                                   'plot_name' => '2018TestPlate02_A03',
                                    'tissue_type' => 'leaf',
+                                   'row_number' => 'A',
+                                   'plot_number' => 'A03',
+                                   'extraction' => 'CTAB',
                                    'volume' => '10',
-                                   'plot_number' => 'A03'
+                                   'dna_person' => 'nmorales',
+                                   'concentration' => '5',
+                                   'acquisition_date' => '2018/02/16',
+                                   'col_number' => '3'
+                                 },
+                        'A02' => {
+                                   'extraction' => undef,
+                                   'plot_number' => 'A02',
+                                   'row_number' => 'A',
+                                   'tissue_type' => undef,
+                                   'stock_name' => 'BLANK',
+                                   'notes' => 'test blank',
+                                   'is_blank' => 1,
+                                   'ncbi_taxonomy_id' => undef,
+                                   'plot_name' => '2018TestPlate02_A02',
+                                   'col_number' => '2',
+                                   'volume' => undef,
+                                   'acquisition_date' => '2018/02/16',
+                                   'concentration' => undef,
+                                   'dna_person' => 'nmorales'
                                  }
-                      },
-          'success' => '1'
+                      }
         });
 
 my $project = $c->bcs_schema()->resultset("Project::Project")->find( { name => 'test' } );

@@ -204,22 +204,23 @@ sub parse_genotype_trial_file_POST : Args(0) {
 
     #Turn parased data into same format as generate_genotype_trial above
     my %design;
-    foreach (values %$parsed_data){
-        $design{$_->{well}} = {
-            plot_name => $_->{sample_id},
-            stock_name => $_->{source_stock_uniquename},
-            plot_number => $_->{well},
-            row_number => $_->{row},
-            col_number => $_->{column},
-            is_blank => $_->{is_blank},
-            concentration => $_->{concentration},
-            volume => $_->{volume},
-            tissue_type => $_->{tissue_type},
-            dna_person => $_->{dna_person},
-            extraction => $_->{extraction},
-            acquisition_date => $_->{date},
-            notes => $_->{notes},
-            ncbi_taxonomy_id => $_->{ncbi_taxonomy_id}
+    foreach (sort keys %$parsed_data){
+        my $val = $parsed_data->{$_};
+        $design{$val->{well}} = {
+            plot_name => $val->{sample_id},
+            stock_name => $val->{source_stock_uniquename},
+            plot_number => $val->{well},
+            row_number => $val->{row},
+            col_number => $val->{column},
+            is_blank => $val->{is_blank},
+            concentration => $val->{concentration},
+            volume => $val->{volume},
+            tissue_type => $val->{tissue_type},
+            dna_person => $val->{dna_person},
+            extraction => $val->{extraction},
+            acquisition_date => $val->{date},
+            notes => $val->{notes},
+            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id}
         };
     }
 
