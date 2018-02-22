@@ -438,7 +438,7 @@ CXGN.List.prototype = {
         html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
         html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
-        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchAccessionListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
         html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
 
         html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
@@ -458,8 +458,10 @@ CXGN.List.prototype = {
         });
 
         if (list_type == 'accessions'){
-            jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
             jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
+        }
+        if (list_type == 'accessions' || list_type == 'seedlots'){
+            jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
         }
         if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(list_type) >= 0){
             jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
@@ -467,10 +469,13 @@ CXGN.List.prototype = {
         jQuery(document).on("change", "#type_select", function(){
             if (jQuery('#type_select').val() == 'accessions'){
                 jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
-                jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
             } else {
-                jQuery('#fuzzySearchAccessionListDiv').html('');
                 jQuery('#availableSeedlotButtonDiv').html('')
+            }
+            if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'seedlots'){
+                jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+jQuery('#type_select').val()+'\')" >Fuzzy Search</button>');
+            } else {
+                jQuery('#fuzzySearchStockListDiv').html('');
             }
 
             if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(jQuery('#type_select').val()) >= 0){
