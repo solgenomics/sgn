@@ -93,6 +93,7 @@ sub get_crossing_data : Path('/ajax/odk/get_crossing_data') : ActionClass('REST'
 sub get_crossing_data_GET {
     my ( $self, $c ) = @_;
     my $cross_wishlist_id = $c->req->param('cross_wishlist_md_file_id');
+    my $cross_wishlist_file_name = $c->req->param('cross_wishlist_file_name');
     my $form_id = $c->req->param('form_id');
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
@@ -120,6 +121,7 @@ sub get_crossing_data_GET {
     }
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
     my $temp_file_path = $temp_file->filename;
@@ -129,12 +131,16 @@ sub get_crossing_data_GET {
     my $odk_crosses = CXGN::ODK::Crosses->new({
         bcs_schema=>$bcs_schema,
         metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
         sp_person_id=>$user_id,
+        sp_person_username=>$user_name,
         sp_person_role=>$user_role,
         archive_path=>$c->config->{archive_path},
         temp_file_dir=>$c->config->{basepath}.$tempfiles_dir,
         temp_file_path=>$temp_file_path,
         cross_wishlist_md_file_id=>$cross_wishlist_id,
+        cross_wishlist_file_name=>$cross_wishlist_file_name,
+        allowed_cross_properties=>$c->config->{cross_properties},
         odk_crossing_data_service_url=>$c->config->{odk_crossing_data_service_url},
         odk_crossing_data_service_username=>$c->config->{odk_crossing_data_service_username},
         odk_crossing_data_service_password=>$c->config->{odk_crossing_data_service_password},
@@ -168,6 +174,7 @@ sub schedule_get_crossing_data_GET {
     }
     my $form_id = $c->req->param('form_id');
     my $cross_wishlist_id = $c->req->param('cross_wishlist_md_file_id');
+    my $cross_wishlist_file_name = $c->req->param('cross_wishlist_file_name');
     my $timing_select = $c->req->param('timing');
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
@@ -201,6 +208,7 @@ sub schedule_get_crossing_data_GET {
 
     my $progress_tree_dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
 
+    my $cross_properties = $c->config->{cross_properties};
     my $rootpath = $c->config->{rootpath};
     my $basepath = $c->config->{basepath};
     my $archive_path = $c->config->{archive_path};
@@ -214,7 +222,7 @@ sub schedule_get_crossing_data_GET {
     my $www_user = $c->config->{www_user};
     my $crontab_log = $c->config->{crontab_log_filepath};
     my $include_path = 'export PERL5LIB="$PERL5LIB:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/local-lib/lib/perl5"';
-    my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -r $user_role -a $archive_path -d $basepath.$tempfiles_dir -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -w $cross_wishlist_id -f $progress_tree_dir -l $ODK_url -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
+    my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -i $user_name -r $user_role -a $archive_path -d $basepath.$tempfiles_dir -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -w $cross_wishlist_id -x $cross_wishlist_file_name -f $progress_tree_dir -l $ODK_url -c $cross_properties -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
     my $timing = '';
     if ($timing_select eq 'everyminute'){
         $timing = "0-59/1 * * * * ";
