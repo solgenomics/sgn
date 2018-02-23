@@ -89,9 +89,9 @@ sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1)
     $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{seedlot} = CXGN::Stock::Seedlot->new( 
-	schema => $c->stash->{schema},
-	seedlot_id => $c->stash->{seedlot_id},
-	);
+        schema => $c->stash->{schema},
+        seedlot_id => $c->stash->{seedlot_id},
+    );
 }
 
 sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) { 
