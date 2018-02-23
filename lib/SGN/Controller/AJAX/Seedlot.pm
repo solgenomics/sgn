@@ -104,6 +104,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         seedlot_id => $c->stash->{seedlot}->seedlot_id(),
         current_count => $c->stash->{seedlot}->current_count(),
         location_code => $c->stash->{seedlot}->location_code(),
+        box_name => $c->stash->{seedlot}->box_name(),
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
         organization_name => $c->stash->{seedlot}->organization_name(),
         population_name => $c->stash->{seedlot}->population_name(),
@@ -132,6 +133,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $organization = $c->req->param('organization');
     my $population = $c->req->param('population');
     my $location = $c->req->param('location');
+    my $box_name = $c->req->param('box_name');
     my $accession_uniquename = $c->req->param('accession');
     my $cross_uniquename = $c->req->param('cross');
     my $schema = $c->stash->{schema};
@@ -183,6 +185,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);
     $seedlot->location_code($location);
+    $seedlot->box_name($box_name);
     $seedlot->accession_stock_id($accession_id);
     $seedlot->cross_stock_id($cross_id);
     $seedlot->population_name($population);
@@ -227,6 +230,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $seedlot_uniquename = $c->req->param("seedlot_name");
     my $location_code = $c->req->param("seedlot_location");
+    my $box_name = $c->req->param("seedlot_box_name");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
 
@@ -286,6 +290,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($seedlot_uniquename);
         $sl->location_code($location_code);
+        $sl->box_name($box_name);
         $sl->accession_stock_id($accession_id);
         $sl->cross_stock_id($cross_id);
         $sl->organization_name($organization);
@@ -419,6 +424,7 @@ sub upload_seedlots_POST : Args(0) {
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             $sl->uniquename($key);
             $sl->location_code($location);
+            $sl->box_name($val->{box_name});
             $sl->accession_stock_id($val->{accession_stock_id});
             $sl->cross_stock_id($val->{cross_stock_id});
             $sl->organization_name($organization);
@@ -588,6 +594,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         $stock_uniquename = $to_new_seedlot_name;
         eval { 
             my $location_code = $c->req->param('to_new_seedlot_location_name');
+            my $box_name = $c->req->param('to_new_seedlot_box_name');
             my $accession_uniquename = $c->req->param('to_new_seedlot_accession_name');
             my $cross_uniquename = $c->req->param('to_new_seedlot_cross_name');
             my $organization = $c->req->param('to_new_seedlot_organization');
@@ -634,6 +641,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             $sl->uniquename($to_new_seedlot_name);
             $sl->location_code($location_code);
+            $sl->box_name($box_name);
             $sl->accession_stock_id($accession_id);
             $sl->cross_stock_id($cross_id);
             $sl->organization_name($organization);

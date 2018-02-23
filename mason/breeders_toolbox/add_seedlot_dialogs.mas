@@ -33,6 +33,12 @@ $cross_uniquename => ''
                         <input class="form-control" id="seedlot_location" placeholder="Required">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Box Name: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_box_name" placeholder="Optional">
+                    </div>
+                </div>
 
                 <div class="well well-sm">
                     <div class="row">
@@ -152,6 +158,7 @@ jQuery(document).ready(function(){
     jQuery('#create_new_seedlot_button').click( function() {
         var name = jQuery('#seedlot_name').val();
         var location = jQuery('#seedlot_location').val();
+        var box_name = jQuery('#seedlot_box_name').val();
         var accession_uniquename = jQuery('#seedlot_accession_uniquename').val();
         var cross_uniquename = jQuery('#seedlot_cross_uniquename').val();
         var population_name = jQuery('#seedlot_population_name').val();
@@ -178,6 +185,7 @@ jQuery(document).ready(function(){
                 data : {
                     'seedlot_name' : name,
                     'seedlot_location': location,
+                    'seedlot_box_name':box_name,
                     'seedlot_accession_uniquename': accession_uniquename,
                     'seedlot_cross_uniquename': cross_uniquename,
                     'seedlot_organization': organization,

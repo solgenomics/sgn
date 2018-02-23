@@ -64,6 +64,20 @@ has 'nd_geolocation_id' => (
     is => 'rw',
 );
 
+=head2 Accessor box_name()
+
+A string specifiying box where the seedlot is stored. On the backend,
+this is stored as a stockprop.
+
+=cut
+
+has 'box_name' => (
+    isa => 'Str',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_box_name',
+);
+
 =head2 Accessor cross()
 
 The crosses this seedlot is a "collection_of". Returns an arrayref of [$cross_stock_id, $cross_uniquename]
@@ -484,6 +498,11 @@ sub _retrieve_location {
     $self->location_code($location_code);
 }
 
+sub _retrieve_box_name {
+    my $self = shift;
+    $self->box_name($self->_retrieve_stockprop('location_code'));
+}
+
 sub _retrieve_breeding_program {
     my $self = shift;
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
@@ -739,6 +758,9 @@ sub store {
             print STDERR "Saving seedlot returned ID $id.".localtime."\n";
             $self->seedlot_id($id);
             $self->_store_seedlot_location();
+            if ($self->box_name){
+                $self->_store_stockprop('location_code', $self->box_name);
+            }
             $error = $self->_store_seedlot_relationships();
             if ($error){
                 die $error;
@@ -787,6 +809,9 @@ sub store {
             $self->seedlot_id($id);
             if($self->breeding_program_id){
                 $self->_update_seedlot_breeding_program();
+            }
+            if($self->box_name){
+                $self->_update_stockprop('location_code', $self->box_name);
             }
             if($self->location_code){
                 $self->_store_seedlot_location();
