@@ -104,12 +104,12 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         seedlot_id => $c->stash->{seedlot}->seedlot_id(),
         current_count => $c->stash->{seedlot}->current_count(),
         location_code => $c->stash->{seedlot}->location_code(),
-        box_name => $c->stash->{seedlot}->box_name(),
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
         organization_name => $c->stash->{seedlot}->organization_name(),
         population_name => $c->stash->{seedlot}->population_name(),
         accession => $c->stash->{seedlot}->accession(),
         cross => $c->stash->{seedlot}->cross(),
+        box_name => $c->stash->{seedlot}->box_name(),
     };
 }
 

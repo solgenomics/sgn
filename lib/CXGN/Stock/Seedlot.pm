@@ -506,7 +506,6 @@ sub _retrieve_box_name {
 sub _retrieve_breeding_program {
     my $self = shift;
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
-    print STDERR $self->seedlot_id."\n";
     my $project_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_experiment_projects')->search_related('project');
     if ($project_rs->count != 1){
         die "Seedlot does not have 1 breeding program project (".$project_rs->count.") associated!\n";
@@ -528,7 +527,6 @@ sub _store_seedlot_relationships {
         if ($self->cross_stock_id){
             $error = $self->_store_seedlot_cross();
         }
-        print STDERR $error."\n";
         if (!$error){
             my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
             my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({
@@ -760,12 +758,12 @@ sub store {
             print STDERR "Saving seedlot returned ID $id.".localtime."\n";
             $self->seedlot_id($id);
             $self->_store_seedlot_location();
-            if ($self->box_name){
-                $self->_store_stockprop('location_code', $self->box_name);
-            }
             $error = $self->_store_seedlot_relationships();
             if ($error){
                 die $error;
+            }
+            if ($self->box_name){
+                $self->_store_stockprop('location_code', $self->box_name);
             }
 
         } else { #Updating seedlot
@@ -812,12 +810,12 @@ sub store {
             if($self->breeding_program_id){
                 $self->_update_seedlot_breeding_program();
             }
-            if($self->box_name){
-                $self->_update_stockprop('location_code', $self->box_name);
-            }
             if($self->location_code){
                 $self->_store_seedlot_location();
                 $self->_update_seedlot_location();
+            }
+            if($self->box_name){
+                $self->_update_stockprop('location_code', $self->box_name);
             }
         }
     };
@@ -832,7 +830,7 @@ sub store {
 	if ($transaction_error){
         return { error=>$transaction_error };
     } else {
-        return { success=>1, seedlot_id=>$self->seedlot_id() };
+        return { success=>1, seedlot_id=>$self->stock_id() };
     }
 }
 
