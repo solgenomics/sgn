@@ -59,7 +59,12 @@ sub _check_cached_output {
 	my $pop_id = $args->{training_pop_id}[0];
 	$self->_check_training_pop_data($c, $pop_id);
 
-    } 
+    }
+    elsif ($req_page =~ /solgs\/populations\/combined\//)
+    {
+	my $trials = $args->{combo_pops_list};
+	$self->_check_combined_pops_data($c, $trials);
+    }
     elsif ($req_page =~ /solgs\/trait\//)
     {
 	my $pop_id = $args->{training_pop_id}[0];
@@ -67,7 +72,7 @@ sub _check_cached_output {
 
 	$self->_check_training_model_output($c, $pop_id, $trait_id);
     }
-    elsif ($req_page =~ /solgs\/model\//)
+    elsif ($req_page =~ /solgs\/model\/\d+\/prediction\//)
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
@@ -117,6 +122,21 @@ sub _check_training_model_output {
     {
 	$c->stash->{rest}{cached} =  $self->check_training_model_output($c, $pop_id, $trait_id);
     }	    
+}
+
+
+sub _check_combined_pops_data {
+    my ($self, $c, $trials) =@_;
+
+    foreach my $trial (@$trials)
+    {
+	print STDERR "\n trial: $trial\n";
+	$self->_check_training_pop_data($c, $trial);
+	my $cached = $c->stash->{rest}{cached};
+
+	print STDERR "\n cached: $cached\n";
+	last if !$c->stash->{rest}{cached};	
+    }
 }
 
 
