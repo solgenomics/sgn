@@ -939,7 +939,7 @@ def: "" []
 is_a: TIME:0000001
 
 [Term]
-id: TIME:0000137
+id: TIME:0000138
 name: hour 24
 synonym: "H24" EXACT []
 def: "" []
