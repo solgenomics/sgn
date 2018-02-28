@@ -62,21 +62,35 @@ sub _check_cached_output {
     }
     elsif ($req_page =~ /solgs\/populations\/combined\//)
     {
-	my $trials = $args->{combo_pops_list};
-	$self->_check_combined_pops_data($c, $trials);
+	my $pop_id = $args->{training_pop_id}[0];
+	$self->_check_combined_trials_data($c, $pop_id);
     }
     elsif ($req_page =~ /solgs\/trait\//)
     {
 	my $pop_id = $args->{training_pop_id}[0];
 	my $trait_id = $args->{trait_id}[0];
-
+	
 	$self->_check_training_model_output($c, $pop_id, $trait_id);
+    }
+    elsif ($req_page =~ /solgs\/model\/combined\/trials\//)
+    {
+	my $pop_id = $args->{training_pop_id}[0];
+	my $trait_id = $args->{trait_id}[0];
+
+	my $type = $args->{data_set_type};
+
+	print STDERR "\nds type: $type - pop id: $pop_id\n";
+	$c->stash->{data_set_type} = $args->{data_set_type};
+	
+	$self->_check_combined_trials_model_output($c, $pop_id, $trait_id);	
     }
     elsif ($req_page =~ /solgs\/model\/\d+\/prediction\//)
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
 	my $trait_id   = $args->{trait_id}[0];
+
+	$c->stash->{data_set_type} = $args->{data_set_type};
 
 	my $referer = $c->req->referer;
 	print STDERR "\nreferer: $referer\n";
@@ -113,11 +127,22 @@ sub _check_training_pop_data {
 }
 
 
+sub _check_combined_trials_model_output {
+    my ($self, $c, $pop_id, $trait_id) =@_;
+    
+    my $cached_pop_data  = $self->_check_combined_trials_data($c, $pop_id);
+    print STDERR "\n combined cached_pop_data: $cached_pop_data\n";
+    if ($cached_pop_data)
+    {
+	$c->stash->{rest}{cached} =  $self->check_training_model_output($c, $pop_id, $trait_id);
+    }	    
+}
+
 sub _check_training_model_output {
     my ($self, $c, $pop_id, $trait_id) =@_;
     
     my $cached_pop_data  = $self->check_training_pop_data($c, $pop_id);
-
+    print STDERR "\n cached_pop_data: $cached_pop_data\n";
     if ($cached_pop_data)
     {
 	$c->stash->{rest}{cached} =  $self->check_training_model_output($c, $pop_id, $trait_id);
@@ -125,9 +150,13 @@ sub _check_training_model_output {
 }
 
 
-sub _check_combined_pops_data {
-    my ($self, $c, $trials) =@_;
+sub _check_combined_trials_data {
+    my ($self, $c, $pop_id) =@_;
 
+    $c->stash->{combo_pops_id} = $pop_id;
+    $c->controller('solGS::combinedTrials')->get_combined_pops_arrayref($c);
+    my $trials = $c->stash->{arrayref_combined_pops_ids};
+   
     foreach my $trial (@$trials)
     {
 	print STDERR "\n trial: $trial\n";
@@ -221,17 +250,52 @@ sub check_selection_pop_all_traits_output {
 
 sub _check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
-	
+
+    my $data_set_type = $c->stash->{data_set_type};
+
+    if ($data_set_type =~ 'combined populations')
+    {
+	$self->_check_combined_trials_model_selection_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
+    }
+    else
+    {
+	$self->_check_single_trial_model_selection_output($tr_pop_id, $sel_pop_id, $trait_id);	
+    }
+   	    
+}
+
+
+sub _check_single_trial_model_selection_output {
+    my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
+    
     my $cached_pop_data = $self->check_training_pop_data($c, $tr_pop_id);
 
-   
-    my $cached_model_out = $self->check_training_model_output($c, $tr_pop_id, $trait_id);
+    if ($cached_pop_data)
+    {   
+	my $cached_model_out = $self->check_training_model_output($c, $tr_pop_id, $trait_id);
   
-    if ($cached_model_out) 
-    {
-	$c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);		
-    }		
+	if ($cached_model_out) 
+	{
+	    $c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);		
+	}
+    }	
+}
+
+
+sub _check_combined_trials_model_selection_output {
+    my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
     
+    $self->_check_combined_trials_data($c, $tr_pop_id);
+
+    if ($c->stash->{rest}{cached})
+    {  
+	my $cached_model_out = $self->_check_combined_trials_model_output($c, $tr_pop_id, $trait_id);
+	
+	if ($cached_model_out) 
+	{
+	    $c->stash->{rest}{cached} = $self->check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);		
+	}		
+    }    
 }
 
 
