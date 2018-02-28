@@ -513,35 +513,35 @@ is_a: TIME:0000000
 
 [Term]
 id: TIME:0000077
-name: "flowering"
+name: at flowering
 synonym: "FLW" EXACT []
 def: "flowering (shooting is here equivalent to flowering) stage"
 is_a: TIME:0000076
 
 [Term]
 id: TIME:0000078
-name: "harvesting"
+name: at harvesting
 synonym: "HVT" EXACT []
 def: "harvesting stage"
 is_a: TIME:0000076
 
 [Term]
 id: TIME:0000079
-name: "post-harvesting"
+name: at post-harvesting
 synonym: "PHVT" EXACT []
 def: "post harvesting stage"
 is_a: TIME:0000076
 
 [Term]
 id: TIME:0000080
-name: "planting"
+name: at planting
 synonym: "PLT" EXACT []
-def: "planting stage"
+def: "planting stage:
 is_a: TIME:0000076
 
 [Term]
 id: TIME:0000081
-name: "date of collection"
+name: date of
 synonym: "DCOL" EXACT []
 def: "date of data collection (dd/mm/yyyy)"
 is_a: TIME:0000076
