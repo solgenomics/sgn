@@ -762,3 +762,185 @@ name: day 31
 synonym: "D31" EXACT []
 def: "" []
 is_a: TIME:0000005
+
+[Term]
+id: TIME:0000113
+name: hour 1
+synonym: "H01" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000114
+name: hour 1
+synonym: "H01" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000115
+name: hour 1
+synonym: "H01" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000116
+name: hour 2
+synonym: "H02" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000117
+name: hour 3
+synonym: "H03" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000118
+name: hour 4
+synonym: "H04" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000119
+name: hour 5
+synonym: "H05" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000120
+name: hour 6
+synonym: "H06" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000121
+name: hour 7
+synonym: "H07" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000122
+name: hour 8
+synonym: "H08" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000123
+name: hour 9
+synonym: "H09" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000124
+name: hour 10
+synonym: "H10" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000125
+name: hour 11
+synonym: "H11" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000126
+name: hour 12
+synonym: "H12" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000127
+name: hour 13
+synonym: "H13" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000128
+name: hour 14
+synonym: "H14" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000129
+name: hour 15
+synonym: "H15" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000130
+name: hour 16
+synonym: "H16" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000131
+name: hour 17
+synonym: "H17" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000132
+name: hour 18
+synonym: "H18" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000133
+name: hour 19
+synonym: "H19" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000134
+name: hour 20
+synonym: "H20" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000135
+name: hour 21
+synonym: "H21" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000136
+name: hour 22
+synonym: "H22" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000137
+name: hour 23
+synonym: "H23" EXACT []
+def: "" []
+is_a: TIME:0000001
+
+[Term]
+id: TIME:0000137
+name: hour 24
+synonym: "H24" EXACT []
+def: "" []
+is_a: TIME:0000001
