@@ -48,6 +48,7 @@ sub _validate_with_plugin {
     my $cross_name_head;
     my $amount_head;
     my $description_head;
+    my $box_name_head;
 
     if ($worksheet->get_cell(0,0)) {
         $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -63,6 +64,9 @@ sub _validate_with_plugin {
     }
     if ($worksheet->get_cell(0,4)) {
         $description_head  = $worksheet->get_cell(0,4)->value();
+    }
+    if ($worksheet->get_cell(0,5)) {
+        $box_name_head  = $worksheet->get_cell(0,5)->value();
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
@@ -80,6 +84,9 @@ sub _validate_with_plugin {
     if (!$description_head || $description_head ne 'description') {
         push @error_messages, "Cell E1: description is missing from the header";
     }
+    if (!$box_name_head || $box_name_head ne 'box_name') {
+        push @error_messages, "Cell F1: box_name is missing from the header";
+    }
 
     my %seen_seedlot_names;
     my %seen_accession_names;
@@ -91,6 +98,7 @@ sub _validate_with_plugin {
         my $cross_name;
         my $amount = 0;
         my $description;
+        my $box_name;
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -106,6 +114,9 @@ sub _validate_with_plugin {
         }
         if ($worksheet->get_cell($row,4)) {
             $description =  $worksheet->get_cell($row,4)->value();
+        }
+        if ($worksheet->get_cell($row,5)) {
+            $box_name =  $worksheet->get_cell($row,5)->value();
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
@@ -239,6 +250,7 @@ sub _parse_with_plugin {
         my $cross_name;
         my $amount = 0;
         my $description;
+        my $box_name;
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -255,6 +267,9 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,4)) {
             $description =  $worksheet->get_cell($row,4)->value();
         }
+        if ($worksheet->get_cell($row,5)) {
+            $box_name =  $worksheet->get_cell($row,5)->value();
+        }
 
         #skip blank lines
         if (!$seedlot_name && !$accession_name && !$cross_name && !$description) {
@@ -267,7 +282,8 @@ sub _parse_with_plugin {
             cross_name => $cross_name,
             cross_stock_id => $cross_lookup{$cross_name},
             amount => $amount,
-            description => $description
+            description => $description,
+            box_name => $box_name
         };
     }
 
