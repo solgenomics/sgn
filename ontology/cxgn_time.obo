@@ -538,3 +538,10 @@ name: "planting"
 synonym: "PLT" EXACT []
 def: "planting stage"
 is_a: TIME:0000076
+
+[Term]
+id: TIME:0000081
+name: "date of collection"
+synonym: "DCOL" EXACT []
+def: "date of data collection (dd/mm/yyyy)"
+is_a: TIME:0000076
