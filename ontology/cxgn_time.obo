@@ -513,9 +513,9 @@ is_a: TIME:0000000
 
 [Term]
 id: TIME:0000077
-name: "shooting"
-synonym: "SHT" EXACT []
-def: "shooting stage"
+name: "flowering"
+synonym: "FLW" EXACT []
+def: "flowering (shooting is here equivalent to flowering) stage"
 is_a: TIME:0000076
 
 [Term]
