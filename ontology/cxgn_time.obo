@@ -40,7 +40,7 @@ is_a: TIME:0000001
 [Term]
 id: TIME:0000005
 name: time of year
-def: "Weeks and months." []
+def: "Days, weeks and months." []
 is_a: TIME:0000000
 
 [Term]
@@ -545,3 +545,220 @@ name: "date of collection"
 synonym: "DCOL" EXACT []
 def: "date of data collection (dd/mm/yyyy)"
 is_a: TIME:0000076
+
+[Term]
+id: TIME:0000082
+name: day 1
+synonym: "D01" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000083
+name: day 2
+synonym: "D02" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000084
+name: day 3
+synonym: "D03" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000085
+name: day 4
+synonym: "D04" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000086
+name: day 5
+synonym: "D05" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000087
+name: day 6
+synonym: "D06" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000088
+name: day 7
+synonym: "D07" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000089
+name: day 8
+synonym: "D08" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000090
+name: day 9
+synonym: "D09" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000091
+name: day 10
+synonym: "D10" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000092
+name: day 11
+synonym: "D11" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000093
+name: day 12
+synonym: "D12" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000094
+name: day 13
+synonym: "D13" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000095
+name: day 14
+synonym: "D14" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000096
+name: day 15
+synonym: "D15" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000097
+name: day 16
+synonym: "D16" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000098
+name: day 17
+synonym: "D17" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000099
+name: day 18
+synonym: "D18" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000100
+name: day 19
+synonym: "D19" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000101
+name: day 20
+synonym: "D20" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000102
+name: day 21
+synonym: "D21" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000103
+name: day 22
+synonym: "D22" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000104
+name: day 23
+synonym: "D23" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000105
+name: day 24
+synonym: "D24" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000106
+name: day 25
+synonym: "D25" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000107
+name: day 26
+synonym: "D26" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000108
+name: day 27
+synonym: "D27" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000109
+name: day 28
+synonym: "D28" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000110
+name: day 29
+synonym: "D29" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000111
+name: day 30
+synonym: "D30" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000112
+name: day 31
+synonym: "D31" EXACT []
+def: "" []
+is_a: TIME:0000005
