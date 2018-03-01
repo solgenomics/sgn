@@ -9,6 +9,7 @@ $content_cross_name
 $organization_name
 $population_name
 $timestamp
+$box_name=>undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -30,6 +31,7 @@ $timestamp
 <tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
+<tr><td><b>Box Name</b></td><td><% $box_name %></td></tr>
 <tr><td><b>Contents</b></td><td><% $content_html %></td></tr>
 <tr><td><b>Population</b></td><td><% $population_name %></td></tr>
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
@@ -120,6 +122,12 @@ $timestamp
                                                 <label class="col-sm-3 control-label">Location: </label>
                                                 <div class="col-sm-9" >
                                                     <input class="form-control" id="transaction_new_seedlot_location" placeholder="Required">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Box Name: </label>
+                                                <div class="col-sm-9" >
+                                                    <input class="form-control" id="transaction_new_seedlot_box_name" placeholder="Optional">
                                                 </div>
                                             </div>
 
@@ -274,6 +282,12 @@ $timestamp
                         <input class="form-control" type="text" id="edit_seedlot_details_location" value="LOADING..."/>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Box Name: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_box_name" value="LOADING..."/>
+                    </div>
+                </div>
 
                 <div class="well well-sm">
                     <div class="row">
@@ -371,6 +385,7 @@ $timestamp
                 jQuery('#edit_seedlot_details_organization').val(response.organization_name);
                 jQuery('#edit_seedlot_details_population').val(response.population_name);
                 jQuery('#edit_seedlot_details_location').val(response.location_code);
+                jQuery('#edit_seedlot_details_box_name').val(response.box_name);
                 var accession_name = '';
                 if (response.accession){
                     accession_name = response.accession[1];
@@ -399,6 +414,7 @@ $timestamp
       var to_new_seedlot_name;
       var to_new_seedlot_breeding_program_id;
       var to_new_seedlot_location_name;
+      var to_new_seedlot_box_name;
       var to_new_seedlot_accession_name;
       var to_new_seedlot_cross_name;
       var to_new_seedlot_amount;
@@ -417,6 +433,7 @@ $timestamp
             to_new_seedlot_name = jQuery('#transaction_new_seedlot_name').val();
             to_new_seedlot_breeding_program_id = jQuery('#transaction_new_seedlot_breeding_program_id').val();
             to_new_seedlot_location_name = jQuery('#transaction_new_seedlot_location').val();
+            to_new_seedlot_box_name = jQuery('#transaction_new_seedlot_box_name').val();
             to_new_seedlot_accession_name = "<% $content_accession_name %>";
             to_new_seedlot_cross_name = "<% $content_cross_name %>";
             to_new_seedlot_amount = jQuery('#transaction_new_seedlot_amount').val();
@@ -457,6 +474,7 @@ $timestamp
             'to_new_seedlot_name' : to_new_seedlot_name,
             'to_new_seedlot_breeding_program_id': to_new_seedlot_breeding_program_id,
             'to_new_seedlot_location_name': to_new_seedlot_location_name,
+            'to_new_seedlot_box_name': to_new_seedlot_box_name,
             'to_new_seedlot_accession_name': to_new_seedlot_accession_name,
             'to_new_seedlot_cross_name': to_new_seedlot_cross_name,
             'to_new_seedlot_amount': to_new_seedlot_amount,
@@ -568,6 +586,7 @@ $timestamp
         var organization = jQuery('#edit_seedlot_details_organization').val();
         var population = jQuery('#edit_seedlot_details_population').val();
         var location = jQuery('#edit_seedlot_details_location').val();
+        var box_name = jQuery('#edit_seedlot_details_box_name').val();
         var accession = jQuery('#edit_seedlot_details_accession').val();
         var cross = jQuery('#edit_seedlot_details_cross').val();
         if (uniquename == ''){
@@ -591,6 +610,7 @@ $timestamp
                     'organization':organization,
                     'population':population,
                     'location':location,
+                    'box_name':box_name,
                     'accession':accession,
                     'cross':cross
                 },
