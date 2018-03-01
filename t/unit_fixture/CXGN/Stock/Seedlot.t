@@ -14,6 +14,7 @@ my $schema = $f->bcs_schema();
 
 my $seedlot_uniquename = 'seedlot1';
 my $seedlot_location = 'seedlot1_location';
+my $seedlot_box_name = 'box1';
 my $seedlot_accession_uniquename = 'test_accession1';
 my $seedlot_accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_accession_uniquename})->stock_id();
 my $seedlot_breeding_program_name = "test";
@@ -24,6 +25,7 @@ my $seedlot_population_name = 'seedlot1_pop';
 my $sl = CXGN::Stock::Seedlot->new(schema=>$schema);
 $sl->uniquename($seedlot_uniquename);
 $sl->location_code($seedlot_location);
+$sl->box_name($seedlot_box_name);
 $sl->accession_stock_id($seedlot_accession_id);
 $sl->organization_name($seedlot_organization);
 $sl->population_name($seedlot_population_name);
@@ -42,5 +44,7 @@ is_deeply($s->accession, [$seedlot_accession_id, $seedlot_accession_uniquename] 
 is_deeply($s->accession_stock_id, $seedlot_accession_id);
 is($s->breeding_program_name, $seedlot_breeding_program_name);
 is($s->breeding_program_id, $seedlot_breeding_program_id);
+is($s->box_name, $seedlot_box_name);
+
 
 done_testing();

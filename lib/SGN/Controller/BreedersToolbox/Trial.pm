@@ -175,7 +175,7 @@ sub trait_info :Path('/breeders/trial') Args(3) {
     $c->stash->{template}   = '/breeders_toolbox/trial_trait.mas';
 }
 
-
+##DEPRECATED by /breeders/trials
 sub trial_tree : Path('/breeders/trialtree') Args(0) {
     my $self = shift;
     my $c = shift;
