@@ -17,7 +17,7 @@ $user_id => undef
 % my $cross_properties = $c->config->{cross_properties};
 % my @cross_props = split ',',$cross_properties;
 
-<& /page/page_title.mas, title => "Detail for cross '$cross_name'" &>
+<& /page/page_title.mas, title => "Details for cross '$cross_name'" &>
 
 <&| /page/info_section.mas, title => "Cross information" &>
 
