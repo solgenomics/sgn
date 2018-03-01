@@ -210,7 +210,7 @@ jQuery(document).ready(function() {
 		       text: "Done" }
 	},
 	autoOpen: false,
-	title: 'Edit cross properties'
+	title: 'Edit Cross Information'
     });
 
     jQuery('#edit_properties_link').click( function() {

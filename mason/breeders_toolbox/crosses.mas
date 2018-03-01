@@ -84,7 +84,7 @@ $user_id => undef
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="creatCrossingTrial">Create Crossing Trial</h4></center>
+                <center><h4 class="modal-title" id="creatCrossingTrial">Add New Crossing Trial</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -138,7 +138,7 @@ $user_id => undef
                         <br>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Create</button>
+                            <button type="button" class="btn btn-primary" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
                         </div>
                 </div>
             </div>
