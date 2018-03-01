@@ -930,3 +930,17 @@ name: hour 24
 synonym: "H24" EXACT []
 def: "" []
 is_a: TIME:0000005
+
+[Term]
+id: TIME:0000137
+name: at maiden
+synonym: "MAD" EXACT []
+def: "maiden stage:
+is_a: TIME:0000076
+
+[Term]
+id: TIME:0000080
+name: at pre-flowering
+synonym: "PFL" EXACT []
+def: "pre-flowering stage:
+is_a: TIME:0000076
