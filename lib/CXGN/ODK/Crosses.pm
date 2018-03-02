@@ -312,7 +312,7 @@ sub save_ona_cross_info {
                         }
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
-                        my $plot_name = _get_plot_name_from_barcode_id($a->{'FieldActivities/Flowering/flowerID'});
+                        my $plot_name = _get_plot_name_from_barcode_id($a->{'FieldActivities/Flowering/flowersID'});
                         $plant_status_info{$plot_name}->{'flowering'} = $a;
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
@@ -484,7 +484,7 @@ sub create_odk_cross_progress_tree {
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
         my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_pxV488A.txt";
+        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_test_5nSlbRZ.txt";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
@@ -512,7 +512,8 @@ sub create_odk_cross_progress_tree {
             $female_plot_name =~ tr/"//d;
             $number_males =~ tr/"//d;
             my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
-            for my $n (10 .. 10+int($number_males)){
+            my $num_males_int = $number_males ? int($number_males) : 0;
+            for my $n (10 .. 10+$num_males_int){
                 if ($_->[$n]){
                     $_->[$n] =~ tr/"//d;
                     $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
@@ -1057,6 +1058,7 @@ sub create_odk_cross_progress_tree {
             }
         }
     }
+    print STDERR Dumper \%parsed_data;
 
     my $cross_trial_id;
     my $wishlist_file_name = $self->cross_wishlist_file_name;
@@ -1084,6 +1086,9 @@ sub create_odk_cross_progress_tree {
     }
 
     if ($parsed_data{crosses} && scalar(@{$parsed_data{crosses}}) > 0){
+
+        
+
         my $cross_add = CXGN::Pedigree::AddCrosses->new({
             chado_schema => $bcs_schema,
             phenome_schema => $phenome_schema,
