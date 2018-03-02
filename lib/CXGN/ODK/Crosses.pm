@@ -1050,7 +1050,7 @@ sub create_odk_cross_progress_tree {
                         $parsed_data{'Screenhouse Transfer Date'}->{$cross_name} = $e->{screenhse_transfer_date};
                     }
                 }
-                if ($activity_name eq 'screenhouse_humiditychamber'){
+                if ($activity_name eq 'hardening'){
                     foreach my $e (@$entries){
                         $parsed_data{'Hardening Date'}->{$cross_name} = $e->{hardening_date};
                     }
@@ -1087,7 +1087,15 @@ sub create_odk_cross_progress_tree {
 
     if ($parsed_data{crosses} && scalar(@{$parsed_data{crosses}}) > 0){
 
-        
+        my @new_crosses;
+        foreach (@{$parsed_data{crosses}}){
+            my $cross_exists_rs = $bcs_schema->resultset("Stock::Stock")->find({uniquename=>$_->get_name});
+            if ($cross_exists_rs->stock_id){
+                print STDERR "Already saved ".$cross_exists_rs->uniquename.". Skipping AddCrosses\n";
+            } else {
+                push @new_crosses, $_;
+            }
+        }
 
         my $cross_add = CXGN::Pedigree::AddCrosses->new({
             chado_schema => $bcs_schema,
@@ -1096,7 +1104,7 @@ sub create_odk_cross_progress_tree {
             dbh => $bcs_schema->storage->dbh,
             location => $wishlist_file_name_loc,
             crossing_trial_id => $cross_trial_id,
-            crosses =>  $parsed_data{crosses},
+            crosses => \@new_crosses,
             owner_name => $self->sp_person_username
         });
         if (!$cross_add->validate_crosses()){
