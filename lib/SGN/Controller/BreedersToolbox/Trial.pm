@@ -13,7 +13,7 @@ use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_
 use CXGN::Trial::Download;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
-use CXGN::List;
+use CXGN::List; 
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -51,6 +51,7 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #print STDERR "Check 1: ".localtime()."\n";
+    print STDERR "TRIAL INIT...\n\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
@@ -120,13 +121,15 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
 
+    #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
+
     if ($design_type eq "genotyping_plate") {
-	if ($format eq "as_table") {
-	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
-	}
-	else {
-	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
-	}
+	     if ($format eq "as_table") {
+	        $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
+	       }
+	        else {
+	           $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
+	        }
 
     }
     elsif ($design_type eq "treatment"){
@@ -134,6 +137,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
     else {
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
+    }
+
+    if ($trial_type_data->[1] eq "crossing_trial"){
+        print STDERR "It's a crossing trial!\n\n";
+        $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
     }
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
@@ -167,7 +175,7 @@ sub trait_info :Path('/breeders/trial') Args(3) {
     $c->stash->{template}   = '/breeders_toolbox/trial_trait.mas';
 }
 
-
+##DEPRECATED by /breeders/trials
 sub trial_tree : Path('/breeders/trialtree') Args(0) {
     my $self = shift;
     my $c = shift;

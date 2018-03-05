@@ -4063,11 +4063,10 @@ sub analyzed_traits {
     {  
         if (-s $trait_file > 1) 
         { 
-            my $trait = $trait_file;
-            $trait =~ s/gebv_kinship_//;
+            my $trait = basename($trait_file);	   
+            $trait =~ s/gebv_kinship_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
-            $trait =~ s/$dir|\///g;
-
+        
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
             {
@@ -5192,7 +5191,8 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
         
-    my $geno_version    = $c->config->{default_genotyping_protocol};    
+    my $geno_version    = $c->config->{default_genotyping_protocol}; 
+    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
     $geno_version       =~ s/\s+//g;
     my $tmp_dir         = $c->site_cluster_shared_dir;    
     $tmp_dir            = catdir($tmp_dir, $geno_version);

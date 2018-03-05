@@ -1674,6 +1674,7 @@ sub studies_table_GET {
 		study_id => $c->stash->{study_id},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 		trait_ids => $clean_inputs->{observationVariableDbId},
 		trial_ids => $clean_inputs->{studyDbId},
 		format => $format,
@@ -1740,6 +1741,7 @@ sub studies_observations_granular_GET {
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1852,6 +1854,7 @@ sub process_phenotypes_search {
 		years => $clean_inputs->{seasonDbIds},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
