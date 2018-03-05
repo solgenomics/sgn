@@ -115,6 +115,8 @@ sub create_anova_phenodata_file {
     $self->anova_pheno_file($c);
     my $pheno_file =  $c->stash->{phenotype_file};
 
+    $self->copy_pheno_file_to_anova_dir($c);
+    
     if (!-s $pheno_file) {
 	$c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
     } else {
@@ -321,6 +323,22 @@ sub run_anova {
     $c->stash->{r_script}     = 'R/anova.r';
 
     $c->controller("solGS::solGS")->run_r_script($c);
+
+}
+
+
+sub copy_pheno_file_to_anova_dir {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->stash->{trial_id};
+
+    $c->controller('solGS::solGS')->phenotype_file_name($c, $trial_id);
+    my $pheno_file = $c->stash->{phenotype_file_name};
+
+    my $anova_cache = $c->stash->{anova_cache_dir};
+
+    copy($pheno_file, $anova_cache) or 
+	die "could not copy $pheno_file to $anova_cache";
     
 }
 
