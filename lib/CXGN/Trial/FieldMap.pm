@@ -56,7 +56,7 @@ has 'old_accession_id' => (isa => "Int",
 sub display_fieldmap {
 	my $self = shift;
 	my $schema = $self->bcs_schema;
-	my $trial_id = $self->trial_id;
+	my $trial_id = $self->trial_id; 
 
 	my $layout = CXGN::Trial::TrialLayout->new({
 		schema => $schema,
@@ -65,8 +65,9 @@ sub display_fieldmap {
 	});
 
 	my $design = $layout-> get_design();
-	
-  #print STDERR Dumper($design);
+    my $design_type = $layout->get_design_type();
+    print STDERR Dumper($design_type);
+  
 	my @plot_names = ();
     my @row_numbers = ();
     my @col_numbers = ();
