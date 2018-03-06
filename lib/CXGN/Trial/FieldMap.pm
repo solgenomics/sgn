@@ -106,13 +106,16 @@ sub display_fieldmap {
         if ($row_number) {
             push @row_numbers, $row_number;
         }elsif (!$row_number){
-			if ($block_number){
+			if ($block_number && $design_type ne 'splitplot'){
 				$row_number = $block_number;
 				push @row_numbers, $row_number;
-			}elsif ($rep_number && !$block_number ){
+			}elsif ($rep_number && !$block_number && $design_type ne 'splitplot'){
 				$row_number = $rep_number;
 				push @row_numbers, $row_number;
-			}
+			}elsif ($design_type eq 'splitplot'){
+                $row_number = $rep_number;
+				push @row_numbers, $row_number;
+            }
 		}
         if ($rep_number) {
             push @rep_numbers, $rep_number;
@@ -262,6 +265,7 @@ sub display_fieldmap {
 		unique_row => \@unique_row,
 		false_coord => $false_coord,
 		result => $result,
+        design_type => $design_type,
 	);
 	#print STDERR Dumper(\%return);
 	return \%return;
