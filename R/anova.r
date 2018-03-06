@@ -69,8 +69,21 @@ for (trait in traits) {
 
   message('means file: ', adjMeansFile)
 
-  anovaOut   <- runAnova(phenoData, trait)
 
+  diagnosticsFile  <- grep("anova_diagnostics",
+                        outputFiles,
+                        value = TRUE)
+
+  message('diagnostics file: ', diagnosticsFile)
+
+  anovaOut   <- runAnova(phenoData, trait) 
+
+  png(diagnosticsFile)
+  par(mfrow=c(2,1))
+  plot(resid(anovaOut), fitted(anovaOut))
+  qqnorm(resid(anovaOut))      
+  dev.off()
+ 
   anovaTable <- getAnovaTable(anovaOut,
                               tableType="html",
                               traitName=trait,
@@ -93,6 +106,7 @@ for (trait in traits) {
   sink(modelSummFile)
   print(anovaOut)
   sink()
+  
 }
 
 
