@@ -74,13 +74,15 @@ for (trait in traits) {
                         outputFiles,
                         value = TRUE)
 
-  message('diagnostics file: ', diagnosticsFile)
-
   anovaOut   <- runAnova(phenoData, trait) 
 
-  png(diagnosticsFile)
-  par(mfrow=c(2,1))
-  plot(resid(anovaOut), fitted(anovaOut))
+  png(diagnosticsFile, 960, 480)
+  par(mfrow=c(1,2))
+  plot(fitted(anovaOut), resid(anovaOut),
+       xlab="Fitted values",
+       ylab="Residuals",
+       main="Fitted values vs Residuals") 
+  abline(0,0)
   qqnorm(resid(anovaOut))      
   dev.off()
  
@@ -93,7 +95,7 @@ for (trait in traits) {
                               tableType="text",
                               traitName=trait,
                               out=anovaTxtFile)
-
+ 
   adjMeans   <- getAdjMeans(phenoData, trait)
 
   fwrite(adjMeans,
