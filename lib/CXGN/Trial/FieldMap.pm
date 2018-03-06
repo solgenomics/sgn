@@ -66,7 +66,7 @@ sub display_fieldmap {
 
 	my $design = $layout-> get_design();
     my $design_type = $layout->get_design_type();
-    print STDERR Dumper($design_type);
+    #print STDERR Dumper($design_type);
   
 	my @plot_names = ();
     my @row_numbers = ();
