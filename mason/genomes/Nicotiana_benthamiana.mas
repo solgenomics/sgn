@@ -2,9 +2,9 @@
 <& /page/page_title.mas, title=>"<i>Nicotiana benthamiana</i> draft genome sequence v1.0.1" &>
 
 <p>
-  A new draft sequence of the <i>Nicotiana benthamiana</i> genome has been released by researchers from the <a href="http://bti.cornell.edu" target="_blank">Boyce Thompson Institute for Plant Research (BTI)</a>.
+  A new draft sequence of the <i>Nicotiana benthamiana</i> genome has been released by researchers from the <a href="http://btiscience.org/" target="_blank">Boyce Thompson Institute for Plant Research (BTI)</a>.
   It is accessible through the SGN BLAST tool and JBrowse, and can be downloaded from the SGN ftp site.
-  More information about this project can be found at the <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/" target="_blank">BTI <i>Nicotiana benthamiana</i> Project site</a>
+  More information about this project can be found at the <a href="https://btiscience.org/our-research/research-facilities/research-resources/nicotiana-benthamiana/" target="_blank">BTI <i>Nicotiana benthamiana</i> Project site</a>
 </p>
 
 <p>
@@ -168,7 +168,7 @@ N25 index:    12906 sequences<br />
 
 <ul>
   <li>
-    More information about this project at the <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/" target="_blank">BTI <i>Nicotiana benthamiana</i> Project site</a>
+    More information about this project at the <a href="https://btiscience.org/our-research/research-facilities/research-resources/nicotiana-benthamiana/" target="_blank">BTI <i>Nicotiana benthamiana</i> Project site</a>
   </li>
   <li>
     <a href="http://sydney.edu.au/science/molecular_bioscience/sites/benthamiana/" target="_blank">Austrialia/New Zealand <i>Nicotiana benthamiana</i> sequencing project</a>
