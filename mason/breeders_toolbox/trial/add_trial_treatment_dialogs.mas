@@ -50,7 +50,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                Apply Field Management Factors to Plants (if available): <input type="checkbox" id="new_trial_add_treatments_apply_to_plants" checked disabled />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Apply Field Management Factors to Plants and Subplots and Tissue Samples (if available): <input type="checkbox" id="new_trial_add_treatments_apply_to_plants" checked disabled />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Continue</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>

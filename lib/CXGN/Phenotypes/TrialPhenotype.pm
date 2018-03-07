@@ -31,6 +31,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use List::MoreUtils ':all';
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -72,7 +73,7 @@ sub get_trial_phenotypes_heatmap {
       row_number=> 'row_number.value::int',
       col_number=> 'col_number.value::int',
       rep=> 'rep.value',
-	  plot_number=> 'plot_number.value',
+	  plot_number=> 'plot_number.value::INT',
 	  block_number=> 'block_number.value',
       phenotype_value=> 'phenotype.value',
 	  phenotype_id=> 'phenotype.phenotype_id',
@@ -101,7 +102,7 @@ sub get_trial_phenotypes_heatmap {
 
 	my $from_clause = $columns{'from_clause'};
 
-	my $order_clause = " ORDER BY 7, 8 ASC";
+	my $order_clause = " ORDER BY 7, 8, 4 ASC";
 	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 	my $numeric_regex_2 = '/^\s*$/';
 
@@ -122,9 +123,16 @@ sub get_trial_phenotypes_heatmap {
 	my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
-	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results);
+	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results, @phenoID);
 	
 	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value, $pheno_id) = $h->fetchrow_array()) {
+		if (!$row_number && !$col_number){
+			if ($block_number){
+				$row_number = $block_number;
+			}elsif ($rep && !$block_number ){
+				$row_number = $rep;
+			}
+		}
 		my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
         push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$pheno_id} ;
 		push @col_No, $col_number;
@@ -135,10 +143,38 @@ sub get_trial_phenotypes_heatmap {
 		push @plot_No, $plot_number;
 		push @block_No, $block_number;
 		push @rep_No, $rep;
+        push @phenoID, $pheno_id; 
 		push @msg, "plot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
     }
 	
-	my ($min_col, $max_col) = minmax @col_No;
+	# my ($min_col, $max_col) = minmax @col_No;
+	# my ($min_row, $max_row) = minmax @row_No;
+	# my (@unique_col,@unique_row);
+	# for my $x (1..$max_col){
+	# 	push @unique_col, $x;
+	# }
+	# for my $y (1..$max_row){
+	# 	push @unique_row, $y;
+	# }
+	
+    my $false_coord;
+	if ($col_No[0] == ""){
+        @col_No = ();
+        $false_coord = 'false_coord';
+		my @row_instances = uniq @row_No;
+		my %unique_row_counts;
+		$unique_row_counts{$_}++ for @row_No;        
+        my @col_number2;
+        for my $key (keys %unique_row_counts){
+            push @col_number2, (1..$unique_row_counts{$key});
+        }
+        for (my $i=0; $i < scalar(@$result); $i++){               
+            @$result[$i]->{'col'} = $col_number2[$i];
+            push @col_No, $col_number2[$i];
+        }		
+	}
+    
+    my ($min_col, $max_col) = minmax @col_No;
 	my ($min_row, $max_row) = minmax @row_No;
 	my (@unique_col,@unique_row);
 	for my $x (1..$max_col){
@@ -147,8 +183,21 @@ sub get_trial_phenotypes_heatmap {
 	for my $y (1..$max_row){
 		push @unique_row, $y;
 	}
-	#print STDERR Dumper(\@unique_col);
-	#print STDERR Dumper(\@unique_row);
+    
+    my $trial = CXGN::Trial->new({
+		bcs_schema => $schema,
+		trial_id => $trial_id
+	});
+	my $data = $trial->get_controls();
+
+	#print STDERR Dumper($data);
+
+	my @control_name;
+	foreach my $cntrl (@{$data}) {
+		push @control_name, $cntrl->{'accession_name'};
+	}
+	#print STDERR Dumper(\@$result);
+	#print STDERR Dumper(\@plot_No);
 
 	%results = (
 	col => \@col_No,
@@ -164,7 +213,10 @@ sub get_trial_phenotypes_heatmap {
 	col_max => $max_col,
 	row_max => $max_row,
 	unique_col => \@unique_col,
-	unique_row => \@unique_row
+	unique_row => \@unique_row,
+    false_coord => $false_coord,
+    phenoID => \@phenoID,
+    controls => \@control_name
 	);
     print STDERR "Search End:".localtime."\n";
 	#print STDERR Dumper($result);

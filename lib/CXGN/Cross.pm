@@ -4,26 +4,34 @@ package CXGN::Cross;
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use JSON;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
-  is => 'rw',
-  required => 1,
+    is => 'rw',
+    required => 1,
 );
 
 has 'cross_stock_id' => (isa => "Int",
-  is => 'rw',
-  required => 0,
+    is => 'rw',
+    required => 0,
 );
 
 has 'female_parent' => (isa => 'Str',
-  is => 'rw',
-  required => 0,
+    is => 'rw',
+    required => 0,
 );
 
 has 'male_parent' => (isa => 'Str',
-  is => 'rw',
-  required => 0,
+    is => 'rw',
+    required => 0,
 );
+
+has 'trial_id' => (isa => "Int",
+    is => 'rw',
+    required => 0,
+);
+
+
 
 sub BUILD {
     my $self = shift;
@@ -76,39 +84,39 @@ sub get_cross_info {
 
     my $where_female = "";
     if ($female_parent){
-    $where_female = " WHERE female_parent.uniquename = ?";
+        $where_female = " WHERE female_parent.uniquename = ?";
     };
 
     my $where_male ="";
     if ($male_parent){
-      $where_male = " AND male_parent.uniquename = ?";
+        $where_male = " AND male_parent.uniquename = ?";
     }
 
    my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value
-    FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id= ? INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship1.object_id) AND cross_entry.type_id= ?
-    LEFT JOIN stock_relationship AS stock_relationship2 ON (cross_entry.stock_id=stock_relationship2.object_id) AND stock_relationship2.type_id= ?
-    LEFT JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
-    $where_female $where_male ORDER BY stock_relationship1.value, male_parent.uniquename";
+        FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
+        AND stock_relationship1.type_id= ? INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship1.object_id) AND cross_entry.type_id= ?
+        LEFT JOIN stock_relationship AS stock_relationship2 ON (cross_entry.stock_id=stock_relationship2.object_id) AND stock_relationship2.type_id= ?
+        LEFT JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
+        $where_female $where_male ORDER BY stock_relationship1.value, male_parent.uniquename";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
     if ($female_parent && $male_parent) {
-	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent, $male_parent);
+        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent, $male_parent);
     }
     elsif ($female_parent) {
-	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent);
+        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent);
     }
     elsif ($male_parent) {
-  $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $male_parent);
+        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $male_parent);
     }
     else {
-  $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
+        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
     }
 
     my @cross_info = ();
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()){
-      push @cross_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type]
+        push @cross_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type]
     }
     #print STDERR Dumper(\@cross_info);
     return \@cross_info;
@@ -139,23 +147,23 @@ sub get_progeny_info {
 
     my $where_female = "";
     if ($female_parent){
-    $where_female = " WHERE female_parent.uniquename = ?";
+        $where_female = " WHERE female_parent.uniquename = ?";
     };
 
     my $where_male ="";
     if ($male_parent){
-      $where_male = " AND male_parent.uniquename = ?";
+        $where_male = " AND male_parent.uniquename = ?";
     }
 
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, CONCAT(stock_relationship1.value, stock_relationship4.value) AS type
-      FROM stock_relationship as stock_relationship1
-      INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
-      INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
-      LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-      LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
-      LEFT JOIN stock_relationship AS stock_relationship3 ON (progeny.stock_id = stock_relationship3.subject_id) AND stock_relationship3.type_id = ?
-      LEFT JOIN stock_relationship AS stock_relationship4 ON (stock_relationship3.object_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
-      $where_female $where_male ORDER BY male_parent.uniquename";
+        FROM stock_relationship as stock_relationship1
+        INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
+        INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
+        LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+        LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship3 ON (progeny.stock_id = stock_relationship3.subject_id) AND stock_relationship3.type_id = ?
+        LEFT JOIN stock_relationship AS stock_relationship4 ON (stock_relationship3.object_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
+        $where_female $where_male ORDER BY male_parent.uniquename";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -175,11 +183,113 @@ sub get_progeny_info {
     my @progeny_info = ();
     while (my($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = $h->fetchrow_array()){
 
-    push @progeny_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type]
+        push @progeny_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type]
     }
       #print STDERR Dumper(\@progeny_info);
-      return \@progeny_info;
+    return \@progeny_info;
     }
+
+=head2 get_crosses_in_trial
+
+
+=cut
+
+sub get_crosses_in_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $trial_id = $self->trial_id;
+
+    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $female_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+    my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock_relationship1.value, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename
+        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock AS stock1 ON (nd_experiment_stock.stock_id = stock1.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship1 ON (stock1.stock_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
+        LEFT JOIN stock AS stock2 ON (stock_relationship1.subject_id = stock2.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship2 ON (stock1.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+        LEFT JOIN stock AS stock3 ON (stock_relationship2.subject_id = stock3.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship3 ON (stock1.stock_id = stock_relationship3.object_id) AND stock_relationship3.type_id = ?
+        LEFT JOIN stock AS stock4 ON (stock_relationship3.subject_id = stock4.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship4 ON (stock1.stock_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
+        LEFT JOIN stock AS stock5 ON (stock_relationship4.subject_id = stock5.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $trial_id);
+
+    my @data =();
+    while(my($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name]
+    }
+    return \@data;
+}
+
+=head2 get_cross_properties_trial
+
+
+=cut
+
+sub get_cross_properties_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $trial_id = $self->trial_id;
+
+    my $cross_props_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        LEFT JOIN stockprop ON (nd_experiment_stock.stock_id = stockprop.stock_id)
+        LEFT JOIN stock ON (stockprop.stock_id = stock.stock_id)
+        WHERE stockprop.type_id = ? AND nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare ($q);
+
+    $h->execute($cross_props_typeid, $trial_id);
+
+    my @data = ();
+    while(my($cross_id, $cross_name, $cross_props) = $h->fetchrow_array()){
+      #print STDERR Dumper $cross_props;
+        my $cross_props_hash = decode_json$cross_props;
+        push @data, [$cross_id, $cross_name, $cross_props_hash]
+    }
+
+    return \@data;
+
+}
+
+=head2 get_cross_progenies_trial
+
+
+=cut
+
+sub get_cross_progenies_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $trial_id = $self->trial_id;
+
+    my $member_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename, COUNT (stock_relationship.subject_id) AS progeny_number
+        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id =?
+        WHERE nd_experiment_project.project_id = ? GROUP BY stock.stock_id";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($member_of_typeid, $trial_id);
+
+    my @data =();
+    while(my($cross_id, $cross_name, $progeny_number) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $progeny_number]
+    }
+
+    return \@data;
+}
 
 
 

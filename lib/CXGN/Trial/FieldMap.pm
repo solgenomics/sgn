@@ -7,8 +7,10 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
-use List::Util 'max';
+#use List::Util 'max';
+use List::MoreUtils ':all';
 use Bio::Chado::Schema;
+use CXGN::Stock;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -58,19 +60,23 @@ sub display_fieldmap {
 
 	my $layout = CXGN::Trial::TrialLayout->new({
 		schema => $schema,
-		trial_id => $trial_id
+		trial_id => $trial_id,
+        experiment_type => 'field_layout'
 	});
 
 	my $design = $layout-> get_design();
-
-#  print STDERR Dumper($design);
-
+	
+  #print STDERR Dumper($design);
+	my @plot_names = ();
     my @row_numbers = ();
     my @col_numbers = ();
     my @rep_numbers = ();
     my @block_numbers = ();
     my @accession_names = ();
+	my @plot_numbers_from_design = ();
     my @plot_numbers_not_used;
+	my $result;
+#	my @plot_image_ids;
 
     my @layout_info;
     while ( my ($k, $v) = (each %$design)) {
@@ -83,27 +89,30 @@ sub display_fieldmap {
         my $plot_name = $v->{plot_name};
         my $accession_name = $v->{accession_name};
         my $plant_names = $v->{plant_names};
-
-        push @layout_info, {
-            plot_id => $plot_id,
-            plot_number => $plot_number,
-            row_number => $row_number,
-            col_number => $col_number,
-            block_number=> $block_number,
-            rep_number =>  $rep_number,
-            plot_name => $plot_name,
-            accession_name => $accession_name,
-            plant_names => $plant_names,
-        };
-        #print STDERR Dumper(@layout_info);
+		my $plot_number_fromDesign = $v->{plot_number};
+		
+		my $image_id = CXGN::Stock->new({
+			schema => $schema,
+			stock_id => $plot_id,
+		});
+		my @plot_image_ids = $image_id->get_image_ids();
 
         push @plot_numbers_not_used, $plot_number;
+		push @plot_numbers_from_design, $plot_number_fromDesign;
         if ($col_number) {
             push @col_numbers, $col_number;
         }
         if ($row_number) {
             push @row_numbers, $row_number;
-        }
+        }elsif (!$row_number){
+			if ($block_number){
+				$row_number = $block_number;
+				push @row_numbers, $row_number;
+			}elsif ($rep_number && !$block_number ){
+				$row_number = $rep_number;
+				push @row_numbers, $row_number;
+			}
+		}
         if ($rep_number) {
             push @rep_numbers, $rep_number;
         }
@@ -113,8 +122,54 @@ sub display_fieldmap {
         if ($accession_name) {
             push @accession_names, $accession_name;
         }
+		if ($plot_name) {
+			push @plot_names, $plot_name;
+		}
+		
+		push @layout_info, {
+            plot_id => $plot_id,
+            plot_number => $plot_number,
+            row_number => $row_number,
+            col_number => $col_number,
+            block_number=> $block_number,
+            rep_number =>  $rep_number,
+            plot_name => $plot_name,
+            accession_name => $accession_name,
+            plant_names => $plant_names,
+			plot_image_ids => \@plot_image_ids, 
+        };
+		
     }
-
+	@layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
+	
+	my $false_coord;
+	if (scalar(@col_numbers) < 1){
+        @col_numbers = ();
+        $false_coord = 'false_coord';
+		my @row_instances = uniq @row_numbers;
+		my %unique_row_counts;
+		$unique_row_counts{$_}++ for @row_numbers;        
+        my @col_number2;
+        for my $key (keys %unique_row_counts){
+            push @col_number2, (1..$unique_row_counts{$key});
+        }
+        for (my $i=0; $i < scalar(@layout_info); $i++){            
+			$layout_info[$i]->{'col_number'} = $col_number2[$i];
+            push @col_numbers, $col_number2[$i];
+        }		
+	}
+	my $plot_popUp;
+	foreach my $hash (@layout_info){
+		if (scalar(@{$hash->{"plant_names"}}) < 1) {
+			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
+		}
+		else{
+			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$hash->{"plant_names"}});
+		}
+		push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, plot_image_ids=>$hash->{'plot_image_ids'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
+	}
+	#print STDERR Dumper(\@col_numbers);
+	#print STDERR Dumper($result); 
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
@@ -128,10 +183,10 @@ sub display_fieldmap {
 		if ($my_hash->{'row_number'}) {
 			if ($my_hash->{'row_number'} =~ m/\d+/) {
 				if (scalar(@{$my_hash->{"plant_names"}}) < 1) {
-					$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
+					$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nPlot_name: ".$my_hash->{'plot_name'};
 				}
 				else{
-					$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}});
+					$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}})."\nPlot_name: ".$my_hash->{'plot_name'};
 				}
 
 				$plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
@@ -158,16 +213,18 @@ sub display_fieldmap {
 	}
 
 	my @sorted_block = sort@block_numbers;
-	#my @uniq_block = uniq(@sorted_block);
-
-	my $max_col = scalar(@col_numbers) > 0 ? max( @col_numbers ) : 0;
-	#print "$max_col\n";
-	my $max_row = scalar(@row_numbers) > 0 ? max( @row_numbers ) : 0;
-	#print "$max_row\n";
-	my $max_rep = scalar(@rep_numbers) > 0 ? max(@rep_numbers) : 0;
-	my $max_block = scalar(@block_numbers) > 0 ? max(@block_numbers) : 0;
-
-	#print STDERR Dumper \@layout_info;
+	my @uniq_block = uniq(@sorted_block);
+	my ($min_rep, $max_rep) = minmax @rep_numbers;
+	my ($min_block, $max_block) = minmax @block_numbers;
+	my ($min_col, $max_col) = minmax @col_numbers;
+	my ($min_row, $max_row) = minmax @row_numbers;
+	my (@unique_col,@unique_row);
+	for my $x (1..$max_col){
+		push @unique_col, $x;
+	}
+	for my $y (1..$max_row){
+		push @unique_row, $y;
+	}
 
 	my $trial = CXGN::Trial->new({
 		bcs_schema => $schema,
@@ -175,13 +232,10 @@ sub display_fieldmap {
 	});
 	my $data = $trial->get_controls();
 
-	#print STDERR Dumper($data);
-
 	my @control_name;
 	foreach my $cntrl (@{$data}) {
 		push @control_name, $cntrl->{'accession_name'};
 	}
-	#print STDERR Dumper(@control_name);
 
 	my %return = (
 		coord_row =>  \@row_numbers,
@@ -202,8 +256,13 @@ sub display_fieldmap {
 		controls => \@control_name,
 		blk => \@blk_no,
 		acc => \@acc_name,
-		rep_no => \@rep_no
+		rep_no => \@rep_no,
+		unique_col => \@unique_col,
+		unique_row => \@unique_row,
+		false_coord => $false_coord,
+		result => $result,
 	);
+	#print STDERR Dumper(\%return);
 	return \%return;
 }
 
@@ -266,7 +325,7 @@ sub substitute_accession_precheck {
 	}
 
 	if (scalar(@plots) != 0)  {
-	 $error = "Controlled (check) plots can not be substituted..";
+	 $error = "Accessions used as control/check can't be substituted between plots...";
 	}
 	return $error;
 }
@@ -362,7 +421,8 @@ sub _regenerate_trial_layout_cache {
     my $self = shift;
     my $layout = CXGN::Trial::TrialLayout->new({
         schema => $self->bcs_schema,
-        trial_id => $self->trial_id
+        trial_id => $self->trial_id,
+        experiment_type => 'field_layout'
     });
     $layout->generate_and_cache_layout();
 }

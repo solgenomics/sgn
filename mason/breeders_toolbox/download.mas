@@ -13,10 +13,10 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm">
+<h4>Download Phenotypes</h4><p>Select Parameters:</p>
 <form id="download_form" action="/breeders/download_action" method="POST" >
-<table class="table" cellpadding="10" border="0" >
+<table class="table table-bordered" >
   <thead>
-  <tr><td colspan="4"><h4>Download Phenotype</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -28,13 +28,7 @@ Choose a list for each parameter and click "Download".
       Traits
     </th>
     <th>
-      Format
-    </th>
-    <th>
-      Timestamps
-    </th>
-    <th>
-      Data Level
+        Options
     </th>
     <th>
       Action
@@ -55,28 +49,31 @@ Choose a list for each parameter and click "Download".
       <div id="trait_list">
       </div>
    </td>
-   <td>
-<div class="radio">
- <label><input type="radio" id="format" name="format" value=".csv" checked>.csv</label>
-</div>
-<div class="radio">
-  <label><input type="radio" id="format" name="format" value=".xls">.xls</label>
-</div>
-<div class="radio">
-  <label><input type="radio" id="format" name="format" value="html">html</label>
-</div>
-    </td>
     <td>
-    <select class="form-control" id="timestamp" name="timestamp">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+    <b>Format:</b><br/>
+    <select class="form-control" id="format" name="format">
+        <option value=".csv">CSV</option>
+        <option value=".xls">XLS</option>
+        <option value="html">HTML</option>
     </select>
-    </td>
-    <td>
+    <br/>
+    <b>Data Level:</b><br/>
     <select class="form-control" id="phenotype_datalevel" name="phenotype_datalevel">
         <option value="all">All</option>
         <option value="plot">Plot</option>
         <option value="plant">Plant</option>
+    </select>
+    <br/>
+    <b>Timestamp:</b><br/>
+    <select class="form-control" id="timestamp" name="timestamp">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
+    <br/>
+    <b>Exclude Phenotype Outliers:</b><br/>
+    <select class="form-control" id="exclude_phenotype_outlier" name="exclude_phenotype_outlier">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
     </select>
     </td>
     <td>

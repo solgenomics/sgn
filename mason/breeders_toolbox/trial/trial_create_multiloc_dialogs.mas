@@ -334,12 +334,13 @@ $breeding_programs
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p><span class="ui-icon ui-icon-info"></span>Trial Layout</p>
+                    <center><p>Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p></center>
                     <div id="multi_trial_design_view_layout_return">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-info btn-sm" id="redo_multiloc_trial_layout_button" >Redo Randomization</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>

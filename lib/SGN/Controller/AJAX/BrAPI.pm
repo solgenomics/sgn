@@ -48,10 +48,15 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $c = shift;
 	my $version = shift;
 	my @status;
-
+	
 	my $page = $c->req->param("page") || 0;
 	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 	my $session_token = $c->req->param("access_token");
+	if (defined $c->request->data){
+		$page = $page || $c->request->data->{"page"} || 0;
+		$page_size = $page_size || $c->request->data->{"pageSize"} || $DEFAULT_PAGE_SIZE;
+		$session_token = $session_token || $c->request->data->{"access_token"};
+	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 	my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -75,9 +80,16 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 
 	$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range');
 	$c->stash->{session_token} = $session_token;
-
-	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
+	
+	if (defined $c->request->data){
+		my %allParams = (%{$c->request->data}, %{$c->req->params});
+		$c->stash->{clean_inputs} = _clean_inputs(\%allParams);
+	}
+	else {
+		$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
+	}
 }
 
 #useful because javascript can pass 'undef' as an empty value, and also standardizes all inputs as arrayrefs
@@ -1483,77 +1495,6 @@ sub studies_info_GET {
 }
 
 
-#sub studies_details  : Chained('studies_single') PathPart('details') Args(0) : ActionClass('REST') { }
-
-#sub studies_details_POST {
-#    my $self = shift;
-#    my $c = shift;
-#    my $auth = _authenticate_user($c);
-#    my $status = $c->stash->{status};
-#
-#    $c->stash->{rest} = {status => $status};
-#}
-
-#sub studies_details_GET {
-#    my $self = shift;
-#    my $c = shift;
-#    #my $auth = _authenticate_user($c);
-#    my $status = $c->stash->{status};
-#    my %result;
-#    my $total_count = 0;
-
-#    my $schema = $self->bcs_schema();
-#    my $t = $c->stash->{study};
-#    my $tl = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $c->stash->{study_id} });
-
-#    if ($t) {
-#	$total_count = 1;
-#	my ($accessions, $controls) = $tl->_get_trial_accession_names_and_control_names();
-#	my @germplasm_data;
-#    foreach (@$accessions) {
-#        push @germplasm_data, { germplasmDbId=>$_->{stock_id}, germplasmName=>$_->{accession_name}, germplasmPUI=>$_->{accession_name} };
-#    }
-#    foreach (@$controls) {
-#        push @germplasm_data, { germplasmDbId=>$_->{stock_id}, germplasmName=>$_->{accession_name}, germplasmPUI=>$_->{accession_name} };
-#    }
-
-#    my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-#    my $programs = $ps->get_breeding_program_with_trial($c->stash->{study_id});
-
-#	%result = (
-#	    studyDbId => $c->stash->{study_id},
-#	    studyId => $t->get_name(),
-#	    studyPUI => "",
-#	    studyName => $t->get_name(),
-#	    studyObjective => $t->get_description(),
-#	    studyType => $t->get_project_type() ? $t->get_project_type()->[1] : "trial",
-#	    studyLocation => $t->get_location() ? $t->get_location()->[1] : undef,
-#	    studyProject => $t->get_breeding_program(),
-#	    dataSet => "",
-#	    studyPlatform => "",
-#	    startDate => $t->get_planting_date(),
-#	    endDate => $t->get_harvest_date(),
-#        programDbId=>@$programs[0]->[0],
-#        programName=>@$programs[0]->[1],
-#	    designType => $tl->get_design_type(),
-#	    keyContact => "",
-#	    contacts => "",
-#	    meteoStationCode => "",
-#	    meteoStationNetwork => "",
-#	    studyHistory => "",
-#	    studyComments => "",
-#	    attributes => "",
-#	    seasons => "",
-#	    observationVariables => "",
-#	    germplasm => \@germplasm_data,
-#	);
-#    }
-
-#    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
-#    my %response = (metadata=>\%metadata, result=>\%result);
-#    $c->stash->{rest} = \%response;
-#}
-
 sub studies_observation_variables : Chained('studies_single') PathPart('observationVariables') Args(0) : ActionClass('REST') { }
 
 sub studies_observation_variables_POST {
@@ -1733,6 +1674,7 @@ sub studies_table_GET {
 		study_id => $c->stash->{study_id},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 		trait_ids => $clean_inputs->{observationVariableDbId},
 		trial_ids => $clean_inputs->{studyDbId},
 		format => $format,
@@ -1799,6 +1741,7 @@ sub studies_observations_granular_GET {
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1911,6 +1854,7 @@ sub process_phenotypes_search {
 		years => $clean_inputs->{seasonDbIds},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }

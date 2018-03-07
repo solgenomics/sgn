@@ -57,9 +57,6 @@ sub validate {
 
 sub download { 
     my $self = shift;
-    
-    my $trial_layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->trial_id() });
-    my $design = $trial_layout->get_design();
 
     my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $self->trial_id() });
     my $treatments = $trial->get_treatments();

@@ -251,9 +251,19 @@ has 'is_live' =>     ( isa => 'Bool',
 
 has 'data_level' =>  ( isa => 'String',
 		       is => 'rw',
-		       isa => enum([qw[ plot plant ]]),
+		       isa => enum([qw[ plot plant subplot ]]),
 		       default => 'plot',
     );
+
+=head2 exclude_phenotype_outlier()
+
+=cut
+
+has 'exclude_phenotype_outlier' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
@@ -409,16 +419,16 @@ sub _get_dataref {
     my $self = shift;
      my $dataref;
 
-    $dataref->{categories}->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
-    $dataref->{categories}->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
-    $dataref->{categories}->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
-    $dataref->{categories}->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
-    $dataref->{categories}->{years} = join(",", @{$self->years()}) if $self->has_years();
-    $dataref->{categories}->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
-		$dataref->{categories}->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
-		$dataref->{categories}->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
-		$dataref->{categories}->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
-    $dataref->{categories}->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
+    $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
+    $dataref->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
+    $dataref->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
+    $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
+    $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
+    $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
+		$dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
+		$dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
+		$dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
+    $dataref->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
     return $dataref;
 }
 
@@ -468,6 +478,8 @@ sub retrieve_phenotypes {
 		trait_list=>$self->traits(),
 		trial_list=>$self->trials(),
 		accession_list=>$self->accessions(),
+        include_row_and_column_numbers=>1,
+        exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
@@ -524,7 +536,7 @@ sub retrieve_trials {
     my $self = shift;
     my $trials;
     if ($self->has_trials()) {
-	return $self->trials();
+        return $self->trials();
     }
     else {
 	my $criteria = $self->get_dataset_definition();
