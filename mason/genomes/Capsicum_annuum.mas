@@ -5,7 +5,7 @@
 
 <!-- <div class="page_introduction"> -->
 <p>
-Linked-read sequencing technology was used to create a phased assembly that was scaffolded into chromosomes for a F1 of a wide cross (UCD-10X-F1) between a landrace, Criollos de Morelos 334 (CM334) and a nonpungent blocky pepper-breeding line. Please see <a href="https://www.nature.com/articles/s41438-017-0011-0">Hulse-Kemp et al. (2017)</a> for more details. This genome is available in <a href="/tools/blast?db_id=301">blast</a> and on the <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/C.annuum_UCD10X/">FTP site</a>.  
+Linked-read sequencing technology was used to create a phased assembly that was scaffolded into chromosomes for an F1 of a wide cross (UCD-10X-F1) between a landrace, Criollos de Morelos 334 (CM334) and a nonpungent blocky pepper-breeding line. Please see <a href="https://www.nature.com/articles/s41438-017-0011-0">Hulse-Kemp et al. (2017)</a> for more details. This genome is available in <a href="/tools/blast?db_id=301">blast</a> and on the <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/C.annuum_UCD10X/">FTP site</a>.  
 </p>
 <p>
 The hot pepper genome (Mexican landrace of <i>Capsicum annuum</i> cv. CM334) has been sequenced by an international group of scientists from Korea, Israel and USA.
