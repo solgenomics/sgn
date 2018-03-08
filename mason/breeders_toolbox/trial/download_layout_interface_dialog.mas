@@ -182,17 +182,6 @@ jQuery(document).ready(function() {
         jQuery('#create_fieldbook_dialog_Fieldbook').modal('show');
         show_fieldbook_treatments_Fieldbook();
     });
-    
-    // jQuery("[name='create_fieldmap_ok_button']").click( function () {
-    //     var trial_id = parseInt(<% $trial_id %>);
-    //     var data_level = jQuery('#create_fieldmap_data_level').val();
-    //     var format = jQuery('#create_fieldmap_format').val();
-    //     var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
-    //     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
-    //     console.log(format); 
-    //     console.log(trial_id);
-    //     window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id);
-    // });
         
     jQuery('#create_fieldbook_ok_button_<% $download_type %>').on('click', function() {
         open_create_fieldbook_dialog_<% $download_type %>();
@@ -427,17 +416,17 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
 % } elsif ($download_type eq 'TrialFieldMapLayout') {
 
 function show_fieldbook_treatments_<% $download_type %>(){
-    //jQuery('#create_fieldbook_treatment_<% $download_type %>').html('Include All Management Factors In Download');
     jQuery('#create_fieldbook_format_div_<% $download_type %>').show();
 }
 
 function open_create_fieldbook_dialog_<% $download_type %>() {
     var trial_id = parseInt(jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val());
     var data_level = jQuery('#create_fieldbook_data_level_<% $download_type %>').val();
-    var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
+    var selected_columns_TrialFieldMapLayout = {'row_number':1,'col_number':1,'accession_name':1};
+    var selected_columns = JSON.stringify(selected_columns_TrialFieldMapLayout);
+    console.log(selected_columns);
     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
     var format = jQuery('#create_fieldbook_format_<% $download_type %>').val();
-    console.log(format); 
     window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id);
 }
 
