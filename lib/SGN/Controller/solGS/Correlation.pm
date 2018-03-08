@@ -124,6 +124,14 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
 }
 
 
+sub trait_acronyms {
+    my ($self, $c) = @_;
+
+    $c->controller('solGS::solGS')->get_acronym_pairs($c);
+    
+}
+
+
 sub combine_gebvs_of_traits {
     my ($self, $c) = @_;
 
@@ -202,40 +210,6 @@ sub create_correlation_phenodata_file {
 }
 
 
-# sub create_correlation_phenodata_file {
-#     my ($self, $c)  = @_;
-#     my $referer = $c->req->referer;
-    
-#     if ($referer =~ /qtl/) 
-#     {
-#         my $pop_id = $c->stash->{pop_id};
-       
-#         my $pheno_exp = "phenodata_${pop_id}";
-#         my $dir       = catdir($c->config->{solqtl}, 'cache');
-       
-#         my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
-       
-#         unless ($phenotype_file) 
-# 	{           
-#             my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
-#             $phenotype_file =  $pop->phenotype_file($c);
-#         }
-        
-#         my $new_file = catfile($c->stash->{correlation_dir}, "phenotype_data_${pop_id}.csv");
-      
-#         copy($phenotype_file, $new_file) 
-#             or die "could not copy $phenotype_file to $new_file";
-       
-#         $c->stash->{phenotype_file} = $new_file;       
-#     } 
-#     else
-#     {           
-#       $c->controller("solGS::solGS")->phenotype_file($c);  
-#     }
-        
-# }
-
-
 sub create_correlation_dir {
     my ($self, $c) = @_;
     
@@ -307,21 +281,26 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
 
     $self->pheno_correlation_output_files($c);
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};
+      
     
     my $ret->{status} = 'failed';
   
     if (!-s $corre_json_file)
     {
         $self->run_pheno_correlation_analysis($c);  
-        $corre_json_file = $c->stash->{corre_coefficients_json_file};       
+        $corre_json_file = $c->stash->{corre_coefficients_json_file}; 
     }
     
     if (-s $corre_json_file)
-    { 
-        $ret->{status}   = 'success';
-        $ret->{data}     = read_file($corre_json_file);
-    } 
+    {
+	$self->trait_acronyms($c);
+	my $acronyms = $c->stash->{acronym};
     
+	$ret->{acronyms} = $acronyms;
+        $ret->{status}   = 'success';
+        $ret->{data}     = read_file($corre_json_file);	
+    } 
+        
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -389,6 +368,7 @@ sub run_pheno_correlation_analysis {
     
     $self->run_correlation_analysis($c);
 
+    #$self->trait_acronyms($c);
 }
 
 
