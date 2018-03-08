@@ -40,10 +40,12 @@ $download_type
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Management Factor: </label>
-                        <div class="col-sm-9" >
-                            <div id="create_fieldbook_treatment_<% $download_type %>">
+                    <div id="management_factore">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Management Factor: </label>
+                            <div class="col-sm-9" >
+                                <div id="create_fieldbook_treatment_<% $download_type %>">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -59,40 +61,43 @@ $download_type
                         </div>
                     </div>
                 </div>
-                <div class="well">
-                    <center><h4>Choose the columns you want to include (Or simply use defaults and click "Submit")</h4></center>
-                    <hr>
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Included Columns: </label>
-                                <div class="col-sm-9" >
-                                    <div id="create_fieldbook_included_columns_<% $download_type %>">
+                <div id="selected_columns_well">
+                    <div class="well">
+                        <center><h4>Choose the columns you want to include (Or simply use defaults and click "Submit")</h4></center>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Included Columns: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="create_fieldbook_included_columns_<% $download_type %>">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Not Included Columns: </label>
-                                <div class="col-sm-9" >
-                                    <div id="create_fieldbook_not_included_columns_<% $download_type %>">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Not Included Columns: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="create_fieldbook_not_included_columns_<% $download_type %>">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="well">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Optional: Include columns for average performance of accessions (for all measurements in database) for list of traits: </label>
-                        <div class="col-sm-9" >
-                            <div id="create_fieldbook_with_trait_list_<% $download_type %>">
+                <div id="accession_average_performance">
+                    <div class="well">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Optional: Include columns for average performance of accessions (for all measurements in database) for list of traits: </label>
+                            <div class="col-sm-9" >
+                                <div id="create_fieldbook_with_trait_list_<% $download_type %>">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </form><br/>
         </div>
       </div>
@@ -127,7 +132,6 @@ $download_type
   </div>
 </div>
 
-
 <script>
 
 var selected_columns_<% $download_type %> = {};
@@ -150,8 +154,25 @@ jQuery(document).ready(function() {
         show_available_columns_TrialLayout('plots');
         var lo = new CXGN.List();
         jQuery('#create_fieldbook_with_trait_list_TrialLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialLayout', [ 'traits' ], 'select'));
+        jQuery('#accession_average_performance').css("display", "inline-block");
+        jQuery('#selected_columns_well').css("display", "inline-block");
+        jQuery('#management_factore').css("display", "inline-block");
         jQuery('#create_fieldbook_dialog_TrialLayout').modal('show');
         show_fieldbook_treatments_TrialLayout();
+    });
+    
+    jQuery("#trial_fieldmap_download_layout_button").click( function () {
+        jQuery('#management_factore').css("display", "none");
+        jQuery("#create_fieldbook_format_TrialFieldMapLayout option[value='xls']").prop('selected', true);
+        jQuery("#create_fieldbook_format_TrialFieldMapLayout").prop('disabled', 'disabled');
+        jQuery("#create_fieldbook_data_level_TrialFieldMapLayout").prop('disabled', 'disabled');
+        show_available_columns_TrialFieldMapLayout('plots');
+        var lo = new CXGN.List();
+        jQuery('#create_fieldbook_with_trait_list_TrialFieldMapLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialFieldMapLayout', [ 'traits' ], 'select'));
+        jQuery('#accession_average_performance').css("display", "none");
+        jQuery('#selected_columns_well').css("display", "none");
+        jQuery('#create_fieldbook_dialog_TrialFieldMapLayout').modal('show');
+        show_fieldbook_treatments_TrialFieldMapLayout();
     });
 
     jQuery("[name='create_fieldbook_link']").click( function () {
@@ -162,6 +183,17 @@ jQuery(document).ready(function() {
         show_fieldbook_treatments_Fieldbook();
     });
     
+    // jQuery("[name='create_fieldmap_ok_button']").click( function () {
+    //     var trial_id = parseInt(<% $trial_id %>);
+    //     var data_level = jQuery('#create_fieldmap_data_level').val();
+    //     var format = jQuery('#create_fieldmap_format').val();
+    //     var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
+    //     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
+    //     console.log(format); 
+    //     console.log(trial_id);
+    //     window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id);
+    // });
+        
     jQuery('#create_fieldbook_ok_button_<% $download_type %>').on('click', function() {
         open_create_fieldbook_dialog_<% $download_type %>();
     });
@@ -388,7 +420,24 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
     var format = jQuery('#create_fieldbook_format_<% $download_type %>').val();
-    console.log(format);
+    console.log(format); 
+    window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id);
+}
+
+% } elsif ($download_type eq 'TrialFieldMapLayout') {
+
+function show_fieldbook_treatments_<% $download_type %>(){
+    //jQuery('#create_fieldbook_treatment_<% $download_type %>').html('Include All Management Factors In Download');
+    jQuery('#create_fieldbook_format_div_<% $download_type %>').show();
+}
+
+function open_create_fieldbook_dialog_<% $download_type %>() {
+    var trial_id = parseInt(jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val());
+    var data_level = jQuery('#create_fieldbook_data_level_<% $download_type %>').val();
+    var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
+    var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
+    var format = jQuery('#create_fieldbook_format_<% $download_type %>').val();
+    console.log(format); 
     window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id);
 }
 
