@@ -223,12 +223,14 @@ sub positions {
 	
 	foreach my $chr ($map->get_chromosomes()) { 
 	    foreach my $m ($chr->get_markers()) { 
-		push @data, { 
-		    markerDbId => $m->get_name(),
-		    markerName => $m->get_name(),
-		    position => $m->get_offset(),
-		    linkageGroup => $chr->get_name(),
-		};
+		if (grep (/$chr->get_name()/, @linkage_group_ids)) { 
+		    push @data, { 
+			markerDbId => $m->get_name(),
+			markerName => $m->get_name(),
+			position => $m->get_offset(),
+			linkageGroup => $chr->get_name(),
+		    };
+		}
 	    }
 	}
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
