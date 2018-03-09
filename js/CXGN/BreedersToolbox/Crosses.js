@@ -239,9 +239,9 @@ jQuery(document).ready(function($) {
         complete: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error_string) {
-                $("#upload_cross_error_display tbody").html('');
-                $("#upload_cross_error_display tbody").append(response.error_string);
-                $("#upload_cross_error_display").modal("show");
+                $("#upload_progenies_error_display tbody").html('');
+                $("#upload_progenies_error_display tbody").append(response.error_string);
+                $("#upload_progenies_error_display").modal("show");
 
                 return;
             }
