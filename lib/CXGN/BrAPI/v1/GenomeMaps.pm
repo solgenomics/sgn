@@ -217,7 +217,7 @@ sub positions {
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_id => $map_id }); 
+	my $map = $map_factory->create( { map_version_id => $map_id }); 
 	
 	my @data = ();
 	
