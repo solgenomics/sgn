@@ -7,6 +7,8 @@
 <& /page/page_title.mas, title=>"The <i>Solanum lycopersicoides</i> Genome Consortium
 " &>
 
+<& /genomes/Solanum_lycopersicoides/usage_popup.mas &>
+
 <div class="page_introduction">
 
   <a href="/organism/Solanum%20lycopersicoides/view/"><i>Solanum
