@@ -576,7 +576,7 @@ function displayTraitAcronyms (acronyms) {
                     "bInfo"        : false,
                     "paging"       : false,
                     'oLanguage'    : {
-		                     "sSearch": "Filter result by: "
+		                     "sSearch": "Filter traits: "
 		                    },
 		    'data'         : acronyms,
 	    });
