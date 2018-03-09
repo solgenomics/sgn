@@ -213,6 +213,49 @@ jQuery(document).ready(function($) {
         }
     });
 
+    $("#upload_progenies_existing_crosses").click(function() {
+
+        $("#update_progenies_spreadsheet_format_info").click(function() {
+            $("#update_progenies_spreadsheet_info_dialog").modal("show");
+        });
+
+        $("#update_progenies_crosses_dialog").modal("show");
+    });
+
+    $("#update_progenies_submit").click(function() {
+        $("#update_progenies_crosses_dialog").modal("hide");
+        upload_progenies_crosses_file();
+    });
+
+    $('#upload_progenies_form').iframePostForm({
+        json: true,
+        post: function() {
+            var uploadProgeniesFile = $("#progenies_upload_file").val();
+            if (uploadProgeniesFile === '') {
+                alert("No file selected");
+            }
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                $("#upload_cross_error_display tbody").html('');
+                $("#upload_cross_error_display tbody").append(response.error_string);
+                $("#upload_cross_error_display").modal("show");
+
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                $('#cross_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+
     jQuery("#refresh_crosstree_button").click(function() {
         jQuery.ajax({
             url: '/ajax/breeders/get_crosses_with_folders',
