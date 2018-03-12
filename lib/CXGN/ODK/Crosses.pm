@@ -1064,8 +1064,8 @@ sub create_odk_cross_progress_tree {
     my $wishlist_file_name = $self->cross_wishlist_file_name;
     $wishlist_file_name =~ s/.csv//;
     my $wishlist_file_name_loc = $wishlist_file_name;
-    my $wishlist_file_name_loc_with_id =~ s/cross_wishlist_//;
-    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc_with_id;
+    $wishlist_file_name_loc =~ s/cross_wishlist_//;
+    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
     $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
     print STDERR $wishlist_file_name_loc."\n";
     my $location_id = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc})->nd_geolocation_id;
