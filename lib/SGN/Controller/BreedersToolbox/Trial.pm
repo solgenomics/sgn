@@ -124,13 +124,20 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
     if ($design_type eq "genotyping_plate") {
-	     if ($format eq "as_table") {
-	        $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
-	       }
-	        else {
-	           $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
-	        }
-
+        $c->stash->{plate_id} = $c->stash->{trial_id};
+        $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
+        $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
+        $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
+        $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
+        if ($trial->get_genotyping_plate_format){
+            $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
+        }
+        if ($format eq "as_table") {
+            $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
+        }
+        else {
+            $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
+        }
     }
     elsif ($design_type eq "treatment"){
         $c->stash->{template} = '/breeders_toolbox/treatment.mas';
@@ -223,7 +230,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
     if ($data_level eq 'plate'){
-        $selected_cols = {'plot_number'=>1, 'plot_name'=>1, 'accession_name'=>1, 'genotyping_project_name'=>1, 'genotyping_user_id'=>1, 'location_name'=>1, 'genus'=>1, 'species'=>1, 'trial_name'=>1, 'pedigree'=>1};
+        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
     }
     my $selected_trait_list_id = $c->req->param('trait_list_id');
     my @selected_trait_names;
