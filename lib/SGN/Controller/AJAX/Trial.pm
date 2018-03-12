@@ -391,7 +391,8 @@ my $location_number = scalar(@locations);
   } else {
       $design_level = 'plots'; 
   }
-  $design_map_view = design_layout_map_view(\%design);
+ 
+  $design_map_view = design_layout_map_view(\%design, $design_type); 
   $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
