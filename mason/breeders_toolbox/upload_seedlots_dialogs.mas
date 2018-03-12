@@ -89,24 +89,28 @@
                                 <td>cross_name</td>
                                 <td>amount</td>
                                 <td>description</td>
+                                <td>box_name</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <b>Required fields:</b>
-                    <br/>
-                    seedlot_name (must be unique)
-                    <br />
-                    <br/>
+                    <ul>
+                    <li>seedlot_name (must be unique)</li>
+                    <li>
                     accession_name (must exist in the database)
                     <br/><b>OR</b><br/>
                     cross_name (must exist in the database)
-                    <br /><br/>
+                    </li>
+                    </ul>
+
                     <b>Optional fields:</b>
-                    <br />
-                    amount (number of seeds in seedlot. if not given will default to 0)
-                    <br />
-                    description (information about why this seedlot is being added)
+                    <ul>
+                    <li>amount (number of seeds in seedlot. if not given will default to 0)</li>
+                    <li>description (information about why this seedlot is being added)</li>
+                    <li>box_name (the box name that the seed is located in)</li>
+                    </ul>
+
                 </div>
             </div>
             <div class="modal-footer">
