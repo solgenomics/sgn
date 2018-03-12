@@ -56,7 +56,7 @@ has 'old_accession_id' => (isa => "Int",
 sub display_fieldmap {
 	my $self = shift;
 	my $schema = $self->bcs_schema;
-	my $trial_id = $self->trial_id;
+	my $trial_id = $self->trial_id; 
 
 	my $layout = CXGN::Trial::TrialLayout->new({
 		schema => $schema,
@@ -65,8 +65,9 @@ sub display_fieldmap {
 	});
 
 	my $design = $layout-> get_design();
-	
-  #print STDERR Dumper($design);
+    my $design_type = $layout->get_design_type();
+    #print STDERR Dumper($design_type);
+  
 	my @plot_names = ();
     my @row_numbers = ();
     my @col_numbers = ();
@@ -105,13 +106,16 @@ sub display_fieldmap {
         if ($row_number) {
             push @row_numbers, $row_number;
         }elsif (!$row_number){
-			if ($block_number){
+			if ($block_number && $design_type ne 'splitplot'){
 				$row_number = $block_number;
 				push @row_numbers, $row_number;
-			}elsif ($rep_number && !$block_number ){
+			}elsif ($rep_number && !$block_number && $design_type ne 'splitplot'){
 				$row_number = $rep_number;
 				push @row_numbers, $row_number;
-			}
+			}elsif ($design_type eq 'splitplot'){
+                $row_number = $rep_number;
+				push @row_numbers, $row_number;
+            }
 		}
         if ($rep_number) {
             push @rep_numbers, $rep_number;
@@ -261,6 +265,7 @@ sub display_fieldmap {
 		unique_row => \@unique_row,
 		false_coord => $false_coord,
 		result => $result,
+        design_type => $design_type,
 	);
 	#print STDERR Dumper(\%return);
 	return \%return;
