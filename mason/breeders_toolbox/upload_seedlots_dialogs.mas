@@ -33,12 +33,14 @@
                                 <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
                             </div>
                         </div>
+                        <!--
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Population Name: </label>
                             <div class="col-sm-9" >
                                 <input class="form-control" name="upload_seedlot_population_name" id="upload_seedlot_population_name" placeholder="Optional">
                             </div>
                         </div>
+                        -->
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Organization Name: </label>
                             <div class="col-sm-9" >
@@ -87,6 +89,7 @@
                                 <td>seedlot_name</td>
                                 <td>accession_name</td>
                                 <td>cross_name</td>
+                                <td>operator_name</td>
                                 <td>amount</td>
                                 <td>description</td>
                                 <td>box_name</td>
@@ -102,6 +105,7 @@
                     <br/><b>OR</b><br/>
                     cross_name (must exist in the database)
                     </li>
+                    <li>operator_name (the name of the person who oversaw the inventory process)</li>
                     </ul>
 
                     <b>Optional fields:</b>

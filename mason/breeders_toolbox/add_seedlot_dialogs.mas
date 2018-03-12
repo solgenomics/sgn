@@ -103,12 +103,14 @@ $cross_uniquename => ''
                         <input class="form-control" id="seedlot_amount" placeholder="Required">
                     </div>
                 </div>
+                <!--
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Population: </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_population_name" placeholder="Optional">
                     </div>
                 </div>
+                -->
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Organization: </label>
                     <div class="col-sm-9" >
