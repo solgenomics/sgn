@@ -445,7 +445,7 @@ sub upload_seedlots_POST : Args(0) {
             $transaction->amount($val->{amount});
             $transaction->timestamp($timestamp);
             $transaction->description($val->{description});
-            $transaction->operator($user_name);
+            $transaction->operator($val->{operator_name});
             $transaction->store();
 
             $sl->set_current_count_property();
