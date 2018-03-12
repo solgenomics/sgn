@@ -8,13 +8,17 @@ CXGN::ODK::Crosses - an object to handle retrieving crossing information from OD
 
 my $odk_crosses = CXGN::ODK::Crosses->new({
     bcs_schema=>$schema,
+    phenome_schema=>$phenome_schema,
     metadata_schema=>$metadata_schema,
     sp_person_id=>$sp_person_id,
+    sp_person_username=>$sp_person_username,
     sp_person_role=>$sp_person_role,
     archive_path=>$archive_path,
     temp_file_dir=>$temp_file_dir,
     temp_file_path=>$temp_file_path,
     cross_wishlist_md_file_id=>$cross_wishlist_md_file_id,
+    cross_wishlist_file_name=>$cross_wishlist_file_name,
+    allowed_cross_properties=>$allowed_cross_properties,
     odk_crossing_data_service_url=>$odk_crossing_data_service_url,
     odk_crossing_data_service_username=>$odk_crossing_data_service_username,
     odk_crossing_data_service_password=>$odk_crossing_data_service_password,
@@ -48,9 +52,19 @@ use File::Spec::Functions qw / catfile catdir/;
 use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
 use SGN::Image;
+use Time::Piece;
+use CXGN::Pedigree::AddCrossingtrial;
+use CXGN::Pedigree::AddCrosses;
+use CXGN::Pedigree::AddCrossInfo;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
     is => 'rw',
     required => 1,
 );
@@ -67,6 +81,18 @@ has 'sp_person_id' => (
     required => 1,
 );
 
+has 'sp_person_username' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'cross_wishlist_file_name' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'cross_wishlist_md_file_id' => (
     isa => 'Int',
     is => 'rw',
@@ -74,6 +100,12 @@ has 'cross_wishlist_md_file_id' => (
 );
 
 has 'sp_person_role' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'allowed_cross_properties' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
@@ -280,7 +312,7 @@ sub save_ona_cross_info {
                         }
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
-                        my $plot_name = _get_plot_name_from_barcode_id($a->{'FieldActivities/Flowering/flowerID'});
+                        my $plot_name = _get_plot_name_from_barcode_id($a->{'FieldActivities/Flowering/flowersID'});
                         $plant_status_info{$plot_name}->{'flowering'} = $a;
                     }
                     if ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
@@ -416,12 +448,7 @@ sub save_ona_cross_info {
             return { error => $return->{error} };
         }
 
-        #Create or get crossing trial based on name of form
-
-        foreach (keys %cross_info){
-            #Add cross to database and link to crossing trial
-            #Add cross_metadata_json stockprop
-        }
+        $self->create_odk_cross_progress_tree();
 
         return { success => 1 };
 
@@ -434,6 +461,8 @@ sub save_ona_cross_info {
 sub create_odk_cross_progress_tree {
     my $self = shift;
     my $wishlist_file_id = $self->cross_wishlist_md_file_id;
+    my $bcs_schema = $self->bcs_schema;
+    my $phenome_schema = $self->phenome_schema;
     my $metadata_schema = $self->metadata_schema;
 
     my %combined;
@@ -455,7 +484,7 @@ sub create_odk_cross_progress_tree {
         #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
         #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
         my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_pxV488A.txt";
+        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_test_5nSlbRZ.txt";
         print STDERR "cross_wishlist $wishlist_file_path\n";
 
         open(my $fh, '<', $wishlist_file_path)
@@ -483,7 +512,8 @@ sub create_odk_cross_progress_tree {
             $female_plot_name =~ tr/"//d;
             $number_males =~ tr/"//d;
             my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
-            for my $n (10 .. 10+int($number_males)){
+            my $num_males_int = $number_males ? int($number_males) : 0;
+            for my $n (10 .. 10+$num_males_int){
                 if ($_->[$n]){
                     $_->[$n] =~ tr/"//d;
                     $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
@@ -569,7 +599,7 @@ sub create_odk_cross_progress_tree {
         }
         #print STDERR Dumper \%combined;
     }
-    print STDERR Dumper \%cross_combinations;
+    #print STDERR Dumper \%cross_combinations;
 
     my %seen_top_levels;
     my %top_level_contents;
@@ -936,6 +966,167 @@ sub create_odk_cross_progress_tree {
     open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
     print { $OUTFILE } encode_json \%save_content or croak "Cannot write to $filename: $!";
     close $OUTFILE or croak "Cannot close $filename: $!";
+
+
+    # find or create crossing trial using name of cross wishlist
+    # create cross in db if not existing
+    # save properties to cross
+    print STDERR Dumper \%summary_info;
+    my %parsed_data;
+    foreach my $cross_hash (values %summary_info){
+        while ( my ($cross_name, $activities) = each %$cross_hash){
+            while ( my ($activity_name, $entries) = each %$activities){
+                if ($activity_name eq 'firstPollination'){
+                    foreach my $e (@$entries){
+                        my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>'biparental');
+                        my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $e->{femaleAccessionName});
+                        $pedigree->set_female_parent($female_parent_individual);
+                        my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $e->{maleAccessionName});
+                        $pedigree->set_male_parent($male_parent_individual);
+                        my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $e->{femalePlotName});
+                        $pedigree->set_female_plot($female_plot_individual);
+                        my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $e->{malePlotName});
+                        $pedigree->set_male_plot($male_plot_individual);
+                        push @{$parsed_data{crosses}}, $pedigree;
+                        $parsed_data{'First Pollation Date'}->{$cross_name} = $e->{date};
+                    }
+                }
+                if ($activity_name eq 'repeatPollination'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Repeat Pollation Date'}->{$cross_name} = $e->{date};
+                    }
+                }
+                if ($activity_name eq 'harvesting'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Harvest Date'}->{$cross_name} = $e->{harvesting_date};
+                    }
+                }
+                if ($activity_name eq 'harvesting'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Harvest Date'}->{$cross_name} = $e->{harvesting_date};
+                    }
+                }
+                if ($activity_name eq 'seedExtraction'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Seed Extraction Date'}->{$cross_name} = $e->{extraction_date};
+                        $parsed_data{'Number of Seeds Extracted'}->{$cross_name} = $e->{total_seeds_extracted};
+                    }
+                }
+                if ($activity_name eq 'embryoRescue'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Embryo Rescue Date'}->{$cross_name} = $e->{embryorescue_date};
+                        $parsed_data{'Embryo Rescue Good Seeds'}->{$cross_name} = $e->{good_seeds};
+                        $parsed_data{'Embryo Rescue Bad Seeds'}->{$cross_name} = $e->{bad_seeds};
+                        $parsed_data{'Embryo Rescue Total Seeds'}->{$cross_name} = $e->{total_seeds};
+                    }
+                }
+                if ($activity_name eq 'subculture'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Subcultures Count'}->{$cross_name} = $e->{subcultures_count};
+                        $parsed_data{'Subculture Date'}->{$cross_name} = $e->{subculture_date};
+                        $parsed_data{'Subcultures Multiplication Number'}->{$cross_name} = $e->{multiplication_number};
+                    }
+                }
+                if ($activity_name eq 'rooting'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Rooting Date'}->{$cross_name} = $e->{rooting_date};
+                        $parsed_data{'Rooting Plantlet'}->{$cross_name} = $e->{rooting_plantlet};
+                    }
+                }
+                if ($activity_name eq 'germinating_after_2wks'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Germinating After 2 Weeks Date'}->{$cross_name} = $e->{germinating_2wks_date};
+                        $parsed_data{'Active Germinating After 2 Weeks'}->{$cross_name} = $e->{actively_2wks};
+                    }
+                }
+                if ($activity_name eq 'germinating_after_8weeks'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Germinating After 8 Weeks Date'}->{$cross_name} = $e->{germinating_8wksdate};
+                        $parsed_data{'Active Germinating After 8 Weeks'}->{$cross_name} = $e->{active_8weeks};
+                    }
+                }
+                if ($activity_name eq 'screenhouse_humiditychamber'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Screenhouse Transfer Date'}->{$cross_name} = $e->{screenhse_transfer_date};
+                    }
+                }
+                if ($activity_name eq 'hardening'){
+                    foreach my $e (@$entries){
+                        $parsed_data{'Hardening Date'}->{$cross_name} = $e->{hardening_date};
+                    }
+                }
+            }
+        }
+    }
+    print STDERR Dumper \%parsed_data;
+
+    my $cross_trial_id;
+    my $wishlist_file_name = $self->cross_wishlist_file_name;
+    $wishlist_file_name =~ s/.csv//;
+    my $wishlist_file_name_loc = $wishlist_file_name;
+    $wishlist_file_name_loc =~ s/cross_wishlist_//;
+    my $location_id = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc})->nd_geolocation_id;
+    my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $self->cross_wishlist_file_name});
+    my $iita_breeding_program_id = $bcs_schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
+    my $t = Time::Piece->new();
+    if ($previous_crossing_trial_rs){
+        $cross_trial_id = $previous_crossing_trial_rs->project_id;
+    } else {
+        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+            chado_schema => $bcs_schema,
+            dbh => $bcs_schema->storage->dbh,
+            breeding_program_id => $iita_breeding_program_id,
+            year => $t->year,
+            project_description => 'ODK ONA crosses from wishlist',
+            crossingtrial_name => $wishlist_file_name,
+            nd_geolocation_id => $location_id
+        });
+        my $store_return = $add_crossingtrial->save_crossingtrial();
+        $cross_trial_id = $store_return->{trial_id};
+    }
+
+    if ($parsed_data{crosses} && scalar(@{$parsed_data{crosses}}) > 0){
+
+        my @new_crosses;
+        foreach (@{$parsed_data{crosses}}){
+            my $cross_exists_rs = $bcs_schema->resultset("Stock::Stock")->find({uniquename=>$_->get_name});
+            if ($cross_exists_rs->stock_id){
+                print STDERR "Already saved ".$cross_exists_rs->uniquename.". Skipping AddCrosses\n";
+            } else {
+                push @new_crosses, $_;
+            }
+        }
+
+        my $cross_add = CXGN::Pedigree::AddCrosses->new({
+            chado_schema => $bcs_schema,
+            phenome_schema => $phenome_schema,
+            metadata_schema => $metadata_schema,
+            dbh => $bcs_schema->storage->dbh,
+            location => $wishlist_file_name_loc,
+            crossing_trial_id => $cross_trial_id,
+            crosses => \@new_crosses,
+            owner_name => $self->sp_person_username
+        });
+        if (!$cross_add->validate_crosses()){
+            return {error => 'Error validating crosses'};
+        }
+        if (!$cross_add->add_crosses()){
+            return {error => 'Error saving crosses'};
+        }
+    }
+
+    my @cross_properties = split ',', $self->allowed_cross_properties;
+    foreach my $info_type (@cross_properties){
+        if ($parsed_data{$info_type}) {
+            my %info_hash = %{$parsed_data{$info_type}};
+            foreach my $cross_name_key (keys %info_hash) {
+                my $value = $info_hash{$cross_name_key};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $bcs_schema, cross_name => $cross_name_key, key => $info_type, value => $value });
+                $cross_add_info->add_info();
+            }
+        }
+    }
+
     return {success => 1};
 }
 

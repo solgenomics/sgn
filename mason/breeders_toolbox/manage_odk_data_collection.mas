@@ -72,6 +72,7 @@ $odk_phenotyping_data_service_url => undef
     </div>
 </div>
 
+<!--
 <div class="panel panel-default">
     <div class="panel-body">
         <div class="row">
@@ -108,6 +109,7 @@ $odk_phenotyping_data_service_url => undef
         </div>
     </div>
 </div>
+-->
 
 </&>
 
@@ -454,7 +456,7 @@ jQuery(document).ready(function () {
     
     jQuery('#import_odk_cross_data').click( function(){
         jQuery.ajax ( {
-            url : '/ajax/odk/get_crossing_data?cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val(),
+            url : '/ajax/odk/get_crossing_data?cross_wishlist_file_name='+jQuery("#odk_cross_data_available_wishlists_select option:selected").text()+'&cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val(),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -476,7 +478,7 @@ jQuery(document).ready(function () {
 
     jQuery('#schedule_import_odk_cross_data').click( function(){
         jQuery.ajax ( {
-            url : '/ajax/odk/schedule_get_crossing_data?cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val()+'&timing='+jQuery('#schedule_import_odk_crossing_form_data').val(),
+            url : '/ajax/odk/schedule_get_crossing_data?cross_wishlist_file_name='+jQuery("#odk_cross_data_available_wishlists_select option:selected").text()+'&cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val()+'&timing='+jQuery('#schedule_import_odk_crossing_form_data').val(),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
