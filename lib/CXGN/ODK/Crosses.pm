@@ -1058,13 +1058,16 @@ sub create_odk_cross_progress_tree {
             }
         }
     }
-    print STDERR Dumper \%parsed_data;
+    #print STDERR Dumper \%parsed_data;
 
     my $cross_trial_id;
     my $wishlist_file_name = $self->cross_wishlist_file_name;
     $wishlist_file_name =~ s/.csv//;
     my $wishlist_file_name_loc = $wishlist_file_name;
     $wishlist_file_name_loc =~ s/cross_wishlist_//;
+    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
+    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
+    print STDERR $wishlist_file_name_loc."\n";
     my $location_id = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc})->nd_geolocation_id;
     my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $self->cross_wishlist_file_name});
     my $iita_breeding_program_id = $bcs_schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
@@ -1090,7 +1093,7 @@ sub create_odk_cross_progress_tree {
         my @new_crosses;
         foreach (@{$parsed_data{crosses}}){
             my $cross_exists_rs = $bcs_schema->resultset("Stock::Stock")->find({uniquename=>$_->get_name});
-            if ($cross_exists_rs->stock_id){
+            if ($cross_exists_rs){
                 print STDERR "Already saved ".$cross_exists_rs->uniquename.". Skipping AddCrosses\n";
             } else {
                 push @new_crosses, $_;
