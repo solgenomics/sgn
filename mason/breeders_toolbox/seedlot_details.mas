@@ -33,7 +33,7 @@ $box_name=>undef
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
 <tr><td><b>Box Name</b></td><td><% $box_name %></td></tr>
 <tr><td><b>Contents</b></td><td><% $content_html %></td></tr>
-<tr><td><b>Population</b></td><td><% $population_name %></td></tr>
+<!--<tr><td><b>Population</b></td><td><% $population_name %></td></tr>-->
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 </table>
 
@@ -167,12 +167,14 @@ $box_name=>undef
                                                     <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Required" value="0">
                                                 </div>
                                             </div>
+                                            <!--
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Population: </label>
                                                 <div class="col-sm-9" >
                                                     <input class="form-control" id="transaction_new_seedlot_population_name" placeholder="Optional">
                                                 </div>
                                             </div>
+                                            -->
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Organization: </label>
                                                 <div class="col-sm-9" >
