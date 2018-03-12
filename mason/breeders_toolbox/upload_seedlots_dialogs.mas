@@ -105,14 +105,14 @@
                     <br/><b>OR</b><br/>
                     cross_name (must exist in the database)
                     </li>
-                    <li>operator_name (the name of the person who oversaw the inventory process)</li>
+                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
                     <li>amount (number of seeds in seedlot. if not given will default to 0)</li>
                     <li>description (information about why this seedlot is being added)</li>
-                    <li>box_name (the box name that the seed is located in)</li>
+                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
 
                 </div>

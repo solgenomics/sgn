@@ -61,7 +61,7 @@ $timestamp
 </&>
 
 
-<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add Seedlot</a>]  [<a id="seedlot_bulk_upload">Upload Seedlots</a>]'&>
+<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add New Seedlot</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_bulk_upload">Upload New Seedlots</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_upload_inventory">Upload Inventory</a>]'&>
 
 <br/>
 
@@ -78,6 +78,7 @@ $timestamp
 </&>
 
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
 <script>
@@ -105,6 +106,7 @@ jQuery(document).ready(function(){
             { title: "Contents", "data": "contents_html" },
             { title: "Seedlot Location", "data": "location" },
             { title: "Count", "data": "count" },
+            { title: "Weight (g)", "data": "weight_gram" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {

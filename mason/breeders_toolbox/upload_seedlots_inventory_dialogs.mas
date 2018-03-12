@@ -1,0 +1,184 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="upload_seedlot_inventory_dialog" name="upload_seedlot_inventory_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_inventory_dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlot_upload_inventory_dialog">Upload Seedlot Inventory</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="seedlot_upload_inventory_spreadsheet_format_info">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_inventory_form" name="upload_seedlot_inventory_form">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File (.csv): </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="seedlot_uploaded_inventory_file" id="seedlot_uploaded_inventory_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="upload_seedlot_inventory_button" type="button" class="btn btn-default" >Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlot_upload_inventory_spreadsheet_info_dialog" name="seedlot_upload_inventory_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInventoryInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotInventoryInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Seedlots may be uploaded in a CSV file (.csv)</b>
+                    <br />
+                    (Excel .xls and .xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>box_id</td>
+                                <td>seed_id</td>
+                                <td>inventory_date</td>
+                                <td>inventory_person</td>
+                                <td>weight_gram</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>box_id (the name of the box that the seedlot is in. also called box_name.)</li>
+                    <li>seed_id (unique identifier for the seedlot. must exist in the database. also called seedlot_name)</li>
+                    <li>inventory_date (a timestamp for when the seedlot was inventoried)</li>
+                    <li>inventory_person (the name of the person doing the inventory. can be any name. also called operator_name)</li>
+                    <li>weight_gram (the weight in grams of the seedlot)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_info_upload_inventory_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_seedlot_inventory_error_display" name="upload_seedlot_inventory_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInventoryErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotInventoryErrorDialog">Errors In Uploaded File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="upload_seedlot_inventory_add_missing_seedlots_html">
+                    </div>
+
+                    <h3>Seedlot Inventory Upload Error Messages</h3>
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#seedlot_upload_inventory').click( function() {
+        jQuery('#upload_seedlot_inventory_dialog').modal('show');
+    });
+
+    jQuery("#seedlot_upload_inventory_spreadsheet_format_info").click( function () {
+        jQuery("#seedlot_upload_inventory_spreadsheet_info_dialog" ).modal("show");
+    });
+
+    jQuery('#upload_seedlot_inventory_button').click(function () {
+        upload_seedlot_inventory_button();
+    });
+    function upload_seedlot_inventory_button() {
+        jQuery('#upload_seedlot_inventory_form').attr("action", "/ajax/breeders/seedlot-inventory-upload");
+        jQuery("#upload_seedlot_inventory_form").submit();
+    }
+
+    jQuery('#upload_seedlot_inventory_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedSeedlotInventoryFile = jQuery("#seedlot_uploaded_inventory_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedSeedlotInventoryFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error){
+                alert(response.error);
+            }
+
+            if (response.error_string) {
+                jQuery("#upload_seedlot_inventory_error_display tbody").html('');
+
+                if (response.missing_seedlots) {
+                    var missing_seedlots_html = "<div class='well well-sm'><h3>Add the missing seedlots to a list</h3><div id='upload_seedlot_inventory_add_missing_seedlots_div_html'></div><div id='upload_seedlot_inventory_missing_seedlots' style='display:none'></div></div><br/>";
+                    jQuery("#upload_seedlot_inventory_add_missing_seedlots_html").html(missing_seedlots_html);
+
+                    var missing_seedlots_vals = '';
+                    for(var i=0; i<response.missing_seedlots.length; i++) {
+                        missing_seedlots_vals = missing_seedlots_vals + response.missing_seedlots[i] + '\n';
+                    }
+                    jQuery("#upload_seedlot_inventory_missing_seedlots").html(missing_seedlots_vals);
+                    addToListMenu('upload_seedlot_inventory_add_missing_seedlots_div_html', 'upload_seedlot_inventory_missing_seedlots', {
+                        selectText: true,
+                        listType: 'seedlots'
+                    });
+                }
+
+                jQuery("#upload_seedlot_inventory_error_display tbody").append(response.error_string);
+                jQuery('#upload_seedlot_inventory_error_display').modal("show");
+
+                return;
+            }
+
+            if (response.success) {
+                alert("File uploaded successfully");
+                document.location.reload();
+            }
+        }
+    });
+});
+</script>

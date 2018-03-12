@@ -70,7 +70,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             contents_html => $contents_html,
             location => $sl->{location},
             location_id => $sl->{location_id},
-            count => $sl->{current_count}
+            count => $sl->{current_count},
+            weight_gram => $sl->{current_weight_gram}
         };
     }
 
@@ -475,6 +476,115 @@ sub upload_seedlots_POST : Args(0) {
 
     $c->stash->{rest} = { success => 1 };
 }
+
+sub upload_seedlots_inventory : Path('/ajax/breeders/seedlot-inventory-upload/') : ActionClass('REST') { }
+sub upload_seedlots_inventory_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlot inventory!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlot inventory!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $upload = $c->req->upload('seedlot_uploaded_inventory_file');
+    my $subdirectory = "seedlot_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('SeedlotInventoryCSV');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_seedlots => $parse_errors->{'missing_seedlots'} };
+        $c->detach();
+    }
+
+    eval {
+        while (my ($key, $val) = each(%$parsed_data)){
+            my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
+            $sl->box_name($val->{box_name});
+            my $return = $sl->store();
+
+            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+            $transaction->factor(1);
+            $transaction->from_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
+            $transaction->to_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
+            $transaction->weight_gram($val->{weight_gram});
+            $transaction->timestamp($val->{inventory_date});
+            $transaction->description('Seed inventory CSV upload.');
+            $transaction->operator($val->{inventory_person});
+            $transaction->store();
+
+            $sl->set_current_count_property();
+            $sl->set_current_weight_property();
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload seedlots inventory. ($@).\n";
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+
 
 sub seedlot_transaction_base :Chained('seedlot_base') PathPart('transaction') CaptureArgs(1) {
     my $self = shift;

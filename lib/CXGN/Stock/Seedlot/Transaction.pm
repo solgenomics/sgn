@@ -28,6 +28,11 @@ has 'amount' => (isa => 'Num',
 
     );
 
+has 'weight_gram' => (
+    isa => 'Num',
+    is => 'rw',
+);
+
 has 'operator' => ( isa => 'Maybe[Str]',
 				is => 'rw',
     );
@@ -56,6 +61,7 @@ sub BUILD {
 	$self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
 	my $data = JSON::Any->decode($row->value());
 	$self->amount($data->{amount});
+	$self->weight_gram($data->{weight_gram});
 	$self->timestamp($data->{timestamp});
 	$self->operator($data->{operator});
 	$self->description($data->{description});
@@ -94,6 +100,7 @@ sub get_transactions_by_seedlot_id {
         $t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
         $t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
         my $data = JSON::Any->decode($row->value());
+        $t_obj->weight_gram($data->{weight_gram});
         $t_obj->amount($data->{amount});
         $t_obj->timestamp($data->{timestamp});
         $t_obj->operator($data->{operator});
@@ -135,6 +142,7 @@ sub store {
                 rank => $new_rank,
                 value => JSON::Any->encode({
                     amount => $self->amount(),
+                    weight_gram => $self->weight_gram(),
                     timestamp => $self->timestamp(),
                     operator => $self->operator(),
                     description => $self->description()
@@ -148,6 +156,7 @@ sub store {
         $row->update({
             value => JSON::Any->encode({
                 amount => $self->amount(),
+                weight_gram => $self->weight_gram(),
                 timestamp => $self->timestamp(),
                 operator => $self->operator(),
                 description => $self->description()

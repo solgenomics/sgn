@@ -187,6 +187,7 @@ sub list_seedlots {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
+    my $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
 
     my %search_criteria;
@@ -194,7 +195,7 @@ sub list_seedlots {
     #$search_criteria{'nd_experiment.type_id'} = $experiment_cvterm_id;
     #$search_criteria{'nd_experiment_stocks.type_id'} = $experiment_cvterm_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
-    $search_criteria{'stockprops.type_id'} = $current_count_cvterm_id;
+    $search_criteria{'stockprops.type_id'} = [$current_count_cvterm_id, $current_weight_cvterm_id];
     if ($seedlot_name) {
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
@@ -224,8 +225,8 @@ sub list_seedlots {
                 {'stock_relationship_objects' => 'subject'},
                 'stockprops'
             ],
-            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
-            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id', 'current_count'],
+            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.type_id', 'stockprops.value'],
+            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id', 'stockprop_type_id', 'current_count_or_current_weight'],
             order_by => {-asc=>'project.name'},
             #distinct => 1
         }
@@ -244,7 +245,12 @@ sub list_seedlots {
         $unique_seedlots{$row->uniquename}->{breeding_program_id} = $row->get_column('breeding_program_id');
         $unique_seedlots{$row->uniquename}->{location} = $row->get_column('location');
         $unique_seedlots{$row->uniquename}->{location_id} = $row->get_column('location_id');
-        $unique_seedlots{$row->uniquename}->{current_count} = $row->get_column('current_count');
+        if ($row->get_column('stockprop_type_id') == $current_count_cvterm_id){
+            $unique_seedlots{$row->uniquename}->{current_count} = $row->get_column('current_count_or_current_weight');
+        }
+        if ($row->get_column('stockprop_type_id') == $current_weight_cvterm_id){
+            $unique_seedlots{$row->uniquename}->{current_weight_gram} = $row->get_column('current_count_or_current_weight');
+        }
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
     }
     my @seedlots;
@@ -701,6 +707,7 @@ sub current_count {
     return $count;
 }
 
+# It is convenient and also much faster to retrieve a single value for the current_count, rather than calculating it from the transactions.
 sub set_current_count_property {
     my $self = shift;
     my $current_count = $self->current_count();
@@ -715,12 +722,59 @@ sub set_current_count_property {
     return $current_count;
 }
 
+# It is convenient and also much faster to retrieve a single value for the current_count, rather than calculating it from the transactions.
 sub get_current_count_property {
     my $self = shift;
     my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_count', 'stock_property');
     my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
     return $recorded_current_count->value();
 }
+
+=head2 Method current_weight()
+
+ Usage:        my $current_weight = $sl->current_weight();
+ Desc:         returns the current weight of seeds in the seedlot
+ Ret:          a number
+ Args:         none
+ Side Effects: retrieves transactions from db and calculates weight
+ Example:
+
+=cut
+
+sub current_weight {
+    my $self = shift;
+    my $transactions = $self->transactions();
+
+    my $weight = 0;
+    foreach my $t (@$transactions) {
+        $weight += $t->weight_gram() * $t->factor();
+    }
+    return $weight;
+}
+
+# It is convenient and also much faster to retrieve a single value for the current_weight, rather than calculating it from the transactions.
+sub set_current_weight_property {
+    my $self = shift;
+    my $current_weight = $self->current_weight();
+    my $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
+    my $stock = $self->stock();
+    my $recorded_current_weight = $stock->find_related('stockprops', {'me.type_id'=>$current_weight_cvterm->cvterm_id});
+    if ($recorded_current_weight){
+        $recorded_current_weight->update({'value'=>$current_weight});
+    } else {
+        $stock->create_stockprops({$current_weight_cvterm->name() => $current_weight});
+    }
+    return $current_weight;
+}
+
+# It is convenient and also much faster to retrieve a single value for the current_weight, rather than calculating it from the transactions.
+sub get_current_weight_property {
+    my $self = shift;
+    my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
+    my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
+    return $recorded_current_count->value();
+}
+
 
 sub _add_transaction {
     my $self = shift;
