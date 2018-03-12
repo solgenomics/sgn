@@ -1093,7 +1093,7 @@ sub create_odk_cross_progress_tree {
         my @new_crosses;
         foreach (@{$parsed_data{crosses}}){
             my $cross_exists_rs = $bcs_schema->resultset("Stock::Stock")->find({uniquename=>$_->get_name});
-            if ($cross_exists_rs->stock_id){
+            if ($cross_exists_rs){
                 print STDERR "Already saved ".$cross_exists_rs->uniquename.". Skipping AddCrosses\n";
             } else {
                 push @new_crosses, $_;
