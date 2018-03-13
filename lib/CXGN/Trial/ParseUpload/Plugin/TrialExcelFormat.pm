@@ -16,18 +16,12 @@ sub _validate_with_plugin {
   my %errors;
   my @error_messages;
   my %missing_accessions;
-  my %supported_trial_types;
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
   my %seen_plot_names;
   my %seen_accession_names;
   my %seen_seedlot_names;
-
-  #currently supported trial types
-  $supported_trial_types{'biparental'} = 1; #both parents required
-  $supported_trial_types{'self'} = 1; #only female parent required
-  $supported_trial_types{'open'} = 1; #only female parent required
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);

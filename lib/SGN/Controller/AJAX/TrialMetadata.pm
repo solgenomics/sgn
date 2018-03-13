@@ -73,7 +73,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
         $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
     }
     catch {
-        print STDERR "Trial Layout for $trial_id does not exist.\n";
+        print STDERR "Trial Layout for $trial_id does not exist. @_\n";
     }
 
 }
@@ -431,6 +431,17 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $data = $trial->get_tissue_sources();
+    print STDERR Dumper $data;
+    $c->stash->{rest} = { tissue_sources => $data };
 }
 
 sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
