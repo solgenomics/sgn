@@ -29,10 +29,11 @@ __PACKAGE__->config(
 
 sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
     my ($self, $c) = @_;
- 
-    my $args = $c->req->param('args');
-    my $json = JSON->new();
-    $args = $json->decode($args);
+
+    my $req_page = $c->req->param('page');
+    my $args     = $c->req->param('args');
+    my $json     = JSON->new();
+    $args        = $json->decode($args);
        
     $self->_check_cached_output($c, $req_page, $args); 
   
