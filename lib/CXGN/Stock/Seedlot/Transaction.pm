@@ -24,10 +24,10 @@ has 'to_stock' => (isa => 'ArrayRef',
 				is => 'rw',
     );
 
-has 'amount' => (isa => 'Num|Str',
-			     is => 'rw',
-
-    );
+has 'amount' => (
+    isa => 'Num|Str',
+    is => 'rw',
+);
 
 has 'weight_gram' => (
     isa => 'Num|Str',

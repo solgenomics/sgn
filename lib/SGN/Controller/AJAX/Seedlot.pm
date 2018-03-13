@@ -734,7 +734,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $to_new_seedlot_name = $c->req->param('to_new_seedlot_name');
     my $stock_id;
     my $stock_uniquename;
-    my $newly_created_seedlot;
+    my $new_sl;
     if ($to_new_seedlot_name){
         $stock_uniquename = $to_new_seedlot_name;
         eval { 
@@ -746,6 +746,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             my $population_name = $c->req->param('to_new_seedlot_population_name');
             my $breeding_program_id = $c->req->param('to_new_seedlot_breeding_program_id');
             my $amount = $c->req->param('to_new_seedlot_amount');
+            my $weight = $c->req->param('to_new_seedlot_weight');
             my $timestamp = $c->req->param('to_new_seedlot_timestamp');
             my $description = $c->req->param('to_new_seedlot_description');
 
@@ -805,13 +806,14 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->from_stock([$from_stock_id, $from_stock_name]);
             $transaction->to_stock([$seedlot_id, $to_new_seedlot_name]);
             $transaction->amount($amount);
+            $transaction->weight_gram($weight);
             $transaction->timestamp($timestamp);
             $transaction->description($description);
             $transaction->operator($operator);
             $transaction->store();
 
-            $sl->set_current_count_property();
-            $newly_created_seedlot = $sl;
+            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+            $new_sl = $sl_new;
         };
 
         if ($@) { 
@@ -841,6 +843,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     }
 
     my $amount = $c->req->param("amount");
+    my $weight = $c->req->param("weight");
     my $timestamp = $c->req->param("timestamp");
     my $description = $c->req->param("description");
     my $factor = $c->req->param("factor");
@@ -856,19 +859,22 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
         die "factor not specified!\n";
     }
     $transaction->amount($amount);
+    $transaction->weight_gram($weight);
     $transaction->timestamp($timestamp);
     $transaction->description($description);
     $transaction->operator($c->user->get_object->get_username);
-
     my $transaction_id = $transaction->store();
-    $c->stash->{seedlot}->set_current_count_property();
 
+    if ($new_sl){
+        $new_sl->set_current_count_property();
+        $new_sl->set_current_weight_property();
+    }
     if ($existing_sl){
         $existing_sl->set_current_count_property();
+        $existing_sl->set_current_weight_property();
     }
-    if($newly_created_seedlot){
-        $newly_created_seedlot->set_current_count_property();
-    }
+    $c->stash->{seedlot}->set_current_count_property();
+    $c->stash->{seedlot}->set_current_weight_property();
 
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }

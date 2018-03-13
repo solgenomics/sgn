@@ -166,7 +166,13 @@ $box_name=>undef
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Starting Amount (number of seeds): </label>
                                                 <div class="col-sm-9" >
-                                                    <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Required" value="0">
+                                                    <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Amount OR Weight Required" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">Starting Weight (g): </label>
+                                                <div class="col-sm-9" >
+                                                    <input class="form-control" id="transaction_new_seedlot_weight" placeholder="Amount OR Weight Required" value="0">
                                                 </div>
                                             </div>
                                             <!--
@@ -205,9 +211,15 @@ $box_name=>undef
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Transaction Amount: </label>
+                    <label class="col-sm-3 control-label">Transaction Amount (number seeds): </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_transaction_amount" placeholder="Required. Number of Seeds transferred.">
+                        <input class="form-control" id="seedlot_transaction_amount" placeholder="Amount OR Weight Required">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Transaction Weight (g): </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_weight" placeholder="Amount OR Weight Required">
                     </div>
                 </div>
                 <div class="form-group">
@@ -425,6 +437,7 @@ $box_name=>undef
       var to_new_seedlot_accession_name;
       var to_new_seedlot_cross_name;
       var to_new_seedlot_amount;
+      var to_new_seedlot_weight;
       var to_new_seedlot_population_name;
       var to_new_seedlot_organization;
       var to_new_seedlot_timestamp;
@@ -444,6 +457,7 @@ $box_name=>undef
             to_new_seedlot_accession_name = "<% $content_accession_name %>";
             to_new_seedlot_cross_name = "<% $content_cross_name %>";
             to_new_seedlot_amount = jQuery('#transaction_new_seedlot_amount').val();
+            to_new_seedlot_weight = jQuery('#transaction_new_seedlot_weight').val();
             to_new_seedlot_population_name = jQuery('#transaction_new_seedlot_population_name').val();
             to_new_seedlot_organization = jQuery('#transaction_new_seedlot_organization').val();
             to_new_seedlot_timestamp = jQuery('#transaction_new_seedlot_timestamp').val();
@@ -455,14 +469,24 @@ $box_name=>undef
             if (to_new_seedlot_accession_name != '' && to_new_seedlot_cross_name != '') {
                 alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
             }
+            if (to_new_seedlot_location_name == ''){
+                alert("Please provide a location for new seedlot."); return;
+            }
+            if (to_new_seedlot_amount == '' && to_new_seedlot_weight == ''){
+                alert("Please provide a starting amount OR weight in grams for new seedlot."); return;
+            }
+            if (to_new_seedlot_timestamp == ''){
+                alert("Please provide a timestamp for new seedlot created."); return;
+            }
         }
       }
       var amount = jQuery('#seedlot_transaction_amount').val();
+      var weight = jQuery('#seedlot_transaction_weight').val();
       var timestamp = jQuery('#seedlot_transaction_timestamp').val();
       var description = jQuery('#seedlot_transaction_description').val();
 
       if (factor == '') { alert("Please provide a factor"); }
-      else if (amount == '') { alert("Please provide an amount"); }
+      else if (amount == '' && weight == '') { alert("Please provide an amount OR a weight in grams"); }
       else if (timestamp == '') { alert("Please provide a timestamp"); }
       else if (description == '') { alert("Please provide a description"); }
       else if (from_existing_seedlot_id == '' && to_existing_seedlot_id == '' && to_new_seedlot_name == '') { alert("Please provide seed lot"); }
@@ -474,6 +498,7 @@ $box_name=>undef
             'factor' : factor,
             'seedlot_id': <% $seedlot_id %>,
             'amount': amount,
+            'weight': weight,
             'timestamp': timestamp,
             'description': description,
             'from_existing_seedlot_id': from_existing_seedlot_id,
@@ -485,6 +510,7 @@ $box_name=>undef
             'to_new_seedlot_accession_name': to_new_seedlot_accession_name,
             'to_new_seedlot_cross_name': to_new_seedlot_cross_name,
             'to_new_seedlot_amount': to_new_seedlot_amount,
+            'to_new_seedlot_weight': to_new_seedlot_weight,
             'to_new_seedlot_population_name': to_new_seedlot_population_name,
             'to_new_seedlot_organization': to_new_seedlot_organization,
             'to_new_seedlot_timestamp': to_new_seedlot_timestamp,
