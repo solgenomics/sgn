@@ -13,13 +13,7 @@ package SGN::Controller::solGS::CachedResult;
 
 use Moose;
 use namespace::autoclean;
-
-#use File::Slurp qw /write_file read_file/;
 use JSON;
-
-#use File::Basename;
-#use File::Spec::Functions;
-
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -35,14 +29,13 @@ __PACKAGE__->config(
 
 sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
     my ($self, $c) = @_;
-
-    my $req_page = $c->req->param('page');
-  
+ 
     my $args = $c->req->param('args');
     my $json = JSON->new();
     $args = $json->decode($args);
        
-    $self->_check_cached_output($c, $req_page, $args);   
+    $self->_check_cached_output($c, $req_page, $args); 
+  
 }
 
 
