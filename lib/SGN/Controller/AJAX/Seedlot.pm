@@ -594,8 +594,9 @@ sub upload_seedlots_inventory_POST : Args(0) {
             $transaction->operator($val->{inventory_person});
             $transaction->store();
 
-            $sl->set_current_count_property();
-            $sl->set_current_weight_property();
+            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
+            $sl_new->set_current_count_property();
+            $sl_new->set_current_weight_property();
         }
     };
     if ($@) {

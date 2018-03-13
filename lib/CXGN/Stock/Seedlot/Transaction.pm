@@ -101,7 +101,11 @@ sub get_transactions_by_seedlot_id {
         $t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
         $t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
         my $data = JSON::Any->decode($row->value());
-        $t_obj->weight_gram($data->{weight_gram});
+        if ($data->{weight_gram}){
+            $t_obj->weight_gram($data->{weight_gram});
+        } else {
+            $t_obj->weight_gram('NA');
+        }
         $t_obj->amount($data->{amount});
         $t_obj->timestamp($data->{timestamp});
         $t_obj->operator($data->{operator});
@@ -135,19 +139,19 @@ sub store {
     my $json_value = JSON::Any->encode($value);
 
     if (!$self->has_transaction_id()) {
-        my $row = $self->schema()->resultset("Stock::StockRelationship")
-            ->find({
+        my $row_rs = $self->schema()->resultset("Stock::StockRelationship")
+            ->search({
                 object_id => $self->from_stock()->[0],
                 subject_id => $self->to_stock()->[0],
                 type_id => $transaction_type_id,
-            });
+            }, {order_by => { -desc => 'rank'} });
 
         my $new_rank = 0;
-        if ($row) { 
-            $new_rank = $row->rank()+1;
+        if ($row_rs->first) { 
+            $new_rank = $row_rs->first->rank()+1;
         }
 
-        $row = $self->schema()->resultset("Stock::StockRelationship")
+        my $row = $self->schema()->resultset("Stock::StockRelationship")
             ->create({
                 object_id => $self->from_stock()->[0],
                 subject_id => $self->to_stock()->[0],

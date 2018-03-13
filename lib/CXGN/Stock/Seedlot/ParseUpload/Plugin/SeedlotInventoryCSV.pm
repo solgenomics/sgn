@@ -1,9 +1,10 @@
 package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotInventoryCSV;
 
-use Moose;
+use Moose::Role;
 use JSON;
 use Data::Dumper;
 use Text::CSV;
+use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -11,6 +12,7 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
     my $delimiter = ',';
     my @error_messages;
+    my %errors;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
@@ -117,6 +119,8 @@ sub _parse_with_plugin {
     my $schema = $self->get_chado_schema();
     my $delimiter = ',';
     my %parse_result;
+    my @error_messages;
+    my %errors;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
