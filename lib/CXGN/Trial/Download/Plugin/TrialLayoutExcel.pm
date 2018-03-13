@@ -54,7 +54,7 @@ use CXGN::Trial::TrialLayoutDownload;
 
 sub verify { 
     return 1;
-}
+} 
 
 sub download { 
     my $self = shift;
@@ -63,6 +63,9 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
+    my %selected_cols = %{$self->selected_columns};
+    my @keys = keys %selected_cols;
+    print STDERR Dumper(\@keys);
     my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
         schema => $self->bcs_schema,
         trial_id => $self->trial_id,
@@ -77,6 +80,8 @@ sub download {
         return $output;
     }
     my @output_array = @{$output->{output}};
+
+    print STDERR Dumper(\@output_array);
     my $row_num = 0;
     foreach my $l (@output_array){
         my $col_num = 0;
