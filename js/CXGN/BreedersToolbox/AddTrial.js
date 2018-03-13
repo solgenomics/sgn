@@ -435,12 +435,16 @@ jQuery(document).ready(function ($) {
                     var row_max =  response.design_map_view.max_row;
                     var controls = response.design_map_view.controls;
                     var false_coord = response.design_map_view.false_coord;
-                    //for (i=0; i<response.design_map_view.coord_col.length; i++) {
-                    //    if (response.design_map_view.coord_col[i] && response.design_map_view.coord_row[i]){
-                    //        col_length = response.design_map_view.coord_col[i];
-                    //        row_length = response.design_map_view.coord_row[i];
-                    //    }
-                    //}
+                    
+                    var dataset = [];
+                    if (design_type == 'splitplot'){
+                        row_length = response.design_map_view.coord_row[1];
+                        dataset = response.design_map_view.result;
+                        dataset.shift();
+                    }else {
+                        dataset = response.design_map_view.result;
+                    }
+
                     if (col_length && row_length) {
                         jQuery("#container_field_map_view").css({"display": "inline-block", "overflow": "auto"});
                         jQuery("#d3_legend").css("display", "inline-block");
@@ -452,8 +456,9 @@ jQuery(document).ready(function ($) {
                           legendElementWidth = gridSize*2,
                           rows = response.design_map_view.unique_row,
                           columns = response.design_map_view.unique_col;
-                          datasets = response.design_map_view.result;
-                         
+                          //datasets = response.design_map_view.result;
+                          datasets = dataset;
+
                       var svg = d3.select("#container_field_map_view").append("svg")
                           .attr("width", width + margin.left + margin.right)
                           .attr("height", height + margin.top + margin.bottom)

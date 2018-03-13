@@ -77,6 +77,7 @@ sub trial_detail_design_view {
 
 sub design_layout_map_view {
     my $design_ref = shift;
+    my $design_type = shift;
     my $result;
     my %design = %{$design_ref};
     my @layout_info;
@@ -94,7 +95,7 @@ sub design_layout_map_view {
         my $col_number = $design{$key}->{col_number} || '';
         my $block_number = $design{$key}->{block_number} || '';
         my $rep_number = $design{$key}->{rep_number} || '';
-        my $plot_number = $key;
+        my $plot_number = $key; 
         
         if ($col_number) {
             push @col_numbers, $col_number;
@@ -102,13 +103,16 @@ sub design_layout_map_view {
         if ($row_number) {
             push @row_numbers, $row_number;
         }elsif (!$row_number){
-			if ($block_number){
+			if ($block_number && $design_type ne 'splitplot'){
 				$row_number = $block_number;
 				push @row_numbers, $row_number;
-			}elsif ($rep_number && !$block_number ){
+			}elsif ($rep_number && !$block_number && $design_type ne 'splitplot'){
 				$row_number = $rep_number;
 				push @row_numbers, $row_number;
-			}
+			}elsif ($design_type eq 'splitplot'){
+                $row_number = $rep_number;
+				push @row_numbers, $row_number;
+            }
 		}
         if ($rep_number) {
             push @rep_numbers, $rep_number;
@@ -130,14 +134,8 @@ sub design_layout_map_view {
             accession_name => $stock_name,
         };
     }
+    
     @layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
-    
-    my $plot_popUp;
-	foreach my $hash (@layout_info){
-		$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
-		push @$result,  {plotname => $hash->{'plot_name'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
-	}
-    
     my $false_coord;
 	if (scalar(@col_numbers) < 1){
         @col_numbers = ();
@@ -154,6 +152,12 @@ sub design_layout_map_view {
             push @col_numbers, $col_number2[$i];
         }		
 	}
+    
+    my $plot_popUp;
+	foreach my $hash (@layout_info){
+		$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
+        push @$result,  {plotname => $hash->{'plot_name'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
+    }
     
     my @sorted_block = sort@block_numbers;
 	my @uniq_block = uniq(@sorted_block);
