@@ -16,15 +16,18 @@ $trials_by_breeding_project => ()
   .genotyping_trial_list_table  {border-spacing:7px;}
   </style>
 
+<br />
 
 <div id="new_submission_process_explanation">
-<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all database users). 
-<ol><li>Go to <a href=" https://slims.biotech.cornell.edu">slims.biotech.cornell.edu</a> to get a tab delimited spreadsheet file containing information on the genotyping trial name and where to insert the blank.</li>
-<li>Use the "Create IGD Genotyping Trial" link on this page to upload the file, together with a list of accessions.</li>
-<li>Use the link on the trial detail page to create the file to proceed with the submission.</li>
-</ol>
-</div>
+<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all database users):
+<ul>
+<li>If you choose to, the system will submit your plate information to a Genotyping Facility directly.</li>
+<li>Clicking on "Add Genotyping Trial" allows you to either submit an XLS file with your own plate layout information or you can allow the database to create a plate layout for you. Please note the Genotyping Facility Requirements before submitting your own plate layout, such as required BLANK wells.</li>
+</ul>
 
+</div>
+<br />
+<br />
 <div id="genotyping_trials_accordion">
   <%perl>
   foreach my $p (sort keys %$trials_by_breeding_project){
@@ -45,5 +48,6 @@ $trials_by_breeding_project => ()
   </%perl>
 
 </div>
+
 
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>

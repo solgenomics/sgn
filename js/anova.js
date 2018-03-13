@@ -157,18 +157,26 @@ function runAnovaAnalysis(traits) {
 			var anovaFile = response.anova_table_file;
 			var modelFile = response.anova_model_file;
 			var meansFile = response.adj_means_file;
+			var diagnosticsFile = response.anova_diagnostics_file;
 
 			var fileNameAnova = anovaFile.split('/').pop();
 			var fileNameModel = modelFile.split('/').pop();
 			var fileNameMeans = meansFile.split('/').pop();
-		
+			var fileNameDiagnostics = diagnosticsFile.split('/').pop()
 			
 			anovaFile = "<a href=\"" + anovaFile +  "\" download=" + fileNameAnova + ">[Anova table]</a>";
 			modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">[Model Summary]</a>";
 			meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">[Adjusted Means]</a>";
+			
+			diagnosticsFile = "<a href=\"" + diagnosticsFile
+			    +  "\" download=" + fileNameDiagnostics + ">[Model Diagnostics]</a>";
 		
 			jQuery("#anova_table")
-			    .append('<br /> <strong>Download:</strong> ' + anovaFile + ' | ' + modelFile + ' | ' + meansFile)
+			    .append('<br /> <strong>Download:</strong> '
+				    + anovaFile + ' | '
+				    + modelFile + ' | '
+				    + meansFile + ' | '
+				    + diagnosticsFile)
 			    .show();
 			
 			jQuery("#anova_message").empty();
@@ -206,14 +214,20 @@ function listAnovaTraits ()  {
         dataType: 'json',
 	data: {'trial_id': trialId},
         url: '/anova/traits/list/',      
-        success: function(response) {
-	    formatAnovaTraits(response.anova_traits);
-	    jQuery("#run_anova").show();	
+         success: function(response) {
+	     var traits = response.anova_traits;
 	  
+	     if (traits.length) {
+		 formatAnovaTraits(traits);
+		 jQuery("#run_anova").show();
+	     } else {
+		 showMessage('This trial has no phenotyped traits.');
+		 jQuery("#run_anova").hide();		 
+	     }	  
         },
         error: function(response) {                          
             showMessage("Error occured listing anova traits.");	    	
-	    jQuery("#run_anova").show();
+	    jQuery("#run_anova").hide();
         }                
     });
 

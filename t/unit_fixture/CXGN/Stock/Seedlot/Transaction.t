@@ -34,6 +34,7 @@ $dest_seedlot->organization_name('bti');
 $dest_seedlot->population_name('test seedlot pop');
 $dest_seedlot->breeding_program_id($seedlot_breeding_program_id);
 my $return = $dest_seedlot->store();
+print STDERR Dumper $return;
 my $dest_seedlot_id = $return->{seedlot_id};
 
 print STDERR "SEEDLOT ID: $dest_seedlot_id, STOCK_ID ".$dest_seedlot->stock_id()."\n";
@@ -50,6 +51,7 @@ $source_seedlot->organization_name('bti');
 $source_seedlot->population_name('test seedlot pop');
 $source_seedlot->breeding_program_id($seedlot_breeding_program_id);
 my $return = $source_seedlot->store();
+print STDERR Dumper $return;
 my $source_seedlot_id = $return->{seedlot_id};
 
 print STDERR "Creating transaction 1...\n";

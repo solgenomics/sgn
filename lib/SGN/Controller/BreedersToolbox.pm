@@ -191,13 +191,16 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
     my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
 
+    my $crossingtrial = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $crossing_trials = $crossingtrial->get_crossing_trials();
+
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
     $c->stash->{locations} = $bp->get_all_locations($c);
 
-    #$c->stash->{projects} = $self->get_projects($c);
-
     $c->stash->{programs} = $breeding_programs;
+
+    $c->stash->{crossing_trials} = $crossing_trials;
 
     $c->stash->{roles} = $c->user()->roles();
 
@@ -277,6 +280,24 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
     $c->stash->{trial_name} = $project_name;
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
+}
+
+sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
+    $c->stash->{odk_crossing_data_service_url} = $c->config->{odk_crossing_data_service_url};
+    $c->stash->{odk_crossing_data_form_name} = $c->config->{odk_crossing_data_form_name};
+    $c->stash->{odk_crossing_data_test_form_name} = $c->config->{odk_crossing_data_test_form_name};
+    $c->stash->{odk_phenotyping_data_service_name} = $c->config->{odk_phenotyping_data_service_name};
+    $c->stash->{odk_phenotyping_data_service_url} = $c->config->{odk_phenotyping_data_service_url};
+    $c->stash->{template} = '/breeders_toolbox/manage_odk_data_collection.mas';
 }
 
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {
@@ -659,7 +680,6 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
-
 
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }

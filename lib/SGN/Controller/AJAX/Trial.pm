@@ -12,7 +12,6 @@ Creating, viewing and deleting trials
 
 Jeremy Edwards <jde22@cornell.edu>
 
-Deletion by Lukas
 
 =cut
 
@@ -33,7 +32,7 @@ use CXGN::Trial;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use JSON -support_by_pp;
-use SGN::View::Trial qw/design_layout_view design_info_view/;
+use SGN::View::Trial qw/design_layout_view design_info_view design_layout_map_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
@@ -46,6 +45,7 @@ use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -77,8 +77,10 @@ sub generate_experimental_design_POST : Args(0) {
   my @stock_names;
   my $design_layout_view_html;
   my $design_info_view_html;
+  my $design_map_view;
   if ($c->req->param('stock_list')) {
       @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+
   }
   my $seedlot_hash_json = $c->req->param('seedlot_hash');
   my @control_names;
@@ -140,28 +142,28 @@ sub generate_experimental_design_POST : Args(0) {
   my $row_in_design_number = $c->req->param('row_in_design_number');
   my $col_in_design_number = $c->req->param('col_in_design_number');
   my $no_of_rep_times = $c->req->param('no_of_rep_times');
-  my $no_of_block_sequence = $c->req->param('no_of_block_sequence');      
+  my $no_of_block_sequence = $c->req->param('no_of_block_sequence');
   my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
   my $replicated_accession_list = $c->req->param('replicated_accession_list');
   my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
-  
-  my @replicated_accession; 
+
+  my @replicated_accession;
   if ($c->req->param('replicated_accession_list')) {
     @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
   }
   my $number_of_replicated_accession = scalar(@replicated_accession);
-  
+
   my @unreplicated_accession;
   if ($c->req->param('unreplicated_accession_list')) {
     @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
   }
   my $number_of_unreplicated_accession = scalar(@unreplicated_accession);
-  
-  #my $trial_name = $c->req->param('project_name');
+
+
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
   my $number_of_checks = scalar(@control_names_crbd);
-  #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
+
   if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
     if (@control_names_crbd) {
         @stock_names = (@stock_names, @control_names_crbd);
@@ -218,13 +220,14 @@ my $location_number = scalar(@locations);
 
     my $trial_name = $c->req->param('project_name');
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
-    #$geolocation_lookup->set_location_name($c->req->param('trial_location'));
+
     $geolocation_lookup->set_location_name($trial_locations);
     #print STDERR Dumper(\$geolocation_lookup);
     if (!$geolocation_lookup->get_geolocation()){
       $c->stash->{rest} = { error => "Trial location not found" };
       return;
     }
+
 
 
   if (scalar(@locations) > 1) {
@@ -374,7 +377,7 @@ my $location_number = scalar(@locations);
   };
   if ($error) {return;}
   if ($trial_design->get_design()) {
-    %design = %{$trial_design->get_design()};
+    %design = %{$trial_design->get_design()}; 
     #print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
@@ -386,8 +389,10 @@ my $location_number = scalar(@locations);
   } elsif ($design_type eq 'splitplot') {
       $design_level = 'subplots';
   } else {
-      $design_level = 'plots';
+      $design_level = 'plots'; 
   }
+ 
+  $design_map_view = design_layout_map_view(\%design, $design_type); 
   $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
@@ -400,6 +405,7 @@ my $location_number = scalar(@locations);
         design_layout_view_html => encode_json(\@design_layout_view_html_array),
         #design_layout_view_html => $design_layout_view_html,
         design_info_view_html => $design_info_view_html,
+        design_map_view => $design_map_view,
         #design_json => $design_json,
         design_json =>  encode_json(\@design_array),
     };
@@ -412,13 +418,13 @@ sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : Ac
 
 sub save_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
-  #my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my $dbh = $c->dbc->dbh;
 
   print STDERR "Saving trial... :-)\n";
+
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -507,6 +513,7 @@ sub save_experimental_design_POST : Args(0) {
         operator => $user_name
 	  });
 
+
     if ($trial_create->trial_name_already_exists()) {
       $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
       return;
@@ -543,8 +550,17 @@ sub save_experimental_design_POST : Args(0) {
         }
     }
 }
-$c->stash->{rest} = {success => "1",}; 
-return;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+    if ($refresh->{error}) {
+        $c->stash->{rest} = { error => $refresh->{'error'} };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {success => "1",}; 
+    return;
 }
 
 
@@ -751,6 +767,7 @@ sub upload_trial_file_POST : Args(0) {
 
   #print STDERR Dumper $parsed_data;
 
+
     my $save;
     my $coderef = sub {
 
@@ -770,7 +787,7 @@ sub upload_trial_file_POST : Args(0) {
             operator => $c->user()->get_object()->get_username()
         });
         $save = $trial_create->save_trial();
-        
+
         if ($save->{error}){
             $chado_schema->txn_rollback();
         }
@@ -790,9 +807,20 @@ sub upload_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+        if ($refresh->{error}) {
+            $c->stash->{rest} = { error => $refresh->{'error'} };
+            $c->detach();
+        }
+
         $c->stash->{rest} = {success => "1"};
         return;
     }
 
 }
+
 1;

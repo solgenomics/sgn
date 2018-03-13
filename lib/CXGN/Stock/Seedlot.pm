@@ -5,17 +5,102 @@ CXGN::Stock::Seedlot - a class to represent seedlots in the database
 
 =head1 DESCRIPTION
 
-CXGN::Stock::Seedlot inherits from CXGN::Stock. The required fields are:
+CXGN::Stock::Seedlot inherits from CXGN::Stock.
 
-uniquename
+To create a new seedlot do:
+#Seedlot can either be from an accession or a cross, therefore, supply an accession_stock_id OR a cross_stock_id here
 
-location_code
+my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+$sl->uniquename($seedlot_uniquename);
+$sl->location_code($location_code);
+$sl->accession_stock_id($accession_id);
+$sl->cross_stock_id($cross_id);
+$sl->organization_name($organization);
+$sl->population_name($population_name);
+$sl->breeding_program_id($breeding_program_id);
+my $return = $sl->store();
+my $seedlot_id = $return->{seedlot_id};
+
+#The first transaction is between the accession_stock_id OR cross_stock_id that you specified above and the new seedlot created.
+my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+$transaction->factor(1);
+$transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
+$transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
+$transaction->amount($amount);
+$transaction->timestamp($timestamp);
+$transaction->description($description);
+$transaction->operator($operator);
+$transaction->store();
+
+$sl->set_current_count_property();
+
+$phenome_schema->resultset("StockOwner")->find_or_create({
+    stock_id     => $seedlot_id,
+    sp_person_id =>  $user_id,
+});
+
+-------------------------------------------------------------------------------
+
+To Update or Edit a seedlot do:
+
+my $seedlot = CXGN::Stock::Seedlot->new( 
+    schema => $schema,
+    seedlot_id => $seedlot_id,
+);
+$seedlot->name($seedlot_name);
+$seedlot->uniquename($seedlot_name);
+$seedlot->breeding_program_id($breeding_program_id);
+$seedlot->organization_name($organization);
+$seedlot->location_code($location);
+$seedlot->accession_stock_id($accession_id);
+$seedlot->cross_stock_id($cross_id);
+$seedlot->population_name($population);
+my $return = $seedlot->store();
+
+------------------------------------------------------------------------------
+
+To Search Across Seedlots do:
+# This is different from CXGN::Stock::Search in that is retrieves information pertinent to seedlots like location and current count
+
+my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+    $c->dbic_schema("Bio::Chado::Schema"),
+    $offset,
+    $limit,
+    $seedlot_name,
+    $breeding_program,
+    $location,
+    $minimum_count,
+    $contents_accession,
+    $contents_cross
+);
+
+------------------------------------------------------------------------------
+
+To Retrieve a single seedlot do:
+
+my $seedlot = CXGN::Stock::Seedlot->new( 
+    schema => $schema,
+    seedlot_id => $seedlot_id,
+);
+# You can access all seedlot accessors from here such as (you can also access all CXGN::Stock accessors):
+my $uniquename => $seedlot->uniquename(),
+my $seedlot_id => $seedlot->seedlot_id(),
+my $current_count => $seedlot->current_count(),
+my $location_code => $seedlot->location_code(),
+my $breeding_program => $seedlot->breeding_program_name(),
+my $organization_name => $seedlot->organization_name(),
+my $population_name => $seedlot->population_name(),
+my $accession => $seedlot->accession(),
+my $cross => $seedlot->cross(),
+
+------------------------------------------------------------------------------
 
 Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
+Nick MOrales <nm529@cornell.edu>
 
 =head1 ACCESSORS & METHODS
 
@@ -62,6 +147,20 @@ has 'location_code' => (
 has 'nd_geolocation_id' => (
     isa => 'Int',
     is => 'rw',
+);
+
+=head2 Accessor box_name()
+
+A string specifiying box where the seedlot is stored. On the backend,
+this is stored as a stockprop.
+
+=cut
+
+has 'box_name' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_box_name',
 );
 
 =head2 Accessor cross()
@@ -484,12 +583,17 @@ sub _retrieve_location {
     $self->location_code($location_code);
 }
 
+sub _retrieve_box_name {
+    my $self = shift;
+    $self->box_name($self->_retrieve_stockprop('location_code'));
+}
+
 sub _retrieve_breeding_program {
     my $self = shift;
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
     my $project_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_experiment_projects')->search_related('project');
     if ($project_rs->count != 1){
-        die "Seedlot does not have 1 breeding program project associated!\n";
+        die "Seedlot does not have 1 breeding program project (".$project_rs->count.") associated!\n";
     }
     my $breeding_program_id = $project_rs->first()->project_id();
     my $breeding_program_name = $project_rs->first()->name();
@@ -743,6 +847,9 @@ sub store {
             if ($error){
                 die $error;
             }
+            if ($self->box_name){
+                $self->_store_stockprop('location_code', $self->box_name);
+            }
 
         } else { #Updating seedlot
 
@@ -792,6 +899,9 @@ sub store {
                 $self->_store_seedlot_location();
                 $self->_update_seedlot_location();
             }
+            if($self->box_name){
+                $self->_update_stockprop('location_code', $self->box_name);
+            }
         }
     };
 
@@ -805,7 +915,7 @@ sub store {
 	if ($transaction_error){
         return { error=>$transaction_error };
     } else {
-        return { success=>1, seedlot_id=>$self->seedlot_id() };
+        return { success=>1, seedlot_id=>$self->stock_id() };
     }
 }
 

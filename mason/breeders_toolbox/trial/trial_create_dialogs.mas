@@ -4,7 +4,53 @@ $locations
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js' ] &>
+
+<style>
+#container_field_map_view {display: none; }
+#d3legend {display: none}
+#no_map_view_MSG {display: none; }
+
+#container_fm {
+    //border:2px dashed #000;
+    height: 390px;
+    width: 700px;
+    overflow: auto;
+    //overflow: scroll;
+    display: none;
+    margin: 10px;
+}
+
+rect.bordered {
+    stroke: #E6E6E6;
+    stroke-width:2px;   
+  }
+
+  text.mono {
+    font-size: 9pt;
+    font-family: Consolas, courier;
+    fill: #aaa;
+  }
+
+  text.axis-workweek {
+    fill: #000;
+  }
+
+  text.axis-worktime {
+    fill: #000;
+  }
+  
+  .legend { list-style: none; }
+  .legend li { float: left; margin-right: 10px; }
+  .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
+
+  .legend .d3_block_even_number { background-color: #c7e9b4; }
+  .legend .d3_block_odd_number { background-color: #41b6c4; }
+  .legend .d3_checks { background-color: #081d58; }
+  .legend .d3_rep_even_number { background-color: red; height: 8px; width: 18px;}
+  .legend .d3_rep_odd_number { background-color: green; height: 8px; width: 18px;}
+
+</style>
 
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
     <div class="modal-dialog modal-xl" role="document">
@@ -260,7 +306,7 @@ $breeding_programs
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Subplot 2 Treatment Name: </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Optional Treatment 2"/>
+                                            <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Required Treatment 2"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
@@ -452,6 +498,15 @@ $breeding_programs
             <div class="modal-body">
                 <div class="container-fluid">
                     <center><p>Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p></center>
+                    <p></br><div class="d3_legend" id="d3_legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
+                      <li><span class="d3_block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+                      <li><span class="d3_block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+                      <li><span class="d3_checks"></span> Checks</li>
+                      <li><span class="d3_rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+                      <li><span class="d3_rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+                    </div>
+                    <div id="container_field_map_view" ></div>
+                    <div id="no_map_view_MSG" >No field map to display...</div>
                     <div id="trial_design_view_layout_return">
                     </div>
                 </div>

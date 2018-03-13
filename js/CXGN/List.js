@@ -721,36 +721,37 @@ CXGN.List.prototype = {
             if (!non_interactive) { alert("This list passed validation."); }
             return 1;
         } else {
+            if (!non_interactive) {
+                if (type == 'accessions') {
+                    jQuery("#validate_accession_error_display tbody").html('');
 
-            if (type == 'accessions') {
-                jQuery("#validate_accession_error_display tbody").html('');
-
-                var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div></div>";
+                    var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div></div>";
 
 
-                jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
+                    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
 
-                var missing_accessions_vals = '';
-                var missing_accessions_vals_for_list = '';
-                for(var i=0; i<missing.length; i++) {
-                    missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
-                    missing_accessions_vals_for_list = missing_accessions_vals_for_list + missing[i] + '\n';
+                    var missing_accessions_vals = '';
+                    var missing_accessions_vals_for_list = '';
+                    for(var i=0; i<missing.length; i++) {
+                        missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
+                        missing_accessions_vals_for_list = missing_accessions_vals_for_list + missing[i] + '\n';
+                    }
+
+                    jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
+                    jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
+                    addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
+                        selectText: true,
+                        listType: 'accessions'
+                    });
+
+                    jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
+                    jQuery('#validate_accession_error_display').modal("show");
+
+                    //alert("List validation failed. Elements not found: "+ missing.join(","));
+                    //return 0;
+                } else {
+                    alert('List did not pass validation because of these items: '+missing.join(", "));
                 }
-
-                jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
-                jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
-                addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
-                    selectText: true,
-                    listType: 'accessions'
-                });
-
-                jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
-                jQuery('#validate_accession_error_display').modal("show");
-
-                //alert("List validation failed. Elements not found: "+ missing.join(","));
-                //return 0;
-            } else {
-                alert('List did not pass validation because of these items: '+missing.join(", "));
             }
             return;
         }

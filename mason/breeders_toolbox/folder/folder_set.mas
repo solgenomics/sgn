@@ -12,8 +12,9 @@ $breeding_program_name => undef
 % my $js_project_type;
 % my $folder_for_trials;
 % my $folder_for_crosses;
+% my $dialog_type;
 % if ($project_type eq 'Trial') { $js_project_type = 'trials'; $folder_for_trials = 1; }
-% if ($project_type eq 'Cross') { $js_project_type = 'crosses'; $folder_for_crosses = 1; }
+% if ($project_type eq 'Cross') { $js_project_type = 'crosses'; $folder_for_crosses = 1; $dialog_type = 'Crossing Trial' }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
@@ -22,13 +23,13 @@ $breeding_program_name => undef
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="setFolderDialog">Place <% $project_type %> in folder</h4>
+        <h4 class="modal-title" id="setFolderDialog">Place <% $dialog_type %> in folder</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
 	       <form class="form-horizontal" role="form" method="post" id="set_folder_dialog_form" name="set_folder_dialog_form">
-         
+
          <div class="form-group">
              <label class="col-sm-3 control-label">Breeding Program: </label>
              <div class="col-sm-9" >
@@ -44,7 +45,7 @@ $breeding_program_name => undef
          </div>
          <hr>
          <div class="form-group">
-             <label class="col-sm-3 control-label"><% $project_type %> Folders: </label>
+             <label class="col-sm-3 control-label"><% $dialog_type %> Folders: </label>
              <div class="col-sm-9" >
                <div id="trial_folder_select_div">
 % if ($folder_id) {
@@ -57,7 +58,7 @@ $breeding_program_name => undef
              </div>
          </div>
 	        <div class="form-group">
-      	      <label class="col-sm-3 control-label"><% $project_type %>: </label>
+      	      <label class="col-sm-3 control-label"><% $dialog_type %>: </label>
       	      <div class="col-sm-9" >
                 <div id="select_trial_for_folder">
 % if ($trial_id) {
@@ -123,7 +124,7 @@ jQuery(document).ready(function() {
       breeding_program_change_trials();
     }
   });
-  
+
   jQuery("#folder_set_breeding_program_select_div").on('change', "#folder_set_breeding_program_id", function() {
     breeding_program_change_folders();
     breeding_program_change_trials();
@@ -160,7 +161,7 @@ function set_trial_folder() {
   var trial_ids = jQuery('#html_select_trial_for_folder').val();
   console.log(trial_ids);
   var folder_id = jQuery('#html_select_folder_for_trial').val();
-  
+
   if ( jQuery.isArray(trial_ids) ) {
     var errors = 0;
     jQuery.each(trial_ids, function(index, value) {

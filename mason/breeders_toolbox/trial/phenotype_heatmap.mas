@@ -1,18 +1,34 @@
 
 <%args>
 $trial_id
+$stockref => undef
 </%args>
 
- <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js' ] &>
+
+
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 <style>
     #trait_heatmap {display: inline; }
     #trial_no_phenoMSG {display: none; }
     #trial_no_rowColMSG {display: none; }
     #traitdiv {display: none; }
+    #trial_heatmap_div  {display: none; }
     #chart {display: none; }
+    #chart_fm {display: none; }
+    #d3legend {display: none; }
+    #plot_image_ids {display: none;}
     
     #container_heatmap {
+        //border:2px dashed #000;
+        height: 390px;
+        width: 700px;
+        overflow: auto;
+        //overflow: scroll;
+        display: none;
+        margin: 10px;
+    }
+    #container_fm {
         //border:2px dashed #000;
         height: 390px;
         width: 700px;
@@ -40,27 +56,49 @@ $trial_id
       text.axis-worktime {
         fill: #000;
       }
+      
+      .legend { list-style: none; }
+      .legend li { float: left; margin-right: 10px; }
+      .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
+
+      .legend .d3block_even_number { background-color: #c7e9b4; }
+      .legend .d3block_odd_number { background-color: #41b6c4; }
+      .legend .d3checks { background-color: #081d58; }
+      .legend .d3rep_even_number { background-color: red; height: 8px; width: 18px;}
+      .legend .d3rep_odd_number { background-color: green; height: 8px; width: 18px;}
+    
 </style>
 
 <div class="form-group form-group-sm" id="traitdiv" >
-    <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label>
-    <div class="col-sm-10">
+    <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
+    <div class="col-sm-12">
         <div id="heatmap_traits_assayed_dropdown">
         </div>
     </div>
 </div>
 
+<p></br><div class="d3legend" id="d3legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
+  <li><span class="d3block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+  <li><span class="d3block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+  <li><span class="d3checks"></span> Checks</li>
+  <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+  <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+  <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
+  <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
+</div>
+
 <div id="container_heatmap" ></div>
+<div id="container_fm" ></div>
 <div id="trait_heatmap" >loading...</div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
 <div class="container" id="trial_no_rowColMSG">
     <div class="well">
-        <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre>
+    <!--    <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre> -->
     </div>
 </div>
 <div id="chart"></div>
 <div class="col-sm-10" id="d_button" style="display:none";>
- <!-- <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
+  <!--<a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
 </div>
 
 <div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
@@ -193,7 +231,122 @@ $trial_id
     </div>
 </div>
 
+<div class="modal fade" id="hm_replace_plot_accessions_dialog" name="hm_replace_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="HmReplacePlotAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmReplacePlotAccessionsDialog">Replace Plot Accession</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
 
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="hm_replace_plot_accession_form" name="hm_replace_plot_accession_form">
+                      <div id="hm_edit_plot_information">
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_name">
+
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_number">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_id">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Accession: </label>
+                        <div class="col-sm-9" id="hm_edit_plot_accession">
+                        </div>
+                      </div>
+
+                      
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+                        <div class="col-sm-9" >
+                          <input class="form-control" id="hm_accession" name="hm_accession"></input>
+                        </div>
+                      </div>
+
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Images</button>
+                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="hm_replace_plot_accession_submit" id="hm_replace_plot_accession_submit">Replace Plot Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="hm_replace_accessions_dialog_message" name="hm_replace_accessions_dialog_message" tabindex="-1" role="dialog" aria-labelledby="HmDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b>Replace Plot Accessions</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_trait_form" name="delete_trait_form">
+
+                    <p3> Plot accession was replaced successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<%perl>
+my $dbh = $stockref->{dbh};
+my $image_ids =  $stockref->{image_ids} || [] ;
+</%perl>
+
+<div class="modal  fade" id="view_plot_image_dialog" name="view_plot_image_dialog" tabindex="-1" role="dialog" aria-labelledby="ViewPlotImage">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ViewPlotImage">View Plot Images</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="view_plot_image_form" name="view_plot_image_form">
+                    
+                    <div class="col-sm-9" id="plot_image_ids"></div>
+                    
+                    <div class="col-sm-9" id="show_plot_image_ids"></div>
+                    
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="view_plot_image_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 <script defer="defer" type="text/javascript" >
 var trial_id = <% $trial_id %>;
@@ -202,82 +355,44 @@ var selected;
 var phenotypes_id = [];
 jQuery(document).ready( function() {
 
-    jQuery('#pheno_heatmap_onswitch').click( function() {
-        jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
-            beforeSend: function() {
-              jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                if (response.traits_assayed[0][0]) {
-                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                    traits_assayed_html = traits_assayed_html + "<option value=''>select trait to show heatmap</option>";
-                    for (i=0; i<response.traits_assayed[0].length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
-                    }
-                    traits_assayed_html = traits_assayed_html +"</select>";
-                    jQuery("#trait_heatmap").css("display", "none");                    
-                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traitdiv").css("display", "inline-block");
-                    jQuery("#working_modal").modal("hide");
-                } 
-                else {
-                    jQuery("#working_modal").modal("hide");
-                    jQuery("#trait_heatmap").css("display", "none"); 
-                    jQuery("#traitdiv").css("display", "none");
-                    jQuery("#trial_no_phenoMSG").css("display", "inline-block");
-                    
-                }
-            },
-            error: function(response){
-                alert('Error retrieving traits assayed in this trial');
-            }
-
-        });
-        
-    });
-    
-
-  jQuery(document).on('change', '#trait_list_dropdown', function () {
-    d3.select("svg").remove(); //Remove already created heatmap.
-    selected = jQuery("#trait_list_dropdown").val();
-    if (selected == ''){ }
-    else {
+    function assayed_trait_heatmap_view(selected) {
         jQuery.ajax( {
              url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected, 
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                var col_length; 
-                var row_length;        
-                var false_coord = response.phenotypes.false_coord;
-                phenotypes_id = response.phenotypes.phenoID;
-                for (i=0; i<response.phenotypes.col.length; i++) {
-                    if (response.phenotypes.col[i] && response.phenotypes.row[i]){
-                        //console.log(response.phenotypes.col[i]);
-                        col_length = response.phenotypes.col[i];
-                        row_length = response.phenotypes.row[i];
-                    }
-                }
+                var col_length = response.col[0]; 
+                var row_length = response.row[0];
+                var col_max =  response.col_max;
+                var row_max =  response.row_max;
+                var false_coord = response.false_coord;
+                phenotypes_id = response.phenoID;
+
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#chart").css({"display": "inline-block"});
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
                     jQuery("#trait_heatmap").css("display", "none");
-                    jQuery("#d_button").css("display", "inline-block");
                     
-
+                    var default_width = 50 * col_max;
+                    var default_Width_used;
+                    if (default_width < 684){
+                        default_Width_used = 684;
+                    }else { default_Width_used = 50 * col_max; }
+                    
                   var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-                      width = 960 - margin.left - margin.right,
-                      height = 900 - margin.top - margin.bottom,
-                      gridSize = Math.floor(width / 24),
-                      legendElementWidth = gridSize*2,
+                      width = default_Width_used + 30 - margin.left - margin.right,
+                      height = 50 * row_max + 150 - margin.top - margin.bottom,
+                     // gridSize = Math.floor(width / 24),
+                      gridSize = 50,
+                      gridSize2 = 38,
+                      legendElementWidth = gridSize2*2,
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-                      rows = response.phenotypes.unique_row,
-                      columns = response.phenotypes.unique_col;
-                      datasets = response.phenotypes.result;
+                      rows = response.unique_row,
+                      columns = response.unique_col;
+                      datasets = response.result;
                 
                   var svg = d3.select("#container_heatmap").append("svg")
                       .attr("width", width + margin.left + margin.right)
@@ -298,12 +413,12 @@ jQuery(document).ready( function() {
                   var columnLabels = svg.selectAll(".columnLabel")
                       .data(columns)
                       .enter().append("text")
-                        .text(function(d) { return d; })
-                        .attr("x", function(d, i) { return i * gridSize; })
-                        .attr("y", 0 )
-                        .style("text-anchor", "middle")
-                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
+                      .text(function(d) { return d; })
+                      .attr("x", function(d, i) { return i * gridSize; })
+                      .attr("y", 0 )
+                      .style("text-anchor", "middle")
+                      .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                      .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
                   
                   var heatmapChart = function(datasets) {
                     
@@ -346,6 +461,10 @@ jQuery(document).ready( function() {
                                                                             //console.log('over');
                                                         })
                           .on("mouseout", function(d) { 
+                                                          var colorScale = d3.scale.quantile()
+                                                              .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
+                                                              .range(colors);
+                          
                                                           var cards = svg.selectAll(".col")
                                                               .data(datasets, function(d) {return d.row+':'+d.col;});
 
@@ -387,14 +506,14 @@ jQuery(document).ready( function() {
                         .attr("x", function(d, i) { return legendElementWidth * i; })
                         .attr("y", 0 - 90)
                         .attr("width", legendElementWidth)
-                        .attr("height", gridSize / 2)
+                        .attr("height", gridSize2 / 2)
                         .style("fill", function(d, i) { return colors[i]; });
 
                       legend.append("text")
                         .attr("class", "mono")
                         .text(function(d) { return ">= " + Math.round(d); })
                         .attr("x", function(d, i) { return legendElementWidth * i; })
-                        .attr("y", 0 - 90 + gridSize);
+                        .attr("y", 0 - 90 + gridSize2);
 
                       legend.exit().remove();
                     
@@ -416,7 +535,442 @@ jQuery(document).ready( function() {
              error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
              }
-        });
+        });    
+    }
+    var image = [];
+    var image_ids = [];
+    function btnClick(n){                        
+      if (n.length == 0){
+         jQuery("#hm_view_plot_image_submit").addClass("disabled");
+      } else {
+        jQuery("#hm_view_plot_image_submit").removeClass("disabled");
+      }
+      return true; 
+    }
+    
+    function field_map_view() {
+        jQuery.ajax( {
+             url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+             beforeSend: function() {
+               jQuery("#working_modal").modal("show");
+             },
+             success: function(response) {
+                var col_length = response.coord_col[0]; 
+                var row_length = response.coord_row[0];
+                var block_max = response.max_block;
+                var rep_max = response.max_rep;
+                var col_max =  response.max_col;
+                var row_max =  response.max_row;
+                var controls = response.controls;
+                var false_coord = response.false_coord;
+                var design_type = response.design_type;
+
+                if (col_length && row_length) {
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#chart_fm").css({"display": "inline-block"});
+                    jQuery("#container_fm").css({"display": "inline-block", "overflow": "auto"});
+                    jQuery("#trait_heatmap").css("display", "none");
+                    jQuery("#d3legend").css("display", "inline-block");
+                    jQuery("#container_heatmap").css("display", "none");
+                    jQuery("#trait_heatmap").css("display", "none");
+
+                  var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+                      width = 50 * col_max + 30 - margin.left - margin.right,
+                      height = 50 * row_max + 100 - margin.top - margin.bottom,
+                      gridSize = 50,
+                      legendElementWidth = gridSize*2,
+                      buckets = 9,
+                      colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+                      rows = response.unique_row,
+                      columns = response.unique_col;
+                      datasets = response.result;
+                     
+                  var svg = d3.select("#container_fm").append("svg")
+                      .attr("width", width + margin.left + margin.right)
+                      .attr("height", height + margin.top + margin.bottom)
+                      .append("g")
+                      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                                        
+                  var rowLabels = svg.selectAll(".rowLabel")
+                      .data(rows)
+                      .enter().append("text")
+                        .text(function (d) { return d; })
+                        .attr("x", 0 )
+                        .attr("y", function (d, i) { return i * gridSize; })
+                        .style("text-anchor", "end")
+                        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "rowLabel mono axis axis-workweek" : "rowLabel mono axis"); });
+
+                  var columnLabels = svg.selectAll(".columnLabel")
+                      .data(columns)
+                      .enter().append("text")
+                        .text(function(d) { return d; })
+                        .attr("x", function(d, i) { return i * gridSize; })
+                        .attr("y", 0 )
+                        .style("text-anchor", "middle")
+                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
+                  
+                  var heatmapChart = function(datasets) {
+                    
+                    datasets.forEach(function(d) { 
+
+                        d.row = +d.row;
+                        d.col = +d.col;
+                        d.blkn = +d.blkn;   
+                                                
+                      var cards = svg.selectAll(".col")
+                          .data(datasets, function(d) {return d.row+':'+d.col;});
+
+                      cards.append("title"); 
+                      
+                      var image_icon = function (d, i){
+                          image = d.plot_image_ids; 
+                          var plot_image;
+                          if (image.length > 0){
+                            plot_image = "/static/css/images/plot_images.png"; 
+                          }else{
+                            plot_image = "";
+                          }
+                          return plot_image;
+                      }                 
+                      
+                      var colors = function (d, i){
+                          if (block_max == 1){
+                            color = '#41b6c4';
+                          }
+                          else if (block_max > 1){
+                            if (d.blkn % 2 == 0){
+                                color = '#c7e9b4';
+                            }
+                            else{
+                                color = '#41b6c4'
+                            }
+                          }
+                          else{
+                            color = '#c7e9b4';
+                          }
+                          if (controls) {
+                            for (var i = 0; i < controls.length; i++) {
+                              if ( controls[i] == d.stock) {
+                                color = '#081d58';
+                              }
+                            }
+                          }
+                          return color;
+                        }
+                        
+                        var strokes = function (d, i){
+                            var stroke;
+                            if (rep_max == 1){
+                              stroke = 'green';
+                            }
+                            else if (rep_max > 1){
+                              if (d.rep % 2 == 0){
+                                  stroke = 'red';
+                              }
+                              else{
+                                  stroke = 'green'
+                              }
+                            }
+                            else{
+                              stroke = 'red';
+                            }
+
+                            return stroke;
+                          }
+                          
+                          function clickcancel() {
+                            var event = d3.dispatch('click', 'dblclick');
+                            function cc(selection) {
+                                var down,
+                                    tolerance = 5,
+                                    last,
+                                    wait = null;
+                                function dist(a, b) {
+                                    return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
+                                }
+                                selection.on('mousedown', function() {
+                                    down = d3.mouse(document.body);
+                                    last = +new Date();
+                                });
+                                selection.on('mouseup', function() {
+                                    if (dist(down, d3.mouse(document.body)) > tolerance) {
+                                        return;
+                                    } else {
+                                        if (wait) {
+                                            window.clearTimeout(wait);
+                                            wait = null;
+                                            event.dblclick(d3.event);
+                                        } else {
+                                            wait = window.setTimeout((function(e) {
+                                                return function() {
+                                                    event.click(e);
+                                                    wait = null;
+                                                };
+                                            })(d3.event), 300);
+                                        }
+                                    }
+                                });
+                            };
+                            return d3.rebind(cc, event, 'on');
+                          }
+                        var cc = clickcancel();
+                      
+                      cards.enter().append("rect")
+                          .attr("x", function(d) { return (d.col - 1) * gridSize; })
+                          .attr("y", function(d) { return (d.row - 1) * gridSize; })
+                          .attr("rx", 4)
+                          .attr("ry", 4)
+                          .attr("class", "col bordered")
+                          .attr("width", gridSize)
+                          .attr("height", gridSize)
+                          .style("stroke-width", 2)
+                          .style("stroke", strokes)
+                          .style("fill", colors)
+                          
+                          .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); })
+                          .on("mouseout", function(d) { 
+                                                          var cards = svg.selectAll(".col")
+                                                              .data(datasets, function(d) {return d.row+':'+d.col;});
+
+                                                          cards.append("title");
+                                                          
+                                                          cards.enter().append("rect")
+                                                            .attr("x", function(d) { return (d.col - 1) * gridSize; })
+                                                            .attr("y", function(d) { return (d.row - 1) * gridSize; })
+                                                            .attr("rx", 4)
+                                                            .attr("ry", 4)
+                                                            .attr("class", "col bordered")
+                                                            .attr("width", gridSize)
+                                                            .attr("height", gridSize)
+                                                            .style("stroke-width", 2)
+                                                            .style("stroke", strokes)
+                                                            .style("fill", colors); 
+                                                            
+                                                            cards.transition().duration(1000)
+                                                                .style("fill", colors) ;                          
+
+                                                            cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                                                            
+                                                            cards.exit().remove();
+                                                            //console.log('out');
+                                                            })                                
+                            .call(cc);                                
+                                                       
+                            cc.on("dblclick", function(el) { var me = d3.select(el.srcElement);
+                                                             var d = me.data()[0];
+                                                              window.location.href = '/stock/'+d.plot_id+'/view';
+                                                            });
+                            cc.on("click", function(el) {  
+                                                           var me = d3.select(el.srcElement);
+                                                           var d = me.data()[0];
+                                                           image_ids = d.plot_image_ids;
+                                                           var replace_accession = d.stock;
+                                                           var replace_plot_id = d.plot_id;
+                                                           var replace_plot_name = d.plotname;
+                                                           var replace_plot_number = d.plotn;
+                                                           
+                                                           jQuery('#plot_image_ids').html(image_ids);
+                                                           jQuery('#hm_replace_accessions_link').find('button').trigger('click');
+                                                           jQuery("#hm_replace_accessions_link").on("click", function(){ btnClick(image_ids); });
+                                                           jQuery('#hm_edit_plot_information').html('<b>Selected Plot Information: </b>');
+                                                           jQuery('#hm_edit_plot_name').html(replace_plot_name);
+                                                           jQuery('#hm_edit_plot_number').html(replace_plot_number);
+                                                           old_plot_id = jQuery('#hm_edit_plot_id').html(replace_plot_id);
+                                                           old_plot_accession = jQuery('#hm_edit_plot_accession').html(replace_accession);
+                                                           jQuery('#hm_replace_plot_accessions_dialog').modal('show');
+                                                           
+                                                           new jQuery.ajax({
+                                                             type: 'POST',
+                                                             url: '/ajax/breeders/trial/<% $trial_id %>/retrieve_plot_images',
+                                                             dataType: "json",
+                                                             data: {
+                                                                     'image_ids': JSON.stringify(image_ids),
+                                                                     'plot_name': replace_plot_name,
+                                                                     'plot_id': replace_plot_id,
+                                                             },
+                                                             success: function (response) {
+                                                               jQuery('#working_modal').modal("hide");
+                                                               var images = response.image_html;
+                                                               if (response.error) {
+                                                                 alert("Error Retrieving Plot Images: "+response.error);
+                                                               }
+                                                               else {
+                                                                 jQuery("#show_plot_image_ids").html(images);
+                                                                
+                                                                // jQuery('#view_plot_image_dialog').modal("show"); 
+                                                               }
+                                                             },
+                                                             error: function () {
+                                                               jQuery('#working_modal').modal("hide");
+                                                               alert('An error occurred retrieving plot images');
+                                                             }
+                                                           });
+                                                       
+                                                          });
+                                                          
+                      cards.transition().duration(1000)
+                          .style("fill", colors) ;  
+
+                      cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                      
+                      cards.append("text");
+                      cards.enter().append("text")
+                        .attr("x", function(d) { return (d.col - 1) * gridSize + 10; })
+                        .attr("y", function(d) { return (d.row - 1) * gridSize + 20 ; })
+                        .text(function(d) { return d.plotn; });
+                      
+                      cards.select("text").text(function(d) { return d.plotn; }) ;
+                         
+                      cards.append("image");
+                      cards.enter().append("image")
+                        .attr("xlink:href", image_icon)
+                        .attr("x", function(d) { return (d.col - 1) * gridSize + 2; })
+                        .attr("y", function(d) { return (d.row - 1) * gridSize + 3 ; })
+                        .attr('width', 10)
+                        .attr('height', 10)
+                                                  
+                      cards.exit().remove();
+                    
+                     });  
+                    } ; 
+                  
+                  heatmapChart(datasets);
+                  if (false_coord){
+                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                  }
+                }
+                else  {
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#container_heatmap").css("display", "none");
+                    jQuery("#trait_heatmap").css("display", "none");
+                    jQuery("#trial_no_rowColMSG").css("display", "inline-block");
+                }
+             },
+             error: function(reponse) {
+                alert('Error displaying traits assayed heatmap');   
+             }
+        });    
+    }
+    
+    jQuery("#hm_view_plot_image_submit").click( function() {
+        jQuery("#view_plot_image_dialog").modal("show");
+    });
+    
+    jQuery("#hm_accession").autocomplete({
+        appendTo: "#hm_replace_plot_accessions_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    }); 
+    
+    jQuery('#hm_replace_plot_accession_submit').click( function() {
+      hm_replace_plotAccession_fieldMap();
+    });
+
+    function hm_replace_plotAccession_fieldMap() {
+      jQuery('#hm_replace_plot_accessions_dialog').modal("hide");
+      jQuery('#working_modal').modal("show");
+
+      var new_accession = jQuery('#hm_accession').val();
+      var old_accession = jQuery('#hm_edit_plot_accession').html();
+      var old_plot_id = jQuery('#hm_edit_plot_id').html();
+
+      new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/breeders/trial/<% $trial_id %>/replace_plot_accessions',
+        dataType: "json",
+        data: {
+                'new_accession': new_accession,
+                'old_accession': old_accession,
+                'old_plot_id': old_plot_id,
+        },
+
+        success: function (response) {
+          jQuery('#working_modal').modal("hide");
+
+          if (response.error) {
+            alert("Error Replacing Plot Accession: "+response.error);
+          }
+          else {
+            jQuery('#hm_replace_accessions_dialog_message').modal("show");
+          }
+        },
+        error: function () {
+          jQuery('#working_modal').modal("hide");
+          alert('An error occurred replacing plot accession');
+        }
+      });
+    }
+    
+    jQuery('#pheno_heatmap_onswitch').click( function() {
+        jQuery("#trait_heatmap").css("display", "none");
+        field_map_view();
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+            beforeSend: function() {
+              jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                if (response.traits_assayed[0][0]) {
+                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
+                    traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
+                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
+                    traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
+                    for (i=0; i<response.traits_assayed[0].length; i++) {
+                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                    }
+                    traits_assayed_html = traits_assayed_html +"</optgroup>";
+                    traits_assayed_html = traits_assayed_html +"</select>";
+                    jQuery("#trait_heatmap").css("display", "none");                   
+                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
+                    jQuery("#traitdiv").css("display", "inline-block");
+                    //field_map_view();
+                    //jQuery("#working_modal").modal("hide");
+                } 
+                else {
+                    //field_map_view();
+                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
+                    traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
+                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
+                    traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
+                    traits_assayed_html = traits_assayed_html +"</optgroup>";
+                    traits_assayed_html = traits_assayed_html +"</select>";
+                    jQuery("#trait_heatmap").css("display", "none");                   
+                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
+                    jQuery("#traitdiv").css("display", "inline-block");
+                    //jQuery("#working_modal").modal("hide");                 
+                }
+            },
+            error: function(response){
+                alert('Error retrieving traits assayed in this trial');
+            }
+        });        
+    });
+    
+    jQuery('#pheno_heatmap_offswitch').click( function() {
+        d3.select("svg").remove();
+        jQuery("#trait_heatmap").css("display", "none");
+        jQuery("#trial_heatmap_div").css("display", "none");
+        jQuery("#traitdiv").css("display", "none");
+        jQuery("#container_heatmap").css("display", "none");
+        jQuery("#chart_fm").css("display", "none");
+        jQuery("#container_fm").css("display", "none");
+        jQuery("#trial_no_phenoMSG").css("display", "none");
+        jQuery("#d3legend").css("display", "none");
+    });
+
+  jQuery(document).on('change', '#trait_list_dropdown', function () {
+    selected = jQuery("#trait_list_dropdown").val();
+    if (selected == ''){ }
+    if (jQuery.isNumeric(selected)){
+        d3.select("svg").remove();
+        jQuery("#d3legend").css("display", "none");
+        jQuery("#container_fm").css("display", "none");
+        assayed_trait_heatmap_view(selected);
+    }
+    if (selected == 'fieldmap'){ 
+        d3.select("svg").remove();
+        field_map_view();
     }
     
   });
@@ -431,7 +985,6 @@ jQuery(document).ready( function() {
     var sup_traitValue = jQuery('#pheno_value').html();
     var sup_traitID = jQuery('#mytrait_id').html();
     var sup_phenoID = jQuery('#mypheno_id').html();
-    //alert(sup_plotName+","+sup_traitValue+"," +sup_traitID);
     
     new jQuery.ajax({
         type: 'POST',

@@ -18,6 +18,7 @@ This module uses the the R CRAN package "Agricolae" to calculate experimental de
 
  Jeremy D. Edwards (jde22@cornell.edu)
  Aimin Yan (ay247@cornell.edu)
+
 =cut
 
 use Moose;
@@ -144,56 +145,78 @@ sub _get_genotyping_plate {
     my $self = shift;
     my %gt_design;
     my @stock_list;
-    my $number_of_stocks;
+
     if ($self->has_stock_list()) {
-	@stock_list = @{$self->get_stock_list()};
-	$number_of_stocks = scalar(@stock_list);
-	if ($number_of_stocks > 95) {
-	    die "Need fewer than 96 stocks per plate (at least one blank!)";
-	}
+        @stock_list = @{$self->get_stock_list()};
+        my $number_of_stocks = scalar(@stock_list);
+        if ($number_of_stocks > $self->get_block_size) {
+            die "Too many to fit on one plate! $number_of_stocks > ".$self->get_block_size;
+        }
     }
     else {
-	die "No stock list specified\n";
+        die "No stock list specified\n";
     }
 
-    my $blank = "";
-    if ($self->has_blank()) {
-	$blank = $self->get_blank();
-	print STDERR "Using previously set blank $blank\n";
+    my $blank = $self->get_blank ? $self->get_blank : ' ';
+
+    if ($self->get_block_size == '96'){
+        foreach my $row ("A".."H") {
+            foreach my $col (1..12) {
+                my $well= sprintf "%s%02d", $row, $col;
+
+                if ($well eq $blank) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well."_BLANK",
+                        stock_name => "BLANK",
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 1
+                    };
+                }
+                elsif (@stock_list) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well,
+                        stock_name => shift(@stock_list),
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 0
+                    };
+                }
+            }
+        }
     }
-    else {
-	my $well_no = int(rand() * $number_of_stocks)+1;
-	my $well_row = chr(int(($well_no-1) / 12) + 65);
-	my $well_col = ($well_no -1) % 12 +1;
-	$blank = sprintf "%s%02d", $well_row, $well_col;
-	print STDERR "Using randomly assigned blank $blank\n";
+    if ($self->get_block_size == '384'){
+        foreach my $row ("A".."P") {
+            foreach my $col (1..24) {
+                my $well= sprintf "%s%02d", $row, $col;
+
+                if ($well eq $blank) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well."_BLANK",
+                        stock_name => "BLANK",
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 1
+                    };
+                }
+                elsif (@stock_list) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well,
+                        stock_name => shift(@stock_list),
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 0
+                    };
+                }
+            }
+        }
     }
 
-    my $count = 0;
-
-    foreach my $row ("A".."H") {
-	foreach my $col (1..12) {
-	    $count++;
-	    my $well= sprintf "%s%02d", $row, $col;
-	    #my $well = $row.$col;
-
-	    if ($well eq $blank) {
-		$gt_design{$well} = {
-		    plot_name => $self->get_trial_name()."_".$well."_BLANK",
-		    stock_name => "BLANK",
-		};
-	    }
-	    elsif (@stock_list) {
-		$gt_design{$well} =
-		{ plot_name => $self->get_trial_name()."_".$well,
-		  stock_name => shift(@stock_list),
-		};
-	    }
-	    #print STDERR Dumper(\%gt_design);
-	}
-    }
     return \%gt_design;
-
 }
 
 sub isint{

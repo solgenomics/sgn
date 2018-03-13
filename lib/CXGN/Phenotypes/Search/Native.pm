@@ -19,6 +19,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         plot_list=>$plot_list,
         plant_list=>$plant_list,
         subplot_list=>$subplot_list,
+        exclude_phenotype_outlier=>0,
         include_timestamp=>$include_timestamp,
         include_row_and_column_numbers=>0,
         trait_contains=>$trait_contains,
@@ -98,6 +99,12 @@ has 'year_list' => (
     is => 'rw',
 );
 
+has 'exclude_phenotype_outlier' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'include_timestamp' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -151,6 +158,7 @@ sub search {
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
     my $include_timestamp = $self->include_timestamp;
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 
@@ -159,8 +167,10 @@ sub search {
 
     my $design_layout_sql = '';
     my $design_layout_select = '';
+    my $phenotypeprop_sql = '';
     my %design_layout_hash;
     my $using_layout_hash;
+    #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         $using_layout_hash = 1;
         foreach (@{$self->trial_list}){
@@ -184,6 +194,34 @@ sub search {
                     }
                 }
             }
+            #For performace reasons it is faster to include specific stock_ids in the query.
+            if ($self->data_level eq 'plot'){
+                if (!$self->plot_list){
+                    $self->plot_list([]);
+                }
+                my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
+                foreach (@$plots){
+                    push @{$self->plot_list}, $_->[0];
+                }
+            }
+            if ($self->data_level eq 'plant'){
+                if (!$self->plant_list){
+                    $self->plant_list([]);
+                }
+                my $plants = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plants();
+                foreach (@$plants){
+                    push @{$self->plant_list}, $_->[0];
+                }
+            }
+            if ($self->data_level eq 'subplot'){
+                if (!$self->subplot_list){
+                    $self->subplot_list([]);
+                }
+                my $subplots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_subplots();
+                foreach (@$subplots){
+                    push @{$self->subplot_list}, $_->[0];
+                }
+            }
         }
     } else {
         if ($self->include_row_and_column_numbers){
@@ -199,6 +237,10 @@ sub search {
             LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id) ";
             $design_layout_select = " ,rep.value, block_number.value, plot_number.value";
         }
+    }
+
+    if ($self->exclude_phenotype_outlier){
+        $phenotypeprop_sql = " LEFT JOIN phenotypeprop ON (phenotype.phenotype_id = phenotypeprop.phenotype_id AND phenotypeprop.type_id = $phenotype_outlier_type_id)";
     }
 
     my %columns = (
@@ -224,6 +266,7 @@ sub search {
       JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN phenotype USING(phenotype_id)
+      $phenotypeprop_sql
       JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
       JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
       JOIN db USING(db_id)
@@ -313,6 +356,10 @@ sub search {
       push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants or subplots
     } else {
       push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id OR plot.type_id = $subplot_type_id)"; #plots AND plants AND subplots
+    }
+
+    if ($self->exclude_phenotype_outlier){
+        push @where_clause, "phenotypeprop.value IS NULL";
     }
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
