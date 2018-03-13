@@ -3,6 +3,7 @@
 $seedlot_id
 $uniquename
 $current_count => 0
+$current_weight => 0
 $content_html
 $content_accession_name
 $content_cross_name
@@ -35,6 +36,7 @@ $box_name=>undef
 <tr><td><b>Contents</b></td><td><% $content_html %></td></tr>
 <!--<tr><td><b>Population</b></td><td><% $population_name %></td></tr>-->
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
+<tr><td><b>Current weight (g)</b></td><td><% $current_weight %></td></tr>
 </table>
 
 </&>
@@ -370,7 +372,8 @@ $box_name=>undef
             { title: "Transaction Date", "data": "timestamp" },
             { title: "From", "data": "from" },
             { title: "To", "data": "to" },
-            { title: "Transaction Count", "data": "value" },
+            { title: "Transaction Num Seeds", "data": "value" },
+            { title: "Transaction Weight (g)", "data": "weight" },
             { title: "Operator", "data": "operator" },
             { title: "Description", "data": "description" },
             { title: "Options", "data": "null", "render" : function ( data, type, row ) { return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>"; } },

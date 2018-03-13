@@ -787,7 +787,12 @@ sub current_count {
 
     my $count = 0;
     foreach my $t (@$transactions) {
-        $count += $t->amount() * $t->factor();
+        if ($t->amount() ne 'NA'){
+            $count += $t->amount() * $t->factor();
+        }
+    }
+    if ($count == 0 && scalar(@$transactions)>0){
+        $count = 'NA';
     }
     return $count;
 }
@@ -832,7 +837,12 @@ sub current_weight {
 
     my $weight = 0;
     foreach my $t (@$transactions) {
-        $weight += $t->weight_gram() * $t->factor();
+        if ($t->weight_gram() ne 'NA'){
+            $weight += $t->weight_gram() * $t->factor();
+        }
+    }
+    if ($weight == 0 && scalar(@$transactions)>0){
+        $weight = 'NA';
     }
     return $weight;
 }

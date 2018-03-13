@@ -4,6 +4,7 @@ package CXGN::Stock::Seedlot::Transaction;
 use Moose;
 use JSON::Any;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 has 'schema' => ( isa => 'Bio::Chado::Schema',
 		  is => 'rw',
@@ -23,13 +24,13 @@ has 'to_stock' => (isa => 'ArrayRef',
 				is => 'rw',
     );
 
-has 'amount' => (isa => 'Num',
+has 'amount' => (isa => 'Num|Str',
 			     is => 'rw',
 
     );
 
 has 'weight_gram' => (
-    isa => 'Num',
+    isa => 'Num|Str',
     is => 'rw',
 );
 
@@ -121,6 +122,18 @@ sub store {
     my $self = shift;    
     my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
 
+    my $amount = $self->amount() ? $self->amount() : 'NA';
+    my $weight = $self->weight_gram() ? $self->weight_gram() : 'NA';
+    my $value = {
+        amount => $amount,
+        weight_gram => $weight,
+        timestamp => $self->timestamp(),
+        operator => $self->operator(),
+        description => $self->description()
+    };
+    print STDERR Dumper $value;
+    my $json_value = JSON::Any->encode($value);
+
     if (!$self->has_transaction_id()) {
         my $row = $self->schema()->resultset("Stock::StockRelationship")
             ->find({
@@ -140,13 +153,7 @@ sub store {
                 subject_id => $self->to_stock()->[0],
                 type_id => $transaction_type_id,
                 rank => $new_rank,
-                value => JSON::Any->encode({
-                    amount => $self->amount(),
-                    weight_gram => $self->weight_gram(),
-                    timestamp => $self->timestamp(),
-                    operator => $self->operator(),
-                    description => $self->description()
-                }),
+                value => $json_value,
             });
         return $row->stock_relationship_id();
     }
@@ -154,13 +161,7 @@ sub store {
     else { 
         my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
         $row->update({
-            value => JSON::Any->encode({
-                amount => $self->amount(),
-                weight_gram => $self->weight_gram(),
-                timestamp => $self->timestamp(),
-                operator => $self->operator(),
-                description => $self->description()
-            })
+            value => $json_value
         });
         return $row->stock_relationship_id();
     }

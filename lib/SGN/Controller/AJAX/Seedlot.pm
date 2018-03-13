@@ -52,15 +52,13 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     );
     my @seedlots;
     foreach my $sl (@$list) {
-        my $source_stocks = $sl->{source_stocks};
+        my $source_stock = $sl->{source_stocks};
         my $contents_html = '';
-        foreach (@$source_stocks){
-            if ($_->[2] eq 'accession'){
-                $contents_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ('.$_->[2].') ';
-            }
-            if ($_->[2] eq 'cross'){
-                $contents_html .= '<a href="/cross/'.$_->[0].'">'.$_->[1].'</a> ('.$_->[2].') ';
-            }
+        if ($source_stock->[0]->[2] eq 'accession'){
+            $contents_html .= '<a href="/stock/'.$source_stock->[0]->[0].'/view">'.$source_stock->[0]->[1].'</a> ('.$source_stock->[0]->[2].') ';
+        }
+        if ($source_stock->[0]->[2] eq 'cross'){
+            $contents_html .= '<a href="/cross/'.$source_stock->[0]->[0].'">'.$source_stock->[0]->[1].'</a> ('.$source_stock->[0]->[2].') ';
         }
         push @seedlots, {
             breeding_program_id => $sl->{breeding_program_id},
@@ -104,6 +102,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         uniquename => $c->stash->{seedlot}->uniquename(),
         seedlot_id => $c->stash->{seedlot}->seedlot_id(),
         current_count => $c->stash->{seedlot}->current_count(),
+        current_weight => $c->stash->{seedlot}->current_weight(),
         location_code => $c->stash->{seedlot}->location_code(),
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
         organization_name => $c->stash->{seedlot}->organization_name(),
@@ -274,9 +273,25 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $population_name = $c->req->param("seedlot_population_name");
     my $organization = $c->req->param("seedlot_organization");
     my $amount = $c->req->param("seedlot_amount");
+    my $weight = $c->req->param("seedlot_weight");
     my $timestamp = $c->req->param("seedlot_timestamp");
     my $description = $c->req->param("seedlot_description");
     my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
+
+    if (!$weight && !$amount){
+        $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
+        $c->detach();
+    }
+
+    if (!$timestamp){
+        $c->stash->{rest} = {error=>'A seedlot must have a timestamp for the transaction.'};
+        $c->detach();
+    }
+
+    if (!$breeding_program_id){
+        $c->stash->{rest} = {error=>'A seedlot must have a breeding program.'};
+        $c->detach();
+    }
 
     my $operator;
     if ($c->user) {
@@ -304,13 +319,20 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->factor(1);
         $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
         $transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
-        $transaction->amount($amount);
+        if ($amount){
+            $transaction->amount($amount);
+        }
+        if ($weight){
+            $transaction->weight_gram($weight);
+        }
         $transaction->timestamp($timestamp);
         $transaction->description($description);
         $transaction->operator($operator);
         $transaction->store();
 
-        $sl->set_current_count_property();
+        my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+        $sl_new->set_current_count_property();
+        $sl_new->set_current_weight_property();
 
         $phenome_schema->resultset("StockOwner")->find_or_create({
             stock_id     => $seedlot_id,
@@ -656,11 +678,24 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     my @transactions;
     foreach my $t (@$transactions) {
         my $value_field = '';
-        if ($t->factor == 1){
+        if ($t->factor == 1 && $t->amount() ne 'NA'){
             $value_field = '<span style="color:green">+'.$t->factor()*$t->amount().'</span>';
         }
-        if ($t->factor == -1){
+        if ($t->factor == -1 && $t->amount() ne 'NA'){
             $value_field = '<span style="color:red">'.$t->factor()*$t->amount().'</span>';
+        }
+        if ($t->amount() eq 'NA'){
+            $value_field = $t->amount;
+        }
+        my $weight_value_field = '';
+        if ($t->factor == 1 && $t->weight_gram() ne 'NA'){
+            $weight_value_field = '<span style="color:green">+'.$t->factor()*$t->weight_gram().'</span>';
+        }
+        if ($t->factor == -1 && $t->weight_gram() ne 'NA'){
+            $weight_value_field = '<span style="color:red">'.$t->factor()*$t->weight_gram().'</span>';
+        }
+        if ($t->weight_gram() eq 'NA'){
+            $weight_value_field = $t->weight_gram;
         }
         my $from_url;
         my $to_url;
@@ -678,7 +713,7 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         } else {
             $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
         }
-        push @transactions, { "transaction_id"=>$t->transaction_id(), "timestamp"=>$t->timestamp(), "from"=>$from_url, "to"=>$to_url, "value"=>$value_field, "operator"=>$t->operator, "description"=>$t->description() };
+        push @transactions, { "transaction_id"=>$t->transaction_id(), "timestamp"=>$t->timestamp(), "from"=>$from_url, "to"=>$to_url, "value"=>$value_field, "weight"=>$weight_value_field, "operator"=>$t->operator, "description"=>$t->description() };
     }
 
     $c->stash->{rest} = { data => \@transactions };
