@@ -558,7 +558,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
-            $sl->box_name($val->{box_name});
+            $sl->box_name($val->{box_id});
             my $return = $sl->store();
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
