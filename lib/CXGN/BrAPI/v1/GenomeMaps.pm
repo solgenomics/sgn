@@ -55,7 +55,7 @@ sub list {
 			species => $m -> get_organism(),
 			type => $m->get_type(),
 			unit => $m->get_units(),
-			markerCount => $m->get_marker_count(),
+			markerCount => $m->get_map_marker_count(),
 		    #publishedDate => $prophash->{'published date'} ? join ',', @{$prophash->{'published date'}} : '',
 			comments => $m->get_abstract(),
 			linkageGroupCount => $m->get_chromosome_count(),
