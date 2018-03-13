@@ -175,7 +175,7 @@ sub _validate_with_plugin {
         #male parent must not be blank if type is biparental or bulk
         if (!$male_parent || $male_parent eq '') {
             if ($cross_type eq ( 'biparental' || 'bulk' )) {
-                push @errors, "Cell D$row_name: male parent required for biparental and bulk crosses";
+                push @error_messages, "Cell D$row_name: male parent required for biparental and bulk crosses";
             }
         }
 
@@ -221,7 +221,7 @@ sub _validate_with_plugin {
 
     my @plots = keys %seen_plot_names;
     my $plot_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots',\@accessions)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
     if (scalar(@plots_missing) > 0) {
         push @error_messages, "The following plots are not in the database as uniquenames or synonyms: ".join(',',@plots_missing);
