@@ -3495,12 +3495,12 @@ sub cache_combined_pops_data {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
-    my  $cache_pheno_data = {key       => "phenotype_data_trait_${trait_id}_${combo_pops_id}_combined",
+    my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
                              file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
                              stash_key => 'trait_combined_pheno_file'
     };
       
-    my  $cache_geno_data = {key       => "genotype_data_trait_${trait_abbr}_${combo_pops_id}_combined",
+    my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
                             file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
                             stash_key => 'trait_combined_geno_file'
     };
