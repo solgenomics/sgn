@@ -116,7 +116,8 @@ sub get_transactions_by_seedlot_id {
         if($row->object_id == $seedlot_id){
             $t_obj->factor(-1);
         }
-        if($data->{factor}){
+        #factor is generally stored as 1 in the seed_transaction and relies on whether the seedlot is the subject or object to decide if the factor is really 1 or -1; however, in the case for a transaction between a single seedlot, factor is stored as 1 or -1 depending on if seed was added or taken.
+        if($data->{factor} == -1){
             $t_obj->factor($data->{factor});
         }
         push @transactions, $t_obj;
