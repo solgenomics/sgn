@@ -454,8 +454,6 @@ sub upload_seedlots_POST : Args(0) {
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
             $sl->check_name_exists(0); #already validated
-            #TO DO
-            #$sl->cross_id($cross_id);
             my $return = $sl->store();
             my $seedlot_id = $return->{seedlot_id};
 
@@ -466,12 +464,15 @@ sub upload_seedlots_POST : Args(0) {
             $transaction->from_stock([$from_stock_id, $from_stock_name]);
             $transaction->to_stock([$seedlot_id, $key]);
             $transaction->amount($val->{amount});
+            $transaction->weight_gram($val->{weight_gram});
             $transaction->timestamp($timestamp);
             $transaction->description($val->{description});
             $transaction->operator($val->{operator_name});
             $transaction->store();
 
-            $sl->set_current_count_property();
+            my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+            $sl_new->set_current_count_property();
+            $sl_new->set_current_weight_property();
             push @added_stocks, $seedlot_id;
         }
     };

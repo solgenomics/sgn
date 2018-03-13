@@ -48,6 +48,7 @@ sub _validate_with_plugin {
     my $cross_name_head;
     my $operator_name_head;
     my $amount_head;
+    my $weight_head;
     my $description_head;
     my $box_name_head;
 
@@ -67,10 +68,13 @@ sub _validate_with_plugin {
         $amount_head  = $worksheet->get_cell(0,4)->value();
     }
     if ($worksheet->get_cell(0,5)) {
-        $description_head  = $worksheet->get_cell(0,5)->value();
+        $weight_head  = $worksheet->get_cell(0,5)->value();
     }
     if ($worksheet->get_cell(0,6)) {
-        $box_name_head  = $worksheet->get_cell(0,6)->value();
+        $description_head  = $worksheet->get_cell(0,6)->value();
+    }
+    if ($worksheet->get_cell(0,7)) {
+        $box_name_head  = $worksheet->get_cell(0,7)->value();
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
@@ -82,17 +86,20 @@ sub _validate_with_plugin {
     if (!$cross_name_head || $cross_name_head ne 'cross_name') {
         push @error_messages, "Cell C1: cross_name is missing from the header";
     }
-    if (!$operator_name_head || $operator_name_head ne 'cross_name') {
+    if (!$operator_name_head || $operator_name_head ne 'operator_name') {
         push @error_messages, "Cell D1: operator_name is missing from the header";
     }
     if (!$amount_head || $amount_head ne 'amount') {
         push @error_messages, "Cell E1: amount is missing from the header";
     }
+    if (!$weight_head || $weight_head ne 'weight(g)') {
+        push @error_messages, "Cell F1: weight(g) is missing from the header";
+    }
     if (!$description_head || $description_head ne 'description') {
-        push @error_messages, "Cell F1: description is missing from the header";
+        push @error_messages, "Cell G1: description is missing from the header";
     }
     if (!$box_name_head || $box_name_head ne 'box_name') {
-        push @error_messages, "Cell G1: box_name is missing from the header";
+        push @error_messages, "Cell H1: box_name is missing from the header";
     }
 
     my %seen_seedlot_names;
@@ -104,7 +111,8 @@ sub _validate_with_plugin {
         my $accession_name;
         my $cross_name;
         my $operator_name;
-        my $amount = 0;
+        my $amount = 'NA';
+        my $weight = 'NA';
         my $description;
         my $box_name;
 
@@ -124,10 +132,13 @@ sub _validate_with_plugin {
             $amount =  $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $description =  $worksheet->get_cell($row,5)->value();
+            $weight =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $box_name =  $worksheet->get_cell($row,6)->value();
+            $description =  $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $box_name =  $worksheet->get_cell($row,7)->value();
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
@@ -163,6 +174,12 @@ sub _validate_with_plugin {
 
         if (!defined($amount) || $amount eq '') {
             push @error_messages, "Cell E$row_name: amount missing";
+        }
+        if (!defined($weight) || $weight eq '') {
+            push @error_messages, "Cell F$row_name: weight(g) missing";
+        }
+        if ($amount eq 'NA' && $weight eq 'NA') {
+            push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
         }
     }
 
@@ -264,7 +281,8 @@ sub _parse_with_plugin {
         my $accession_name;
         my $cross_name;
         my $operator_name;
-        my $amount = 0;
+        my $amount = 'NA';
+        my $weight = 'NA';
         my $description;
         my $box_name;
 
@@ -284,10 +302,13 @@ sub _parse_with_plugin {
             $amount =  $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $description =  $worksheet->get_cell($row,5)->value();
+            $weight =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $box_name =  $worksheet->get_cell($row,6)->value();
+            $description =  $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $box_name =  $worksheet->get_cell($row,7)->value();
         }
 
         #skip blank lines
@@ -301,6 +322,7 @@ sub _parse_with_plugin {
             cross_name => $cross_name,
             cross_stock_id => $cross_lookup{$cross_name},
             amount => $amount,
+            weight_gram => $weight,
             description => $description,
             box_name => $box_name,
             operator_name => $operator_name
