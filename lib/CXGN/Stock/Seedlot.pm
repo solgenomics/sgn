@@ -867,7 +867,7 @@ sub get_current_weight_property {
     my $self = shift;
     my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
     my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
-    return $recorded_current_count->value();
+    return $recorded_current_count ? $recorded_current_count->value() : '';
 }
 
 

@@ -737,12 +737,14 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
         $c->detach();
     }
     my $operator = $c->user->get_object->get_username;
+    my $user_id = $c->user->get_object->get_sp_person_id;
 
     my $to_new_seedlot_name = $c->req->param('to_new_seedlot_name');
     my $stock_id;
@@ -827,6 +829,11 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 
             my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
             $new_sl = $sl_new;
+
+            $phenome_schema->resultset("StockOwner")->find_or_create({
+                stock_id     => $seedlot_id,
+                sp_person_id =>  $user_id,
+            });
         };
 
         if ($@) { 
@@ -861,7 +868,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $description = $c->req->param("description");
     my $factor = $c->req->param("factor");
     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema});
-    $transaction->factor($factor);
+    $transaction->factor(1);
     if ($factor == 1){
         $transaction->from_stock([$stock_id, $stock_uniquename]);
         $transaction->to_stock([$c->stash->{seedlot_id}, $c->stash->{uniquename}]);
