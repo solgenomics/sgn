@@ -583,12 +583,23 @@ sub upload_seedlots_inventory_POST : Args(0) {
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
             my $return = $sl->store();
+            my $current_stored_count = $sl->get_current_count_property();
+            my $current_stored_weight = $sl->get_current_weight_property();
+
+            my $weight_difference = $val->{weight_gram} - $current_stored_weight;
+            my $factor;
+            if ($weight_difference >= 0){
+                $factor = 1;
+            } else {
+                $factor = -1;
+                $weight_difference = $weight_difference * -1; #Store positive values only
+            }
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-            $transaction->factor(1);
+            $transaction->factor($factor);
             $transaction->from_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
             $transaction->to_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
-            $transaction->weight_gram($val->{weight_gram});
+            $transaction->weight_gram($weight_difference);
             $transaction->timestamp($val->{inventory_date});
             $transaction->description('Seed inventory CSV upload.');
             $transaction->operator($val->{inventory_person});

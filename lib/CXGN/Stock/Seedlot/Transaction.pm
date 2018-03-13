@@ -101,7 +101,7 @@ sub get_transactions_by_seedlot_id {
         $t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
         $t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
         my $data = JSON::Any->decode($row->value());
-        if ($data->{weight_gram}){
+        if (defined($data->{weight_gram})){
             $t_obj->weight_gram($data->{weight_gram});
         } else {
             $t_obj->weight_gram('NA');
@@ -116,6 +116,9 @@ sub get_transactions_by_seedlot_id {
         if($row->object_id == $seedlot_id){
             $t_obj->factor(-1);
         }
+        if($data->{factor}){
+            $t_obj->factor($data->{factor});
+        }
         push @transactions, $t_obj;
     }
 
@@ -126,14 +129,15 @@ sub store {
     my $self = shift;    
     my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
 
-    my $amount = $self->amount() ? $self->amount() : 'NA';
-    my $weight = $self->weight_gram() ? $self->weight_gram() : 'NA';
+    my $amount = defined($self->amount()) ? $self->amount() : 'NA';
+    my $weight = defined($self->weight_gram()) ? $self->weight_gram() : 'NA';
     my $value = {
         amount => $amount,
         weight_gram => $weight,
         timestamp => $self->timestamp(),
         operator => $self->operator(),
-        description => $self->description()
+        description => $self->description(),
+        factor => $self->factor()
     };
     print STDERR Dumper $value;
     my $json_value = JSON::Any->encode($value);
