@@ -70,20 +70,9 @@ sub _validate_with_plugin {
     $male_plot_head  = $worksheet->get_cell(0,5)->value();
   }
 
-#  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-#  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
-
   for my $column ( 6 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
   }
-#    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
-#    if ($matching_cross_property_row->first) {
-#      my $matching_term = $matching_cross_property_row->first->name;
-#      if (!$matching_term) {
-#        push @errors, "Header property $header_string is not supported\n";
-#      }
-#    }
-#  }
 
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
     push @errors, "Cell A1: cross_name is missing from the header";
@@ -236,16 +225,12 @@ sub _parse_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
-#  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-#  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
-
   for my $column ( 6 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
-#    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
-#    if ($matching_cross_property_row->first) {
+
       $properties_columns{$column} = $header_string;
       $additional_properties{$header_string} = ();
-#    }
+
   }
 
   for my $row ( 1 .. $row_max ) {
