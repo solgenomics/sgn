@@ -32,6 +32,8 @@ it under the same terms as Perl itself.
 package UpgradeGenotypeStorage;
 
 use Moose;
+use CXGN::BreederSearch;
+use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -45,19 +47,32 @@ sub patch {
 
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
+    print STDOUT "\nChecking if materialized_phenoview is populated.\n";
+
+    try {
+      my $populated_query = "select * from materialized_phenoview limit 1";
+      my $sth = $self->dbh->prepare($populated_query);
+      $sth->execute();
+    } catch { #if test query fails because views aren't populated
+      print STDERR "materialized_phenoview is not populated, run 'SELECT refresh_materialized_views();' in database before running this patch";
+      return;
+    };
+
     print STDOUT "\nExecuting the SQL commands.\n";
 
     $self->dbh->do(<<EOSQL);
 
 --do your SQL here
 
-DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
-
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_genoview CASCADE;
+
+UPDATE genotypeprop SET value = '{"igd number":"' || value || '"}' WHERE type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'igd number');
+ALTER TABLE genotypeprop ALTER COLUMN value TYPE JSONB USING value::JSON;
+
 CREATE MATERIALIZED VIEW public.materialized_genoview AS
  SELECT stock.stock_id AS accession_id,
     nd_experiment_protocol.nd_protocol_id AS genotyping_protocol_id,
-    genotypeprop.genotype_id AS genotype_id
+    nd_experiment_genotype.genotype_id AS genotype_id
    FROM stock
      LEFT JOIN nd_experiment_stock ON stock.stock_id = nd_experiment_stock.stock_id
      LEFT JOIN nd_experiment_protocol ON nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
