@@ -25,14 +25,40 @@ solGS.waitPage = function (page, args) {
      	+ '|solgs/analyze/traits/';
   		    
     if (page.match(matchItems)) {
-
-    	askUser(page, args);
+	checkCachedResult(page, args);
+    //	askUser(page, args);
     }
     else {
 
     	blockPage(page, args);
     }
-   
+
+    function checkCachedResult(page, args) {
+
+	args = getArgsFromUrl(page, args);
+	args = JSON.stringify(args);
+	
+	jQuery.ajax({
+	    type    : 'POST',
+	    dataType: 'json',
+	    data    : {'page': page, 'args': args },
+	    url     : '/solgs/check/cached/result/',
+	    success : function(response) {
+		if (response.cached) {
+		    args = JSON.parse(args);
+		    displayAnalysisNow(page, args);
+		} else {
+		    args = JSON.parse(args);
+		    askUser(page, args);
+		}
+		
+	    },
+	    error: function() {
+		alert('Error occured checking for cached output.')		
+	    }
+	   	    
+	})
+    }
 
     function  askUser(page, args) {
 	
@@ -732,6 +758,13 @@ jQuery(document).ready(function (){
     
 });
 
+
+// solGS.alertMessage = function (msg) {
+//      jQuery("#alert_message")
+//         .css({"padding-left": '0px'})
+//         .html(msg);
+    
+// }
 
 solGS.getTraitDetails = function (traitId) {
   
