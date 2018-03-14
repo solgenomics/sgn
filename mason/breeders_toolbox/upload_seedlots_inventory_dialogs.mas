@@ -11,6 +11,21 @@
             <div class="modal-body">
                 <div class="container-fluid">
 
+                    <div class="well well-sm">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <b><p>How do I inventory my seed?</p></b>
+                                <ul>
+                                <li>1) Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
+                                <li>2) Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
+                                <li>3) Use the "Seed Inventory" Android Application to scan seedlot barcodes and record weight. Then use "Upload Inventory" to upload this info into database. If you prefer you can create your own CSV file and upload that, if you do not want to use the Seed Inventory Application.</li>
+                                <li><b>For more info about the "Seed Inventory" Android Application go to <a href="http://www.wheatgenetics.org/research/software/35-inventory">Seed Inventory</a>.</b></li>
+                                <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <&| /page/explanation.mas, title=>'Template information' &>
                         <p>
                             <b>File format information</b>
