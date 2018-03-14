@@ -40,6 +40,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     $draw =~ s/\D//g; # cast to int
 
     my @accessions = split ',', $contents_accession;
+    my @crosses = split ',', $contents_cross;
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema"),
         $c->dbic_schema("CXGN::Phenome::Schema"),
@@ -50,8 +51,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $location,
         $minimum_count,
         \@accessions,
-        $contents_cross,
-        1
+        \@crosses,
+        0
     );
     my @seedlots;
     foreach my $sl (@$list) {

@@ -430,6 +430,8 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $accessions = $c->req->param('seedlot_content_accession_name') ? [$c->req->param('seedlot_content_accession_name')] : [];
+    my $crosses = $c->req->param('seedlot_content_cross_name') ? [$c->req->param('seedlot_content_cross_name')] : [];
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema"),
         $c->dbic_schema("CXGN::Phenome::Schema"),
@@ -439,8 +441,8 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
         $c->req->param('seedlot_breeding_program_name'),
         $c->req->param('seedlot_location'),
         $c->req->param('seedlot_amount'),
-        [$c->req->param('seedlot_content_accession_name')],
-        $c->req->param('seedlot_content_cross_name'),
+        $accessions,
+        $crosses,
         0
     );
     my @seedlots;

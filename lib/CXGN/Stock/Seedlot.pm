@@ -264,8 +264,8 @@ sub list_seedlots {
     my $location = shift;
     my $minimum_count = shift;
     my $contents_accession = shift; #arrayref of uniquenames
-    my $contents_cross = shift; #single string of uniquename
-    my $exact_match_accession_uniquenames = shift;
+    my $contents_cross = shift; #arrayref of uniquenames
+    my $exact_match_uniquenames = shift;
 
     print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
@@ -295,7 +295,7 @@ sub list_seedlots {
     }
     if ($contents_accession && scalar(@$contents_accession)>0) {
         $search_criteria{'subject.type_id'} = $accession_type_id;
-        if ($exact_match_accession_uniquenames){
+        if ($exact_match_uniquenames){
             $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
         } else {
             foreach (@$contents_accession){
@@ -303,15 +303,21 @@ sub list_seedlots {
             }
         }
     }
-    if ($contents_cross) {
-        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents_cross.'%' };
+    if ($contents_cross && scalar(@$contents_cross)>0) {
         $search_criteria{'subject.type_id'} = $cross_type_id;
+        if ($exact_match_uniquenames){
+            $search_criteria{'subject.uniquename'} = { -in => $contents_cross };
+        } else {
+            foreach (@$contents_cross){
+                push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
+            }
+        }
     }
     if ($minimum_count) {
         $search_criteria{'stockprops.value' }  = { '>' => $minimum_count };
     }
-    print STDERR Dumper \%search_criteria;
-    $schema->storage->debug(1);
+    #print STDERR Dumper \%search_criteria;
+    #$schema->storage->debug(1);
     my $rs = $schema->resultset("Stock::Stock")->search(
         \%search_criteria,
         {
@@ -329,7 +335,7 @@ sub list_seedlots {
 
     my %source_types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $cross_type_id => 'cross' );
     my $records_total = $rs->count();
-    if ($limit && defined($limit) && $offset && defined($offset)){
+    if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
     }
     my %seen_seedlot_ids;

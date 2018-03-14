@@ -88,7 +88,7 @@
       allOptionRows = newOptionRows.merge(optionRows);
       var optionRowCells = allOptionRows.selectAll("td").data(function(d){
           if (d==empty_placeholder){
-            return ['<input disabled type="checkbox">'," ","No Availible Seedlots"," "," "," "]
+            return ['<input disabled type="checkbox">'," ","No Availible Seedlots"," "," "," "," "]
           }
           var cells = [];
           cells.push('<input value="'+d.seedlot[0]+'" name="'+d.seedlot[0]+'" type="checkbox">');

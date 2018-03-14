@@ -136,12 +136,12 @@ sub get_possible_seedlots {
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $schema,
         $phenome_schema,
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
+        undef,
+        undef,
+        undef,
+        undef,
+        undef,
+        undef,
         $accessions,
         $crosses,
         1
