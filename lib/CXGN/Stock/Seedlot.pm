@@ -263,8 +263,9 @@ sub list_seedlots {
     my $breeding_program = shift;
     my $location = shift;
     my $minimum_count = shift;
-    my $contents_accession = shift;
-    my $contents_cross = shift;
+    my $contents_accession = shift; #arrayref of uniquenames
+    my $contents_cross = shift; #single string of uniquename
+    my $exact_match_accession_uniquenames = shift;
 
     print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
@@ -292,9 +293,15 @@ sub list_seedlots {
     if ($location) {
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
-    if ($contents_accession) {
-        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents_accession.'%' };
+    if ($contents_accession && scalar(@$contents_accession)>0) {
         $search_criteria{'subject.type_id'} = $accession_type_id;
+        if ($exact_match_accession_uniquenames){
+            $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
+        } else {
+            foreach (@$contents_accession){
+                push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
+            }
+        }
     }
     if ($contents_cross) {
         $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents_cross.'%' };
@@ -303,7 +310,8 @@ sub list_seedlots {
     if ($minimum_count) {
         $search_criteria{'stockprops.value' }  = { '>' => $minimum_count };
     }
-    #print STDERR Dumper \%search_criteria;
+    print STDERR Dumper \%search_criteria;
+    $schema->storage->debug(1);
     my $rs = $schema->resultset("Stock::Stock")->search(
         \%search_criteria,
         {
@@ -321,10 +329,12 @@ sub list_seedlots {
 
     my %source_types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $cross_type_id => 'cross' );
     my $records_total = $rs->count();
-    if (defined($limit) && defined($offset)){
+    if ($limit && defined($limit) && $offset && defined($offset)){
         $rs = $rs->slice($offset, $limit);
     }
+    my %seen_seedlot_ids;
     while (my $row = $rs->next()) {
+        $seen_seedlot_ids{$row->stock_id}++;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_id} = $row->stock_id;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_uniquename} = $row->uniquename;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_description} = $row->description;
@@ -342,8 +352,9 @@ sub list_seedlots {
     }
     #print STDERR Dumper \%unique_seedlots;
 
+    my @seen_seedlot_ids = keys %seen_seedlot_ids;
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-    my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
 
     my @seedlots;
     foreach (sort keys %unique_seedlots){
@@ -363,7 +374,7 @@ sub list_seedlots {
 # class method
 =head2 Class method: verify_seedlot_stock_lists()
 
- Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, \@stock_names, \@seedlot_names);
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, $phenome_schema, \@stock_names, \@seedlot_names);
  Desc:         Class method that verifies if a given list of seedlots is valid for a given list of accessions
  Ret:          success or error
  Args:         $schema, $stock_names, $seedlot_names
@@ -374,6 +385,7 @@ sub list_seedlots {
 sub verify_seedlot_stock_lists {
     my $class = shift;
     my $schema = shift;
+    my $phenome_schema = shift;
     my $stock_names = shift;
     my $seedlot_names = shift;
     my $error = '';
@@ -423,7 +435,7 @@ sub verify_seedlot_stock_lists {
     my %selected_accessions = map {$_=>1} @stock_names;
     my %seedlot_hash;
 
-    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema});
+    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema, phenome_schema=>$phenome_schema});
     my $possible_seedlots = $ac->get_possible_seedlots(\@stock_names);
     my %allowed_seedlots;
     while (my($key,$val) = each %$possible_seedlots){

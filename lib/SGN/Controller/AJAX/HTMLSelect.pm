@@ -432,15 +432,16 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $c = shift;
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema"),
-        $c->dbic_schema("CXGN::Metadata::Schema"),
+        $c->dbic_schema("CXGN::Phenome::Schema"),
         $c->req->param('seedlot_offset'),
         $c->req->param('seedlot_limit'),
         $c->req->param('seedlot_name'),
         $c->req->param('seedlot_breeding_program_name'),
         $c->req->param('seedlot_location'),
         $c->req->param('seedlot_amount'),
-        $c->req->param('seedlot_content_accession_name'),
-        $c->req->param('seedlot_content_cross_name')
+        [$c->req->param('seedlot_content_accession_name')],
+        $c->req->param('seedlot_content_cross_name'),
+        0
     );
     my @seedlots;
     foreach my $sl (@$list) {

@@ -3,7 +3,7 @@
   <table class="table table-hover table-bordered">
     <thead>
       <tr>
-        <th rowspan="2" style="text-align: center;">Accessions</th><th colspan="6" style="text-align: center;">Seedlots</th>
+        <th rowspan="2" style="text-align: center;">Accessions</th><th colspan="7" style="text-align: center;">Seedlots</th>
       </tr>
       <tr>
         <th></th>
@@ -12,6 +12,7 @@
         <th style="text-align: center;">Contents</th>
         <th style="text-align: center;">Seedlot Location</th>
         <th style="text-align: center;">Count</th>
+        <th style="text-align: center;">Weight(g)</th>
       </tr>
     </thead>
   </table>
@@ -21,12 +22,12 @@
     var mainFormSelector = "#available-seedlots";
     var d3 = global.d3v4;
     var ex = {};
-    ex.build_table = function(accession_names){
+    ex.build_table = function(accession_names, list_type){
       jQuery('#working_modal').modal('show');
       jQuery.ajax({
         type: 'POST',
         url: '/ajax/accessions/possible_seedlots',
-        data: {'names': accession_names},
+        data: {'names': accession_names, 'type': list_type},
         dataType: "json",
         success: function(response) {
           _build_table(accession_names,response.seedlots,response.synonyms);
@@ -96,6 +97,7 @@
           cells.push('<a href="/stock/'+d.contents[1]+'/view">'+d.contents[0]+'</a>');
           cells.push(d.location);
           cells.push(d.count);
+          cells.push(d.weight_gram);
           return cells;
         });
       var newOptionRowCells = optionRowCells.enter().append("td");

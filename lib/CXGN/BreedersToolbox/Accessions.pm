@@ -24,8 +24,15 @@ use Data::Dumper;
 use Moose;
 use SGN::Model::Cvterm;
 
-has 'schema' => ( isa => 'Bio::Chado::Schema',
-                  is => 'rw');
+has 'schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw'
+);
+
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw'
+);
 
 sub get_all_accessions { 
     my $self = shift;
@@ -112,58 +119,47 @@ sub get_population_members {
 
 sub get_possible_seedlots {
     my $self = shift;
-    my $accessions = shift; #array ref to list of accession unique names
+    my $uniquenames = shift; #array ref to list of accession unique names
+    my $type = shift;
     my $schema = $self->schema();
+    my $phenome_schema = $self->phenome_schema();
 
-    my $collection_id = SGN::Model::Cvterm->get_cvterm_row($schema,'collection_of','stock_relationship')->cvterm_id;
-    my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
-
-    my $table_joins = {
-        join => { 
-          'stock_relationship_subjects' => {
-            'object' => [
-              {
-                'nd_experiment_stocks' => {
-                  'nd_experiment' => [ 
-                    {'nd_experiment_projects' => 'project' }, 
-                    'nd_geolocation' 
-                  ]
-                }
-            },
-            'stockprops'
-            ]
-          }
-        },
-        '+select' => ['me.uniquename','me.stock_id','stock_relationship_subjects.object_id','object.name','project.name', 'project.project_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
-        '+as' => ['accession_name','accession_id','seedlot_id','seedlot_name','breeding_program_name', 'breeding_program_id', 'location', 'location_id', 'current_count']
-    };
-    my $query = {
-        'me.is_obsolete' => { '!=' => 't' },
-        'stockprops.type_id' => { '=' => $current_count_cvterm_id},
-        'stock_relationship_subjects.type_id' => {'=' => $collection_id},
-        'me.uniquename' => {-in=>$accessions}
-    };
-    my $stock_rs = $schema->resultset("Stock::Stock")
-        ->search($query,$table_joins);
-    my $seedlot_hash = {};
-    while( my $row = $stock_rs->next) {
-        my $uname = $row->get_column('accession_name');
-        if (not defined $seedlot_hash->{$uname}){
-            $seedlot_hash->{$uname} = [];
-        }
-        my $seedlot_name = $row->get_column('seedlot_name');
-        my $seedlot_id = $row->get_column('seedlot_id');
-        if ($seedlot_id && $seedlot_name){
-            push @{$seedlot_hash->{$uname}}, {
-                'program'  => $row->get_column('breeding_program_name'),
-                'seedlot'  => [$seedlot_name, $seedlot_id],
-                'contents' => [$uname, $row->get_column('accession_id')],
-                'location' => $row->get_column('location'),
-                'count'    => $row->get_column('current_count')
-            };
-        }
+    my $accessions;
+    my $crosses;
+    if ($type eq 'accessions'){
+        $accessions = $uniquenames;
     }
-    return $seedlot_hash;
+    if ($type eq 'crosses'){
+        $crosses = $uniquenames;
+    }
+
+    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+        $schema,
+        $phenome_schema,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        $accessions,
+        $crosses,
+        1
+    );
+
+    my %seedlot_hash;
+    foreach my $sl (@$list) {
+        push @{$seedlot_hash{$sl->{source_stocks}->[0]->[1]}}, {
+            breeding_program_id => $sl->{breeding_program_id},
+            program => $sl->{breeding_program_name},
+            seedlot => [$sl->{seedlot_stock_uniquename}, $sl->{seedlot_stock_id}],
+            contents => [$sl->{source_stocks}->[0]->[1], $sl->{source_stocks}->[0]->[0]],
+            location => $sl->{location},
+            count => $sl->{current_count},
+            weight_gram => $sl->{current_weight_gram}
+        };
+    }
+    return \%seedlot_hash;
 }
 
 1;

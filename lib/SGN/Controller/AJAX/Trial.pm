@@ -599,6 +599,7 @@ sub verify_seedlot_list : Path('/ajax/trial/verify_seedlot_list') : ActionClass(
 sub verify_seedlot_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my @stock_names;
     my @seedlot_names;
     if ($c->req->param('stock_list')) {
@@ -607,7 +608,7 @@ sub verify_seedlot_list_POST : Args(0) {
     if ($c->req->param('seedlot_list')) {
         @seedlot_names = @{_parse_list_from_json($c->req->param('seedlot_list'))};
     }
-    my $return = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, \@stock_names, \@seedlot_names);
+    my $return = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, $phenome_schema, \@stock_names, \@seedlot_names);
 
     if (exists($return->{error})){
         $c->stash->{rest} = { error => $return->{error} };
