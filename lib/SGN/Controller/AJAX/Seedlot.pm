@@ -41,6 +41,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
 
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema"),
+        $c->dbic_schema("CXGN::Metadata::Schema"),
         $offset,
         $limit,
         $seedlot_name,
@@ -69,7 +70,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             location => $sl->{location},
             location_id => $sl->{location_id},
             count => $sl->{current_count},
-            weight_gram => $sl->{current_weight_gram}
+            weight_gram => $sl->{current_weight_gram},
+            owners_string => $sl->{owners_string}
         };
     }
 

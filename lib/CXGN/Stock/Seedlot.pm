@@ -118,6 +118,7 @@ use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use Try::Tiny;
+use CXGN::Stock::StockLookup;
 
 =head2 Accessor seedlot_id()
 
@@ -255,6 +256,7 @@ after 'stock_id' => sub {
 sub list_seedlots {
     my $class = shift;
     my $schema = shift;
+    my $phenome_schema = shift;
     my $offset = shift;
     my $limit = shift;
     my $seedlot_name = shift;
@@ -301,7 +303,7 @@ sub list_seedlots {
     if ($minimum_count) {
         $search_criteria{'stockprops.value' }  = { '>' => $minimum_count };
     }
-
+    #print STDERR Dumper \%search_criteria;
     my $rs = $schema->resultset("Stock::Stock")->search(
         \%search_criteria,
         {
@@ -338,8 +340,20 @@ sub list_seedlots {
         }
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
     }
+    #print STDERR Dumper \%unique_seedlots;
+
+    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+    my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+
     my @seedlots;
     foreach (sort keys %unique_seedlots){
+        my $owners = $owners_hash->{$unique_seedlots{$_}->{seedlot_stock_id}};
+        my @owners_html;
+        foreach (@$owners){
+            push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';
+        }
+        my $owners_string = join ', ', @owners_html;
+        $unique_seedlots{$_}->{owners_string} = $owners_string;
         push @seedlots, $unique_seedlots{$_};
     }
     #print STDERR Dumper \@seedlots;

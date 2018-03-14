@@ -107,6 +107,7 @@ jQuery(document).ready(function(){
             { title: "Seedlot Location", "data": "location" },
             { title: "Count", "data": "count" },
             { title: "Weight (g)", "data": "weight_gram" },
+            { title: "Owners", "data": "owners_string" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
