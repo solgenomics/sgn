@@ -642,6 +642,7 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
         transaction_id => $t->transaction_id,
         description=>$t->description,
         amount=>$t->amount,
+        weight_gram=>$t->weight_gram,
         operator=>$t->operator,
         timestamp=>$t->timestamp
     };
@@ -663,14 +664,17 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
     my $t = $c->stash->{transaction_object};
     my $edit_operator = $c->req->param('operator');
     my $edit_amount = $c->req->param('amount');
+    my $edit_weight = $c->req->param('weight_gram');
     my $edit_desc = $c->req->param('description');
     my $edit_timestamp = $c->req->param('timestamp');
     $t->operator($edit_operator);
     $t->amount($edit_amount);
+    $t->weight_gram($edit_weight);
     $t->description($edit_desc);
     $t->timestamp($edit_timestamp);
     my $transaction_id = $t->store();
     $c->stash->{seedlot}->set_current_count_property();
+    $c->stash->{seedlot}->set_current_weight_property();
     if ($transaction_id){
         $c->stash->{rest} = { success => 1 };
     } else {

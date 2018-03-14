@@ -62,7 +62,11 @@ sub BUILD {
 	$self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
 	my $data = JSON::Any->decode($row->value());
 	$self->amount($data->{amount});
-	$self->weight_gram($data->{weight_gram});
+    if ($data->{weight_gram}){
+        $self->weight_gram($data->{weight_gram});
+    } else {
+        $self->weight_gram('NA');
+    }
 	$self->timestamp($data->{timestamp});
 	$self->operator($data->{operator});
 	$self->description($data->{description});
