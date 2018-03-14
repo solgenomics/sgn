@@ -116,8 +116,8 @@ sub get_transactions_by_seedlot_id {
         if($row->object_id == $seedlot_id){
             $t_obj->factor(-1);
         }
-        #factor is generally stored as 1 in the seed_transaction and relies on whether the seedlot is the subject or object to decide if the factor is really 1 or -1; however, in the case for a transaction between a single seedlot, factor is stored as 1 or -1 depending on if seed was added or taken.
-        if($data->{factor} == -1){
+        #in the special case for a transaction between a single seedlot, factor is stored as 1 or -1 depending on if seed was added or taken.
+        if($data->{factor}){
             $t_obj->factor($data->{factor});
         }
         push @transactions, $t_obj;
@@ -138,8 +138,12 @@ sub store {
         timestamp => $self->timestamp(),
         operator => $self->operator(),
         description => $self->description(),
-        factor => $self->factor()
     };
+
+    #In the special case where the transaction is between the same seedlot
+    if($self->from_stock()->[0] == $self->to_stock()->[0]){
+        $value->{factor} = $self->factor();
+    }
     print STDERR Dumper $value;
     my $json_value = JSON::Any->encode($value);
 
