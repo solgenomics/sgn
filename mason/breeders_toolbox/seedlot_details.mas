@@ -47,8 +47,10 @@ $box_name=>undef
 
 <&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='add_seedlot_transaction_button' >Add New Transaction</a>]" &>
 
-<table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
-</table>
+<div style="overflow:scroll">
+    <table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
+    </table>
+</div>
 
 </&>
 
