@@ -51,6 +51,8 @@ use Data::Dumper;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
+use List::MoreUtils ':all';
+use CXGN::Trial::TrialLayout;
 
 sub verify { 
     return 1;
@@ -63,9 +65,9 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    my %selected_cols = %{$self->selected_columns};
-    my @keys = keys %selected_cols;
-    print STDERR Dumper(\@keys);
+    #my %selected_cols = %{$self->selected_columns};
+    #my @keys = keys %selected_cols;
+    #print STDERR Dumper(\@keys);
     my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
         schema => $self->bcs_schema,
         trial_id => $self->trial_id,
@@ -79,19 +81,80 @@ sub download {
     if ($output->{error_messages}){
         return $output;
     }
-    my @output_array = @{$output->{output}};
-
-    print STDERR Dumper(\@output_array);
-    my $row_num = 0;
-    foreach my $l (@output_array){
-        my $col_num = 0;
-        foreach my $c (@$l){
-            $ws->write($row_num, $col_num, $c);
-            $col_num++;
+    
+    if ($self->data_level eq 'plot_fieldMap'){
+        my %hash = %{$output->{output}};
+        print STDERR Dumper(\%hash);
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema,, trial_id => $self->trial_id,, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+        my $trial_name =  $trial_layout->get_trial_name();
+        $ws->write( "C1", $trial_name );
+        $ws->write( "A3", "Rows/Columns" );
+        
+        foreach my $row (keys %hash){
+            my $cols = $hash{$row};
+            foreach my $col (keys %$cols){
+                my $accession = $hash{$row}->{$col};
+                $ws->write($row, $col, $accession);
+            }
         }
-        $row_num++;
+        
+    }else{
+        
+        my @output_array = @{$output->{output}};
+        my $row_num = 0;
+        foreach my $l (@output_array){
+            my $col_num = 0;
+            foreach my $c (@$l){
+                $ws->write($row_num, $col_num, $c);
+                $col_num++;
+            }
+            $row_num++;
+        }
     }
+    
+    
+    # print STDERR Dumper(\@output_array);
+    # if (scalar(@keys) == 3){
+    #     
+    #     my (@cols, @rows, @accs, @unique_col, @unique_row, @arrays, $array);
+    #     foreach my $row (@output_array){
+    #         push @cols, @$row[2];
+    #         push @rows, @$row[1];
+    #         push @accs, @$row[0];
+    #     }
+    #     shift @accs;
+    #     shift @rows;
+    #     shift @cols;
+    #     
+    #     #print STDERR Dumper(\@cols);
+    #     #print STDERR Dumper(\@rows);
+    #     #print STDERR Dumper(\@accs);
+    #     my ($min_col, $max_col) = minmax @cols;
+    # 	my ($min_row, $max_row) = minmax @rows;
+    # 	for my $x (1..$max_col){
+    # 		push @unique_col, $x;
+    # 	}
+    # 	for my $y (1..$max_row){
+    # 		push @unique_row, $y;
+    # 	}
+        
+        #print STDERR Dumper(\@unique_row);
+        # my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema,, trial_id => $self->trial_id,, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+        # my $trial_name =  $trial_layout->get_trial_name();
+        # $ws->write( "C1", $trial_name );
+        # #$ws->write( "B2", "Columns" );
+        # $ws->write( "A3", "Rows/Columns" );
+        # my $row_num = 1;
+        # foreach my $l (@output_array){
+        #     my $col_num = 2;
+        #     foreach my $c (@$l){
+        #         $ws->write($col_num, $row_num, $c);
+        #         $col_num++;
+        #     }
+        #     $row_num++;
+        # }
 
+    
 }
 
 1;
