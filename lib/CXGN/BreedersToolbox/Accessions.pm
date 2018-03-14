@@ -29,6 +29,11 @@ has 'schema' => (
     is => 'rw'
 );
 
+has 'people_schema' => (
+    isa => 'CXGN::People::Schema',
+    is => 'rw'
+);
+
 has 'phenome_schema' => (
     isa => 'CXGN::Phenome::Schema',
     is => 'rw'
@@ -123,6 +128,7 @@ sub get_possible_seedlots {
     my $type = shift;
     my $schema = $self->schema();
     my $phenome_schema = $self->phenome_schema();
+    my $people_schema = $self->people_schema();
 
     my $accessions;
     my $crosses;
@@ -135,6 +141,7 @@ sub get_possible_seedlots {
 
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $schema,
+        $people_schema,
         $phenome_schema,
         undef,
         undef,

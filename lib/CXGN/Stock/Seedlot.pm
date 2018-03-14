@@ -119,6 +119,7 @@ use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::Search;
 
 =head2 Accessor seedlot_id()
 
@@ -256,6 +257,7 @@ after 'stock_id' => sub {
 sub list_seedlots {
     my $class = shift;
     my $schema = shift;
+    my $people_schema = shift;
     my $phenome_schema = shift;
     my $offset = shift;
     my $limit = shift;
@@ -280,10 +282,7 @@ sub list_seedlots {
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
-    #$search_criteria{'nd_experiment.type_id'} = $experiment_cvterm_id;
-    #$search_criteria{'nd_experiment_stocks.type_id'} = $experiment_cvterm_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
-    $search_criteria{'stockprops.type_id'} = [$current_count_cvterm_id, $current_weight_cvterm_id];
     if ($seedlot_name) {
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
@@ -323,11 +322,10 @@ sub list_seedlots {
         {
             join => [
                 {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }},
-                {'stock_relationship_objects' => 'subject'},
-                'stockprops'
+                {'stock_relationship_objects' => 'subject'}
             ],
-            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.type_id', 'stockprops.value'],
-            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id', 'stockprop_type_id', 'current_count_or_current_weight'],
+            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
+            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id'],
             order_by => {-asc=>'project.name'},
             #distinct => 1
         }
@@ -348,12 +346,6 @@ sub list_seedlots {
         $unique_seedlots{$row->uniquename}->{breeding_program_id} = $row->get_column('breeding_program_id');
         $unique_seedlots{$row->uniquename}->{location} = $row->get_column('location');
         $unique_seedlots{$row->uniquename}->{location_id} = $row->get_column('location_id');
-        if ($row->get_column('stockprop_type_id') == $current_count_cvterm_id){
-            $unique_seedlots{$row->uniquename}->{current_count} = $row->get_column('current_count_or_current_weight');
-        }
-        if ($row->get_column('stockprop_type_id') == $current_weight_cvterm_id){
-            $unique_seedlots{$row->uniquename}->{current_weight_gram} = $row->get_column('current_count_or_current_weight');
-        }
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
     }
     #print STDERR Dumper \%unique_seedlots;
@@ -361,6 +353,23 @@ sub list_seedlots {
     my @seen_seedlot_ids = keys %seen_seedlot_ids;
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
+
+    my $stock_search = CXGN::Stock::Search->new({
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        phenome_schema=>$phenome_schema,
+        stock_id_list=>\@seen_seedlot_ids,
+        stock_type_id=>$type_id,
+        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1},
+        minimal_info=>1,  #for only returning stock_id and uniquenames
+        display_pedigree=>0 #to calculate and display pedigree
+    });
+    my ($stocksearch_result, $records_stock_total) = $stock_search->search();
+    #print STDERR Dumper $result;
+    my %stockprop_hash;
+    foreach (@$stocksearch_result){
+        $stockprop_hash{$_->{stock_id}} = $_;
+    }
 
     my @seedlots;
     foreach (sort keys %unique_seedlots){
@@ -371,6 +380,8 @@ sub list_seedlots {
         }
         my $owners_string = join ', ', @owners_html;
         $unique_seedlots{$_}->{owners_string} = $owners_string;
+        $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
+        $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
         push @seedlots, $unique_seedlots{$_};
     }
     #print STDERR Dumper \@seedlots;
@@ -380,7 +391,7 @@ sub list_seedlots {
 # class method
 =head2 Class method: verify_seedlot_stock_lists()
 
- Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, $phenome_schema, \@stock_names, \@seedlot_names);
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, $people_schema, $phenome_schema, \@stock_names, \@seedlot_names);
  Desc:         Class method that verifies if a given list of seedlots is valid for a given list of accessions
  Ret:          success or error
  Args:         $schema, $stock_names, $seedlot_names
@@ -391,6 +402,7 @@ sub list_seedlots {
 sub verify_seedlot_stock_lists {
     my $class = shift;
     my $schema = shift;
+    my $people_schema = shift;
     my $phenome_schema = shift;
     my $stock_names = shift;
     my $seedlot_names = shift;
@@ -441,7 +453,7 @@ sub verify_seedlot_stock_lists {
     my %selected_accessions = map {$_=>1} @stock_names;
     my %seedlot_hash;
 
-    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema, phenome_schema=>$phenome_schema});
+    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema, people_schema=>$people_schema, phenome_schema=>$phenome_schema});
     my $possible_seedlots = $ac->get_possible_seedlots(\@stock_names);
     my %allowed_seedlots;
     while (my($key,$val) = each %$possible_seedlots){

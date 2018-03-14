@@ -42,7 +42,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my @accessions = split ',', $contents_accession;
     my @crosses = split ',', $contents_cross;
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
-        $c->dbic_schema("Bio::Chado::Schema"),
+        $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
+        $c->dbic_schema("CXGN::People::Schema"),
         $c->dbic_schema("CXGN::Phenome::Schema"),
         $offset,
         $limit,

@@ -454,13 +454,14 @@ sub possible_seedlots : Path('/ajax/accessions/possible_seedlots') : ActionClass
 sub possible_seedlots_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $people_schema = $c->dbic_schema('CXGN::People::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
 
   my $names = $c->req->body_data->{'names'};
   my $type = $c->req->body_data->{'type'};
 
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-  my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema, phenome_schema=>$phenome_schema);
+  my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema, people_schema=>$people_schema, phenome_schema=>$phenome_schema);
 
   my $synonyms;
   my @uniquenames;
