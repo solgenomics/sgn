@@ -54,6 +54,7 @@
             <label class="col-sm-2 control-label">Location: </label>
             <div class="col-sm-10">
         <select class="form-control" id="location" name="location">
+            <option value="">Select Location</option>
     <%perl>
         foreach my $location (@locations) {
             print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
