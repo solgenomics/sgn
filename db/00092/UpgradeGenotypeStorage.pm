@@ -47,17 +47,6 @@ sub patch {
 
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
-    print STDOUT "\nChecking if materialized_phenoview is populated.\n";
-
-    try {
-      my $populated_query = "select * from materialized_phenoview limit 1";
-      my $sth = $self->dbh->prepare($populated_query);
-      $sth->execute();
-    } catch { #if test query fails because views aren't populated
-      print STDERR "materialized_phenoview is not populated, run 'SELECT refresh_materialized_views();' in database before running this patch";
-      return;
-    };
-
     print STDOUT "\nExecuting the SQL commands.\n";
 
     $self->dbh->do(<<EOSQL);
