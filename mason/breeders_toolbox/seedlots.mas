@@ -14,54 +14,86 @@ $timestamp
   <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
 
 
-<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>0 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <b><p>What are seedlots?</p></b>
+                <ul>
+                <li>Seedlots represent physical seed in packets.</li>
+                <li>This seed can be from crosses or for named accessions.</li>
+                <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+                <li>Seedlots can belong to breeding programs and organizations.</li>
+                </ul>
 
-<form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Seedlot Name: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_seedlot_name" type="text" />
+                <b><p>How do I inventory my seed?</p></b>
+                <ul>
+                <li>1) Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
+                <li>2) Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
+                <li>3) Use the "Seed Inventory" Android Application to scan seedlot barcodes and record weight. Then use "Upload Inventory" to upload this info into database. If you prefer you can create your own CSV file and upload that, if you do not want to use the Seed Inventory Application.</li>
+                <li><b>For more info about the "Seed Inventory" Android Application go to <a href="http://www.wheatgenetics.org/research/software/35-inventory">Seed Inventory</a>.</b></li>
+                <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
+                </ul>
+            </div>
         </div>
     </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Breeding Program: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_breeding_program" type="text" />
-        </div>
-    </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
-        </div>
-    </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Contents (Cross Uniquename): </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_contents_cross" type="text" />
-        </div>
-    </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Location: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_location" type="text" />
-        </div>
-    </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Minimum Count: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
-        </div>
-    </div>
-</form>
-<center>
-<button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
-</center>
-
 </&>
 
 
 <&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add New Seedlot</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_bulk_upload">Upload New Seedlots</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_upload_inventory">Upload Inventory</a>]'&>
+
+<br/>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>
+
+<div class="well well-sm">
+    <form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Seedlot Name: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_seedlot_name" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Breeding Program: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_breeding_program" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Contents (Cross Uniquename): </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_contents_cross" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Location: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_location" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Minimum Count: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
+            </div>
+        </div>
+    </form>
+    <center>
+    <button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
+    </center>
+</div>
+</&>
 
 <br/>
 
@@ -75,6 +107,9 @@ $timestamp
 <div id="available_seedlots_add_to_list">
 </div>
 
+        </div>
+    </div>
+</div>
 </&>
 
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
