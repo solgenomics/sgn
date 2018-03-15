@@ -16,7 +16,6 @@ sub _validate_with_plugin {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
-    my %seen_cross_names;
 
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
@@ -38,7 +37,7 @@ sub _validate_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of progeny
-        push @errors, "Spreadsheet is missing header or no progeny data";
+        push @error_messages, "Spreadsheet is missing header or no progeny data";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -63,7 +62,7 @@ sub _validate_with_plugin {
     }
 
     my %seen_cross_names;
-    my %seen_progeny_name;
+    my %seen_progeny_names;
 
     for my $row (1 .. $row_max){
         my $row_name = $row+1;
@@ -78,7 +77,7 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @errors_messages, "Cell A$row_name: cross name missing";
+            push @error_messages, "Cell A$row_name: cross name missing";
         } else {
             if ($cross_name){
                 $seen_cross_names{$cross_name}++;
@@ -86,7 +85,7 @@ sub _validate_with_plugin {
         }
 
         if (!$progeny_name || $progeny_name eq '') {
-            push @errors_messages, "Cell A$row_name: progeny name missing";
+            push @error_messages, "Cell A$row_name: progeny name missing";
         } else {
             if ($progeny_name){
                 $seen_progeny_names{$progeny_name}++;
@@ -162,7 +161,8 @@ sub _parse_with_plugin {
         push @{$cross_progenies_hash{$cross_name}}, $progeny_name;
     }
 
-    return \%cross_progenies_hash;
+    $self->_set_parsed_data(\%cross_progenies_hash);
+    return 1;
 }
 
 1;
