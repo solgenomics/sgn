@@ -158,6 +158,10 @@ jQuery(document).ready(function($) {
 
         var visibleToRole = $("#visible_to_role").val();
         var location = $("#location").val();
+            if (!location) {
+                alert("A location is required");
+                return;
+        }
         var female_plot = $("#female_plot").val();
         var male_plot = $("#male_plot").val();
 
@@ -175,11 +179,6 @@ jQuery(document).ready(function($) {
     });
 
     $("#upload_crosses_submit").click(function() {
-        var crossing_trial_id = $("#cross_upload_crossing_trial").val();
-            if (!crossing_trial_id) {
-                alert("A crossing trial is required");
-                return;
-            }
 
         $("#upload_crosses_dialog").modal("hide");
         upload_crosses_file();
@@ -371,6 +370,18 @@ jQuery(document).ready(function($) {
     }
 
     function upload_crosses_file() {
+        var crossing_trial_id = $("#cross_upload_crossing_trial").val();
+        if (!crossing_trial_id) {
+            alert("A crossing trial is required");
+            return;
+        }
+
+        var location = $("#cross_upload_location").val();
+        if (!location) {
+            alert("A location is required");
+            return;
+        }
+
         var uploadFile = $("#crosses_upload_file").val();
         $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
         if (uploadFile === '') {

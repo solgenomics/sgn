@@ -15,6 +15,9 @@ use CXGN::Stock::StockLookup;
 use CXGN::List;
 use CXGN::Trial::TrialDesign;
 use DateTime;
+use Test::WWW::Mechanize;
+use LWP::UserAgent;
+use JSON;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -330,32 +333,56 @@ my $design;
 $td->calculate_design();
 $design = $td->get_design();
 
-#print STDERR Dumper $design;
+print STDERR Dumper $design;
 
 my $igd_design_check = {
-          'A01' => {
-                     'stock_name' => 'test_accession1',
-                     'plot_name' => 'CASSAVA_GS_74_A01'
-                   },
-          'A03' => {
-                     'stock_name' => 'test_accession3',
-                     'plot_name' => 'CASSAVA_GS_74_A03'
-                   },
-          'F05' => {
-                     'stock_name' => 'BLANK',
-                     'plot_name' => 'CASSAVA_GS_74_F05_BLANK'
-                   },
           'A05' => {
                      'stock_name' => 'test_accession5',
+                     'col_number' => 5,
+                     'is_blank' => 0,
+                     'row_number' => 'A',
+                     'plot_number' => 'A05',
                      'plot_name' => 'CASSAVA_GS_74_A05'
                    },
-          'A02' => {
-                     'stock_name' => 'test_accession2',
-                     'plot_name' => 'CASSAVA_GS_74_A02'
-                   },
           'A04' => {
+                     'plot_number' => 'A04',
+                     'plot_name' => 'CASSAVA_GS_74_A04',
+                     'col_number' => 4,
                      'stock_name' => 'test_accession4',
-                     'plot_name' => 'CASSAVA_GS_74_A04'
+                     'is_blank' => 0,
+                     'row_number' => 'A'
+                   },
+          'A02' => {
+                     'is_blank' => 0,
+                     'row_number' => 'A',
+                     'col_number' => 2,
+                     'stock_name' => 'test_accession2',
+                     'plot_name' => 'CASSAVA_GS_74_A02',
+                     'plot_number' => 'A02'
+                   },
+          'A01' => {
+                     'stock_name' => 'test_accession1',
+                     'col_number' => 1,
+                     'row_number' => 'A',
+                     'is_blank' => 0,
+                     'plot_name' => 'CASSAVA_GS_74_A01',
+                     'plot_number' => 'A01'
+                   },
+          'F05' => {
+                     'plot_name' => 'CASSAVA_GS_74_F05_BLANK',
+                     'plot_number' => 'F05',
+                     'is_blank' => 1,
+                     'row_number' => 'F',
+                     'stock_name' => 'BLANK',
+                     'col_number' => 5
+                   },
+          'A03' => {
+                     'plot_name' => 'CASSAVA_GS_74_A03',
+                     'plot_number' => 'A03',
+                     'stock_name' => 'test_accession3',
+                     'col_number' => 3,
+                     'row_number' => 'A',
+                     'is_blank' => 0
                    }
         };
 
@@ -377,6 +404,10 @@ my $trial_create = CXGN::Trial::TrialCreate
 	is_genotyping => 1,
 	genotyping_user_id => $meta->{user_id} || "unknown",
 	genotyping_project_name => $meta->{project_name} || "unknown",
+    genotyping_facility_submitted => 'no',
+    genotyping_facility => 'igd',
+    genotyping_plate_format => '96',
+    genotyping_plate_sample_type => 'DNA',
 	operator => "janedoe"
 	  });
 
@@ -413,7 +444,7 @@ ok($post2_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post2_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post2_project_prop_diff."\n";
-ok($post2_project_prop_diff == 6, "check projectprop table after upload igd trial");
+ok($post2_project_prop_diff == 10, "check projectprop table after upload igd trial");
 
 $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post2_stock_diff = $post_stock_count - $pre_stock_count;
@@ -423,7 +454,7 @@ ok($post2_stock_diff == 14, "check stock table after upload igd trial");
 $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post2_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post2_stock_prop_diff."\n";
-ok($post2_stock_prop_diff == 71, "check stockprop table after upload igd trial");
+ok($post2_stock_prop_diff == 84, "check stockprop table after upload igd trial");
 
 $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post2_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -639,7 +670,7 @@ ok($post1_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 9, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 13, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -649,7 +680,7 @@ ok($post1_stock_diff == 22, "check stock table after upload excel trial");
 my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post1_stock_prop_diff."\n";
-ok($post1_stock_prop_diff == 119, "check stockprop table after upload excel trial");
+ok($post1_stock_prop_diff == 132, "check stockprop table after upload excel trial");
 
 my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -666,5 +697,107 @@ my $post1_project_relationship_diff = $post_project_relationship_count - $pre_pr
 print STDERR "ProjectRelationship: ".$post1_project_relationship_diff."\n";
 ok($post1_project_relationship_diff == 3, "check projectrelationship table after upload excel trial");
 
+
+
+my $mech = Test::WWW::Mechanize->new;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+print STDERR Dumper $response;
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
+my $file = $f->config->{basepath}."/t/data/genotype_trial_upload/NewGenotypeUpload";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/parsegenotypetrial',
+        Content_Type => 'form-data',
+        Content => [
+            genotyping_trial_layout_upload => [ $file, 'genotype_trial_upload', Content_Type => 'application/vnd.ms-excel', ],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+
+is_deeply($message_hash, {
+          'success' => '1',
+          'design' => {
+                        'A01' => {
+                                   'concentration' => '5',
+                                   'acquisition_date' => '2018/02/16',
+                                   'dna_person' => 'nmorales',
+                                   'volume' => '10',
+                                   'col_number' => '1',
+                                   'plot_name' => '2018TestPlate02_A01',
+                                   'ncbi_taxonomy_id' => '9001',
+                                   'stock_name' => 'KASESE_TP2013_885',
+                                   'notes' => 'test well A01',
+                                   'is_blank' => 0,
+                                   'extraction' => 'CTAB',
+                                   'plot_number' => 'A01',
+                                   'row_number' => 'A',
+                                   'tissue_type' => 'leaf'
+                                 },
+                        'A03' => {
+                                   'notes' => 'test well A03',
+                                   'is_blank' => 0,
+                                   'stock_name' => 'KASESE_TP2013_1671',
+                                   'ncbi_taxonomy_id' => '9001',
+                                   'plot_name' => '2018TestPlate02_A03',
+                                   'tissue_type' => 'leaf',
+                                   'row_number' => 'A',
+                                   'plot_number' => 'A03',
+                                   'extraction' => 'CTAB',
+                                   'volume' => '10',
+                                   'dna_person' => 'nmorales',
+                                   'concentration' => '5',
+                                   'acquisition_date' => '2018/02/16',
+                                   'col_number' => '3'
+                                 },
+                        'A02' => {
+                                   'extraction' => undef,
+                                   'plot_number' => 'A02',
+                                   'row_number' => 'A',
+                                   'tissue_type' => undef,
+                                   'stock_name' => 'BLANK',
+                                   'notes' => 'test blank',
+                                   'is_blank' => 1,
+                                   'ncbi_taxonomy_id' => undef,
+                                   'plot_name' => '2018TestPlate02_A02',
+                                   'col_number' => '2',
+                                   'volume' => undef,
+                                   'acquisition_date' => '2018/02/16',
+                                   'concentration' => undef,
+                                   'dna_person' => 'nmorales'
+                                 }
+                      }
+        });
+
+my $project = $c->bcs_schema()->resultset("Project::Project")->find( { name => 'test' } );
+my $location = $c->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => 'test_location' } );
+
+my $plate_data = {
+    design => $message_hash->{design},
+    genotyping_facility_submit => 'yes',
+    project_name => 'NextGenCassava',
+    description => 'test geno trial upload',
+    location => $location->nd_geolocation_id,
+    year => '2018',
+    name => 'test_genotype_upload_trial1',
+    breeding_program => $project->project_id,
+    genotyping_facility => 'igd',
+    sample_type => 'DNA',
+    plate_format => '96'
+};
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+ok($response->{trial_id});
 
 done_testing();

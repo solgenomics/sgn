@@ -563,6 +563,7 @@ jQuery(document).ready( function() {
                 var row_max =  response.max_row;
                 var controls = response.controls;
                 var false_coord = response.false_coord;
+                var design_type = response.design_type;
 
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");

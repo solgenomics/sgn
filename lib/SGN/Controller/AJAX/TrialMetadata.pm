@@ -73,7 +73,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
         $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
     }
     catch {
-        print STDERR "Trial Layout for $trial_id does not exist.\n";
+        print STDERR "Trial Layout for $trial_id does not exist. @_\n";
     }
 
 }
@@ -431,6 +431,17 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $data = $trial->get_tissue_sources();
+    print STDERR Dumper $data;
+    $c->stash->{rest} = { tissue_sources => $data };
 }
 
 sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
@@ -1640,6 +1651,9 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
     print STDERR Dumper(\@items);
     my @trait_ids = ($trait_id);
+    
+    my $layout = $c->stash->{trial_layout};
+    my $design_type = $layout->get_design_type();
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         "MaterializedView",
@@ -1656,11 +1670,13 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     foreach my $d (@$data) {
         my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count) = @$d;
         if (!$row_number && !$col_number){
-			if ($block_number){
+			if ($block_number && $design_type ne 'splitplot'){
 				$row_number = $block_number;
-			}elsif ($rep && !$block_number ){
+			}elsif ($rep && !$block_number && $design_type ne 'splitplot'){
 				$row_number = $rep;
-			}
+			}elsif ($design_type eq 'splitplot'){
+                $row_number = $rep;
+            }
 		}
 
         my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
@@ -1679,7 +1695,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     }
 
     my $false_coord;
-	if ($col_No[0] == ""){
+	if (!$col_No[0]){
         @col_No = ();
         $false_coord = 'false_coord';
 		my @row_instances = uniq @row_No;
@@ -1714,7 +1730,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
 	foreach my $cntrl (@{$data_check}) {
 		push @control_name, $cntrl->{'accession_name'};
 	}
-
+    #print STDERR Dumper($result);
     $c->stash->{rest} = { #phenotypes => $phenotype,
                             col => \@col_No,
                             row => \@row_No,
