@@ -3924,26 +3924,30 @@ sub get_all_traits {
 sub create_trait_data {
     my ($self, $c) = @_;   
        
-    my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
+   
    
     my $acronym_pairs = $self->get_acronym_pairs($c);
-    
-    foreach (@$acronym_pairs)
-    {
-        my $trait_name = $_->[1];
-        $trait_name    =~ s/\n//g;
-        
-	my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
-       
-	if ($trait_id)
-	{
-	    $table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
-	} 
-   }
 
-    $self->all_traits_file($c);
-    my $traits_file =  $c->stash->{all_traits_file};
-    write_file($traits_file, $table);
+    if (@$acronym_pairs)
+    {
+	my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
+	foreach (@$acronym_pairs)
+	{
+	    my $trait_name = $_->[1];
+	    $trait_name    =~ s/\n//g;
+        
+	    my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+       
+	    if ($trait_id)
+	    {
+		$table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
+	    } 
+	}
+
+	$self->all_traits_file($c);
+	my $traits_file =  $c->stash->{all_traits_file};
+	write_file($traits_file, $table);
+    }
 }
 
 
@@ -4014,18 +4018,21 @@ sub get_acronym_pairs {
 
 sub traits_acronym_table {
     my ($self, $c, $acronym_table) = @_;
-    
-    my $table = 'Acronym' . "\t" . 'Trait name' . "\n"; 
-
-    foreach (keys %$acronym_table)
+        
+    if (keys %$acronym_table)
     {
-        $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
-    }
-
-    $self->traits_acronym_file($c);
-    my $acronym_file =  $c->stash->{traits_acronym_file};
+	my $table = 'Acronym' . "\t" . 'Trait name' . "\n";
+ 
+	foreach (keys %$acronym_table)
+	{
+	    $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
+	}
+	
+	$self->traits_acronym_file($c);
+	my $acronym_file =  $c->stash->{traits_acronym_file};
     
-    write_file($acronym_file, $table);
+	write_file($acronym_file, $table);
+    }
 
 }
 
