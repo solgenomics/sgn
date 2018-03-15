@@ -139,7 +139,18 @@ function checkTrainingPopulation (popId) {
 			    searchAllTrials('/solgs/search/trials');   
 			});
 	    }
-	}
+	},
+	error: function(response) {
+            jQuery("#searched_trials_message")
+		.html('Error occured checking for if trial can be used as training population.');
+
+	    jQuery("#searched_trials_message")
+		.delay(4000)
+		.fadeOut('slow', function () {
+		    // searchAllTrials('/solgs/search/trials');   
+		});		 
+        }   
+	
     });
     
 }
@@ -219,9 +230,19 @@ function checkPopulationExists (name) {
 			   // searchAllTrials('/solgs/search/trials');   
 			});		   		    
 		}
-	    }
+	    },
+	    error: function(res) {
+		jQuery("#searched_trials_message")
+		    .html('Error occured checking if the training population exists.');
+		
+		jQuery("#searched_trials_message")
+		    .delay(4000)
+		    .fadeOut('slow', function () {
+			// searchAllTrials('/solgs/search/trials');   
+		    });		 
+            }
 	});
-    
+	   
 }
 
 

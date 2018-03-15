@@ -49,4 +49,22 @@ my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
+$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_verify_app";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/seedlot-inventory-upload',
+        Content_Type => 'form-data',
+        Content => [
+            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_upload', Content_Type => 'application/vnd.ms-excel', ],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
 done_testing();

@@ -73,7 +73,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
         $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
     }
     catch {
-        print STDERR "Trial Layout for $trial_id does not exist.\n";
+        print STDERR "Trial Layout for $trial_id does not exist. @_\n";
     }
 
 }
@@ -113,10 +113,6 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-        if ($refresh->{error}) {
-            $c->stash->{rest} = { error => $refresh->{'error'} };
-            $c->detach();
-        }
     }
     elsif ($datatype eq 'entry') {
 	$error = $c->stash->{trial}->delete_project_entry();
@@ -433,6 +429,17 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     $c->stash->{rest} = { accessions => \@data };
 }
 
+sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $data = $trial->get_tissue_sources();
+    print STDERR Dumper $data;
+    $c->stash->{rest} = { tissue_sources => $data };
+}
+
 sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -531,12 +538,14 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
             $transaction->from_stock([$val->{seedlot_stock_id}, $val->{seedlot_name}]);
             $transaction->to_stock([$val->{plot_stock_id}, $val->{plot_name}]);
             $transaction->amount($val->{amount});
+            $transaction->weight_gram($val->{weight_gram});
             $transaction->timestamp($timestamp);
             $transaction->description($val->{description});
             $transaction->operator($user_name);
             $transaction->store();
 
             $sl->set_current_count_property();
+            $sl->set_current_weight_property();
         }
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
@@ -549,6 +558,10 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         print STDERR "An error condition occurred, was not able to upload trial used seedlots. ($@).\n";
         $c->detach();
     }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
 
     $c->stash->{rest} = { success => 1 };
 }
@@ -657,10 +670,6 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
 
     $c->stash->{rest} = { success => 1 };
 }
@@ -805,10 +814,6 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
 
     $c->stash->{rest} = { success => 1 };
 }
@@ -1202,10 +1207,6 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
     my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
 
@@ -1378,10 +1379,6 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-        if ($refresh->{error}) {
-            $c->stash->{rest} = { error => $refresh->{'error'} };
-            $c->detach();
-        }
 
         $c->stash->{rest} = {success => 1};
         return;
@@ -1429,10 +1426,6 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-        if ($refresh->{error}) {
-            $c->stash->{rest} = { error => $refresh->{'error'} };
-            $c->detach();
-        }
 
         $c->stash->{rest} = {success => 1};
         $c->detach;;
@@ -1546,10 +1539,6 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
 
     $c->stash->{rest} = {success => 1};
 }

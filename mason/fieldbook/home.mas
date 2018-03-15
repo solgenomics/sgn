@@ -19,8 +19,13 @@ $user_id => undef
 
 <&| /page/explanation.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
   <p>
-    <em>Field Book</em> is an app for collecting phenotypic data on field research plots using an android tablet computer.</br>
+    <em><b>Field Book</b></em> is an app for collecting phenotypic data on field research plots using an android tablet computer.
+    <br/><br/>
     <a href="http://www.wheatgenetics.org/bioinformatics/22-android-field-book"> Field Book Software</a>
+    <br/><br/>
+    To use Fieldbook you need a Field Layout File and a Trait File; both can be created on this page. <br/>Once you have created and downloaded your Field Layout and Trait files, move them onto your mobile device into the Fieldbook directories (generally /fieldbook/import_field/ for your Field Layout Files and /fieldbook/traits/ for your trait files.)
+    <br/><br/>
+    By using Fieldbook with the Field Layout and Trait Files created here, you can be sure that your traits are properly defined and your experimental units, whether they are plots or plants or tissue samples, are also properly defined.
   </p>
 </&>
 

@@ -21,9 +21,13 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $self = shift;
     my $c = shift;
     my $seedlot_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
     my $sl = CXGN::Stock::Seedlot->new(
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        schema => $schema,
+        phenome_schema => $phenome_schema,
         seedlot_id => $seedlot_id
     );
     my @content_accession_names;
@@ -45,6 +49,12 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     foreach (@$populations){
         $populations_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
     }
+    my $owners = $sl->owners;
+    my $owners_string = '';
+    foreach (@$owners){
+        my $p = $people_schema->resultset("SpPerson")->find({sp_person_id=>$_});
+        $owners_string .= '<a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
+    }
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{organization_name} = $sl->organization_name();
@@ -54,6 +64,8 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{content_accession_name} = $content_accession_names[0];
     $c->stash->{content_cross_name} = $content_cross_names[0];
     $c->stash->{current_count} = $sl->get_current_count_property();
+    $c->stash->{current_weight} = $sl->get_current_weight_property();
+    $c->stash->{owners_string} = $owners_string;
     $c->stash->{timestamp} = localtime();
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }
