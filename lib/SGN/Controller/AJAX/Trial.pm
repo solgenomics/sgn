@@ -737,8 +737,6 @@ sub upload_trial_file_POST : Args(0) {
   $parser->load_plugin('TrialExcelFormat');
   $parsed_data = $parser->parse();
 
-
-
   if (!$parsed_data) {
     my $return_error = '';
 
@@ -763,7 +761,6 @@ sub upload_trial_file_POST : Args(0) {
   print STDERR "Check 4: ".localtime()."\n";
 
   #print STDERR Dumper $parsed_data;
-
 
     my $save;
     my $coderef = sub {

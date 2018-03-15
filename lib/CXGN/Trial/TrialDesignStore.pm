@@ -512,6 +512,10 @@ sub store {
             if($design{$key}->{num_seed_per_plot}){
                 $num_seed_per_plot = $design{$key}->{num_seed_per_plot};
             }
+            my $weight_gram_seed_per_plot;
+            if($design{$key}->{weight_gram_seed_per_plot}){
+                $weight_gram_seed_per_plot = $design{$key}->{weight_gram_seed_per_plot};
+            }
             my $block_number;
             if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
                 $block_number = $design{$key}->{block_number};
@@ -783,11 +787,12 @@ sub store {
                     stock_id => $plot->stock_id(),
                 });
 
-                if ($seedlot_stock_id && $seedlot_name && defined($num_seed_per_plot)){
+                if ($seedlot_stock_id && $seedlot_name){
                     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
                     $transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
                     $transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
                     $transaction->amount($num_seed_per_plot);
+                    $transaction->weight_gram($weight_gram_seed_per_plot);
                     $transaction->timestamp($timestamp);
                     my $description = "Created Trial: ".$self->get_trial_name." Plot: ".$plot->uniquename;
                     $transaction->description($description);
@@ -795,6 +800,7 @@ sub store {
                     my $transaction_id = $transaction->store();
                     my $sl = CXGN::Stock::Seedlot->new(schema=>$chado_schema, seedlot_id=>$seedlot_stock_id);
                     $sl->set_current_count_property();
+                    $sl->set_current_weight_property();
                 }
             }
 
