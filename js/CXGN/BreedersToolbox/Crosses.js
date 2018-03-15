@@ -212,36 +212,37 @@ jQuery(document).ready(function($) {
         }
     });
 
-    $("#upload_progenies_existing_crosses").click(function() {
+    jQuery("#upload_progenies_existing_crosses").click(function(){
 
-        $("#update_progenies_spreadsheet_format_info").click(function() {
-            $("#update_progenies_spreadsheet_info_dialog").modal("show");
+        jQuery("#update_progenies_spreadsheet_format_info").click(function(){
+            jQuery("#update_progenies_spreadsheet_info_dialog").modal("show");
         });
 
-        $("#update_progenies_crosses_dialog").modal("show");
+        jQuery("#update_progenies_crosses_dialog").modal("show");
     });
 
-    $("#update_progenies_submit").click(function() {
-        $("#update_progenies_crosses_dialog").modal("hide");
-        upload_progenies_crosses_file();
+    jQuery("#update_progenies_submit").click(function(){
+        var uploadFile = $("#progenies_upload_file").val();
+        jQuery('#upload_progenies_form').attr("action", "/ajax/cross/upload_progenies");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_progenies_form").submit();
+        jQuery("#update_progenies_crosses_dialog").modal("hide");
     });
 
-    $('#upload_progenies_form').iframePostForm({
+    jQuery('#upload_progenies_form').iframePostForm({
         json: true,
-        post: function() {
-            var uploadProgeniesFile = $("#progenies_upload_file").val();
-            if (uploadProgeniesFile === '') {
-                alert("No file selected");
-            }
+        post: function(){
             jQuery("#working_modal").modal("show");
         },
         complete: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error_string) {
-                $("#upload_progenies_error_display tbody").html('');
-                $("#upload_progenies_error_display tbody").append(response.error_string);
-                $("#upload_progenies_error_display").modal("show");
-
+                jQuery("#upload_progenies_error_display tbody").html('');
+                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
+                jQuery("#upload_progenies_error_display").modal("show");
                 return;
             }
             if (response.error) {
@@ -249,7 +250,7 @@ jQuery(document).ready(function($) {
                 return;
             }
             if (response.success) {
-                $('#cross_saved_dialog_message').modal("show");
+                jQuery('#cross_saved_dialog_message').modal("show");
             }
         }
     });
