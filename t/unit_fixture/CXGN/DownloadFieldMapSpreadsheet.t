@@ -12,7 +12,6 @@ my $test = SGN::Test::Fixture->new();
 my $schema = $test->bcs_schema;
 
 open(my $F, "<", '/home/vagrant/cxgn/sgn/t/data/trial/field_coord_upload.csv');
-#my $schema = $c->dbic_schema("Bio::Chado::Schema");
 my $header = <$F>;
 while (<$F>) {
     chomp;
