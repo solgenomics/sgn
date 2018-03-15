@@ -437,10 +437,6 @@ sub add_accession_list_POST : Args(0) {
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
 
     #print STDERR Dumper \@added_fullinfo_stocks;
     $c->stash->{rest} = {
@@ -454,19 +450,26 @@ sub possible_seedlots : Path('/ajax/accessions/possible_seedlots') : ActionClass
 sub possible_seedlots_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  
+  my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+  my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+
   my $names = $c->req->body_data->{'names'};
-    
+  my $type = $c->req->body_data->{'type'};
+
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-  my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
-  
-  my $synonyms = $stock_lookup->get_stock_synonyms('any_name','accession',$names);
-  
-  my @uniquenames = keys %{$synonyms};
-  
-  my $seedlots = $accession_manager->get_possible_seedlots(\@uniquenames);
-    
-  print STDERR $names;
+  my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema, people_schema=>$people_schema, phenome_schema=>$phenome_schema);
+
+  my $synonyms;
+  my @uniquenames;
+  if ($type eq 'accessions'){
+      $synonyms = $stock_lookup->get_stock_synonyms('any_name','accession',$names);
+      @uniquenames = keys %{$synonyms};
+  } else {
+      @uniquenames = @$names;
+  }
+
+  my $seedlots = $accession_manager->get_possible_seedlots(\@uniquenames, $type);
+
   $c->stash->{rest} = {
       success => "1",
       seedlots=> $seedlots,

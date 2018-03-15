@@ -38,6 +38,11 @@ has 'schema' => (
     required => 1
 );
 
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+);
+
 has 'check_name_exists' => (
     isa => 'Bool',
     is => 'rw',
@@ -52,6 +57,14 @@ has 'stock' => (
 has 'stock_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
+);
+
+# Returns the stock_owners as [sp_person_id, sp_person_id2, ..]
+has 'owners' => (
+    isa => 'Maybe[ArrayRef[Int]]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_stock_owner',
 );
 
 has 'organism' => (
@@ -163,7 +176,17 @@ sub BUILD {
     return $self;
 }
 
-
+sub _retrieve_stock_owner {
+    my $self = shift;
+    my $owner_rs = $self->phenome_schema->resultset("StockOwner")->search({
+        stock_id => $self->stock_id,
+    });
+    my @owners;
+    while (my $r = $owner_rs->next){
+        push @owners, $r->sp_person_id;
+    }
+    $self->owners(\@owners);
+}
 
 =head2 store
 

@@ -108,12 +108,7 @@ sub add_stockprop_POST {
             my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
 
-            if ($refresh->{error}) {
-                $c->stash->{rest} = { error => $refresh->{'error'} };
-            }
-            else {
-                $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
-            }
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
         };
