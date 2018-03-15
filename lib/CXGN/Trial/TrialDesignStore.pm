@@ -217,6 +217,7 @@ sub validate_design {
         @valid_properties = (
             'seedlot_name',
             'num_seed_per_plot',
+            'weight_gram_seed_per_plot',
             'stock_name',
             'plot_name',
             'plot_number',
@@ -791,8 +792,12 @@ sub store {
                     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
                     $transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
                     $transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
-                    $transaction->amount($num_seed_per_plot);
-                    $transaction->weight_gram($weight_gram_seed_per_plot);
+                    if ($num_seed_per_plot){
+                        $transaction->amount($num_seed_per_plot);
+                    }
+                    if ($weight_gram_seed_per_plot){
+                        $transaction->weight_gram($weight_gram_seed_per_plot);
+                    }
                     $transaction->timestamp($timestamp);
                     my $description = "Created Trial: ".$self->get_trial_name." Plot: ".$plot->uniquename;
                     $transaction->description($description);

@@ -11,6 +11,7 @@ $organization_name
 $population_name
 $timestamp
 $box_name=>undef
+$owners_string => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -37,6 +38,7 @@ $box_name=>undef
 <!--<tr><td><b>Population</b></td><td><% $population_name %></td></tr>-->
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 <tr><td><b>Current weight (g)</b></td><td><% $current_weight %></td></tr>
+<tr><td><b>Owners</b></td><td><% $owners_string %></td></tr>
 </table>
 
 </&>

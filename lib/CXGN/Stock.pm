@@ -39,7 +39,7 @@ has 'schema' => (
 );
 
 has 'phenome_schema' => (
-    isa => 'CXGN::Metadata::Schema',
+    isa => 'CXGN::Phenome::Schema',
     is => 'rw',
 );
 
@@ -59,9 +59,9 @@ has 'stock_id' => (
     is => 'rw',
 );
 
-# Returns the stock_owner sp_person_id
-has 'owner' => (
-    isa => 'Maybe[Int]',
+# Returns the stock_owners as [sp_person_id, sp_person_id2, ..]
+has 'owners' => (
+    isa => 'Maybe[ArrayRef[Int]]',
     is => 'rw',
     lazy     => 1,
     builder  => '_retrieve_stock_owner',
@@ -178,10 +178,14 @@ sub BUILD {
 
 sub _retrieve_stock_owner {
     my $self = shift;
-    my $owner = $self->phenome_schema->resultset("StockOwner")->find({
+    my $owner_rs = $self->phenome_schema->resultset("StockOwner")->search({
         stock_id => $self->stock_id,
     });
-    $self->owner($owner->sp_person_id);
+    my @owners;
+    while (my $r = $owner_rs->next){
+        push @owners, $r->sp_person_id;
+    }
+    $self->owners(\@owners);
 }
 
 =head2 store
