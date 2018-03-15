@@ -62,7 +62,10 @@ sub _validate_with_plugin {
         push @error_messages, "Cell B1: progeny_name is missing from the header";
     }
 
-    for my $row ( 1 .. $row_max ){
+    my %seen_cross_names;
+    my %seen_progeny_name;
+
+    for my $row (1 .. $row_max){
         my $row_name = $row+1;
         my $cross_name;
         my $progeny_name;
@@ -75,16 +78,21 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @errors, "Cell A$row_name: cross name missing";
+            push @errors_messages, "Cell A$row_name: cross name missing";
+        } else {
+            if ($cross_name){
+                $seen_cross_names{$cross_name}++;
+            }
         }
 
         if (!$progeny_name || $progeny_name eq '') {
-            push @errors, "Cell A$row_name: progeny name missing";
+            push @errors_messages, "Cell A$row_name: progeny name missing";
+        } else {
+            if ($progeny_name){
+                $seen_progeny_names{$progeny_name}++;
+            }
         }
     }
-
-    my %seen_cross_names;
-    my %seen_progeny_name;
 
     my @crosses = keys %seen_cross_names;
     my $cross_validator = CXGN::List::Validate->new();
@@ -101,7 +109,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@progenies }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cell".$seen_seedlot_names{$r->uniquename}.": progeny name already exists in database: ".$r->uniquename;
+        push @error_messages, "Cell".$seen_progeny_names{$r->uniquename}.": progeny name already exists in database: ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
