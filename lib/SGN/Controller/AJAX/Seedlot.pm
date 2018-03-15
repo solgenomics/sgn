@@ -355,10 +355,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
 
     $c->stash->{rest} = { success => 1, seedlot_id => $seedlot_id };
 }
@@ -498,10 +494,6 @@ sub upload_seedlots_POST : Args(0) {
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
 
     $c->stash->{rest} = { success => 1 };
 }
@@ -622,6 +614,10 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $c->detach();
     }
 
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
     $c->stash->{rest} = { success => 1 };
 }
 
@@ -680,6 +676,10 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
     $c->stash->{seedlot}->set_current_count_property();
     $c->stash->{seedlot}->set_current_weight_property();
     if ($transaction_id){
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "Something went wrong with the transaction update" };
@@ -905,6 +905,10 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     }
     $c->stash->{seedlot}->set_current_count_property();
     $c->stash->{seedlot}->set_current_weight_property();
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
 
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }
