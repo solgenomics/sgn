@@ -538,12 +538,14 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
             $transaction->from_stock([$val->{seedlot_stock_id}, $val->{seedlot_name}]);
             $transaction->to_stock([$val->{plot_stock_id}, $val->{plot_name}]);
             $transaction->amount($val->{amount});
+            $transaction->weight_gram($val->{weight_gram});
             $transaction->timestamp($timestamp);
             $transaction->description($val->{description});
             $transaction->operator($user_name);
             $transaction->store();
 
             $sl->set_current_count_property();
+            $sl->set_current_weight_property();
         }
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();

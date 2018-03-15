@@ -571,6 +571,7 @@ sub generate_and_cache_layout {
         $design_info{"seedlot_name"} = $seedlot->first->uniquename;
         $design_info{"seedlot_stock_id"} = $seedlot->first->stock_id;
         $design_info{"num_seed_per_plot"} = $val->{amount};
+        $design_info{"weight_gram_seed_per_plot"} = $val->{weight_gram};
         $design_info{"seed_transaction_operator"} = $val->{operator};
     }
     if ($plants) {
