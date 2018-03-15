@@ -51,8 +51,8 @@ use Data::Dumper;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
-use List::MoreUtils ':all';
 use CXGN::Trial::TrialLayout;
+use List::MoreUtils ':all';
 
 sub verify { 
     return 1;
@@ -80,23 +80,49 @@ sub download {
     }
     
     if ($self->data_level eq 'plot_fieldMap'){
+        my (@unique_col,@unique_row);
         my %hash = %{$output->{output}};
-        print STDERR Dumper(\%hash);
-        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema,, trial_id => $self->trial_id,, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
-        my $trial_name =  $trial_layout->get_trial_name();
-        $ws->write( "C1", $trial_name );
-        $ws->write( "A3", "Rows/Columns" );
+        my @all_col = @{$output->{cols}};
+        my @all_rows = @{$output->{rows}};
+        my ($min_col, $max_col) = minmax @all_col;
+    	my ($min_row, $max_row) = minmax @all_rows;
+    	for my $x (1..$max_col){
+    		push @unique_col, $x;
+    	}
+    	for my $y (1..$max_row){
+    		push @unique_row, $y;
+    	}
+        print STDERR Dumper(\@unique_row);
+        #my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema,, trial_id => $self->trial_id,, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+        #my $trial_name =  $trial_layout->get_trial_name();
+        my $info = "Columns\nRows";
+        #$ws->write( "D1", $trial_name );
+        $ws->write( "A1", $info );
+        #$ws->write( "A2", "Rows" );
         
+        my $row_num_label = 1;        
+        foreach my $l (@unique_row){
+            my $col_num_label = 0;
+            $ws->write( $row_num_label, $col_num_label, $l);
+            $col_num_label++;
+            $row_num_label++;
+        }        
+        my $row_num_label_col = 1;
+        foreach my $l (@unique_col){
+            my $col_num_label_col = 0;
+            $ws->write($col_num_label_col, $row_num_label_col, $l);
+            $col_num_label_col++;
+            $row_num_label_col++;
+        }        
         foreach my $row (keys %hash){
             my $cols = $hash{$row};
             foreach my $col (keys %$cols){
                 my $accession = $hash{$row}->{$col};
+                print "ROW: $row and COLUMN: $col\n";
                 $ws->write($row, $col, $accession);
             }
-        }
-        
-    }else{
-        
+        }        
+    }else{        
         my @output_array = @{$output->{output}};
         my $row_num = 0;
         foreach my $l (@output_array){

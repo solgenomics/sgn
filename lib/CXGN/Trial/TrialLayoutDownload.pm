@@ -227,7 +227,7 @@ sub get_layout_output {
         push @header, $_;
     }
     push @output, \@header; 
-    
+    my (@rows, @cols);
     if ($self->data_level eq 'plot_fieldMap' ) {
         my %hash;
         foreach my $key (keys %$design) {
@@ -235,10 +235,12 @@ sub get_layout_output {
             my $row_num = $design_info->{row_number};
             my $col_num = $design_info->{col_number};
             my $accession = $design_info->{accession_name};
-            $hash{$row_num}->{$col_num} = $accession;      
+            $hash{$row_num}->{$col_num} = $accession; 
+            push @rows, $row_num;
+            push @cols, $col_num;     
         }
         print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
-        return {output => \%hash};
+        return {output => \%hash, rows => \@rows, cols => \@cols};
     }
     else{
         foreach my $key (sort { $a <=> $b} keys %$design) {
