@@ -460,6 +460,8 @@ CXGN.List.prototype = {
 
     if (list_type == 'accessions'){
         jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
+    }
+    if (list_type == 'accessions' || list_type == 'crosses'){
         jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
     }
     if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(list_type) >= 0){
@@ -467,10 +469,13 @@ CXGN.List.prototype = {
     }
     jQuery(document).on("change", "#type_select", function(){
         if (jQuery('#type_select').val() == 'accessions'){
-            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
             jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
         } else {
             jQuery('#fuzzySearchAccessionListDiv').html('');
+        }
+        if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
+            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
+        } else {
             jQuery('#availableSeedlotButtonDiv').html('')
         }
 				if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(jQuery('#type_select').val()) >= 0){
@@ -760,8 +765,9 @@ CXGN.List.prototype = {
 			var self = this;
 			jQuery('#availible_seedlots_modal').modal('show');
 			var accessions = this.getList(list_id);
+			var list_type = this.getListType(list_id);
 			if (window.available_seedlots){
-				window.available_seedlots.build_table(accessions);
+				window.available_seedlots.build_table(accessions, list_type);
 			} else {
 				throw "avalilible_seedlots.mas not included";
 			}
