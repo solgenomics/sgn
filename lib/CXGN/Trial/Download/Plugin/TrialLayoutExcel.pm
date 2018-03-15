@@ -92,8 +92,9 @@ sub download {
     	for my $y (1..$max_row){
     		push @unique_row, $y;
     	}
-        
-        my $info = "Columns\nRows";
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema,, trial_id => $self->trial_id,, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+        my $trial_name =  $trial_layout->get_trial_name();
+        my $info = $trial_name."\nColumns\nRows";
         $ws->write( "A1", $info );
         my $row_num_label = 1;        
         foreach my $l (@unique_row){
