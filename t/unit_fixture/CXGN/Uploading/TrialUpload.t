@@ -688,7 +688,7 @@ ok($post1_stock_diff == 22, "check stock table after upload excel trial");
 my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post1_stock_prop_diff."\n";
-ok($post1_stock_prop_diff == 136, "check stockprop table after upload excel trial");
+ok($post1_stock_prop_diff == 133, "check stockprop table after upload excel trial");
 
 my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
