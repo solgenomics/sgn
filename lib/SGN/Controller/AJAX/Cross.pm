@@ -1461,7 +1461,7 @@ sub list_cross_wishlists_GET : Args(0) {
 
 sub add_crossingtrial : Path('/ajax/cross/add_crossingtrial') : ActionClass('REST') {}
 
-sub add_crossingtrial_POST :Args(0) {
+sub add_crossingtrial_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
@@ -1471,30 +1471,6 @@ sub add_crossingtrial_POST :Args(0) {
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
-#    my $folder_name = $c->req->param('crossingtrial_folder_name');
-#    my $folder_id = $c->req->param('crossingtrial_folder_id');
-#    my $folder;
-
-#    if ($folder_name && !$folder_id) {
-#      eval {
-#        $folder = CXGN::Trial::Folder->create({
-#          bcs_schema => $schema,
-#          parent_folder_id => '',
-#          name => $folder_name,
-#          breeding_program_id => $breeding_program_id,
-#          folder_for_crosses =>1
-#        });
-#      };
-
-#      if ($@) {
-#        $c->stash->{rest} = {error => $@ };
-#        return;
-#      }
-
-#      $folder_id = $folder->folder_id();
-#    }
-
-
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($location);
     if(!$geolocation_lookup->get_geolocation()){
@@ -1502,16 +1478,16 @@ sub add_crossingtrial_POST :Args(0) {
         return;
     }
 
-    if (!$c->user()) {
-  print STDERR "User not logged in... not adding a crossingtrial.\n";
-  $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial." };
-  return;
+    if (!$c->user()){
+        print STDERR "User not logged in... not adding a crossingtrial.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial."};
+        return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-  print STDERR "User does not have sufficient privileges.\n";
-  $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
-  return;
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        print STDERR "User does not have sufficient privileges.\n";
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
+        return;
     }
 
     my $error;
@@ -1522,27 +1498,26 @@ sub add_crossingtrial_POST :Args(0) {
             breeding_program_id => $breeding_program_id,
             year => $c->req->param('year'),
             project_description => $c->req->param('project_description'),
-#            location => $location,
             crossingtrial_name => $crossingtrial_name,
             nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
         });
         my $store_return = $add_crossingtrial->save_crossingtrial();
         if ($store_return->{error}){
-          $error = $store_return->{error};
+            $error = $store_return->{error};
         }
     };
 
     if ($@) {
         $c->stash->{rest} = {error => $@};
         return;
-      };
+    };
 
     if ($error){
-      $c->stash->{rest} = {error => $error};
+        $c->stash->{rest} = {error => $error};
     } else {
-      $c->stash->{rest} = {success => 1};
+        c->stash->{rest} = {success => 1};
     }
-  }
+}
 
 
 ###
