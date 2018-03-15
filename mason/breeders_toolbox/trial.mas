@@ -42,6 +42,7 @@ $sgn_session_id => undef
 $user_name => undef
 $design_name => undef
 $phenotypes_fully_uploaded => undef
+$has_col_and_row_numbers => undef
 $assayed_traits => undef
 $identifier_prefix => 'SGN'
 $main_production_site_url
