@@ -155,6 +155,16 @@ sub add_crosses {
 	      $organism_id = $male_parent->organism_id();
 	  }
 
+      my $previous_cross_stock_rs = $chado_schema->resultset("Stock::Stock")->search({
+          organism_id => $organism_id,
+          uniquename => $cross_name,
+          type_id => $cross_stock_type_cvterm->cvterm_id,
+      });
+      if ($previous_cross_stock_rs->count > 0){
+          #If cross already exists, just go to next cross
+          next;
+      }
+
 	  #create cross experiment
 	  $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create(
 	      {

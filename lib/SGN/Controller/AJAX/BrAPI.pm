@@ -1678,6 +1678,7 @@ sub studies_table_GET {
 		study_id => $c->stash->{study_id},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 		trait_ids => $clean_inputs->{observationVariableDbId},
 		trial_ids => $clean_inputs->{studyDbId},
 		format => $format,
@@ -1744,6 +1745,7 @@ sub studies_observations_granular_GET {
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1856,6 +1858,7 @@ sub process_phenotypes_search {
 		years => $clean_inputs->{seasonDbIds},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -2251,6 +2254,90 @@ sub observationvariable_detail_GET {
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+
+sub samples_list : Chained('brapi') PathPart('samples') Args(0) : ActionClass('REST') { }
+
+sub samples_list_POST {
+    my $self = shift;
+    my $c = shift;
+    $c->forward('samples_search_POST');
+}
+
+sub samples_list_GET {
+    my $self = shift;
+    my $c = shift;
+    $c->forward('samples_search_GET');
+}
+
+
+=head2 brapi/v1/samples/<sampleDbId>
+
+Usage: To retrieve details for a specific sample
+Desc:
+Return JSON example:
+{
+    "metadata": {
+        "pagination" : { 
+            "pageSize":0, 
+            "currentPage":0, 
+            "totalCount":0, 
+            "totalPages":0 
+        },
+        "status" : [],
+        "datafiles": []
+    },
+    "result": {
+      "sampleDbId": "Unique-Plant-SampleID",
+      "observationUnitDbId": "abc123",
+      "germplasmDbId": "def456",
+      "studyDbId": "StudyId-123",
+      "plotDbId": "PlotId-123",
+      "plantDbId" : "PlantID-123",
+      "plateDbId": "PlateID-123",
+      "plateIndex": 0,
+      "takenBy": "Mr. Technician",
+      "sampleTimestamp": "2016-07-27T14:43:22+0100",
+      "sampleType" : "TypeOfSample",
+      "tissueType" : "TypeOfTissue",
+      "notes": "Cut from infected leaf",
+    }
+}
+=cut
+
+sub samples_single : Chained('brapi') PathPart('samples') CaptureArgs(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sample_id = shift;
+
+    $c->stash->{sample_id} = $sample_id;
+}
+
+
+sub sample_details : Chained('samples_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub sample_details_POST {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+}
+
+sub sample_details_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Samples');
+    my $brapi_package_result = $brapi_module->detail(
+    	$c->stash->{sample_id}
+    );
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+
+
+
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;

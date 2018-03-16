@@ -538,6 +538,7 @@ sub studies_table {
 	my $study_id = $inputs->{study_id};
 	my $data_level = $inputs->{data_level} || 'plot';
 	my $search_type = $inputs->{search_type} || 'complete';
+	my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my $format = $inputs->{format} || 'json';
 	my $file_path = $inputs->{file_path};
 	my $file_uri = $inputs->{file_uri};
@@ -562,6 +563,7 @@ sub studies_table {
 		trial_list=>\@trial_ids_array,
 		trait_list=>\@trait_ids_array,
 		include_timestamp=>1,
+        exclude_phenotype_outlier=>$exclude_phenotype_outlier
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
 	#print STDERR Dumper \@data;
@@ -622,6 +624,7 @@ sub observation_units_granular {
 	my $study_id = $inputs->{study_id};
 	my $data_level = $inputs->{data_level} || 'plot';
 	my $search_type = $inputs->{search_type} || 'complete';
+    my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -642,6 +645,7 @@ sub observation_units_granular {
 			trial_list=>[$study_id],
 			trait_list=>\@trait_ids_array,
 			include_timestamp=>1,
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier
 		}
 	);
 	my $data = $phenotypes_search->search();
