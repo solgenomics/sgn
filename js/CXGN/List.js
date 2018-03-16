@@ -810,7 +810,7 @@ CXGN.List.prototype = {
                     jQuery('#synonym_search_result_display').modal('show');
                     html += "<table class='table table-hover table-bordered'><thead><tr><th>Name in List</th><th>Unique Name</th></tr></thead><tbody>";
                     for (var i = 0; i < response.previous_list.length; i++) {
-                        if (response.previous_list[i] in response.synonyms){
+                        if (response.synonyms && response.previous_list[i] in response.synonyms){
                             html+="<tr><td>"+response.previous_list[i]+"</td><td>&harr; "+response.previous_list[i]+"</td></tr>";
                         } else {
                             var match = false;
