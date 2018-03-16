@@ -48,7 +48,20 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
  {
     'A01' => {
         "plot_name" => "mytissuesample_A01",
-        "stock_name" => "accession1"
+        "stock_name" => "accession1",
+        "plot_number" => "A01",
+        "row_number" => "A",
+        "col_number" => "1",
+        "is_blank" => 0,
+        "concentration" => "2",
+        "volume" => "4",
+        "dna_person" => "nmorales",
+        "acquisition_date" => "2018/01/09",
+        "tissue_type" => "leaf",
+        "extraction" => "ctab",
+        "ncbi_taxonomy_id" => "1001",
+        "source_observation_unit_name" => "plant1",
+        "source_observation_unit_id" => "9091"
     }
  }
  
@@ -229,6 +242,7 @@ sub _get_unique_accession_names_from_trial {
     my %design = %{$self->get_design()};
     my @acc_names;
     my %unique_acc;
+    no warnings 'numeric'; #for genotyping trial so that wells don't give warning
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
@@ -247,6 +261,7 @@ sub _get_unique_control_accession_names_from_trial {
     my %design = %{$self->get_design()};
     my @control_names;
     my %unique_controls;
+    no warnings 'numeric'; #for genotyping trial so that wells don't give warning
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         my $is_a_control = $design_info{"is_a_control"};
@@ -363,6 +378,15 @@ sub generate_and_cache_layout {
   my $is_a_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'is a control', 'stock_property' )->cvterm_id();
   my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'row_number', 'stock_property' )->cvterm_id();
   my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'col_number', 'stock_property' )->cvterm_id();
+  my $is_blank_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'is_blank', 'stock_property' )->cvterm_id();
+  my $concentration_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'concentration', 'stock_property')->cvterm_id();
+  my $volume_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'volume', 'stock_property')->cvterm_id();
+  my $dna_person_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'dna_person', 'stock_property')->cvterm_id();
+  my $extraction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'extraction', 'stock_property')->cvterm_id();
+  my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'tissue_type', 'stock_property')->cvterm_id();
+  my $acquisition_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'acquisition date', 'stock_property')->cvterm_id();
+  my $notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'notes', 'stock_property')->cvterm_id();
+  my $ncbi_taxonomy_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'ncbi_taxonomy_id', 'stock_property')->cvterm_id();
   my $plot_geo_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot_geo_json', 'stock_property' )->cvterm_id();
   my $json = JSON->new();
 
@@ -391,13 +415,48 @@ sub generate_and_cache_layout {
     my $is_a_control_prop = $stockprop_hash{$is_a_control_cvterm_id} ? join ',', @{$stockprop_hash{$is_a_control_cvterm_id}} : undef;
     my $row_number_prop = $stockprop_hash{$row_number_cvterm_id} ? join ',', @{$stockprop_hash{$row_number_cvterm_id}} : undef;
     my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
+    my $is_blank_prop = $stockprop_hash{$is_blank_cvterm_id} ? join ',', @{$stockprop_hash{$is_blank_cvterm_id}} : undef;
+    my $well_concentration_prop = $stockprop_hash{$concentration_cvterm_id} ? join ',', @{$stockprop_hash{$concentration_cvterm_id}} : undef;
+    my $well_volume_prop = $stockprop_hash{$volume_cvterm_id} ? join ',', @{$stockprop_hash{$volume_cvterm_id}} : undef;
+    my $well_dna_person_prop = $stockprop_hash{$dna_person_cvterm_id} ? join ',', @{$stockprop_hash{$dna_person_cvterm_id}} : undef;
+    my $well_extraction_prop = $stockprop_hash{$extraction_cvterm_id} ? join ',', @{$stockprop_hash{$extraction_cvterm_id}} : undef;
+    my $well_tissue_type_prop = $stockprop_hash{$tissue_type_cvterm_id} ? join ',', @{$stockprop_hash{$tissue_type_cvterm_id}} : undef;
+    my $well_acquisition_date_prop = $stockprop_hash{$acquisition_date_cvterm_id} ? join ',', @{$stockprop_hash{$acquisition_date_cvterm_id}} : undef;
+    my $well_notes_prop = $stockprop_hash{$notes_cvterm_id} ? join ',', @{$stockprop_hash{$notes_cvterm_id}} : undef;
+    my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$ncbi_taxonomy_id_cvterm_id} ? join ',', @{$stockprop_hash{$ncbi_taxonomy_id_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
         { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
         { 'join' => 'object' }
     );
     if ($accession_rs->count != 1){
-        die "There is more than one accession linked here!\n";
+        die "There is more than one or no (".$accession_rs->count.") accession linked here!\n";
+    }
+    if ($self->get_experiment_type eq 'genotyping_layout'){
+        my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
+            { 'me.type_id' => { -in => [ $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
+            { 'join' => 'object' }
+        )->search_related('object');
+        while (my $r=$source_rs->next){
+            if ($r->type_id == $plot_cvterm_id){
+                $design_info{"source_plot_id"} = $r->stock_id;
+                $design_info{"source_plot_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_id"} = $r->stock_id;
+            }
+            if ($r->type_id == $plant_cvterm_id){
+                $design_info{"source_plant_id"} = $r->stock_id;
+                $design_info{"source_plant_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_id"} = $r->stock_id;
+            }
+            if ($r->type_id == $tissue_cvterm_id){
+                $design_info{"source_tissue_id"} = $r->stock_id;
+                $design_info{"source_tissue_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_id"} = $r->stock_id;
+            }
+        }
     }
     my $accession = $accession_rs->first->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {'object.type_id' => $plant_cvterm_id}, {order_by=>"object.stock_id"});
@@ -429,6 +488,37 @@ sub generate_and_cache_layout {
     }
 	if ($col_number_prop) {
       $design_info{"col_number"}=$col_number_prop;
+    }
+    if ($self->get_experiment_type eq 'genotyping_layout'){
+        if ($is_blank_prop) {
+          $design_info{"is_blank"}=1;
+        } else {
+          $design_info{"is_blank"}=0;
+        }
+    }
+    if ($well_concentration_prop){
+        $design_info{"concentration"} = $well_concentration_prop;
+    }
+    if ($well_volume_prop){
+        $design_info{"volume"} = $well_volume_prop;
+    }
+    if ($well_dna_person_prop){
+        $design_info{"dna_person"} = $well_dna_person_prop;
+    }
+    if ($well_extraction_prop){
+        $design_info{"extraction"} = $well_extraction_prop;
+    }
+    if ($well_tissue_type_prop){
+        $design_info{"tissue_type"} = $well_tissue_type_prop;
+    }
+    if ($well_acquisition_date_prop){
+        $design_info{"acquisition_date"} = $well_acquisition_date_prop;
+    }
+    if ($well_notes_prop){
+        $design_info{"notes"} = $well_notes_prop;
+    }
+    if ($well_ncbi_taxonomy_id_prop){
+        $design_info{"ncbi_taxonomy_id"} = $well_ncbi_taxonomy_id_prop;
     }
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop;
@@ -481,6 +571,7 @@ sub generate_and_cache_layout {
         $design_info{"seedlot_name"} = $seedlot->first->uniquename;
         $design_info{"seedlot_stock_id"} = $seedlot->first->stock_id;
         $design_info{"num_seed_per_plot"} = $val->{amount};
+        $design_info{"weight_gram_seed_per_plot"} = $val->{weight_gram};
         $design_info{"seed_transaction_operator"} = $val->{operator};
     }
     if ($plants) {

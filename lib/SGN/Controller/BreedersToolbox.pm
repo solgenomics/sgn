@@ -681,7 +681,6 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $c->stash->{breeding_programs} = $breeding_programs;
 
-
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
 

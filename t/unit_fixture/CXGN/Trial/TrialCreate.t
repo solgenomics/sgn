@@ -4,6 +4,7 @@ use strict;
 use Test::More;
 use lib 't/lib';
 use SGN::Test::Fixture;
+use JSON::Any;
 use Data::Dumper;
 
 my $fix = SGN::Test::Fixture->new();
@@ -84,6 +85,8 @@ ok($trial_design->set_design_type("RCBD"), "set design type");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
+my $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
+
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
@@ -94,6 +97,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_description => "test description",
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_name",
+    trial_type=>$ayt_cvterm_id,
     design_type => "RCBD",
     operator => "janedoe"
 						    }), "create trial object");
@@ -176,35 +180,158 @@ foreach my $acc (@$accession_names) {
 }
 
 
+# layout for genotyping experiment
+# use data structure returned by brapi call for GDF:
+# plates:[ { 'project_id' : 'project x', 
+#            'plate_name' : 'required',
+#            'plate_format': 'Plate_96' | 'tubes',
+#            'sample_type' : 'DNA' | 'RNA' | 'Tissue'
+#            'samples':[
+# {
+#    		'name': 'sample_name1', 
+#     		'well': 'optional'
+#               'concentration:
+#'              'volume': 
+#               'taxomony_id' : 
+#               'tissue_type' : 
+#               }
+# ] 
 
-#make design for genotyping
-my %geno_design;
+my $plate_info = {
+    elements => \@genotyping_stock_names,
+    plate_format => 96,
+    blank_well => 'A02',
+    name => 'test_genotyping_trial_name',
+    description => "test description",
+    year => '2015',
+    project_name => 'NextGenCassava',
+    genotyping_facility_submit => 'no',
+    genotyping_facility => 'igd',
+    sample_type => 'DNA'
+};
 
-  for (my $i = 0; $i < scalar(@genotyping_stock_names); $i++) {
-    my %plot_info;
-    
-    #a
-    $plot_info{'stock_name'} = @genotyping_stock_names[$i];
-    #$plot_info{'block_number'} = $block_numbers[$i];
-    #$plot_info{'plot_name'} = $converted_plot_numbers[$i];
-    $plot_info{'plot_name'} = @genotyping_stock_names[$i]."_test_trial_name_".$i;
-    $geno_design{$i+1} = \%plot_info;
-  }
+my $gd = CXGN::Trial::TrialDesign->new( { schema => $chado_schema } );
+$gd->set_stock_list($plate_info->{elements});
+$gd->set_block_size($plate_info->{plate_format});
+$gd->set_blank($plate_info->{blank_well});
+$gd->set_trial_name($plate_info->{name});
+$gd->set_design_type("genotyping_plate");
+$gd->calculate_design();
+my $geno_design = $gd->get_design();
 
-ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
+print STDERR Dumper $geno_design;
+is_deeply($geno_design, {
+          'A09' => {
+                     'row_number' => 'A',
+                     'plot_name' => 'test_genotyping_trial_name_A09',
+                     'stock_name' => 'test_stock_for_genotyping_trial8',
+                     'col_number' => 9,
+                     'is_blank' => 0,
+                     'plot_number' => 'A09'
+                   },
+          'A07' => {
+                     'is_blank' => 0,
+                     'plot_number' => 'A07',
+                     'plot_name' => 'test_genotyping_trial_name_A07',
+                     'row_number' => 'A',
+                     'col_number' => 7,
+                     'stock_name' => 'test_stock_for_genotyping_trial6'
+                   },
+          'A02' => {
+                     'is_blank' => 1,
+                     'plot_number' => 'A02',
+                     'row_number' => 'A',
+                     'plot_name' => 'test_genotyping_trial_name_A02_BLANK',
+                     'stock_name' => 'BLANK',
+                     'col_number' => 2
+                   },
+          'A05' => {
+                     'is_blank' => 0,
+                     'plot_number' => 'A05',
+                     'row_number' => 'A',
+                     'plot_name' => 'test_genotyping_trial_name_A05',
+                     'stock_name' => 'test_stock_for_genotyping_trial4',
+                     'col_number' => 5
+                   },
+          'A08' => {
+                     'plot_name' => 'test_genotyping_trial_name_A08',
+                     'row_number' => 'A',
+                     'col_number' => 8,
+                     'stock_name' => 'test_stock_for_genotyping_trial7',
+                     'is_blank' => 0,
+                     'plot_number' => 'A08'
+                   },
+          'A04' => {
+                     'plot_name' => 'test_genotyping_trial_name_A04',
+                     'row_number' => 'A',
+                     'stock_name' => 'test_stock_for_genotyping_trial3',
+                     'col_number' => 4,
+                     'is_blank' => 0,
+                     'plot_number' => 'A04'
+                   },
+          'A01' => {
+                     'is_blank' => 0,
+                     'plot_number' => 'A01',
+                     'plot_name' => 'test_genotyping_trial_name_A01',
+                     'row_number' => 'A',
+                     'stock_name' => 'test_stock_for_genotyping_trial1',
+                     'col_number' => 1
+                   },
+          'A11' => {
+                     'plot_name' => 'test_genotyping_trial_name_A11',
+                     'row_number' => 'A',
+                     'stock_name' => 'test_stock_for_genotyping_trial10',
+                     'col_number' => 11,
+                     'is_blank' => 0,
+                     'plot_number' => 'A11'
+                   },
+          'A06' => {
+                     'plot_number' => 'A06',
+                     'is_blank' => 0,
+                     'stock_name' => 'test_stock_for_genotyping_trial5',
+                     'col_number' => 6,
+                     'row_number' => 'A',
+                     'plot_name' => 'test_genotyping_trial_name_A06'
+                   },
+          'A10' => {
+                     'is_blank' => 0,
+                     'plot_number' => 'A10',
+                     'plot_name' => 'test_genotyping_trial_name_A10',
+                     'row_number' => 'A',
+                     'col_number' => 10,
+                     'stock_name' => 'test_stock_for_genotyping_trial9'
+                   },
+          'A03' => {
+                     'plot_name' => 'test_genotyping_trial_name_A03',
+                     'row_number' => 'A',
+                     'stock_name' => 'test_stock_for_genotyping_trial2',
+                     'col_number' => 3,
+                     'is_blank' => 0,
+                     'plot_number' => 'A03'
+                   }
+        }, 'check genotyping trial design');
+
+my $genotyping_trial_create;
+ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    is_genotyping => 1,
     user_name => "johndoe", #not implemented
-    design => \%geno_design,	
     program => "test",
-    trial_year => "2015",
-    trial_description => "test description",
     trial_location => "test_location_for_trial",
-    trial_name => "test_genotyping_trial_name",
-    design_type => "genotyping_plate",
-    operator => "janedoe"
-							       }), "create genotyping trial");
+    operator => "janedoe",
+    trial_year => $plate_info->{year},
+    trial_description => $plate_info->{description},
+    design_type => 'genotyping_plate',
+    design => $geno_design,
+    trial_name => $plate_info->{name},
+    is_genotyping => 1,
+    genotyping_user_id => 41,
+    genotyping_project_name => $plate_info->{project_name},
+    genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
+    genotyping_facility => $plate_info->{genotyping_facility},
+    genotyping_plate_format => $plate_info->{plate_format},
+    genotyping_plate_sample_type => $plate_info->{sample_type},
+    }), "create genotyping trial");
                                    
 my $save = $genotyping_trial_create->save_trial();
 ok($save->{'trial_id'}, "save genotyping trial");
@@ -222,6 +349,7 @@ ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
 						    }), "create trial layout object for genotyping trial");
 ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names3");
 my %genotyping_stocks = map { $_ => 1 } @genotyping_stock_names;
+$genotyping_stocks{'BLANK'} = 1;
 foreach my $acc (@$genotyping_accession_names) { 
     ok(exists($genotyping_stocks{$acc->{accession_name}}), "check existence of accession names $acc->{accession_name}");
 }
