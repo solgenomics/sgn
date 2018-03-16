@@ -88,20 +88,23 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     my $json = JSON->new();
     $args = $json->decode($args);
     
+    my $training_pop_id  = $args->{training_pop_id}[0];
+    my $selection_pop_id = $args->{selection_pop_id}[0];
+    my $trait_id         =  $args->{trait_id}[0];
     $c->stash->{list}                = $args->{list};
     $c->stash->{list_name}           = $args->{list_name};
     $c->stash->{list_id}             = $args->{list_id};
     $c->stash->{data_set_type}       = $args->{data_set_type}; 
-    $c->stash->{training_pop_id}     = $args->{training_pop_id};
-    $c->stash->{model_id}            = $args->{training_pop_id}; 
-    $c->stash->{pop_id}              = $args->{training_pop_id}; 
-    $c->stash->{selection_pop_id}    = $args->{selection_pop_id};  
+    $c->stash->{training_pop_id}     = $training_pop_id;
+    $c->stash->{model_id}            = $training_pop_id; 
+    $c->stash->{pop_id}              = $training_pop_id; 
+    $c->stash->{selection_pop_id}    = $selection_pop_id;  
     $c->stash->{uploaded_prediction} = $args->{population_type};
-    $c->stash->{trait_id}            = $args->{trait_id};
+    $c->stash->{trait_id}            = $trait_id;
 
     if ($args->{data_set_type} =~ /combined populations/) 
     {
-	 $c->stash->{combo_pops_id}  = $args->{training_pop_id};
+	 $c->stash->{combo_pops_id}  = $training_pop_id;
     }
    
     $self->get_selection_genotypes_list($c);
@@ -110,8 +113,6 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
    
     my $data = $c->model('solGS::solGS')->genotypes_list_genotype_data($genotypes_list);
     $c->stash->{genotypes_list_genotype_data} = $data;
-  
-    my $selection_pop_id = $args->{selection_pop_id}; 
  
     $self->genotypes_list_genotype_data_file($c, $selection_pop_id);   
     my $genotype_file = $c->stash->{genotypes_list_genotype_data_file};

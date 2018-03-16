@@ -7,7 +7,8 @@
     <li><a href="/organism/Solanum_tuberosum/genome">Potato</a></li>
     <li><a href="/organism/Capsicum_annuum/genome">Pepper</a></li>
     <li><a href="/organism/Solanum_pennellii/genome"><i>Solanum pennellii</i></a></li>
-    
+    <li><a href="/organism/Solanum_lycopersicoides/genome"><i>Solanum lycopersicoides</i></a></li>
+
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Draft Genomes</li>
     <li><a href="/organism/Nicotiana_attenuata/genome"><i>Nicotiana attenuata</i></a></li>

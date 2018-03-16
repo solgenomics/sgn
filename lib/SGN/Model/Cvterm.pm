@@ -124,7 +124,7 @@ sub get_trait_from_exact_components {
 sub get_trait_from_cvterm_id {
     my $schema = shift;
     my $cvterm_id = shift;
-    my $format = shift;
+    my $format = shift; #can be 'concise' for just the name or 'extended' for name|DB:0000001
     if ($format eq 'concise'){
         $q = "SELECT name FROM cvterm WHERE cvterm_id=?;";
     }
@@ -199,7 +199,7 @@ sub get_traits_from_component_categories {
         #}
         my $existing_cvterm_id = $self->get_trait_from_exact_components($schema, $concatenated_cvterms->{$key});
         if ($existing_cvterm_id){
-            my $existing_name = get_trait_from_cvterm_id($schema, $existing_cvterm_id, $composable_cvterm_format);
+            my $existing_name = get_trait_from_cvterm_id($schema, $existing_cvterm_id, 'extended');
             push @existing_traits, [$existing_cvterm_id, $existing_name];
             next;
         }

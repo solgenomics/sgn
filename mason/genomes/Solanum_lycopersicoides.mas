@@ -1,0 +1,89 @@
+
+<%doc>
+
+</%doc>
+
+
+<& /page/page_title.mas, title=>"The <i>Solanum lycopersicoides</i> Genome Consortium
+" &>
+
+<& /genomes/Solanum_lycopersicoides/usage_popup.mas &>
+
+<div class="page_introduction">
+
+  <a href="/organism/Solanum%20lycopersicoides/view/"><i>Solanum
+  lycopersicoides</i></a>  is a wild tomato species 
+  related to the domesticated <a href="/organism/Solanum lycopersicum/view"><i>Solanum
+  lycopersicum</i></a>.  
+
+</div>
+
+<&| /page/info_section.mas, title=>"Disclaimer and data access agreement" &>
+
+<div style="text-align: justify; border: 1px solid gray; padding: 2em 3em 3em 3em">
+
+<h3 style="text-align: center"><i>Solanum lycopersicoides</i> Data Access Agreement</h3>
+<h4 style="text-align: center">PLEASE READ BEFORE ACCESSING THE PRE-PUBLICATION SEQUENCE OF SOLANUM LYCOPERSICOIDES</h4>
+
+ The Boyce Thompson Institute and RWTH Aachen University are pleased to make the pre-publication 
+ Solanum lycopersicoides LA2951 genome sequences publicly available as a resource for plant breeding and biology. 
+
+ By accessing these data, I hereby agree to respect the rights of the consortium to analyze and 
+ publish the first global analyses in a peer-reviewed publication according to the Toronto agreement. 
+ This includes: 
+ 1) whole chromosome or whole genome level analyses on genes, gene families, and repetitive sequences and 
+ 2) comparative analyses with other organisms. 
+ Studies that do not overlap with those planned by the consortium may be undertaken following an agreement. 
+ Please contact  <a href="mailto:usadel@bio1.rwth-aachen.de">Dr. Bjorn Usadel</a> or  <a href="mailto:srs57@cornell.edu">Dr. Susan Strickler</a>  
+ to discuss such possibilities. 
+
+ The data may be freely downloaded and used by all who respect the restrictions described above.
+ <b>Any use of the S. lycopersicoides genome data prior to its publication must follow the agreement 
+ and must credit "The Solanum lycopersicoides Genome Consortium".</b>
+
+ 
+</div>  
+
+</&>
+
+<&| /page/info_section.mas, title => 'Assembly details' &>
+
+<p>
+The genome was sequenced at 90X coverage using PacBio technology and was assembled with Canu.  Contigs were error-corrected with Quiver and Pilon and scaffolded with Hi-C.  Gaps were filled with PacBio sequence using PBJelly. 
+<br><br>
+contig total length: 1,254,763,366 bp<br>
+no contigs: 17,507<br>
+longest contig: 3,446,189 bp<br>
+contig N50: 139,475 bp<br>
+<br>
+final assembly total length: 1,269,715,057 bp<br>
+no sequences: 3,096<br>
+final assembly N50: 93,894,821 bp<br>
+longest sequence: 133,820,975 bp<br>
+89.7% of the assembly is found in 12 scaffolds<br>
+</p>
+
+</&>
+
+
+<&| /page/info_section.mas, title => 'Annotation details' &>
+<p>Augustus and snap were trained to use as predictors in the Maker pipeline. Sequence data used as input includes: PacBio IsoSeq, RNA-seq from leaves, fruit, and flowers, proteins from S. lycopersicum, S. pennellii, and refseq. A total of 37,938 genes were predicted, 34,240 of these are located on pseudomolecules.</p>
+
+</&>
+
+
+<&| /page/info_section.mas, title => 'Available Data' &>
+   <% info_table_html(
+         __border   => 0,
+         __multicol => 2,
+   'Genome browser' => '<a href="/jbrowse_solgenomics/?data=data/json/Slyd0.6&tracks=DNA,gene_models">Jbrowse</a>',
+   BLAST => 
+   '<a href="/tools/blast/?db_id=302">Genomic scaffolds</a>'
+     )
+    %>
+</&>
+
+
+<%init>
+  use CXGN::Page::FormattingHelpers qw/info_table_html/;
+</%init>

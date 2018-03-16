@@ -24,7 +24,7 @@
     <div class="modal-content ui-front">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="createNewCrosses">Create New Crosses</h4>
+        <h4 class="modal-title" id="createNewCrosses">Add New Cross</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -54,6 +54,7 @@
             <label class="col-sm-2 control-label">Location: </label>
             <div class="col-sm-10">
         <select class="form-control" id="location" name="location">
+            <option value="">Select Location</option>
     <%perl>
         foreach my $location (@locations) {
             print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
@@ -277,7 +278,7 @@
 	      <tr>
 	        <td>
 	    	  <div class="form-group">
-      	      	    <label title="You may choose to create accessions for the progeny of the cross at this time." class="col-sm-9 control-label">Create Accessions for Progeny: </label>
+      	      	    <label title="You may choose to create accessions for the progeny of the cross at this time." class="col-sm-9 control-label">Add New Accessions for Progeny: </label>
       	      	    <div class="col-sm-3">
 	              <input id="create_progeny_checkbox" type="checkbox"/>
               	    </div>
@@ -322,7 +323,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="create_cross_submit" id="create_cross_submit">Create</button>
+        <button type="button" class="btn btn-primary" name="create_cross_submit" id="create_cross_submit">Submit</button>
       </div>
     </div>
   </div>

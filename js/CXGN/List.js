@@ -457,23 +457,23 @@ CXGN.List.prototype = {
             paging:         false,
         });
 
-        if (list_type == 'accessions'){
-            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
-        }
         if (list_type == 'accessions' || list_type == 'seedlots'){
-            jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
+            jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>')
+        }
+        if (list_type == 'accessions' || list_type == 'crosses'){
+            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
         }
         if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(list_type) >= 0){
             jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
         }
         jQuery(document).on("change", "#type_select", function(){
-            if (jQuery('#type_select').val() == 'accessions'){
+            if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
                 jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
             } else {
                 jQuery('#availableSeedlotButtonDiv').html('')
             }
-            if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'seedlots'){
-                jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+jQuery('#type_select').val()+'\')" >Fuzzy Search</button>');
+            if (list_type == 'accessions' || list_type == 'seedlots'){
+                jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
             } else {
                 jQuery('#fuzzySearchStockListDiv').html('');
             }
@@ -721,36 +721,37 @@ CXGN.List.prototype = {
             if (!non_interactive) { alert("This list passed validation."); }
             return 1;
         } else {
+            if (!non_interactive) {
+                if (type == 'accessions') {
+                    jQuery("#validate_accession_error_display tbody").html('');
 
-            if (type == 'accessions') {
-                jQuery("#validate_accession_error_display tbody").html('');
-
-                var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div></div>";
+                    var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div></div>";
 
 
-                jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
+                    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
 
-                var missing_accessions_vals = '';
-                var missing_accessions_vals_for_list = '';
-                for(var i=0; i<missing.length; i++) {
-                    missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
-                    missing_accessions_vals_for_list = missing_accessions_vals_for_list + missing[i] + '\n';
+                    var missing_accessions_vals = '';
+                    var missing_accessions_vals_for_list = '';
+                    for(var i=0; i<missing.length; i++) {
+                        missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
+                        missing_accessions_vals_for_list = missing_accessions_vals_for_list + missing[i] + '\n';
+                    }
+
+                    jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
+                    jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
+                    addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
+                        selectText: true,
+                        listType: 'accessions'
+                    });
+
+                    jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
+                    jQuery('#validate_accession_error_display').modal("show");
+
+                    //alert("List validation failed. Elements not found: "+ missing.join(","));
+                    //return 0;
+                } else {
+                    alert('List did not pass validation because of these items: '+missing.join(", "));
                 }
-
-                jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
-                jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
-                addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
-                    selectText: true,
-                    listType: 'accessions'
-                });
-
-                jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
-                jQuery('#validate_accession_error_display').modal("show");
-
-                //alert("List validation failed. Elements not found: "+ missing.join(","));
-                //return 0;
-            } else {
-                alert('List did not pass validation because of these items: '+missing.join(", "));
             }
             return;
         }
@@ -760,8 +761,9 @@ CXGN.List.prototype = {
         var self = this;
         jQuery('#availible_seedlots_modal').modal('show');
         var accessions = this.getList(list_id);
+        var list_type = this.getListType(list_id);
         if (window.available_seedlots){
-            window.available_seedlots.build_table(accessions);
+            window.available_seedlots.build_table(accessions, list_type);
         } else {
             throw "avalilible_seedlots.mas not included";
         }
@@ -773,7 +775,7 @@ CXGN.List.prototype = {
                     map[obj.name] = obj.value;
                     return map;
                 }, {});
-                //console.log(form);
+                console.log(form);
                 var list = new CXGN.List();
                 var names = window.available_seedlots.get_selected().map(function(d){
                     return d.name;
@@ -807,7 +809,7 @@ CXGN.List.prototype = {
             },
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
-                //console.log(response);
+                console.log(response);
                 if (response.success) {
                     html = "";
                     jQuery('#synonym_search_result_display').modal('show');
@@ -842,7 +844,7 @@ CXGN.List.prototype = {
                                 map[obj.name] = obj.value;
                                 return map;
                             }, {});
-                            //console.log(form);
+                            console.log(form);
                             var list = new CXGN.List();
                             var newListID = list.newList(form["name"]);
                             if (!newListID) throw "List creation failed.";
