@@ -33,12 +33,14 @@
                                 <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
                             </div>
                         </div>
+                        <!--
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Population Name: </label>
                             <div class="col-sm-9" >
                                 <input class="form-control" name="upload_seedlot_population_name" id="upload_seedlot_population_name" placeholder="Optional">
                             </div>
                         </div>
+                        -->
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Organization Name: </label>
                             <div class="col-sm-9" >
@@ -87,26 +89,37 @@
                                 <td>seedlot_name</td>
                                 <td>accession_name</td>
                                 <td>cross_name</td>
+                                <td>operator_name</td>
                                 <td>amount</td>
+                                <td>weight(g)</td>
                                 <td>description</td>
+                                <td>box_name</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <b>Required fields:</b>
-                    <br/>
-                    seedlot_name (must be unique)
-                    <br />
-                    <br/>
+                    <ul>
+                    <li>seedlot_name (must be unique)</li>
+                    <li>
                     accession_name (must exist in the database)
                     <br/><b>OR</b><br/>
                     cross_name (must exist in the database)
-                    <br /><br/>
+                    </li>
+                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
+                    <li>
+                    amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
+                    <br/><b>AND/OR</b><br/>
+                    weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                    </li>
+                    </ul>
+
                     <b>Optional fields:</b>
-                    <br />
-                    amount (number of seeds in seedlot. if not given will default to 0)
-                    <br />
-                    description (information about why this seedlot is being added)
+                    <ul>
+                    <li>description (information about why this seedlot is being added)</li>
+                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
+                    </ul>
+
                 </div>
             </div>
             <div class="modal-footer">

@@ -19,6 +19,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     plant_list=>$plant_list,
     include_timestamp=>$include_timestamp,
     include_row_and_column_numbers=>0,
+    exclude_phenotype_outlier=>0,
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
     phenotype_max_value=>$phenotype_max_value,
@@ -108,6 +109,12 @@ has 'include_timestamp' => (
     default => 0
 );
 
+has 'exclude_phenotype_outlier' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'include_row_and_column_numbers' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -157,6 +164,7 @@ sub get_phenotype_matrix {
             subplot_list=>$self->subplot_list,
             include_timestamp=>$self->include_timestamp,
             include_row_and_column_numbers=>$self->include_row_and_column_numbers,
+            exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,

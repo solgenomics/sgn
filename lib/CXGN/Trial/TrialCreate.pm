@@ -10,53 +10,99 @@ Will do the following:
 3) Will associate the location to the project through the nd_experiment as well as through a projectprop. Location lookup happens based on location name that is provided. Assumes locations already stored in database.
 4) Will associate the trial to its breeding program. Lookup is by breeding program name that is provided and assumes bp already exists in database. Will return an error if breeding program name not found.
 5) Creates a single nd_experiment_project entry, linking project to nd_experiment.
-6) Creates a year and design projectprop. Also a project_type projectprop if provided.
-7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (plots and plants) and stockprops (rep, block, etc)
+6) Creates a year and design projectprop. Also a project_type projectprop if provided. For genotyping trials also creates others like, genotyping_facility and plate_format projectprops
+7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (tissue_samples, or plots and plants and subplots) and stockprops (rep, block, well, etc)
 
 =head1 USAGE
 
- FOR FIELD PHENOTYPING TRIALS:
- my $trial_create = CXGN::Trial::TrialCreate->new({
-	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	dbh => $c->dbc->dbh(),
-	user_name => $user_name, #not implemented,
-	design_type => 'CRD',
-	design => $design_hash,
-	program => $breeding_program->name(),
-	trial_year => $year,
-	trial_description => $project_description,
-	trial_location => $location->name(),
-	trial_name => $trial_name,
-	trial_type => $trialtype
- });
- try {
-   $trial_create->save_trial();
- } catch {
-   print STDERR "ERROR SAVING TRIAL!\n";
- };
+    FOR FIELD PHENOTYPING TRIALS:
+    my $trial_create = CXGN::Trial::TrialCreate->new({
+        chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        dbh => $c->dbc->dbh(),
+        user_name => $user_name, #not implemented,
+        operator => $c->user()->get_object()->get_username(),
+        design_type => 'CRD',
+        design => $design_hash,
+        program => $breeding_program->name(),
+        trial_year => $year,
+        trial_description => $project_description,
+        trial_location => $location->name(),
+        trial_name => $trial_name,
+        trial_type => $trialtype
+    });
+    try {
+        $trial_create->save_trial();
+    } catch {
+        print STDERR "ERROR SAVING TRIAL!\n";
+    };
 
- FOR GENOTYPING TRIALS:
- my $ct = CXGN::Trial::TrialCreate->new( {
-	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	dbh => $c->dbc->dbh(),
-	user_name => $c->user()->get_object()->get_username(), #not implemented
-	trial_year => $year,
-	trial_location => $location->name(),
-	program => $breeding_program->name(),
-	trial_description => $description,
-	design_type => 'genotyping_plate',
-	design => $design_hash,
-	trial_name => $trial_name,
-	is_genotyping => 1,
-	genotyping_user_id => $user_id,
-	genotyping_project_name => $project_name
- });
- try {
-   $ct->save_trial();
- } catch {
-   print STDERR "ERROR SAVING TRIAL!\n";
- };
+    FOR GENOTYPING TRIALS:
+    my $ct = CXGN::Trial::TrialCreate->new( {
+        chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        dbh => $c->dbc->dbh(),
+        user_name => $c->user()->get_object()->get_username(), #not implemented
+        operator => $c->user()->get_object()->get_username(),
+        trial_year => $year,
+        trial_location => $location->name(),
+        program => $breeding_program->name(),
+        trial_description => $description,
+        design_type => 'genotyping_plate',
+        design => $design_hash,
+        trial_name => $trial_name,
+        is_genotyping => 1,
+        genotyping_user_id => $user_id,
+        genotyping_project_name => $project_name,
+        genotyping_facility_submit => $plate_info->{genotyping_facility_submit},
+        genotyping_facility => $plate_info->{genotyping_facility},
+        genotyping_plate_format => $plate_info->{plate_format},
+        genotyping_plate_sample_type => $plate_info->{sample_type},
+    });
+    try {
+        $ct->save_trial();
+    } catch {
+        print STDERR "ERROR SAVING TRIAL!\n";
+    };
 
+---------------------------------------------------------------------------------
+
+For field_layout trials, the design should be a HasfRef of HashRefs like:
+
+{
+   '1001' => {
+       "plot_name" => "plot1",
+       "plot_number" => 1001,
+       "accession_name" => "accession1",
+       "block_number" => 1,
+       "row_number" => 2,
+       "col_number" => 3,
+       "rep_number" => 1,
+       "is_a_control" => 1,
+       "seedlot_name" => "seedlot1",
+       "num_seed_per_plot" => 12,
+       "plot_geo_json" => {},
+       "plant_names" => ["plant1", "plant2"],
+   }
+}
+
+For genotyping_layout trials, the design should be a HashRef of HashRefs like:
+
+{
+   'A01' => {
+       "plot_name" => "mytissuesample_A01",
+       "stock_name" => "accession1",
+       "plot_number" => "A01",
+       "row_number" => "A",
+       "col_number" => "1",
+       "is_blank" => 0,
+       "concentration" => "5",
+       "volume" => "2",
+       "tissue_type" => "leaf",
+       "dna_person" => "nmorales",
+       "extraction" => "ctab",
+       "acquisition_date" => "2018/02/16",
+       "notes" => "test notes",
+   }
+}
 
 =head1 DESCRIPTION
 
@@ -104,6 +150,10 @@ has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', requir
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
+has 'genotyping_facility_submitted' => (isa => 'Str', is => 'rw');
+has 'genotyping_facility' => (isa => 'Str', is => 'rw');
+has 'genotyping_plate_format' => (isa => 'Str', is => 'rw');
+has 'genotyping_plate_sample_type' => (isa => 'Str', is => 'rw');
 
 
 sub trial_name_already_exists {
@@ -177,6 +227,10 @@ sub save_trial {
 	my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
 	my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
 	my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
+	my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility', 'project_property');
+	my $genotyping_facility_submitted_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility_submitted', 'project_property');
+	my $genotyping_plate_format_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_format', 'project_property');
+	my $genotyping_plate_sample_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_sample_type', 'project_property');
 	my $genotyping_user_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_user_id', 'nd_experiment_property');
 	my $genotyping_project_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_name', 'nd_experiment_property');
 
@@ -205,6 +259,13 @@ sub save_trial {
 			$genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
 			$genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
 		});
+
+        $project->create_projectprops({
+            $genotyping_facility_cvterm->name() => $self->get_genotyping_facility(),
+            $genotyping_facility_submitted_cvterm->name() => $self->get_genotyping_facility_submitted(),
+            $genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
+            $genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
+        });
 	}
 
 	my $t = CXGN::Trial->new({

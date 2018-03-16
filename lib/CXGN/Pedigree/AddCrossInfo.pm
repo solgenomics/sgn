@@ -83,7 +83,7 @@ sub _generate_property_hash {
   my $value = shift;
   my $cross_json_hash = shift;
   $cross_json_hash->{$key} = $value;
-  print STDERR Dumper $cross_json_hash;
+  #print STDERR Dumper $cross_json_hash;
   my $cross_json_string = encode_json $cross_json_hash;
   return $cross_json_string;
 }
