@@ -457,14 +457,12 @@ CXGN.List.prototype = {
             paging:         false,
         });
 
-        if (list_type == 'accessions' || list_type == 'seedlots'){
-            jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>')
-        }
         if (list_type == 'accessions' || list_type == 'crosses'){
             jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
         }
-        if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(list_type) >= 0){
+        if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(list_type) >= 0){
             jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
+            jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
         }
         jQuery(document).on("change", "#type_select", function(){
             if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
@@ -472,16 +470,13 @@ CXGN.List.prototype = {
             } else {
                 jQuery('#availableSeedlotButtonDiv').html('')
             }
-            if (list_type == 'accessions' || list_type == 'seedlots'){
-                jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
-            } else {
-                jQuery('#fuzzySearchStockListDiv').html('');
-            }
 
-            if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(jQuery('#type_select').val()) >= 0){
+            if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(jQuery('#type_select').val()) >= 0){
                 jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
+                jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+jQuery('#type_select').val()+'\')" >Fuzzy Search</button>');
             } else {
                 jQuery('#synonymListButtonDiv').html('');
+                jQuery('#fuzzySearchStockListDiv').html('');
             }
         });
 
@@ -887,14 +882,15 @@ CXGN.List.prototype = {
                 jQuery('#working_modal').modal('hide');
                 //console.log(response);
                 var html = "";
+                var list_type_name = list_type.charAt(0).toUpperCase() + list_type.slice(1);
                 if (response.success) {
-                    html += "<h2>Accessions that exactly match</h2>";
+                    html += "<h2>"+list_type_name+" that exactly match as uniquenames (not synonyms)</h2>";
                     html += "<table class='table table-hover table-bordered' ><thead><tr><th>Found In Database</th></tr></thead><tbody>";
                     for(var i=0; i<response.found.length; i++){
                         html += "<tr><td>"+response.found[i].unique_name+"</td></tr>";
                     }
                     html += "</tbody></table>";
-                    html += "<h2>Accessions that fuzzy match</h2>";
+                    html += "<h2>"+list_type_name+" that are not found in the database, but fuzzy match (names are visibily similar)</h2>";
                     html += "<table class='table table-hover table-bordered' ><thead><tr><th>Name In Your List</th><th>Found In Database</th><th>Distance Score</th></tr></thead><tbody>";
                     for(var i=0; i<response.fuzzy.length; i++){
                         for(j=0; j <response.fuzzy[i].matches.length; j++){
@@ -906,7 +902,7 @@ CXGN.List.prototype = {
                         }
                     }
                     html += "</tbody></table>";
-                    html += "<h2>Accessions that have no match</h2>";
+                    html += "<h2>"+list_type_name+" that are not found in the database and have no match</h2>";
                     html += "<table class='table table-hover table-bordered' ><thead><tr><th>Not Found In Database</th></tr></thead><tbody>";
                     for(var i=0; i<response.absent.length; i++){
                         html += "<tr><td>"+response.absent[i]+"</td></tr>";
@@ -920,7 +916,7 @@ CXGN.List.prototype = {
                 }
             },
             error: function(response) {
-                alert("An error occurred while validating the list "+list_id);
+                alert("An error occurred while fuzzy searching the list "+list_id);
                 error=1;
             }
         });
