@@ -79,17 +79,13 @@ sub _validate_with_plugin {
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross name missing";
         } else {
-            if ($cross_name){
-                $seen_cross_names{$cross_name}++;
-            }
+            $seen_cross_names{$cross_name}++;
         }
 
         if (!$progeny_name || $progeny_name eq '') {
             push @error_messages, "Cell A$row_name: progeny name missing";
         } else {
-            if ($progeny_name){
-                $seen_progeny_names{$progeny_name}++;
-            }
+            $seen_progeny_names{$progeny_name}++;
         }
     }
 
@@ -129,8 +125,6 @@ sub _parse_with_plugin {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
-    my @pedigrees;
-    my %parsed_result;
 
     $excel_obj = $parser->parse($filename);
     if (!$excel_obj){
