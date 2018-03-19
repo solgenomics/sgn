@@ -93,8 +93,8 @@
                                     <label class="col-sm-3 control-label">Select One: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="genotyping_trial_well_input_option">
-                                            <option value="coordinate">I am uploading a Default Coordinate Android Application plate design</option>
                                             <option value="xls">I am uploading a plate design I made in Excel</option>
+                                            <option value="coordinate">I am uploading a Default Coordinate Android Application plate design</option>
                                             <option value="design">I need to design a completely new plate</option>
                                         </select>
                                     </div>
