@@ -54,18 +54,12 @@ sub validate {
         for (my $col=$num_fixed_col; $col<=$col_max; $col++) {
             my $value_string = '';
             my $value = '';
+            my $timestamp = '';
             if ($worksheet->get_cell($row,$col)) {
                 $value_string = $worksheet->get_cell($row,$col)->value();
                 #print STDERR $value_string."\n";
-                my ($value, $timestamp) = split /,/, $value_string;
-                if (!$timestamp_included) {
-                    if ($timestamp) {
-                        $parse_result{'error'} = "Timestamp found in value, but 'Timestamps Included' is not selected.";
-                        print STDERR "Timestamp wrongly found in value.\n";
-                        return \%parse_result;
-                    }
-                }
                 if ($timestamp_included) {
+                    ($value, $timestamp) = split /,/, $value_string;
                     if (!$timestamp) {
                         $parse_result{'error'} = "No timestamp found in value, but 'Timestamps Included' is selected.";
                         print STDERR "Timestamp not found in value.\n";
@@ -134,8 +128,6 @@ sub parse {
                 if ($observationunit_name ne ''){
                     $observationunits_seen{$observationunit_name} = 1;
 
-                    my @treatments;
-
                     for my $col ($num_fixed_col .. $col_max) {
                         my $trait_name;
                         if ($worksheet->get_cell(0,$col)) {
@@ -149,15 +141,18 @@ sub parse {
                                     if ($worksheet->get_cell($row, $col)){
                                         $value_string = $worksheet->get_cell($row, $col)->value();
                                     }
-                                    my ($trait_value, $timestamp) = split /,/, $value_string;
-                                    if (!$timestamp) {
-                                        $timestamp = '';
+                                    my $timestamp = '';
+                                    my $trait_value = '';
+                                    if ($timestamp_included){
+                                        ($trait_value, $timestamp) = split /,/, $value_string;
+                                    } else {
+                                        $trait_value = $value_string;
                                     }
                                     #print STDERR $trait_value." : ".$timestamp."\n";
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
-                                            $data{$observationunit_name}->{$trait_name} = [$trait_value, $timestamp, \@treatments];
+                                            $data{$observationunit_name}->{$trait_name} = [$trait_value, $timestamp];
                                         }
                                     }
                                 }
