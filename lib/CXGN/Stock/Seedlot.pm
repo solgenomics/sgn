@@ -1053,6 +1053,10 @@ sub delete {
         } else {
             my $nd_experiment = $nd_experiment_rs->first();
             $nd_experiment->delete();
+            my $stock_owner_rs = $self->phenome_schema->resultset("StockOwner")->find({stock_id=>$self->stock_id});
+            if ($stock_owner_rs){
+                $stock_owner_rs->delete();
+            }
             $stock->delete();
         }
     }
