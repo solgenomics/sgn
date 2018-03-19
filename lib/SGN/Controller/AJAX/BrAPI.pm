@@ -53,9 +53,9 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 	my $session_token = $c->req->param("access_token");
 	if (defined $c->request->data){
-		$page = $page || $c->request->data->{"page"} || 0;
-		$page_size = $page_size || $c->request->data->{"pageSize"} || $DEFAULT_PAGE_SIZE;
-		$session_token = $session_token || $c->request->data->{"access_token"};
+		$page = $c->request->data->{"page"} || $page || 0;
+		$page_size = $c->request->data->{"pageSize"} || $page_size || $DEFAULT_PAGE_SIZE;
+		$session_token = $c->request->data->{"access_token"} || $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
