@@ -171,11 +171,11 @@ sub parse {
                 }
                 #print STDERR $value_string."\n";
                 my $timestamp = '';
-                my $trait_value = '';
+                my $value = '';
                 if ($timestamp_included){
-                    ($trait_value, $timestamp) = split /,/, $value_string;
+                    ($value, $timestamp) = split /,/, $value_string;
                 } else {
-                    $trait_value = $value_string;
+                    $value = $value_string;
                 }
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
