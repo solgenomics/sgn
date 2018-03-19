@@ -134,8 +134,6 @@ sub parse {
                 if ($observationunit_name ne ''){
                     $observationunits_seen{$observationunit_name} = 1;
 
-                    my @treatments;
-
                     for my $col ($num_fixed_col .. $col_max) {
                         my $trait_name;
                         if ($worksheet->get_cell(0,$col)) {
@@ -157,7 +155,7 @@ sub parse {
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
-                                            $data{$observationunit_name}->{$trait_name} = [$trait_value, $timestamp, \@treatments];
+                                            $data{$observationunit_name}->{$trait_name} = [$trait_value, $timestamp];
                                         }
                                     }
                                 }
