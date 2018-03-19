@@ -54,6 +54,21 @@ __PACKAGE__->config(
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
        $longest_hash{'year'} = $year;
 
+       my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
+       my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
+       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+           my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+           my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+           my $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
+           my $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+                   project_id => $trial_id
+               })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+                   'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+               })->first->value();
+
+           $longest_hash{'genotyping_project_name'} = $genotyping_project_name;
+           $longest_hash{'genotyping_facility'} = $genotyping_facility;
+       }
 
        #get all fields in this trials design
        my $random_plot = $design{(keys %design)[rand keys %design]};
@@ -124,6 +139,21 @@ __PACKAGE__->config(
            return;
        }
 
+       my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
+       my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
+
+       my ($genotyping_facility, $genotyping_project_name);
+       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+           my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+           my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+           $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
+           $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+                   project_id => $trial_id
+               })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+                   'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+               })->first->value();
+       }
+
        my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
 
@@ -165,6 +195,8 @@ __PACKAGE__->config(
                 my %design_info = %{$design{$key}};
                 $design_info{'trial_name'} = $trial_name;
                 $design_info{'year'} = $year;
+                $design_info{'genotyping_facility'} = $genotyping_facility;
+                $design_info{'genotyping_project_name'} = $genotyping_project_name;
                 $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
                 #print STDERR "Design info: " . Dumper(%design_info);
 
