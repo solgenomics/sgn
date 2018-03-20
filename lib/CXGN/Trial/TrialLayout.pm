@@ -434,10 +434,16 @@ sub generate_and_cache_layout {
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
         my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
-            { 'me.type_id' => { -in => [ $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
+            { 'me.type_id' => { -in => [ $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
             { 'join' => 'object' }
         )->search_related('object');
         while (my $r=$source_rs->next){
+            if ($r->type_id == $accession_cvterm_id){
+                $design_info{"source_accession_id"} = $r->stock_id;
+                $design_info{"source_accession_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_name"} = $r->uniquename;
+                $design_info{"source_observation_unit_id"} = $r->stock_id;
+            }
             if ($r->type_id == $plot_cvterm_id){
                 $design_info{"source_plot_id"} = $r->stock_id;
                 $design_info{"source_plot_name"} = $r->uniquename;

@@ -276,6 +276,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if (($format eq "xls") && ($what eq "basic_trial_excel")) {
         $plugin = "BasicExcel";
     }
+    if ( ($format eq "intertekxls") && ($what eq "layout")) {
+        $plugin = "GenotypingTrialLayoutIntertekXLS";
+    }
 
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();

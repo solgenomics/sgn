@@ -60,6 +60,8 @@ $genotyping_plate_sample_type => undef
                 </div>
             </div>
 
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-primary">Download Intertek Formatted File</a
+
         </div>
         <div class="col-sm-3">
 
