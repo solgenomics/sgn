@@ -68,7 +68,7 @@ $locations
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Description: </label>
                             <div class="col-sm-9" >
-                                <textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" ></textarea>
+                                <textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" maxlength="250"></textarea>
                             </div>
                         </div>
                         <div class="form-group">
