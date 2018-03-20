@@ -1,7 +1,8 @@
+
+// JavaScript for mason/util/workflow.mas
 var Workflow = {
   
-  "init": function(init_target){
-    //add onclick to workflow progress markers
+  "init": function(init_target){ //Initializes a workflow (or all workflows)
     init_target = init_target || "";
     var prog_steps = document.querySelectorAll('.workflow-prog>li');
     prog_steps.forEach(function(ele,i){
@@ -12,7 +13,7 @@ var Workflow = {
     });
   },
   
-  "prog_click": function(step_index){
+  "prog_click": function(step_index){ // onclick for progress markers
     //on progress marker click, change the focus to show that page
     function click(){
       var wf = this;
@@ -26,13 +27,14 @@ var Workflow = {
         return;
       }
       
+      //change focus and check for completion
       Workflow.focus(wf,step_index);
       Workflow.check_complete(wf);
     }
     return click
   },
   
-  "focus":function(wf,step_index){
+  "focus":function(wf,step_index){ // changes workflow focus page
     function change_focus(ele,i){
       if (i===step_index){
         ele.classList.add('workflow-focus');
@@ -49,7 +51,7 @@ var Workflow = {
     conts.forEach(change_focus);
   },
   
-  "check_complete":function(wf){
+  "check_complete":function(wf){ // checks if the endscreens should be shown and acts accordingly
     var progs = wf.querySelectorAll('.workflow-prog>li');
     var conts = wf.querySelectorAll('.workflow-content>li');
     
@@ -75,7 +77,7 @@ var Workflow = {
     }
   },
   
-  "complete":function(wf_child,set_focus,status){
+  "complete":function(wf_child,set_focus,status){ // completes a step
     set_focus = set_focus===false?false:true;
     var wf = wf_child;
     var content_li = wf_child;
@@ -118,12 +120,12 @@ var Workflow = {
     
   },
   
-  "skip":function(wf_child,set_focus){
+  "skip":function(wf_child,set_focus){ //completes a step with skipped status
     set_focus = set_focus===false?false:true;
     Workflow.complete(wf_child,set_focus,"skipped");
   },
   
-  "pending":function(wf_child,set_focus){
+  "pending":function(wf_child,set_focus){ //completes a step with pending status
     set_focus = set_focus===false?false:true;
     Workflow.complete(wf_child,set_focus,"pending");
   }

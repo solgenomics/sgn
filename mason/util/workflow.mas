@@ -1,3 +1,9 @@
+%# Generates a workflow component
+<%args>
+  $id
+</%args>
+
+%# Initializes shared variables.
 <%shared>
   my $loadstyle = 1;  
   my @titles = ();
@@ -6,6 +12,7 @@
   my $complete = "Complete!";
 </%shared>
 
+%# Clears shared variables from previous uses.
 <%init>
   @titles = ();
   @contents = ();
@@ -13,10 +20,7 @@
   $complete = "Complete!";
 </%init>
 
-<%args>
-  $id
-</%args>
-
+%# Adds a new step to the workflow
 <%method step>
   <%args>
     $title => ""
@@ -27,18 +31,22 @@
   </%init>
 </%method>
 
+%# Shown when all steps are completed but one or more is pending.
 <%method pending>
   <%init>
     $pending = $m->content;
   </%init>
 </%method>
 
+%# Shown when all steps are completed and none are pending.
 <%method complete>
   <%init>
     $complete = $m->content;
   </%init>
 </%method>
 
+
+%# loads css, but only once (even if used multiple time in one request)
 % if ($loadstyle) {
 % $loadstyle = 0;
 <style media="screen">
