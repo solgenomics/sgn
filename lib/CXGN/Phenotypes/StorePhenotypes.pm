@@ -249,7 +249,7 @@ sub verify {
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
-                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9.\-\/\_]/ && $trait_value ne '.')){
+                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9,.\-\/\_]/ && $trait_value ne '.')){
                     $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                 }
 
@@ -300,10 +300,6 @@ sub verify {
                     }
                 } else {
                     $error_message = $error_message."<small>'Timestamps Included' is selected, but no timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
-                }
-            } else {
-                if ($timestamp) {
-                    $error_message = $error_message."<small>Timestamps found in file, but 'Timestamps Included' is not selected.</small><hr>";
                 }
             }
 
@@ -398,7 +394,6 @@ sub store {
                 if (!$timestamp) {
                     $timestamp = 'NA'.$upload_date;
                 }
-                my $treatments = $value_array->[2];
 
                 if (defined($trait_value) && length($trait_value)) {
 
@@ -442,12 +437,6 @@ sub store {
                         ## Link the experiment to the project
                         $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 
-                        #Link the experiment to the treatments
-                        foreach my $treatment (@$treatments){
-                            my $treatment_project_id = $schema->resultset('Project::Project')->find({name=>$treatment})->project_id();
-                            $experiment->create_related('nd_experiment_projects', {project_id => $treatment_project_id});
-                        }
-
                         # Link the experiment to the stock
                         $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
 
@@ -456,7 +445,6 @@ sub store {
                         #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
                         $experiment_ids{$experiment->nd_experiment_id()}=1;
-
                     }
                 }
             }
