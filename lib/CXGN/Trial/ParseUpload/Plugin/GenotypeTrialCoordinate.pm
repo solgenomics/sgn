@@ -96,6 +96,9 @@ sub _validate_with_plugin {
         if (!$columns[3] || $columns[3] eq ''){
             push @error_messages, 'The fourth column must contain an sample_id on row: '.$row;
         } else {
+            if ($columns[3] =~ /\s/ || $columns[3] =~ /\// || $columns[3] =~ /\\/ ) {
+                push @error_messages, "Row: $row: sample_id name must not contain spaces or slashes.";
+            }
             if ($seen_sample_ids{$columns[3]}){
                 push @error_messages, 'Duplicate sample_id in your file on row: '.$row;
             }

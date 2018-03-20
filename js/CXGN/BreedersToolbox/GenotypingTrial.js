@@ -268,6 +268,10 @@ jQuery(document).ready(function ($) {
         },
         complete: function (response) {
 
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
             if (response.error_string) {
                 alert(response.error_string);
                 return;

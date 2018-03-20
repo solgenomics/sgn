@@ -306,6 +306,10 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $error = $download->download();
 
+    if ($format eq 'intertekxls'){
+        $format = 'xls';
+    }
+
     my $file_name = $trial_id . "_" . "$what" . ".$format";
     $c->res->content_type('Application/'.$format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
