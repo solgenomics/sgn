@@ -79,9 +79,14 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        var uploadFile = jQuery("#genotyping_trial_layout_upload").val();
-        if(uploadFile === ''){
-            submit_genotype_trial_create(plate_data);
+        var uploadFileXLS = jQuery("#genotyping_trial_layout_upload").val();
+        if (uploadFileXLS === ''){
+            var uploadFileCoordinate = jQuery("#genotyping_trial_layout_upload_coordinate").val();
+            if (uploadFileCoordinate === ''){
+                submit_genotype_trial_create(plate_data);
+            } else {
+                submit_genotype_trial_upload(plate_data);
+            }
         } else {
             submit_genotype_trial_upload(plate_data);
         }
@@ -263,6 +268,10 @@ jQuery(document).ready(function ($) {
         },
         complete: function (response) {
 
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
             if (response.error_string) {
                 alert(response.error_string);
                 return;
@@ -296,6 +305,8 @@ jQuery(document).ready(function ($) {
                     brapi_plate_data = response.plate_data;
                     if (plate_data.genotyping_facility_submit == 'yes'){
                         submit_plate_to_gdf(brapi_plate_data);
+                    } else {
+                        location.reload();
                     }
                 }
             },
