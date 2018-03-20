@@ -15,7 +15,7 @@ $breeding_programs
                 <div class="panel-body">
                     <b><p>What are genotyping trials?</p></b>
                     <ul>
-                    <li>Genotyping trials represent 96 or 386 well plates.</li>
+                    <li>Genotyping trials represent 96 or 384 well plates.</li>
                     <li>Each well in the plate has a unique tissue sample ID.</li>
                     <li>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already.</li>
                     <li>If you choose to submit your genotyping trial to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</li>
