@@ -121,10 +121,6 @@ sub parse {
         if ($header_cell eq "timestamp") {
             $header_column_info{'timestamp'} = $header_column_number;
         }
-        if (index($header_cell, "Treatment:") != -1) {
-            $header_cell =~ s/Treatment\://;
-            $header_column_info{'treatment'} = [$header_column_number, $header_cell];
-        }
         $header_column_number++;
     }
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
@@ -148,15 +144,6 @@ sub parse {
         my $timestamp = $row[$header_column_info{'timestamp'}];
         $timestamp =~ s/\"//g;
 
-        my @treatments;
-        if(exists($header_column_info{'treatment'})){
-            my $treatment_val = $row[$header_column_info{'treatment'}->[0]];
-            $treatment_val =~ s/\"//g;
-            if($treatment_val eq "1"){
-                push @treatments, $header_column_info{'treatment'}->[1];
-            }
-        }
-
         if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
             $parse_result{'error'} = "Error getting value from file";
             print STDERR "value: $value\n";
@@ -170,7 +157,7 @@ sub parse {
         $plots_seen{$plot_id} = 1;
         $traits_seen{$trait} = 1;
         if (defined($value) && defined($timestamp)) {
-            $data{$plot_id}->{$trait} = [$value, $timestamp, \@treatments];
+            $data{$plot_id}->{$trait} = [$value, $timestamp];
         }
     }
 

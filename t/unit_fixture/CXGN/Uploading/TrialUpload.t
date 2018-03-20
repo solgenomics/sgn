@@ -808,4 +808,144 @@ print STDERR Dumper $response;
 
 ok($response->{trial_id});
 
+
+my $file = $f->config->{basepath}."/t/data/genotype_trial_upload/CoordinatePlateUpload";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/parsegenotypetrial',
+        Content_Type => 'form-data',
+        Content => [
+            genotyping_trial_layout_upload_coordinate => [ $file, 'genotype_trial_upload', Content_Type => 'application/vnd.ms-excel', ],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+
+is_deeply($message_hash, {
+          'design' => {
+                        'B01' => {
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 0,
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_B01',
+                                   'col_number' => '01',
+                                   'notes' => '',
+                                   'extraction' => 'CTAB',
+                                   'tissue_type' => 'Leaf',
+                                   'volume' => 'NA',
+                                   'concentration' => 'NA',
+                                   'stock_name' => 'test_accession1',
+                                   'plot_number' => 'B01',
+                                   'row_number' => 'B',
+                                   'dna_person' => 'Trevor_Rife'
+                                 },
+                        'B04' => {
+                                   'tissue_type' => 'Leaf',
+                                   'extraction' => 'CTAB',
+                                   'notes' => '',
+                                   'col_number' => '04',
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_B04',
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 1,
+                                   'row_number' => 'B',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'plot_number' => 'B04',
+                                   'stock_name' => 'BLANK',
+                                   'concentration' => 'NA',
+                                   'volume' => 'NA'
+                                 },
+                        'C01' => {
+                                   'is_blank' => 0,
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'plot_name' => '18DNA00001_C01',
+                                   'acquisition_date' => '2018-02-06',
+                                   'notes' => '',
+                                   'col_number' => '01',
+                                   'extraction' => 'CTAB',
+                                   'tissue_type' => 'Leaf',
+                                   'volume' => 'NA',
+                                   'concentration' => 'NA',
+                                   'stock_name' => 'test_accession2',
+                                   'plot_number' => 'C01',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'C'
+                                 },
+                        'C04' => {
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 1,
+                                   'plot_name' => '18DNA00001_C04',
+                                   'acquisition_date' => '2018-02-06',
+                                   'notes' => '',
+                                   'col_number' => '04',
+                                   'tissue_type' => 'Leaf',
+                                   'extraction' => 'CTAB',
+                                   'volume' => 'NA',
+                                   'stock_name' => 'BLANK',
+                                   'concentration' => 'NA',
+                                   'plot_number' => 'C04',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'C'
+                                 },
+                        'A01' => {
+                                   'is_blank' => 0,
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_A01',
+                                   'notes' => '',
+                                   'col_number' => '01',
+                                   'extraction' => 'CTAB',
+                                   'tissue_type' => 'Leaf',
+                                   'volume' => 'NA',
+                                   'concentration' => 'NA',
+                                   'stock_name' => 'test_accession1',
+                                   'plot_number' => 'A01',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'A'
+                                 },
+                        'D01' => {
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'D',
+                                   'plot_number' => 'D01',
+                                   'stock_name' => 'test_accession2',
+                                   'concentration' => 'NA',
+                                   'volume' => 'NA',
+                                   'tissue_type' => 'Leaf',
+                                   'extraction' => 'CTAB',
+                                   'col_number' => '01',
+                                   'notes' => '',
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_D01',
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 0
+                                 }
+                      },
+          'success' => '1'
+        }, 'test upload parse of coordinate genotyping trial');
+
+my $plate_data = {
+    design => $message_hash->{design},
+    genotyping_facility_submit => 'no',
+    project_name => 'NextGenCassava',
+    description => 'test geno trial upload coordinate',
+    location => $location->nd_geolocation_id,
+    year => '2018',
+    name => 'test_genotype_upload_coordinate_trial1',
+    breeding_program => $project->project_id,
+    genotyping_facility => 'igd',
+    sample_type => 'DNA',
+    plate_format => '96'
+};
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+ok($response->{trial_id});
+
 done_testing();

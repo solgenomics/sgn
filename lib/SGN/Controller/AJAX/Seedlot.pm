@@ -92,9 +92,11 @@ sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1)
     print STDERR "Seedlot id = $seedlot_id\n";
 
     $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
+    $c->stash->{phenome_schema} = $c->dbic_schema("CXGN::Phenome::Schema");
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{seedlot} = CXGN::Stock::Seedlot->new( 
         schema => $c->stash->{schema},
+        phenome_schema => $c->stash->{phenome_schema},
         seedlot_id => $c->stash->{seedlot_id},
     );
 }

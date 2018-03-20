@@ -54,11 +54,37 @@ __PACKAGE__->config(
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
        $longest_hash{'year'} = $year;
 
+       my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
+       my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
+       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+           my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+           my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+           my $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
+           my $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+                   project_id => $trial_id
+               })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+                   'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+               })->first->value();
+
+           $longest_hash{'genotyping_project_name'} = $genotyping_project_name;
+           $longest_hash{'genotyping_facility'} = $genotyping_facility;
+       }
 
        #get all fields in this trials design
        my $random_plot = $design{(keys %design)[rand keys %design]};
+       my %reps;
        my @keys = keys %{$random_plot};
        foreach my $field (@keys) {
+
+           # if rep_number, find unique options and return them
+           if ($field eq 'rep_number') {
+               print STDERR "Searching for unique rep numbers.\n";
+            #    foreach my $key (keys %design) {
+               $reps{$_->{'rep_number'}}++ foreach values %design;
+               print STDERR "Reps: ".Dumper(%reps);
+           }
+
+
            print STDERR " Searching for longest $field\n";
            #for each field order values by descending length, then save the first one
            foreach my $key ( sort { length($design{$b}{$field}) <=> length($design{$a}{$field}) or  $a <=> $b } keys %design) {
@@ -81,7 +107,10 @@ __PACKAGE__->config(
         }
 
         #print STDERR "Dumped data is: ".Dumper(%longest_hash);
-        $c->stash->{rest} = \%longest_hash;
+        $c->stash->{rest} = {
+            fields => \%longest_hash,
+            reps => \%reps,
+        };
    }
 
    sub label_designer_download : Path('/tools/label_designer/download') : ActionClass('REST') { }
@@ -122,6 +151,21 @@ __PACKAGE__->config(
        if (!$design) {
            $c->stash->{rest} = { error => "Trial $trial_name does not have a valid field design. Can't create labels." };
            return;
+       }
+
+       my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
+       my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
+
+       my ($genotyping_facility, $genotyping_project_name);
+       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+           my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+           my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+           $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
+           $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+                   project_id => $trial_id
+               })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+                   'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+               })->first->value();
        }
 
        my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
@@ -165,97 +209,102 @@ __PACKAGE__->config(
                 my %design_info = %{$design{$key}};
                 $design_info{'trial_name'} = $trial_name;
                 $design_info{'year'} = $year;
+                $design_info{'genotyping_facility'} = $genotyping_facility;
+                $design_info{'genotyping_project_name'} = $genotyping_project_name;
                 $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
                 #print STDERR "Design info: " . Dumper(%design_info);
 
-                for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
-                    #print STDERR "Working on label num $i\n";
-                    my $label_x = $design_params->{'left_margin'} + ($design_params->{'label_width'} + $design_params->{'horizontal_gap'}) * ($col_num-1);
-                    my $label_y = $design_params->{'page_height'} - $design_params->{'top_margin'} - ($design_params->{'label_height'} + $design_params->{'vertical_gap'}) * ($row_num-1);
+                if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
 
-                   foreach my $element (@$label_params) {
-                       #print STDERR "Element Dumper\n" . Dumper($element);
-                       my %element = %{$element};
-                       my $elementx = $label_x + ( $element{'x'} / $conversion_factor );
-                       my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
+                    for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
+                        #print STDERR "Working on label num $i\n";
+                        my $label_x = $design_params->{'left_margin'} + ($design_params->{'label_width'} + $design_params->{'horizontal_gap'}) * ($col_num-1);
+                        my $label_y = $design_params->{'page_height'} - $design_params->{'top_margin'} - ($design_params->{'label_height'} + $design_params->{'vertical_gap'}) * ($row_num-1);
 
-                       my $filled_value = $element{'value'};
-                       $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
-                       #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
-                       #print STDERR "Writing to the PDF . . .\n";
-                       if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
+                       foreach my $element (@$label_params) {
+                           #print STDERR "Element Dumper\n" . Dumper($element);
+                           my %element = %{$element};
+                           my $elementx = $label_x + ( $element{'x'} / $conversion_factor );
+                           my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
 
-                            if ( $element{'type'} eq "Code128" ) {
+                           my $filled_value = $element{'value'};
+                           $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
+                           #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
+                           #print STDERR "Writing to the PDF . . .\n";
+                           if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
-                               my $barcode_object = Barcode::Code128->new();
+                                if ( $element{'type'} eq "Code128" ) {
 
-                               my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-                               open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
-                               binmode(PNG);
+                                   my $barcode_object = Barcode::Code128->new();
 
-                               $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
-                               $barcode_object->barcode($filled_value);
-                               my $barcode = $barcode_object->gd_image();
-                               print PNG $barcode->png();
-                               close(PNG);
+                                   my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
+                                   open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
+                                   binmode(PNG);
 
-                                my $image = $pdf->image_png($png_location);
+                                   $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
+                                   $barcode_object->barcode($filled_value);
+                                   my $barcode = $barcode_object->gd_image();
+                                   print PNG $barcode->png();
+                                   close(PNG);
+
+                                    my $image = $pdf->image_png($png_location);
+                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
+                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                    my $elementx = $elementx - ($width/2);
+                                    #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
+                                    $gfx->image($image, $elementx, $elementy, $width, $height);
+
+
+                              } else { #QRCode
+
+                                  my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+                                  my $barcode_generator = CXGN::QRcode->new(
+                                      text => $filled_value,
+                                      size => $element{'size'},
+                                      margin => 0,
+                                      version => 0,
+                                      level => 'M'
+                                  );
+                                  my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
+
+                                   my $image = $pdf->image_jpeg($jpeg_location);
+                                   my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                   my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
+                                   my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                   my $elementx = $elementx - ($width/2);
+                                   $gfx->image($image, $elementx, $elementy, $width, $height);
+
+                              }
+                           }
+                           else { #Text
+
+                                my $font = $pdf->corefont($element{'font'}); # Add a built-in font to the PDF
+                                # Add text to the page
+                                my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
+                                $text->font($font, $adjusted_size);
                                 my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                                my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
-                                my $elementx = $elementx - ($width/2);
-                                #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
-                                $gfx->image($image, $elementx, $elementy, $width, $height);
-
-
-                          } else { #QRCode
-
-                              my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
-                              my $barcode_generator = CXGN::QRcode->new(
-                                  text => $filled_value,
-                                  size => $element{'size'},
-                                  margin => 0,
-                                  version => 0,
-                                  level => 'M'
-                              );
-                              my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
-
-                               my $image = $pdf->image_jpeg($jpeg_location);
-                               my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                               my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                               my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
-                               my $elementx = $elementx - ($width/2);
-                               $gfx->image($image, $elementx, $elementy, $width, $height);
-
-                          }
+                                my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
+                                $text->translate($elementx, $elementy);
+                                $text->text_center($filled_value);
+                           }
                        }
-                       else { #Text
 
-                            my $font = $pdf->corefont($element{'font'}); # Add a built-in font to the PDF
-                            # Add text to the page
-                            my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
-                            $text->font($font, $adjusted_size);
-                            my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                            my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
-                            $text->translate($elementx, $elementy);
-                            $text->text_center($filled_value);
-                       }
-                   }
+                        if ($col_num < $design_params->{'number_of_columns'}) { #next column
+                            $col_num++;
+                        } else { #new row, reset col num
+                            $col_num = 1;
+                            $row_num++;
+                        }
 
-                    if ($col_num < $design_params->{'number_of_columns'}) { #next column
-                        $col_num++;
-                    } else { #new row, reset col num
-                        $col_num = 1;
-                        $row_num++;
-                    }
-
-                    if ($row_num > $design_params->{'number_of_rows'}) { #create new page and reset row and col num
-                        $pdf->finishobjects($page, $gfx, $text); #flush the page to save memory on big PDFs
-                        $page = $pdf->page();
-                        $text = $page->text();
-                        $gfx = $page->gfx();
-                        $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
-                        $row_num = 1;
+                        if ($row_num > $design_params->{'number_of_rows'}) { #create new page and reset row and col num
+                            $pdf->finishobjects($page, $gfx, $text); #flush the page to save memory on big PDFs
+                            $page = $pdf->page();
+                            $text = $page->text();
+                            $gfx = $page->gfx();
+                            $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
+                            $row_num = 1;
+                        }
                     }
                 }
              $key_number++;
