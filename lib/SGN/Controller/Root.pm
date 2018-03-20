@@ -7,6 +7,8 @@ use CatalystX::GlobalContext ();
 
 use CXGN::Login;
 use CXGN::People::Person;
+use List::MoreUtils 'uniq';
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -134,6 +136,7 @@ sub insert_collected_html :Private {
     my ( $self, $c ) = @_;
 
     $c->forward('/js/resolve_javascript_classes');
+    $c->forward('resolve_css_paths');
 
     my $b = $c->res->body;
     my $inserted_head_pre  = $b && $b =~ s{<!-- \s* INSERT_HEAD_PRE_HTML \s* --> }{ $self->_make_head_pre_html( $c )  }ex;
@@ -204,6 +207,28 @@ sub auto : Private {
     return 1;
 }
 
+
+=head2 resolve_css_paths
+    
+    Compiles list of CSS files added by mason/import_css.mas
+    
+=cut
+
+sub resolve_css_paths :Private {
+    my ( $self, $c ) = @_;
+
+    my $files = $c->stash->{css_paths}
+        or return;
+
+    my @files = uniq @{$files}; #< do not sort, load order might be important
+    for (@files) {
+        s!^/?(.*?)(?:\.css)?$!/css/$1.css!;
+    }
+
+    $c->stash->{css_uris} = \@files;
+    
+    print STDERR Dumper $c->stash->{css_uris};
+}
 
 
 ############# helper methods ##########
