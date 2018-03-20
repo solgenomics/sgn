@@ -79,9 +79,14 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        var uploadFile = jQuery("#genotyping_trial_layout_upload").val();
-        if(uploadFile === ''){
-            submit_genotype_trial_create(plate_data);
+        var uploadFileXLS = jQuery("#genotyping_trial_layout_upload").val();
+        if (uploadFileXLS === ''){
+            var uploadFileCoordinate = jQuery("#genotyping_trial_layout_upload_coordinate").val();
+            if (uploadFileCoordinate === ''){
+                submit_genotype_trial_create(plate_data);
+            } else {
+                submit_genotype_trial_upload(plate_data);
+            }
         } else {
             submit_genotype_trial_upload(plate_data);
         }
