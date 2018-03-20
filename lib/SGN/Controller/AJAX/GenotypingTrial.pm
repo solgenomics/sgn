@@ -33,7 +33,7 @@ sub generate_genotype_trial_POST : Args(0) {
     print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters" };
+        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 
@@ -287,7 +287,7 @@ sub store_genotype_trial_POST : Args(0) {
     #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters" };
+        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 
