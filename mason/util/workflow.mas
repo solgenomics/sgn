@@ -1,7 +1,13 @@
 <%shared>
   my @titles = ();
   my @contents = ();
+  my $pending = "";
+  my $complete = "Complete!";
 </%shared>
+
+<%args>
+  $id
+</%args>
 
 <%method step>
   <%args>
@@ -10,6 +16,18 @@
   <%init>
     push @contents, $m->content;
     push @titles, $title;
+  </%init>
+</%method>
+
+<%method pending>
+  <%init>
+    $pending = $m->content;
+  </%init>
+</%method>
+
+<%method complete>
+  <%init>
+    $complete = $m->content;
   </%init>
 </%method>
 
@@ -34,13 +52,22 @@
     font-size: 11px;
   }
   
+  ol.workflow-prog>li>span.workflow-title{
+    display: inline-block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
   ol.workflow-prog>li::after{
     font-size: 14px;
     width: 30px;
     height: 30px;
     content: counter(step);
     counter-increment: step;
-    line-height: 23px;
+    line-height: 1em;
+    padding-top: 0.3em;
     border: 4px solid;
     display: block;
     text-align: center;
@@ -72,8 +99,8 @@
   
   ol.workflow-prog>li.workflow-skipped::after{
     border-color: #eeb700;
-    color: black;
     background: #eeb700;
+    color: white;
   }
   
   ol.workflow-prog>li.workflow-focus::after{
@@ -120,23 +147,39 @@
   ol.workflow-content>li.workflow-focus{
     display: block;
   }  
+  
+  div.workflow-pending-message{
+    display: none;
+  }
+  div.workflow-complete-message{
+    display: none;
+  }
+  div.workflow-message-show{
+    display: block;
+  }
+  
 </style>
 
+<& '/util/import_javascript.mas', classes => ['workflow'] &>
 <% $m->content %>
-
-<div class="workflow">
+<div id="<% $id %>" class="workflow">
   <ol class="workflow-prog">
-% foreach my $title (@titles) {
-    <li><% $title %></li>
-% }
+%   foreach my $title (@titles) {
+      <li><span class="workflow-title"><% $title %></span></li>
+%    }
   </ol>
   <div class="panel panel-default">
     <div class="panel-body">
-      <ol class="workflow-content panel">
-% foreach my $content (@contents) {
-        <li><% $content %></li>
-% }
+      <ol class="workflow-content">
+%       foreach my $content (@contents) {
+          <li><% $content %></li>
+%       }
       </ol>
+      <div class="workflow-pending-message"><% $pending || $complete %></div>
+      <div class="workflow-complete-message"><% $complete %></div>
     </div>
   </div>
 </div>
+<script type="text/javascript">
+  Workflow.init("#<% $id %>");
+</script>
