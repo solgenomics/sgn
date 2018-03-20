@@ -1,9 +1,17 @@
 <%shared>
+  my $loadstyle = 1;  
   my @titles = ();
   my @contents = ();
   my $pending = "";
   my $complete = "Complete!";
 </%shared>
+
+<%init>
+  @titles = ();
+  @contents = ();
+  $pending = "";
+  $complete = "Complete!";
+</%init>
 
 <%args>
   $id
@@ -31,6 +39,8 @@
   </%init>
 </%method>
 
+% if ($loadstyle) {
+% $loadstyle = 0;
 <style media="screen">
   ol.workflow-prog{
     display: table;
@@ -72,8 +82,8 @@
     display: block;
     text-align: center;
     position: relative;
-    margin: 0.25em auto 0 auto;
     border-radius: 50%;
+    margin: 0 auto 0 auto;
     background: white;
     border-color: #bbb;
     color: #bbb;
@@ -116,7 +126,7 @@
     content: '';
     display: block;
     position: relative;
-    top: 36.5px;
+    top: 34px;
     margin-left: 50%;
     background-color: #bbb;
   }
@@ -159,13 +169,14 @@
   }
   
 </style>
+% }
 
 <& '/util/import_javascript.mas', classes => ['workflow'] &>
 <% $m->content %>
 <div id="<% $id %>" class="workflow">
   <ol class="workflow-prog">
 %   foreach my $title (@titles) {
-      <li><span class="workflow-title"><% $title %></span></li>
+      <li><div class="workflow-title"><% $title %></div></li>
 %    }
   </ol>
   <div class="panel panel-default">
