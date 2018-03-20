@@ -6,7 +6,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
-use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::BreedersToolbox::OrganismFuzzySearch;
 
 sub _validate_with_plugin {
@@ -383,7 +383,7 @@ sub _parse_with_plugin {
         $parsed_entries{$row} = \%row_info;
     }
 
-    my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+    my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
     my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
     my $max_distance = 0.2;
     my $found_accessions;
@@ -400,7 +400,7 @@ sub _parse_with_plugin {
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
 
-    my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
+    my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
     #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
     print STDERR "DoFuzzySearch 2".localtime()."\n";
 
@@ -409,7 +409,7 @@ sub _parse_with_plugin {
     $absent_accessions = $fuzzy_search_result->{'absent'};
 
     if (scalar @synonyms_list > 0){
-        my $fuzzy_synonyms_result = $fuzzy_accession_search->get_matches(\@synonyms_list, $max_distance);
+        my $fuzzy_synonyms_result = $fuzzy_accession_search->get_matches(\@synonyms_list, $max_distance, 'accession');
         $found_synonyms = $fuzzy_synonyms_result->{'found'};
         $fuzzy_synonyms = $fuzzy_synonyms_result->{'fuzzy'};
         $absent_synonyms = $fuzzy_synonyms_result->{'absent'};
@@ -422,37 +422,6 @@ sub _parse_with_plugin {
         $fuzzy_organisms = $fuzzy_organism_result->{'fuzzy'};
         $absent_organisms = $fuzzy_organism_result->{'absent'};
         #print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
-    }
-
-    if (scalar(@$fuzzy_accessions)>0 || scalar(@$fuzzy_synonyms)>0){
-        my %synonym_hash;
-        my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id;
-        my $synonym_rs = $schema->resultset('Stock::Stock')->search({'stockprops.type_id'=>$synonym_type_id}, {join=>'stockprops', '+select'=>['stockprops.value'], '+as'=>['value']});
-        while (my $r = $synonym_rs->next()){
-            $synonym_hash{$r->get_column('value')} = $r->uniquename;
-        }
-
-        foreach (@$fuzzy_accessions){
-            my $matches = $_->{matches};
-            foreach my $m (@$matches){
-                my $name = $m->{name};
-                if (exists($synonym_hash{$name})){
-                    $m->{is_synonym} = 1;
-                    $m->{synonym_of} = $synonym_hash{$name};
-                }
-            }
-        }
-
-        foreach (@$fuzzy_synonyms){
-            my $matches = $_->{matches};
-            foreach my $m (@$matches){
-                my $name = $m->{name};
-                if (exists($synonym_hash{$name})){
-                    $m->{is_synonym} = 1;
-                    $m->{synonym_of} = $synonym_hash{$name};
-                }
-            }
-        }
     }
 
     my %return_data = (

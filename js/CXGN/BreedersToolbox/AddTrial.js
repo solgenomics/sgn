@@ -492,6 +492,7 @@ jQuery(document).ready(function ($) {
                             d.row = +d.row;
                             d.col = +d.col;
                             d.blkn = +d.blkn;   
+                        });
                                                     
                           var cards = svg.selectAll(".col")
                               .data(datasets, function(d) {return d.row+':'+d.col;});
@@ -596,7 +597,7 @@ jQuery(document).ready(function ($) {
                           
                           cards.exit().remove();
                         
-                         });  
+                        // });  
                         } ; 
                       
                       heatmapChart(datasets);
