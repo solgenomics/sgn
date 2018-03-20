@@ -25,30 +25,31 @@
                         <div class="tab-content">
                             <div id="add_genotyping_trial_home" class="tab-pane fade in active">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Genotyping Facility: </label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Genotyping Facility: </label>
+                                    <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_trial_facility_select">
                                             <option value="none">None</option>
                                             <option value="igd">Cornell IGD</option>
+                                            <option value="intertek">Intertek</option>
                                             <option value="bgi">BGI</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Genotyping Project Name: <small>Should match Vendor Project</small></label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>-In Coordinate App this is called "Plate ID"<br/>-Should match Vendor Project if you have one</small></label>
+                                    <div class="col-sm-7">
                                         <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="e.g. NextGenCassava"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Genotyping Plate ID: </label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"</small></label>
+                                    <div class="col-sm-7">
                                         <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" placeholder=" e.g. 18DNA00001"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Plate Format: </label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Plate Format: </label>
+                                    <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_trial_plate_format">
                                             <option value="96">96 Well</option>
                                             <option value="384">384 Well</option>
@@ -56,35 +57,35 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Sample Type: </label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Sample Type: </label>
+                                    <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_trial_plate_sample_type">
                                             <option value="DNA">DNA</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Breeding Program: </label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Breeding Program: </label>
+                                    <div class="col-sm-7">
                                         <span id="breeding_program_select_div"></span>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Location: </label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Location: </label>
+                                    <div class="col-sm-7">
                                         <span id="location_select_div"></span>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Year: </label>
-                                    <div class="col-sm-9">
+                                    <label class="col-sm-5 control-label">Year: </label>
+                                    <div class="col-sm-7">
                                         <span id="year_select_div"></span>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Description: </label>
-                                    <div class="col-sm-9">
-                                        <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description" ></textarea>
+                                    <label class="col-sm-5 control-label">Description: </label>
+                                    <div class="col-sm-7">
+                                        <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description" maxlength="250"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -238,11 +239,11 @@
                             </div>
                             <div id="add_genotyping_trial_confirm" class="tab-pane fade in">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Along with saving this information to this database, I want to submit to the Genotyping Facility: </label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="genotyping_trial_facility_submit_select">
-                                            <option value="yes">Yes</option>
+                                    <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <br/><small>Automatic submission currently not working. You can submit it from the Genotyping Trial's detail page or download the information from the Genotyping Trials's detail page and submit it yourself after clicking Submit</small></label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="genotyping_trial_facility_submit_select" disabled>
                                             <option value="no">No</option>
+                                            <option value="yes">Yes</option>
                                         </select>
                                     </div>
                                 </div>

@@ -305,6 +305,8 @@ jQuery(document).ready(function ($) {
                     brapi_plate_data = response.plate_data;
                     if (plate_data.genotyping_facility_submit == 'yes'){
                         submit_plate_to_gdf(brapi_plate_data);
+                    } else {
+                        location.reload();
                     }
                 }
             },
