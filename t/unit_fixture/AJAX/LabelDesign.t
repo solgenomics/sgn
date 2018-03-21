@@ -18,6 +18,7 @@ my $mech = Test::WWW::Mechanize->new;
 
 $mech->get_ok("http://localhost:3010//tools/label_designer/retrieve_longest_fields?data_type=Trials&value=139");
 my $response = decode_json $mech->content;
+print STDERR Dumper $response;
 
 my $expected_response = {
     "accession_name" => "UG120054",
@@ -32,7 +33,7 @@ my $expected_response = {
     "pedigree_string" => "NA/NA"
 };
 
-is(%{$response}, %{$expected_response}, 'retrieve longest fields test');
+is_deeply($response->{fields}, $expected_response, 'retrieve longest fields test');
 
 my $download_type = 'pdf';
 my $data_type = 'Trials';
@@ -110,7 +111,7 @@ my $design_json = encode_json {
 
 $mech->post_ok('http://localhost:3010/tools/label_designer/download', [ 'download_type' => $download_type, 'data_type' => $data_type, 'value'=> $value, 'design_json' => $design_json ]);
 $response = decode_json $mech->content;
-
+print STDERR Dumper $response;
 my $file = $response->{'filepath'};
 my $pdf = CAM::PDF->new($file);
 
