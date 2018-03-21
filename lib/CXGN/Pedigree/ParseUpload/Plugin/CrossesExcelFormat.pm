@@ -195,19 +195,6 @@ sub _validate_with_plugin {
             $seen_plot_names{$male_plot_name}++;
         }
 
-#    #female plot must exist in the database
-#    if ($female_plot_name){
-#        if (!$self->_get_plot($female_plot_name)){
-#            push @errors, "Cell E$row_name: female plot does not exist: $female_plot_name";
-#        }
-#    }
-
-#      #female plot must exist in the database
-#    if ($male_plot_name){
-#        if (!$self->_get_plot($male_plot_name)){
-#            push @errors, "Cell F$row_name: male plot does not exist: $male_plot_name";
-#        }
-#    }
     }
 
     my @accessions = keys %seen_accession_names;
