@@ -10,39 +10,41 @@ with 'MooseX::Object::Pluggable';
 
 
 has 'chado_schema' => (
-		       is       => 'ro',
-		       isa      => 'DBIx::Class::Schema',
-		       required => 1,
-		      );
+    is => 'ro',
+    isa => 'DBIx::Class::Schema',
+    required => 1,
+);
 
 has 'filename' => (
-		   is => 'ro',
-		   isa => 'Str',
-		   required => 1,
-		  );
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+);
 
 has 'parse_errors' => (
-		       is => 'ro',
-		       isa => 'ArrayRef[Str]',
-		       writer => '_set_parse_errors',
-		       reader => 'get_parse_errors',
-		       predicate => 'has_parse_errors',
-		      );
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_parse_errors',
+    reader => 'get_parse_errors',
+    predicate => 'has_parse_errors',
+);
 
 has '_parsed_data' => (
-		       is => 'ro',
-		       isa => 'HashRef',
-		       writer => '_set_parsed_data',
-		       predicate => '_has_parsed_data',
-		      );
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_parsed_data',
+    predicate => '_has_parsed_data',
+);
+
 
 sub parse {
-  my $self = shift;
+    my $self = shift;
 
   if (!$self->_validate_with_plugin()) {
     print STDERR "\nCould not validate cross file: ".$self->get_filename()."\n";
     return;
   }
+
 
   if (!$self->_parse_with_plugin()) {
     print STDERR "\nCould not parse cross file: ".$self->get_filename()."\n";
