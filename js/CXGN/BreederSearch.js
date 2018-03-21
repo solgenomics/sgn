@@ -136,6 +136,19 @@ window.onload = function initialize() {
         }
     });
 
+    jQuery('#download_wizard_metadata_submit_button').on('click', function (event) {
+        event.preventDefault();
+        var selected_trials = get_selected_results('trials');
+        var format = jQuery("#download_wizard_metadata_format").val();
+        var data_level = 'metadata';
+        if (selected_trials.length !== 0 ) {
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&dataLevel="+data_level);
+        } else {
+            alert("No filters selected for download.");
+        }
+    });
+
+
     jQuery('#download_button_genotypes').on('click', function (event) {
       event.preventDefault();
       var accession_ids = get_selected_results('accessions');
