@@ -554,11 +554,6 @@ sub save_experimental_design_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
 
-    if ($refresh->{error}) {
-        $c->stash->{rest} = { error => $refresh->{'error'} };
-        $c->detach();
-    }
-
     $c->stash->{rest} = {success => "1",}; 
     return;
 }
@@ -599,6 +594,8 @@ sub verify_seedlot_list : Path('/ajax/trial/verify_seedlot_list') : ActionClass(
 sub verify_seedlot_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my @stock_names;
     my @seedlot_names;
     if ($c->req->param('stock_list')) {
@@ -607,7 +604,7 @@ sub verify_seedlot_list_POST : Args(0) {
     if ($c->req->param('seedlot_list')) {
         @seedlot_names = @{_parse_list_from_json($c->req->param('seedlot_list'))};
     }
-    my $return = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, \@stock_names, \@seedlot_names);
+    my $return = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, $people_schema, $phenome_schema, \@stock_names, \@seedlot_names);
 
     if (exists($return->{error})){
         $c->stash->{rest} = { error => $return->{error} };
@@ -740,8 +737,6 @@ sub upload_trial_file_POST : Args(0) {
   $parser->load_plugin('TrialExcelFormat');
   $parsed_data = $parser->parse();
 
-
-
   if (!$parsed_data) {
     my $return_error = '';
 
@@ -766,7 +761,6 @@ sub upload_trial_file_POST : Args(0) {
   print STDERR "Check 4: ".localtime()."\n";
 
   #print STDERR Dumper $parsed_data;
-
 
     my $save;
     my $coderef = sub {
@@ -811,11 +805,6 @@ sub upload_trial_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
-
-        if ($refresh->{error}) {
-            $c->stash->{rest} = { error => $refresh->{'error'} };
-            $c->detach();
-        }
 
         $c->stash->{rest} = {success => "1"};
         return;

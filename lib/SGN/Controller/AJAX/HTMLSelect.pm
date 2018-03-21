@@ -256,20 +256,24 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
 
     my $user_id = $c->user()->get_sp_person_id();
     my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'plots');
-    print STDERR "Lists are ".Dumper($lists)."\n";
     my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh(), 'plots');
-    print STDERR "Public lists are ".Dumper($public_lists)."\n";
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
     my $projects = $p->get_breeding_programs();
-    my @trials = [];
+
+    my (@field_trials, @cross_trials, @genotyping_trials) = [];
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
-          push @trials, $_;
+          push @field_trials, $_;
+      }
+      foreach (@$cross_trials) {
+          push @cross_trials, $_;
+      }
+      foreach (@$genotyping_trials) {
+          push @genotyping_trials, $_;
       }
     }
-    @trials = sort { $a->[1] cmp $b->[1] } @trials;
 
     my @choices = [];
     push @choices, '__Your Plot Lists';
@@ -280,8 +284,19 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $item (@$public_lists) {
         push @choices, [@$item[0], @$item[1]];
     }
-    push @choices, '__Trials';
-    foreach my $trial (@trials) {
+    push @choices, '__Field Trials';
+    my @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
+    foreach my $trial (@field_trials) {
+        push @choices, $trial;
+    }
+    push @choices, '__Genotyping Trials';
+    my @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
+    foreach my $trial (@genotyping_trials) {
+        push @choices, $trial;
+    }
+    push @choices, '__Cross Trials';
+    my @cross_trials = sort { $a->[1] cmp $b->[1] } @cross_trials;
+    foreach my $trial (@cross_trials) {
         push @choices, $trial;
     }
     #
@@ -430,16 +445,21 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $accessions = $c->req->param('seedlot_content_accession_name') ? [$c->req->param('seedlot_content_accession_name')] : [];
+    my $crosses = $c->req->param('seedlot_content_cross_name') ? [$c->req->param('seedlot_content_cross_name')] : [];
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
-        $c->dbic_schema("Bio::Chado::Schema"),
+        $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
+        $c->dbic_schema("CXGN::People::Schema"),
+        $c->dbic_schema("CXGN::Phenome::Schema"),
         $c->req->param('seedlot_offset'),
         $c->req->param('seedlot_limit'),
         $c->req->param('seedlot_name'),
         $c->req->param('seedlot_breeding_program_name'),
         $c->req->param('seedlot_location'),
         $c->req->param('seedlot_amount'),
-        $c->req->param('seedlot_content_accession_name'),
-        $c->req->param('seedlot_content_cross_name')
+        $accessions,
+        $crosses,
+        0
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -761,14 +781,14 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     my $html = '<select><option disabled="1">None</option></select>';
     my $user_id;
     if ($c->user()) {
-	if ($user_id = $c->user->get_object()->get_sp_person_id()) { 
+	if ($user_id = $c->user->get_object()->get_sp_person_id()) {
 
 	    my $datasets = CXGN::Dataset->get_datasets_by_user(
 		$c->dbic_schema("CXGN::People::Schema"),
 		$user_id);
 
 	    print STDERR "Retrieved datasets: ".Dumper($datasets);
-	    
+
 	    $html = simple_selectbox_html(
 		name => 'available_datasets',
 		id => 'available_datasets',
@@ -778,7 +798,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 	}
     }
     $c->stash->{rest} = { select => $html };
-} 
+}
 
 sub _clean_inputs {
 	no warnings 'uninitialized';

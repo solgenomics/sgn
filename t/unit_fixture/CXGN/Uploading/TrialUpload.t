@@ -513,109 +513,117 @@ ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 print STDERR Dumper $parsed_data;
 
 my $parsed_data_check = {
-          '3' => {
-                   'stock_name' => 'test_accession2',
-                   'seedlot_name' => 'test_accession2_001',
+          '7' => {
+                   'is_a_control' => 0,
                    'num_seed_per_plot' => '12',
-                   'plot_number' => '3',
-                   'row_number' => '3',
-                   'plot_name' => 'plot_with_seedlot_name3',
-                   'block_number' => '1',
-                   'col_number' => '1',
-                   'is_a_control' => 0,
-                   'range_number' => '1',
-                   'rep_number' => '1'
-                 },
-          '6' => {
-                   'plot_name' => 'plot_with_seedlot_name6',
-                   'row_number' => '2',
-                   'num_seed_per_plot' => '12',
-                   'plot_number' => '6',
-                   'stock_name' => 'test_accession3',
-                   'seedlot_name' => 'test_accession3_001',
-                   'rep_number' => '2',
-                   'range_number' => '2',
-                   'is_a_control' => 0,
-                   'col_number' => '2',
-                   'block_number' => '2'
-                 },
-          '8' => {
-                   'rep_number' => '2',
-                   'range_number' => '2',
-                   'is_a_control' => 0,
-                   'col_number' => '2',
                    'block_number' => '2',
-                   'plot_name' => 'plot_with_seedlot_name8',
-                   'plot_number' => '8',
-                   'num_seed_per_plot' => '12',
-                   'row_number' => '4',
+                   'rep_number' => '1',
+                   'col_number' => '2',
+                   'plot_name' => 'plot_with_seedlot_name7',
+                   'stock_name' => 'test_accession4',
                    'seedlot_name' => 'test_accession4_001',
-                   'stock_name' => 'test_accession4'
-                 },
-          '2' => {
-                   'rep_number' => '2',
-                   'range_number' => '1',
-                   'col_number' => '1',
-                   'is_a_control' => 0,
-                   'block_number' => '1',
-                   'plot_name' => 'plot_with_seedlot_name2',
-                   'row_number' => '2',
-                   'num_seed_per_plot' => '12',
-                   'plot_number' => '2',
-                   'stock_name' => 'test_accession1',
-                   'seedlot_name' => 'test_accession1_001'
-                 },
-          '1' => {
-                   'block_number' => '1',
-                   'is_a_control' => 0,
-                   'col_number' => '1',
-                   'range_number' => '1',
-                   'rep_number' => '1',
-                   'stock_name' => 'test_accession1',
-                   'seedlot_name' => 'test_accession1_001',
-                   'plot_number' => '1',
-                   'num_seed_per_plot' => '12',
-                   'row_number' => '1',
-                   'plot_name' => 'plot_with_seedlot_name1'
-                 },
-          '5' => {
-                   'num_seed_per_plot' => '12',
-                   'row_number' => '1',
-                   'plot_number' => '5',
-                   'plot_name' => 'plot_with_seedlot_name5',
-                   'stock_name' => 'test_accession3',
-                   'seedlot_name' => 'test_accession3_001',
+                   'plot_number' => '7',
                    'range_number' => '2',
-                   'rep_number' => '1',
-                   'block_number' => '2',
-                   'col_number' => '2',
-                   'is_a_control' => 0
+                   'weight_gram_seed_per_plot' => 0,
+                   'row_number' => '3'
                  },
           '4' => {
-                   'rep_number' => '2',
-                   'range_number' => '1',
-                   'col_number' => '1',
-                   'is_a_control' => 0,
-                   'block_number' => '1',
-                   'plot_name' => 'plot_with_seedlot_name4',
-                   'num_seed_per_plot' => '12',
-                   'plot_number' => '4',
                    'row_number' => '4',
+                   'weight_gram_seed_per_plot' => '5',
+                   'range_number' => '1',
                    'seedlot_name' => 'test_accession2_001',
-                   'stock_name' => 'test_accession2'
-                 },
-          '7' => {
-                   'block_number' => '2',
-                   'is_a_control' => 0,
-                   'col_number' => '2',
-                   'range_number' => '2',
-                   'rep_number' => '1',
-                   'seedlot_name' => 'test_accession4_001',
-                   'stock_name' => 'test_accession4',
+                   'plot_number' => '4',
+                   'rep_number' => '2',
                    'num_seed_per_plot' => '12',
-                   'plot_number' => '7',
+                   'block_number' => '1',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession2',
+                   'plot_name' => 'plot_with_seedlot_name4',
+                   'col_number' => '1'
+                 },
+          '1' => {
+                   'row_number' => '1',
+                   'weight_gram_seed_per_plot' => 0,
+                   'range_number' => '1',
+                   'seedlot_name' => 'test_accession1_001',
+                   'plot_number' => '1',
+                   'rep_number' => '1',
+                   'num_seed_per_plot' => '12',
+                   'block_number' => '1',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession1',
+                   'plot_name' => 'plot_with_seedlot_name1',
+                   'col_number' => '1'
+                 },
+          '5' => {
+                   'range_number' => '2',
+                   'row_number' => '1',
+                   'weight_gram_seed_per_plot' => 0,
+                   'plot_number' => '5',
+                   'seedlot_name' => 'test_accession3_001',
+                   'plot_name' => 'plot_with_seedlot_name5',
+                   'col_number' => '2',
+                   'stock_name' => 'test_accession3',
+                   'rep_number' => '1',
+                   'is_a_control' => 0,
+                   'num_seed_per_plot' => '12',
+                   'block_number' => '2'
+                 },
+          '2' => {
+                   'block_number' => '1',
+                   'num_seed_per_plot' => '12',
+                   'is_a_control' => 0,
+                   'rep_number' => '2',
+                   'stock_name' => 'test_accession1',
+                   'col_number' => '1',
+                   'plot_name' => 'plot_with_seedlot_name2',
+                   'plot_number' => '2',
+                   'seedlot_name' => 'test_accession1_001',
+                   'row_number' => '2',
+                   'weight_gram_seed_per_plot' => 0,
+                   'range_number' => '1'
+                 },
+          '3' => {
+                   'weight_gram_seed_per_plot' => '4',
                    'row_number' => '3',
-                   'plot_name' => 'plot_with_seedlot_name7'
+                   'range_number' => '1',
+                   'plot_number' => '3',
+                   'seedlot_name' => 'test_accession2_001',
+                   'rep_number' => '1',
+                   'block_number' => '1',
+                   'num_seed_per_plot' => '12',
+                   'is_a_control' => 0,
+                   'stock_name' => 'test_accession2',
+                   'plot_name' => 'plot_with_seedlot_name3',
+                   'col_number' => '1'
+                 },
+          '6' => {
+                   'col_number' => '2',
+                   'plot_name' => 'plot_with_seedlot_name6',
+                   'stock_name' => 'test_accession3',
+                   'is_a_control' => 0,
+                   'num_seed_per_plot' => '12',
+                   'block_number' => '2',
+                   'rep_number' => '2',
+                   'seedlot_name' => 'test_accession3_001',
+                   'plot_number' => '6',
+                   'range_number' => '2',
+                   'row_number' => '2',
+                   'weight_gram_seed_per_plot' => 0
+                 },
+          '8' => {
+                   'seedlot_name' => 'test_accession4_001',
+                   'plot_number' => '8',
+                   'weight_gram_seed_per_plot' => 0,
+                   'row_number' => '4',
+                   'range_number' => '2',
+                   'block_number' => '2',
+                   'num_seed_per_plot' => '12',
+                   'is_a_control' => 0,
+                   'rep_number' => '2',
+                   'stock_name' => 'test_accession4',
+                   'col_number' => '2',
+                   'plot_name' => 'plot_with_seedlot_name8'
                  }
         };
 
@@ -680,7 +688,7 @@ ok($post1_stock_diff == 22, "check stock table after upload excel trial");
 my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post1_stock_prop_diff."\n";
-ok($post1_stock_prop_diff == 132, "check stockprop table after upload excel trial");
+ok($post1_stock_prop_diff == 133, "check stockprop table after upload excel trial");
 
 my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -788,6 +796,146 @@ my $plate_data = {
     location => $location->nd_geolocation_id,
     year => '2018',
     name => 'test_genotype_upload_trial1',
+    breeding_program => $project->project_id,
+    genotyping_facility => 'igd',
+    sample_type => 'DNA',
+    plate_format => '96'
+};
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+ok($response->{trial_id});
+
+
+my $file = $f->config->{basepath}."/t/data/genotype_trial_upload/CoordinatePlateUpload";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/parsegenotypetrial',
+        Content_Type => 'form-data',
+        Content => [
+            genotyping_trial_layout_upload_coordinate => [ $file, 'genotype_trial_upload', Content_Type => 'application/vnd.ms-excel', ],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+
+is_deeply($message_hash, {
+          'design' => {
+                        'B01' => {
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 0,
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_B01',
+                                   'col_number' => '01',
+                                   'notes' => '',
+                                   'extraction' => 'CTAB',
+                                   'tissue_type' => 'Leaf',
+                                   'volume' => 'NA',
+                                   'concentration' => 'NA',
+                                   'stock_name' => 'test_accession1',
+                                   'plot_number' => 'B01',
+                                   'row_number' => 'B',
+                                   'dna_person' => 'Trevor_Rife'
+                                 },
+                        'B04' => {
+                                   'tissue_type' => 'Leaf',
+                                   'extraction' => 'CTAB',
+                                   'notes' => '',
+                                   'col_number' => '04',
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_B04',
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 1,
+                                   'row_number' => 'B',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'plot_number' => 'B04',
+                                   'stock_name' => 'BLANK',
+                                   'concentration' => 'NA',
+                                   'volume' => 'NA'
+                                 },
+                        'C01' => {
+                                   'is_blank' => 0,
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'plot_name' => '18DNA00001_C01',
+                                   'acquisition_date' => '2018-02-06',
+                                   'notes' => '',
+                                   'col_number' => '01',
+                                   'extraction' => 'CTAB',
+                                   'tissue_type' => 'Leaf',
+                                   'volume' => 'NA',
+                                   'concentration' => 'NA',
+                                   'stock_name' => 'test_accession2',
+                                   'plot_number' => 'C01',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'C'
+                                 },
+                        'C04' => {
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 1,
+                                   'plot_name' => '18DNA00001_C04',
+                                   'acquisition_date' => '2018-02-06',
+                                   'notes' => '',
+                                   'col_number' => '04',
+                                   'tissue_type' => 'Leaf',
+                                   'extraction' => 'CTAB',
+                                   'volume' => 'NA',
+                                   'stock_name' => 'BLANK',
+                                   'concentration' => 'NA',
+                                   'plot_number' => 'C04',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'C'
+                                 },
+                        'A01' => {
+                                   'is_blank' => 0,
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_A01',
+                                   'notes' => '',
+                                   'col_number' => '01',
+                                   'extraction' => 'CTAB',
+                                   'tissue_type' => 'Leaf',
+                                   'volume' => 'NA',
+                                   'concentration' => 'NA',
+                                   'stock_name' => 'test_accession1',
+                                   'plot_number' => 'A01',
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'A'
+                                 },
+                        'D01' => {
+                                   'dna_person' => 'Trevor_Rife',
+                                   'row_number' => 'D',
+                                   'plot_number' => 'D01',
+                                   'stock_name' => 'test_accession2',
+                                   'concentration' => 'NA',
+                                   'volume' => 'NA',
+                                   'tissue_type' => 'Leaf',
+                                   'extraction' => 'CTAB',
+                                   'col_number' => '01',
+                                   'notes' => '',
+                                   'acquisition_date' => '2018-02-06',
+                                   'plot_name' => '18DNA00001_D01',
+                                   'ncbi_taxonomy_id' => 'NA',
+                                   'is_blank' => 0
+                                 }
+                      },
+          'success' => '1'
+        }, 'test upload parse of coordinate genotyping trial');
+
+my $plate_data = {
+    design => $message_hash->{design},
+    genotyping_facility_submit => 'no',
+    project_name => 'NextGenCassava',
+    description => 'test geno trial upload coordinate',
+    location => $location->nd_geolocation_id,
+    year => '2018',
+    name => 'test_genotype_upload_coordinate_trial1',
     breeding_program => $project->project_id,
     genotyping_facility => 'igd',
     sample_type => 'DNA',
