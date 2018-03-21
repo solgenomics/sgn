@@ -448,9 +448,11 @@ sub upload_seedlots_POST : Args(0) {
     my @added_stocks;
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
-            my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
-            if ($val->{seedlot_id}){
-                $sl->seedlot_id($val->{seedlot_id}); #this allow us to update existing seedlot entries
+            my $sl;
+            if (defined($val->{seedlot_id})){
+                $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$val->{seedlot_id}); #this allows update of existing seedlot
+            } else {
+                $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             }
             $sl->uniquename($key);
             $sl->location_code($location);
@@ -470,7 +472,7 @@ sub upload_seedlots_POST : Args(0) {
             my $transaction_amount;
             my $transaction_weight;
             # If seedlot already exists in database, the system will update so that the current weight and current count match what was uploaded.
-            if ($val->{seedlot_id}){
+            if (defined($val->{seedlot_id})){
                 my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
                 my $current_stored_count = $sl->get_current_count_property() && $sl->get_current_count_property() ne 'NA' ? $sl->get_current_count_property() : 0;
                 my $current_stored_weight = $sl->get_current_weight_property() && $sl->get_current_weight_property() ne 'NA' ? $sl->get_current_weight_property() : 0;
