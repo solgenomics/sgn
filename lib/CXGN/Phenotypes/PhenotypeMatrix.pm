@@ -191,7 +191,7 @@ sub get_phenotype_matrix {
                 push @unique_plot_list, $plot_id;
                 $seen_plots{$plot_id} = 1;
             }
- 
+
             #my $cvterm = $trait."|".$cvterm_accession;
             if ($include_timestamp && $timestamp_value) {
                 $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
@@ -212,10 +212,15 @@ sub get_phenotype_matrix {
 
     my @info = ();
     my @line;
-    if ($self->include_row_and_column_numbers){
-        @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber' );
-    } else {
-        @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber' );
+    if ($self->data_level eq 'metadata'){
+      @line = ( 'studyYear', 'studyName', 'locationName', 'studyDesign', 'breedingProgram', 'plantingDate', 'harvestDate' );
+    }
+    else {
+      if ($self->include_row_and_column_numbers){
+          @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber' );
+      } else {
+          @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber' );
+      }
     }
 
     # generate header line
