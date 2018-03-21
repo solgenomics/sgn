@@ -96,7 +96,7 @@ sub upload_cross_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -105,7 +105,7 @@ sub upload_cross_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1534,7 +1534,7 @@ sub upload_progenies_POST : Args(0) {
     my $parsed_data;
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "progeny_upload";
+    my $subdirectory = "cross_upload";
     my $archived_filename_with_path;
     my $md5;
     my $validate_file;
@@ -1555,7 +1555,7 @@ sub upload_progenies_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -1564,7 +1564,7 @@ sub upload_progenies_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1657,7 +1657,7 @@ sub upload_info_POST : Args(0) {
     my $parsed_data;
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "crossinfo_upload";
+    my $subdirectory = "cross_upload";
     my $archived_filename_with_path;
     my $md5;
     my $validate_file;
@@ -1671,14 +1671,13 @@ sub upload_info_POST : Args(0) {
     my $user_id;
     my $user_name;
     my $owner_name;
-#   my $upload_file_type = "crosses excel";#get from form when more options are added
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -1687,7 +1686,7 @@ sub upload_info_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -1715,7 +1714,7 @@ sub upload_info_POST : Args(0) {
     unlink $upload_tempfile;
 
     $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="crossinfo upload file";
+    $upload_metadata{'archived_file_type'}="cross upload file";
     $upload_metadata{'user_id'}=$user_id;
     $upload_metadata{'date'}="$timestamp";
 
