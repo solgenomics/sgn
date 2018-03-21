@@ -263,16 +263,27 @@ sub _parse_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
     my @accessions = keys %seen_accession_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },
-        -or => ['me.uniquename' => { -in => \@accessions }, 'stockprops.value' => { -in => \@accessions}],
+        'me.uniquename' => { -in => \@accessions },
         'me.type_id' => $accession_cvterm_id,
     },{join => 'stockprops'});
     my %accession_lookup;
     while (my $r=$rs->next){
         $accession_lookup{$r->uniquename} = $r->stock_id;
+    }
+    my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+        'me.is_obsolete' => { '!=' => 't' },
+        'stockprops.value' => { -in => \@accessions},
+        'me.type_id' => $accession_cvterm_id,
+        'stockprops.type_id' => $synonym_cvterm_id
+    },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+    my %acc_synonyms_lookup;
+    while (my $r=$acc_synonym_rs->next){
+        $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
     }
     my @crosses = keys %seen_cross_names;
     my $cross_rs = $schema->resultset("Stock::Stock")->search({
@@ -333,6 +344,14 @@ sub _parse_with_plugin {
         #skip blank lines
         if (!$seedlot_name && !$accession_name && !$cross_name && !$description) {
             next;
+        }
+
+        if ($acc_synonyms_lookup{$accession_name}){
+            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+            if (scalar(@accession_names)>1){
+                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+            }
+            $accession_name = $accession_names[0];
         }
 
         if (!$accession_lookup{$accession_name} && !$cross_lookup{$cross_name}){
