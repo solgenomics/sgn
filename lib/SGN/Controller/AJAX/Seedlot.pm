@@ -253,7 +253,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     my $accession_id;
     if ($accession_uniquename){
-        $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename, type_id=>$accession_cvterm_id})->stock_id();
+        # In case of synonyms, use stocklookup
+        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$accession_uniquename });
+        my $stock_lookup_rs = $stock_lookup->get_stock($accession_cvterm_id);
+        if (!$stock_lookup_rs){
+            $c->stash->{rest} = {error=>'The accession name you provided does not match to a unique accession. Please make sure you are using the correct name or contact us.'};
+            $c->detach();
+        }
+        $accession_id = $stock_lookup_rs->stock_id();
+        $accession_uniquename = $stock_lookup_rs->uniquename();
     }
     my $cross_id;
     if ($cross_uniquename){
