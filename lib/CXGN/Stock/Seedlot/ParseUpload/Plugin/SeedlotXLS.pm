@@ -267,10 +267,10 @@ sub _parse_with_plugin {
 
     my @accessions = keys %seen_accession_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'me.is_obsolete' => { '!=' => 't' },
-        'me.uniquename' => { -in => \@accessions },
-        'me.type_id' => $accession_cvterm_id,
-    },{join => 'stockprops'});
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@accessions },
+        'type_id' => $accession_cvterm_id,
+    });
     my %accession_lookup;
     while (my $r=$rs->next){
         $accession_lookup{$r->uniquename} = $r->stock_id;
