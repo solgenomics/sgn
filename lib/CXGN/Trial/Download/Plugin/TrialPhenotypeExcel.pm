@@ -97,11 +97,16 @@ sub download {
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
+    if ($self->data_level() eq 'metadata'){
+      $factory_type = 'Native';
     }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
+    else {
+      if ($search_type eq 'complete'){
+          $factory_type = 'Native';
+      }
+      if ($search_type eq 'fast'){
+          $factory_type = 'MaterializedView';
+      }
     }
 	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 		bcs_schema=>$schema,
@@ -115,8 +120,8 @@ sub download {
 		plot_list=>$plot_list,
 		plant_list=>$plant_list,
 		include_timestamp=>$include_timestamp,
-        include_row_and_column_numbers=>$self->include_row_and_column_numbers,
-        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+    include_row_and_column_numbers=>$self->include_row_and_column_numbers,
+    exclude_phenotype_outlier=>$exclude_phenotype_outlier,
 		trait_contains=>$trait_contains,
 		phenotype_min_value=>$phenotype_min_value,
 		phenotype_max_value=>$phenotype_max_value,
