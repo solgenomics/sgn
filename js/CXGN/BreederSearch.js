@@ -104,6 +104,10 @@ window.onload = function initialize() {
         jQuery('#download_wizard_phenotypes_dialog').modal("show");
     });
 
+    jQuery('#wizard_download_metadata_button').click( function () {
+        jQuery('#download_wizard_phenotypes_dialog').modal("show");
+    });
+
     jQuery('#download_wizard_phenotypes_submit_button').on('click', function (event) {
         event.preventDefault();
         var selected_trials = get_selected_results('trials');
@@ -370,6 +374,8 @@ function update_download_options(this_section, categories) {
     if (isLoggedIn()) {
         jQuery('#wizard_download_phenotypes_button').prop( 'title', 'Click to Download Trial Phenotypes');
         jQuery('#wizard_download_phenotypes_button').removeAttr('disabled');
+        jQuery('#wizard_download_metadata_button').prop( 'title', 'Click to Download Trial Metadata');
+        jQuery('#wizard_download_metadata_button').removeAttr('disabled');
     }
 
     for (i=0; i < categories.length; i++) {
@@ -379,6 +385,7 @@ function update_download_options(this_section, categories) {
         selected_trials = 1;
         var trial_html = '<font color="green">'+data[i].length+' trials selected</font></div>';
         jQuery('#selected_trials').html(trial_html);
+        jQuery('#selected_trials_metadata').html(trial_html);
       }
       if (categories[i] === 'accessions' && data[i]) {
         selected_accessions = 1;
@@ -404,6 +411,7 @@ function update_download_options(this_section, categories) {
     //console.log("accessions-selected="+accessions_selected);
     if (selected_trials !== 1) {
       jQuery('#selected_trials').html('No trials selected');
+      jQuery('#selected_trials_metadata').html('No trials selected');
     }
     if (selected_accessions !== 1) {
       jQuery('#selected_accessions').html('No accessions selected');

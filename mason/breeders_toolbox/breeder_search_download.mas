@@ -114,7 +114,7 @@
   </div>
   </td>
   <td>
-  <div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div id="selected_trials">No trials selected</div>
+  <div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div id="selected_trials_metadata">No trials selected</div>
   </td>
   </tr>
   <tr>
