@@ -48,7 +48,7 @@ $timestamp
     <div class="panel panel-default">
         <div class="panel-body">
 
-<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>0 &>
 
 <div class="well well-sm">
     <form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
