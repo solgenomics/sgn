@@ -201,14 +201,15 @@ sub _validate_with_plugin {
         $errors{'missing_crosses'} = \@crosses_missing;
     }
 
-    my @seedlots = keys %seen_seedlot_names;
-    my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@seedlots }
-    });
-    while (my $r=$rs->next){
-        push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
-    }
+    # Not checking if seedlot name already exists because the database will just update the seedlot entries
+    # my @seedlots = keys %seen_seedlot_names;
+    # my $rs = $schema->resultset("Stock::Stock")->search({
+    #     'is_obsolete' => { '!=' => 't' },
+    #     'uniquename' => { -in => \@seedlots }
+    # });
+    # while (my $r=$rs->next){
+    #     push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
+    # }
 
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
@@ -241,9 +242,15 @@ sub _parse_with_plugin {
 
     my %seen_accession_names;
     my %seen_cross_names;
+    my %seen_seedlot_names;
     for my $row ( 1 .. $row_max ) {
+        my $seedlot_name;
         my $accession_name;
         my $cross_name;
+        if ($worksheet->get_cell($row,0)) {
+            $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seen_seedlot_names{$seedlot_name}++;
+        }
         if ($worksheet->get_cell($row,1)) {
             $accession_name = $worksheet->get_cell($row,1)->value();
             $seen_accession_names{$accession_name}++;
@@ -255,25 +262,37 @@ sub _parse_with_plugin {
     }
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
     my @accessions = keys %seen_accession_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@accessions },
-        'type_id' => $accession_cvterm_id
-    });
+        'me.is_obsolete' => { '!=' => 't' },
+        -or => ['me.uniquename' => { -in => \@accessions }, 'stockprops.value' => { -in => \@accessions}],
+        'me.type_id' => $accession_cvterm_id,
+    },{join => 'stockprops'});
     my %accession_lookup;
     while (my $r=$rs->next){
         $accession_lookup{$r->uniquename} = $r->stock_id;
     }
     my @crosses = keys %seen_cross_names;
-    my $rs = $schema->resultset("Stock::Stock")->search({
+    my $cross_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@crosses },
         'type_id' => $cross_cvterm_id
     });
     my %cross_lookup;
-    while (my $r=$rs->next){
+    while (my $r=$cross_rs->next){
         $cross_lookup{$r->uniquename} = $r->stock_id;
+    }
+    my @seedlots = keys %seen_seedlot_names;
+    my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@seedlots },
+        'type_id' => $seedlot_cvterm_id
+    });
+    my %seedlot_lookup;
+    while (my $r=$seedlot_rs->next){
+        $seedlot_lookup{$r->uniquename} = $r->stock_id;
     }
 
     for my $row ( 1 .. $row_max ) {
@@ -316,7 +335,12 @@ sub _parse_with_plugin {
             next;
         }
 
+        if (!$accession_lookup{$accession_name} && !$cross_lookup{$cross_name}){
+            die "Seedlot $seedlot_name source material not found. Accession $accession_name or cross $cross_name . this should not happen!\n";
+        }
+
         $parsed_seedlots{$seedlot_name} = {
+            seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
             accession => $accession_name,
             accession_stock_id => $accession_lookup{$accession_name},
             cross_name => $cross_name,
@@ -328,6 +352,7 @@ sub _parse_with_plugin {
             operator_name => $operator_name
         };
     }
+    #print STDERR Dumper \%parsed_seedlots;
 
     $self->_set_parsed_data(\%parsed_seedlots);
     return 1;
