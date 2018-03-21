@@ -55,7 +55,6 @@ jQuery(document).ready(function ($) {
     });
 
     $("#trial_upload_spreadsheet_format_info").click( function () {
-	$('#upload_trial_dialog').modal("hide");
 	$("#trial_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
