@@ -346,22 +346,22 @@ sub _parse_with_plugin {
             next;
         }
 
+        my $accession_stock_id;
         if ($acc_synonyms_lookup{$accession_name}){
             my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
             if (scalar(@accession_names)>1){
                 print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
             }
+            $accession_stock_id = $acc_synonyms_lookup{$accession_name}->{$accession_names[0]};
             $accession_name = $accession_names[0];
-        }
-
-        if (!$accession_lookup{$accession_name} && !$cross_lookup{$cross_name}){
-            die "Seedlot $seedlot_name source material not found. Accession $accession_name or cross $cross_name . this should not happen!\n";
+        } else {
+            $accession_stock_id = $accession_lookup{$accession_name};
         }
 
         $parsed_seedlots{$seedlot_name} = {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
             accession => $accession_name,
-            accession_stock_id => $accession_lookup{$accession_name},
+            accession_stock_id => $accession_stock_id,
             cross_name => $cross_name,
             cross_stock_id => $cross_lookup{$cross_name},
             amount => $amount,
