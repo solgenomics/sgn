@@ -144,24 +144,22 @@ sub upload_cross_file_POST : Args(0) {
   $parsed_data = $parser->parse();
   #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
-  if (!$parsed_data) {
-    my $return_error = '';
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
 
-    if (! $parser->has_parse_errors() ){
-      $return_error = "Could not get parsing errors";
-      $c->stash->{rest} = {error_string => $return_error,};
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
     }
-
-    else {
-      $parse_errors = $parser->get_parse_errors();
-      foreach my $error_string (@{$parse_errors}){
-	$return_error=$return_error.$error_string."<br>";
-      }
-    }
-
-    $c->stash->{rest} = {error_string => $return_error,};
-    return;
-  }
 
   my $cross_add = CXGN::Pedigree::AddCrosses
     ->new({
@@ -1602,23 +1600,24 @@ sub upload_progenies_POST : Args(0) {
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
-    if (!$parsed_data) {
+    if (!$parsed_data){
         my $return_error = '';
-
-        if (! $parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
-            $c->stash->{rest} = {error_string => $return_error,};
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
             $parse_errors = $parser->get_parse_errors();
-            foreach my $error_string (@{$parse_errors}){
-                $return_error=$return_error.$error_string."<br>";
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error,};
-        return;
+        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->detach();
     }
 
-  #add the progeny
+    #add the progeny
     if ($parsed_data){
         my %progeny_hash = %{$parsed_data};
         foreach my $cross_name_key (keys %progeny_hash){
@@ -1726,18 +1725,19 @@ sub upload_info_POST : Args(0) {
 
     if (!$parsed_data) {
         my $return_error = '';
-
-        if (! $parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
-            $c->stash->{rest} = {error_string => $return_error,};
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
             $parse_errors = $parser->get_parse_errors();
-            foreach my $error_string (@{$parse_errors}){
-                $return_error=$return_error.$error_string."<br>";
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error,};
-        return;
+        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->detach();
     }
 
     my $cross_properties = $c->config->{cross_properties};
