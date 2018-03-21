@@ -40,26 +40,25 @@ has '_parsed_data' => (
 sub parse {
     my $self = shift;
 
-  if (!$self->_validate_with_plugin()) {
-    print STDERR "\nCould not validate cross file: ".$self->get_filename()."\n";
+    if (!$self->_validate_with_plugin()) {
+        print STDERR "\nCould not validate cross file: ".$self->get_filename()."\n";
+        return;
+    }
+
+    if (!$self->_parse_with_plugin()) {
+        print STDERR "\nCould not parse cross file: ".$self->get_filename()."\n";
+        return;
+    }
+
+    if (!$self->_has_parsed_data()) {
+        print STDERR "\nNo parsed data for cross file: ".$self->get_filename()."\n";
+        return;
+    } else {
+        return $self->_parsed_data();
+    }
+
+    print STDERR "\nError parsing cross file: ".$self->get_filename()."\n";
     return;
-  }
-
-
-  if (!$self->_parse_with_plugin()) {
-    print STDERR "\nCould not parse cross file: ".$self->get_filename()."\n";
-    return;
-  }
-
-  if (!$self->_has_parsed_data()) {
-    print STDERR "\nNo parsed data for cross file: ".$self->get_filename()."\n";
-    return;
-  } else {
-    return $self->_parsed_data();
-  }
-
-  print STDERR "\nError parsing cross file: ".$self->get_filename()."\n";
-  return;
 }
 
 
