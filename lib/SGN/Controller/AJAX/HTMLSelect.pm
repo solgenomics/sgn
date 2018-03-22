@@ -242,6 +242,47 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_genotyping_trials_select : Path('/ajax/html/select/genotyping_trials') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+
+    my $projects;
+    if (!$breeding_program_id) {
+      $projects = $p->get_breeding_programs();
+    } else {
+      push @$projects, [$breeding_program_id];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my $multiple = $c->req->param("multiple") || 0;
+    my $live_search = $c->req->param("live_search") || 0;
+
+    my @trials;
+    foreach my $project (@$projects) {
+      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$genotyping_trials) {
+          push @trials, $_;
+      }
+    }
+    @trials = sort { $a->[1] cmp $b->[1] } @trials;
+
+    if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
+
+    my $html = simple_selectbox_html(
+      multiple => $multiple,
+      live_search => $live_search,
+      name => $name,
+      id => $id,
+      size => $size,
+      choices => \@trials,
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') Args(0) {
     my $self = shift;

@@ -383,7 +383,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-sm btn-info" id="refresh_crosstree_button" name="refresh_crosstree_button">Close and Refresh tree</button>
+        <button class="btn btn-sm btn-info" id="refresh_crosstree_button" name="refresh_crosses_jstree_html">Close and Refresh tree</button>
         <button id="dismiss_cross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
