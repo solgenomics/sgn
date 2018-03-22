@@ -47,6 +47,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
+use CXGN::Calendar;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -262,7 +263,7 @@ sub search {
       trial_design=> 'design.value',
       planting_date => 'plantingDate.value',
       harvest_date => 'harvestDate.value',
-      breeding_program => 'program.value',
+      breeding_program => 'breeding_program.name',
       plot_type=> 'plot_type.name',
       from_clause=> " FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
       JOIN cvterm as plot_type ON (plot_type.cvterm_id = plot.type_id)
@@ -278,12 +279,14 @@ sub search {
       JOIN db USING(db_id)
       JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN project USING(project_id)
+      JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id )
+      JOIN project as breeding_program on (breeding_program.project_id=project_relationship.object_project_id)
       LEFT JOIN projectprop as year ON (project.project_id=year.project_id AND year.type_id = $year_type_id)
       LEFT JOIN projectprop as design ON (project.project_id=design.project_id AND design.type_id = $design_type_id)
       LEFT JOIN projectprop as location ON (project.project_id=location.project_id AND location.type_id = $project_location_type_id)
       LEFT JOIN projectprop as plantingDate ON (project.project_id=plantingDate.project_id AND plantingDate.type_id = $planting_date_type_id)
       LEFT JOIN projectprop as harvestDate ON (project.project_id=harvestDate.project_id AND harvestDate.type_id = $havest_date_type_id)
-      LEFT JOIN projectprop as program ON (project.project_id=program.project_id AND program.type_id = $breeding_program_type_id)",
+      LEFT JOIN projectprop as breeding_program_check ON (breeding_program.project_id=breeding_program_check.project_id AND breeding_program_check.type_id = $breeding_program_type_id)",
     );
 
     my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.", ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", ".$columns{'planting_date'}.", ".$columns{'harvest_date'}.", ".$columns{'breeding_program'}.", phenotype.phenotype_id, count(phenotype.phenotype_id) OVER() AS full_count ".$design_layout_select;
@@ -360,13 +363,15 @@ sub search {
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
-    if ($self->data_level ne 'all') {
-      my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
-      push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants or subplots
-    } else {
-      push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id OR plot.type_id = $subplot_type_id)"; #plots AND plants AND subplots
+    if ( $self->data_level eq 'metadata'){}
+    else {
+      if ($self->data_level ne 'all') {
+        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
+        push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants or subplots
+      } else {
+        push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id OR plot.type_id = $subplot_type_id)"; #plots AND plants AND subplots
+      }
     }
-
     if ($self->exclude_phenotype_outlier){
         push @where_clause, "phenotypeprop.value IS NULL";
     }
@@ -430,7 +435,10 @@ sub search {
         my $synonyms = $synonym_hash_lookup{$stock_name};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
         if ($self->data_level eq 'metadata'){
-          push @$result, [ $year, $project_name, $location_name, $design, $breeding_program, $planting_date, $harvest_date ];
+          my $calendar_funcs = CXGN::Calendar->new({});
+          my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
+          my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
+          push @$result, [ $year, $project_name, $location_name, $design, $breeding_program, $planting_date_value, $harvest_date_value ];
         }
         else{
           push @$result, [ $year, $project_name, $stock_name, $location_name, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
@@ -438,6 +446,7 @@ sub search {
     }
 
     print STDERR "Search End:".localtime."\n";
+    #print STDERR Dumper($result);
     return $result;
 }
 
