@@ -431,14 +431,26 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $c = shift;
 
     my $accession_list_id = $c->req->param("accession_list_list_select");
-    my $trial_list_id     = $c->req->param("trial_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
+    my $trial_list_id     = $c->req->param("trial_list_list_select");
+    if (!$trial_list_id && !$accession_list_id && !$trait_list_id){
+      $trial_list_id     = $c->req->param("trial_metadata_list_list_select");
+    }
     my $format            = $c->req->param("format");
+    if (!$format){
+      $format            = $c->req->param("metadata_format");
+    }
     my $datalevel         = $c->req->param("phenotype_datalevel");
+    if (!$datalevel){
+      $datalevel         = $c->req->param("metadata_datalevel");
+    }
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $search_type        = $c->req->param("search_type") || 'complete';
     my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
+    if (!$dl_token){
+      $dl_token = $c->req->param("metadata_download_token") || "no_token";
+    }
     my $dl_cookie = "download".$dl_token;
     print STDERR "Token is: $dl_token\n";
 
@@ -500,8 +512,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 		trial_list=>$trial_id_data->{transform},
 		accession_list=>$accession_id_data->{transform},
 		include_timestamp=>$timestamp_included,
-        include_row_and_column_numbers=>1,
-        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+    include_row_and_column_numbers=>1,
+    exclude_phenotype_outlier=>$exclude_phenotype_outlier,
 		data_level=>$datalevel,
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
@@ -726,7 +738,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $c->res->body($error);
     return;
   }
-  
+
   # find accession synonyms
   my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
   my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
@@ -740,7 +752,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
           $synonym_string.= (join ", ", @{$synonym_list}).")";
       }
   }
-  
+
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
   print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
