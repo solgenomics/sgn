@@ -41,7 +41,7 @@ $breeding_programs
       <hr>
       <h4>Folders</h4>
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial to folder</button><br/><br/>
+      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial(s) to folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
       
       <div id="folder_edit_options" style="display:none">
@@ -69,7 +69,7 @@ $breeding_programs
   jQuery(document).ready(function($) {
 
     jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached',
+      url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
       success: function(response) {
         var html = '<ul>'+response.html+'</ul>';
 

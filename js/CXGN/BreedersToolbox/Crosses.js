@@ -212,24 +212,6 @@ jQuery(document).ready(function($) {
         }
     });
 
-    jQuery("#refresh_crosstree_button").click(function() {
-        jQuery.ajax({
-            url: '/ajax/breeders/get_crosses_with_folders',
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response) {
-                jQuery("#working_modal").modal("hide");
-                location.reload();
-            },
-            error: function(response) {
-                jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing crosses jstree html');
-            }
-        });
-    });
-
-
 
 
     function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
