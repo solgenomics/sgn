@@ -53,7 +53,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $owners_string = '';
     foreach (@$owners){
         my $p = $people_schema->resultset("SpPerson")->find({sp_person_id=>$_});
-        $owners_string .= '<a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
+        $owners_string .= ' <a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
     }
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();

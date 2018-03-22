@@ -285,17 +285,17 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
         push @choices, [@$item[0], @$item[1]];
     }
     push @choices, '__Field Trials';
-    my @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
+    @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
     foreach my $trial (@field_trials) {
         push @choices, $trial;
     }
     push @choices, '__Genotyping Trials';
-    my @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
+    @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
     foreach my $trial (@genotyping_trials) {
         push @choices, $trial;
     }
     push @choices, '__Cross Trials';
-    my @cross_trials = sort { $a->[1] cmp $b->[1] } @cross_trials;
+    @cross_trials = sort { $a->[1] cmp $b->[1] } @cross_trials;
     foreach my $trial (@cross_trials) {
         push @choices, $trial;
     }
