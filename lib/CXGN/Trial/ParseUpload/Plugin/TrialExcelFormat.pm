@@ -373,6 +373,29 @@ sub _parse_with_plugin {
       }
   }
 
+  my %seen_accession_names;
+  for my $row ( 1 .. $row_max ) {
+      my $accession_name;
+      if ($worksheet->get_cell($row,1)) {
+          $accession_name = $worksheet->get_cell($row,1)->value();
+          $seen_accession_names{$accession_name}++;
+      }
+  }
+  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+  my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
+  my @accessions = keys %seen_accession_names;
+  my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+      'me.is_obsolete' => { '!=' => 't' },
+      'stockprops.value' => { -in => \@accessions},
+      'me.type_id' => $accession_cvterm_id,
+      'stockprops.type_id' => $synonym_cvterm_id
+  },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+  my %acc_synonyms_lookup;
+  while (my $r=$acc_synonym_rs->next){
+      $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+  }
+
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
     my $accession_name;
@@ -437,6 +460,14 @@ sub _parse_with_plugin {
             }
         }
         $treatment_col++;
+    }
+
+    if ($acc_synonyms_lookup{$accession_name}){
+        my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+        if (scalar(@accession_names)>1){
+            print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+        }
+        $accession_name = $accession_names[0];
     }
 
     my $key = $row;

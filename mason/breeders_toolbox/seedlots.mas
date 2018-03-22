@@ -40,7 +40,7 @@ $timestamp
 </&>
 
 
-<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add New Seedlot</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_bulk_upload">Upload New Seedlots</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_upload_inventory">Upload Inventory</a>]'&>
+<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add New Seedlot</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_bulk_upload">Upload Seedlots</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_upload_inventory">Upload Inventory</a>]'&>
 
 <br/>
 
@@ -48,7 +48,7 @@ $timestamp
     <div class="panel panel-default">
         <div class="panel-body">
 
-<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>0 &>
 
 <div class="well well-sm">
     <form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">

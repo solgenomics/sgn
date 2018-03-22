@@ -317,8 +317,6 @@ jQuery(document).ready(function($) {
     });
 
 
-
-
     function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
 
         var progenyNumber = $("#progeny_number").val();

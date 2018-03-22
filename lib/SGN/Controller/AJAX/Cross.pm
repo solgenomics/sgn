@@ -552,58 +552,6 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 
 }
 
-sub get_crosses_with_folders : Path('/ajax/breeders/get_crosses_with_folders') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
-
-    my $projects = $p->get_breeding_programs();
-
-    my $html = "";
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
-
-    print STDERR "Starting get crosses at time ".localtime()."\n";
-    foreach my $project (@$projects) {
-        my %project = ( "id" => $project->[0], "name" => $project->[1]);
-        $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', 'cross');
-    }
-    print STDERR "Finished get crosses at time ".localtime()."\n";
-
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
-    eval { make_path($dir) };
-    if ($@) {
-        print "Couldn't create $dir: $@";
-    }
-    my $filename = $dir."/entire_crosses_jstree_html.txt";
-
-    my $OUTFILE;
-    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
-
-    $c->stash->{rest} = { status => 1 };
-}
-
-sub get_crosses_with_folders_cached : Path('/ajax/breeders/get_crosses_with_folders_cached') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
-    my $filename = $dir."/entire_crosses_jstree_html.txt";
-    my $html = '';
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
-    {
-        local $/;
-        $html = <$fh>;
-    }
-    close($fh);
-
-    #print STDERR $html;
-    $c->stash->{rest} = { html => $html };
-}
-
 sub add_individual_cross {
   my $self = shift;
   my $c = shift;
