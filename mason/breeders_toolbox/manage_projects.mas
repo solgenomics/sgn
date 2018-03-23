@@ -9,7 +9,7 @@ $breeding_programs
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_trial_link">Upload Existing Trial</a>]  [<a id="add_project_link">Design New Trial</a>] [<a id="add_multiloc_project_link">Design New Multi-location Trial</a>]' &>
+<&| /page/info_section.mas, title=>'Trials', collapsible=>1, collapsed=>0, subtitle=>'[<a name="upload_trial_link">Upload Existing Trial</a>]  [<a id="add_project_link">Design New Trial</a>] [<a id="add_multiloc_project_link">Design New Multi-location Trial</a>]' &>
 
   <& /breeders_toolbox/trialtreefolders.mas, locations=>$locations, breeding_programs=>$breeding_programs,&>
   </&>

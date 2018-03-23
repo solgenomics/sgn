@@ -119,7 +119,7 @@ $locations
                     <br /><br />
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
+                    The first row (header) must contain the following:
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >

@@ -14,7 +14,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("refresh_jstree_html", "id", "click on upload_trial_link ")->click();
     sleep(10);
 
-    $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
+    $t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
 
     sleep(2);
 

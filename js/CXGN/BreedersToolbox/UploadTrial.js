@@ -44,7 +44,7 @@ jQuery(document).ready(function ($) {
 	$("#trial_upload_design_method").change();
     }
 
-    $('#upload_trial_link').click(function () {
+    $('[name="upload_trial_link"]').click(function () {
         get_select_box('years', 'trial_upload_year', {'auto_generate': 1 });
         get_select_box('trial_types', 'trial_upload_trial_type', {'empty': 1 });
         open_upload_trial_dialog();
