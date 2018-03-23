@@ -1461,7 +1461,7 @@ sub add_crossingtrial_POST :Args(0){
     if ($error){
         $c->stash->{rest} = {error => $error};
     } else {
-        c->stash->{rest} = {success => 1};
+        $c->stash->{rest} = {success => 1};
     }
 }
 
