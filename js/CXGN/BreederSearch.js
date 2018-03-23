@@ -397,6 +397,7 @@ function update_download_options(this_section, categories) {
         selected_trials = 1;
         var trial_html = '<font color="green">'+data[i].length+' trials selected</font></div>';
         jQuery('#selected_trials').html(trial_html);
+        jQuery('#selected_trials_metadata').html(trial_html);
       }
       if (categories[i] === 'accessions' && data[i]) {
         selected_accessions = 1;
