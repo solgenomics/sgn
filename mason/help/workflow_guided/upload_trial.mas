@@ -19,8 +19,6 @@ $locations
         <& /page/page_title.mas, title=>"Try to upload your experimental trial" &>
         <ul>
         <li>Trying to upload your file will allow the database to check your file for errors.</li>
-        <li>If your file has errors, such as if your plot numbers are not unique in your file, it is up to you to correct your file and then try the upload again.</li>
-        <li>If after attempting to upload your trial the database tells you that there are accessions in your file not present in the database or that there are seedlots in your file not present in the database, please go to steps 3 and 4 in this workflow. All other types of errors should be corrected by fixing your file and then retrying the upload.</li>
         </ul>
         <br/>
 
