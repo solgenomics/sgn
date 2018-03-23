@@ -53,9 +53,31 @@ jQuery(document).ready(function ($) {
             alert("Please select a file");
         }
         else {
-            return 1;
+            verify_upload_trial_name(trial_name);
         }
-        return 0;
+    }
+
+    function verify_upload_trial_name(trial_name){
+        jQuery.ajax( {
+            url: '/ajax/trial/verify_trial_name?trial_name='+trial_name,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error){
+                    alert(response.error);
+                    jQuery('[name="upload_trial_submit"]').attr('disabled', true);
+                }
+                else {
+                    jQuery('[name="upload_trial_submit"]').attr('disabled', false);
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred checking trial name');
+            }
+        });
     }
 
     function upload_trial_file() {
@@ -85,15 +107,10 @@ jQuery(document).ready(function ($) {
     });
 
     $('#upload_trial_validate_form_button').click(function(){
-        var validated = upload_trial_validate_form();
-        if (validated == 1){
-            jQuery('#upload_trial_submit').attr('disabled', false);
-        } else {
-            jQuery('#upload_trial_submit').attr('disabled', true);
-        }
+        upload_trial_validate_form();
     });
 
-    $('#upload_trial_submit').click(function () {
+    $('[name="upload_trial_submit"]').click(function () {
         upload_trial_file();
     });
 
@@ -117,12 +134,10 @@ jQuery(document).ready(function ($) {
 
             $('#working_modal').modal("hide");
             if (response.error) {
-                console.log(response);
                 alert(response.error);
                 return;
             }
             else if (response.error_string) {
-                $("#upload_trial_error_display tbody").html('');
 
                 if (response.missing_accessions) {
                     jQuery('#upload_trial_missing_accessions_div').show();
@@ -147,23 +162,28 @@ jQuery(document).ready(function ($) {
                 if (response.missing_seedlots) {
                     jQuery('#upload_trial_missing_seedlots_div').show();
                 } else {
-                    jQuery('#upload_trial_missing_accessions_div').hide();
-                    var no_missing_accessions_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing seedlots Click Here</button><br/><br/>';
-                    jQuery('#upload_trial_no_error_messages_html').html(no_missing_accessions_html);
+                    jQuery('#upload_trial_missing_seedlots_div').hide();
+                    var no_missing_seedlot_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing seedlots Click Here</button><br/><br/>';
+                    jQuery('#upload_trial_no_error_messages_seedlot_html').html(no_missing_seedlot_html);
                 }
 
-                $("#upload_trial_error_display tbody").append(response.error_string);
-                $("#upload_trial_error_display_seedlot tbody").append(response.error_string);
-            }
-            else {
-                jQuery('#upload_trial_no_error_messages_html').html('<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no error messages! Click Here</button><br/><br/>');
+                $("#upload_trial_error_display tbody").html(response.error_string);
+                $("#upload_trial_error_display_seedlot tbody").html(response.error_string);
+                $("#upload_trial_error_display_second_try").show();
+                $("#upload_trial_error_display_second_try tbody").html(response.error_string);
             }
             if (response.success) {
-                console.log(response);
                 refreshTrailJsTree();
-                jQuery('#upload_trial_no_error_messages_seedlot_html').html('<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no error messages! Click Here</button><br/><br/>');
+                jQuery("#upload_trial_error_display_second_try").hide();
+                jQuery('#trial_upload_show_repeat_upload_button').hide();
+                jQuery('[name="upload_trial_completed_message"]').html('<button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>')
             }
         }
+    });
+
+    jQuery(document).on('click', '[name="upload_trial_success_complete_button"]', function(){
+        alert('Trial was saved in the database');
+        jQuery('#upload_trial_dialog').modal('hide');
     });
 
 });
