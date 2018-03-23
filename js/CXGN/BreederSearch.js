@@ -386,6 +386,8 @@ function update_download_options(this_section, categories) {
     if (isLoggedIn()) {
         jQuery('#wizard_download_phenotypes_button').prop( 'title', 'Click to Download Trial Phenotypes');
         jQuery('#wizard_download_phenotypes_button').removeAttr('disabled');
+        jQuery('#wizard_download_metadata_button').prop( 'title', 'Click to Download Trial Metadata');
+        jQuery('#wizard_download_metadata_button').removeAttr('disabled');
     }
 
     for (i=0; i < categories.length; i++) {
