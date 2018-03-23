@@ -10,8 +10,10 @@ $locations
     <&| /util/workflow.mas:step, title=> "File Formatting" &>
         <& /page/page_title.mas, title=>"Make sure your experiment is formatted in the right format" &>
         <br/><br/>
+        <center>
         <button class="btn btn-info" id="guided_help_trial_upload_format_button">Information about file format</button><br/><br/>
         <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+        </center>
     </&>
     <&| /util/workflow.mas:step, title=> "Try to Upload" &>
         <& /page/page_title.mas, title=>"Try to upload your experimental trial" &>
@@ -22,49 +24,10 @@ $locations
         </ul>
         <br/>
 
-        <button class="btn btn-info" id="guided_help_trial_upload_first_try_button" name="upload_trial_link">Try to upload your trial</button><br/><br/>
-        <button class="btn btn-primary" onclick="Workflow.complete(this);">If the database told you there are accessions or seedlots in your file that are not present in the database, Click Here.</button><br/><br/>
-        <button name="guided_help_upload_trial_finish_button" class="btn btn-primary" >If your trial was saved to the database with no errors, congrats! Click here.</button>
-    </&>
-    <&| /util/workflow.mas:step, title=> "Missing Accessions" &>
-        <& /page/page_title.mas, title=>"Fixing the missing accession(s) problem" &>
-        <ul>
-        <li>Accessions tested in your experimental trial must exist in the database prior to adding your trial. The reason for this is that an accession can be tested in many trials and therefore exists as a separate entity in the database.</li>
-        <li>When adding accessions into the database, you can use either a list of accessions or an Excel file. If you want to prepare your list <button name="lists_link" class="btn btn-sm btn-info">Open the list manager</button></li>
-        </ul>
-        <br/>
-
-        <button class="btn btn-primary" onclick="Workflow.skip(this);">If you did not receive any errors regarding missing accessions Click Here</button><br/><br/>
-        <button class="btn btn-info" name="add_accessions_link">Add your accessions to the database</button><br/><br/>
-        <button class="btn btn-primary" onclick="Workflow.complete(this);">Once your accessions are all present in the database congrats! Click here to continue.</button>
-    </&>
-    <&| /util/workflow.mas:step, title=> "Missing Seedlots" &>
-        <& /page/page_title.mas, title=>"Fixing the missing seedlots problem" &>
-        <ul>
-        <li>Seedlots planted in your experimental trial must exist in the database prior to adding your trial. The reason for this is that a seedlot can be tested in many trials and therefore exists as a separate entity in the database.</li>
-        <li>When adding seedlots into the database, you can upload an Excel file or you can add seedlots one at a time.<br/><br/>
-            <ul>
-            <li><button class="btn btn-info" id="guided_help_trial_upload_add_seedlots_button" name="seedlot_bulk_upload">Upload Excel file</button><br/><br/></li>
-            <li><button class="btn btn-info" id="guided_help_trial_add_seedlot_button" name="add_seedlot_button">Add One Seedlot</button></li>
-            </ul>
-        </li>
-        </ul>
-        <br/>
-
-        <button class="btn btn-primary" onclick="Workflow.skip(this);">If you did not receive any errors regarding missing seedlots Click Here</button><br/><br/>
-        <button class="btn btn-primary" onclick="Workflow.complete(this);">Once your seedlots are all present in the database congrats! Click here to continue.</button>
-    </&>
-    <&| /util/workflow.mas:step, title=> "Try to Upload Again" &>
-        <& /page/page_title.mas, title=>"Try to upload your experimental trial" &>
-        <ul>
-        <li>Step 3 and Step 4 here allow you to correct any errors related to missing accessions or missing seedlots.</li>
-        <li>For any other error, it is up to you to correct your file and then try the upload again.</li>
-        <li>Please use the contact form if you continue to encounter problems.</li>
-        </ul>
-        <br/>
-
-        <button class="btn btn-info" id="guided_help_trial_upload_second_try_button" name="upload_trial_link">Try to upload your trial</button><br/><br/>
-        <button onclick="Workflow.complete(this);" class="btn btn-primary" >If your trial was saved to the database with no errors, congrats! Click here.</button>
+        <center>
+        <button class="btn btn-info" name="upload_trial_link">Try to upload your trial</button><br/><br/>
+        <button class="btn btn-primary" onclick="Workflow.complete(this);">If you were able to upload your trial congrats! Click Here.</button><br/><br/>
+        </center>
     </&>
     <&| /util/workflow.mas:complete, title=> "Complete" &>
         <& /page/page_title.mas, title=>"Your trial is now in the database" &>
@@ -75,7 +38,9 @@ $locations
         </ul>
         <br/>
 
+        <center>
         <button name="guided_help_upload_trial_finish_button" class="btn btn-primary" >Finish Activity</button>
+        </center>
     </&>
 </&>
 

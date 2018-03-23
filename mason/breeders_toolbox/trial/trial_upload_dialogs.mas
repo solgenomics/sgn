@@ -102,7 +102,7 @@ $locations
                             <br/>
                             <center>
                             <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
-                            <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.pending(this);" id="upload_trial_submit">Upload Trial</button>
+                            <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this);" >Upload Trial</button>
                             <center>
 
                         </&>
@@ -134,8 +134,12 @@ $locations
                                     </div>
                                 </div>
                             </div>
+                            <center>
                             <div id="upload_trial_no_error_messages_html">
                             </div>
+                            <div name="upload_trial_completed_message">
+                            </div>
+                            </center>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Fix missing seedlots problem" &>
                             <& /page/page_title.mas, title=>"Fixing the missing seedlot(s) problem" &>
@@ -168,14 +172,34 @@ $locations
                                     </div>
                                 </div>
                             </div>
+                            <center>
                             <div id="upload_trial_no_error_messages_seedlot_html">
                             </div>
-                        </&>
-                        <&| /util/workflow.mas:pending, title=> "Try submitting trial again" &>
-                            <& /page/page_title.mas, title=>"Submit your trial again. All errors should be corrected" &>
-                            <center>
-                            <button type="button" class="btn btn-lg btn-primary" name="upload_trial_submit" onclick="Workflow.complete(this);" >Upload Trial</button>
                             </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Try submitting trial again" &>
+                            <& /page/page_title.mas, title=>"Submit your trial again. You should have corrected all errors by now, but if not please take a look at the errors in the red box below. You can continue to modify your file and then click Upload until it works." &>
+                            <div id="trial_upload_show_repeat_upload_button">
+                                <center>
+                                <button type="button" class="btn btn-lg btn-primary" name="upload_trial_submit" >Upload Trial</button><br/><br/>
+                                </center>
+                            </div>
+                            <center>
+                            <div name="upload_trial_completed_message">
+                            </div>
+                            </center>
+
+                            <div id="upload_trial_error_display_second_try" style="display:none">
+
+                                <h3>There exist these problems in your file:</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your trial is now in the database" &>

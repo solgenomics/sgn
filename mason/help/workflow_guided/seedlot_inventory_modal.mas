@@ -24,6 +24,4 @@ $timestamp
     </div>
 </div>
 
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
-<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
