@@ -1,0 +1,35 @@
+<%args>
+$breeding_programs
+$locations
+$preferred_species
+$editable_stock_props
+$timestamp
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.GuidedHelp' ] &>
+
+<div class="modal fade" id="guided_help_create_trial_dialog" name="guided_help_create_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="guidedHelpCreateTrialDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="guidedHelpCreateTrialDialog">Workflow for creating a trial</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                Nothing Here Yet<br/>
+                Please refer to the <a href="https://solgenomics.github.io/sgn">Documentation</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_guided_help_upload_trial_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+
