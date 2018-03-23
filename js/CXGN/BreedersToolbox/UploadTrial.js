@@ -19,29 +19,63 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
-    function upload_trial_file() {
+    function upload_trial_validate_form(){
+        var trial_name = $("#trial_upload_name").val();
+        var breeding_program = $("#trial_upload_breeding_program").val();
+        var location = $("#trial_upload_location").val();
+        var trial_type = $("#trial_upload_trial_type").val();
+        var trial_year = $("#trial_upload_year").val();
+        var description = $("#trial_upload_description").val();
+        var design_type = $("#trial_upload_design_method").val();
         var uploadFile = $("#trial_uploaded_file").val();
-        $('#upload_trial_form').attr("action", "/ajax/trial/upload_trial_file");
-        if (uploadFile === '') {
-	    alert("Please select a file");
-	    return;
+        if (trial_name === '') {
+            alert("Please give a trial name");
         }
+        else if (breeding_program === '') {
+            alert("Please give a breeding program");
+        }
+        else if (location === '') {
+            alert("Please give a location");
+        }
+        else if (trial_type === '') {
+            alert("Please give a trial type");
+        }
+        else if (trial_year === '') {
+            alert("Please give a trial year");
+        }
+        else if (description === '') {
+            alert("Please give a description");
+        }
+        else if (design_type === '') {
+            alert("Please give a design type");
+        }
+        else if (uploadFile === '') {
+            alert("Please select a file");
+        }
+        else {
+            return 1;
+        }
+        return 0;
+    }
+
+    function upload_trial_file() {
+        $('#upload_trial_form').attr("action", "/ajax/trial/upload_trial_file");
         $("#upload_trial_form").submit();
     }
 
     function open_upload_trial_dialog() {
-	$('#upload_trial_dialog').modal("show");
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened
-	$("#trial_upload_design_method").prepend("<option value=''></option>").val('');
-	$("#trial_upload_design_method").one('mousedown', function () {
+        $('#upload_trial_dialog').modal("show");
+        //add a blank line to design method select dropdown that dissappears when dropdown is opened
+        $("#trial_upload_design_method").prepend("<option value=''></option>").val('');
+        $("#trial_upload_design_method").one('mousedown', function () {
             $("option:first", this).remove();
             $("#trial_design_more_info").show();
-	    //trigger design method change events in case the first one is selected after removal of the first blank select item
-	    $("#trial_upload_design_method").change();
-	});
+            //trigger design method change events in case the first one is selected after removal of the first blank select item
+            $("#trial_upload_design_method").change();
+        });
 
-	//reset previous selections
-	$("#trial_upload_design_method").change();
+        //reset previous selections
+        $("#trial_upload_design_method").change();
     }
 
     $('[name="upload_trial_link"]').click(function () {
@@ -50,64 +84,86 @@ jQuery(document).ready(function ($) {
         open_upload_trial_dialog();
     });
 
+    $('#upload_trial_validate_form_button').click(function(){
+        var validated = upload_trial_validate_form();
+        if (validated == 1){
+            jQuery('#upload_trial_submit').attr('disabled', false);
+        } else {
+            jQuery('#upload_trial_submit').attr('disabled', true);
+        }
+    });
+
     $('#upload_trial_submit').click(function () {
         upload_trial_file();
     });
 
     $("#trial_upload_spreadsheet_format_info").click( function () {
-	$("#trial_upload_spreadsheet_info_dialog" ).modal("show");
+        $("#trial_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
     $('#upload_trial_form').iframePostForm({
-	json: true,
-	post: function () {
+        json: true,
+        post: function () {
             var uploadedTrialLayoutFile = $("#trial_uploaded_file").val();
-	    $('#working_modal').modal("show");
+            $('#working_modal').modal("show");
             if (uploadedTrialLayoutFile === '') {
-		$('#working_modal').modal("hide");
-		alert("No file selected");
+                $('#working_modal').modal("hide");
+                alert("No file selected");
+                return;
             }
-	},
-    complete: function (response) {
-        console.log(response);
+        },
+        complete: function (response) {
+            console.log(response);
 
-        $('#working_modal').modal("hide");
-        if (response.error_string) {
-            $("#upload_trial_error_display tbody").html('');
-
-            if (response.missing_accessions) {
-                var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_trial_missing_accessions' style='display:none'></div><div id='upload_trial_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions. Please create a list of the missing accessions before clicking the link.</h4></div><br/>";
-                $("#upload_trial_add_missing_accessions_html").html(missing_accessions_html);
-
-                var missing_accessions_vals = '';
-                for(var i=0; i<response.missing_accessions.length; i++) {
-                    missing_accessions_vals = missing_accessions_vals + response.missing_accessions[i] + '\n';
-                }
-                $("#upload_trial_missing_accessions").html(missing_accessions_vals);
-                addToListMenu('upload_trial_add_missing_accessions', 'upload_trial_missing_accessions', {
-          selectText: true,
-          listType: 'accessions'
-        });
-            }
-
-            $("#upload_trial_error_display tbody").append(response.error_string);
-            $('#upload_trial_dialog').modal("hide");
-            $('#upload_trial_error_display').modal("show");
-
-		return;
-            }
+            $('#working_modal').modal("hide");
             if (response.error) {
-		console.log(response);
-		alert(response.error);
-		return;
+                console.log(response);
+                alert(response.error);
+                return;
+            }
+            else if (response.error_string) {
+                $("#upload_trial_error_display tbody").html('');
+
+                if (response.missing_accessions) {
+                    jQuery('#upload_trial_missing_accessions_div').show();
+                    var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_trial_missing_accessions' style='display:none'></div><div id='upload_trial_add_missing_accessions'></div></div><br/>";
+                    $("#upload_trial_add_missing_accessions_html").html(missing_accessions_html);
+
+                    var missing_accessions_vals = '';
+                    for(var i=0; i<response.missing_accessions.length; i++) {
+                        missing_accessions_vals = missing_accessions_vals + response.missing_accessions[i] + '\n';
+                    }
+                    $("#upload_trial_missing_accessions").html(missing_accessions_vals);
+                    addToListMenu('upload_trial_add_missing_accessions', 'upload_trial_missing_accessions', {
+                        selectText: true,
+                        listType: 'accessions'
+                    });
+                } else {
+                    jQuery('#upload_trial_missing_accessions_div').hide();
+                    var no_missing_accessions_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing accessions Click Here</button><br/><br/>';
+                    jQuery('#upload_trial_no_error_messages_html').html(no_missing_accessions_html);
+                }
+
+                if (response.missing_seedlots) {
+                    jQuery('#upload_trial_missing_seedlots_div').show();
+                } else {
+                    jQuery('#upload_trial_missing_accessions_div').hide();
+                    var no_missing_accessions_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing seedlots Click Here</button><br/><br/>';
+                    jQuery('#upload_trial_no_error_messages_html').html(no_missing_accessions_html);
+                }
+
+                $("#upload_trial_error_display tbody").append(response.error_string);
+                $("#upload_trial_error_display_seedlot tbody").append(response.error_string);
+            }
+            else {
+                jQuery('#upload_trial_no_error_messages_html').html('<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no error messages! Click Here</button><br/><br/>');
             }
             if (response.success) {
-		console.log(response);
-		//alert("uploadTrial got success response" + response.success);
-		$('#trial_upload_success_dialog_message').modal("show");
-		//alert("File uploaded successfully");
+                console.log(response);
+                refreshTrailJsTree();
+                jQuery('#upload_trial_no_error_messages_seedlot_html').html('<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no error messages! Click Here</button><br/><br/>');
             }
-	}
+        }
     });
 
 });

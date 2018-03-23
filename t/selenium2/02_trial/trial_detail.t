@@ -10,7 +10,7 @@ my $f = SGN::Test::Fixture->new();
     $t->login_as("curator");
     #Upload New Trial
     $t->get_ok('/breeders/trials');
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "name", "refresh tree")->click();
     sleep(3);
     $t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
     sleep(2);
@@ -39,7 +39,7 @@ my $f = SGN::Test::Fixture->new();
     $t->find_element_ok("close_trial_upload_dialog", "id", "close trial upload dialog")->click();
     sleep(1);
 
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "name", "refresh tree")->click();
     sleep(3);
     my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
     sleep(2);
