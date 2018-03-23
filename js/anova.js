@@ -190,10 +190,10 @@ function runAnovaAnalysis(traits) {
 		    }
 		    //} else {
 		//	showMessage("There is no anova output for this dataset."); 		
-			jQuery("#run_anova").show();
+		    jQuery("#run_anova").show();
 		 //   }
-
 		    clearTraitSelection();
+		    
 		},
 		error: function(response) {                          
 		    showMessage("Error occured running the anova analysis.");	    	
