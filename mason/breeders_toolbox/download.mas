@@ -77,7 +77,7 @@ Choose a list for each parameter and click "Download".
     </select>
     </td>
     <td>
-      <button class="btn btn-primary" type="button" id="phenotype">Download</button>
+      <button class="btn btn-primary" type="button" id="phenotype">Download</button></br></br>
       <input type="hidden" id="phenotype_download_token" name="phenotype_download_token"/>
     </td>
   </tr>
@@ -85,6 +85,55 @@ Choose a list for each parameter and click "Download".
   </table>
 </form>
 </div>
+
+
+<div class="well well-sm">
+<h4>Download Metadata</h4><p>Select Parameters:</p>
+<form id="download_metadata_form" action="/breeders/download_action" method="POST" >
+<table class="table table-bordered" >
+  <thead>
+  <tr>
+    <th>
+      Trials
+    </th>
+    <th>
+        Options
+    </th>
+    <th>
+      Action
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>
+      <div id="trial_metadata_list">
+      </div>
+    </td>
+    <td>
+    <b>Format:</b><br/>
+    <select class="form-control" id="metadata_format" name="metadata_format">
+        <option value=".xls">XLS</option>
+        <option value=".csv">CSV</option>
+        <option value="html">HTML</option>
+    </select>
+    <br/>
+    <div id="datalevel" style="display:none">
+      <select class="form-control" id="metadata_datalevel" name="metadata_datalevel">
+          <option value="metadata">Metadata</option>
+      </select>
+    </div>
+    </td>
+    <td>
+      <button class="btn btn-primary" type="button" id="metadata">Download</button>
+      <input type="hidden" id="metadata_download_token" name="metadata_download_token"/>
+    </td>
+  </tr>
+  </tbody>
+  </table>
+</form>
+</div>
+
 
 <script>
 $(document).ready(function() {
@@ -94,6 +143,31 @@ $(document).ready(function() {
     $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
     $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
     $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
+    $('#trial_metadata_list').html(lo.listSelect('trial_metadata_list', ['trials'], 'select'));
+
+    $('#metadata').click(function() { 
+      var trial_list_id = $('#trial_metadata_list_list_select').val();
+      var trial_validation = 1;
+      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
+
+      var problem_lists = new Array();
+      if (trial_validation != 1) {
+        problem_lists.push('trials');
+      }
+
+      if (problem_lists.length > 0) {
+      	  alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+	        return;
+      }
+
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#metadata_download_token').val(token);
+      jQuery('#download_metadata_form').submit();
+
+    });
 
     $('#phenotype').click(function() {
 

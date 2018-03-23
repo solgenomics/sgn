@@ -97,11 +97,16 @@ sub download {
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
+    if ($self->data_level() eq 'metadata'){
+      $factory_type = 'Native';
     }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
+    else {
+      if ($search_type eq 'complete'){
+          $factory_type = 'Native';
+      }
+      if ($search_type eq 'fast'){
+          $factory_type = 'MaterializedView';
+      }
     }
 	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 		bcs_schema=>$schema,
@@ -115,8 +120,8 @@ sub download {
 		plot_list=>$plot_list,
 		plant_list=>$plant_list,
 		include_timestamp=>$include_timestamp,
-        include_row_and_column_numbers=>$self->include_row_and_column_numbers,
-        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+    include_row_and_column_numbers=>$self->include_row_and_column_numbers,
+    exclude_phenotype_outlier=>$exclude_phenotype_outlier,
 		trait_contains=>$trait_contains,
 		phenotype_min_value=>$phenotype_min_value,
 		phenotype_max_value=>$phenotype_max_value,
@@ -146,8 +151,11 @@ sub download {
 		my $max_value_text = $phenotype_max_value ? $phenotype_max_value : '';
 		my $location_list_text = $location_list ? join(",", @$location_list) : '';
 		my $year_list_text = $year_list ? join(",", @$year_list) : '';
-		$ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outliers: $exclude_phenotype_outlier");
-	}
+    if ($data_level eq 'metadata'){ $ws->write(1, 1, "metadata");}
+    else{
+		    $ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outliers: $exclude_phenotype_outlier");
+    }
+  }
 
     for (my $line=0; $line< scalar(@data); $line++) {
         my $columns = $data[$line];
