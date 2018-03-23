@@ -423,6 +423,7 @@ function update_download_options(this_section, categories) {
     //console.log("accessions-selected="+accessions_selected);
     if (selected_trials !== 1) {
       jQuery('#selected_trials').html('No trials selected');
+      jQuery('#selected_trials_metadata').html('No trials selected');
     }
     if (selected_accessions !== 1) {
       jQuery('#selected_accessions').html('No accessions selected');
