@@ -221,8 +221,9 @@ sub resolve_css_paths :Private {
         or return;
 
     my @files = uniq @{$files}; #< do not sort, load order might be important
+    # assume paths are relative to /static/css/ if they are not absolute paths or urls
     for (@files) {
-        s!^/?(.*?)(?:\.css)?$!/css/$1.css!;
+        s!^([^/])!/static/css/$1! if !(/^(.*?:\/)/);
     }
 
     $c->stash->{css_uris} = \@files;

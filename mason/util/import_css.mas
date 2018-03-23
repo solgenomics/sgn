@@ -7,11 +7,11 @@ CSS paths (relative to /static/css).
 
 =head1 ARGS
 
-=head2 C<paths> - single CSS path, or arrayref of paths to import
+=head2 C<paths> - an arrayref of paths to a css file relative to /static/css/, absolute paths, or urls.
 
 =head1 EXAMPLE
 
-  <& /util/import_css, paths => ['jquery','bootstrap/v1'] &>
+  <& /util/import_css.mas, paths => ['bootstrap/v1.css','/css/jquery.css','http://foo.bar/buzz.css'] &>
 
 =cut
 
