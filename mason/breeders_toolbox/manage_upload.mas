@@ -219,8 +219,10 @@ $preferred_species => ""
 <a id="create_cross_wishlist" >Create Cross Wishlist</a>
 </td>
 <td>
-<a id="upload_crosses_link"><p>Upload Many Crosses</p></a>
+<a id="upload_crosses_link"><p>Upload Many New Crosses</p></a>
 <a id="create_cross_link"><p>Add A Cross</p></a>
+<a id="upload_progenies_existing_crosses"><p>Upload Progenies of Existing Crosses</p></a>
+<a id="upload_cross_info"><p>Upload Experimental Info of Existing Crosses</p></a>
 </td>
 <td>
 <a href="/breeders/crosses"><p>Go To Manage Crosses Page</p></a>
@@ -235,6 +237,8 @@ $preferred_species => ""
 <& /breeders_toolbox/cross_wishlist.mas &>
 <& /breeders_toolbox/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
 <& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/cross/upload_update_crosses.mas &>
+
 
 <div class="well well-sm">
 <h1>Phenotypes</h1><br/>
