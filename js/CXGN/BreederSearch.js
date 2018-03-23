@@ -104,6 +104,10 @@ window.onload = function initialize() {
         jQuery('#download_wizard_phenotypes_dialog').modal("show");
     });
 
+    jQuery('#wizard_download_metadata_button').click( function () {
+        jQuery('#download_wizard_metadata_dialog').modal("show");
+    });
+    
     jQuery('#download_wizard_phenotypes_submit_button').on('click', function (event) {
         event.preventDefault();
         var selected_trials = get_selected_results('trials');
