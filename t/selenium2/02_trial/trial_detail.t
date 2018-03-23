@@ -12,7 +12,7 @@ my $f = SGN::Test::Fixture->new();
     $t->get_ok('/breeders/trials');
     my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
     sleep(3);
-    $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
+    $t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
     sleep(2);
     my $program_select = $t->find_element_ok("trial_upload_breeding_program", "id", "find breeding program select");
     $program_select->send_keys('test');

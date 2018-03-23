@@ -158,7 +158,7 @@ jQuery(document).ready(function(){
        source: '/ajax/stock/cross_autocomplete',
     });
 
-    jQuery('#add_seedlot_button').click( function() {
+    jQuery('[name="add_seedlot_button"]').click( function() {
         jQuery('#add_seedlot_dialog').modal('show');
         get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
     });
@@ -210,7 +210,7 @@ jQuery(document).ready(function(){
                         alert("The seedlot has been created.");
                         jQuery('#add_seedlot_dialog').modal('hide');
                         //seedlots_table.ajax.reload();
-                        document.location.reload();
+                        //document.location.reload();
                     }
                     if (response.error) {
                         alert(response.error);

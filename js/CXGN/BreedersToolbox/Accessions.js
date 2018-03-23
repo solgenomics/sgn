@@ -368,7 +368,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $('#add_accessions_link').click(function () {
+    $('[name="add_accessions_link"]').click(function () {
         var list = new CXGN.List();
         accessionList;
         accession_list_id;

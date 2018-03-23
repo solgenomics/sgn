@@ -238,6 +238,10 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
         return;
     }
 
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
     $c->stash->{locations} = $projects->get_all_locations();

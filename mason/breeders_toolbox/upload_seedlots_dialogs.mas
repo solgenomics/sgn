@@ -162,7 +162,7 @@ jQuery(document).ready(function(){
        source: '/ajax/stock/geolocation_autocomplete',
     });
 
-    jQuery('#seedlot_bulk_upload').click( function() {
+    jQuery('[name="seedlot_bulk_upload"]').click( function() {
         jQuery('#upload_seedlot_dialog').modal('show');
         get_select_box('breeding_programs', 'upload_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
     });
@@ -240,7 +240,7 @@ jQuery(document).ready(function(){
                 alert("File uploaded successfully");
                 jQuery('#upload_seedlot_dialog').modal('hide');
                 //seedlots_table.ajax.reload();
-                document.location.reload();
+                //document.location.reload();
             }
         }
     });
