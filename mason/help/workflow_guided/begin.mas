@@ -6,21 +6,6 @@ $editable_stock_props
 $timestamp
 </%args>
 
-<style>
-.ui-autocomplete {
-  max-height: 100px;
-  overflow-y: auto;
-  /* prevent horizontal scrollbar */
-  overflow-x: hidden;
-}
-
-/* IE 6 doesn't support max-height
-* we use height instead, but this forces the menu to always be this tall
-*/
-* html .ui-autocomplete {
-  height: 100px;
-}
-</style>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.GuidedHelp','bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
