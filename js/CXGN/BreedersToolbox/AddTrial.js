@@ -1116,6 +1116,7 @@ jQuery(document).ready(function ($) {
                     jQuery('#trial_design_confirm').modal("hide");
                 } else {
                     //alert('Trial design saved');
+                    refreshTrailJsTree();
                     jQuery('#working_modal').modal("hide");
                     jQuery('#trial_saved_dialog_message').modal("show");
                 }

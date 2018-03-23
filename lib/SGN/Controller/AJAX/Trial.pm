@@ -754,7 +754,7 @@ sub upload_trial_file_POST : Args(0) {
       }
     }
 
-    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
+    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
     return;
   }
 

@@ -9,7 +9,8 @@ $locations
 <&| /util/workflow.mas, id=> "guided_help_upload_trial_workflow" &>
     <&| /util/workflow.mas:step, title=> "File Formatting" &>
         <& /page/page_title.mas, title=>"Make sure your experiment is formatted in the right format" &>
-        <button class="btn btn-info" id="guided_help_trial_upload_format_button">Information about file format</button>
+        <br/><br/>
+        <button class="btn btn-info" id="guided_help_trial_upload_format_button">Information about file format</button><br/><br/>
         <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
     </&>
     <&| /util/workflow.mas:step, title=> "Try to Upload" &>
@@ -26,7 +27,7 @@ $locations
         <button name="guided_help_upload_trial_finish_button" class="btn btn-primary" >If your trial was saved to the database with no errors, congrats! Click here.</button>
     </&>
     <&| /util/workflow.mas:step, title=> "Missing Accessions" &>
-        <& /page/page_title.mas, title=>"Fixing the missing accession problem" &>
+        <& /page/page_title.mas, title=>"Fixing the missing accession(s) problem" &>
         <ul>
         <li>Accessions tested in your experimental trial must exist in the database prior to adding your trial. The reason for this is that an accession can be tested in many trials and therefore exists as a separate entity in the database.</li>
         <li>When adding accessions into the database, you can use either a list of accessions or an Excel file. If you want to prepare your list <button name="lists_link" class="btn btn-sm btn-info">Open the list manager</button></li>
