@@ -53,7 +53,7 @@ $timestamp
                                         <h4>Design a completely new experimental field trial in the database</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button class="btn btn-primary btn-sm">Go</button>
+                                        <button id="guided_help_create_trial_button" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -70,7 +70,7 @@ $timestamp
                                         <h4>Catalog your available seed inventory into the database</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button class="btn btn-primary btn-sm">Go</button>
+                                        <button id="guided_help_seedlot_inventory_button" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -85,7 +85,7 @@ $timestamp
                                         <h4>Upload phenotypic data into the database that you have saved on your computer in Excel</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button class="btn btn-primary btn-sm">Go</button>
+                                        <button id="guided_help_upload_phenotypes_button" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -102,7 +102,7 @@ $timestamp
                                         <h4>Prepare a 96 or 384 well plate for a genotyping experiment</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button class="btn btn-primary btn-sm">Go</button>
+                                        <button id="guided_help_genotyping_trial_button" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -117,7 +117,7 @@ $timestamp
                                         <h4>Upload crosses and crossing information into the database</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button class="btn btn-primary btn-sm">Go</button>
+                                        <button id="guided_help_upload_crosses_button" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -134,7 +134,7 @@ $timestamp
                                         <h4>Print barcode labels for my experiment (for your plots or plants or tissue samples in the field, or for your 96 well plate and tissue samples)</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button class="btn btn-primary btn-sm">Go</button>
+                                        <button id="guided_help_barcode_trial_button" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -149,7 +149,7 @@ $timestamp
                                         <h4>Analyze phenotypic performance across trials</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button class="btn btn-primary btn-sm">Go</button>
+                                        <button id="guided_help_trial_comparison_button" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -165,3 +165,11 @@ $timestamp
 </div>
 
 <& /help/workflow_guided/upload_trial_modal.mas, breeding_programs=>$breeding_programs, locations=>$locations, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, timestamp=>$timestamp &>
+<& /help/workflow_guided/create_trial_modal.mas, breeding_programs=>$breeding_programs, locations=>$locations, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, timestamp=>$timestamp &>
+<& /help/workflow_guided/seedlot_inventory_modal.mas, timestamp=>$timestamp &>
+<& /help/workflow_guided/phenotype_upload_modal.mas &>
+<& /help/workflow_guided/genotyping_trial_modal.mas &>
+<& /help/workflow_guided/upload_crosses_modal.mas &>
+<& /help/workflow_guided/trial_barcoding_modal.mas &>
+<& /help/workflow_guided/trial_comparison_modal.mas &>
+
