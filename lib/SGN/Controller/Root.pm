@@ -227,8 +227,6 @@ sub resolve_css_paths :Private {
     }
 
     $c->stash->{css_uris} = \@files;
-    
-    print STDERR Dumper $c->stash->{css_uris};
 }
 
 
