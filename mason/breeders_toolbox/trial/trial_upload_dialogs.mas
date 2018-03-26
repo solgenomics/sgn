@@ -110,7 +110,7 @@ $locations
                             <br/>
                             <center>
                             <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
-                            <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this);" >Upload Trial</button>
+                            <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this, false);" >Upload Trial</button>
                             <center>
 
                         </&>
@@ -183,6 +183,8 @@ $locations
                             <center>
                             <div id="upload_trial_no_error_messages_seedlot_html">
                             </div>
+                            <div name="upload_trial_completed_message">
+                            </div>
                             </center>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Try submitting trial again" &>
@@ -221,6 +223,10 @@ $locations
                                 <li>You can print barcodes for the plots or plants or tissue samples in this trial.</li>
                                 <li>You an add phenotypes for the plots or plants in this trial now.</li>
                             </ul>
+                            <br/>
+                            <center>
+                            <button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </center>
                         </&>
                     </&>
 
