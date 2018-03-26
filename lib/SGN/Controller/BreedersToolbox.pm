@@ -136,10 +136,6 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 	return;
     }
 
-    $c->assets->include('/static/css/leaflet.css');
-    $c->assets->include('/static/css/leaflet.extra-markers.min.css');
-    $c->assets->include('/static/css/esri-leaflet-geocoder.css');
-
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
