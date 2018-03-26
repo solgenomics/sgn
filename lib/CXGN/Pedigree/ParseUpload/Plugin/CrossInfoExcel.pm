@@ -71,7 +71,7 @@ sub _validate_with_plugin {
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross name missing";
         } elsif ($seen_cross_names{$cross_name}) {
-            push @error_messages, "Cell A$row_name: duplicate cross name at cell A".$seen_cross_names{$cross_name}.": $cross_name";
+            push @error_messages, "Duplicate cross name at cell A$row_name".": $cross_name";
         } else {
             $seen_cross_names{$cross_name}++;
         }
