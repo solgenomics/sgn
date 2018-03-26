@@ -155,7 +155,13 @@ sub insert_collected_html :Private {
 
 sub _make_head_pre_html {
     my ( $self, $c ) = @_;
-    return join "\n", @{ $c->stash->{head_pre_html} || [] };
+    return join "\n", (
+        @{ $c->stash->{head_pre_html} || [] },
+        ( map {
+            qq{<link rel="stylesheet" type="text/css" href="$_" />}
+          } @{ $c->stash->{css_uris} || [] }
+        ),
+    );
 }
 
 sub _make_head_post_html {
@@ -163,10 +169,6 @@ sub _make_head_post_html {
 
     my $head_post_html = join "\n", (
         @{ $c->stash->{add_head_html} || [] },
-        ( map {
-            qq{<link rel="stylesheet" type="text/css" href="$_" />}
-          } @{ $c->stash->{css_uris} || [] }
-        ),
         ( map {
             qq{<script src="$_" type="text/javascript"></script>}
           } @{ $c->stash->{js_uris} || [] }
