@@ -6,7 +6,7 @@ $breeding_programs
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.TrialTreeFolders','CXGN.BreedersToolbox.AddMultipleTrial' ] &>
 
-<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+<& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
 <& /breeders_toolbox/folder/folder_set.mas &>
 <& /breeders_toolbox/folder/folder_new.mas &>
