@@ -75,13 +75,12 @@ jQuery(document).ready(function() {
                             trait_html = '<option id="select_message" value="" title="Select a trait">Select a trait</option>\n';
                             for (i = 0; i < list.length; i++) {
                                 var trait_id = list[i][0];
-                                var trait_name = list[i][1];
-                                var parts = trait_name.split("|");
+                                var trait_name_with_id = list[i][1];
+                                // remove crop ontology id to improve readability
+                                var trait_name = trait_name_with_id.substring(0, trait_name_with_id.lastIndexOf("|"));
                                 var synonym = synonyms[trait_id];
-                            //    synonym_fixed = synonym.replace(/"/g, "");
-                            //    var syn_parts = synonym_fixed.split(" ");
-                              //  synonym_fixed = syn_parts[0];
-                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym + '" data-list_name="' + trait_name + '" title="' + parts[0] + '">' + parts[0] + '</a>\n';
+
+                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym + '" data-list_name="' + trait_name_with_id + '" title="' + trait_name + '">' + trait_name + '</a>\n';
                             }
 
                             jQuery('#trait_list').html(trait_html);
