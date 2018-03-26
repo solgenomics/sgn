@@ -157,6 +157,7 @@ jQuery(document).ready(function ($) {
                     jQuery('#upload_trial_missing_accessions_div').hide();
                     var no_missing_accessions_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing accessions Click Here</button><br/><br/>';
                     jQuery('#upload_trial_no_error_messages_html').html(no_missing_accessions_html);
+                    Workflow.skip(jQuery('#upload_trial_missing_accessions_div'));
                 }
 
                 if (response.missing_seedlots) {
@@ -165,6 +166,7 @@ jQuery(document).ready(function ($) {
                     jQuery('#upload_trial_missing_seedlots_div').hide();
                     var no_missing_seedlot_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing seedlots Click Here</button><br/><br/>';
                     jQuery('#upload_trial_no_error_messages_seedlot_html').html(no_missing_seedlot_html);
+                    Workflow.skip(jQuery('#upload_trial_missing_seedlots_div'));
                 }
 
                 $("#upload_trial_error_display tbody").html(response.error_string);
@@ -176,7 +178,10 @@ jQuery(document).ready(function ($) {
                 refreshTrailJsTree();
                 jQuery("#upload_trial_error_display_second_try").hide();
                 jQuery('#trial_upload_show_repeat_upload_button').hide();
-                jQuery('[name="upload_trial_completed_message"]').html('<button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>')
+                jQuery('[name="upload_trial_completed_message"]').html('<button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>');
+            }
+            if (response.success && !response.error && !response.error_string){
+                Workflow.focus(false);
             }
         }
     });
