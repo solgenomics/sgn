@@ -199,6 +199,7 @@ jQuery(document).ready(function ($) {
     jQuery(document).on('click', '[name="upload_trial_success_complete_button"]', function(){
         alert('Trial was saved in the database');
         jQuery('#upload_trial_dialog').modal('hide');
+        location.reload();
     });
 
 });

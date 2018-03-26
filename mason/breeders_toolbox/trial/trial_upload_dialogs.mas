@@ -120,7 +120,7 @@ $locations
                             <div id="upload_trial_missing_accessions_div" style="display:none">
                                 <div class="well">
                                     <ul>
-                                        <li>Accessions tested in your experimental trial must exist in the database prior to adding your trial. The reason for this is that an accession can be tested in many trials and therefore exists as a separate entity in the database. We also want to be careful about adding new accessions into the database because we do not want data to be incorrectly linked to duplicates.</li>
+                                        <li>Accessions tested in your trial must exist in the database prior to adding your trial. The reason for this is that an accession can be tested in many trials and therefore exists as a separate entity in the database. We also want to be careful about adding new accessions into the database because we do not want incorrectly duplicated data.</li>
                                         <li>When adding accessions into the database, you can use either a list of accessions or an Excel file.</li>
                                     </ul>
                                 </div>
