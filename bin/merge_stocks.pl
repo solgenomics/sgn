@@ -69,7 +69,7 @@ eval {
 	    next();
 	}
 	
-	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => { $merge_stock_name } );
+	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name } );
 	if (!$merge_row) { 
 	    print STDERR "Stock $merge_stock_name not available for merging. Skipping\n";
 	    next();
