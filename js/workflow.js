@@ -35,6 +35,7 @@ var Workflow = {
   },
   
   "focus":function(wf,step_index){ // changes workflow focus page
+    wf = wf instanceof Element ? wf : document.querySelector(wf);
     function change_focus(ele,i){
       if (i===step_index){
         ele.classList.add('workflow-focus');
@@ -52,6 +53,7 @@ var Workflow = {
   },
   
   "check_complete":function(wf){ // checks if the endscreens should be shown and acts accordingly
+    wf = wf instanceof Element ? wf : document.querySelector(wf);
     var progs = wf.querySelectorAll('.workflow-prog>li');
     var conts = wf.querySelectorAll('.workflow-content>li');
     
@@ -79,6 +81,7 @@ var Workflow = {
   
   "complete":function(wf_child,set_focus,status){ // completes a step
     set_focus = set_focus===false?false:true;
+    wf_child = wf_child instanceof Element ? wf_child : document.querySelector(wf_child);
     var wf = wf_child;
     var content_li = wf_child;
     while (!wf.classList.contains('workflow')){
@@ -121,12 +124,10 @@ var Workflow = {
   },
   
   "skip":function(wf_child,set_focus){ //completes a step with skipped status
-    set_focus = set_focus===false?false:true;
     Workflow.complete(wf_child,set_focus,"skipped");
   },
   
   "pending":function(wf_child,set_focus){ //completes a step with pending status
-    set_focus = set_focus===false?false:true;
     Workflow.complete(wf_child,set_focus,"pending");
   }
   
