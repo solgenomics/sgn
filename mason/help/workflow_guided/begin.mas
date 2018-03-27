@@ -54,7 +54,7 @@ $timestamp
                                         <h4>Design a completely new experimental field trial in the database</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button id="guided_help_create_trial_button" class="btn btn-primary btn-sm">Go</button>
+                                        <button id="add_project_link" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -165,7 +165,6 @@ $timestamp
     </div>
 </div>
 
-<& /help/workflow_guided/create_trial_modal.mas, breeding_programs=>$breeding_programs, locations=>$locations, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, timestamp=>$timestamp &>
 <& /help/workflow_guided/seedlot_inventory_modal.mas, timestamp=>$timestamp &>
 <& /help/workflow_guided/phenotype_upload_modal.mas &>
 <& /help/workflow_guided/genotyping_trial_modal.mas &>
