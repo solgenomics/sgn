@@ -3,14 +3,17 @@ jQuery(document).ready(function($) {
 
     jQuery("[name='refresh_jstree_html']").click(function(){
         refreshTrailJsTree();
+        location.reload();
     });
 
     jQuery("[name='refresh_crosses_jstree_html']").click(function(){
         refreshCrossJsTree();
+        location.reload();
     });
 
     jQuery("[name='refresh_genotyping_trial_jstree_html']").click( function() {
         refreshGenotypingTrialJsTree();
+        location.reload();
     });
 
 });
