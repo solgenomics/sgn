@@ -11,6 +11,7 @@ $mad_description => "Adjustments are calculated using data from all checks. Crea
 $greenhouse_nursery_description => "A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database."
 $splitplot_description => "Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database."
 $prep_description => "Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database."
+$westcott_description => "Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)."
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js' ] &>
@@ -148,7 +149,7 @@ rect.bordered {
                                             <option data-title="<% $greenhouse_nursery_description %>" title="<% $greenhouse_nursery_description %>" value="greenhouse" >Nursery/Greenhouse </option>
                                             <option data-title="<% $splitplot_description %>" title="<% $splitplot_description %>" value="splitplot">Split Plot</option>
                                             <option data-title="<% $prep_description %>" title="<% $prep_description %>" value="p-rep">Partially Replicated</option>
-                                            <option title="Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)" value=westcott>Westcott Design</option>
+                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="westcott">Westcott Design</option>
                                             <!--<option value=MADIII>MADIII</option>-->
                                             <!--<option value=MADIV>MADIV</option>-->
                                             <!--<option value=MADV>MADV</option>-->
