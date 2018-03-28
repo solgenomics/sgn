@@ -84,7 +84,6 @@ $breeding_program_name => undef
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The folder was moved successfully
                     </p>
-                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
                 </div>
             </div>
             <div class="modal-footer">
@@ -149,6 +148,7 @@ function move_folder() {
         jQuery('#move_folder_dialog').modal("hide");
       }
       else {
+        refreshTrailJsTree();
         jQuery('#folder_move_success_dialog_message').modal("show");
         jQuery('#move_folder_dialog').modal("hide");
         //location.reload();
