@@ -70,110 +70,6 @@ rect.bordered {
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-<<<<<<< HEAD
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Trial Name: </label>
-                            <div class="col-sm-9">
-                                <input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="select_breeding_program" name="select_breeding_program">
-                                <%perl>foreach my $program (@$breeding_programs) {
-                                    print "<option value='".@$program[1]."'>".@$program[1]."</option>"; }
-                                </%perl>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Location: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="add_project_location" name="add_project_location">
-                                <%perl>foreach my $location (@$locations) { print "
-                                    <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-                                </%perl>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Trial Type: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="add_project_type" name="add_project_type" type="text">
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Year: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Description: </label>
-                            <div class="col-sm-9">
-                                <textarea class="form-control" id="add_project_description" name="add_project_description" ></textarea>
-                            </div>
-                        </div>
-
-                        <div id="format_type_radio" style="display: none">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Create Using Trial Design Tool: </label>
-                                <div class="col-sm-10">
-                                    <input type="radio" class="format_type" id="format_radio3" name="radio" value="create_with_design_tool" checked="checked" />
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Create From Uploaded File: </label>
-                                <div class="col-sm-10">
-                                    <input type="radio" class="format_type" id="format_radio2" name="radio" value="create_with_upload" />
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Create Empty Trial: </label>
-                                <div class="col-sm-10">
-                                    <input type="radio" class="format_type" id="format_radio1" name="radio" value="empty" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="get_file_upload_data" style="display: none">
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Upload File: </label>
-                                <div class="col-sm-10">
-                                    <input type="file" name="trial_upload_file" id="trial_upload_file" encoding="multipart/form-data" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="trial_design_info" style="display: none">
-                            <hr>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Design Type: </label>
-                                <div class="col-sm-9">
-                                    <select class="form-control" id="select_design_method" name="select_design_method">
-                                        <option title="generates completely a randomized design with equal or different repetition, using the methods of random number generation in R." value=CRD>Completely Randomized</option>
-                                        <option title="generates Randomized Complete Block Design, using the methods of random number generation in R." value=RCBD>Complete Block</option>
-                                        <option title="creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams." value=Alpha>Alpha Lattice</option>
-                                        <option title="SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice." value=Lattice>Lattice</option>
-                                        <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
-                                        <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
-                                        <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>
-                                        <option title="Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment distributed randomly among them." value="splitplot">Split Plot</option>
-                                        <option title="Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments." value=p-rep>Partially Replicated</option>
-                                        <option title="Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)" value=westcott>Westcott Design</option>
-                                        <!--<option value=MADIII>MADIII</option>-->
-                                        <!--<option value=MADIV>MADIV</option>-->
-                                        <!--<option value=MADV>MADV</option>-->
-                                    </select>
-                                    <div id="prephelp" style="display: none"> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#partial_rep_help_dialog">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button> </div>
-                                </div>
-                            </div>
-                        </div>
-=======
->>>>>>> master
 
                     <&| /util/workflow.mas, id=> "trial_design_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
@@ -252,6 +148,7 @@ rect.bordered {
                                             <option data-title="<% $greenhouse_nursery_description %>" title="<% $greenhouse_nursery_description %>" value="greenhouse" >Nursery/Greenhouse </option>
                                             <option data-title="<% $splitplot_description %>" title="<% $splitplot_description %>" value="splitplot">Split Plot</option>
                                             <option data-title="<% $prep_description %>" title="<% $prep_description %>" value="p-rep">Partially Replicated</option>
+                                            <option title="Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)" value=westcott>Westcott Design</option>
                                             <!--<option value=MADIII>MADIII</option>-->
                                             <!--<option value=MADIV>MADIV</option>-->
                                             <!--<option value=MADV>MADV</option>-->
