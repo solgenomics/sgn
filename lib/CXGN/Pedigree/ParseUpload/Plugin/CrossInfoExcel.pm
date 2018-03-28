@@ -11,6 +11,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $cross_properties = $self->get_cross_properties();
     my @error_messages;
     my %errors;
     my $parser = Spreadsheet::ParseExcel->new();
@@ -54,8 +55,18 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A1: cross_name is missing from the header";
     }
 
+    my %valid_properties;
+    my @properties = @{$cross_properties};
+    foreach my $property(@properties){
+        $valid_properties{$property} = 1;
+    }
+
     for my $column (1 .. $col_max){
       my $header_string = $worksheet->get_cell(0,$column)->value();
+
+      if (!$valid_properties{$header_string}){
+          push @error_messages, "Invalid info type: $header_string";
+      }
     }
 
     my %seen_cross_names;
