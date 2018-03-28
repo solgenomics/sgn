@@ -449,7 +449,7 @@ sub upload_seedlots_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_crosses => $parse_errors->{'missing_crosses'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_crosses => $parse_errors->{'missing_crosses'}, missing_plants => $parse_errors->{'missing_plants'}, missing_plots => $parse_errors->{'missing_plots'}};
         $c->detach();
     }
 
@@ -465,8 +465,8 @@ sub upload_seedlots_POST : Args(0) {
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
-            $sl->accession_stock_id($val->{accession_stock_id});
-            $sl->cross_stock_id($val->{cross_stock_id});
+            $sl->accession_stock_id($val->{source_accession_stock_id});
+            $sl->cross_stock_id($val->{source_cross_stock_id});
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
@@ -474,8 +474,27 @@ sub upload_seedlots_POST : Args(0) {
             my $return = $sl->store();
             my $seedlot_id = $return->{seedlot_id};
 
-            my $from_stock_id = $val->{accession_stock_id} ? $val->{accession_stock_id} : $val->{cross_stock_id};
-            my $from_stock_name = $val->{accession} ? $val->{accession} : $val->{cross_name};
+            my $from_stock_id;
+            my $from_stock_name;
+            if ($val->{source_plant_stock_id}){
+                $from_stock_id = $val->{source_plant_stock_id};
+                $from_stock_name = $val->{source_plant};
+            }
+            elsif ($val->{source_plot_stock_id}){
+                $from_stock_id = $val->{source_plot_stock_id};
+                $from_stock_name = $val->{source_plot};
+            }
+            elsif ($val->{source_accession_stock_id}){
+                $from_stock_id = $val->{source_accession_stock_id};
+                $from_stock_name = $val->{source_accession};
+            }
+            elsif ($val->{source_cross_stock_id}){
+                $from_stock_id = $val->{source_cross_stock_id};
+                $from_stock_name = $val->{source_cross_name};
+            }
+            if (!$from_stock_id || !$from_stock_name){
+                die "There must be a from_stock to make a seedlot transaction! A source plant, source plot, source accession, or source cross must be given.\n";
+            }
 
             my $transaction_amount;
             my $transaction_weight;
@@ -947,7 +966,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $description = $c->req->param("description");
     my $factor = $c->req->param("factor");
     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema});
-    $transaction->factor(1);
+    $transaction->factor($factor);
     if ($factor == 1){
         $transaction->from_stock([$stock_id, $stock_uniquename]);
         $transaction->to_stock([$c->stash->{seedlot_id}, $c->stash->{uniquename}]);

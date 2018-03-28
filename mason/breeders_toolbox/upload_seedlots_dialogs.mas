@@ -2,7 +2,7 @@
 </%args>
 
 <div class="modal fade" id="upload_seedlot_dialog" name="upload_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -11,50 +11,113 @@
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Template information' &>
-                        <p>
-                            <b>File format information</b>
-                            <br>
-                            <a id="seedlot_upload_spreadsheet_format_info">Spreadsheet format</a>
-                        </p>
+                    <&| /util/workflow.mas, id=> "upload_seedlot_main_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"What are seedlots?" &>
+                            <ul>
+                            <li>Seedlots represent physical seed in packets.</li>
+                            <li>This seed can be from crosses or for named accessions.</li>
+                            <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+                            <li>Seedlots can belong to breeding programs and organizations.</li>
+                            <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
+                            </ul>
+
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "What seedlots do you have?" &>
+                            <& /page/page_title.mas, title=>"Seedlots fall into two categories" &>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Select One: </label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">
+                                        <option value=""></option>
+                                        <option value="from_accession">I have seed lots for named accessions</option>
+                                        <option value="from_cross">I have seed lots harvested from a cross that was performed</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="upload_seedlots_types_description">
+                            </div>
+                            <br/><br/>
+                            <center>
+                                <button disabled class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "File format" &>
+                            <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
+                            <br/><br/>
+                            <center>
+                                <div id="upload_seedlots_accessions_template_section" style="display:none">
+                                    <button class="btn btn-info" id="guided_help_seedlot_upload_format_button">Information about file format for uploading seedlots of named accessions</button><br/><br/>
+                                </div>
+                                <div id="upload_seedlots_crosses_template_section" style="display:none">
+                                    <button class="btn btn-info" id="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading seed lots harvested</button><br/><br/>
+                                </div>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Upload seedlots" &>
+                            <& /page/page_title.mas, title=>"Provide basic information about the seedlots and upload your file" &>
+
+                            <div id="upload_seedlots_accessions_section" style="display:none">
+
+                                <&| /page/explanation.mas, title=>'Template information' &>
+                                    <p>
+                                        <b>File format information</b>
+                                        <br>
+                                        <a id="seedlot_upload_spreadsheet_format_info">Spreadsheet format</a>
+                                    </p>
+                                </&>
+
+                                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <div class="col-sm-9" >
+                                            <div id="upload_seedlot_breeding_program_div"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Location: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
+                                        </div>
+                                    </div>
+                                    <!--
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Population Name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" name="upload_seedlot_population_name" id="upload_seedlot_population_name" placeholder="Optional">
+                                        </div>
+                                    </div>
+                                    -->
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Organization Name: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="Optional">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                        <div class="col-sm-9" >
+                                            <input type="file" name="seedlot_uploaded_file" id="seedlot_uploaded_file" encoding="multipart/form-data" />
+                                        </div>
+                                    </div>
+
+                                </form>
+
+                            </div><!-- End seedlots from accesions section -->
+
+                        </&>
                     </&>
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
-                            <div class="col-sm-9" >
-                                <div id="upload_seedlot_breeding_program_div"></div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Location: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
-                            </div>
-                        </div>
-                        <!--
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Population Name: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" name="upload_seedlot_population_name" id="upload_seedlot_population_name" placeholder="Optional">
-                            </div>
-                        </div>
-                        -->
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Organization Name: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="Optional">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File (.xls): </label>
-                            <div class="col-sm-9" >
-                                <input type="file" name="seedlot_uploaded_file" id="seedlot_uploaded_file" encoding="multipart/form-data" />
-                            </div>
-                        </div>
-
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -65,7 +128,7 @@
 </div>
 
 <div class="modal fade" id="seedlot_upload_spreadsheet_info_dialog" name="seedlot_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
