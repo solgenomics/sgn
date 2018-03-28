@@ -552,6 +552,7 @@ jQuery(document).ready(function ($) {
                   alert(response.error);
                   jQuery('#multi_trial_design_confirm').modal("hide");
               } else {
+                  refreshTrailJsTree();
                   //alert('Trial design saved');
                   jQuery('#working_modal').modal("hide");
                   jQuery('#multi_trial_saved_dialog_message').modal("show");
