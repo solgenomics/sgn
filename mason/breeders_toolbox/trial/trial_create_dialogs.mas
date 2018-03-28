@@ -153,6 +153,7 @@ rect.bordered {
                                         <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>
                                         <option title="Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment distributed randomly among them." value="splitplot">Split Plot</option>
                                         <option title="Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments." value=p-rep>Partially Replicated</option>
+                                        <option title="Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)" value=westcott>Westcott Design</option>
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
