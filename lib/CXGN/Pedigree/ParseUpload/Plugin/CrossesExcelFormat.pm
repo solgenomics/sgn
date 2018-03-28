@@ -161,12 +161,9 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: cross name missing";
         } elsif ($cross_name =~ /\s/ || $cross_name =~ /\// || $cross_name =~ /\\/ ) {
             push @error_messages, "Cell A$row_name: cross_name must not contain spaces or slashes.";
-        } else {
-            if ($seen_cross_names{$cross_name}) {
-                push @error_messages, "Cell A$row_name: duplicate cross name at cell A".$seen_cross_names{$cross_name}.": $cross_name";
-            }
-            $seen_cross_names{$cross_name}=$row_name;
-        }
+        } elsif ($seen_cross_names{$cross_name}) {
+            push @error_messages, "Cell A$row_name: duplicate cross name: $cross_name";
+        } 
 
         #cross type must not be blank
         if (!$cross_type || $cross_type eq '') {
@@ -188,6 +185,10 @@ sub _validate_with_plugin {
             if ($cross_type eq ( 'biparental' || 'bulk' )) {
                 push @error_messages, "Cell D$row_name: male parent required for biparental and bulk crosses";
             }
+        }
+
+        if ($cross_name){
+            $seen_cross_names{$cross_name}++;
         }
 
         if ($female_parent){
@@ -235,7 +236,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@crosses }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cell A".$seen_cross_names{$r->uniquename}.": cross name already exists in database: ".$r->uniquename;
+        push @error_messages, "Cross name already exists in database: ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
