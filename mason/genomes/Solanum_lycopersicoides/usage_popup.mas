@@ -38,12 +38,12 @@ The Boyce Thompson Institute and RWTH Aachen University are pleased to make the 
 <script>
 
 
-  $('#usage_policy_agree_submit').click( function () {
+  jQuery('#usage_policy_agree_submit').click( function () {
      jQuery.cookie("data_usage_policy_approved", "1", { expires: 10000 } );
-     $('#usage_policy').modal("hide");
+     jQuery('#usage_policy').modal("hide");
   });
 
-  $('#usage_policy_disagree_submit').click( function () {
+  jQuery('#usage_policy_disagree_submit').click( function () {
      document.location.href="/";
   });
 
@@ -59,12 +59,12 @@ The Boyce Thompson Institute and RWTH Aachen University are pleased to make the 
     if (cookie == undefined) {
     //  alert("showing!");
 
-      $('#usage_policy').modal("show");
+      jQuery('#usage_policy').modal("show");
   //alert("Done!");
     }
     else {
       //alert("Hiding!");
-      $('#usage_policy').modal("hide");
+      jQuery('#usage_policy').modal("hide");
 
     }
   }

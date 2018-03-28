@@ -24,40 +24,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    if (! $c->user()) {
-	$c->stash->{rest} = { error => "You must be logged in to add projects." } ;
-	return;
-    }
-
-    my $params = $c->req->parameters();
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    my $exists = $schema->resultset('Project::Project')->search(
-	{ name => $params->{project_name} }
-	);
-
-    if ($exists > 0) {
-	$c->stash->{rest} = { error => "This trial name is already used." };
-	return;
-    }
-
-    my $project = $schema->resultset('Project::Project')->find_or_create(
-	{
-	    name => $params->{project_name},
-	    description => $params->{project_description},
-	}
-	);
-
-    my $projectprop_year = $project->create_projectprops( { 'project year' => $params->{year},}, {autocreate=>1}); #cv_name => 'project_property' } );
-
-    $c->stash->{rest} = { error => '' };
-}
-
 sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
     my $self = shift;
     my $c = shift;
