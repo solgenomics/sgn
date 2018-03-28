@@ -70,7 +70,7 @@
     font-size: 11px;
   }
   
-  ol.workflow-prog>li>span.workflow-title{
+  ol.workflow-prog>li>div.workflow-title{
     display: inline-block;
     width: 100%;
     white-space: nowrap;
