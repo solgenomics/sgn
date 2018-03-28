@@ -10,6 +10,7 @@ library(lme4)
 library(data.table)
 library(phenoAnalysis)
 library(dplyr)
+library(tibble)
 
 allArgs <- commandArgs()
 
@@ -151,11 +152,14 @@ for (popGenoFile in allGenoFiles) {
                       na.strings = c("NA", " ", "--", "-"),
                       )
 
-    genoData           <- as.data.frame(genoData)
-    rownames(genoData) <- genoData[, 1]
-    genoData[, 1]      <- NULL
+    print(genoData[1:5, 1:5])
 
+    genoData   <- data.frame(genoData)
+    genoData   <- column_to_rownames(genoData, var='V1')
+ #   rownames(genoData) <- genoData[, 1]
+ #   genoData[, 1]      <- NULL
 
+print(genoData[1:5, 1:5])
     popGenoFile <- basename(popGenoFile)     
     popId       <- str_extract(popGenoFile, "\\d+")
     popIds      <- c(popIds, popId)
@@ -188,6 +192,8 @@ for (popGenoFile in allGenoFiles) {
         genoData <- genoData[!(rownames(genoData) %in% uniqGenoNames),]
 
         message('cnt of unique genotypes from new dataset ', popId, ': ', length(rownames(genoData)))
+
+        print(rownames(genoData))
         
         if (!is.null(genoData)) {
             
