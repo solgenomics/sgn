@@ -96,7 +96,7 @@ sub upload_cross_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional trials to a file!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -105,7 +105,7 @@ sub upload_cross_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -144,24 +144,22 @@ sub upload_cross_file_POST : Args(0) {
   $parsed_data = $parser->parse();
   #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
-  if (!$parsed_data) {
-    my $return_error = '';
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
 
-    if (! $parser->has_parse_errors() ){
-      $return_error = "Could not get parsing errors";
-      $c->stash->{rest} = {error_string => $return_error,};
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
     }
-
-    else {
-      $parse_errors = $parser->get_parse_errors();
-      foreach my $error_string (@{$parse_errors}){
-	$return_error=$return_error.$error_string."<br>";
-      }
-    }
-
-    $c->stash->{rest} = {error_string => $return_error,};
-    return;
-  }
 
   my $cross_add = CXGN::Pedigree::AddCrosses
     ->new({
@@ -1409,7 +1407,7 @@ sub list_cross_wishlists_GET : Args(0) {
 
 sub add_crossingtrial : Path('/ajax/cross/add_crossingtrial') : ActionClass('REST') {}
 
-sub add_crossingtrial_POST :Args(0) {
+sub add_crossingtrial_POST :Args(0){
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
@@ -1419,30 +1417,6 @@ sub add_crossingtrial_POST :Args(0) {
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
-#    my $folder_name = $c->req->param('crossingtrial_folder_name');
-#    my $folder_id = $c->req->param('crossingtrial_folder_id');
-#    my $folder;
-
-#    if ($folder_name && !$folder_id) {
-#      eval {
-#        $folder = CXGN::Trial::Folder->create({
-#          bcs_schema => $schema,
-#          parent_folder_id => '',
-#          name => $folder_name,
-#          breeding_program_id => $breeding_program_id,
-#          folder_for_crosses =>1
-#        });
-#      };
-
-#      if ($@) {
-#        $c->stash->{rest} = {error => $@ };
-#        return;
-#      }
-
-#      $folder_id = $folder->folder_id();
-#    }
-
-
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($location);
     if(!$geolocation_lookup->get_geolocation()){
@@ -1450,16 +1424,16 @@ sub add_crossingtrial_POST :Args(0) {
         return;
     }
 
-    if (!$c->user()) {
-  print STDERR "User not logged in... not adding a crossingtrial.\n";
-  $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial." };
-  return;
+    if (!$c->user()){
+        print STDERR "User not logged in... not adding a crossingtrial.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial."};
+        return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-  print STDERR "User does not have sufficient privileges.\n";
-  $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
-  return;
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        print STDERR "User does not have sufficient privileges.\n";
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
+        return;
     }
 
     my $error;
@@ -1470,27 +1444,272 @@ sub add_crossingtrial_POST :Args(0) {
             breeding_program_id => $breeding_program_id,
             year => $c->req->param('year'),
             project_description => $c->req->param('project_description'),
-#            location => $location,
             crossingtrial_name => $crossingtrial_name,
             nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
         });
         my $store_return = $add_crossingtrial->save_crossingtrial();
         if ($store_return->{error}){
-          $error = $store_return->{error};
+            $error = $store_return->{error};
         }
     };
 
     if ($@) {
         $c->stash->{rest} = {error => $@};
         return;
-      };
+    };
 
     if ($error){
-      $c->stash->{rest} = {error => $error};
+        $c->stash->{rest} = {error => $error};
     } else {
-      $c->stash->{rest} = {success => 1};
+        $c->stash->{rest} = {success => 1};
     }
-  }
+}
+
+
+sub upload_progenies : Path('/ajax/cross/upload_progenies') : ActionClass('REST'){ }
+
+sub upload_progenies_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('progenies_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "cross_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+#   my $upload_file_type = "crosses excel";#get from form when more options are added
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('ProgeniesExcel');
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->detach();
+    }
+
+    #add the progeny
+    if ($parsed_data){
+        my %progeny_hash = %{$parsed_data};
+        foreach my $cross_name_key (keys %progeny_hash){
+            my $progenies_ref = $progeny_hash{$cross_name_key};
+            my @progenies = @{$progenies_ref};
+
+            my $progeny_add = CXGN::Pedigree::AddProgeny->new({
+                chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progenies,
+                owner_name => $user_name,
+            });
+            if (!$progeny_add->add_progeny()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                return;
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
+
+sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }
+
+sub upload_info_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('crossinfo_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "cross_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('CrossInfoExcel');
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->detach();
+    }
+
+    my $cross_properties = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties;
+
+    while (my $info_type = shift (@properties)){
+        if ($parsed_data->{$info_type}) {
+            print STDERR "Handling info type $info_type\n";
+            my %info_hash = %{$parsed_data->{$info_type}};
+            foreach my $cross_name_key (keys %info_hash){
+                my $value = $info_hash{$cross_name_key};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                    chado_schema => $chado_schema,
+                    cross_name => $cross_name_key,
+                    key => $info_type,
+                    value => $value,
+                });
+                $cross_add_info->add_info();
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
 
 
 ###

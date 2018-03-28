@@ -15,90 +15,225 @@ $locations
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template information' &>
-                        <p>
-                            <b>File format information</b>
-                            <br>
-                            <a id="trial_upload_spreadsheet_format_info">Spreadsheet format</a>
-                        </p>
+                    <&| /util/workflow.mas, id=> "trial_upload_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "File Formatting" &>
+                            <& /page/page_title.mas, title=>"Make sure your experiment is formatted in the right format" &>
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-info" id="guided_help_trial_upload_format_button">Information about file format</button><br/><br/>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Enter trial information" &>
+                            <& /page/page_title.mas, title=>"Enter information about the experiment and upload your trial layout" &>
+
+                            <&| /page/explanation.mas, title=>'Template information' &>
+                                <p>
+                                    <b>File format information</b>
+                                    <br>
+                                    <a id="trial_upload_spreadsheet_format_info">Spreadsheet format</a>
+                                </p>
+                            </&>
+
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <input type="text" class="form-control" id="trial_upload_name" name="trial_upload_name" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
+                                            <%perl>
+                                            foreach my $program (@$breeding_programs) {
+                                                print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                            }
+                                            </%perl>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Location: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_upload_location" name="trial_upload_location">
+                                            <%perl>foreach my $location (@$locations) { print "
+                                                <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+                                            </%perl>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trial Type: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="trial_upload_trial_type" name="trial_upload_trial_type" type="text">
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Year: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_upload_year" name="trial_upload_year"></select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Description: </label>
+                                    <div class="col-sm-9" >
+                                        <textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" maxlength="250"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Design Type: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
+                                            <option value=CRD>Completely Randomized</option>
+                                            <option value=RCBD>Complete Block</option>
+                                            <option value=Alpha>Alpha Lattice</option>
+                                            <option value=Augmented>Augmented</option>
+                                            <option value=MAD>Modified Augmented Design</option>
+
+                                            <!--  <option value=MADIII>MADIII</option>   -->
+                                            <!--  <option value=MADIV>MADIV</option> -->
+                                            <!--  <option value=MADV>MADV</option> -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Upload File: </label>
+                                    <div class="col-sm-9" >
+                                        <input type="file" name="trial_uploaded_file" id="trial_uploaded_file" encoding="multipart/form-data" />
+                                    </div>
+                                </div>
+                            </form>
+
+                            <br/>
+                            <center>
+                            <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
+                            <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this, false);" >Upload Trial</button>
+                            <center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Fix missing accessions problem" &>
+                            <& /page/page_title.mas, title=>"Fixing the missing accession(s) problem" &>
+
+                            <div id="upload_trial_missing_accessions_div" style="display:none">
+                                <div class="well">
+                                    <ul>
+                                        <li>Accessions tested in your trial must exist in the database prior to adding your trial. The reason for this is that an accession can be tested in many trials and therefore exists as a separate entity in the database. We also want to be careful about adding new accessions into the database because we do not want incorrectly duplicated data.</li>
+                                        <li>When adding accessions into the database, you can use either a list of accessions or an Excel file.</li>
+                                    </ul>
+                                </div>
+
+                                <div id="upload_trial_add_missing_accessions_html">
+                                </div>
+
+                                <button class="btn btn-info" name="add_accessions_link">Add your accessions to the database</button><br/><br/>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your accessions are in the database Click Here</button><br/><br/>
+                            </div>
+                            <div id="upload_trial_error_display">
+
+                                <h3>Trial Upload Error Messages</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <center>
+                            <div id="upload_trial_no_error_messages_html">
+                            </div>
+                            <div name="upload_trial_completed_message">
+                            </div>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Fix missing seedlots problem" &>
+                            <& /page/page_title.mas, title=>"Fixing the missing seedlot(s) problem" &>
+
+                            <div id="upload_trial_missing_seedlots_div" style="display:none">
+                                <div class="well">
+                                    <ul>
+                                        <li>Seedlots tested in your experimental trial must exist in the database prior to adding your trial. The reason for this is that an accession can be tested in many trials and therefore exists as a separate entity in the database. We also want to be careful about adding new seedlots into the database because we do not want data to be incorrectly linked to duplicates.</li>
+                                        <li>When adding seedlots into the database, you can use an Excel file.</li>
+                                    </ul>
+                                </div>
+                                <ul>
+                                <li>When adding seedlots into the database, you can upload an Excel file or you can add seedlots one at a time.<br/><br/>
+                                    <ul>
+                                    <li><button class="btn btn-info" name="seedlot_bulk_upload">Upload Excel file</button><br/><br/></li>
+                                    <li><button class="btn btn-info" name="add_seedlot_button">Add One Seedlot</button></li>
+                                    </ul>
+                                </li>
+                                </ul><br/>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your seedlots are in the database Click Here</button><br/><br/>
+                            </div>
+                            <div id="upload_trial_error_display_seedlot">
+
+                                <h3>Trial Upload Error Messages</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <center>
+                            <div id="upload_trial_no_error_messages_seedlot_html">
+                            </div>
+                            <div name="upload_trial_completed_message">
+                            </div>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Try submitting trial again" &>
+                            <& /page/page_title.mas, title=>"Submit your trial again. You should have corrected all errors by now, but if not please take a look at the errors in the red box below. You can continue to modify your file and then click Upload until it works." &>
+                            <div id="trial_upload_show_repeat_upload_button">
+                                <center>
+                                <button type="button" class="btn btn-lg btn-primary" name="upload_trial_submit" >Upload Trial</button><br/><br/>
+                                </center>
+                            </div>
+                            <center>
+                            <div name="upload_trial_completed_message">
+                            </div>
+                            </center>
+
+                            <div id="upload_trial_error_display_second_try" style="display:none">
+
+                                <h3>There exist these problems in your file:</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your trial is now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                The trial file was uploaded successfully
+                            </p>
+                            
+                            <ul>
+                                <li>You may want to proceed to the trial detail page for the trial you just created.</li>
+                                <li>You can print barcodes for the plots or plants or tissue samples in this trial.</li>
+                                <li>You an add phenotypes for the plots or plants in this trial now.</li>
+                            </ul>
+                            <br/>
+                            <center>
+                            <button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </center>
+                        </&>
                     </&>
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Trial Name: </label>
-                            <div class="col-sm-9" >
-                                <input type="text" class="form-control" id="trial_upload_name" name="trial_upload_name" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
-                                    <%perl>
-                                    foreach my $program (@$breeding_programs) {
-                                        print "<option value='".@$program[1]."'>".@$program[1]."</option>";
-                                    }
-                                    </%perl>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Location: </label>
-                            <div class="col-sm-9" >
-                                <select class="form-control" id="trial_upload_location" name="trial_upload_location">
-                                    <%perl>foreach my $location (@$locations) { print "
-                                        <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-                                    </%perl>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Trial Type: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="trial_upload_trial_type" name="trial_upload_trial_type" type="text">
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Year: </label>
-                            <div class="col-sm-9" >
-                                <select class="form-control" id="trial_upload_year" name="trial_upload_year"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Description: </label>
-                            <div class="col-sm-9" >
-                                <textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" maxlength="250"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Design Type: </label>
-                            <div class="col-sm-9" >
-                                <select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
-                                    <option value=CRD>Completely Randomized</option>
-                                    <option value=RCBD>Complete Block</option>
-                                    <option value=Alpha>Alpha Lattice</option>
-                                    <option value=Augmented>Augmented</option>
-                                    <option value=MAD>Modified Augmented Design</option>
-
-                                    <!--  <option value=MADIII>MADIII</option>   -->
-                                    <!--  <option value=MADIV>MADIV</option> -->
-                                    <!--  <option value=MADV>MADV</option> -->
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
-                            <div class="col-sm-9" >
-                                <input type="file" name="trial_uploaded_file" id="trial_uploaded_file" encoding="multipart/form-data" />
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_trial_submit" id="upload_trial_submit">Upload Trial</button>
             </div>
         </div>
     </div>
@@ -119,7 +254,7 @@ $locations
                     <br /><br />
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
+                    The first row (header) must contain the following:
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -178,50 +313,11 @@ $locations
     </div>
 </div>
 
-<div class="modal fade" id="trial_upload_success_dialog_message" name="trial_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialSuccessDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTrialSuccessDialog">Upload Successful</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The trial file was uploaded successfully
-                    </p>
-                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_trial_upload_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<script>
+jQuery(document).ready(function(){
+    jQuery('#guided_help_trial_upload_format_button').click(function(){
+        jQuery('#trial_upload_spreadsheet_info_dialog').modal('show');
+    });
+})
+</script>
 
-<div class="modal fade" id="upload_trial_error_display" name="upload_trial_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTrialErrorDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTrialErrorDialog">Errors In Uploaded File</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="upload_trial_add_missing_accessions_html">
-                    </div>
-
-                    <h3>Trial Upload Error Messages</h3>
-                    <table>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>

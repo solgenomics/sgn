@@ -195,28 +195,18 @@ sub _validate_with_plugin {
             $seen_plot_names{$male_plot_name}++;
         }
 
-#    #female plot must exist in the database
-#    if ($female_plot_name){
-#        if (!$self->_get_plot($female_plot_name)){
-#            push @errors, "Cell E$row_name: female plot does not exist: $female_plot_name";
-#        }
-#    }
-
-#      #female plot must exist in the database
-#    if ($male_plot_name){
-#        if (!$self->_get_plot($male_plot_name)){
-#            push @errors, "Cell F$row_name: male plot does not exist: $male_plot_name";
-#        }
-#    }
     }
 
     my @accessions = keys %seen_accession_names;
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
 
-    if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
-        $errors{'missing_accessions'} = \@accessions_missing;
+    my $population_validator = CXGN::List::Validate->new();
+    my @parents_missing = @{$population_validator->validate($schema,'populations',\@accessions_missing)->{'missing'}};
+
+    if (scalar(@parents_missing) > 0) {
+        push @error_messages, "The following accessions or populations are not in the database as uniquenames or synonyms: ".join(',',@parents_missing);
+        $errors{'missing_accessions'} = \@parents_missing;
     }
 
     my @plots = keys %seen_plot_names;

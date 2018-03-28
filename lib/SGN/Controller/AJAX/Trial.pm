@@ -559,6 +559,32 @@ sub save_experimental_design_POST : Args(0) {
 }
 
 
+sub verify_trial_name : Path('/ajax/trial/verify_trial_name') : ActionClass('REST') { }
+
+sub verify_trial_name_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_name = $c->req->param('trial_name');
+    my $error;
+    my %errors;
+
+    if (!$trial_name) {
+        $c->stash->{rest} = {error => "No trial name supplied"};
+        $c->detach;
+    }
+
+    my $project_rs = $schema->resultset('Project::Project')->find({name=>$trial_name});
+
+    if ($project_rs){
+        my $error = 'The following trial name has aready been used. Please use a unique name';
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
 sub verify_stock_list_POST : Args(0) {
@@ -754,7 +780,7 @@ sub upload_trial_file_POST : Args(0) {
       }
     }
 
-    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
+    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
     return;
   }
 

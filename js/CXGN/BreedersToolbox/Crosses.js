@@ -212,7 +212,91 @@ jQuery(document).ready(function($) {
         }
     });
 
+    jQuery("#upload_progenies_existing_crosses").click(function(){
 
+        jQuery("#update_progenies_spreadsheet_format_info").click(function(){
+            jQuery("#update_progenies_spreadsheet_info_dialog").modal("show");
+        });
+
+        jQuery("#update_progenies_crosses_dialog").modal("show");
+    });
+
+    jQuery("#update_progenies_submit").click(function(){
+        var uploadFile = $("#progenies_upload_file").val();
+        jQuery('#upload_progenies_form').attr("action", "/ajax/cross/upload_progenies");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_progenies_form").submit();
+        jQuery("#update_progenies_crosses_dialog").modal("hide");
+    });
+
+    jQuery('#upload_progenies_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_progenies_error_display tbody").html('');
+                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
+                jQuery("#upload_progenies_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#cross_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#upload_cross_info").click(function(){
+
+        jQuery("#update_crossinfo_spreadsheet_format").click(function(){
+            jQuery("#update_crossinfo_spreadsheet_info_dialog").modal("show");
+        });
+
+        jQuery("#update_crossinfo_dialog").modal("show");
+    });
+
+    jQuery("#update_crossinfo_submit").click(function(){
+        var uploadFile = $("#crossinfo_upload_file").val();
+        jQuery('#upload_crossinfo_form').attr("action", "/ajax/cross/upload_info");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_crossinfo_form").submit();
+        jQuery("#update_crossinfo_dialog").modal("hide");
+    });
+
+    jQuery('#upload_crossinfo_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_crossinfo_error_display tbody").html('');
+                jQuery("#upload_crossinfo_error_display tbody").append(response.error_string);
+                jQuery("#upload_crossinfo_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#cross_saved_dialog_message').modal("show");
+            }
+        }
+    });
 
     function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
 
