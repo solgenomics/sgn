@@ -713,6 +713,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         } else if (design_method == "RCBD") {
             $("#trial_multi-design_more_info").show();
             $("#FieldMap").show();
@@ -742,6 +746,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         } else if (design_method == "Alpha") {
             $("#FieldMap").show();
             $("#prephelp").hide();
@@ -771,6 +779,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         } else if (design_method == "Lattice") {
             $("#FieldMap").show();
             $("#prephelp").hide();
@@ -800,6 +812,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         } else if (design_method == "Augmented") {
             $("#FieldMap").hide();
             $("#prephelp").hide();
@@ -829,6 +845,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         } else if (design_method == "") {
             $("#FieldMap").hide();
             $("#prephelp").hide();
@@ -858,6 +878,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         }
 
         else if (design_method == "MAD") {
@@ -898,6 +922,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         }
 
         else if (design_method == 'greenhouse') {
@@ -930,6 +958,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').show();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
             greenhouse_show_num_plants_section();
         }
 
@@ -963,6 +995,10 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").show();
             $("#num_plants_per_plot_section").show();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         }
         else if (design_method == 'p-rep') {
             $("#FieldMap").hide();
@@ -994,12 +1030,61 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
             $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
         }
-
+        else if (design_method == 'westcott') {
+            $("#FieldMap").hide();
+            $("#trial_multi-design_more_info").show();
+            $("#prephelp").hide();
+            $("#show_list_of_accession_section").show();
+            $("#show_list_of_checks_section").hide();
+            $("#show_list_of_unrep_accession").hide();
+            $("#show_list_of_rep_accession").hide();
+            $("#show_no_of_row_in_design").hide();
+            $("#show_no_of_col_in_design").hide();
+            $("#show_no_of_rep_times").hide();
+            $("#show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
+            $("#crbd_show_list_of_checks_section").hide();
+            $("#rep_count_section").hide();
+            $("#block_number_section").hide();
+            $("#block_size_section").hide();
+            $("#max_block_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
+            $("#design_info").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").show();
+            $("#westcott_num_col_between_check_section").show();
+            $("#westcott_check_1_section").show();
+            $("#westcott_check_2_section").show();
+        }
+        
         else {
             alert("Unsupported design method");
         }
     });
+    
+    jQuery("#westcott_check_1").autocomplete({
+        appendTo: "#add_project_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    }); 
+    
+    jQuery("#westcott_check_2").autocomplete({
+        appendTo: "#add_project_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    }); 
 
     jQuery(document).on('change', '#select_list_list_select', function() {
         if (jQuery("#select_design_method").val() == 'greenhouse') {

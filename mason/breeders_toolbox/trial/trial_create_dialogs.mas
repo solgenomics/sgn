@@ -180,7 +180,20 @@ rect.bordered {
                                         <div class="col-sm-5" id="select_list" name="select_list">
                                         </div>
                                         <br/><br/>
+                                    </div>                                    
+                                    <div class="form-group" id="westcott_check_1_section" style="display: none">
+                                      <label class="col-sm-3 control-label">Name of Check 1: </label>
+                                      <div class="col-sm-9" >
+                                        <input class="form-control" id="westcott_check_1" name="westcott_check_1" placeholder="Required"></input>
+                                      </div>
                                     </div>
+                                    <br/><br/>
+                                    <div class="form-group" id="westcott_check_2_section" style="display: none">
+                                      <label class="col-sm-3 control-label">Name of Check 1: </label>
+                                      <div class="col-sm-9" >
+                                        <input class="form-control" id="westcott_check_2" name="westcott_check_2" placeholder="Required"> </input>
+                                      </div>
+                                    </div>                                    
                                     <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
                                         <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                         <div class="col-sm-5" id="list_of_checks_section" >
@@ -259,7 +272,7 @@ rect.bordered {
                                     </div>
                                     <br/><br/>
                                 </div>
-
+                                
                                 <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                     <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                     <div class="col-sm-5" >
@@ -271,6 +284,22 @@ rect.bordered {
                                     <hr>
                                     <center><h4>Number of Plants:</h4></center>
                                     <div id="greenhouse_num_plants_per_accession" >
+                                    </div>
+                                    <br/><br/>
+                                </div>
+
+                                <div class="form-group form-group-sm" id="westcott_num_col_section" style="display: none" >
+                                    <hr>
+                                    <center><h4>Number of Columns (required):</h4></center>
+                                    <div id="westcott_num_col" >
+                                        <input class="form-control" id="westcott_col" name="westcott_col" placeholder="Required"/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm" id="westcott_num_col_between_check_section" style="display: none" >
+                                    <hr>
+                                    <center><h4>Number of columns between two check columns (Optional):</h4></center>
+                                    <div id="westcott_num_col_between_check" >
+                                        <input class="form-control" id="westcott_col_between_check" name="westcott_col_between_check" placeholder="default is 10" />
                                     </div>
                                     <br/><br/>
                                 </div>
