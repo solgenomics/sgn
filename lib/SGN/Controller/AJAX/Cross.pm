@@ -1665,8 +1665,12 @@ sub upload_info_POST : Args(0) {
     $upload_metadata{'user_id'}=$user_id;
     $upload_metadata{'date'}="$timestamp";
 
+    my $cross_properties_json = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties_json;
+    my $cross_properties = \@properties;
+    
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
     $parser->load_plugin('CrossInfoExcel');
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -1687,9 +1691,6 @@ sub upload_info_POST : Args(0) {
         $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
         $c->detach();
     }
-
-    my $cross_properties = $c->config->{cross_properties};
-    my @properties = split ',', $cross_properties;
 
     while (my $info_type = shift (@properties)){
         if ($parsed_data->{$info_type}) {
