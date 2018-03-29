@@ -106,75 +106,68 @@
   </div>
 </div>
 
-<div class="modal fade" id="cross_upload_spreadsheet_info_dialog" name="cross_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesInfoDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadCrossesInfoDialog">Template Information</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-
-            <b>
-            Crosses may be uploaded in an Excel file (.xls)
-            </b>
-            <br>
-            (.xlsx format not supported)
-            <br><br>
-            <b>
-              Header:
-            </b>
-            <br>
-            The first row (header) must contain the following:
-            <br>
-
-            <table class="table table-bordered table-hover">
-              <tbody>
-              <tr>
-                <td>cross_name</td>
-                <td>cross_type</td>
-                <td>female_parent</td>
-                <td>male_parent</td>
-                <td>female_plot</td>
-                <td>male_plot</td>
-              </tr>
-              </tbody>
-            </table>
-
-            <b>
-              Required columns:
-            </b>
-            <br>
-            <b>-cross_name</b> (must not conflict with an existing cross name)
-            <br>
-            <b>-cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
-            <br>
-            <b>-female_parent</b> (must exist in the database)
-            <br>
-            <b>-male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, must exist in the database)
-            <br>
-            <b>-female_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)
-            <br>
-            <b>-male_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)
-            <br>
-            <br>
-            <b>
-              Optional columns (dates must be in the format YYYY/MM/DD):
-            </b>
-            <br>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
-% foreach my $column_header(@column_header){
-            <%$column_header%>
-            <br>
-%}
 
+<div class="modal fade" id="cross_upload_spreadsheet_info_dialog" name="cross_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossesInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <br>
+                    (.xlsx format not supported)
+
+                    <br><br>
+                    <b>Header:</b>
+                    <br>
+
+                    The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_name</td>
+                                <td>cross_type</td>
+                                <td>female_parent</td>
+                                <td>male_parent</td>
+                                <td>female_plot</td>
+                                <td>male_plot</td>
+% foreach my $column_header(@column_header){
+                                <td><% $column_header %></td>
+%}
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required columns:</b>
+                    <ul>
+                        <li><b>cross_name</b> (must not conflict with an existing cross name)</li>
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
+                        <li><b>female_parent</b> (must exist in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, must exist in the database)</li>
+                    </ul>
+
+                    <b>Optional columns (dates must be in the format YYYY/MM/DD):</b>
+                    <ul>
+                        <li><b>female_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)</li>
+                        <li><b>male_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)</li>
+% foreach my $column_header(@column_header){
+                        <li><%$column_header%></li>
+%}
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
     </div>
-  </div>
 </div>
