@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 12:01:2018 15:26
+date: 29:03:2018 15:54
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -232,7 +232,7 @@ def: "Olive, brown, blue-green leaf." [TGRC:U]
 xref: PATO:0001942
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000029
@@ -416,7 +416,7 @@ name: purple leaf
 xref: PATO:0000951
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000052
@@ -424,7 +424,7 @@ name: white leaf
 xref: PATO:0000323
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000053
@@ -432,7 +432,7 @@ name: yellow leaf
 xref: PATO:0000342
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000054
@@ -440,7 +440,7 @@ name: yellow-green leaf
 xref: PATO:0001941
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000055
@@ -448,7 +448,7 @@ name: dull green/grey leaf
 xref: PATO:0000950
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000056
@@ -456,7 +456,7 @@ name: dark green leaf
 xref: PATO:0001249
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000057
@@ -465,7 +465,7 @@ synonym: "TO:0000069" RELATED []
 xref: PATO:0001533
 xref: PO:0001050
 xref: PO:0005645
-is_a: SP:0000005 ! leaf color
+is_a: SP:0000471 ! leaf color phenotypic values
 
 [Term]
 id: SP:0000058
@@ -827,7 +827,7 @@ name: white flower
 xref: PATO:0000323
 xref: PO:0007600
 xref: PO:0009046
-is_a: SP:0000009 ! flower color
+is_a: SP:0000476 ! flower color phenotypic values
 
 [Term]
 id: SP:0000092
@@ -1595,19 +1595,19 @@ is_a: SP:0000463 ! fruit shape phenotypic values
 id: SP:0000174
 name: determinate
 def: "Determinate growth of plant branches terminating with an inflorescence." [SGN:NM]
-is_a: SP:0000128 ! plant habit index
+is_a: SP:0000469 ! plant habit phenotypic values
 
 [Term]
 id: SP:0000175
 name: semi determinate
 def: "Semi-determinate growth of plant branches producing more inflorescences than determinate plants, but eventually terminating." [SGN:NM]
-is_a: SP:0000128 ! plant habit index
+is_a: SP:0000469 ! plant habit phenotypic values
 
 [Term]
 id: SP:0000176
 name: indeterminate
 def: "Ineterminate growth of plant branches. Continual twig elongation and bud formation." [SGN:NM]
-is_a: SP:0000128 ! plant habit index
+is_a: SP:0000469 ! plant habit phenotypic values
 
 [Term]
 id: SP:0000177
@@ -1615,7 +1615,7 @@ name: compound leaf
 xref: PATO:0001504
 xref: PO:0001050
 xref: PO:0009025
-is_a: SP:0000045 ! leaf complexity
+is_a: SP:0000468 ! leaf complexity phenotpic values
 
 [Term]
 id: SP:0000178
@@ -1623,7 +1623,7 @@ name: simple leaf
 xref: PATO:0001503
 xref: PO:0001050
 xref: PO:0009025
-is_a: SP:0000045 ! leaf complexity
+is_a: SP:0000468 ! leaf complexity phenotpic values
 
 [Term]
 id: SP:0000179
@@ -1751,13 +1751,13 @@ name: erect
 def: "Erect plant growth habit." [PVP:3]
 synonym: "upright" EXACT []
 xref: PATO:0000622
-is_a: SP:0000128 ! plant habit index
+is_a: SP:0000469 ! plant habit phenotypic values
 
 [Term]
 id: SP:0000195
 name: semi erect
 def: "Semi erect plant growth habit." [PVP:5]
-is_a: SP:0000128 ! plant habit index
+is_a: SP:0000469 ! plant habit phenotypic values
 
 [Term]
 id: SP:0000196
@@ -1765,7 +1765,7 @@ name: spreading
 def: "Spreading plant growth habit." [PVP:7]
 synonym: "horizontal" RELATED []
 xref: PATO:0001855
-is_a: SP:0000128 ! plant habit index
+is_a: SP:0000469 ! plant habit phenotypic values
 
 [Term]
 id: SP:0000197
@@ -2040,7 +2040,7 @@ name: yellow flower color
 xref: PATO:0000324
 xref: PO:0007600
 xref: PO:0009046
-is_a: SP:0000009 ! flower color
+is_a: SP:0000476 ! flower color phenotypic values
 created_by: Naama
 creation_date: 2010-05-20T02:33:53Z
 
@@ -2062,7 +2062,7 @@ name: compound inflorescence
 xref: PATO:0001504
 xref: PO:0001083
 xref: PO:0009049
-is_a: SP:0000071 ! inflorescence structure
+is_a: SP:0000473 ! inflorescence structure - phenotypic values
 created_by: Naama
 creation_date: 2010-05-22T02:08:21Z
 
@@ -2100,14 +2100,14 @@ name: simple inflorescence
 xref: PATO:0001503
 xref: PO:0001083
 xref: PO:0009049
-is_a: SP:0000071 ! inflorescence structure
+is_a: SP:0000473 ! inflorescence structure - phenotypic values
 created_by: Naama
 creation_date: 2010-05-22T02:08:21Z
 
 [Term]
 id: SP:0000235
 name: decumbent
-is_a: SP:0000128 ! plant habit index
+is_a: SP:0000469 ! plant habit phenotypic values
 created_by: Naama
 creation_date: 2010-05-24T12:11:36Z
 
@@ -3447,7 +3447,7 @@ id: SP:0000383
 name: intermediate inflorescence
 xref: PO:0001083
 xref: PO:0009049
-is_a: SP:0000071 ! inflorescence structure
+is_a: SP:0000473 ! inflorescence structure - phenotypic values
 created_by: Naama
 creation_date: 2011-09-16T02:49:09Z
 
@@ -4090,6 +4090,155 @@ def: "Phenotype values for fruit shape. Used historically, should not be used an
 is_a: SP:0000038 ! fruit shape
 created_by: naama
 creation_date: 2018-01-09T15:15:57Z
+
+[Term]
+id: SP:0000464
+name: vascular bundle
+relationship: part_of SP:0000030 ! vascular tissue
+created_by: naama
+creation_date: 2018-03-29T14:49:24Z
+
+[Term]
+id: SP:0000465
+name: vascular bundle content
+def: "Scored in mature green fruit. Vascular bundles network for water transportation. It begins in the stem\nscar and runs to the locules through the placenta while also extending to the\nouter pericarp. Visual score 0-7 (0:absent, 3:slight, 5:intermediate, 7:severe)." [SGN:MJD]
+relationship: variable_of SP:0000464 ! vascular bundle
+relationship: variable_of SP:0000466 ! mature green fruit
+created_by: naama
+creation_date: 2018-03-29T14:49:36Z
+
+[Term]
+id: SP:0000466
+name: mature green fruit
+relationship: part_of SP:0000013 ! fruit ripening
+created_by: naama
+creation_date: 2018-03-29T14:52:19Z
+
+[Term]
+id: SP:0000467
+name: leaf type. Observation.
+def: "0-2 score (0:pimpinellifolium, 1:standard, 2:double feathered)." [SGN:MJD]
+relationship: variable_of SP:0000045 ! leaf complexity
+created_by: naama
+creation_date: 2018-03-29T15:07:38Z
+
+[Term]
+id: SP:0000468
+name: leaf complexity phenotpic values
+def: "terms used historically to describe leaf complexity mutations." [SGN:NM]
+is_a: SP:0000045 ! leaf complexity
+created_by: naama
+creation_date: 2018-03-29T15:10:56Z
+
+[Term]
+id: SP:0000469
+name: plant habit phenotypic values
+def: "historic terms for describing plant habit mutations." [SGN:NM]
+is_a: SP:0000128 ! plant habit index
+created_by: naama
+creation_date: 2018-03-29T15:13:29Z
+
+[Term]
+id: SP:0000470
+name: plant growth habit, visual observation nominal scale
+def: "0-Determinate,\n1-Semi-determinate,\n2-Indeterminate." [SGN:MJD]
+relationship: variable_of SP:0000128 ! plant habit index
+created_by: naama
+creation_date: 2018-03-29T15:14:29Z
+
+[Term]
+id: SP:0000471
+name: leaf color phenotypic values
+def: "historic values for leaf color mutations." [SGN:NM]
+is_a: SP:0000005 ! leaf color
+created_by: naama
+creation_date: 2018-03-29T15:17:03Z
+
+[Term]
+id: SP:0000472
+name: green leaf color, visual observation 3-7 scale
+def: "3:Light green, 5:medium green, 7\n:dark green." [SGN:MJD]
+relationship: variable_of SP:0000005 ! leaf color
+created_by: naama
+creation_date: 2018-03-29T15:17:54Z
+
+[Term]
+id: SP:0000473
+name: inflorescence structure - phenotypic values
+def: "historic phenotypic values for inflorescence structure used for describing mutations." [SGN:NM]
+is_a: SP:0000071 ! inflorescence structure
+created_by: naama
+creation_date: 2018-03-29T15:24:30Z
+
+[Term]
+id: SP:0000474
+name: inflorescence type, nominal scale
+def: "1: uniparous, 2: fishbone, 3: forked, 4- irregular." [SGN:MJD]
+relationship: variable_of SP:0000071 ! inflorescence structure
+created_by: naama
+creation_date: 2018-03-29T15:25:57Z
+
+[Term]
+id: SP:0000475
+name: leafy inflorescence, observation 0-2 scale
+def: "Scored when the inflorescence is completely developed. 0-2 score (0:absent, 1:leaves, 2:leaves and shoots)." [SGN:MJD]
+relationship: variable_of SP:0000071 ! inflorescence structure
+created_by: naama
+creation_date: 2018-03-29T15:33:10Z
+
+[Term]
+id: SP:0000476
+name: flower color phenotypic values
+def: "Historic values used to describe flower color mutants." [SGN:NM]
+is_a: SP:0000009 ! flower color
+created_by: naama
+creation_date: 2018-03-29T15:40:35Z
+
+[Term]
+id: SP:0000477
+name: flower color, observation 1-7 nominal scale
+def: "3: Pale yellow, 5: Yellow, 7: Yellow-orange." [SGN:NM]
+relationship: variable_of SP:0000009 ! flower color
+created_by: naama
+creation_date: 2018-03-29T15:41:30Z
+
+[Term]
+id: SP:0000478
+name: proximal fruit end color, observation 0-7 nominal scale
+def: "0: Uniform, 3: Light green, 5:  Medium green,  7: Dark green." [SGN:MJD]
+relationship: variable_of SP:0000182 ! proximal fruit end color
+created_by: naama
+creation_date: 2018-03-29T15:44:49Z
+
+[Term]
+id: SP:0000479
+name: distal fruit end scar shape
+is_a: SP:0000367 ! distal fruit end scar
+created_by: naama
+creation_date: 2018-03-29T15:47:45Z
+
+[Term]
+id: SP:0000480
+name: distal fruit end scar shape, observation 1-7 nominal scale
+def: "1: dot, 3: linear, 5: star, 7: irregular." [SGN:MJD]
+relationship: variable_of SP:0000479 ! distal fruit end scar shape
+created_by: naama
+creation_date: 2018-03-29T15:48:06Z
+
+[Term]
+id: SP:0000481
+name: fruit fasciation
+is_a: SP:0000038 ! fruit shape
+created_by: naama
+creation_date: 2018-03-29T15:50:50Z
+
+[Term]
+id: SP:0000482
+name: fruit fasciation, observation 0-7 ordinal scale
+def: "0: Not present, 3: low, 5: intermediate, 7: severe." [SGN:MJD]
+relationship: variable_of SP:0000481 ! fruit fasciation
+created_by: naama
+creation_date: 2018-03-29T15:51:48Z
 
 [Term]
 id: SP:0000706
