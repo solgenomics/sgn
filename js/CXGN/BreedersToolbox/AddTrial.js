@@ -681,6 +681,8 @@ jQuery(document).ready(function ($) {
     $(document).on('change', '#select_design_method', function () {
         if (jQuery(this).find("option:selected").data("title")){
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>'+jQuery(this).find("option:selected").data("title")+'</p></div>');
+        } else {
+            jQuery('#create_trial_design_description_div').html('');
         }
 
         var design_method = $("#select_design_method").val();

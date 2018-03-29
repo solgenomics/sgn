@@ -1,6 +1,8 @@
 
 <%args>
 $timestamp
+$preferred_species
+$editable_stock_props
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -115,6 +117,7 @@ $timestamp
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
 
 <script>
 jQuery(document).ready(function(){

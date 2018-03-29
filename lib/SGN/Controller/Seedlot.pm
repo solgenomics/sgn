@@ -12,7 +12,12 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{timestamp} = localtime();
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{timestamp} = localtime;
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{template} = '/breeders_toolbox/seedlots.mas';
 
 }

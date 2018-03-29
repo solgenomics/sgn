@@ -765,8 +765,13 @@ sub _update_content_stock_id {
     while (my $r=$acc_rs->next){
         $r->delete();
     }
-    my $error = $self->_store_seedlot_accession();
-    $error = $self->_store_seedlot_cross();
+    my $error;
+    if ($self->accession_stock_id){
+        $error = $self->_store_seedlot_accession();
+    }
+    if ($self->cross_stock_id){
+        $error = $self->_store_seedlot_cross();
+    }
     return $error;
 }
 

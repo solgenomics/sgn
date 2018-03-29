@@ -407,7 +407,23 @@ sub upload_seedlots_POST : Args(0) {
     my $location = $c->req->param("upload_seedlot_location");
     my $population = $c->req->param("upload_seedlot_population_name");
     my $organization = $c->req->param("upload_seedlot_organization_name");
-    my $upload = $c->req->upload('seedlot_uploaded_file');
+    my $upload_from_accessions = $c->req->upload('seedlot_uploaded_file');
+    my $upload_harvested_from_crosses = $c->req->upload('seedlot_harvested_uploaded_file');
+    if (!$upload_from_accessions && !$upload_harvested_from_crosses){
+        $c->stash->{rest} = {error=>'You must upload a seedlot file!'};
+        $c->detach();
+    }
+    my $upload;
+    my $parser_type;
+    if ($upload_from_accessions){
+        $upload = $upload_from_accessions;
+        $parser_type = 'SeedlotXLS';
+    }
+    if ($upload_harvested_from_crosses){
+        $upload = $upload_harvested_from_crosses;
+        $parser_type = 'SeedlotHarvestedXLS';
+    }
+    print STDERR "$parser_type \n";
     my $subdirectory = "seedlot_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -432,7 +448,7 @@ sub upload_seedlots_POST : Args(0) {
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('SeedlotXLS');
+    $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
@@ -449,7 +465,7 @@ sub upload_seedlots_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_crosses => $parse_errors->{'missing_crosses'}, missing_plants => $parse_errors->{'missing_plants'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_crosses => $parse_errors->{'missing_crosses'}};
         $c->detach();
     }
 
@@ -465,8 +481,8 @@ sub upload_seedlots_POST : Args(0) {
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
-            $sl->accession_stock_id($val->{source_accession_stock_id});
-            $sl->cross_stock_id($val->{source_cross_stock_id});
+            $sl->accession_stock_id($val->{accession_stock_id});
+            $sl->cross_stock_id($val->{cross_stock_id});
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
@@ -476,24 +492,16 @@ sub upload_seedlots_POST : Args(0) {
 
             my $from_stock_id;
             my $from_stock_name;
-            if ($val->{source_plant_stock_id}){
-                $from_stock_id = $val->{source_plant_stock_id};
-                $from_stock_name = $val->{source_plant};
+            if ($val->{accession_stock_id}){
+                $from_stock_id = $val->{accession_stock_id};
+                $from_stock_name = $val->{accession};
             }
-            elsif ($val->{source_plot_stock_id}){
-                $from_stock_id = $val->{source_plot_stock_id};
-                $from_stock_name = $val->{source_plot};
-            }
-            elsif ($val->{source_accession_stock_id}){
-                $from_stock_id = $val->{source_accession_stock_id};
-                $from_stock_name = $val->{source_accession};
-            }
-            elsif ($val->{source_cross_stock_id}){
-                $from_stock_id = $val->{source_cross_stock_id};
-                $from_stock_name = $val->{source_cross_name};
+            elsif ($val->{cross_stock_id}){
+                $from_stock_id = $val->{cross_stock_id};
+                $from_stock_name = $val->{cross_name};
             }
             if (!$from_stock_id || !$from_stock_name){
-                die "There must be a from_stock to make a seedlot transaction! A source plant, source plot, source accession, or source cross must be given.\n";
+                die "A source accession or source cross must be given to make a seedlot transaction.\n";
             }
 
             my $transaction_amount;
