@@ -83,7 +83,7 @@ sub _validate_with_plugin {
         }
 
         if (!$progeny_name || $progeny_name eq '') {
-            push @error_messages, "Cell A$row_name: progeny name missing";
+            push @error_messages, "Cell B$row_name: progeny name missing";
         } else {
             $seen_progeny_names{$progeny_name}++;
         }
@@ -104,7 +104,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@progenies }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cell".$seen_progeny_names{$r->uniquename}.": progeny name already exists in database: ".$r->uniquename;
+        push @error_messages, "Progeny name already exists in database: ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
