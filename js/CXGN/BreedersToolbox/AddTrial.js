@@ -717,6 +717,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         } else if (design_method == "RCBD") {
             $("#trial_multi-design_more_info").show();
             $("#FieldMap").show();
@@ -750,6 +751,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         } else if (design_method == "Alpha") {
             $("#FieldMap").show();
             $("#prephelp").hide();
@@ -783,6 +785,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         } else if (design_method == "Lattice") {
             $("#FieldMap").show();
             $("#prephelp").hide();
@@ -816,6 +819,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         } else if (design_method == "Augmented") {
             $("#FieldMap").hide();
             $("#prephelp").hide();
@@ -849,6 +853,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         } else if (design_method == "") {
             $("#FieldMap").hide();
             $("#prephelp").hide();
@@ -882,6 +887,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         }
 
         else if (design_method == "MAD") {
@@ -926,6 +932,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         }
 
         else if (design_method == 'greenhouse') {
@@ -962,6 +969,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
             greenhouse_show_num_plants_section();
         }
 
@@ -999,6 +1007,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         }
         else if (design_method == 'p-rep') {
             $("#FieldMap").hide();
@@ -1034,6 +1043,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").hide();
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
         }
         else if (design_method == 'westcott') {
             $("#FieldMap").hide();
@@ -1069,6 +1079,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_num_col_between_check_section").show();
             $("#westcott_check_1_section").show();
             $("#westcott_check_2_section").show();
+            $("#FieldMap_westcott").show();
         }
         
         else {
