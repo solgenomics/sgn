@@ -169,18 +169,15 @@ jQuery(document).ready(function($) {
 
     });
 
+    $("#cross_upload_spreadsheet_format_info").click(function() {
+        $("#cross_upload_spreadsheet_info_dialog").modal("show");
+    });
+
     $("#upload_crosses_link").click(function() {
-
-        $("#cross_upload_spreadsheet_format_info").click(function() {
-            $("#cross_upload_spreadsheet_info_dialog").modal("show");
-        });
-
         $("#upload_crosses_dialog").modal("show");
     });
 
     $("#upload_crosses_submit").click(function() {
-
-        $("#upload_crosses_dialog").modal("hide");
         upload_crosses_file();
     });
 
@@ -207,9 +204,16 @@ jQuery(document).ready(function($) {
                 return;
             }
             if (response.success) {
-                $('#cross_saved_dialog_message').modal("show");
+                Workflow.focus("#crosses_upload_workflow", -1); //Go to success page
+                Workflow.check_complete("#crosses_upload_workflow");
             }
         }
+    });
+
+    jQuery(document).on('click', '[name="upload_crosses_success_complete_button"]', function(){
+        alert('Crosses saved in the database');
+        jQuery('#upload_crosses_dialog').modal('hide');
+        location.reload();
     });
 
     jQuery("#upload_progenies_existing_crosses").click(function(){
