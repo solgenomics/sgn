@@ -1,0 +1,50 @@
+
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>'Search Genotypes' &>
+
+<&| /page/info_section.mas, title=>''&>
+
+<div class="row" id="genotype_search_form" >
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Dataset:</label>
+                        <div class="col-sm-8" >
+                            <div class="input-group">
+                                <select class="form-control" id="select_dataset">
+                                    <option value="">Select a dataset</option>
+                                    </select>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+
+<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
+
+    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+    <table id="genotype_search_results" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Accession</th>
+                <th>Genotype</th>
+            </tr>
+        </thead>
+    </table>
+</&>
