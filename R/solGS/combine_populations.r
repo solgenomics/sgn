@@ -152,30 +152,24 @@ for (popGenoFile in allGenoFiles) {
                       na.strings = c("NA", " ", "--", "-"),
                       )
 
-    print(genoData[1:5, 1:5])
-
-    genoData   <- data.frame(genoData)
-    genoData   <- column_to_rownames(genoData, var='V1')
- #   rownames(genoData) <- genoData[, 1]
- #   genoData[, 1]      <- NULL
-
-print(genoData[1:5, 1:5])
+    genoData <- data.frame(genoData)
+   
     popGenoFile <- basename(popGenoFile)     
     popId       <- str_extract(popGenoFile, "\\d+")
     popIds      <- c(popIds, popId)
     
-    popMarkers <- colnames(genoData)
-    message("No of markers from population ", popId, ": ", length(popMarkers))
+    #popMarkers <- colnames(genoData)
+    #message("No of markers from population ", popId, ": ", length(popMarkers))
     
-    message("sum of geno missing values: ", sum(is.na(genoData)))
-    genoData <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
-    message("sum of geno missing values: ", sum(is.na(genoData)))
-
-    if (sum(is.na(genoData)) > 0) {
-        message("sum of geno missing values: ", sum(is.na(genoData)))
-        genoData <- na.roughfix(genoData)
-        message("total number of stocks for pop ", popId,": ", length(rownames(genoData)))
-    }
+   # message("sum of geno missing values: ", sum(is.na(genoData)))
+   # genoData <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
+   # genoData <- data.frame(genoData)
+   # message("sum of geno missing values: ", sum(is.na(genoData)))
+    ## if (sum(is.na(genoData)) > 0) {
+    ##     message("sum of geno missing values: ", sum(is.na(genoData)))
+    ##     genoData <- na.roughfix(genoData)
+    ##     message("total number of stocks for pop ", popId,": ", length(rownames(genoData)))
+    ## }
 
     if (cnt == 1 ) {
         print('no need to combine, yet')
@@ -193,10 +187,7 @@ print(genoData[1:5, 1:5])
 
         message('cnt of unique genotypes from new dataset ', popId, ': ', length(rownames(genoData)))
 
-        print(rownames(genoData))
-        
-        if (!is.null(genoData)) {
-            
+        if (!is.null(genoData)) {        
             combinedGenoPops <- bind_rows(combinedGenoPops, genoData)
         } else {
             message('dataset ', popId, ' has no unique genotypes.')
@@ -204,6 +195,9 @@ print(genoData[1:5, 1:5])
     }   
     
 }
+
+combinedGenoPops <- arrange(combinedGenoPops, V1)
+combinedGenoPops <- column_to_rownames(combinedGenoPops, var='V1')
 
 message("combined number of genotypes in combined dataset: ", length(rownames(combinedGenoPops)))
 
