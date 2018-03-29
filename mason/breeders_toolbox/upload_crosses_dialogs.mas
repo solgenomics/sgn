@@ -4,83 +4,85 @@
 </%args>
 
 <div class="modal fade" id="upload_crosses_dialog" name="upload_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadCrossesDialog">Upload Crosses</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <&| /page/explanation.mas, title=>'Template Information' &>
-    	    <p>
-      	    <b>File Format Information</b>
-      	    <br>
-      	    <a id="cross_upload_spreadsheet_format_info">Spreadsheet Format</a>
-      	    <br>
-      	    <a id="cross_upload_barcode_format_info" style = "display: none">Barcode format (Not currently supported)</a>
-    	    </p>
-  	  </&>
-	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
-    <div class="form-group">
-        <label class="col-sm-2 control-label">Crossing Trial: </label>
-            <div class="col-sm-10">
-                <select class="form-control" id="cross_upload_crossing_trial" name="cross_upload_crossing_trial">
-                    <option value="">Select Crossing Trial</option>
-                    <%perl>
-                        foreach my $crossing_trial (@crossing_trials) {
-                        print "<option value=".'"'.@$crossing_trial[0].'"'.">".@$crossing_trial[1]."</option>";
-                        }
-                    </%perl>
-                </select>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossesDialog">Upload Crosses</h4>
             </div>
-    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Location: </label>
-      	      <div class="col-sm-10">
-	        <select class="form-control" id="cross_upload_location" name="cross_upload_location">
-              <option value="">Select Location</option>
-      		<%perl>
-		  foreach my $location (@locations) {
-		    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-		  }
-      		</%perl>
-    		</select>
-              </div>
-	    </div>
-      <div class="form-group">
-      	      <label class="col-sm-2 control-label">Upload File: </label>
-      	      <div class="col-sm-10">
-	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
-              </div>
-	    </div>
-<!--
-	    <hr>
-      <h3>Additional options:</h3>
+            <div class="modal-body">
+                <div class="container-fluid">
 
-	    <p>Progeny naming: <i>If generating progeny, use cross name and:</i></p>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Prefix: </label>
-      	      <div class="col-sm-10">
-	        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" />
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Suffix: </label>
-      	      <div class="col-sm-10">
-	        <input class="form-control" id="upload_suffix" name="upload_suffix" />
-              </div>
-	    </div>
--->
-    	  </form>
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="cross_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Crossing Trial: </label>
+                            <div class="col-sm-10">
+                                <select class="form-control" id="cross_upload_crossing_trial" name="cross_upload_crossing_trial">
+                                    <option value="">Select Crossing Trial</option>
+                                    <%perl>
+                                        foreach my $crossing_trial (@crossing_trials) {
+                                        print "<option value=".'"'.@$crossing_trial[0].'"'.">".@$crossing_trial[1]."</option>";
+                                        }
+                                    </%perl>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Location: </label>
+                            <div class="col-sm-10">
+                                <select class="form-control" id="cross_upload_location" name="cross_upload_location">
+                                    <option value="">Select Location</option>
+<%perl>
+    foreach my $location (@locations) {
+        print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+    }
+</%perl>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                            <div class="col-sm-10">
+                                <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
+                        <!--
+                        <hr>
+                        <h3>Additional options:</h3>
+
+                        <p>Progeny naming: <i>If generating progeny, use cross name and:</i></p>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Prefix: </label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Suffix: </label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="upload_suffix" name="upload_suffix" />
+                            </div>
+                        </div>
+                        -->
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
-      </div>
     </div>
-  </div>
 </div>
 
 <div class="modal fade" id="upload_cross_error_display" name="upload_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesErrorDialog">
