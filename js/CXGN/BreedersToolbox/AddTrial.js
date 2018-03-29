@@ -1124,7 +1124,7 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 } else {
                     //alert('Trial design saved');
-                    refreshTrailJsTree();
+                    refreshTrailJsTree(0);
                     jQuery('#working_modal').modal("hide");
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
