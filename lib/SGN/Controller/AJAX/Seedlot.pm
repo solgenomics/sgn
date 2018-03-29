@@ -75,7 +75,9 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             location_id => $sl->{location_id},
             count => $sl->{current_count},
             weight_gram => $sl->{current_weight_gram},
-            owners_string => $sl->{owners_string}
+            owners_string => $sl->{owners_string},
+            organization => $sl->{organization},
+            box => $sl->{box}
         };
     }
 

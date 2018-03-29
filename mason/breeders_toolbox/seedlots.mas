@@ -142,10 +142,12 @@ jQuery(document).ready(function(){
             { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
             { title: "Breeding Program", "data": "breeding_program_name" },
             { title: "Contents", "data": "contents_html" },
-            { title: "Seedlot Location", "data": "location" },
+            { title: "Location", "data": "location" },
             { title: "Count", "data": "count" },
             { title: "Weight (g)", "data": "weight_gram" },
             { title: "Owners", "data": "owners_string" },
+            { title: "Organization", "data": "organization" },
+            { title: "Box", "data": "box" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
