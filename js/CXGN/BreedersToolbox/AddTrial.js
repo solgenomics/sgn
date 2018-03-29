@@ -346,6 +346,10 @@ jQuery(document).ready(function ($) {
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
         var num_seed_per_plot = $('#num_seed_per_plot').val();
+        var westcott_check_1 = $('#westcott_check_1').val();
+        var westcott_check_2 = $('#westcott_check_2').val();
+        var westcott_col = $('#westcott_col').val();
+        var westcott_col_between_check = $('#westcott_col_between_check').val();
 
         var seedlot_hash_combined = {};
         seedlot_hash_combined = extend_obj(accession_list_seedlot_hash, checks_list_seedlot_hash);
@@ -441,6 +445,10 @@ jQuery(document).ready(function ($) {
                 'no_of_sub_block_sequence': no_of_sub_block_sequence,
                 'seedlot_hash': JSON.stringify(seedlot_hash_combined),
                 'num_seed_per_plot': num_seed_per_plot,
+                'westcott_check_1': westcott_check_1,
+                'westcott_check_2': westcott_check_2,
+                'westcott_col': westcott_col,
+                'westcott_col_between_check': westcott_col_between_check,
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
