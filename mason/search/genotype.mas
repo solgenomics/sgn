@@ -28,6 +28,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Name:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="input_marker" placeholder="Enter marker name">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-info" id="search_genotypes"><i class="glyphicon glyphicon-search"></i> Genotypes </button>
+                                        </div>
+                                </div>
+                            </div>
+                    </div>
                 </div>
             </div>
         </div>
