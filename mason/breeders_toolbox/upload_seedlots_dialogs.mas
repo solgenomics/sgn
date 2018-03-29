@@ -139,8 +139,19 @@
                                     <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your accessions are in the database Click Here</button><br/><br/>
                                 </div>
                                 <div id="upload_seedlots_missing_crosses_div" style="display:none">
-                                    <div id="upload_seedlots_add_missing_crosses_html">
+                                    <div class="well">
+                                        <ul>
+                                            <li>Crosses must exist in the database before adding your seed lots. The reason for this is that a cross can produce many seed lots and so the cross must exists as a separate entity in the database. We also want to be careful about adding new crosses into the database because we do not want data to be incorrectly linked to duplicates.</li>
+                                        </ul>
                                     </div>
+                                    <ul>
+                                    <li>When adding crosses into the database, you can upload an Excel file or you can add seedlots one at a time.<br/><br/>
+                                        <ul>
+                                        <li><button class="btn btn-info" name="upload_crosses_link">Upload Excel file</button><br/><br/></li>
+                                        <li><button class="btn btn-info" name="create_cross_link">Add One Cross</button></li>
+                                        </ul>
+                                    </li>
+                                    </ul><br/>
                                 </div>
                             </div>
                             <div id="upload_seedlots_error_display" style="display:none">
@@ -440,8 +451,6 @@ jQuery(document).ready(function(){
                         });
                     } else if (response.missing_crosses){
                         jQuery('#upload_seedlots_missing_crosses_div').show();
-                        var add_crosses_html = "<h3>Add the missing crosses into the database</h3>";
-                        jQuery('#upload_seedlots_add_missing_crosses_html').html(add_crosses_html);
                     }
                 } else {
                     jQuery('#upload_seedlots_missing_accessions_or_crosses_div').hide();

@@ -59,7 +59,7 @@ jQuery(document).ready(function($) {
 
     });
 
-    $("#create_cross_link").click(function() {
+    $("[name='create_cross_link']").click(function() {
 
         $("#cross_type_info").click(function() {
             $("#cross_type_dialog").modal("show");
@@ -173,7 +173,7 @@ jQuery(document).ready(function($) {
         $("#cross_upload_spreadsheet_info_dialog").modal("show");
     });
 
-    $("#upload_crosses_link").click(function() {
+    $("[name='upload_crosses_link']").click(function() {
         $("#upload_crosses_dialog").modal("show");
     });
 
@@ -213,7 +213,6 @@ jQuery(document).ready(function($) {
     jQuery(document).on('click', '[name="upload_crosses_success_complete_button"]', function(){
         alert('Crosses saved in the database');
         jQuery('#upload_crosses_dialog').modal('hide');
-        location.reload();
     });
 
     jQuery("#upload_progenies_existing_crosses").click(function(){

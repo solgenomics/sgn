@@ -3,6 +3,9 @@
 $timestamp
 $preferred_species
 $editable_stock_props
+$programs
+$locations
+$crossing_trials
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -13,7 +16,7 @@ $editable_stock_props
 }
 </style>
   
-  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses' ] &>
 
 
 <&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>0 &>
@@ -118,6 +121,8 @@ $editable_stock_props
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 
 <script>
 jQuery(document).ready(function(){

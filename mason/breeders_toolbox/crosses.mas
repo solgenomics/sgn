@@ -1,7 +1,6 @@
 
 <%args>
 $user_id => undef
-@cross_populations => ()
 @programs => ()
 @crossing_trials => ()
 @locations => ()

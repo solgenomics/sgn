@@ -220,8 +220,8 @@ $editable_stock_props => {}
 <a id="create_cross_wishlist" >Create Cross Wishlist</a>
 </td>
 <td>
-<a id="upload_crosses_link"><p>Upload Many New Crosses</p></a>
-<a id="create_cross_link"><p>Add A Cross</p></a>
+<a name="upload_crosses_link"><p>Upload Many New Crosses</p></a>
+<a name="create_cross_link"><p>Add A Cross</p></a>
 <a id="upload_progenies_existing_crosses"><p>Upload Progenies of Existing Crosses</p></a>
 <a id="upload_cross_info"><p>Upload Experimental Info of Existing Crosses</p></a>
 </td>
