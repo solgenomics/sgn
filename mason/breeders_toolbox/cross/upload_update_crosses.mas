@@ -42,7 +42,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadProgeniesErrorDialog">Upload Crosses File Error</h4>
+                <h4 class="modal-title" id="uploadProgeniesErrorDialog">Upload Progenies File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -87,7 +94,7 @@
                     <br>
                         <b>-cross_name</b> (must exist in the database)
                     <br>
-                        <b>-progeny_name</b> (must not already exist in the database)
+                        <b>-progeny_name</b> (must not already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
                     <br>
                 </div>
             </div>
@@ -138,7 +145,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadCrossinfoErrorDialog">Upload Crosses File Error</h4>
+                <h4 class="modal-title" id="uploadCrossinfoErrorDialog">Upload Cross Info File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -181,9 +195,9 @@
                       Required columns:
                     </b>
                     <br>
-                        <b>-cross_name</b> (must exist in the database)
+                        <b>-cross_name</b> (must exist in the database, must not have duplicate cross name in the upload file)
                     <br>
-                        <b>-At least one of the following columns:</b>
+                        <b>-At least one of the following columns:</b> (all of the experimental info of a cross must be in a single row)
                     <br>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
