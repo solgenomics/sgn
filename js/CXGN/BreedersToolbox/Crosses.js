@@ -462,7 +462,6 @@ jQuery(document).ready(function($) {
                 'project_description': project_description,
             },
             beforeSend: function() {
-                jQuery("#create_crossingtrial_dialog").modal("hide");
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
@@ -479,9 +478,10 @@ jQuery(document).ready(function($) {
                 } else {
                     jQuery("#working_modal").modal("hide");
                     refreshCrossJsTree(0);
-                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel'});
-                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial'});
-                    $('#cross_saved_dialog_message').modal("show");
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
+                    Workflow.focus("#add_crossing_trial_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_crossing_trial_workflow");
                 }
             },
         });
