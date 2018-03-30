@@ -20,7 +20,7 @@
 </style>
 
 <div class="modal fade" id="create_cross" name="create_cross" tabindex="-1" role="dialog" aria-labelledby="createNewCrossesDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -29,303 +29,368 @@
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /page/explanation.mas, title=>'Cross Type information' &>
-                        <p>
-                            <b>Cross type information</b>
-                            <br>
-                            <a id="cross_type_info">Descriptions of cross types</a>
-                        </p>
-                    </&>
+                    <&| /util/workflow.mas, id=> "add_cross_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"What is a cross?" &>
 
-                    <form class="form-horizontal" role="form" name="create_cross_form" id="create_cross_form">
-                        <h3>Required:</h3>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Crossing Trial: </label>
-                            <div class="col-sm-10">
-                                <select class="form-control" id="crossing_trial" name="crossing_trial">
-                                    <option value="">Select Crossing Trial</option>
+                            <ul>
+                                <li>Crosses represent any pollination that occurs.</li>
+                                <li>Crosses can be of different types (biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
+                                <li>Depending on the cross type, an individual cross can be defined as between two accessions (e.g. accession A is the female and accession B is the male in a biparental cross)</li>
+                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are only defined as groups of accessions)</li>
+                                <li>An individual cross can be linked to the specific female plot or plant, as well as the specific male plot or plant.</li>
+                                <li>A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.</li>
+                                <li>A cross can produce seed, which goes into a seedlot.</li>
+                                <li>A cross can ultimately produce progeny, which then become named accessions in the database.</li>
+                            </ul>
+
+                            <br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <form class="form-horizontal" role="form" name="create_cross_form" id="create_cross_form">
+
+                            <&| /util/workflow.mas:step, title=> "Enter cross information" &>
+                                <& /page/page_title.mas, title=>"Enter basic information about the cross" &>
+
+                                <&| /page/explanation.mas, title=>'Cross Type information' &>
+                                    <p>
+                                        <b>Cross type information</b>
+                                        <br>
+                                        <a id="cross_type_info">Descriptions of cross types</a>
+                                    </p>
+                                </&>
+
+                                <h3>Required:</h3>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Crossing Trial: </label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control" id="crossing_trial" name="crossing_trial">
+                                            <option value="">Select Crossing Trial</option>
 <%perl>
     foreach my $crossing_trial (@crossing_trials) {
         print "<option value=".'"'.@$crossing_trial[0].'"'.">".@$crossing_trial[1]."</option>";
     }
 </%perl>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Location: </label>
-                            <div class="col-sm-10">
-                                <select class="form-control" id="location" name="location">
-                                    <option value="">Select Location</option>
+                                        </select>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Location: </label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control" id="location" name="location">
+                                            <option value="">Select Location</option>
 <%perl>
     foreach my $location (@locations) {
         print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
     }
 </%perl>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Cross Name: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" type="text" id="cross_name" name="cross_name"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Cross Type: </label>
-                            <div class="col-sm-10">
-                                <select class="form-control" id="cross_type">
-                                    <option value="">Select a cross type</option>
-                                    <option value="biparental">biparental</option>
-                                    <option value="self">self</option>
-                                    <option value="open">open pollinated</option>
-                                    <option value="bulk">bulk</option>
-                                    <option value="bulk_self">bulk selfed</option>
-                                    <option value="bulk_open">bulk and open pollinated</option>
-                                    <option value="doubled_haploid">doubled haploid</option>
-                                    <option value="polycross">polycross</option>
-                                    <option value="reciprocal">reciprocal</option>
-                                    <option value="multicross">multicross</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_maternal_parent" style="display: none">
-                            <label class="col-sm-2 control-label">Female Parent: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="maternal_parent" type="text" name="maternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_paternal_parent" style="display: none">
-                            <label class="col-sm-2 control-label">Male Parent: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="paternal_parent" type="text" name="paternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_selfed_parent" style="display: none">
-                            <label class="col-sm-2 control-label">Selfed Parent: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="selfed_parent" type="text" name="selfed" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_open_maternal_parent" style="display: none">
-                            <label class="col-sm-2 control-label">Female Parent: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_open_paternal_population" style="display: none">
-                            <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="open_paternal_population" type="text" name="open paternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_bulk_maternal_population" style="display: none">
-                            <label class="col-sm-2 control-label">Female Population: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_bulk_paternal_parent" style="display: none">
-                            <label class="col-sm-2 control-label">Male Parent: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_bulk_selfed_population" style="display: none">
-                            <label class="col-sm-2 control-label">Selfed Population: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_bulk_open_maternal_population" style="display: none">
-                            <label class="col-sm-2 control-label">Female Population: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_bulk_open_paternal_population" style="display: none">
-                            <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="get_doubled_haploid_parent" style="display: none">
-                            <label class="col-sm-2 control-label">Doubled Haploid Parent: </label>
-                            <div class="col-sm-10">
-                                <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" />
-                            </div>
-                        </div>
-                        <div class="form-group" id="polycross_accessions" style="display: none">
-                            <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
-                            <div class="col-sm-10">
-                                <div id="polycross_accession_list"></div>
-                            </div>
-                        </div>
-                        <div class="form-group" id="reciprocal_accessions" style="display: none">
-                            <label class="col-sm-2 control-label">Accessions to use in Reciprocal cross: </label>
-                            <div class="col-sm-10">
-                                <div id="reciprocal_accession_list"></div>
-                            </div>
-                        </div>
-                        <div class="form-group" id="maternal_accessions" style="display: none">
-                            <label class="col-sm-2 control-label">Multicross Female Parents: </label>
-                            <div class="col-sm-10">
-                                <div id="maternal_accession_list"></div>
-                            </div>
-                        </div>
-                        <div class="form-group" id="paternal_accessions" style="display: none">
-                            <label class="col-sm-2 control-label">Multicross Male Parents: </label>
-                            <div class="col-sm-10">
-                                <div id="paternal_accession_list"></div>
-                            </div>
-                        </div>
-                        <br>
+                                        </select>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Cross Name: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" type="text" id="cross_name" name="cross_name"/>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Cross Type: </label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control" id="cross_type">
+                                            <option value="">Select a cross type</option>
+                                            <option value="biparental">biparental</option>
+                                            <option value="self">self</option>
+                                            <option value="open">open pollinated</option>
+                                            <option value="bulk">bulk</option>
+                                            <option value="bulk_self">bulk selfed</option>
+                                            <option value="bulk_open">bulk and open pollinated</option>
+                                            <option value="doubled_haploid">doubled haploid</option>
+                                            <option value="polycross">polycross</option>
+                                            <option value="reciprocal">reciprocal</option>
+                                            <option value="multicross">multicross</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/><br/>
+                                <center>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Enter parentage information" &>
+                                <& /page/page_title.mas, title=>"Enter basic information about the cross" &>
 
-                        <h3>Optional:</h3>
-                        <table>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Field Trial: </label>
-                                <div class="col-sm-10">
-                                    <div class="input-group">
-                                        <input type ="text" class ="form-control" id ="field_trial">
-                                        <div class ="input-group-btn">
-                                            <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
-                                        </div>
-                                    </div>
+                                <div class="form-group" id="get_maternal_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Female Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="maternal_parent" type="text" name="maternal" />
+                                    </div><br/><br/>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Female Plot: </label>
-                                <div class="col-sm-10">
-                                    <select class="form-control" id="female_plot" name="female_plot">
-                                        <option value="">Choose trial first</option>
-                                    </select>
+                                <div class="form-group" id="get_paternal_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Male Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="paternal_parent" type="text" name="paternal" />
+                                    </div><br/><br/>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Male Plot: </label>
-                                <div class="col-sm-10">
-                                    <select class="form-control" id="male_plot" name="male_plot">
-                                        <option value="">Choose trial first</option>
-                                    </select>
+                                <div class="form-group" id="get_selfed_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Selfed Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="selfed_parent" type="text" name="selfed" />
+                                    </div><br/><br/>
                                 </div>
-                            </div>
+                                <div class="form-group" id="get_open_maternal_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Female Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_open_paternal_population" style="display: none">
+                                    <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="open_paternal_population" type="text" name="open paternal" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_bulk_maternal_population" style="display: none">
+                                    <label class="col-sm-2 control-label">Female Population: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_bulk_paternal_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Male Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_bulk_selfed_population" style="display: none">
+                                    <label class="col-sm-2 control-label">Selfed Population: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_bulk_open_maternal_population" style="display: none">
+                                    <label class="col-sm-2 control-label">Female Population: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_bulk_open_paternal_population" style="display: none">
+                                    <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_doubled_haploid_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Doubled Haploid Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="polycross_accessions" style="display: none">
+                                    <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
+                                    <div class="col-sm-10">
+                                        <div id="polycross_accession_list"></div>
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="reciprocal_accessions" style="display: none">
+                                    <label class="col-sm-2 control-label">Accessions to use in Reciprocal cross: </label>
+                                    <div class="col-sm-10">
+                                        <div id="reciprocal_accession_list"></div>
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="maternal_accessions" style="display: none">
+                                    <label class="col-sm-2 control-label">Multicross Female Parents: </label>
+                                    <div class="col-sm-10">
+                                        <div id="maternal_accession_list"></div>
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="paternal_accessions" style="display: none">
+                                    <label class="col-sm-2 control-label">Multicross Male Parents: </label>
+                                    <div class="col-sm-10">
+                                        <div id="paternal_accession_list"></div>
+                                    </div><br/><br/>
+                                </div>
+                                <br>
+                                <center>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Track exact cross parents" &>
+                                <& /page/page_title.mas, title=>"If you choose to record exact cross parents, you can do so." &>
 
-                            <tr>
-                                <td>
-                                    <div class="form-group">
-                                        <label class="col-sm-9 control-label">Specify Pollination Date: </label>
-                                        <div class="col-sm-3">
-                                            <input id= "pollination_date_checkbox" type="checkbox" />
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Field Trial: </label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <input type ="text" class ="form-control" id ="field_trial">
+                                            <div class ="input-group-btn">
+                                                <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    <div class="form-group" id="get_pollination_date" style="display: none">
-                                        <label class="col-sm-6 control-label">Pollination Date (YYYY/MM/DD): </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" type="text" id="pollination_date" />
-                                        </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Female Plot: </label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control" id="female_plot" name="female_plot">
+                                            <option value="">Choose trial first</option>
+                                        </select>
                                     </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="form-group">
-                                        <label class="col-sm-9 control-label">Specify Number of Flowers: </label>
-                                        <div class="col-sm-3">
-                                            <input id= "flower_number_checkbox" type="checkbox" />
-                                        </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Male Plot: </label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control" id="male_plot" name="male_plot">
+                                            <option value="">Choose trial first</option>
+                                        </select>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-9 control-label">Specify Number of Fruits: </label>
-                                        <div class="col-sm-3">
-                                            <input id= "fruit_number_checkbox" type="checkbox" />
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="form-group" id="get_flower_number" style="display: none">
-                                        <label class="col-sm-6 control-label">Number of Flowers: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" type="text" id="flower_number" />
-                                        </div>
-                                    </div>
-                                    <div class="form-group" id="get_fruit_number" style="display: none">
-                                        <label class="col-sm-6 control-label">Number of Fruits: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" type="text" id="fruit_number" />
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="form-group">
-                                        <label class="col-sm-9 control-label">Specify Number of Seeds: </label>
-                                        <div class="col-sm-3">
-                                            <input id= "seed_number_checkbox" type="checkbox" />
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="form-group" id="get_seed_number" style="display: none">
-                                        <label class="col-sm-6 control-label">Number of Seeds: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" type="text" id="seed_number" />
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="form-group">
-                                        <label title="You may choose to create accessions for the progeny of the cross at this time." class="col-sm-9 control-label">Add New Accessions for Progeny: </label>
-                                        <div class="col-sm-3">
-                                            <input id="create_progeny_checkbox" type="checkbox"/>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="form-group" id="create_progeny_number" style="display: none">
-                                        <label class="col-sm-6 control-label">Number of progeny: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" type="text" id="progeny_number" />
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr id="use_prefix_suffix" style = "display: none">
-                                <td>
-                                    <div class="form-group">
-                                        <label class="col-sm-9 control-label">Use Prefix and/or Suffix: </label>
-                                        <div class="col-sm-3">
-                                            <input id="use_prefix_suffix_checkbox" type="checkbox" checked/>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td id="get_prefix_suffix" style="display: none">
-                                    <div class="form-group" >
-                                        <label class="col-sm-6 control-label">Prefix: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" id="prefix" name="prefix" value="P" size="5" />
-                                        </div>
-                                    </div>
-                                    <div class="form-group" >
-                                        <label class="col-sm-6 control-label">Suffix: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" id="suffix" name="suffix" size="5" />
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
+                                </div><br/><br/>
+                                <center>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Additional cross info" &>
+                                <& /page/page_title.mas, title=>"If you know more information about the cross, you can add it" &>
+
+                                <h3>Optional:</h3>
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label class="col-sm-9 control-label">Specify Pollination Date: </label>
+                                                <div class="col-sm-3">
+                                                    <input id= "pollination_date_checkbox" type="checkbox" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-group" id="get_pollination_date" style="display: none">
+                                                <label class="col-sm-6 control-label">Pollination Date (YYYY/MM/DD): </label>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" type="text" id="pollination_date" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label class="col-sm-9 control-label">Specify Number of Flowers: </label>
+                                                <div class="col-sm-3">
+                                                    <input id= "flower_number_checkbox" type="checkbox" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-9 control-label">Specify Number of Fruits: </label>
+                                                <div class="col-sm-3">
+                                                    <input id= "fruit_number_checkbox" type="checkbox" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-group" id="get_flower_number" style="display: none">
+                                                <label class="col-sm-6 control-label">Number of Flowers: </label>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" type="text" id="flower_number" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group" id="get_fruit_number" style="display: none">
+                                                <label class="col-sm-6 control-label">Number of Fruits: </label>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" type="text" id="fruit_number" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label class="col-sm-9 control-label">Specify Number of Seeds: </label>
+                                                <div class="col-sm-3">
+                                                    <input id= "seed_number_checkbox" type="checkbox" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-group" id="get_seed_number" style="display: none">
+                                                <label class="col-sm-6 control-label">Number of Seeds: </label>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" type="text" id="seed_number" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label title="You may choose to create accessions for the progeny of the cross at this time." class="col-sm-9 control-label">Add New Accessions for Progeny: </label>
+                                                <div class="col-sm-3">
+                                                    <input id="create_progeny_checkbox" type="checkbox"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-group" id="create_progeny_number" style="display: none">
+                                                <label class="col-sm-6 control-label">Number of progeny: </label>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" type="text" id="progeny_number" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr id="use_prefix_suffix" style = "display: none">
+                                        <td>
+                                            <div class="form-group">
+                                                <label class="col-sm-9 control-label">Use Prefix and/or Suffix: </label>
+                                                <div class="col-sm-3">
+                                                    <input id="use_prefix_suffix_checkbox" type="checkbox" checked/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td id="get_prefix_suffix" style="display: none">
+                                            <div class="form-group" >
+                                                <label class="col-sm-6 control-label">Prefix: </label>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" id="prefix" name="prefix" value="P" size="5" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group" >
+                                                <label class="col-sm-6 control-label">Suffix: </label>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" id="suffix" name="suffix" size="5" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br/>
+                                <center>
+                                    <button class="btn btn-primary" name="create_cross_submit" id="create_cross_submit" onclick="Workflow.complete(this, false);">Submit Cross</button>
+                                </center>
+                            </&>
+                        </form>
+
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your cross is now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                The cross was added successfully
+                            </p>
+                            
+                            <ul>
+                                <li>You may want to proceed to the cross detail page for the cross you just created.</li>
+                                <li>You can print barcodes for the cross.</li>
+                                <li>You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).</li>
+                            </ul>
+                            <br/>
+                        </&>
+                    </&><!-- End of workflow -->
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="create_cross_submit" id="create_cross_submit">Submit</button>
             </div>
         </div>
     </div>

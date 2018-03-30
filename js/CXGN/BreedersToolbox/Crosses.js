@@ -376,7 +376,6 @@ jQuery(document).ready(function($) {
                 '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&location=' + location + '&female_plot=' + female_plot +
                 '&male_plot=' + male_plot,
             beforeSend: function() {
-                jQuery("#create_cross").modal("hide");
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
@@ -390,8 +389,8 @@ jQuery(document).ready(function($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    $('#cross_saved_dialog_message').modal("show");
-                    refreshCrossJsTree(1);
+                    Workflow.focus("#add_cross_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_cross_workflow");
                 }
             },
         });
