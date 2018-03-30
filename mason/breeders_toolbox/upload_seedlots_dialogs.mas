@@ -152,6 +152,9 @@
                                         </ul>
                                     </li>
                                     </ul><br/>
+                                    <center>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your crosses are in the database Click Here</button><br/><br/>
+                                    </center>
                                 </div>
                             </div>
                             <div id="upload_seedlots_error_display" style="display:none">

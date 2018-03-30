@@ -389,6 +389,7 @@ jQuery(document).ready(function($) {
                     alert(response.error);
                 } else {
                     $('#cross_saved_dialog_message').modal("show");
+                    refreshCrossJsTree(1);
                 }
             },
         });
