@@ -59,3 +59,16 @@
         </thead>
     </table>
 </&>
+
+<script>
+
+
+jQuery(document).ready(function () {
+
+    var list = new CXGN.List();
+
+    jQuery("#select_dataset").html(list.listSelect("select_dataset", ["accessions"] ));
+
+});
+
+</script>
