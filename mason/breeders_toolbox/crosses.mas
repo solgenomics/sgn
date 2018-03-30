@@ -14,6 +14,7 @@ $user_id => undef
 <& /breeders_toolbox/cross_wishlist.mas &>
 <& /breeders_toolbox/add_cross_dialogs.mas, programs=>\@programs, locations=>\@locations, crossing_trials=>\@crossing_trials &>
 <& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations, crossing_trials=>\@crossing_trials &>
+<& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>\@programs, locations=>\@locations &>
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
@@ -59,123 +60,6 @@ $user_id => undef
     </tbody>
 </table>
 
-
-<style>
-  .ui-autocomplete {
-  max-height: 100px;
-  overflow-y: auto;
-  /* prevent horizontal scrollbar */
-  overflow-x: hidden;
-  }
-
-  /* IE 6 doesn't support max-height
-  * we use height instead, but this forces the menu to always be this tall
-  */
-  * html .ui-autocomplete {
-  height: 100px;
-  }
-</style>
-
-<!-- Modal Dialogs Below Here -->
-
-<div class="modal fade" id="create_crossingtrial_dialog" name="create_crossingtrial_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossingTrialDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content ui-front">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="creatCrossingTrial">Add New Crossing Trial</h4></center>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-
-                    <&| /util/workflow.mas, id=> "add_crossing_trial_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What are crossing trials?" &>
-
-                            <p>Crossing trials are for grouping crosses together. The grouping is most often done for geographic reasons, such as a group of crosses done in the same field trial. This grouping can be used to encapsulate all the crosses done in a crossing block field trial that you have saved in the database (e.g. in Manage Trials your crossing block will appear as a field trial with plots)</p>
-                            <hr>
-
-                            <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                            </center>
-                        </&>
-                        <&| /util/workflow.mas:step, title=> "Add a crossing trial" &>
-                            <& /page/page_title.mas, title=>"Enter basic information about the crossing trial" &>
-
-                            <form class="form-horizontal" role="form" name="create_crossingtrial_form" id="create_crossingtrial_form">
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-lable">Crossing Trial Name: </label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="crossingtrial_name" name="crossingtrial_name" type="text" />
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Breeding Program: </label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="crossingtrial_program" name="crossingtrial_program">
-                                            <option value="">Select Breeding Program</option>
-<%perl>
-    foreach my $program (@programs) {
-        print "<option value=".'"'.@$program[0].'"'.">".@$program[1]."</option>";
-        }
-</%perl>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Location: </label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
-                                            <option value="">Select Location</option>
-<%perl>
-    foreach my $location (@locations) {
-        print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-    }
-</%perl>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-lable">Year:</label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Description:</label>
-                                    <div class="col-sm-10">
-                                        <textarea class="form-control" id="add_project_description" name="add_project_description"  name="add_project_description"></textarea>
-                                    </div>
-                                </div>
-                            </form>
-                            <br/>
-                            <center>
-                                <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
-                            </center>
-                        </&>
-                        <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your crossing trial is now in the database" &>
-                            <p>
-                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                Crossing trial was added successfully
-                            </p>
-                            
-                            <ul>
-                                <li>You may want to proceed to the crossing trial detail page you just created.</li>
-                                <li>You can add or upload crosses into your crossing trial as they become available.</li>
-                                <li>You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).</li>
-                            </ul>
-                            <br/>
-                        </&>
-                    </&><!-- End of workflow -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
 
