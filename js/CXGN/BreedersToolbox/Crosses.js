@@ -18,7 +18,7 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    $("#create_crossingtrial_link").click(function() {
+    $("[name='create_crossingtrial_link']").click(function() {
         var lo = new CXGN.List();
         get_select_box('years', 'add_project_year', {'auto_generate':1});
         $("#create_crossingtrial_dialog").modal("show");
@@ -174,6 +174,8 @@ jQuery(document).ready(function($) {
     });
 
     $("[name='upload_crosses_link']").click(function() {
+        get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
+        get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
         $("#upload_crosses_dialog").modal("show");
     });
 
@@ -476,6 +478,9 @@ jQuery(document).ready(function($) {
                     alert(response.error);
                 } else {
                     jQuery("#working_modal").modal("hide");
+                    refreshCrossJsTree(0);
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel'});
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial'});
                     $('#cross_saved_dialog_message').modal("show");
                 }
             },

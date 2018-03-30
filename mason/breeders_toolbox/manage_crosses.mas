@@ -12,7 +12,7 @@ $user_id
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'<a id="create_crossingtrial_link" >&nbsp; [ Add Crossing Trial ] &nbsp;</a> <a name="create_cross_link" >&nbsp; [ Add Cross ] &nbsp;</a> <a name="upload_crosses_link" >&nbsp; [ Upload Crosses ] &nbsp;</a> <a id="create_cross_wishlist" > &nbsp; [ Add Cross Wishlist ] &nbsp;</a>' &>
+<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'<a name="create_crossingtrial_link" >&nbsp; [ Add Crossing Trial ] &nbsp;</a> <a name="create_cross_link" >&nbsp; [ Add Cross ] &nbsp;</a> <a name="upload_crosses_link" >&nbsp; [ Upload Crosses ] &nbsp;</a> <a id="create_cross_wishlist" > &nbsp; [ Add Cross Wishlist ] &nbsp;</a>' &>
 
 <& /breeders_toolbox/crosses.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, crossing_trials=>$crossing_trials, roles=>$roles  &>
 

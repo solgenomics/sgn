@@ -685,6 +685,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
     my $size = $c->req->param("size");
     my @crosses;
     foreach my $project (@$projects) {
@@ -696,7 +697,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     @crosses = sort @crosses;
 
     my $html = simple_selectbox_html(
-      multiple => 1,
+      multiple => $multiple,
       name => $name,
       id => $id,
       size => $size,
