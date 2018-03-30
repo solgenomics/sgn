@@ -78,6 +78,8 @@ rect.bordered {
                             <p>To design a trial you need to provide a globally unique trial name. The plot_names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
                             <p>You also need to provide a list of accessions to use. Based on the design you have picked, the accessions will be randomized over the blocks or replicates in the trial.</p>
                             <p>Depending on the design you have picked, you will need to provide different design parameters (e.g. for complete block you will need to provide number of blocks, while for alpha lattice you will need to provide block size and number of replicates.).</p>
+                            <p>A trial can represent a variety of things, including a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
+                            <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
                             <br/><br/>
                             <center>
                             <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>

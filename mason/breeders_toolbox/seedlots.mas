@@ -19,7 +19,7 @@ $crossing_trials
   <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses' ] &>
 
 
-<&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -28,6 +28,7 @@ $crossing_trials
                 <li>Seedlots represent physical seed in packets.</li>
                 <li>This seed can be from crosses or for named accessions.</li>
                 <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+                <li>Seed can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
                 <li>Seedlots can belong to breeding programs and organizations.</li>
                 </ul>
 

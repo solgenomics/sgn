@@ -16,6 +16,16 @@ $locations
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "trial_upload_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through designing a new trial in the database" &>
+                            <p>A field trial represents plots in the field where each plot has a globally unique plot_name, a sequential plot_number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block design vs augmented). Each plot can have a row_number and col_number indicating the relative position of the plot in the field.</p>
+                            <p>A trial can represent a variety of things, including a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
+                            <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
                         <&| /util/workflow.mas:step, title=> "File Formatting" &>
                             <& /page/page_title.mas, title=>"Make sure your experiment is formatted in the right format" &>
                             <br/><br/>
