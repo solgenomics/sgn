@@ -111,16 +111,16 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
   my $self = shift;
   my $c = shift;
 
-  my $trial_id = $c->req->param('trial_id');
+  my @trial_ids = $c->req->param('trial_ids[]');
   my @trait_ids = $c->req->param('trait_ids[]');
   my @weights = $c->req->param('coefficients[]');
   my @controls = $c->req->param('controls[]');
   my $allow_missing = $c->req->param('allow_missing');
 
   my $dbh = $c->dbc->dbh();
-  my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+  my $bs = CXGN::BreederSearch->new( { bcs_schema => $c->dbic_schema('Bio::Chado::Schema'), dbh=>$dbh } );
 
-  my $results_ref = $bs->avg_phenotypes_query($trial_id, \@trait_ids, \@weights, \@controls, $allow_missing);
+  my $results_ref = $bs->avg_phenotypes_query(\@trial_ids, \@trait_ids, \@weights, \@controls, $allow_missing);
 
   $c->stash->{rest} = {
     error => $results_ref->{'error'},

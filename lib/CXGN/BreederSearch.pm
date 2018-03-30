@@ -16,7 +16,15 @@ package CXGN::BreederSearch;
 use Moose;
 use Data::Dumper;
 use Try::Tiny;
+use Scalar::Util qw(looks_like_number);
+use CXGN::Stock::StockLookup;
 
+
+has 'bcs_schema' => (
+    isa => "Bio::Chado::Schema",
+    is => 'ro',
+    required => 1,
+    );
 has 'dbh' => (
     is  => 'rw',
     required => 1,
@@ -173,7 +181,7 @@ Side Effects: none
 
 sub avg_phenotypes_query {
   my $self = shift;
-  my $trial_id = shift;
+  my $trial_ids = shift;
   my $trait_ids = shift;
   my $weights = shift;
   my $controls = shift;
@@ -182,24 +190,99 @@ sub avg_phenotypes_query {
   my @controls = @$controls;
   my $allow_missing = shift;
 
-  my $select = "SELECT table0.accession_id, table0.accession_name";
-  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
-  for (my $i = 1; $i <= scalar @trait_ids; $i++) {
-    $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
-    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
+  my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+      bcs_schema=>$self->bcs_schema(),
+      search_type=>'Native',
+      data_level=>'plot',
+      trait_list=>$trait_ids,
+      trait_component_list=>'',
+      trial_list=>$trial_ids,
+      year_list=>[],
+      location_list=>[],
+      accession_list=>[],
+      plot_list=>[],
+      plant_list=>[],
+      include_timestamp=>0,
+      include_row_and_column_numbers=>0,
+      exclude_phenotype_outlier=>0,
+      trait_contains=>[""],
+      phenotype_min_value=>'',
+      phenotype_max_value=>'',
+  );
+  my @data = $phenotypes_search->get_phenotype_matrix();
+
+  # reduce matrix to just accession name and trait values
+  splice(@$_, 0, 7) foreach @data;
+  splice(@$_, 1, 7) foreach @data;
+  print STDERR "Data is: " . Dumper(@data);
+
+  # combine plot level measurements into accession averages.
+  my %hash;
+  my $length;
+  foreach my $row (@data) {
+      my @row = @{$row};
+      my $name = shift @row;
+      $length = scalar @row - 1;
+      for my $i (0 .. $#row) {
+          if (looks_like_number($row[$i])) {
+              $hash{$name}{$i}{'count'} += 1;
+              $hash{$name}{$i}{'sum'} += $row[$i];
+          }
+      }
   }
-  my $query = $select . $from . " ORDER BY 2";
-  if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
 
-  print STDERR "QUERY: $query\n";
+  my @averages;
+  #print STDERR "Length is $length\n";
+  foreach my $key (keys %hash) {
+      #print STDERR "First sum is: ". $hash{$key}{0}{'sum'} . "and count is: ". $hash{$key}{0}{'count'};
+      #print STDERR "Second sum is: ". $hash{$key}{1}{'sum'} . "and count is: ". $hash{$key}{1}{'count'};
+      #print STDERR "Third sum is: ". $hash{$key}{2}{'sum'} . "and count is: ". $hash{$key}{2}{'count'};
+      my @means = map {
+          if ( $hash{$key}{$_}{'sum'} && $hash{$key}{$_}{'count'} ) {
+              $hash{$key}{$_}{'sum'} / $hash{$key}{$_}{'count'};
+          } else {
+              'missing data';
+          }
+      } (0 ..$length);
+      unshift @means, $key;
+      print STDERR "Means are @means\n";
 
-  my $h = $self->dbh->prepare($query);
-  $h->execute(@$trait_ids);
+      my %means = map { $_ => 1 } @means;
+      if (exists($means{'missing data'})) {
+          print STDERR "Skipping clone due to incomplete data";
+      } {
+          my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $self->bcs_schema(), stock_name=>$key);
+          my $stock_id = $stock_lookup->get_stock_exact()->stock_id();
+          print STDERR "Stock $key has id ".$stock_id."\n";
+          unshift @means, $stock_id;
+          push @averages, [@means];
+      }
+
+  }
+
+  #print STDERR "Averages are: " . Dumper(@averages);
+  print STDERR "Averages are calculated!\n";
+
+  # my $select = "SELECT table0.accession_id, table0.accession_name";
+  # my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  # for (my $i = 1; $i <= scalar @trait_ids; $i++) {
+  #   $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
+  #   $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
+  # }
+  # my $query = $select . $from . " ORDER BY 2";
+  # if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
+  #
+  # print STDERR "QUERY: $query\n";
+  #
+  # my $h = $self->dbh->prepare($query);
+  # $h->execute(@$trait_ids);
 
   my (@raw_avg_values, @reference_values, @rows_to_scale, @weighted_values);
 
   if (grep { defined($_) } @controls) {
-  while (my @row = $h->fetchrow_array()) {
+      foreach my $row (@averages) {
+  # while (my @row = $h->fetchrow_array()) {
+    my @row = @{$row};
     push @rows_to_scale, @row;
     my ($id, $name, @avg_values) = @row;
     for my $i (0..$#controls) {
@@ -218,8 +301,13 @@ sub avg_phenotypes_query {
     }
 
     #print STDERR "reference values = @reference_values\n";
-    $h->execute(@$trait_ids);
-    while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+    # $h->execute(@$trait_ids);
+    # while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+        foreach my $row (@averages) {
+    # while (my @row = $h->fetchrow_array()) {
+      my @avg_values = @{$row};
+        my $id = shift @avg_values;
+        my $name = shift @avg_values;
 
       my @scaled_values = map {sprintf("%.2f", $avg_values[$_] / $reference_values[$_])} 0..$#avg_values;
       my @scaled_and_weighted = map {sprintf("%.2f", $scaled_values[$_] * $weights[$_])} 0..$#scaled_values;
@@ -236,12 +324,19 @@ sub avg_phenotypes_query {
 
   } else {
 
-  while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+  # while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+  foreach my $row (@averages) {
+# while (my @row = $h->fetchrow_array()) {
+    my @avg_values = @{$row};
+    my $id = shift @avg_values;
+    my $name = shift @avg_values;
+    print STDERR "Separating values. Id is $id and name is $name\n";
 
     my @values_to_weight = @avg_values;
     unshift @avg_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
     push @raw_avg_values, [@avg_values];
 
+    print STDERR "Weighting values\n";
     @values_to_weight = map {$values_to_weight[$_] * $weights[$_]} 0..$#values_to_weight;
     my $sum;
     map { $sum += $_ } @values_to_weight;
@@ -252,15 +347,16 @@ sub avg_phenotypes_query {
   }
 
 }
-
+    print "Sorting values by total weighted value\n";
   my @weighted_values2 = sort { $b->[-1] <=> $a->[-1] } @weighted_values;
+  print STDERR "Adding order numbers to values\n";
   my @weighted_values3;
   for (my $i = 0; $i < scalar @weighted_values2; $i++ ) {
     my $temp_array = $weighted_values2[$i];
     my @temp_array = @$temp_array;
     push @temp_array, $i+1;
     push @weighted_values3, [@temp_array];
-  }
+}
 
   #print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
   #print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);

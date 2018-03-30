@@ -36,13 +36,14 @@ jQuery(document).ready(function() {
             ];
 
             jQuery.ajax({ // get traits phenotyped in trial
-                url: '/ajax/breeder/search',
+                url : '/ajax/breeders/trial/'+ trial_id + '/traits_assayed?stock_type=plot',
+                // url: '/ajax/breeder/search',
                 method: 'POST',
-                data: {
-                    'categories': ['trials', 'traits'],
-                    'data': data,
-                    'querytypes': 0
-                },
+                // data: {
+                //     'categories': ['trials', 'traits'],
+                //     'data': data,
+                //     'querytypes': 0
+                // },
                 beforeSend: function() {
                     disable_ui();
                 },
@@ -50,7 +51,9 @@ jQuery(document).ready(function() {
                     enable_ui();
                 },
                 success: function(response) {
-                    var list = response.list || 0;
+                    // var list = response.list || 0;
+                    var list = response.traits_assayed[0] || 0;
+                    // console.log("Trait list is: "+JSON.stringify(list));
                     if (!list) {
                       trait_html = '<option id="select_message" value="" title="No trait measurements found.">No trait measurements found for '+trial_name+'.</option>\n';
                       jQuery('#trait_list').html(trait_html);
@@ -58,8 +61,10 @@ jQuery(document).ready(function() {
                     }
                     var trait_ids = [];
                     for (i = 0; i < list.length; i++) {
+                        // console.log("current array is: "+JSON.stringify(list[i]));
                         trait_ids.push(list[i][0]);
                     }
+                    // console.log("Trait ids are: "+JSON.stringify(trait_ids));
 
                     var synonyms;
                     jQuery.ajax({ // get trait synonyms
@@ -97,20 +102,22 @@ jQuery(document).ready(function() {
             });
 
             jQuery.ajax({ // get plots phenotyped in trial
-                url: '/ajax/breeder/search',
+                url: '/ajax/breeders/trial/' + trial_id + '/plots',
+                // url: '/ajax/breeder/search',
                 method: 'POST',
-                data: {
-                    'categories': ['trials', 'plots'],
-                    'data': data,
-                    'querytypes': 0
-                },
+                // data: {
+                //     'categories': ['trials', 'plots'],
+                //     'data': data,
+                //     'querytypes': 0
+                // },
                 success: function(response) {
-                    var plots = response.list || [];
-                    //console.log("plots: " + JSON.stringify(plots));
+                    // var plots = response.list || [];
+                    var plots = response.plots[0] || [];
+                    console.log("plots: " + JSON.stringify(plots));
                     var plot_ids = plots.map(function(val) {
                         return val[0]
                     });
-                    //console.log("plot ids: " + JSON.stringify(plot_ids));
+                    console.log("plot ids: " + JSON.stringify(plot_ids));
                     jQuery.ajax({
                         url: '/ajax/breeders/trial/' + data + '/controls_by_plot',
                         data: {
@@ -238,14 +245,16 @@ jQuery(document).ready(function() {
       }
         jQuery('#raw_avgs_div').html("");
         jQuery('#weighted_values_div').html("");
-        var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
+        //var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
         var selected_trait_rows = jQuery('#trait_table').children();
-        var trait_ids = [],
+        var trial_ids = [],
+            trait_ids = [],
             column_names = [],
             weighted_column_names = [],
             coefficients = [],
             controls = [];
 
+        trial_ids.push(jQuery("#select_trial_for_selection_index option:selected").val());
         var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
         column_names.push({
             title: "Accession"
@@ -290,7 +299,7 @@ jQuery(document).ready(function() {
             url: '/ajax/breeder/search/avg_phenotypes',
             method: 'POST',
             data: {
-                'trial_id': trial_id,
+                'trial_ids': trial_ids,
                 'trait_ids': trait_ids,
                 'coefficients': coefficients,
                 'controls': controls,
