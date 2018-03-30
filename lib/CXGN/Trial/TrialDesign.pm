@@ -63,6 +63,10 @@ has 'sub_block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_sub_blo
 has 'block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_block_sequence', clearer => 'clear_block_sequence');
 has 'col_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_col_in_design_number',clearer => 'clear_col_in_design_number');
 has 'row_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_row_in_design_number',clearer => 'clear_row_in_design_number');
+has 'westcott_col' => (isa => 'Int',is => 'rw',predicate => 'has_westcott_col',clearer => 'clear_westcott_col');
+has 'westcott_col_between_check' => (isa => 'Int',is => 'rw',predicate => 'has_westcott_col_between_check',clearer => 'clear_westcott_col_between_check');
+has 'westcott_check_1' => (isa => 'Str',is => 'rw',predicate => 'has_westcott_check_1',clearer => 'clear_westcott_check_1');
+has 'westcott_check_2' => (isa => 'Str',is => 'rw',predicate => 'has_westcott_check_2',clearer => 'clear_westcott_check_2');
 
 subtype 'RandomizationMethodType',
   as 'Str',
@@ -74,7 +78,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "westcott" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -109,6 +113,9 @@ sub calculate_design {
     }
     elsif ($self->get_design_type() eq "p-rep") {
       $design = _get_p_rep_design($self);
+    }
+    elsif ($self->get_design_type() eq "westcott") {
+      $design = _get_westcott_design($self);
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -406,6 +413,55 @@ sub _get_crd_design {
 
     %crd_design = %{_build_plot_names($self,\%crd_design)};
     return \%crd_design;
+}
+
+sub _get_westcott_design {
+    my $self = shift;
+    my %westcott_design;
+    my $rbase = R::YapRI::Base->new();
+    my @stock_list;
+    my $stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @stock_names;
+    my @block_numbers;
+    my @converted_plot_numbers;
+    my $westcott_col;
+    my $westcott_check_2;
+    my $westcott_check_1;
+    my $westcott_col_between_check;
+    
+    if ($self->has_stock_list()) {
+      @stock_list = @{$self->get_stock_list()};
+    } else {
+      die "No stock list specified\n";
+    }
+    if ($self->has_westcott_col()) {
+      $westcott_col = $self->get_westcott_col();
+    }
+    if ($self->has_westcott_check_2()) {
+      $westcott_check_2 = $self->get_westcott_check_2();
+    }
+    if ($self->has_westcott_check_1()) {
+      $westcott_check_1 = $self->get_westcott_check_1();
+    }
+    if ($self->has_westcott_col_between_check()) {
+      $westcott_col_between_check = $self->get_westcott_col_between_check();
+    }
+    
+    $stock_data_matrix =  R::YapRI::Data::Matrix->new({
+        name => 'stock_data_matrix',
+        rown => 1,
+        coln => scalar(@stock_list),
+        data => \@stock_list,
+    });
+    
+    $r_block = $rbase->create_block('r_block');
+    $stock_data_matrix->send_rbase($rbase, 'r_block'); 
+    $r_block->add_command('library(devtools)');
+    $r_block->add_command('library(st4gi)');
+    
 }
 
 sub _get_p_rep_design {
