@@ -40,7 +40,7 @@
                             </center>
                         </&>
 
-                        <&| /util/workflow.mas:step, title=> "Crossing trials" &>
+                        <&| /util/workflow.mas:step, title=> "Crossing trial" &>
                             <& /page/page_title.mas, title=>"Select a crossing trial" &>
 
                             <p>Crossing trials are for grouping crosses together. The grouping is most often done for geographic reasons, such as a group of crosses done in the same field trial. This grouping can be used to encapsulate a crossing block field trial that you have saved in the database (e.g. in Manage Trials your crossing block will appear as a field trial with plots)</p>
