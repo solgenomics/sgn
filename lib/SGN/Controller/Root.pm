@@ -36,11 +36,11 @@ The root page (/)
 
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
         my %file_info;
-        my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
         my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping')";
         my $h = $schema->storage()->dbh()->prepare($q);
         $h->execute();
@@ -55,6 +55,17 @@ sub index :Path :Args(0) {
         #print STDERR Dumper \@file_array;
         $c->stash->{phenotype_files} = \@file_array;
     }
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+    my $breeding_programs = $projects->get_breeding_programs();
+    $c->stash->{locations} = $projects->get_all_locations();
+    $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{timestamp} = localtime;
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
 
     # Hello World
     $c->stash->{template} = '/index.mas';

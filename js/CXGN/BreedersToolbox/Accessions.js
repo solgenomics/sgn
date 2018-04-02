@@ -368,7 +368,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $('#add_accessions_link').click(function () {
+    $('[name="add_accessions_link"]').click(function () {
         var list = new CXGN.List();
         accessionList;
         accession_list_id;
@@ -651,7 +651,7 @@ function process_fuzzy_options(accession_list_id) {
             }
         },
         error: function () {
-            alert('An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym!');
+            alert('An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym! Also do not use any special characters!');
         }
     });
 }

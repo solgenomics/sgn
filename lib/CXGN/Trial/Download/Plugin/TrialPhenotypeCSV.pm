@@ -96,11 +96,16 @@ sub download {
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my $factory_type;
-    if ($search_type eq 'complete'){
+    if ($data_level eq 'metadata'){
         $factory_type = 'Native';
     }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
+    else {
+        if ($search_type eq 'complete'){
+            $factory_type = 'Native';
+        }
+        if ($search_type eq 'fast'){
+            $factory_type = 'MaterializedView';
+        }
     }
 
 	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
@@ -108,7 +113,7 @@ sub download {
 		search_type=>$factory_type,
 		data_level=>$data_level,
 		trait_list=>$trait_list,
-    trait_component_list=>$trait_component_list,
+        trait_component_list=>$trait_component_list,
 		trial_list=>$trial_list,
 		year_list=>$year_list,
 		location_list=>$location_list,
@@ -138,8 +143,12 @@ sub download {
     my $max_value_text = $phenotype_max_value ? $phenotype_max_value : '';
     my $location_list_text = $location_list ? join(",", @$location_list) : '';
     my $year_list_text = $year_list ? join(",", @$year_list) : '';
-    my $search_parameters = "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outlier: $exclude_phenotype_outlier";
-
+    my $search_parameters;
+    if ($data_level eq 'metadata'){
+        $search_parameters = "metadata";
+    }else{
+        $search_parameters = "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outlier: $exclude_phenotype_outlier";
+    }
 	no warnings 'uninitialized';
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
       if ($self->has_header){

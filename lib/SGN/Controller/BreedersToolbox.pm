@@ -66,8 +66,12 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $breeding_programs = $projects->get_breeding_programs();
 
-    # use get_all_locations, as other calls for locations can be slow
-    #
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{timestamp} = localtime;
+
     $c->stash->{locations} = $projects->get_all_locations();
 
     $c->stash->{breeding_programs} = $breeding_programs;
@@ -233,6 +237,10 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
         $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
