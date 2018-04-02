@@ -513,6 +513,7 @@ sub _get_westcott_design {
       $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     %westcott_design = %{_build_plot_names($self,\%westcott_design)};
+
     return \%westcott_design;   
 
 }

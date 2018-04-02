@@ -560,11 +560,13 @@ sub save_experimental_design_POST : Args(0) {
     };
 
     if ($save->{'error'}) {
-        my $folder = CXGN::Trial::Folder->new({
-            bcs_schema => $chado_schema,
-            folder_id => $folder_id,
-        });
-        my $delete_folder = $folder->delete_folder();
+        if (scalar(@locations) > 1){
+            my $folder = CXGN::Trial::Folder->new({
+                bcs_schema => $chado_schema,
+                folder_id => $folder_id,
+            });
+            my $delete_folder = $folder->delete_folder();
+        }
         print STDERR "Error saving trial: ".$save->{'error'};
         $c->stash->{rest} = {error => $save->{'error'}};
         return;

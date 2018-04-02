@@ -1187,6 +1187,10 @@ jQuery(document).ready(function ($) {
         var fieldmap_row_number = jQuery('#fieldMap_row_number').val();
         var plot_layout_format = jQuery('#plot_layout_format').val();
         var trial_type = jQuery('#add_project_type').val();
+        var westcott_check_1 = $('#westcott_check_1').val();
+        var westcott_check_2 = $('#westcott_check_2').val();
+        var westcott_col = $('#westcott_col').val();
+        var westcott_col_between_check = $('#westcott_col_between_check').val();
 
         jQuery.ajax({
            type: 'POST',
@@ -1221,6 +1225,10 @@ jQuery(document).ready(function ($) {
                 'plot_layout_format': plot_layout_format,
                 'has_plant_entries': num_plants_per_plot,
                 'has_subplot_entries': num_subplots_per_plot,
+                'westcott_check_1': westcott_check_1,
+                'westcott_check_2': westcott_check_2,
+                'westcott_col': westcott_col,
+                'westcott_col_between_check': westcott_col_between_check,
             },
             success: function (response) {
                 if (response.error) {
