@@ -6,7 +6,7 @@
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses', 'CXGN.TrialTreeFolders'] &>
 
 <div class="modal fade" id="create_crossingtrial_dialog" name="create_crossingtrial_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossingTrialDialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>

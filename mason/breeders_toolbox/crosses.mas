@@ -2,7 +2,6 @@
 <%args>
 $user_id => undef
 @programs => ()
-@crossing_trials => ()
 @locations => ()
 @roles => ()
 </%args>
@@ -12,8 +11,8 @@ $user_id => undef
 <link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
 
 <& /breeders_toolbox/cross_wishlist.mas &>
-<& /breeders_toolbox/add_cross_dialogs.mas, programs=>\@programs, locations=>\@locations, crossing_trials=>\@crossing_trials &>
-<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations, crossing_trials=>\@crossing_trials &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>\@programs, locations=>\@locations &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations &>
 <& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>\@programs, locations=>\@locations &>
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
