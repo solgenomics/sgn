@@ -431,14 +431,24 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $c = shift;
 
     my $accession_list_id = $c->req->param("accession_list_list_select");
-    my $trial_list_id     = $c->req->param("trial_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
+    my $trial_list_id     = $c->req->param("trial_list_list_select");
+    my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
+    if (!$trial_list_id && !$accession_list_id && !$trait_list_id){
+        $trial_list_id     = $c->req->param("trial_metadata_list_list_select");
+        $dl_token = $c->req->param("metadata_download_token") || "no_token";
+    }
     my $format            = $c->req->param("format");
+    if (!$format){
+        $format            = $c->req->param("metadata_format");
+    }
     my $datalevel         = $c->req->param("phenotype_datalevel");
+    if (!$datalevel){
+        $datalevel         = $c->req->param("metadata_datalevel");
+    }
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $search_type        = $c->req->param("search_type") || 'complete';
-    my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     print STDERR "Token is: $dl_token\n";
 
