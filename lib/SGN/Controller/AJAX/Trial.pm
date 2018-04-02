@@ -114,11 +114,32 @@ sub generate_experimental_design_POST : Args(0) {
   my @treatments = $c->req->param('treatments[]');
   my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
   my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
+  my $westcott_check_1 = $c->req->param('westcott_check_1');
+  my $westcott_check_2 = $c->req->param('westcott_check_2');
+  my $westcott_col = $c->req->param('westcott_col');
+  my $westcott_col_between_check = $c->req->param('westcott_col_between_check');
 
   #if (!$num_seed_per_plot){
 #      $c->stash->{rest} = { error => "You need to provide number of seeds per plot so that your breeding material can be tracked."};
 #      return;
   #}
+  
+  if ($design_type eq 'westcott'){
+      if (!$westcott_check_1){
+          $c->stash->{rest} = { error => "You need to provide name of check 1 for westcott design."};
+          return;
+      }
+      if (!$westcott_check_2){
+          $c->stash->{rest} = { error => "You need to provide name of check 2 for westcott design."};
+          return;
+      }
+      if (!$westcott_col){
+          $c->stash->{rest} = { error => "You need to provide number of columns for westcott design."};
+          return;
+      }
+       push @control_names_crbd, $westcott_check_1;
+       push @control_names_crbd, $westcott_check_2;
+  }
 
   if ($design_type eq 'splitplot'){
       if (scalar(@treatments)<1){
@@ -313,6 +334,18 @@ my $location_number = scalar(@locations);
   if ($greenhouse_num_plants) {
       my $json = JSON->new();
     $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
+  }
+  if ($westcott_check_1){
+      $trial_design->set_westcott_check_1($westcott_check_1);
+  }
+  if ($westcott_check_2){
+      $trial_design->set_westcott_check_2($westcott_check_2);
+  }
+  if ($westcott_col){
+      $trial_design->set_westcott_col($westcott_col);
+  }
+  if ($westcott_col_between_check){
+      $trial_design->set_westcott_col_between_check($westcott_col_between_check);
   }
   if ($location_number) {
     $design_info{'number_of_locations'} = $location_number;
