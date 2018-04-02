@@ -9,7 +9,7 @@ $timestamp
 
 <& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
-<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+<& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
 <& /breeders_toolbox/folder/folder_set.mas &>
 <& /breeders_toolbox/folder/folder_new.mas &>
