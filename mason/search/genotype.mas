@@ -65,9 +65,9 @@
 
 jQuery(document).ready(function () {
 
-    var list = new CXGN.List();
+    var list = new CXGN.Dataset();
 
-    jQuery("#select_dataset").html(list.listSelect("select_dataset", ["accessions"] ));
+    get_select_box('datasets','select_dataset');
 
 });
 
