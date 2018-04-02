@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'brapi.GraphicalFiltering', 'd3.d3v4Min' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
 
 <style>
 
@@ -327,104 +327,54 @@ jQuery(document).ready(function () {
 
 });
 
-
+var currentGFilter = null;
 function loadBrAPIData(server,parameters,success){
-    var base_url = server;
-    var load_url = base_url+"/brapi/v1/phenotypes-search";
     var data = {
         "pageSize" : 10000000,
-        "page" : 0,
         "search_type" : jQuery('#stock_search_graphical_filter_search_type').val()
     };
     d3.entries(parameters).forEach(function(entry){
         data[entry.key] = data[entry.key]||entry.value;
     });
-    //console.log(load_url);
-    //console.log(data);
-
-    jQuery.ajax({
-    type: "POST",
-        url: load_url,
-        data: data,
-        success: success,
-    });
-};
-
-// filters and modifies the response and then creates the root filter object
-// and datatable
-function useBrAPIData(response,groupByAccession){
-    //console.log(response);
-    var traits = {};
-    var data = response.result.data
-    .map(function(observeUnit){
-      var newObj = {};
-      d3.entries(observeUnit).forEach(function(entry){
-        if (entry.key!="observations"){
-            newObj[entry.key] = entry.value;
-        }
-      });
-      observeUnit.observations.forEach(function(obs){
-            newObj[obs.observationVariableName] = obs.value;
-            traits[obs.observationVariableName] = true;
-      });
-      return newObj;
-    });
-    var trait_names = d3.keys(traits);
-    data.forEach(function(datum){
-    trait_names.forEach(function(trait){
-      if (datum[trait]==undefined||datum[trait]==null||datum[trait]==NaN){
-        datum[trait] = null
+    
+    var brapi_Data = BrAPI(server+"/brapi/v1").phenotypes_search(data);
+    
+    if (currentGFilter!=null){
+        $("#stock_search_graphical_filter_results_div").DataTable().destroy();
+        $("#stock_search_graphical_filter_results_div").html("");
       }
-    })
-    });
-    var tableCols = [
-    {title:"Study",data:"studyName"},
-    {title:"Name",data:"observationUnitName"},
-    {title:"Accession",data:"germplasmName"},
-    ];
-    if (groupByAccession){
-        var grouped = d3.nest().key(function(d){return d.germplasmDbId}).entries(data);
-        var newdata = grouped.map(function(group){
-          var newDatum = {};
-          newDatum.germplasmName = group.values[0].germplasmName;
-          newDatum.germplasmDbId = group.key;
-          newDatum.count = group.values.length;
-          newDatum.group = group.values;
-          trait_names.forEach(function(trait_key){
-            var avg = d3.mean(group.values,function(d){
-              if (d[trait_key]!==null){
-                return d[trait_key];
-              }
-            });
-            newDatum[trait_key] = avg==undefined?null:avg;
+
+    currentGFilter = GraphicalFilter(
+        brapi_Data,
+        function(d) { // traits/values
+          var traits = {}
+          d.observations.forEach(function(obs){
+            traits[obs.observationVariableName] = obs.value;
           });
-          return newDatum;
-        });
-        var tableCols = [
-          {title:"Accession", data:"germplasmName"},
-          {title:"Unit Count", data:"count"}
-        ];
-        data = newdata;
-    }
-
-
-    // use the list of shared traits to create dataTables columns
-    tableCols = tableCols.concat(trait_names.map(function(d){
-        return {title:d,data:d.replace(/\./g, "\\.")};
-    }));
-
-    // create the root filter object and datatable
-    var gfilter = GraphicalFilter();
-    gfilter.create("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div",data,tableCols,trait_names);
-    _make_graphical_filtering_list_select();
-
-    jQuery('#stock_search_graphical_filter_results_div').on( 'draw.dt', function () {
-        _make_graphical_filtering_list_select();
+          return traits;
+        },
+        function(d) {
+          return {
+            'Accession':d.germplasmName
+          }
+        },
+        ["Accession"],
+        function(d) {
+          return d.germplasmDbId
+        }
+      );
+    currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
+    brapi_Data.all(function(){
+      _make_graphical_filtering_list_select();
+      jQuery('#stock_search_graphical_filter_results_div').on( 'draw.dt', function () {
+          _make_graphical_filtering_list_select();
+      });
     });
+    
 
     function _make_graphical_filtering_list_select(){
-        var data = gfilter.results_table.context[0].aoData;
-        var displayed_rows = gfilter.results_table.context[0].aiDisplay;
+        var data = currentGFilter.results_table.context[0].aoData;
+        var displayed_rows = currentGFilter.results_table.context[0].aiDisplay;
         var names = [];
         for (var i =0; i< displayed_rows.length; i++){
             var displayed_index = displayed_rows[i];
