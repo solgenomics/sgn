@@ -2,7 +2,7 @@
 </%args>
 
 <div class="modal fade" id="upload_seedlot_inventory_dialog" name="upload_seedlot_inventory_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_inventory_dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -57,8 +57,69 @@
 
                             <br/><br/>
                             <center>
-                                <button id="upload_seedlot_inventory_button" onclick="Workflow.complete(this, false);" type="button" class="btn btn-primary" >Submit</button>
+                                <button name="upload_seedlot_inventory_button" onclick="Workflow.complete(this, false);" type="button" class="btn btn-primary" >Submit</button>
                             </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Fix missing seedlots problem" &>
+                            <& /page/page_title.mas, title=>"Fixing the missing seedlot(s) problem" &>
+
+                            <div id="upload_seedlot_inventory_missing_seedlots_div" style="display:none">
+                                <div class="well">
+                                    <ul>
+                                        <li>Seedlots must exist in the database prior to updating or adding inventory. The reason for this is that the inventory does not give information about the content (a named accession or a cross name) and this information is required for a seedlot to exist in the database. We also want to be careful about adding new seedlots into the database because we do not want data to be incorrectly linked to duplicates.</li>
+                                    </ul>
+                                </div>
+                                <ul>
+                                <li>When adding seedlots into the database, you can upload an Excel file or you can add seedlots one at a time.<br/><br/>
+                                    <ul>
+                                    <li><button class="btn btn-info" name="seedlot_bulk_upload">Upload Excel file</button><br/><br/></li>
+                                    <li><button class="btn btn-info" name="add_seedlot_button">Add One Seedlot</button></li>
+                                    </ul>
+                                </li>
+                                </ul><br/>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your seedlots are in the database Click Here</button><br/><br/>
+                            </div>
+                            <div id="upload_seedlot_inventory_error_display">
+
+                                <h3>Seedlot Inventory Upload Error Messages</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <center>
+                            <div id="upload_seedlot_inventory_no_error_messages_html">
+                            </div>
+                            <div name="upload_seedlot_inventory_completed_message">
+                            </div>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Try submitting inventory again" &>
+                            <& /page/page_title.mas, title=>"Submit your inventory again. You should have corrected all errors by now, but if not please take a look at the errors in the red box below. You can continue to modify your file and then click Upload until it works." &>
+                            <div id="seedlot_inventory_upload_show_repeat_upload_button">
+                                <center>
+                                <button type="button" class="btn btn-lg btn-primary" name="upload_seedlot_inventory_button" >Upload Seedlot Inventory</button><br/><br/>
+                                </center>
+                            </div>
+                            <center>
+                            <div name="upload_seedlot_inventory_completed_message">
+                            </div>
+                            </center>
+
+                            <div id="upload_seedlot_inventory_error_display_second_try" style="display:none">
+
+                                <h3>There exist these problems in your file:</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your seedlot inventory is in the database" &>
@@ -133,31 +194,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="upload_seedlot_inventory_error_display" name="upload_seedlot_inventory_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInventoryErrorDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotInventoryErrorDialog">Errors In Uploaded File</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="upload_seedlot_inventory_add_missing_seedlots_html">
-                    </div>
-
-                    <h3>Seedlot Inventory Upload Error Messages</h3>
-                    <table>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 <script>
 jQuery(document).ready(function(){
@@ -170,7 +206,7 @@ jQuery(document).ready(function(){
         jQuery("#seedlot_upload_inventory_spreadsheet_info_dialog" ).modal("show");
     });
 
-    jQuery('#upload_seedlot_inventory_button').click(function () {
+    jQuery('[name="upload_seedlot_inventory_button"]').click(function () {
         upload_seedlot_inventory_button();
     });
     function upload_seedlot_inventory_button() {
@@ -197,32 +233,34 @@ jQuery(document).ready(function(){
             }
 
             if (response.error_string) {
-                jQuery("#upload_seedlot_inventory_error_display tbody").html('');
-
                 if (response.missing_seedlots) {
-                    var missing_seedlots_html = "<div class='well well-sm'><h3>Add the missing seedlots to a list</h3><div id='upload_seedlot_inventory_add_missing_seedlots_div_html'></div><div id='upload_seedlot_inventory_missing_seedlots' style='display:none'></div></div><br/>";
-                    jQuery("#upload_seedlot_inventory_add_missing_seedlots_html").html(missing_seedlots_html);
-
-                    var missing_seedlots_vals = '';
-                    for(var i=0; i<response.missing_seedlots.length; i++) {
-                        missing_seedlots_vals = missing_seedlots_vals + response.missing_seedlots[i] + '\n';
-                    }
-                    jQuery("#upload_seedlot_inventory_missing_seedlots").html(missing_seedlots_vals);
-                    addToListMenu('upload_seedlot_inventory_add_missing_seedlots_div_html', 'upload_seedlot_inventory_missing_seedlots', {
-                        selectText: true,
-                        listType: 'seedlots'
-                    });
+                    jQuery('#upload_seedlot_inventory_missing_seedlots_div').show();
+                } else {
+                    jQuery('#upload_seedlot_inventory_missing_seedlots_div').hide();
+                    var no_missing_seedlot_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing seedlots Click Here</button><br/><br/>';
+                    jQuery('#upload_seedlot_inventory_no_error_messages_html').html(no_missing_seedlot_html);
+                    Workflow.skip('#upload_seedlot_inventory_missing_seedlots_div', false);
                 }
+                jQuery("#upload_seedlot_inventory_error_display tbody").html(response.error_string);
+                jQuery("#upload_seedlot_inventory_error_display_second_try").show();
+                jQuery("#upload_seedlot_inventory_error_display_second_try tbody").html(response.error_string);
+            }
 
-                jQuery("#upload_seedlot_inventory_error_display tbody").append(response.error_string);
-                jQuery('#upload_seedlot_inventory_error_display').modal("show");
-
-                return;
+            if(response.missing_seedlots){
+                Workflow.focus("#upload_seedlot_inventory_workflow", 3);
+            } else if(response.error_string){
+                Workflow.focus("#upload_seedlot_inventory_workflow", 4);
+                jQuery("#upload_seedlot_inventory_error_display_second_try").show();
             }
 
             if (response.success) {
-                alert("File uploaded successfully");
-                document.location.reload();
+                jQuery("#upload_seedlot_inventory_error_display_second_try").hide();
+                jQuery('#seedlot_inventory_upload_show_repeat_upload_button').hide();
+                jQuery('[name="upload_seedlot_inventory_completed_message"]').html('<h3>The trial was saved to the database with no errors!</h3><br/><br/>');
+                Workflow.skip('#upload_seedlot_inventory_missing_seedlots_div', false);
+                Workflow.skip('#upload_seedlot_inventory_error_display_second_try', false);
+                Workflow.focus("#upload_seedlot_inventory_workflow", -1); //Go to success page
+                Workflow.check_complete("#upload_seedlot_inventory_workflow");
             }
         }
     });

@@ -174,8 +174,8 @@ $timestamp
 
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, breeding_programs=>$breeding_programs, locations=>$locations &>
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
-<& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 
