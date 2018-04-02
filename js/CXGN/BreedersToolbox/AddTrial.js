@@ -1088,6 +1088,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").show();
             $("#westcott_check_2_section").show();
             $("#FieldMap_westcott").show();
+            $("#field_map_options").hide();
         }
         
         else {
