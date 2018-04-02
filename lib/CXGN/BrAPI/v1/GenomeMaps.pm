@@ -223,13 +223,22 @@ sub positions {
 	
 	foreach my $chr ($map->get_chromosomes()) { 
 	    foreach my $m ($chr->get_markers()) { 
-		if (grep (/$chr->get_name()/, @linkage_group_ids)) { 
+		if (@linkage_group_ids) {
+		    if (grep $_ eq $chr->get_name(), @linkage_group_ids) { 
+			push @data, { 
+		    	    markerDbId => $m->get_name(),
+		    	    markerName => $m->get_name(),
+			    position => $m->get_offset(),
+		    	    linkageGroup => $chr->get_name(),
+		        };
+		    }
+		} else {
 		    push @data, { 
 			markerDbId => $m->get_name(),
 			markerName => $m->get_name(),
 			position => $m->get_offset(),
 			linkageGroup => $chr->get_name(),
-		    };
+		    };		
 		}
 	    }
 	}
