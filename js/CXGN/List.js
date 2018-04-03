@@ -399,7 +399,7 @@ CXGN.List.prototype = {
         var html = '';
 
         html += '<table id="public_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Actions</th><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>View</th><th>Download</th><th>Copy To Your Lists</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             html += '<tr><td><b>'+lists[i][1]+'</b></td>';
             html += '<td>'+lists[i][3]+'</td>';
@@ -444,14 +444,15 @@ CXGN.List.prototype = {
         html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
         html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" title="Will determine whther the items in your list are saved in the database as valid entries. The validation depends on the list type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
-        html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
+        html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea></td></tr></table>';
 
-        html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
+        html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
+        html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
         for(var n=0; n<items.length; n++) {
             html = html +'<tr><td id="list_item_toggle_edit_div_'+items[n][0]+'" ><div name="list_item_toggle_edit" data-listitemdiv="list_item_toggle_edit_div_'+items[n][0]+'" data-listitemid="'+items[n][0]+'" data-listitemname="'+items[n][1]+'" >'+ items[n][1] + '</div></td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
         }
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
 
         jQuery('#'+div+'_div').html(html);
 
@@ -697,6 +698,22 @@ CXGN.List.prototype = {
         this.renderLists('list_dialog');
     },
 
+    sortItems: function(list_id, sort) {
+        jQuery.ajax({
+            url: '/list/sort',
+            async: false,
+            data: { 'sort' : sort, 'list_id' : list_id },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+            },
+            error: function(response) { alert("An error occurred in sort."); }
+        });
+        this.renderItems('list_item_dialog', list_id);
+    },
+
     validate: function(list_id, type, non_interactive) {
         var missing = new Array();
         var error = 0;
@@ -777,7 +794,7 @@ CXGN.List.prototype = {
                     map[obj.name] = obj.value;
                     return map;
                 }, {});
-                console.log(form);
+                //console.log(form);
                 var list = new CXGN.List();
                 var names = window.available_seedlots.get_selected().map(function(d){
                     return d.name;
@@ -811,7 +828,7 @@ CXGN.List.prototype = {
             },
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
-                console.log(response);
+                //console.log(response);
                 if (response.success) {
                     html = "";
                     jQuery('#synonym_search_result_display').modal('show');
@@ -846,7 +863,7 @@ CXGN.List.prototype = {
                                 map[obj.name] = obj.value;
                                 return map;
                             }, {});
-                            console.log(form);
+                            //console.log(form);
                             var list = new CXGN.List();
                             var newListID = list.newList(form["name"]);
                             if (!newListID) throw "List creation failed.";
