@@ -10,6 +10,10 @@
 
 <& '/page/page_title.mas', title => "Compare trials" &>
 
+
+
+<& /util/import_css.mas, paths => ['tools/trial_comparison.css'] &>
+
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3v4Min' ] &>
 
 <div class="row">

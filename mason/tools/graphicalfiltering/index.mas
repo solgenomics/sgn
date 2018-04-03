@@ -9,6 +9,8 @@ $ajaxRequestString => ""
 
 </%args>
 
+<& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
+
 <& '/page/page_title.mas', title => "Graphical Filtering" &>
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'CXGN.List', 'd3.d3v4Min' ] &>
