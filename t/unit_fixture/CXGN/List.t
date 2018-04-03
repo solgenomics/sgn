@@ -342,5 +342,36 @@ ok(!$list->exists_element(" bla3 "), 'trailing and leading spaces removed from e
 my $space4 = $list->add_element("    ");
 ok($space4 eq "Empty list elements are not allowed", 'element with only spaces cannot be added'); 
 
+#test sort
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+ok($list->add_bulk(['item1','item2']), 'test add bulk');
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+ok($list->sort_items('ASC'), "sort ascending list");
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+$items = $list->elements;
+print STDERR Dumper $items;
+is_deeply($items, [
+            'bla1',
+            'bla2',
+            'bla3',
+            'item1',
+            'item2',
+            'updated name'
+          ], 'check asc ordered items');
+
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+ok($list->sort_items('DESC'), "sort descending list");
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+$items = $list->elements;
+print STDERR Dumper $items;
+is_deeply($items, [
+          'updated name',
+          'item2',
+          'item1',
+          'bla3',
+          'bla2',
+          'bla1'
+        ], 'check desc ordered items');
+
 
 done_testing();
