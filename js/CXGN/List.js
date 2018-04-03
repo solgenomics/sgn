@@ -452,6 +452,7 @@ CXGN.List.prototype = {
 
         jQuery('#list_item_dialog_datatable').DataTable({
             destroy: true,
+            ordering: false,
             scrollY:        '30vh',
             scrollCollapse: true,
             paging:         false,
@@ -547,6 +548,7 @@ CXGN.List.prototype = {
 
         jQuery('#public_list_item_dialog_datatable').DataTable({
             destroy: true,
+            ordering: false,
             scrollY:        '30vh',
             scrollCollapse: true,
             paging:         false,
