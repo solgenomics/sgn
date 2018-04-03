@@ -599,6 +599,7 @@ sub delete_bulk {
 }
 
 sub sort_items {
+    no warnings 'uninitialized';
     my $self = shift;
     my $sort = shift;
     my $items = $self->retrieve_elements_with_ids($self->list_id);
@@ -610,9 +611,15 @@ sub sort_items {
     }
     my @sorted;
     if ($sort eq 'ASC'){
-        @sorted = sort{$a cmp $b} @contents;
+        @sorted = map  { $_->[0] }
+            sort { $a->[1] <=> $b->[1] }
+            map  { [$_, $_=~/(\d+)/ ] }
+            @contents;
     } elsif ($sort eq 'DESC'){
-        @sorted = sort{$b cmp $a} @contents;
+        @sorted = map  { $_->[0] }
+            sort { $b->[1] <=> $a->[1] }
+            map  { [$_, $_=~/(\d+)/ ] }
+            @contents;
     } else {
         return;
     }
