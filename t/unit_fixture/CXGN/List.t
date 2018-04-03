@@ -344,20 +344,24 @@ ok($space4 eq "Empty list elements are not allowed", 'element with only spaces c
 
 #test sort
 my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
-ok($list->add_bulk(['item1','item2']), 'test add bulk');
-my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+ok($list->add_bulk(['item1','item2','item1','item20','item1001','item01','item10','item010']), 'test add bulk');
 ok($list->sort_items('ASC'), "sort ascending list");
 my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
 $items = $list->elements;
 print STDERR Dumper $items;
 is_deeply($items, [
-            'bla1',
-            'bla2',
-            'bla3',
-            'item1',
-            'item2',
-            'updated name'
-          ], 'check asc ordered items');
+          'bla1',
+          'bla2',
+          'bla3',
+          'item01',
+          'item010',
+          'item1',
+          'item10',
+          'item1001',
+          'item2',
+          'item20',
+          'updated name'
+        ], 'check asc ordered items');
 
 my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
 ok($list->sort_items('DESC'), "sort descending list");
@@ -366,8 +370,13 @@ $items = $list->elements;
 print STDERR Dumper $items;
 is_deeply($items, [
           'updated name',
+          'item20',
           'item2',
+          'item1001',
+          'item10',
           'item1',
+          'item010',
+          'item01',
           'bla3',
           'bla2',
           'bla1'
