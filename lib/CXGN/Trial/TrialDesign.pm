@@ -491,18 +491,8 @@ sub _get_westcott_design {
     
     @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)}; 
     
-    my $counting = 0;
-    my %seedlot_hash;
-    if($self->get_seedlot_hash){
-        %seedlot_hash = %{$self->get_seedlot_hash};
-    }
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
       my %plot_info;
-
-      $plot_info{'seedlot_name'} = $seedlot_hash{$plot_info{'stock_name'}}->[0];
-      if ($plot_info{'seedlot_name'}){
-          $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
-      }
       $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
       $plot_info{'stock_name'} = $stock_names[$i];
       $plot_info{'block_number'} = $block_numbers[$i];
