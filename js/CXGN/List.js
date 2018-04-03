@@ -323,33 +323,38 @@ CXGN.List.prototype = {
     renderLists: function(div) {
         var lists = this.availableLists();
         var html = '';
-        html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
+        html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List. Type New List Name Here" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
 
         if (lists.length===0) {
             html = html + "None";
             jQuery('#'+div+'_div').html(html);
         }
 
-        html += '<table class="table table-hover table-condensed">';
-        html += '<thead><tr><th>&nbsp;</th><th>List Name</th><th>Count</th><th>Type</th><th colspan="4">Actions</th></tr></thead><tbody>';
+        html += '<div class="well well-sm"><table id="private_list_data_table" class="table table-hover table-condensed">';
+        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
-            html += '<tr><td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td>';
-            html += '<td><b>'+lists[i][1]+'</b></td>';
+            html += '<tr><td><b>'+lists[i][1]+'</b></td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
             html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
             html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
             if (lists[i][6] == 0){
-                html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
+                html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td>';
             } else if (lists[i][6] == 1){
-                html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
+                html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td>';
             }
+            html += '<td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td></tr>';
         }
-        html = html + '</tbody></table>';
+        html = html + '</tbody></table></div>';
         html += '<div id="list_group_select_action"></div>';
 
         jQuery('#'+div+'_div').html(html);
+
+        jQuery('#private_list_data_table').DataTable({
+            "destroy": true,
+            "columnDefs": [   { "orderable": false, "targets": [3,4,5,6,7] }  ]
+        });
 
         jQuery('#add_list_button').click(function() {
             var lo = new CXGN.List();
