@@ -199,6 +199,7 @@ sub detail {
 		name => $map->get_short_name(),
 		type => "genotype",
 		unit => "bp",
+		comments => $map->get_abstract(),
 		linkageGroups => $data_window,
 	);
 	my @data_files;
