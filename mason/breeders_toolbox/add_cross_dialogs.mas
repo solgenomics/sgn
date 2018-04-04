@@ -33,14 +33,14 @@
                             <& /page/page_title.mas, title=>"What is a cross?" &>
 
                             <ul>
-                                <li>Crosses represent any pollination that occurs.</li>
-                                <li>Crosses can be of different types (biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
-                                <li>Depending on the cross type, an individual cross can be defined as between two accessions (e.g. accession A is the female and accession B is the male in a biparental cross)</li>
-                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are only defined as groups of accessions)</li>
-                                <li>An individual cross can be linked to the specific female plot or plant, as well as the specific male plot or plant.</li>
-                                <li>A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.</li>
-                                <li>A cross can produce seed, which goes into a seedlot.</li>
-                                <li>A cross can ultimately produce progeny, which then become named accessions in the database.</li>
+                                <li>The Cross Tool can track any pollinations in a breeding program.</li>
+                                <li>Each cross has a globally unique cross name.</li>
+                                <li>Supported cross types are: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid</li>
+                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
+                                <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
+                                <li>A cross can have other data associated to it, such as number of flowers, pollination date, etc.</li>
+                                <li>Seed produced by a cross can be managed using a seedlot.</li>
+                                <li>Progenies from a cross can become named accessions in the database.</li>
                             </ul>
 
                             <br/>
