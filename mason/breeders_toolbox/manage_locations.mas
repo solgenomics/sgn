@@ -3,6 +3,12 @@
 $user_id => undef
 </%args>
 
+<& /util/import_css.mas, paths => [
+    'leaflet.css',
+    'leaflet.extra-markers.min.css',
+    'esri-leaflet-geocoder.css'
+] &>
+
 <& /page/page_title.mas, title=>"Manage Locations" &>
 
 <div class="container-fluid">
