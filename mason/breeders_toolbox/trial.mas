@@ -48,17 +48,6 @@ $identifier_prefix => 'SGN'
 $main_production_site_url
 </%args>
 
-<style>
-
-@media (min-width: 1200px) {
-    .affix {
-        top:100px;
-        right:0;
-        position:fixed;
-    }
-}
-
-</style>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
@@ -71,10 +60,11 @@ $main_production_site_url
 
 
     <div class="panel panel-default">
+    <div class="panel-body">
         <div class="row">
             <div class="col-sm-8">
 
-                <table class="table table-hover" >
+                <table class="table table-hover table-bordered" >
 
                     <tr>
                         <td><b>Trial Name</b></td>
@@ -197,6 +187,7 @@ $main_production_site_url
             </div>
         </div>
 
+    </div>
     </div><!-- closes info section -->
 
 </&>
@@ -211,7 +202,7 @@ $main_production_site_url
             <div class="well">
                 <div class="row">
                     <div class="col-sm-3">
-                        <span style="font-size:2.5em;" class="glyphicon glyphicon-tags"></span>
+                        <span style="font-size:2.5em;" class="glyphicon glyphicon-qrcode"></span>
                     </div>
                     <div class="col-sm-7">
                         <h4>Generate barcode labels for plots or plants or accessions in this trial.</h4>
@@ -469,7 +460,7 @@ $main_production_site_url
             <div class="well">
                 <div class="row">
                     <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-blackboard"></span>
+                        <span style="font-size:3.5em;" class="glyphicon glyphicon-signal"></span>
                     </div>
                     <div class="col-sm-11">
                         <h4>Analysis Tools</h4>
@@ -573,7 +564,9 @@ $main_production_site_url
 % print $trial_id;
 </div>
 
-<div data-spy="affix" data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
+<&| /page/info_section.mas, title=>"Trial Status", is_subsection => 0, collapsible=>1, collapsed=>1  &>
+
+<div data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
     <div class="panel panel-info">
         <div class="panel-heading">Completion</div>
         <div class="panel-body">
@@ -660,6 +653,8 @@ $main_production_site_url
         </div>
     </div>
 </div>
+
+</&>
 
 <script defer="defer">
 
