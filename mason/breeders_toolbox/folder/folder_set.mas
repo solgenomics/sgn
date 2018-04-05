@@ -1,6 +1,6 @@
 
 <%args>
-$project_type => 'Trial'
+$project_type => 'Trial' #Trial or Cross or Genotyping Trial
 $trial_id => undef
 $trial_name => undef
 $folder_id => undef
@@ -13,8 +13,9 @@ $breeding_program_name => undef
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $dialog_type;
-% if ($project_type eq 'Trial') { $js_project_type = 'trials'; $folder_for_trials = 1; }
-% if ($project_type eq 'Cross') { $js_project_type = 'crosses'; $folder_for_crosses = 1; $dialog_type = 'Crossing Trial' }
+% if ($project_type eq 'Trial') { $js_project_type = 'trials'; $folder_for_trials = 1; $dialog_type = 'Trial(s)'}
+% if ($project_type eq 'Genotyping Trial') { $js_project_type = 'genotyping_trials'; $folder_for_trials = 1; $dialog_type = 'Genotyping Trial(s)'}
+% if ($project_type eq 'Cross') { $js_project_type = 'crosses'; $folder_for_crosses = 1; $dialog_type = 'Crossing Trial(s)' }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
@@ -94,11 +95,6 @@ $breeding_program_name => undef
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The <% $project_type %> was moved into the folder successfully
                     </p>
-%  if ($project_type eq 'Trial') {
-                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh <% $project_type %> Tree</button>
-%  } elsif ($project_type eq 'Cross') {
-                    <button class="btn btn-primary" name="refresh_crosses_jstree_html">Refresh <% $project_type %> Tree</button>
-%  }
                 </div>
             </div>
             <div class="modal-footer">
@@ -185,6 +181,11 @@ function set_trial_folder() {
         });
     });
     if (errors == 0) {
+%  if ($project_type eq 'Trial') {
+                    refreshTrailJsTree();
+%  } elsif ($project_type eq 'Cross') {
+                    refreshCrossJsTree();
+%  }
         jQuery('#folder_set_success_dialog_message').modal("show");
     }
   } else {

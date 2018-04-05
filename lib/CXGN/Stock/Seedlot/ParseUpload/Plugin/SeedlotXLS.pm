@@ -152,6 +152,7 @@ sub _validate_with_plugin {
             if ($seen_seedlot_names{$seedlot_name}) {
                 push @error_messages, "Cell A$row_name: duplicate seedlot_name at cell A".$seen_seedlot_names{$seedlot_name}.": $seedlot_name";
             }
+            $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
@@ -161,9 +162,11 @@ sub _validate_with_plugin {
             push @error_messages, "In row:$row_name: you must provide either an accession_name or a cross_name for the contents of the seedlot and Not both.";
         } else {
             if ($accession_name){
+                $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
                 $seen_accession_names{$accession_name}++;
             }
             if ($cross_name){
+                $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
                 $seen_cross_names{$cross_name}++;
             }
         }
@@ -201,14 +204,15 @@ sub _validate_with_plugin {
         $errors{'missing_crosses'} = \@crosses_missing;
     }
 
-    my @seedlots = keys %seen_seedlot_names;
-    my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@seedlots }
-    });
-    while (my $r=$rs->next){
-        push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
-    }
+    # Not checking if seedlot name already exists because the database will just update the seedlot entries
+    # my @seedlots = keys %seen_seedlot_names;
+    # my $rs = $schema->resultset("Stock::Stock")->search({
+    #     'is_obsolete' => { '!=' => 't' },
+    #     'uniquename' => { -in => \@seedlots }
+    # });
+    # while (my $r=$rs->next){
+    #     push @error_messages, "Cell A".$seen_seedlot_names{$r->uniquename}.": seedlot name already exists in database: ".$r->uniquename;
+    # }
 
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {
@@ -241,39 +245,71 @@ sub _parse_with_plugin {
 
     my %seen_accession_names;
     my %seen_cross_names;
+    my %seen_seedlot_names;
     for my $row ( 1 .. $row_max ) {
+        my $seedlot_name;
         my $accession_name;
         my $cross_name;
+        if ($worksheet->get_cell($row,0)) {
+            $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            $seen_seedlot_names{$seedlot_name}++;
+        }
         if ($worksheet->get_cell($row,1)) {
             $accession_name = $worksheet->get_cell($row,1)->value();
+            $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}++;
         }
         if ($worksheet->get_cell($row,2)) {
             $cross_name = $worksheet->get_cell($row,2)->value();
+            $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_cross_names{$cross_name}++;
         }
     }
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
     my @accessions = keys %seen_accession_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@accessions },
-        'type_id' => $accession_cvterm_id
+        'type_id' => $accession_cvterm_id,
     });
     my %accession_lookup;
     while (my $r=$rs->next){
         $accession_lookup{$r->uniquename} = $r->stock_id;
     }
+    my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+        'me.is_obsolete' => { '!=' => 't' },
+        'stockprops.value' => { -in => \@accessions},
+        'me.type_id' => $accession_cvterm_id,
+        'stockprops.type_id' => $synonym_cvterm_id
+    },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+    my %acc_synonyms_lookup;
+    while (my $r=$acc_synonym_rs->next){
+        $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+    }
     my @crosses = keys %seen_cross_names;
-    my $rs = $schema->resultset("Stock::Stock")->search({
+    my $cross_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@crosses },
         'type_id' => $cross_cvterm_id
     });
     my %cross_lookup;
-    while (my $r=$rs->next){
+    while (my $r=$cross_rs->next){
         $cross_lookup{$r->uniquename} = $r->stock_id;
+    }
+    my @seedlots = keys %seen_seedlot_names;
+    my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@seedlots },
+        'type_id' => $seedlot_cvterm_id
+    });
+    my %seedlot_lookup;
+    while (my $r=$seedlot_rs->next){
+        $seedlot_lookup{$r->uniquename} = $r->stock_id;
     }
 
     for my $row ( 1 .. $row_max ) {
@@ -311,14 +347,31 @@ sub _parse_with_plugin {
             $box_name =  $worksheet->get_cell($row,7)->value();
         }
 
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+
         #skip blank lines
         if (!$seedlot_name && !$accession_name && !$cross_name && !$description) {
             next;
         }
 
+        my $accession_stock_id;
+        if ($acc_synonyms_lookup{$accession_name}){
+            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+            if (scalar(@accession_names)>1){
+                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+            }
+            $accession_stock_id = $acc_synonyms_lookup{$accession_name}->{$accession_names[0]};
+            $accession_name = $accession_names[0];
+        } else {
+            $accession_stock_id = $accession_lookup{$accession_name};
+        }
+
         $parsed_seedlots{$seedlot_name} = {
+            seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
             accession => $accession_name,
-            accession_stock_id => $accession_lookup{$accession_name},
+            accession_stock_id => $accession_stock_id,
             cross_name => $cross_name,
             cross_stock_id => $cross_lookup{$cross_name},
             amount => $amount,
@@ -328,6 +381,7 @@ sub _parse_with_plugin {
             operator_name => $operator_name
         };
     }
+    #print STDERR Dumper \%parsed_seedlots;
 
     $self->_set_parsed_data(\%parsed_seedlots);
     return 1;
