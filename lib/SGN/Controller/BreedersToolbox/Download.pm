@@ -225,7 +225,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
     my $search_type = $c->req->param("search_type") || 'fast';
-print "DATALEVEL: $data_level\n";
+
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
     my @trait_component_list;
@@ -333,9 +333,14 @@ print "DATALEVEL: $data_level\n";
     if ($format eq "csv") {
         $plugin = "TrialPhenotypeCSV";
     }
-
+    
+    my $temp_file_name;
     my $dir = $c->tempfiles_subdir('download');
-    my $temp_file_name = "phenotype" . "XXXX";
+    if ($data_level eq "metadata"){
+        $temp_file_name = "metadata" . "XXXX";
+    }else{
+        $temp_file_name = "phenotype" . "XXXX";
+    }    
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
