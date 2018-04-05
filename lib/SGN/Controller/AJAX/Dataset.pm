@@ -8,6 +8,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
+use CXGN::Genotype::Search;
 
 
 __PACKAGE__->config(
@@ -137,6 +138,46 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     else {
 	$c->stash->{rest} = { success => 1 };
     }
+}
+
+sub get_dataset_genotypes :Path('/ajax/dataset/get_genotypes') :Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->param("dataset_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $dataset = CXGN::Dataset->new(
+
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id=> $dataset_id,
+    );
+
+    my $dataset_data = $dataset->get_dataset_data();
+    print STDERR "DATASET =" .Dumper($dataset_data). "\n";
+
+    my %data = %{$dataset_data};
+
+    my @genotype_accessions = $data{'categories'}{'accessions'};
+    my $genotype_protocol = $data{'categories'}{'genotyping_protocols'};
+
+    print STDERR "ACCESSIONS =" .Dumper(@genotype_accessions). "\n";
+    print STDERR "PROTOCOL =" .Dumper($genotype_protocol). "\n";
+
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$schema,
+        accession_list=>\@genotype_accessions,
+        protocol_id=>$genotype_protocol
+    });
+    my $genotypes = $genotypes_search->get_genotype_info();
+
+    print STDERR "GENOTYPES =" .Dumper($genotypes). "\n";
+
+
+
+
+
+    $c->stash->{rest} = { dataset => $dataset_data };
 }
 
 1;
