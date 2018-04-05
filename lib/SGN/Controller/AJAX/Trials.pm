@@ -5,6 +5,7 @@ use Moose;
 
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial::Folder;
+use CXGN::Trial;
 use Data::Dumper;
 use Carp;
 use File::Path qw(make_path);
@@ -90,6 +91,52 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
 
     #print STDERR $html;
     $c->stash->{rest} = { html => $html };
+}
+
+sub get_shared_traits : Path('/ajax/breeders/get_shared_traits') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my @trial_ids = $c->req->param('trial_ids[]');
+    my @placeholders;
+
+    print STDERR "Trial ids sfsadff are @trial_ids\n";
+
+    foreach my $trial_id (@trial_ids) {
+        push @placeholders, $trial_id;
+        push @placeholders, '^[0-9]+([,.][0-9]+)?$';
+    }
+
+    print STDERR "Trial ids after adding  are @placeholders\n";
+
+    my @parts;
+    foreach my $trial_id (@trial_ids) {
+	      push @parts, "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id";
+    }
+    my $query = join (" INTERSECT ", @parts);
+    $query = $query . ' ORDER BY trait';
+
+    print STDERR "Query is: $query\n";
+
+    my $dbh = $c->dbic_schema("Bio::Chado::Schema")->storage()->dbh();
+    my $traits_assayed_q = $dbh->prepare($query);
+    $traits_assayed_q->execute(@placeholders);
+
+    my @traits_assayed;
+    while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
+        push @traits_assayed, [$trait_id, $trait_name];
+    }
+
+    print STDERR "traits assayed are: @traits_assayed\n";
+
+    # my @shared_traits;
+    #
+    # foreach my $trial_id (@trial_ids) {
+    #     my %seen;
+    #     my $new_traits = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") , trial_id => $trial_id } )->get_traits_assayed();
+    #     @shared_traits = grep( !$seen{$_}++, @shared_traits, @$new_traits)
+    # }
+
+    $c->stash->{rest} = { traits => \@traits_assayed };
 }
 
 sub trial_autocomplete : Local : ActionClass('REST') { }

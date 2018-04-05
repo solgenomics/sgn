@@ -25,6 +25,9 @@ jQuery(document).ready(function() {
     jQuery('#select_trial_for_selection_index').change( // update selection index options when trial selection changes
         function() {
 
+            console.log("value is: "+jQuery(this).val()+"\n");
+            console.log("text is: "+jQuery('option:selected', this).text()+"\n");
+
             jQuery('#selection_index').html("");
             jQuery('#trait_table').html("");
             jQuery('#weighted_values_div').html("");
@@ -36,24 +39,31 @@ jQuery(document).ready(function() {
                 return;
             };
 
+
+            // if multiple trials selected, get intersection of traits used in all trials
+            // same for controls.
+
+
             jQuery('#trait_table_label').html('Traits and coefficients for <a href="/breeders_toolbox/trial/'+jQuery(this).val()+'">'+jQuery('option:selected', this).text()+'</a>:')
 
-            var trial_id = jQuery(this).val();
+            var trial_ids = jQuery(this).val();
             var trial_name = jQuery("option:selected", this).text();
+
+            // console.log("ids are: "+trials+"\n");
 
             var data = [
                 [jQuery(this).val()]
             ];
 
             jQuery.ajax({ // get traits phenotyped in trial
-                url : '/ajax/breeders/trial/'+ trial_id + '/traits_assayed?stock_type=plot',
+                url : '/ajax/breeders/get_shared_traits',
                 // url: '/ajax/breeder/search',
                 method: 'POST',
-                // data: {
-                //     'categories': ['trials', 'traits'],
-                //     'data': data,
-                //     'querytypes': 0
-                // },
+                data: {
+                    'trial_ids': trial_ids,
+                    // 'data': data,
+                    // 'querytypes': 0
+                },
                 beforeSend: function() {
                     disable_ui();
                 },
@@ -62,8 +72,9 @@ jQuery(document).ready(function() {
                 },
                 success: function(response) {
                     // var list = response.list || 0;
-                    var list = response.traits_assayed[0] || 0;
-                    // console.log("Trait list is: "+JSON.stringify(list));
+                    var list = response.traits[0] || 0;
+                    // var list = response.traits_assayed[0] || 0;
+                    console.log("Trait list is: "+JSON.stringify(list));
                     if (!list) {
                       trait_html = '<option id="select_message" value="" title="No trait measurements found.">No trait measurements found for '+trial_name+'.</option>\n';
                       jQuery('#trait_list').html(trait_html);

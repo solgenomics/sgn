@@ -21,7 +21,7 @@ $trial_name => undef
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
       <div class="col-sm-12 col-md-12 col-lg-12">
           <label for="select_trial_for_selection_index">Trial: </label>
-          <select data-live-search="true" id="select_trial_for_selection_index" class="selectpicker" multiple></select>
+          <select data-live-search="true" id="select_trial_for_selection_index" class="selectpicker" autofocus="autofocus" multiple></select>
       </div><br><br><br><br><br>
       <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
         <label id="trait_table_label">Traits and coefficients: </label>
