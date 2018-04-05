@@ -140,6 +140,7 @@ sub _validate_with_plugin {
             if ($seen_seedlot_names{$seedlot_name}) {
                 push @error_messages, "Cell A$row_name: duplicate seedlot_name at cell A".$seen_seedlot_names{$seedlot_name}.": $seedlot_name";
             }
+            $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
@@ -147,6 +148,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell B:$row_name: you must provide an accession_name for the contents of the seedlot.";
         } else {
             if ($accession_name){
+                $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
                 $seen_accession_names{$accession_name}++;
             }
         }
@@ -221,10 +223,12 @@ sub _parse_with_plugin {
         my $accession_name;
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_seedlot_names{$seedlot_name}++;
         }
         if ($worksheet->get_cell($row,1)) {
             $accession_name = $worksheet->get_cell($row,1)->value();
+            $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}++;
         }
     }
@@ -293,6 +297,10 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $box_name =  $worksheet->get_cell($row,6)->value();
         }
+
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
 
         #skip blank lines
         if (!$seedlot_name && !$accession_name && !$description) {
