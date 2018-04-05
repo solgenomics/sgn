@@ -14,7 +14,8 @@ $editable_stock_props => {}
 <div class="container-fluid">
 
 <div class="well">
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Accessions Or Upload Accession Info</a>] [<a id="check_pedigree_link">Check Pedigrees</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
+
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a name="add_accessions_link">Add Accessions Or Upload Accession Info</a>] [<a id="check_pedigree_link">Check Pedigrees</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>

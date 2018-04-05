@@ -1,6 +1,6 @@
 <html>
 <head>
-<link rel="stylesheet" href="/css/sgn.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/css/sgn.css'] &>
 </head>
 
 <body>

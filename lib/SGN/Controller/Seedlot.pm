@@ -11,10 +11,21 @@ use Data::Dumper;
 sub seedlots :Path('/breeders/seedlots') :Args(0) { 
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    $c->stash->{timestamp} = localtime();
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{timestamp} = localtime;
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+    my $breeding_programs = $projects->get_breeding_programs();
+    $c->stash->{crossing_trials} = $projects->get_crossing_trials();
+    $c->stash->{locations} = $projects->get_all_locations();
+    $c->stash->{programs} = $breeding_programs;
     $c->stash->{template} = '/breeders_toolbox/seedlots.mas';
-
 }
 
 sub seedlot_detail :Path('/breeders/seedlot') Args(1) { 
@@ -53,7 +64,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $owners_string = '';
     foreach (@$owners){
         my $p = $people_schema->resultset("SpPerson")->find({sp_person_id=>$_});
-        $owners_string .= '<a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
+        $owners_string .= ' <a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id.'">'.$p->username.'</a>';
     }
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();

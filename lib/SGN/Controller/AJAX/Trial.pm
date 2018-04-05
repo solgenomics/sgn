@@ -114,11 +114,32 @@ sub generate_experimental_design_POST : Args(0) {
   my @treatments = $c->req->param('treatments[]');
   my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
   my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
+  my $westcott_check_1 = $c->req->param('westcott_check_1');
+  my $westcott_check_2 = $c->req->param('westcott_check_2');
+  my $westcott_col = $c->req->param('westcott_col');
+  my $westcott_col_between_check = $c->req->param('westcott_col_between_check');
 
   #if (!$num_seed_per_plot){
 #      $c->stash->{rest} = { error => "You need to provide number of seeds per plot so that your breeding material can be tracked."};
 #      return;
   #}
+  
+  if ($design_type eq 'westcott'){
+      if (!$westcott_check_1){
+          $c->stash->{rest} = { error => "You need to provide name of check 1 for westcott design."};
+          return;
+      }
+      if (!$westcott_check_2){
+          $c->stash->{rest} = { error => "You need to provide name of check 2 for westcott design."};
+          return;
+      }
+      if (!$westcott_col){
+          $c->stash->{rest} = { error => "You need to provide number of columns for westcott design."};
+          return;
+      }
+       push @control_names_crbd, $westcott_check_1;
+       push @control_names_crbd, $westcott_check_2;
+  }
 
   if ($design_type eq 'splitplot'){
       if (scalar(@treatments)<1){
@@ -313,6 +334,18 @@ my $location_number = scalar(@locations);
   if ($greenhouse_num_plants) {
       my $json = JSON->new();
     $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
+  }
+  if ($westcott_check_1){
+      $trial_design->set_westcott_check_1($westcott_check_1);
+  }
+  if ($westcott_check_2){
+      $trial_design->set_westcott_check_2($westcott_check_2);
+  }
+  if ($westcott_col){
+      $trial_design->set_westcott_col($westcott_col);
+  }
+  if ($westcott_col_between_check){
+      $trial_design->set_westcott_col_between_check($westcott_col_between_check);
   }
   if ($location_number) {
     $design_info{'number_of_locations'} = $location_number;
@@ -527,11 +560,13 @@ sub save_experimental_design_POST : Args(0) {
     };
 
     if ($save->{'error'}) {
-        my $folder = CXGN::Trial::Folder->new({
-            bcs_schema => $chado_schema,
-            folder_id => $folder_id,
-        });
-        my $delete_folder = $folder->delete_folder();
+        if (scalar(@locations) > 1){
+            my $folder = CXGN::Trial::Folder->new({
+                bcs_schema => $chado_schema,
+                folder_id => $folder_id,
+            });
+            my $delete_folder = $folder->delete_folder();
+        }
         print STDERR "Error saving trial: ".$save->{'error'};
         $c->stash->{rest} = {error => $save->{'error'}};
         return;
@@ -558,6 +593,32 @@ sub save_experimental_design_POST : Args(0) {
     return;
 }
 
+
+sub verify_trial_name : Path('/ajax/trial/verify_trial_name') : ActionClass('REST') { }
+
+sub verify_trial_name_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_name = $c->req->param('trial_name');
+    my $error;
+    my %errors;
+
+    if (!$trial_name) {
+        $c->stash->{rest} = {error => "No trial name supplied"};
+        $c->detach;
+    }
+
+    my $project_rs = $schema->resultset('Project::Project')->find({name=>$trial_name});
+
+    if ($project_rs){
+        my $error = 'The following trial name has aready been used. Please use a unique name';
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
@@ -754,7 +815,7 @@ sub upload_trial_file_POST : Args(0) {
       }
     }
 
-    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
+    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
     return;
   }
 

@@ -91,7 +91,7 @@ sub add_pedigrees {
         my ($accessions_hash_ref, $accessions_and_populations_hash_ref) = $self->_get_available_stocks();
         my %accessions_hash = %{$accessions_hash_ref};
         my %accessions_and_populations_hash = %{$accessions_and_populations_hash_ref};
- 
+
         foreach my $pedigree (@pedigrees) {
 
             #print STDERR Dumper($pedigree);
@@ -292,27 +292,37 @@ sub validate_pedigrees {
         }
     }
 
-		my $mother_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-		$mother_lookup->set_stock_name($female_parent_name);
-		my $mother_lookup_result = $mother_lookup->get_stock_exact();
-		my $mother_id = $mother_lookup_result->stock_id();
+		# my $mother_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+		# $mother_lookup->set_stock_name($female_parent_name);
+		# my $mother_lookup_result = $mother_lookup->get_stock_exact();
+		# my $mother_id = $mother_lookup_result->stock_id();
+		#
+		# my $father_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+		# $father_lookup->set_stock_name($male_parent_name);
+		# my $father_lookup_result = $father_lookup->get_stock_exact();
+		# my $father_id = $father_lookup_result->stock_id();
 
-		my $father_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-		$father_lookup->set_stock_name($male_parent_name);
-		my $father_lookup_result = $father_lookup->get_stock_exact();
-		my $father_id = $father_lookup_result->stock_id();
+		foreach my $pedigree (@pedigrees) {
+        my $progeny_name = $pedigree->get_name();
+				my $female_parent_name = $pedigree->get_female_parent()->get_name();
+        my $female_parent = $accessions_hash{$female_parent_name};
+				my $male_parent_name = $pedigree->get_male_parent()->get_name();
+				my $male_parent = $accessions_and_populations_hash{$male_parent_name};
+				my $mother_id = $female_parent->[0];
+				my $father_id = $male_parent->[0];
 
-		print STDERR "progeny name is $progeny_name\n";
+				print STDERR "progeny name is $progeny_name\n";
 
-		my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $progeny_name, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
-		my $conflict_return = $conflict_object->pedigree_check();
-		my $conflict_score = $conflict_return->{'score'};
+				my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $progeny_name, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
+				my $conflict_return = $conflict_object->pedigree_check();
+				my $conflict_score = $conflict_return->{'score'};
 
-		if ($conflict_score >= .03){
-			push @{$return{error}}, "$conflict_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
-		}
-		else{
-			push @{$return{message}}, "$conflict_score% of markers are in conflict indiciating that the pedigree of $progeny_name is likely correct.";
+				if ($conflict_score >= .03){
+					push @{$return{error}}, "$conflict_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
+				}
+				else{
+					push @{$return{message}}, "$conflict_score% of markers are in conflict indiciating that the pedigree of $progeny_name is likely correct.";
+				}
 		}
     return \%return;
 }

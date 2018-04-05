@@ -97,22 +97,30 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %errors;
 
     while (<$F>) {
-	chomp;
-	$_ =~ s/\r//g;
-	my @acc = split /\t/;
-	for(my $i=0; $i<3; $i++) {
-	    if ($acc[$i] =~ /\,/) {
-		my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
-		foreach (@a) { $stocks{$_}++ if $_ };
-	    }
-	    else {
-		$stocks{$acc[$i]}++ if $acc[$i];
-	    }
-	}
-	# check if the cross types are recognized...
-	if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
-	    $errors{"not legal cross type: $acc[3] (should be biparental, self, or open)"}=1;
-	}
+        chomp;
+        $_ =~ s/\r//g;
+        my @acc = split /\t/;
+        for(my $i=0; $i<3; $i++) {
+            if ($acc[$i] =~ /\,/) {
+                my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
+                foreach (@a) {
+                    if ($_){
+                        $_ =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+                        $stocks{$_}++;
+                    }
+                };
+            }
+            else {
+                if ($acc[$i]){
+                    $acc[$i] =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+                    $stocks{$acc[$i]}++;
+                }
+            }
+        }
+        # check if the cross types are recognized...
+        if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
+            $errors{"not legal cross type: $acc[3] (should be biparental, self, or open)"}=1;
+        }
     }
     close($F);
     my @unique_stocks = keys(%stocks);
@@ -192,6 +200,9 @@ sub _get_pedigrees_from_file {
         chomp;
         $_ =~ s/\r//g;
         my ($progeny, $female, $male, $cross_type) = split /\t/;
+        $progeny =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $female =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $male =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
 
         if (!$female && !$male) {
             $c->stash->{rest} = { error => "No male parent and no female parent on line $line_num!" };
@@ -267,7 +278,7 @@ sub _get_pedigrees_from_file {
 Usage:
     GET "/ajax/pedigrees/get_full?stock_id=<STOCK_ID>";
 
-Responds with JSON array containing pedigree relationship objects for the 
+Responds with JSON array containing pedigree relationship objects for the
 accession identified by STOCK_ID and all of its parents (recursively).
 
 =cut
@@ -303,7 +314,7 @@ Usage:
     POST "/ajax/pedigrees/get_relationships";
     BODY "stock_id=<STOCK_ID>[&stock_id=<STOCK_ID>...]"
 
-Responds with JSON array containing pedigree relationship objects for the 
+Responds with JSON array containing pedigree relationship objects for the
 accessions identified by the provided STOCK_IDs.
 
 =cut
@@ -350,12 +361,12 @@ sub _get_pedigree_parents {
     my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
-        { 
+        {
             'me.object_id' => $stock_id,
             'me.type_id' => $father_cvterm,
             'subject.type_id'=> $accession_cvterm
         },
-        { 
+        {
             'me.object_id' => $stock_id,
             'me.type_id' => $mother_cvterm,
             'subject.type_id'=> $accession_cvterm
@@ -379,12 +390,12 @@ sub _get_pedigree_children {
     my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
-        { 
+        {
             'me.subject_id' => $stock_id,
             'me.type_id' => $father_cvterm,
             'object.type_id'=> $accession_cvterm
         },
-        { 
+        {
             'me.subject_id' => $stock_id,
             'me.type_id' => $mother_cvterm,
             'object.type_id'=> $accession_cvterm

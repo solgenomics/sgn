@@ -47,7 +47,6 @@ $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
 
-
 # test adding cross and info
 my $crossing_trial_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial'});
 my $crossing_trial_id = $crossing_trial_rs->project_id();
@@ -61,7 +60,6 @@ $mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_i
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
-
 
 
 # test uploading crosses
@@ -86,7 +84,6 @@ print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
 
-
 # test retrieving crosses in a trial
 my $test_add_cross_rs = $schema->resultset('Stock::Stock')->find({name =>'test_add_cross'});
 my $test_add_cross_id = $test_add_cross_rs->stock_id();
@@ -102,8 +99,7 @@ is_deeply($response, {'data'=> [
 ]}, 'crosses in a trial');
 
 
-
-# test retrieving crossing experiment info
+# test retrieving crossing experimental info
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cross_properties_trial");
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -112,6 +108,51 @@ is_deeply($response, {'data'=> [
     [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, undef, "2018/02/15", undef, "20", "15", "30"]
 ]}, 'crossing experiment info');
 
+
+# test uploading progenies
+$file = $f->config->{basepath}."/t/data/cross/update_progenies.xls";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_progenies',
+    Content_Type => 'form-data',
+    Content => [
+        progenies_upload_file => [ $file, 'update_progenies.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
+
+# test uploading cross info
+$file = $f->config->{basepath}."/t/data/cross/update_crossinfo.xls";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_info',
+    Content_Type => 'form-data',
+    Content => [
+        crossinfo_upload_file => [ $file, 'update_crossinfo.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
+
+# test retrieving crossing experimental info after updating
+$mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cross_properties_trial");
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+is_deeply($response, {'data'=> [
+    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, "10", "2017/02/02", "10", "50", "15", "30"]
+]}, 'crossing experiment info');
 
 
 # remove added crossing trials after test so that they don't affect downstream tests

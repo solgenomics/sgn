@@ -29,7 +29,7 @@ $acronym
 </%args>
 
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation"] &>
 
@@ -72,4 +72,3 @@ $acronym
 <& /solgs/population/acronym.mas,
    acronym => $acronym,
 &>
-
