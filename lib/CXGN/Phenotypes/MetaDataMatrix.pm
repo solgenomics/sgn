@@ -100,15 +100,10 @@ sub get_metadata_matrix {
        }
        @unique_plot_list = uniq(@unique_plot_list);
     # }
-     
-    #print STDERR Dumper \%plot_data;
-    #print STDERR Dumper \%traits;
 
     my @info = ();
     my @line;
-    #if ($self->data_level eq 'metadata'){
-       @line = ( 'studyYear', 'studyName', 'locationName', 'studyDesign', 'breedingProgram', 'trialDescription', 'trialType', 'plotLength', 'plotWidth', 'plantPerPlot', 'blockNumber', 'repNumber', 'plantingDate', 'harvestDate' );
-     #}
+    @line = ( 'studyYear', 'studyName', 'locationName', 'studyDesign', 'breedingProgram', 'trialDescription', 'trialType', 'plotLength', 'plotWidth', 'plantPerPlot', 'blockNumber', 'repNumber', 'plantingDate', 'harvestDate' );
      
     # generate header line
     #

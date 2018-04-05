@@ -78,7 +78,6 @@ sub search {
     my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program', 'project_property')->cvterm_id();
     my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
 
-
     #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
 
     my %columns = (
@@ -109,7 +108,6 @@ sub search {
 
     my @where_clause;
 
-
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         my $trial_sql = _sql_from_arrayref($self->trial_list);
         push @where_clause, $columns{'trial_id'}." in ($trial_sql)";
@@ -139,8 +137,6 @@ sub search {
         my $trial_type = $trial_type_data->[1];
         
         my $layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'});
-        #my $design = $layout->get_design();
-        #my $design_type = $layout->get_design_type();
         
         my $plot_dimensions = $layout->get_plot_dimensions();
         
@@ -164,23 +160,20 @@ sub search {
         if ($block_numbers) {
           $number_of_blocks = scalar(@{$block_numbers});
         }
-        print STDERR Dumper($number_of_blocks);
+
         my $replicate_numbers = $layout->get_replicate_numbers();
         my $number_of_replicates = '';
         if ($replicate_numbers) {
           $number_of_replicates = scalar(@{$replicate_numbers});
         }        
-        print STDERR Dumper($number_of_replicates);
+
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
-        #if ($self->data_level eq 'metadata'){
-           my $calendar_funcs = CXGN::Calendar->new({});
-           my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
-           my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
-           push @$result, [ $year, $project_name, $location_name, $design, $breeding_program, $trial_desc, $trial_type, $plot_length, $plot_width, $plants_per_plot, $number_of_blocks, $number_of_replicates, $planting_date_value, $harvest_date_value ];
-         #}
+        my $calendar_funcs = CXGN::Calendar->new({});
+        my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
+        my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
+        push @$result, [ $year, $project_name, $location_name, $design, $breeding_program, $trial_desc, $trial_type, $plot_length, $plot_width, $plants_per_plot, $number_of_blocks, $number_of_replicates, $planting_date_value, $harvest_date_value ];
 
     }
-    print STDERR Dumper($result);
     print STDERR "Search End:".localtime."\n";
     return $result;
 }
