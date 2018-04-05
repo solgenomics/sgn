@@ -1065,34 +1065,38 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $design_type = $layout->get_design_type();
     my $plot_dimensions = $layout->get_plot_dimensions();
 
-    my $plot_length = '';
-    if ($plot_dimensions->[0]) {
-	$plot_length = $plot_dimensions->[0];
-    }
-
-    my $plot_width = '';
-    if ($plot_dimensions->[1]){
-	$plot_width = $plot_dimensions->[1];
-    }
-
-    my $plants_per_plot = '';
-    if ($plot_dimensions->[2]){
-	$plants_per_plot = $plot_dimensions->[2];
-    }
+    my $plot_length = $plot_dimensions->[0] ? $plot_dimensions->[0] : '';
+    my $plot_width = $plot_dimensions->[1] ? $plot_dimensions->[1] : '';
+    my $plants_per_plot = $plot_dimensions->[2] ? $plot_dimensions->[2] : '';
 
     my $block_numbers = $layout->get_block_numbers();
     my $number_of_blocks = '';
     if ($block_numbers) {
-      $number_of_blocks = scalar(@{$block_numbers});
+        $number_of_blocks = scalar(@{$block_numbers});
     }
 
     my $replicate_numbers = $layout->get_replicate_numbers();
     my $number_of_replicates = '';
     if ($replicate_numbers) {
-      $number_of_replicates = scalar(@{$replicate_numbers});
+        $number_of_replicates = scalar(@{$replicate_numbers});
     }
 
-    $c->stash->{rest} = { design_type => $design_type, num_blocks => $number_of_blocks, num_reps => $number_of_replicates, plot_length => $plot_length, plot_width => $plot_width, plants_per_plot => $plants_per_plot, design => $design };
+    my $plot_names = $layout->get_plot_names();
+    my $number_of_plots = '';
+    if ($plot_names){
+        $number_of_plots = scalar(@{$plot_names});
+    }
+
+    $c->stash->{rest} = {
+        design_type => $design_type,
+        num_blocks => $number_of_blocks,
+        num_reps => $number_of_replicates,
+        plot_length => $plot_length,
+        plot_width => $plot_width,
+        plants_per_plot => $plants_per_plot,
+        total_number_plots => $number_of_plots,
+        design => $design
+    };
 }
 
 sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {

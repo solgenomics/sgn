@@ -68,6 +68,10 @@ organism_property	organism_synonym				00052
 organism_property	species authority	From BrAPI	03/27/2017	nm529	00076
 organism_property	subtaxa	From BrAPI	03/27/2017	nm529	00076
 organism_property	subtaxa authority	From BrAPI	03/27/2017	nm529	00076
+project_property	plot_width		04/05/2018	nm529	00093
+project_property	plot_length		04/05/2018	nm529	00093
+project_property	field_size		04/05/2018	nm529	00093
+project_property	field_trial_is_genotyped		04/05/2018	nm529	00093
 project_property	breeding_program				00051
 project_property	data_agreement
 project_property	design
