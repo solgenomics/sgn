@@ -225,7 +225,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
     my $search_type = $c->req->param("search_type") || 'fast';
-
+print "DATALEVEL: $data_level\n";
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
     my @trait_component_list;
@@ -439,7 +439,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $dl_token = $c->req->param("metadata_download_token") || "no_token";
     }
     my $format            = $c->req->param("format");
-    if (!$format){
+    if (!$format){ 
         $format            = $c->req->param("metadata_format");
     }
     my $datalevel         = $c->req->param("phenotype_datalevel");
