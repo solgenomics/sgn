@@ -161,7 +161,7 @@ sub check_prerequisite_jobs {
 	else
 	{
 	    my ($sec, $min, $now_hr) = localtime();
-	    if ($now_hr == $start_hr + 2 ) 
+	    if ($now_hr == $start_hr + 8 ) 
 	    { 
 		last;
 	    }

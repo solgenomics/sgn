@@ -75,7 +75,9 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             location_id => $sl->{location_id},
             count => $sl->{current_count},
             weight_gram => $sl->{current_weight_gram},
-            owners_string => $sl->{owners_string}
+            owners_string => $sl->{owners_string},
+            organization => $sl->{organization},
+            box => $sl->{box}
         };
     }
 
@@ -407,7 +409,23 @@ sub upload_seedlots_POST : Args(0) {
     my $location = $c->req->param("upload_seedlot_location");
     my $population = $c->req->param("upload_seedlot_population_name");
     my $organization = $c->req->param("upload_seedlot_organization_name");
-    my $upload = $c->req->upload('seedlot_uploaded_file');
+    my $upload_from_accessions = $c->req->upload('seedlot_uploaded_file');
+    my $upload_harvested_from_crosses = $c->req->upload('seedlot_harvested_uploaded_file');
+    if (!$upload_from_accessions && !$upload_harvested_from_crosses){
+        $c->stash->{rest} = {error=>'You must upload a seedlot file!'};
+        $c->detach();
+    }
+    my $upload;
+    my $parser_type;
+    if ($upload_from_accessions){
+        $upload = $upload_from_accessions;
+        $parser_type = 'SeedlotXLS';
+    }
+    if ($upload_harvested_from_crosses){
+        $upload = $upload_harvested_from_crosses;
+        $parser_type = 'SeedlotHarvestedXLS';
+    }
+    print STDERR "$parser_type \n";
     my $subdirectory = "seedlot_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -432,7 +450,7 @@ sub upload_seedlots_POST : Args(0) {
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('SeedlotXLS');
+    $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
@@ -474,8 +492,19 @@ sub upload_seedlots_POST : Args(0) {
             my $return = $sl->store();
             my $seedlot_id = $return->{seedlot_id};
 
-            my $from_stock_id = $val->{accession_stock_id} ? $val->{accession_stock_id} : $val->{cross_stock_id};
-            my $from_stock_name = $val->{accession} ? $val->{accession} : $val->{cross_name};
+            my $from_stock_id;
+            my $from_stock_name;
+            if ($val->{accession_stock_id}){
+                $from_stock_id = $val->{accession_stock_id};
+                $from_stock_name = $val->{accession};
+            }
+            elsif ($val->{cross_stock_id}){
+                $from_stock_id = $val->{cross_stock_id};
+                $from_stock_name = $val->{cross_name};
+            }
+            if (!$from_stock_id || !$from_stock_name){
+                die "A source accession or source cross must be given to make a seedlot transaction.\n";
+            }
 
             my $transaction_amount;
             my $transaction_weight;
@@ -947,7 +976,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $description = $c->req->param("description");
     my $factor = $c->req->param("factor");
     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema});
-    $transaction->factor(1);
+    $transaction->factor($factor);
     if ($factor == 1){
         $transaction->from_stock([$stock_id, $stock_uniquename]);
         $transaction->to_stock([$c->stash->{seedlot_id}, $c->stash->{uniquename}]);
