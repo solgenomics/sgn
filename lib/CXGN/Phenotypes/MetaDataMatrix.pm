@@ -94,8 +94,8 @@ sub get_metadata_matrix {
          grep !$seen{$_}++, @_;
        }
        foreach my $d (@$data) {
-           my ($year,$project_name,$location,$design,$breeding_program,$planting_date,$harvest_date) = @$d;
-           $plot_data{$project_name}->{metadata} = [$year,$project_name,$location,$design,$breeding_program,$planting_date,$harvest_date];
+           my ($year,$project_name,$location,$design,$breeding_program,$trial_desc,$trial_type,$plot_length,$plot_width,$plants_per_plot,$number_of_blocks,$number_of_replicates,$planting_date,$harvest_date) = @$d;
+           $plot_data{$project_name}->{metadata} = [$year,$project_name,$location,$design,$breeding_program,$trial_desc,$trial_type,$plot_length,$plot_width,$plants_per_plot,$number_of_blocks,$number_of_replicates,$planting_date,$harvest_date];
            push @unique_plot_list, $project_name;
        }
        @unique_plot_list = uniq(@unique_plot_list);
@@ -107,7 +107,7 @@ sub get_metadata_matrix {
     my @info = ();
     my @line;
     #if ($self->data_level eq 'metadata'){
-       @line = ( 'studyYear', 'studyName', 'locationName', 'studyDesign', 'breedingProgram', 'plantingDate', 'harvestDate' );
+       @line = ( 'studyYear', 'studyName', 'locationName', 'studyDesign', 'breedingProgram', 'trialDescription', 'trialType', 'plotLength', 'plotWidth', 'plantPerPlot', 'blockNumber', 'repNumber', 'plantingDate', 'harvestDate' );
      #}
      
     # generate header line
