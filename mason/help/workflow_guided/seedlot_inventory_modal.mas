@@ -13,8 +13,38 @@ $timestamp
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                Nothing Here Yet<br/>
-                Please refer to the <a href="https://solgenomics.github.io/sgn">Documentation</a>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-plus"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>I have new seedlots that need to be added into the database.</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="seedlot_bulk_upload" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-scale"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>I conducted an inventory (in weight(g)) and want to update the database to reflect the current state of the inventory.</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="seedlot_upload_inventory" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

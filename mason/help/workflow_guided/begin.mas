@@ -118,7 +118,7 @@ $timestamp
                                         <h4>Upload crosses and crossing information into the database</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button id="guided_help_upload_crosses_button" class="btn btn-primary btn-sm">Go</button>
+                                        <button name="upload_crosses_link" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -168,13 +168,17 @@ $timestamp
 <& /help/workflow_guided/seedlot_inventory_modal.mas, timestamp=>$timestamp &>
 <& /help/workflow_guided/phenotype_upload_modal.mas &>
 <& /help/workflow_guided/genotyping_trial_modal.mas &>
-<& /help/workflow_guided/upload_crosses_modal.mas &>
 <& /help/workflow_guided/trial_barcoding_modal.mas &>
 <& /help/workflow_guided/trial_comparison_modal.mas &>
 
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, breeding_programs=>$breeding_programs, locations=>$locations &>
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
-<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+
+<& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
 

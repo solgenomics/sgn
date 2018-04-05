@@ -38,7 +38,7 @@ $model_parameters
 					   ] 
 &>
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas, 
    title => "Genomic selection model for $trait_name ($trait_abbr) in $project_name"
@@ -107,4 +107,3 @@ $model_parameters
    prediction_pop_name     => $prediction_pop_name,
    project_name            => $project_name,
 &>
-
