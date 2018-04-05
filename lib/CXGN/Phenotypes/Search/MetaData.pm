@@ -2,40 +2,26 @@ package CXGN::Phenotypes::Search::MetaData;
 
 =head1 NAME
 
-CXGN::Phenotypes::Search::Native - an object to handle searching phenotypes across database. called from factory CXGN::Phenotypes::SearchFactory. Processes phenotype search against cxgn schema.
+CXGN::Phenotypes::Search::MetaData - an object to handle searching meta-data across database. called from factory CXGN::Phenotypes::SearchFactory. Processes meta-data search against cxgn schema.
 
 =head1 USAGE
 
-my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'Native',    #can be either 'MaterializedView', or 'Native'
+my $metadata_search = CXGN::Phenotypes::SearchFactory->instantiate(
+    'MetaData',    #can be either 'MaterializedView', or 'Native'
     {
-        bcs_schema=>$schema,
-        data_level=>$data_level,
-        trait_list=>$trait_list,
-        trial_list=>$trial_list,
-        year_list=>$year_list,
-        location_list=>$location_list,
-        accession_list=>$accession_list,
-        plot_list=>$plot_list,
-        plant_list=>$plant_list,
-        subplot_list=>$subplot_list,
-        exclude_phenotype_outlier=>0,
-        include_timestamp=>$include_timestamp,
-        include_row_and_column_numbers=>0,
-        trait_contains=>$trait_contains,
-        phenotype_min_value=>$phenotype_min_value,
-        phenotype_max_value=>$phenotype_max_value,
-        limit=>$limit,
-        offset=>$offset
+        bcs_schema=>$self->bcs_schema, 
+        data_level=>$self->data_level,
+        trial_list=>$self->trial_list,
     }
 );
-my @data = $phenotypes_search->search();
+my @data = $metadata_search->search();
 
 =head1 DESCRIPTION
 
 
 =head1 AUTHORS
 
+Alex Ogbonna <aco46@cornell.edu>
 
 =cut
 
