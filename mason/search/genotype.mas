@@ -63,7 +63,7 @@
 <script>
 
 
-jQuery(document).ready(function () {
+jQuery(document).ready(function (){
 
     var list = new CXGN.Dataset();
 
@@ -71,19 +71,15 @@ jQuery(document).ready(function () {
 
     $("#search_genotypes").click(function(){
 
-    var table = jQuery('#genotype_search_results').DataTable({
+        var table = jQuery('#genotype_search_results').DataTable({
 
-    'ajax':{'url':'/ajax/dataset/get_genotypes',
-        data:{'dataset_id':$('#selected_dataset').val()}
-        }
-    });
+            'ajax':{'url':'/ajax/dataset/get_genotypes',
+            data:{'dataset_id':$('#selected_dataset').val()}
+            }
+        });
     });
 
 });
-
-
-
-
 
 
 </script>
