@@ -359,7 +359,7 @@ $main_production_site_url
 
 % my $download_pheno_subtitle;
 % if (scalar(@$assayed_traits) > 0){
-%   $download_pheno_subtitle = "<button class='btn btn-sm btm-primary' id='trial_download_phenotypes_button'>Download Trial Data</button>"
+%   $download_pheno_subtitle = "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>"
 % }
 % else {
 %   $download_pheno_subtitle = "Trial has no phenotype for download";
