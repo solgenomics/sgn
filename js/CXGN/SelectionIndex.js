@@ -1,5 +1,15 @@
 jQuery(document).ready(function() {
 
+    get_select_box(
+        'trials',
+        'select_trial_for_selection_index',
+        {
+            'name' : 'html_select_trial_for_selection_index',
+            'id' : 'html_select_trial_for_selection_index' ,
+            'empty' : 1,
+            'multiselect' : 1
+        });
+
     jQuery(document)
         .on('show.bs.collapse', '.panel-collapse', function() {
             var $span = jQuery(this).parents('.panel').find('.panel-heading span.clickable');

@@ -10,7 +10,7 @@ $trial_name => undef
 <script type="text/javascript" async
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
 </script>
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex', 'bootstrap-select_min'] &>
 <& /page/page_title.mas, title=>"Build a Selection Index" &>
 
 <div class="panel panel-default">
@@ -21,7 +21,7 @@ $trial_name => undef
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
       <div class="col-sm-12 col-md-12 col-lg-12">
           <label for="select_trial_for_selection_index">Trial: </label>
-          <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
+          <select data-live-search="true" id="select_trial_for_selection_index" class="selectpicker" multiple></select>
       </div><br><br><br><br><br>
       <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
         <label id="trait_table_label">Traits and coefficients: </label>
@@ -154,7 +154,6 @@ $trial_name => undef
 <script>
     jQuery(document).ready(function() {
         jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
-        get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
         var lo = new CXGN.List();
         jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh'));
         jQuery('#sin_list_list_select').change(
