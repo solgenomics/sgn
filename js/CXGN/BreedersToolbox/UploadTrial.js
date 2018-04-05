@@ -183,7 +183,7 @@ jQuery(document).ready(function ($) {
                 $("#upload_trial_error_display_second_try").show();
             }
             if (response.success) {
-                refreshTrailJsTree();
+                refreshTrailJsTree(0);
                 jQuery("#upload_trial_error_display_second_try").hide();
                 jQuery('#trial_upload_show_repeat_upload_button').hide();
                 jQuery('[name="upload_trial_completed_message"]').html('<button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>');

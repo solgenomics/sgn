@@ -360,7 +360,7 @@ sub list_seedlots {
         phenome_schema=>$phenome_schema,
         stock_id_list=>\@seen_seedlot_ids,
         stock_type_id=>$type_id,
-        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1},
+        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1},
         minimal_info=>1,  #for only returning stock_id and uniquenames
         display_pedigree=>0 #to calculate and display pedigree
     });
@@ -380,6 +380,8 @@ sub list_seedlots {
         }
         my $owners_string = join ', ', @owners_html;
         $unique_seedlots{$_}->{owners_string} = $owners_string;
+        $unique_seedlots{$_}->{organization} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} : 'NA';
+        $unique_seedlots{$_}->{box} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} : 'NA';
         $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
         $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
         push @seedlots, $unique_seedlots{$_};
@@ -765,8 +767,13 @@ sub _update_content_stock_id {
     while (my $r=$acc_rs->next){
         $r->delete();
     }
-    my $error = $self->_store_seedlot_accession();
-    $error = $self->_store_seedlot_cross();
+    my $error;
+    if ($self->accession_stock_id){
+        $error = $self->_store_seedlot_accession();
+    }
+    if ($self->cross_stock_id){
+        $error = $self->_store_seedlot_cross();
+    }
     return $error;
 }
 
