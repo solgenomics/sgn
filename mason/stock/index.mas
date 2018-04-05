@@ -53,7 +53,6 @@ $barcode_tempdir => undef
 $barcode_tempuri => undef
 $identifier_prefix => 'SGN'
 $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
-
 </%args>
 
 
@@ -191,6 +190,8 @@ function jqueryStuff() {
   });
 }
 </script>
+
+
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
