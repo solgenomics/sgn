@@ -117,11 +117,8 @@ $trial_name
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_field_map_form" name="edit_field_map_form">
-
                     <p3> Accession was replaced successfully...</p3>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -142,11 +139,8 @@ $trial_name
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="subs_field_map_form" name="subs_field_map_form">
-
                     <p3> Accessions were substituted successfully...</p3>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -368,4 +362,4 @@ jQuery(document).ready(function () {
 
 });
 
-</script
+</script>

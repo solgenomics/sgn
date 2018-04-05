@@ -215,6 +215,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
     }
     else {
+        $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         #file must not contain duplicate plot names
         if ($seen_plot_names{$plot_name}) {
             push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
@@ -229,6 +230,7 @@ sub _validate_with_plugin {
       push @error_messages, "Cell B$row_name: accession name missing";
     } else {
       #accession name must exist in the database
+      $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_accession_names{$accession_name}++;
     }
 
@@ -277,6 +279,7 @@ sub _validate_with_plugin {
     }
 
     if ($seedlot_name){
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_seedlot_names{$seedlot_name}++;
         push @pairs, [$seedlot_name, $accession_name];
     }
@@ -378,6 +381,7 @@ sub _parse_with_plugin {
       my $accession_name;
       if ($worksheet->get_cell($row,1)) {
           $accession_name = $worksheet->get_cell($row,1)->value();
+          $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
           $seen_accession_names{$accession_name}++;
       }
   }
@@ -413,9 +417,11 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
     }
+    $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,1)) {
       $accession_name = $worksheet->get_cell($row,1)->value();
     }
+    $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
     }
@@ -440,6 +446,7 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,9)) {
         $seedlot_name = $worksheet->get_cell($row, 9)->value();
     }
+    $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,10)) {
         $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
     }
