@@ -63,6 +63,7 @@ $c->res->body($output);
 use Moose::Role;
 use CXGN::Trial;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::MetaDataMatrix;
 use Data::Dumper;
 
 sub verify {
@@ -96,8 +97,16 @@ sub download {
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my $factory_type;
+    my @data;
     if ($data_level eq 'metadata'){
-        $factory_type = 'Native';
+        $factory_type = 'MetaData';
+        my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
+    		bcs_schema=>$schema,
+    		search_type=>$factory_type,
+    		data_level=>$data_level,
+    		trial_list=>$trial_list,    		
+    	);
+    	@data = $metadata_search->get_metadata_matrix();
     }
     else {
         if ($search_type eq 'complete'){
@@ -106,29 +115,28 @@ sub download {
         if ($search_type eq 'fast'){
             $factory_type = 'MaterializedView';
         }
+
+    	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+    		bcs_schema=>$schema,
+    		search_type=>$factory_type,
+    		data_level=>$data_level,
+    		trait_list=>$trait_list,
+            trait_component_list=>$trait_component_list,
+    		trial_list=>$trial_list,
+    		year_list=>$year_list,
+    		location_list=>$location_list,
+    		accession_list=>$accession_list,
+    		plot_list=>$plot_list,
+    		plant_list=>$plant_list,
+    		include_timestamp=>$include_timestamp,
+            include_row_and_column_numbers=>$self->include_row_and_column_numbers,
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+    		trait_contains=>$trait_contains,
+    		phenotype_min_value=>$phenotype_min_value,
+    		phenotype_max_value=>$phenotype_max_value,
+    	);
+    	@data = $phenotypes_search->get_phenotype_matrix();
     }
-
-	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-		bcs_schema=>$schema,
-		search_type=>$factory_type,
-		data_level=>$data_level,
-		trait_list=>$trait_list,
-        trait_component_list=>$trait_component_list,
-		trial_list=>$trial_list,
-		year_list=>$year_list,
-		location_list=>$location_list,
-		accession_list=>$accession_list,
-		plot_list=>$plot_list,
-		plant_list=>$plant_list,
-		include_timestamp=>$include_timestamp,
-        include_row_and_column_numbers=>$self->include_row_and_column_numbers,
-        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-		trait_contains=>$trait_contains,
-		phenotype_min_value=>$phenotype_min_value,
-		phenotype_max_value=>$phenotype_max_value,
-	);
-	my @data = $phenotypes_search->get_phenotype_matrix();
-
     #print STDERR Dumper \@data;
 
     my $time = DateTime->now();

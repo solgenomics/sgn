@@ -21,11 +21,11 @@ $identifier => ''
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         Generate barcode for plots and accessions.
                     </p>
-                        <center>
+                    <center>
                         <div class="well">
-                        <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                            <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                         </div>
-                    <p>
+                    </center>
 
                     <div class="well well-sm">
                         <div class="row">
