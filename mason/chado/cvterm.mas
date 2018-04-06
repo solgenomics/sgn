@@ -177,7 +177,7 @@ my $edit_privs = $curator || $submitter || $sequencer;
 
 <h4>Add this term to a list</h4>
 
-<div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $db_name %>:<% $accession %></div>
+<div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $accession %></div>
 
 <&| /page/info_section.mas, title=>"Add to list", collapsible=>1, collapsed=>1 &>
 <div id="paste_to_list">

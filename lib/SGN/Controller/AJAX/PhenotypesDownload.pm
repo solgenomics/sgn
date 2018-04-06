@@ -59,7 +59,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
-  print STDERR Dumper \@trial_ids;
+  #print STDERR Dumper \@trial_ids;
   my $format = $c->req->param('format') || "ExcelBasic";
   my $data_level = $c->req->param('data_level') || "plots";
   my $file_format = $c->req->param('create_spreadsheet_phenotype_file_format') || "detailed";

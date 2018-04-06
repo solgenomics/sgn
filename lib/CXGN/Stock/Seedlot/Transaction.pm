@@ -53,23 +53,22 @@ has 'description' => ( isa => 'Maybe[Str]',
 
 sub BUILD { 
     my $self = shift;
-    
-    if ($self->transaction_id()) { 
-	my $row = $self->schema()->resultset("Stock::StockRelationship")
-	    ->find( { stock_relationship_id => $self->transaction_id() }, { join => ['subject', 'object'], '+select' => ['subject.uniquename', 'subject.type_id', 'object.uniquename', 'object.type_id'], '+as' => ['subject_uniquename', 'subject_type_id', 'object_uniquename', 'object_type_id'] } );
 
-	$self->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
-	$self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
-	my $data = JSON::Any->decode($row->value());
-	$self->amount($data->{amount});
-    if ($data->{weight_gram}){
-        $self->weight_gram($data->{weight_gram});
-    } else {
-        $self->weight_gram('NA');
-    }
-	$self->timestamp($data->{timestamp});
-	$self->operator($data->{operator});
-	$self->description($data->{description});
+    if ($self->transaction_id()) {
+        my $row = $self->schema()->resultset("Stock::StockRelationship")->find( { stock_relationship_id => $self->transaction_id() }, { join => ['subject', 'object'], '+select' => ['subject.uniquename', 'subject.type_id', 'object.uniquename', 'object.type_id'], '+as' => ['subject_uniquename', 'subject_type_id', 'object_uniquename', 'object_type_id'] } );
+
+        $self->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
+        $self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
+        my $data = JSON::Any->decode($row->value());
+        $self->amount($data->{amount});
+        if ($data->{weight_gram}){
+            $self->weight_gram($data->{weight_gram});
+        } else {
+            $self->weight_gram('NA');
+        }
+        $self->timestamp($data->{timestamp});
+        $self->operator($data->{operator});
+        $self->description($data->{description});
     }
 }
 
@@ -110,7 +109,11 @@ sub get_transactions_by_seedlot_id {
         } else {
             $t_obj->weight_gram('NA');
         }
-        $t_obj->amount($data->{amount});
+        if (defined($data->{amount})){
+            $t_obj->amount($data->{amount});
+        } else {
+            $t_obj->amount('NA');
+        }
         $t_obj->timestamp($data->{timestamp});
         $t_obj->operator($data->{operator});
         $t_obj->description($data->{description});
@@ -148,7 +151,7 @@ sub store {
     if($self->from_stock()->[0] == $self->to_stock()->[0]){
         $value->{factor} = $self->factor();
     }
-    print STDERR Dumper $value;
+    #print STDERR Dumper $value;
     my $json_value = JSON::Any->encode($value);
 
     if (!$self->has_transaction_id()) {
@@ -163,6 +166,7 @@ sub store {
         if ($row_rs->first) { 
             $new_rank = $row_rs->first->rank()+1;
         }
+        #print STDERR Dumper $new_rank;
 
         my $row = $self->schema()->resultset("Stock::StockRelationship")
             ->create({

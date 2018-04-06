@@ -224,6 +224,7 @@ sub _validate_with_plugin {
         }
         else {
             #file must not contain duplicate sample_id
+            $sample_id =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             if ($seen_sample_ids{$sample_id}) {
                 push @error_messages, "Cell B$row_name: duplicate sample_id at cell B".$seen_sample_ids{$sample_id}.": $sample_id";
             }
@@ -232,6 +233,7 @@ sub _validate_with_plugin {
 
         #source_observation_unit_name name must exist in the database
         if ($source_observation_unit_name){
+            $source_observation_unit_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_source_observation_unit_names{$source_observation_unit_name}++;
         }
 
@@ -393,6 +395,9 @@ sub _parse_with_plugin {
         if($is_blank){
             $source_observation_unit_name = 'BLANK';
         }
+
+        $sample_id =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $source_observation_unit_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
 
         my $key = $row;
         $design{$key}->{date} = $date;

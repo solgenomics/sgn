@@ -287,8 +287,12 @@ $(document).ready(function($) {
                     alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
                     getDataSourceSelect();
                 } else {
-                    add_fields = response;
+                    add_fields = response.fields;
                     add_fields["Select a field"] = {};
+
+                    // if reps, add reps as options for filtering
+                    reps = response.reps;
+                    addPlotFilter(reps);
 
                     createAdders(add_fields);
                     initializeCustomModal(add_fields);
@@ -394,6 +398,7 @@ $(document).ready(function($) {
             document.getElementById("vertical_gap").value,
             document.getElementById("number_of_columns").value,
             document.getElementById("number_of_rows").value,
+            document.getElementById("plot_filter").value,
             document.getElementById("sort_order").value,
             document.getElementById("copies_per_plot").value
         );
@@ -954,7 +959,7 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
     }
 }
 
-function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, sort_order, copies_per_plot) {
+function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical_gap, number_of_columns, number_of_rows, plot_filter, sort_order, copies_per_plot) {
     // save options in javascript object and in html elements
     var page = d3.select("#page_format").node().value;
     var label = d3.select("#label_format").node().value;
@@ -964,6 +969,7 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     page_formats[page].label_sizes[label].vertical_gap = vertical_gap;
     page_formats[page].label_sizes[label].number_of_columns = number_of_columns;
     page_formats[page].label_sizes[label].number_of_rows = number_of_rows;
+    page_formats[page].label_sizes[label].plot_filter = plot_filter;
     page_formats[page].label_sizes[label].sort_order = sort_order;
     page_formats[page].label_sizes[label].copies_per_plot = copies_per_plot;
     document.getElementById("top_margin").value = top_margin;
@@ -972,6 +978,7 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     document.getElementById("vertical_gap").value = vertical_gap;
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
+    document.getElementById("plot_filter").value = plot_filter;
     document.getElementById("sort_order").value = sort_order;
     document.getElementById("copies_per_plot").value = copies_per_plot;
 }
@@ -1003,6 +1010,28 @@ function createAdders(add_fields) {
         })
         .attr("value", function(d) {
             return add_fields[d]
+        });
+
+}
+
+function addPlotFilter(reps) {
+
+    Object.keys(reps).forEach(function(key) {
+        var newkey = "Rep "+key+" only";
+        reps[newkey] = key;
+        delete reps[key];
+    });
+    reps['All Plots'] = 'all';
+
+    d3.select("#plot_filter").selectAll("option").remove();
+    d3.select("#plot_filter").selectAll("option")
+        .data(Object.keys(reps).sort())
+        .enter().append("option")
+        .text(function(d) {
+            return d
+        })
+        .attr("value", function(d) {
+            return reps[d]
         });
 
 }
@@ -1091,8 +1120,9 @@ function retrievePageParams() {
         vertical_gap: label_sizes[label].vertical_gap,
         number_of_columns: label_sizes[label].number_of_columns,
         number_of_rows: label_sizes[label].number_of_rows,
-        copies_per_plot: document.getElementById("copies_per_plot").value,
+        plot_filter: document.getElementById("plot_filter").value,
         sort_order: document.getElementById("sort_order").value,
+        copies_per_plot: document.getElementById("copies_per_plot").value,
         label_format: label,
         label_width: label_sizes[label].label_width,
         label_height: label_sizes[label].label_height,
@@ -1260,8 +1290,9 @@ function loadDesign (list_id) {
         params['vertical_gap'],
         params['number_of_columns'],
         params['number_of_rows'],
+        params['plot_filter'],
         params['sort_order'],
         params['copies_per_plot']
     );
-    //console.log("List has been loaded!\n");
+
 }

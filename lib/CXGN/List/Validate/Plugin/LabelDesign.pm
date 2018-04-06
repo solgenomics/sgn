@@ -30,6 +30,7 @@ sub validate {
         "number_of_rows" => \&check_is_numeric,
         "copies_per_plot" => \&check_is_numeric,
         "sort_order" => \&check_sort_order,
+        "plot_filter" => \&check_plot_filter,
         "label_format" => \&check_label_format,
         "label_width" => \&check_is_numeric,
         "label_height" => \&check_is_numeric,
@@ -92,6 +93,17 @@ sub validate {
 sub check_is_numeric {
     my $num = shift;
     looks_like_number($num) ? return 1 : return 0;
+}
+
+sub check_plot_filter {
+    my $filter = shift;
+    my $valid;
+    if (looks_like_number($filter) || $filter eq 'all') {
+        $valid = 1;
+    } else {
+        $valid = 0;
+    }
+    return $valid;
 }
 
 sub check_page_format {

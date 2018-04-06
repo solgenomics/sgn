@@ -30,10 +30,10 @@ sub generate_genotype_trial_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("plate_data");
-    print STDERR Dumper $plate_info;
+    #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters" };
+        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 
@@ -104,9 +104,28 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('genotyping_trial_layout_upload');
+    my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
+    my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
+    if ($upload_xls && $upload_coordinate){
+        $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
+        return;
+    }
+    if (!$upload_xls && !$upload_coordinate){
+        $c->stash->{rest} = {error => "You must upload a genotyping trial file!" };
+        return;
+    }
     my $parser;
     my $parsed_data;
+    my $upload;
+    my $upload_type;
+    if ($upload_xls){
+        $upload = $upload_xls;
+        $upload_type = 'GenotypeTrialXLS';
+    }
+    if ($upload_coordinate){
+        $upload = $upload_coordinate;
+        $upload_type = 'GenotypeTrialCoordinate';
+    }
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
     my $subdirectory = "genotyping_trial_upload";
@@ -178,7 +197,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('GenotypeTrialXLS');
+    $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
@@ -268,7 +287,7 @@ sub store_genotype_trial_POST : Args(0) {
     #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters" };
+        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 

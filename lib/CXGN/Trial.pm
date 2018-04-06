@@ -2249,6 +2249,43 @@ sub create_tissue_samples {
     return 1;
 }
 
+=head2 function has_col_and_row_numbers()
+
+	Usage:        $trial->has_col_and_row_numbers();
+	Desc:         Some trials require tissue_samples from plants. This function will determine if a trial has row and column numbers for fieldMap spreadsheet download.
+	Ret:          Returns 1 if trial has row and column numbers, 0 if the trial does not.
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub has_col_and_row_numbers {
+	my $self = shift;
+	my $chado_schema = $self->bcs_schema();
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
+    my $design = $layout->get_design();
+    
+    my (@row_numbers, @col_numbers);
+    foreach my $plot (keys %$design) {
+        my $row_number = $design->{$plot}->{row_number};
+        my $col_number = $design->{$plot}->{col_number};
+        if ($row_number){
+            push @row_numbers, $row_number;
+        }
+        if ($col_number){
+            push @col_numbers, $col_number;
+        }
+    }
+    
+    if (scalar(@row_numbers) ne '0' && scalar(@col_numbers) ne '0'){
+		return 1;
+	} else {
+		return 0;
+	}
+
+}
+
 =head2 function has_tissue_sample_entries()
 
 	Usage:        $trial->has_tissue_sample_entries();
@@ -2915,7 +2952,7 @@ sub delete_assayed_trait {
 	if (scalar(@$pheno_ids) > 0){
 		$search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
 	}
-	$schema->storage->debug(1);
+	#$schema->storage->debug(1);
 	if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
 		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
 		$search_params,
@@ -2930,7 +2967,7 @@ sub delete_assayed_trait {
 			push @nd_expt_ids, $nd_expt_id;
 			$res->delete;
 		}
-        print STDERR Dumper(\@nd_expt_ids);
+        #print STDERR Dumper(\@nd_expt_ids);
 		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});

@@ -360,7 +360,7 @@ sub list_seedlots {
         phenome_schema=>$phenome_schema,
         stock_id_list=>\@seen_seedlot_ids,
         stock_type_id=>$type_id,
-        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1},
+        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1},
         minimal_info=>1,  #for only returning stock_id and uniquenames
         display_pedigree=>0 #to calculate and display pedigree
     });
@@ -380,6 +380,8 @@ sub list_seedlots {
         }
         my $owners_string = join ', ', @owners_html;
         $unique_seedlots{$_}->{owners_string} = $owners_string;
+        $unique_seedlots{$_}->{organization} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} : 'NA';
+        $unique_seedlots{$_}->{box} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} : 'NA';
         $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
         $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
         push @seedlots, $unique_seedlots{$_};
@@ -568,12 +570,38 @@ sub verify_seedlot_accessions {
         return \%return;
     }
 
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my %seen_accession_names;
+    foreach (@pairs){
+        $seen_accession_names{$_->[1]}++;
+    }
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+
+    my @accessions = keys %seen_accession_names;
+    my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+        'me.is_obsolete' => { '!=' => 't' },
+        'stockprops.value' => { -in => \@accessions},
+        'me.type_id' => $accession_cvterm_id,
+        'stockprops.type_id' => $synonym_cvterm_id
+    },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+    my %acc_synonyms_lookup;
+    while (my $r=$acc_synonym_rs->next){
+        $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+    }
+
     foreach (@pairs){
         my $seedlot_name = $_->[0];
         my $accession_name = $_->[1];
+
+        if ($acc_synonyms_lookup{$accession_name}){
+            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+            if (scalar(@accession_names)>1){
+                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+            }
+            $accession_name = $accession_names[0];
+        }
 
         my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$accession_name, 'subject.type_id'=>$accession_cvterm_id});
         if (!$seedlot_rs->first){
@@ -739,8 +767,13 @@ sub _update_content_stock_id {
     while (my $r=$acc_rs->next){
         $r->delete();
     }
-    my $error = $self->_store_seedlot_accession();
-    $error = $self->_store_seedlot_cross();
+    my $error;
+    if ($self->accession_stock_id){
+        $error = $self->_store_seedlot_accession();
+    }
+    if ($self->cross_stock_id){
+        $error = $self->_store_seedlot_cross();
+    }
     return $error;
 }
 
@@ -861,7 +894,7 @@ sub get_current_count_property {
     my $self = shift;
     my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_count', 'stock_property');
     my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
-    return $recorded_current_count->value();
+    return $recorded_current_count ? $recorded_current_count->value() : '';
 }
 
 =head2 Method current_weight()
@@ -1053,6 +1086,10 @@ sub delete {
         } else {
             my $nd_experiment = $nd_experiment_rs->first();
             $nd_experiment->delete();
+            my $stock_owner_rs = $self->phenome_schema->resultset("StockOwner")->find({stock_id=>$self->stock_id});
+            if ($stock_owner_rs){
+                $stock_owner_rs->delete();
+            }
             $stock->delete();
         }
     }
