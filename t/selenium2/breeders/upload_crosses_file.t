@@ -12,7 +12,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->get_ok('/breeders/crosses');
 
-    $t->find_element_ok("upload_crosses_link", "id", "click on upload_crosses_link ")->click();
+    $t->find_element_ok("upload_crosses_link", "name", "click on upload_crosses_link ")->click();
 
     sleep(2);
 

@@ -62,6 +62,7 @@ sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('R
 
 sub upload_cross_file_POST : Args(0) {
   my ($self, $c) = @_;
+  #print STDERR Dumper $c->req->params();
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");

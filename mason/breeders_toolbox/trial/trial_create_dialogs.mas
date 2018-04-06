@@ -11,6 +11,7 @@ $mad_description => "Adjustments are calculated using data from all checks. Crea
 $greenhouse_nursery_description => "A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database."
 $splitplot_description => "Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database."
 $prep_description => "Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database."
+$westcott_description => "Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)."
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js' ] &>
@@ -74,10 +75,13 @@ rect.bordered {
                     <&| /util/workflow.mas, id=> "trial_design_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"This workflow will guide you through designing a new trial in the database" &>
-                            <p>A field trial represents plots in the field where each plot has a globally unqiue plot_name, a sequential plot_number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block design vs augmented). Each plot can have a row_number and col_number indicating the relative position of the plot in the field.</p>
-                            <p>To design a trial you need to provide a globally unique trial name. The plot_names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
+                            <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
+                            <p>To design a trial you need to provide a globally unique trial name. The plot names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
                             <p>You also need to provide a list of accessions to use. Based on the design you have picked, the accessions will be randomized over the blocks or replicates in the trial.</p>
+                            <p>You can provide a list of accessions to use as controls or checks in your experiment.</p>
                             <p>Depending on the design you have picked, you will need to provide different design parameters (e.g. for complete block you will need to provide number of blocks, while for alpha lattice you will need to provide block size and number of replicates.).</p>
+                            <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
+                            <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
                             <br/><br/>
                             <center>
                             <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
@@ -148,6 +152,7 @@ rect.bordered {
                                             <option data-title="<% $greenhouse_nursery_description %>" title="<% $greenhouse_nursery_description %>" value="greenhouse" >Nursery/Greenhouse </option>
                                             <option data-title="<% $splitplot_description %>" title="<% $splitplot_description %>" value="splitplot">Split Plot</option>
                                             <option data-title="<% $prep_description %>" title="<% $prep_description %>" value="p-rep">Partially Replicated</option>
+                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="westcott">Westcott Design</option>
                                             <!--<option value=MADIII>MADIII</option>-->
                                             <!--<option value=MADIV>MADIV</option>-->
                                             <!--<option value=MADV>MADV</option>-->
@@ -178,7 +183,20 @@ rect.bordered {
                                         <div class="col-sm-5" id="select_list" name="select_list">
                                         </div>
                                         <br/><br/>
+                                    </div>                                    
+                                    <div class="form-group" id="westcott_check_1_section" style="display: none">
+                                      <label class="col-sm-3 control-label">Name of Check 1: </label>
+                                      <div class="col-sm-9" >
+                                        <input class="form-control" id="westcott_check_1" name="westcott_check_1" placeholder="Required"></input>
+                                      </div>
                                     </div>
+                                    <br/><br/>
+                                    <div class="form-group" id="westcott_check_2_section" style="display: none">
+                                      <label class="col-sm-3 control-label">Name of Check 2: </label>
+                                      <div class="col-sm-9" >
+                                        <input class="form-control" id="westcott_check_2" name="westcott_check_2" placeholder="Required"> </input>
+                                      </div>
+                                    </div>                                    
                                     <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
                                         <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                         <div class="col-sm-5" id="list_of_checks_section" >
@@ -257,7 +275,7 @@ rect.bordered {
                                     </div>
                                     <br/><br/>
                                 </div>
-
+                                
                                 <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                     <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                     <div class="col-sm-5" >
@@ -269,6 +287,22 @@ rect.bordered {
                                     <hr>
                                     <center><h4>Number of Plants:</h4></center>
                                     <div id="greenhouse_num_plants_per_accession" >
+                                    </div>
+                                    <br/><br/>
+                                </div>
+
+                                <div class="form-group form-group-sm" id="westcott_num_col_section" style="display: none" >
+                                    <hr>
+                                    <center><h4>Number of Columns (required):</h4></center>
+                                    <div id="westcott_num_col" >
+                                        <input class="form-control" id="westcott_col" name="westcott_col" placeholder="Required"/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm" id="westcott_num_col_between_check_section" style="display: none" >
+                                    <hr>
+                                    <center><h4>Number of columns between two check columns (Optional):</h4></center>
+                                    <div id="westcott_num_col_between_check" >
+                                        <input class="form-control" id="westcott_col_between_check" name="westcott_col_between_check" placeholder="default is 10" />
                                     </div>
                                     <br/><br/>
                                 </div>
@@ -414,6 +448,12 @@ rect.bordered {
                                 <p>You can upload the exact row and column information for your plots (in any layout shape) on the Trial Detail Page after you have created the trial in the database and actually planted the experiment.</p>
 
                                 <hr>
+                                <div class="form-group"  id="FieldMap_westcott" style="display: none">
+                                    <label class="col-sm-4 control-label">Field map display: </label>
+                                    <div class="col-sm-8" > <label class="col-sm-8 control-label">
+                                        <input type="checkbox" id="westcott_field_map" checked="checked" disabled/>  (comes with design)</label>
+                                    </div>
+                                </div>
                                 <div class="form-group"  id="FieldMap">
                                     <label class="col-sm-4 control-label">Field map display: </label>
                                     <div class="col-sm-8" >

@@ -125,8 +125,6 @@ foreach my $acc (@$accession_names) {
     ok(exists($stocks{$acc->{accession_name}}), "check accession names $acc->{accession_name}");
 }
 
-
-
 #create RCBD trial with one accession
 
 @stock_names;
@@ -353,5 +351,77 @@ $genotyping_stocks{'BLANK'} = 1;
 foreach my $acc (@$genotyping_accession_names) { 
     ok(exists($genotyping_stocks{$acc->{accession_name}}), "check existence of accession names $acc->{accession_name}");
 }
+
+#create westcott trial design_type
+
+my @stock_names_westcott;
+for (my $i = 1; $i <= 100; $i++) {
+    push(@stock_names_westcott, "test_stock_for_westcott_trial".$i);
+}
+foreach my $stock_name (@stock_names_westcott) {
+    my $accession_stock = $chado_schema->resultset('Stock::Stock')
+	->create({
+	    organism_id => $organism->organism_id,
+	    name       => $stock_name,
+	    uniquename => $stock_name,
+	    type_id     => $accession_cvterm->cvterm_id,
+		 });
+};
+ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
+ok($trial_design->set_trial_name("test_westcott_trial"), "set trial name");
+ok($trial_design->set_stock_list(\@stock_names_westcott), "set stock list");
+ok($trial_design->set_plot_start_number(1), "set plot start number");
+ok($trial_design->set_plot_number_increment(1), "set plot increment");
+ok($trial_design->set_westcott_check_1("test_stock_for_trial1"), "set check 1");
+ok($trial_design->set_westcott_check_2("test_stock_for_trial2"), "set check 2");
+ok($trial_design->set_westcott_col(20), "set column number");
+ok($trial_design->set_design_type("westcott"), "set design type");
+ok($trial_design->calculate_design(), "calculate design");
+ok(my $design = $trial_design->get_design(), "retrieve design");
+
+$ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
+
+ok(my $trial_create = CXGN::Trial::TrialCreate->new({
+    chado_schema => $chado_schema,
+    dbh => $dbh,
+    user_name => "johndoe", #not implemented
+    design => $design,	
+    program => "test",
+    trial_year => "2015",
+    trial_description => "test description",
+    trial_location => "test_location_for_trial",
+    trial_name => "new_test_trial_name_westcott",
+    trial_type=>$ayt_cvterm_id,
+    design_type => "westcott",
+    operator => "janedoe"
+						    }), "create trial object");
+
+$save = $trial_create->save_trial();
+ok($save->{'trial_id'}, "save trial");
+
+ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
+    schema => $chado_schema,
+    trial_name => "new_test_trial_name_westcott",
+						    }), "create trial lookup object");
+ok(my $trial = $trial_lookup->get_trial());
+ok(my $trial_id = $trial->project_id());
+ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
+    schema => $chado_schema,
+    trial_id => $trial_id,
+    experiment_type => 'field_layout'
+						    }), "create trial layout object");
+
+ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names1");
+
+%stocks = map { $_ => 1 } @stock_names_westcott;
+my @accessions;
+for (my $i=0; $i<scalar(@stock_names_westcott); $i++){
+    foreach my $acc (@$accession_names) {
+        if ($acc->{accession_name} eq $stock_names_westcott[$i]){
+            push @accessions, $acc->{accession_name};
+        }
+    }
+}
+ok(scalar(@accessions) == 100, "check accession names");
 
 done_testing();
