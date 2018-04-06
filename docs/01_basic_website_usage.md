@@ -97,6 +97,7 @@ In the Manage menu, the options are:
 | Breeding Programs   | View, add and delete breeding programs                                                             |
 | Locations           | View, add and delete locations                                                                     |
 | Accessions          | Manage and search different accessions                                                             |
+| Seedlots            | Manage and search different seedlots                                                               |
 | Crosses             | Create new crosses in the database                                                                 |
 | Field Trials        | Manage field trials. Create trials using different field layouts.                                  |
 | Genotyping Trials   | Manage genotyping trials. Create trials using different breeding programs, locations, and years.   |
@@ -126,35 +127,33 @@ In the Analyze menu, the options are:
 
 Lists are collections of identifiers that are stored in the database. Lists can be composed of accessions, plots, traits, locations, and trials. Lists are attached to the individual user's account, and can only be created and seen by the user while logged in. SGN databases make heavy use of lists in a number of tools on the website. For example, trials are created using lists of accessions.
 
-### Generating lists
-
-**IMPORTANT: You can add only items that are stored in the database into your lists.**
+### Creating lists
 
 Lists can be generated in various ways:
 
 One way to create a list is by clicking on the "Lists" link located on the toolbar.
 
-<img src='{{"assets/images/image180.png" | relative_url }}' alt="list1.png" width="624" height="102" />
+<img src='{{"assets/images/list_manager_start.png" | relative_url }}' />
 
-To create a new list, entering the name of your new list, then clicking on “New List” button.
+To create a new list, enter the name of your new list and then clicking on the “New List” button. The name of the list can be anything, but should be unique and should be something to help you easily identify.
 
-<img src='{{"assets/images/image176.png" | relative_url }}' alt="list2.png" width="624" height="153" />
+<img src='{{"assets/images/list_manager_new_list.png" | relative_url }}' />
 
-You can find the list that you entered on the “Your Lists” page. To add items on your list, clicking on the view icon to open “List Contents” page.
+You can find the list that you entered on the “Your Lists” page. To add items to your list, click on the "View" icon to open “List Contents” page.
 
-<img src='{{"assets/images/image323.png" | relative_url }}' alt="list3.png" width="624" height="158" />
+<img src='{{"assets/images/list_manager_view_list.png" | relative_url }}' />
 
-On the “List Contents” page, entering items that you want to add to the list, then clicking on “Add” button.
+On the “List Contents” page, enter items that you want to add to the list, then click on “Add” button.
 
-<img src='{{"assets/images/image13.png" | relative_url }}' alt="list4.png" width="624" height="258" />
+<img src='{{"assets/images/list_manager_add_items.png" | relative_url }}' />
 
-The page will be updated and will display your items in a table at the bottom of the page.
+The page will be updated and will display your items in a table at the bottom of the page. It is possible to sort the list if you need.
 
-<img src='{{"assets/images/image80.png" | relative_url }}' alt="list6.png" width="624" height="228" />
+<img src='{{"assets/images/list_manager_added_items.png" | relative_url }}' />
 
-Selecting the type of items in your list. To verify that the items that you added to your list are already stored in the database and that you selected a correct type for the items, clicking on the “Validate” button.
+Select the type of items in your list. To verify that the items that you added to your list are already stored in the database and that you selected a correct type for the items, click on the “Validate” button.
 
-<img src='{{"assets/images/image145.png" | relative_url }}' alt="list5.png" width="624" height="224" />
+<img src='{{"assets/images/list_manager_list_types.png" | relative_url }}' />
 
 If those items are already in the database, a message will indicate that “This list passed validation”
 

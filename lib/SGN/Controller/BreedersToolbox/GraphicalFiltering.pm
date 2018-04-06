@@ -36,7 +36,6 @@ sub graphical_filtering :Path('/tools/graphicalfiltering') {
   print STDERR $ajaxRequestString;
   $c->stash->{ajaxRequestString} = $ajaxRequestString;
 
-  $c->assets->include('/static/css/tools/GraphicalFiltering.css');
   $c->stash->{template} = '/tools/graphicalfiltering/index.mas';
 }
 1;

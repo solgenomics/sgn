@@ -1,0 +1,215 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="update_progenies_crosses_dialog" name="update_progenies_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="updateProgeniesDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateProgeniesDialog">Upload Progenies of Existing Crosses </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="update_progenies_spreadsheet_format_info">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_form" name="upload_progenies_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                                <div class="col-sm-10">
+                                    <input type="file" name="progenies_upload_file" id="progenies_upload_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="update_progenies_submit" id="update_progenies_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_progenies_error_display" name="upload_progenies_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesErrorDialog">Upload Progenies File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="update_progenies_spreadsheet_info_dialog" name="update_progenies_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_name</td>
+                                <td>progeny_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <br>
+                        <b>-cross_name</b> (must exist in the database)
+                    <br>
+                        <b>-progeny_name</b> (must not already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="update_crossinfo_dialog" name="update_crossinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="updateCrossinfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateCrossinfoDialog">Upload Experimantal Info of Existing Crosses </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="update_crossinfo_spreadsheet_format">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crossinfo_form" name="upload_crossinfo_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                                <div class="col-sm-10">
+                                    <input type="file" name="crossinfo_upload_file" id="crossinfo_upload_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="update_crossinfo_submit" id="update_crossinfo_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_crossinfo_error_display" name="upload_crossinfo_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossinfoErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossinfoErrorDialog">Upload Cross Info File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="update_crossinfo_spreadsheet_info_dialog" name="update_crossinfo_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossinfoInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossinfoInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Experimental Info of existing crosses may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_name</td>
+                                <td>At least one column of experimental info listed below</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                      Required columns:
+                    </b>
+                    <br>
+                        <b>-cross_name</b> (must exist in the database, must not have duplicate cross name in the upload file)
+                    <br>
+                        <b>-At least one of the following columns:</b> (all of the experimental info of a cross must be in a single row)
+                    <br>
+% my $cross_properties = $c->config->{cross_properties};
+% my @column_header = split ',',$cross_properties;
+% foreach my $column_header(@column_header){
+                    <%$column_header%>
+                    <br>
+%}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

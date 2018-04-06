@@ -2952,7 +2952,7 @@ sub delete_assayed_trait {
 	if (scalar(@$pheno_ids) > 0){
 		$search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
 	}
-	$schema->storage->debug(1);
+	#$schema->storage->debug(1);
 	if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
 		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
 		$search_params,
@@ -2967,7 +2967,7 @@ sub delete_assayed_trait {
 			push @nd_expt_ids, $nd_expt_id;
 			$res->delete;
 		}
-        print STDERR Dumper(\@nd_expt_ids);
+        #print STDERR Dumper(\@nd_expt_ids);
 		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});

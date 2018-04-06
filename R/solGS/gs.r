@@ -19,7 +19,6 @@ library(phenoAnalysis)
 library(caret)
 library(dplyr)
 
-
 allArgs <- commandArgs()
 
 inputFiles  <- scan(grep("input_files", allArgs, ignore.case = TRUE, perl = TRUE, value = TRUE),
@@ -151,7 +150,7 @@ if (datasetInfo == 'combined populations') {
 if (is.null(filteredGenoData)) {
  
   #genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData, maf=0)
+  genoData <- filterGenoData(genoData, maf=0.01)
   genoData <- roundAlleleDosage(genoData)
 
   genoData <- as.data.frame(genoData)
@@ -208,7 +207,7 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
   predictionData <- unique(predictionData, by='V1')
   
-  predictionData <- filterGenoData(predictionData, maf=0)
+  predictionData <- filterGenoData(predictionData, maf=0.01)
   predictionData <- roundAlleleDosage(predictionData)
   
   predictionData  <- as.data.frame(predictionData)

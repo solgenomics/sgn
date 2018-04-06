@@ -75,7 +75,9 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             location_id => $sl->{location_id},
             count => $sl->{current_count},
             weight_gram => $sl->{current_weight_gram},
-            owners_string => $sl->{owners_string}
+            owners_string => $sl->{owners_string},
+            organization => $sl->{organization},
+            box => $sl->{box}
         };
     }
 
@@ -253,7 +255,15 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     my $accession_id;
     if ($accession_uniquename){
-        $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename, type_id=>$accession_cvterm_id})->stock_id();
+        # In case of synonyms, use stocklookup
+        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$accession_uniquename });
+        my $stock_lookup_rs = $stock_lookup->get_stock($accession_cvterm_id);
+        if (!$stock_lookup_rs){
+            $c->stash->{rest} = {error=>'The accession name you provided does not match to a unique accession. Please make sure you are using the correct name or contact us.'};
+            $c->detach();
+        }
+        $accession_id = $stock_lookup_rs->stock_id();
+        $accession_uniquename = $stock_lookup_rs->uniquename();
     }
     my $cross_id;
     if ($cross_uniquename){
@@ -399,7 +409,23 @@ sub upload_seedlots_POST : Args(0) {
     my $location = $c->req->param("upload_seedlot_location");
     my $population = $c->req->param("upload_seedlot_population_name");
     my $organization = $c->req->param("upload_seedlot_organization_name");
-    my $upload = $c->req->upload('seedlot_uploaded_file');
+    my $upload_from_accessions = $c->req->upload('seedlot_uploaded_file');
+    my $upload_harvested_from_crosses = $c->req->upload('seedlot_harvested_uploaded_file');
+    if (!$upload_from_accessions && !$upload_harvested_from_crosses){
+        $c->stash->{rest} = {error=>'You must upload a seedlot file!'};
+        $c->detach();
+    }
+    my $upload;
+    my $parser_type;
+    if ($upload_from_accessions){
+        $upload = $upload_from_accessions;
+        $parser_type = 'SeedlotXLS';
+    }
+    if ($upload_harvested_from_crosses){
+        $upload = $upload_harvested_from_crosses;
+        $parser_type = 'SeedlotHarvestedXLS';
+    }
+    print STDERR "$parser_type \n";
     my $subdirectory = "seedlot_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -424,7 +450,7 @@ sub upload_seedlots_POST : Args(0) {
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('SeedlotXLS');
+    $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
@@ -448,7 +474,12 @@ sub upload_seedlots_POST : Args(0) {
     my @added_stocks;
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
-            my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+            my $sl;
+            if (defined($val->{seedlot_id})){
+                $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$val->{seedlot_id}); #this allows update of existing seedlot
+            } else {
+                $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+            }
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
@@ -461,18 +492,83 @@ sub upload_seedlots_POST : Args(0) {
             my $return = $sl->store();
             my $seedlot_id = $return->{seedlot_id};
 
-            my $from_stock_id = $val->{accession_stock_id} ? $val->{accession_stock_id} : $val->{cross_stock_id};
-            my $from_stock_name = $val->{accession} ? $val->{accession} : $val->{cross_name};
-            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-            $transaction->factor(1);
-            $transaction->from_stock([$from_stock_id, $from_stock_name]);
-            $transaction->to_stock([$seedlot_id, $key]);
-            $transaction->amount($val->{amount});
-            $transaction->weight_gram($val->{weight_gram});
-            $transaction->timestamp($timestamp);
-            $transaction->description($val->{description});
-            $transaction->operator($val->{operator_name});
-            $transaction->store();
+            my $from_stock_id;
+            my $from_stock_name;
+            if ($val->{accession_stock_id}){
+                $from_stock_id = $val->{accession_stock_id};
+                $from_stock_name = $val->{accession};
+            }
+            elsif ($val->{cross_stock_id}){
+                $from_stock_id = $val->{cross_stock_id};
+                $from_stock_name = $val->{cross_name};
+            }
+            if (!$from_stock_id || !$from_stock_name){
+                die "A source accession or source cross must be given to make a seedlot transaction.\n";
+            }
+
+            my $transaction_amount;
+            my $transaction_weight;
+            # If seedlot already exists in database, the system will update so that the current weight and current count match what was uploaded.
+            if (defined($val->{seedlot_id})){
+                my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
+                my $current_stored_count = $sl->get_current_count_property() && $sl->get_current_count_property() ne 'NA' ? $sl->get_current_count_property() : 0;
+                my $current_stored_weight = $sl->get_current_weight_property() && $sl->get_current_weight_property() ne 'NA' ? $sl->get_current_weight_property() : 0;
+
+                $val->{description} .= " Info: Seedlot XLS upload update.";
+
+                if ($val->{weight_gram} ne 'NA'){
+                    my $weight_difference = $val->{weight_gram} - $current_stored_weight;
+                    my $weight_factor;
+                    if ($weight_difference >= 0){
+                        $weight_factor = 1;
+                    } else {
+                        $weight_factor = -1;
+                        $weight_difference = $weight_difference * -1; #Store positive values only
+                    }
+                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                    $transaction->from_stock([$seedlot_id, $key]);
+                    $transaction->to_stock([$seedlot_id, $key]);
+                    $transaction->weight_gram($weight_difference);
+                    $transaction->timestamp($timestamp);
+                    $transaction->description($val->{description});
+                    $transaction->operator($val->{operator_name});
+                    $transaction->factor($weight_factor);
+                    $transaction->store();
+                }
+
+                if ($val->{amount} ne 'NA'){
+                    my $amount_difference = $val->{amount} - $current_stored_count;
+                    my $amount_factor;
+                    if ($amount_difference >= 0){
+                        $amount_factor = 1;
+                    } else {
+                        $amount_factor = -1;
+                        $amount_difference = $amount_difference * -1; #Store positive values only
+                    }
+                    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                    $transaction->from_stock([$seedlot_id, $key]);
+                    $transaction->to_stock([$seedlot_id, $key]);
+                    $transaction->amount($amount_difference);
+                    $transaction->timestamp($timestamp);
+                    $transaction->description($val->{description});
+                    $transaction->operator($val->{operator_name});
+                    $transaction->factor($amount_factor);
+                    $transaction->store();
+                }
+            }
+            # If this is not updating an existing seedlot, then it just the initial transaction
+            else {
+                my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+                $transaction->factor(1);
+                $transaction->from_stock([$from_stock_id, $from_stock_name]);
+                $transaction->to_stock([$seedlot_id, $key]);
+                $transaction->amount($val->{amount});
+                $transaction->weight_gram($val->{weight_gram});
+                $transaction->timestamp($timestamp);
+                $transaction->description($val->{description});
+                $transaction->operator($val->{operator_name});
+                $transaction->store();
+            }
 
             my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
             $sl_new->set_current_count_property();
@@ -880,7 +976,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $description = $c->req->param("description");
     my $factor = $c->req->param("factor");
     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema});
-    $transaction->factor(1);
+    $transaction->factor($factor);
     if ($factor == 1){
         $transaction->from_stock([$stock_id, $stock_uniquename]);
         $transaction->to_stock([$c->stash->{seedlot_id}, $c->stash->{uniquename}]);

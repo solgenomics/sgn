@@ -323,33 +323,38 @@ CXGN.List.prototype = {
     renderLists: function(div) {
         var lists = this.availableLists();
         var html = '';
-        html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
+        html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List. Type New List Name Here" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
 
         if (lists.length===0) {
             html = html + "None";
             jQuery('#'+div+'_div').html(html);
         }
 
-        html += '<table class="table table-hover table-condensed">';
-        html += '<thead><tr><th>&nbsp;</th><th>List Name</th><th>Count</th><th>Type</th><th colspan="4">Actions</th></tr></thead><tbody>';
+        html += '<div class="well well-sm"><table id="private_list_data_table" class="table table-hover table-condensed">';
+        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
-            html += '<tr><td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td>';
-            html += '<td><b>'+lists[i][1]+'</b></td>';
+            html += '<tr><td><b>'+lists[i][1]+'</b></td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
             html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
             html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
             if (lists[i][6] == 0){
-                html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td></tr>';
+                html += '<td><a title="Make Public" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-share-alt"></span></a></td>';
             } else if (lists[i][6] == 1){
-                html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td></tr>';
+                html += '<td><a title="Make Private" id="share_list_'+lists[i][1]+'" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td>';
             }
+            html += '<td><input type="checkbox" id="list_select_checkbox_'+lists[i][0]+'" name="list_select_checkbox" value="'+lists[i][0]+'"/></td></tr>';
         }
-        html = html + '</tbody></table>';
+        html = html + '</tbody></table></div>';
         html += '<div id="list_group_select_action"></div>';
 
         jQuery('#'+div+'_div').html(html);
+
+        jQuery('#private_list_data_table').DataTable({
+            "destroy": true,
+            "columnDefs": [   { "orderable": false, "targets": [3,4,5,6,7] }  ]
+        });
 
         jQuery('#add_list_button').click(function() {
             var lo = new CXGN.List();
@@ -394,7 +399,7 @@ CXGN.List.prototype = {
         var html = '';
 
         html += '<table id="public_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Actions</th><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>View</th><th>Download</th><th>Copy To Your Lists</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             html += '<tr><td><b>'+lists[i][1]+'</b></td>';
             html += '<td>'+lists[i][3]+'</td>';
@@ -438,42 +443,44 @@ CXGN.List.prototype = {
         html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
         html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
-        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
-        html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
+        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" title="Will determine whther the items in your list are saved in the database as valid entries. The validation depends on the list type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+        html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea></td></tr></table>';
 
-        html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
+        html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
+        html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
         for(var n=0; n<items.length; n++) {
             html = html +'<tr><td id="list_item_toggle_edit_div_'+items[n][0]+'" ><div name="list_item_toggle_edit" data-listitemdiv="list_item_toggle_edit_div_'+items[n][0]+'" data-listitemid="'+items[n][0]+'" data-listitemname="'+items[n][1]+'" >'+ items[n][1] + '</div></td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
         }
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
 
         jQuery('#'+div+'_div').html(html);
 
         jQuery('#list_item_dialog_datatable').DataTable({
             destroy: true,
+            ordering: false,
             scrollY:        '30vh',
             scrollCollapse: true,
             paging:         false,
         });
 
         if (list_type == 'accessions' || list_type == 'crosses'){
-            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
+            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Availible Seedlots</button>');
         }
         if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(list_type) >= 0){
-            jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
-            jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
+            jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')" title="Will display whether the items in your list are synonyms or actual uniquenames.">Find Synonyms</button>');
+            jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" title="Will display if the items in your list are uniquenames in the database or whether they look very similar to other accessions in the database.">Fuzzy Search</button>');
         }
         jQuery(document).on("change", "#type_select", function(){
             if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
-                jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
+                jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Availible Seedlots</button>');
             } else {
                 jQuery('#availableSeedlotButtonDiv').html('')
             }
 
             if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(jQuery('#type_select').val()) >= 0){
-                jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
-                jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+jQuery('#type_select').val()+'\')" >Fuzzy Search</button>');
+                jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')" title="Will display whether the items in your list are synonyms or actual uniquenames.">Find Synonyms</button>');
+                jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+jQuery('#type_select').val()+'\')" title="Will display if the items in your list are uniquenames in the database or whether they look very similar to other accessions in the database.">Fuzzy Search</button>');
             } else {
                 jQuery('#synonymListButtonDiv').html('');
                 jQuery('#fuzzySearchStockListDiv').html('');
@@ -547,6 +554,7 @@ CXGN.List.prototype = {
 
         jQuery('#public_list_item_dialog_datatable').DataTable({
             destroy: true,
+            ordering: false,
             scrollY:        '30vh',
             scrollCollapse: true,
             paging:         false,
@@ -690,6 +698,22 @@ CXGN.List.prototype = {
         this.renderLists('list_dialog');
     },
 
+    sortItems: function(list_id, sort) {
+        jQuery.ajax({
+            url: '/list/sort',
+            async: false,
+            data: { 'sort' : sort, 'list_id' : list_id },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+            },
+            error: function(response) { alert("An error occurred in sort."); }
+        });
+        this.renderItems('list_item_dialog', list_id);
+    },
+
     validate: function(list_id, type, non_interactive) {
         var missing = new Array();
         var error = 0;
@@ -770,7 +794,7 @@ CXGN.List.prototype = {
                     map[obj.name] = obj.value;
                     return map;
                 }, {});
-                console.log(form);
+                //console.log(form);
                 var list = new CXGN.List();
                 var names = window.available_seedlots.get_selected().map(function(d){
                     return d.name;
@@ -804,7 +828,7 @@ CXGN.List.prototype = {
             },
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
-                console.log(response);
+                //console.log(response);
                 if (response.success) {
                     html = "";
                     jQuery('#synonym_search_result_display').modal('show');
@@ -839,7 +863,7 @@ CXGN.List.prototype = {
                                 map[obj.name] = obj.value;
                                 return map;
                             }, {});
-                            console.log(form);
+                            //console.log(form);
                             var list = new CXGN.List();
                             var newListID = list.newList(form["name"]);
                             if (!newListID) throw "List creation failed.";

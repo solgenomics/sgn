@@ -33,7 +33,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
@@ -73,5 +73,3 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
   <& /solgs/search/list_type_selection_population.mas &>
 
 </&>
-
-

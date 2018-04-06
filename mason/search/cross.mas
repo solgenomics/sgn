@@ -52,7 +52,7 @@
 
 <&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <table id="pedigree_search_results" width="100%" class="table table-hover table-striped">
 <thead>
@@ -126,7 +126,7 @@
 
 <&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <table id="cross_search_results" width="100%" class="table table-hover table-striped">
 <thead>
