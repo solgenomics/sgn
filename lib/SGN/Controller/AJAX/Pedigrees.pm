@@ -96,7 +96,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %legal_cross_types = ( biparental => 1, open => 1, self => 1);
     my %errors;
 
-    while (<$F>) {
+    while (<$F>) { 
         chomp;
         $_ =~ s/\r//g;
         my @acc = split /\t/;
