@@ -59,22 +59,32 @@ sub pedigree_check_POST :  Args(0) {
 
     my $parents = $stock->get_parents();
     my $mother_id = $parents->{'mother_id'};
-    print STDERR "mother id is $mother_id";
+    #print STDERR "mother id is $mother_id";
 
     my $father_id = $parents->{'father_id'};
-    print STDERR "father id is $father_id";
-
-    my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $accession, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
-    my $conflict_results = $conflict_object->pedigree_check();
-
-    if ($conflict_results->{error}){
-      my $error = $conflict_results->{error};
-      $result_hash{$accession} = $error;
-      print STDERR "controller an error has occurred: $error";
+    #print STDERR "father id is $father_id";
+    if (!$mother_id && !$father_id){
+      $result_hash{missing}->{$accession} = "$accession misses both female and male parents";
+    }
+    elsif(!$mother_id){
+      $result_hash{missing}->{$accession} = "$accession misses its female parent";
+    }
+    elsif(!$father_id){
+      $result_hash{missing}->{$accession} = "$accession misses its male parent";
     }
     else{
-      my $conflict_score = $conflict_results->{'score'};
-      $result_hash{$accession} = $conflict_score;
+      my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $accession, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
+      my $conflict_results = $conflict_object->pedigree_check();
+
+      if ($conflict_results->{error}){
+        my $error = $conflict_results->{error};
+        $result_hash{missing}->{$accession} = $error;
+        print STDERR "controller an error has occurred: $error";
+      }
+      else{
+        my $conflict_score = $conflict_results->{'score'};
+        $result_hash{calculated}->{$accession} = $conflict_score;
+      }
     }
   }
     $c->stash->{rest} = \%result_hash;
