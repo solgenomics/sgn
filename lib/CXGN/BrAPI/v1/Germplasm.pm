@@ -241,7 +241,7 @@ sub germplasm_progeny {
 	my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-	print STDERR Dumper $stock_id;
+	#print STDERR Dumper $stock_id;
 	my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ 
 	    'type_id'=> $accession_cvterm,
 		'stock_id'=> $stock_id,
