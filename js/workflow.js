@@ -4,7 +4,7 @@ var Workflow = {
   
   "init": function(init_target){ //Initializes a workflow with a given ID
     var wf = document.querySelector(init_target);
-    var prog_steps = wf.querySelectorAll(init_target+'>.workflow-prog>li');
+    var prog_steps = document.querySelectorAll(init_target+'>.workflow-prog>li');
     prog_steps.forEach(function(ele,i){
       ele.onclick = Workflow.prog_click(i);
     });
