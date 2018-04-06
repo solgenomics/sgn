@@ -500,7 +500,7 @@ delete_field_map();
 
 
 
-jQuery('#delete_field_map_link').click(function () {
+jQuery('#delete_field_map_hm_link').click(function () {
     jQuery('#delete_field_map_dialog').dialog("open");
 });
 
