@@ -133,6 +133,78 @@ rect.bordered {
                                     </div>
                                 </div><br/><br/>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plot Width (m): </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
+                                            <option value="">NA</option>
+                                            <option value="0.5">0.5</option>
+                                            <option value="1">1.0</option>
+                                            <option value="1.5">1.5</option>
+                                            <option value="2">2.0</option>
+                                            <option value="2.5">2.5</option>
+                                            <option value="3">3.0</option>
+                                            <option value="3.5">3.5</option>
+                                            <option value="4">4.0</option>
+                                            <option value="4.5">4.5</option>
+                                            <option value="5">5.0</option>
+                                            <option value="5.5">5.5</option>
+                                            <option value="6">6.0</option>
+                                            <option value="6.5">6.5</option>
+                                            <option value="7">7.0</option>
+                                            <option value="7.5">7.5</option>
+                                            <option value="8">8.0</option>
+                                            <option value="8.5">8.5</option>
+                                            <option value="9">9.0</option>
+                                            <option value="9.5">9.5</option>
+                                            <option value="10">10.0</option>
+                                            <option value="10.5">10.5</option>
+                                            <option value="11">11.0</option>
+                                            <option value="11.5">11.5</option>
+                                            <option value="12">12.0</option>
+                                            <option value="12.5">12.5</option>
+                                        </select>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plot Length (m): </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_project_plot_length" name="add_project_plot_length">
+                                            <option value="">NA</option>
+                                            <option value="0.5">0.5</option>
+                                            <option value="1">1.0</option>
+                                            <option value="1.5">1.5</option>
+                                            <option value="2">2.0</option>
+                                            <option value="2.5">2.5</option>
+                                            <option value="3">3.0</option>
+                                            <option value="3.5">3.5</option>
+                                            <option value="4">4.0</option>
+                                            <option value="4.5">4.5</option>
+                                            <option value="5">5.0</option>
+                                            <option value="5.5">5.5</option>
+                                            <option value="6">6.0</option>
+                                            <option value="6.5">6.5</option>
+                                            <option value="7">7.0</option>
+                                            <option value="7.5">7.5</option>
+                                            <option value="8">8.0</option>
+                                            <option value="8.5">8.5</option>
+                                            <option value="9">9.0</option>
+                                            <option value="9.5">9.5</option>
+                                            <option value="10">10.0</option>
+                                            <option value="10.5">10.5</option>
+                                            <option value="11">11.0</option>
+                                            <option value="11.5">11.5</option>
+                                            <option value="12">12.0</option>
+                                            <option value="12.5">12.5</option>
+                                        </select>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Field Size (ha): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_trial_field_size" name="new_trial_field_size" type="text" />
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="add_project_description" name="add_project_description" maxlength="250"></textarea>
@@ -439,6 +511,86 @@ rect.bordered {
                                 <center>
                                 <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this);" >Continue to Next Step</button>
                                 <center>
+
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database?" &>
+
+                                <br/>
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Is this trial following-up a previous field trial?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_sourced" name="add_project_trial_sourced">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group" style="display:none" id="add_trial_source_trial_section">
+                                        <label class="col-sm-5 control-label">Select the trial(s) which preceded this trial: </label>
+                                        <div class="col-sm-7">
+                                            <div id="add_project_trial_source" name="add_project_trial_source">
+                                            </div>
+                                        </div><br/><br/>
+                                    </div><br/><br/>
+                                </div>
+
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Will this trial be genotyped?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_will_be_genotyped" name="add_project_trial_will_be_genotyped">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group" style="display:none" id="add_trial_trial_has_been_genotyped_section">
+                                        <label class="col-sm-5 control-label">Has this trial been genotyped?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_been_genotyped" name="add_project_trial_been_genotyped">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div><br/><br/>
+                                    </div>
+                                    <div class="form-group" style="display:none" id="add_trial_select_genotyping_trial_section">
+                                        <label class="col-sm-5 control-label">Are genotyping trial(s) (e.g. 96 well plates) from this field trial saved in the database?: </label>
+                                        <div class="col-sm-7">
+                                            <div id="add_project_trial_genotype_trial" name="add_project_trial_genotype_trial">
+                                            </div>
+                                        </div><br/><br/>
+                                    </div><br/><br/>
+                                </div>
+
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Will crosses be done on this trial?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_will_be_crossed" name="add_project_trial_will_be_crossed">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group" style="display:none" id="add_trial_select_crossing_trial_section">
+                                        <label class="col-sm-5 control-label">Have crosses been done on this trial?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_been_crossed" name="add_project_trial_been_crossed">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div><br/><br/>
+                                    </div>
+                                    <div class="form-group" style="display:none" id="add_trial_select_crossing_trials_section">
+                                        <label class="col-sm-5 control-label">Are crossing trial(s) linked to this field trial saved in the database?: </label>
+                                        <div class="col-sm-7">
+                                            <div id="add_project_trial_crossing_trial" name="add_project_trial_crossing_trial">
+                                            </div>
+                                        </div><br/><br/>
+                                    </div><br/><br/>
+                                </div>
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Field Map Information" &>

@@ -416,6 +416,7 @@ $main_production_site_url
                                     <div class="panel-body">
                                         <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" id="trial_set_phenotypes_fully_link">Phenotypes Fully Uploaded?</button>' &>
 
+                                            <div style="overflow:scroll">
                                             <table class="table table-bordered files_datatables" alt="">
                                                 <thead>
                                                     <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
@@ -432,6 +433,7 @@ $main_production_site_url
 % }
                                                 </tbody>
                                             </table>
+                                            </div>
 
                                         </&><!-- closes uploaded file section -->
                                     </div>

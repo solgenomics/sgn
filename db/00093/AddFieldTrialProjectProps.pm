@@ -65,7 +65,13 @@ sub patch {
             'plot_width',
             'plot_length',
             'field_size',
-            'field_trial_is_genotyped'
+            'field_trial_is_planned_to_be_genotyped',
+            'field_trial_is_planned_to_cross',
+        ],
+        'project_relationship' => [
+            'field_trial_from_field_trial',
+            'genotyping_trial_from_field_trial',
+            'crossing_trial_from_field_trial'
         ]
     };
 
