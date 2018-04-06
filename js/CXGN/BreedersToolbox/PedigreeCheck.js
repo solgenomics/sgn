@@ -23,6 +23,7 @@ jQuery(document).ready(function ($) {
               disable_ui();
             },
             success: function (response) {
+              console.log(response);
               jQuery('#working_modal').modal('hide');
               enable_ui();
               if (response.error) {
@@ -30,26 +31,25 @@ jQuery(document).ready(function ($) {
               }
               else {
                   var return_array = new Array();
-                  var json_hash_string = JSON.stringify(response);
-                  var json_hash_object = JSON.parse(json_hash_string);
-                  var linesCount = Object.keys(json_hash_object).length;
-                  var output_string;
-
-                  for (var i=0; i < linesCount; i++){
-                    var key = Object.keys(json_hash_object)[i];
-                    var value = json_hash_object[key];
-
+                  var missing = response.missing;
+                  var calculated = response.calculated;
+                  var output_string = "";
+                  for (var accession in calculated){
+                    var value = calculated[accession];
                     if (value > 3){
-                       output_string = "<p>Accession " + key + " has a pedigree conflict of " + value  + "%. A pedigree error is likely to have occurred.<\p>";
+                       output_string = "<p>" + accession + " has a pedigree conflict of " + value  + "%. A pedigree error is likely to have occurred.<\p>";
                     }
                     else{
-                       output_string = "<p>Accession " + key + " has a pedigree conflict of " + value + "%. A pedigree error is unlikely to have occurred.<\p>";
+                       output_string = "<p>" + accession + " has a pedigree conflict of " + value + "%. A pedigree error is unlikely to have occurred.<\p>";
                     }
                     return_array.push(output_string);
                     var breaks_return_array = return_array.join("<br>");
                     console.log(breaks_return_array);
                   }
-                  jQuery("#pedigree_check_body").append(breaks_return_array);
+                  for (var accession in missing){
+                    return_array.push(missing[accession]);
+                  }
+                  jQuery("#pedigree_check_body").html(breaks_return_array);
                   jQuery('#pedigree_check_results').modal('show');
               }
             },
