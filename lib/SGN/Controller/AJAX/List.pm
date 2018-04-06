@@ -397,6 +397,21 @@ sub copy_public_list : Path('/list/public/copy') Args(0) {
     }
 }
 
+sub sort_list_items : Path('/list/sort') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id");
+    my $sort = $c->req->param("sort");
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $return = $list->sort_items($sort);
+    if ($return) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => 1 };
+    }
+}
+
 sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my $self = shift;
     my $c = shift;

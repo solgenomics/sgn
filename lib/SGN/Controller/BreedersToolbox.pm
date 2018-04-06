@@ -204,8 +204,6 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     $c->stash->{roles} = $c->user()->roles();
 
-    $c->stash->{cross_populations} = $self->get_crosses($c);
-
     $c->stash->{template} = '/breeders_toolbox/manage_crosses.mas';
 
 }
@@ -550,8 +548,6 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     # my @roles = $c->user->roles();
     # $c->stash->{roles}=\@roles;
 
-    # $c->stash->{cross_populations} = $self->get_crosses($c);
-
     # $c->stash->{stockrelationships} = $self->get_stock_relationships($c);
 
     # my $locations = $bp->get_locations($c);
@@ -576,36 +572,6 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }
-
-
-sub get_crosses : Private {
-    my $self = shift;
-    my $c = shift;
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
-    # get crosses
-    #
-    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock_type'});
-    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->find(
-	{ name   => 'cross',
-	  cv_id => $stock_type_cv->cv_id(),
-	});
-    my @cross_populations = ();
-
-    if ($cross_cvterm) {
-
-      my @cross_population_stocks = $schema->resultset("Stock::Stock")->search(
-									       { type_id => $cross_cvterm->cvterm_id, is_obsolete => 'f'
-									       } );
-      foreach my $cross_pop (@cross_population_stocks) {
-	push @cross_populations, [$cross_pop->name,$cross_pop->stock_id];
-      }
-    }
-    return  \@cross_populations;
-}
-
-
 
 sub get_phenotyping_data : Private {
     my $self = shift;

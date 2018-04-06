@@ -16,6 +16,18 @@ $locations
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "trial_upload_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through uploading a new trial in the database" &>
+                            <p>A field trial represents plots in the field where each plot has a globally unique <i>plot_name</i>, a sequential <i>plot_number</i> that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an <i>accession_name</i> representing the genotype being tested in that plot. Each plot can belong to different blocks (<i>block_number</i>) and reps (<i>rep_number</i>) depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a <i>row_number</i> and <i>col_number</i> indicating the relative position of the plot in the field.</p>
+                            <p>If a specific accession is a check or control, you can indicate the plots that that accession is planted in as controls using <i>is_a_control</i>.</p>
+                            <p>You can provide the specific <i>seedlot_name</i> planted in each plot, along with the number of seeds (<i>num_seed_per_plot</i>) and/or the weight (g) of seed (<i>weight_gram_seed_per_plot</i>) that were used.</p>
+                            <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
+                            <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
                         <&| /util/workflow.mas:step, title=> "File Formatting" &>
                             <& /page/page_title.mas, title=>"Make sure your experiment is formatted in the right format" &>
                             <br/><br/>
@@ -155,8 +167,7 @@ $locations
                             <div id="upload_trial_missing_seedlots_div" style="display:none">
                                 <div class="well">
                                     <ul>
-                                        <li>Seedlots tested in your experimental trial must exist in the database prior to adding your trial. The reason for this is that an accession can be tested in many trials and therefore exists as a separate entity in the database. We also want to be careful about adding new seedlots into the database because we do not want data to be incorrectly linked to duplicates.</li>
-                                        <li>When adding seedlots into the database, you can use an Excel file.</li>
+                                        <li>Seedlots tested in your experimental trial must exist in the database prior to adding your trial. The reason for this is that a seedlot can be tested in many trials and therefore exists as a separate entity in the database. We also want to be careful about adding new seedlots into the database because we do not want data to be incorrectly linked to duplicates.</li>
                                     </ul>
                                 </div>
                                 <ul>

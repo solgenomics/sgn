@@ -114,6 +114,7 @@ sub _validate_with_plugin {
             push @error_messages, 'The seventh column must contain tissue_id on row: '.$row;
         } else {
             my $source_name = $columns[6];
+            $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             if (index($source_name, 'BLANK') != -1) {
                 $source_name = 'BLANK';
             }
@@ -222,6 +223,7 @@ sub _parse_with_plugin {
         my $notes = $columns[8];
         my $tissue_type = $columns[9];
         my $extraction = $columns[10];
+        $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
 
         my $key = $row;
         if (index($source_name, 'BLANK') != -1) {

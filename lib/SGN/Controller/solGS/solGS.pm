@@ -3923,9 +3923,7 @@ sub get_all_traits {
 
 sub create_trait_data {
     my ($self, $c) = @_;   
-       
-   
-   
+          
     my $acronym_pairs = $self->get_acronym_pairs($c);
 
     if (@$acronym_pairs)

@@ -81,6 +81,7 @@ sub _validate_with_plugin {
         if (!$columns[1] || $columns[1] eq ''){
             push @error_messages, 'The second column must contain a seed_id on row: '.$row;
         } else {
+            $columns[1] =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_seedlot_names{$columns[1]}++;
         }
         if (!$columns[2] || $columns[2] eq ''){
@@ -163,6 +164,7 @@ sub _parse_with_plugin {
         my $inventory_date = $columns[2];
         my $inventory_person = $columns[3];
         my $weight_gram = $columns[4];
+        $seed_id =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_seedlot_names{$seed_id}++;
 
         $parse_result{$seed_id} = {

@@ -64,7 +64,7 @@ sub download {
     my $trial_name = $trial->get_name();
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $self->trial_id,, experiment_type => 'genotyping_layout'});
     my $design = $trial_layout->get_design();
-    print STDERR Dumper $design;
+    #print STDERR Dumper $design;
     my $row_count = 1;
     while (my ($key, $val) = each (%$design)){
         $ws->write($row_count, 0, $val->{plot_name});

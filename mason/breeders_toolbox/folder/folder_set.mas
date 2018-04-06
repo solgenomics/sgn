@@ -133,6 +133,10 @@ jQuery(document).ready(function() {
     jQuery('#set_folder_dialog').modal("hide");
   });
 
+  jQuery('#folder_set_success_dialog_message').on('hidden.bs.modal', function () {
+      location.reload();
+  })
+
 });
 
 function breeding_program_change_folders() {
@@ -182,9 +186,9 @@ function set_trial_folder() {
     });
     if (errors == 0) {
 %  if ($project_type eq 'Trial') {
-                    refreshTrailJsTree();
+                    refreshTrailJsTree(0);
 %  } elsif ($project_type eq 'Cross') {
-                    refreshCrossJsTree();
+                    refreshCrossJsTree(0);
 %  }
         jQuery('#folder_set_success_dialog_message').modal("show");
     }
@@ -201,7 +205,6 @@ function set_trial_folder() {
               }
               else {
                     jQuery('#folder_set_success_dialog_message').modal("show");
-                  //location.reload();
               }
           },
           error: function(response) {
