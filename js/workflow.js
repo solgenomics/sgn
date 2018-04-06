@@ -2,15 +2,13 @@
 // JavaScript for mason/util/workflow.mas
 var Workflow = {
   
-  "init": function(init_target){ //Initializes a workflow (or all workflows)
-    init_target = init_target || "";
-    var prog_steps = document.querySelectorAll('.workflow-prog>li');
+  "init": function(init_target){ //Initializes a workflow with a given ID
+    var wf = document.querySelector(init_target);
+    var prog_steps = wf.querySelectorAll(init_target+'>.workflow-prog>li');
     prog_steps.forEach(function(ele,i){
       ele.onclick = Workflow.prog_click(i);
     });
-    document.querySelectorAll('.workflow').forEach(function(wf){
-      Workflow.focus(wf,0);
-    });
+    Workflow.focus(wf,0);
   },
   
   "prog_click": function(step_index){ // onclick for progress markers
