@@ -436,7 +436,7 @@ sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
 
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
     my $data = $trial->get_tissue_sources();
-    print STDERR Dumper $data;
+    #print STDERR Dumper $data;
     $c->stash->{rest} = { tissue_sources => $data };
 }
 
@@ -1631,7 +1631,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     # my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
 
     my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
-    print STDERR Dumper(\@items);
+    #print STDERR Dumper(\@items);
     my @trait_ids = ($trait_id);
     
     my $layout = $c->stash->{trial_layout};
@@ -1815,7 +1815,7 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
   my $images = $stockref->{image_ids};
   $dbh = $stockref->{dbh};
 
-  print STDERR Dumper($stockref);
+  #print STDERR Dumper($stockref);
   print "$plot_name and $plot_id and $image_ids\n";
   
   my $image_html     = "";
