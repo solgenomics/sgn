@@ -592,6 +592,10 @@ rect.bordered {
                                     </div><br/><br/>
                                 </div>
 
+                                <br/>
+                                <center>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this);" >Continue to Next Step</button>
+                                <center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Field Map Information" &>
                                 <& /page/page_title.mas, title=>"Specify the number of rows and columns for the entire field" &>
