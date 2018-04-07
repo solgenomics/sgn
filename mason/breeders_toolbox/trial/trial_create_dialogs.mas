@@ -687,18 +687,24 @@ rect.bordered {
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Review Designed Trial" &>
-                                <& /page/page_title.mas, title=>"Review the generated trial layout. Make sure to click Submit if you approve of the trial!" &>
+                                <& /page/page_title.mas, title=>"Review the generated trial layout. Make sure to click Submit at the bottom of this page if you approve of the trial!" &>
 
-                                <center><p>Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p></center>
-                                <p></br><div class="d3_legend" id="d3_legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
-                                  <li><span class="d3_block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
-                                  <li><span class="d3_block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
-                                  <li><span class="d3_checks"></span> Checks</li>
-                                  <li><span class="d3_rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-                                  <li><span class="d3_rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+                                <div id="trial_design_warning_message">
                                 </div>
-                                <div id="container_field_map_view" ></div>
-                                <div id="no_map_view_MSG" >No field map to display...</div>
+
+                                <div class="well">
+                                    <center><p>Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p></center>
+                                    <div class="d3_legend" id="d3_legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
+                                        <li><span class="d3_block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+                                        <li><span class="d3_block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+                                        <li><span class="d3_checks"></span> Checks</li>
+                                        <li><span class="d3_rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+                                        <li><span class="d3_rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+                                    </div>
+                                    <div id="container_field_map_view" ></div>
+                                    <div id="no_map_view_MSG" >No field map to display...</div>
+                                </div>
+
                                 <div id="trial_design_view_layout_return">
                                 </div>
                                 <br/>

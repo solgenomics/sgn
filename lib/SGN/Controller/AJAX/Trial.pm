@@ -424,12 +424,24 @@ sub generate_experimental_design_POST : Args(0) {
         push @design_layout_view_html_array, $design_layout_view_html;
     }
 
+    my $warning_message;
+    #check if field size can fit the design_json
+    if ($field_size && $plot_width && $plot_length){
+        my $num_plots = scalar( keys %{decode_json $design_array[0]} );
+        my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
+        my $field_size_m = $field_size * 10000;
+        if ($field_size_m < $total_area){
+            $warning_message = "The generated design would require atleast $total_area square meters, which is larger than the $field_size hectare ($field_size_m square meter) field size you indicated.";
+        }
+    }
+
     $c->stash->{rest} = {
         success => "1",
         design_layout_view_html => encode_json(\@design_layout_view_html_array),
         design_info_view_html => $design_info_view_html,
         design_map_view => $design_map_view,
         design_json =>  encode_json(\@design_array),
+        warning_message => $warning_message
     };
 }
 
