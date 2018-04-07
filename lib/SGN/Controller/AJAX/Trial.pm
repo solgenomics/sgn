@@ -118,6 +118,10 @@ sub generate_experimental_design_POST : Args(0) {
     my $westcott_col = $c->req->param('westcott_col');
     my $westcott_col_between_check = $c->req->param('westcott_col_between_check');
 
+    my $field_size = $c->req->param('field_size');
+    my $plot_width = $c->req->param('plot_width');
+    my $plot_length = $c->req->param('plot_length');
+
     if ($design_type eq 'westcott'){
         if (!$westcott_check_1){
             $c->stash->{rest} = { error => "You need to provide name of check 1 for westcott design."};

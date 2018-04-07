@@ -391,6 +391,10 @@ jQuery(document).ready(function ($) {
         var westcott_col = $('#westcott_col').val();
         var westcott_col_between_check = $('#westcott_col_between_check').val();
 
+        var plot_width = $('#add_project_plot_width').val();
+        var plot_length = $('#add_project_plot_length').val();
+        var field_size = $('#new_trial_field_size').val();
+
         var seedlot_hash_combined = {};
         seedlot_hash_combined = extend_obj(accession_list_seedlot_hash, checks_list_seedlot_hash);
         seedlot_hash_combined = extend_obj(seedlot_hash_combined, crbd_checks_list_seedlot_hash);
@@ -489,6 +493,9 @@ jQuery(document).ready(function ($) {
                 'westcott_check_2': westcott_check_2,
                 'westcott_col': westcott_col,
                 'westcott_col_between_check': westcott_col_between_check,
+                'field_size': field_size,
+                'plot_width': plot_width,
+                'plot_length': plot_length
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -1308,69 +1315,74 @@ jQuery(document).ready(function ($) {
     });
 
     function open_project_dialog() {
-	$('#add_project_dialog').modal("show");
+        $('#add_project_dialog').modal("show");
 
-	//add lists to the list select and list of checks select dropdowns.
-    document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh');
-    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh');
-    document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh');
+        //add lists to the list select and list of checks select dropdowns.
+        document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh');
+        document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh');
+        document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh');
 
-    //add lists to the list select and list of checks select dropdowns for CRBD.
-    document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh');
-    document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh');
-    document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh');
+        //add lists to the list select and list of checks select dropdowns for CRBD.
+        document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh');
+        document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh');
+        document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh');
 
-	//add a blank line to location select dropdown that dissappears when dropdown is opened
-	$("#add_project_location").prepend("<option value=''></option>").val('');
-	$("#add_project_location").one('mousedown', function () {
+        //add a blank line to location select dropdown that dissappears when dropdown is opened
+        $("#add_project_location").prepend("<option value=''></option>").val('');
+        $("#add_project_location").one('mousedown', function () {
             $("option:first", this).remove();
-	});
+        });
 
-	//add a blank line to list select dropdown that dissappears when dropdown is opened
-	$("#select_list_list_select").prepend("<option value=''></option>").val('');
-	$("#select_list_list_select").one('mousedown', function () {
+        //add a blank line to list select dropdown that dissappears when dropdown is opened
+        $("#select_list_list_select").prepend("<option value=''></option>").val('');
+        $("#select_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
-	});
+        });
 
-    //add a blank line to list select dropdown that dissappears when dropdown is opened
-	$("#select_seedlot_list_list_select").prepend("<option value=''></option>").val('');
-	$("#select_seedlot_list_list_select").one('mousedown', function () {
+        //add a blank line to list select dropdown that dissappears when dropdown is opened
+        $("#select_seedlot_list_list_select").prepend("<option value=''></option>").val('');
+        $("#select_seedlot_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
-	});
+        });
 
 
-	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened
-	$("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
-	$("#list_of_checks_section_list_select").one('mousedown', function () {
+        //add a blank line to list of checks select dropdown that dissappears when dropdown is opened
+        $("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#list_of_checks_section_list_select").one('mousedown', function () {
             $("option:first", this).remove();
-	});
+        });
 
-  $("#crbd_list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
-  $("#crbd_list_of_checks_section_list_select").one('mousedown', function () {
+        $("#crbd_list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#crbd_list_of_checks_section_list_select").one('mousedown', function () {
             $("option:first", this).remove();
-  });
+        });
 
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened
-	$("#select_design_method").prepend("<option value=''></option>").val('');
-	$("#select_design_method").one('mousedown', function () {
+        //add a blank line to design method select dropdown that dissappears when dropdown is opened
+        $("#select_design_method").prepend("<option value=''></option>").val('');
+        $("#select_design_method").one('mousedown', function () {
             $("option:first", this).remove();
-	    //trigger design method change events in case the first one is selected after removal of the first blank select item
-	    $("#select_design_method").change();
-	});
+            //trigger design method change events in case the first one is selected after removal of the first blank select item
+            $("#select_design_method").change();
+        });
 
-	//reset previous selections
-	$("#select_design_method").change();
-
+        //reset previous selections
+        $("#select_design_method").change();
     }
 
-     $('#add_project_link').click(function () {
-         get_select_box('years', 'add_project_year', {'auto_generate': 1 });
-         get_select_box('trial_types', 'add_project_type', {'empty':1} );
-         get_select_box('trials', 'add_project_trial_source', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
-         get_select_box('genotyping_trials', 'add_project_trial_genotype_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
-         get_select_box('crosses', 'add_project_trial_crossing_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
-         open_project_dialog();
-     });
+    $('#add_project_link').click(function () {
+        get_select_box('years', 'add_project_year', {'auto_generate': 1 });
+        get_select_box('trial_types', 'add_project_type', {'empty':1} );
+        get_select_box('trials', 'add_project_trial_source', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('genotyping_trials', 'add_project_trial_genotype_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('crosses', 'add_project_trial_crossing_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        open_project_dialog();
+    });
+
+    jQuery('#select_breeding_program').change(function(){
+        get_select_box('trials', 'add_project_trial_source', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('genotyping_trials', 'add_project_trial_genotype_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('crosses', 'add_project_trial_crossing_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+    });
 
     jQuery('button[name="new_trial_add_treatments"]').click(function(){
         jQuery('#trial_design_add_treatments').modal('show');
