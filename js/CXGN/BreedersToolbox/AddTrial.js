@@ -503,7 +503,13 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 } else {
 
-                    Workflow.focus("#trial_design_workflow", 5); //Go to review page
+                    Workflow.focus("#trial_design_workflow", 6); //Go to review page
+
+                    if(response.warning_message){
+                        jQuery('#trial_design_warning_message').html("<center><div class='well'><h4 class='text-warning'>Warning: "+response.warning_message+"</h4></div></center>");
+                    } else {
+                        jQuery('#trial_design_warning_message').html('');
+                    }
 
                     $('#trial_design_information').html(response.design_info_view_html);
                     var layout_view = JSON.parse(response.design_layout_view_html);
