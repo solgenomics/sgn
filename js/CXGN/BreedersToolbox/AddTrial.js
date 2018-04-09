@@ -1251,6 +1251,8 @@ jQuery(document).ready(function ($) {
         var plot_width = $('#add_project_plot_width').val();
         var plot_length = $('#add_project_plot_length').val();
         var field_size = $('#new_trial_field_size').val();
+        var field_trial_is_planned_to_be_genotyped = $('#add_project_trial_will_be_genotyped').val();
+        var field_trial_is_planned_to_cross = $('#add_project_trial_will_be_crossed').val();
 
         jQuery.ajax({
            type: 'POST',
@@ -1291,7 +1293,9 @@ jQuery(document).ready(function ($) {
                 'westcott_col_between_check': westcott_col_between_check,
                 'field_size': field_size,
                 'plot_width': plot_width,
-                'plot_length': plot_length
+                'plot_length': plot_length,
+                'field_trial_is_planned_to_be_genotyped': field_trial_is_planned_to_be_genotyped,
+                'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross
             },
             success: function (response) {
                 if (response.error) {

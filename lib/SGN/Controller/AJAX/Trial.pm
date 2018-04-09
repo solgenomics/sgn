@@ -485,6 +485,8 @@ sub save_experimental_design_POST : Args(0) {
     my $field_size = $c->req->para('field_size');
     my $plot_width = $c->req->para('plot_width');
     my $plot_length = $c->req->para('plot_length');
+    my $field_trial_is_planned_to_be_genotyped = $c->req->para('field_trial_is_planned_to_be_genotyped');
+    my $field_trial_is_planned_to_cross = $c->req->para('field_trial_is_planned_to_cross');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
@@ -545,7 +547,9 @@ sub save_experimental_design_POST : Args(0) {
             trial_type => $trial_type,
             trial_has_plant_entries => $c->req->param('has_plant_entries'),
             trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
-            operator => $user_name
+            operator => $user_name,
+            field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
+            field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped
         );
 
         if ($field_size){
