@@ -28,7 +28,10 @@ Will do the following:
         trial_description => $project_description,
         trial_location => $location->name(),
         trial_name => $trial_name,
-        trial_type => $trialtype
+        trial_type => $trialtype,
+        field_size => $field_size, #(ha)
+        plot_width => $plot_width, #(m)
+        plot_length => $plot_length, #(m)
     });
     try {
         $trial_create->save_trial();
@@ -145,6 +148,9 @@ has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', re
 has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 has 'trial_has_plant_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_plant_entries', required => 0);
 has 'trial_has_subplot_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_subplot_entries', required => 0);
+has 'field_size' => (isa => 'Int', is => 'rw', predicate => 'has_field_size', required => 0);
+has 'plot_width' => (isa => 'Int', is => 'rw', predicate => 'has_plot_width', required => 0);
+has 'plot_length' => (isa => 'Int', is => 'rw', predicate => 'has_plot_length', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
@@ -225,6 +231,11 @@ sub save_trial {
 
 	my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
 	my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
+	my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
+	my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
+	my $plot_length_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_length', 'project_property');
+	my $field_trial_is_planned_to_be_genotyped_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_be_genotyped', 'project_property');
+	my $field_trial_is_planned_to_cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_cross', 'project_property');
 	my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
 	my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
 	my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility', 'project_property');
@@ -285,6 +296,21 @@ sub save_trial {
 		$project_year_cvterm->name() => $self->get_trial_year(),
 		$project_design_cvterm->name() => $self->get_design_type()
 	});
+    if ($self->has_field_size && $self->get_field_size){
+		$project->create_projectprops({
+			$field_size_cvterm->name() => $self->get_field_size
+		});
+	}
+    if ($self->has_plot_width && $self->get_plot_width){
+		$project->create_projectprops({
+			$plot_width_cvterm->name() => $self->get_plot_width
+		});
+	}
+    if ($self->has_plot_length && $self->get_plot_length){
+		$project->create_projectprops({
+			$plot_length_cvterm->name() => $self->get_plot_length
+		});
+	}
 	if ($self->has_trial_has_plant_entries && $self->get_trial_has_plant_entries){
 		$project->create_projectprops({
 			$has_plant_entries_cvterm->name() => $self->get_trial_has_plant_entries
