@@ -112,11 +112,12 @@ sub remove_ontology {
 sub create_anova_phenodata_file {
     my ($self, $c)  = @_;
         
-    $self->anova_pheno_file($c);
-    my $pheno_file =  $c->stash->{phenotype_file};
-
+    $c->stash->{pop_id} = $c->stash->{trial_id};
+    $c->controller('solGS::solGS')->phenotype_file($c);
+      
     $self->copy_pheno_file_to_anova_dir($c);
-    
+    my $pheno_file =  $c->stash->{phenotype_file};
+      
     if (!-s $pheno_file) {
 	$c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
     } else {
@@ -349,7 +350,8 @@ sub run_anova {
     my $output_file = $c->stash->{anova_output_files};
 
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{anova_temp_dir};
-
+    $c->stash->{r_temp_file} = "anova-${trial_id}-${trait_id}";
+    
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "anova-${trial_id}-${trait_id}";
@@ -372,6 +374,9 @@ sub copy_pheno_file_to_anova_dir {
 
     copy($pheno_file, $anova_cache) or 
 	die "could not copy $pheno_file to $anova_cache";
+
+    my $file = basename($pheno_file);
+    $c->stash->{phenotype_file} = catfile($anova_cache, $file);
     
 }
 
@@ -406,9 +411,7 @@ sub anova_input_files {
 sub anova_pheno_file {
     my ($self, $c) = @_;
     
-    $c->stash->{pop_id} = $c->stash->{trial_id};
-
-    $c->controller('solGS::solGS')->phenotype_file($c);
+    $self->create_anova_phenodata_file($c);
    
 }
 

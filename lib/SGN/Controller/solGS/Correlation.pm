@@ -469,8 +469,6 @@ sub run_correlation_analysis {
 		or die "could not copy '$corre_commands_file' to '$corre_commands_temp'";
 	}
 
-
-
 	my $config = {
 	    backend => $c->config->{backend},
 	    temp_base => $corre_dir,
