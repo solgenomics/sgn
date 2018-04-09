@@ -353,6 +353,7 @@ var trial_id = <% $trial_id %>;
 var value = 'plot';
 var selected;
 var phenotypes_id = [];
+var ctrlFuncDataset = [];
 jQuery(document).ready( function() {
 
     function assayed_trait_heatmap_view(selected) {
@@ -393,6 +394,7 @@ jQuery(document).ready( function() {
                       rows = response.unique_row,
                       columns = response.unique_col;
                       datasets = response.result;
+                      ctrlFuncDataset = datasets;
                 
                   var svg = d3.select("#container_heatmap").append("svg")
                       .attr("width", width + margin.left + margin.right)
@@ -548,7 +550,7 @@ jQuery(document).ready( function() {
       }
       return true; 
     }
-    
+    var list_of_checks;
     function field_map_view() {
         jQuery.ajax( {
              url: '/ajax/breeders/trial/'+trial_id+'/coords', 
@@ -563,6 +565,9 @@ jQuery(document).ready( function() {
                 var col_max =  response.max_col;
                 var row_max =  response.max_row;
                 var controls = response.controls;
+                if (controls){
+                    list_of_checks = controls;
+                }
                 var false_coord = response.false_coord;
                 var design_type = response.design_type;
 
