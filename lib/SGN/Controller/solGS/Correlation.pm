@@ -439,64 +439,133 @@ sub run_correlation_analysis {
     my $referer        = $c->stash->{referer};
     my $corre_analysis = $c->stash->{correlation_type};
     my $corre_script   = $c->stash->{correlation_script};
+
+    $c->stash->{r_temp_file} = $corre_analysis . '-analysis';
+    $c->stash->{analysis_tempfiles_dir} = $corre_dir;
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    my $out_file_temp  = $c->stash->{out_file_temp};
+    my $err_file_temp  = $c->stash->{err_file_temp};
+
+    my $background_job = $c->stash->{background_job};
    
     if (-s $data_input_file) 
-    {
-        CXGN::Tools::Run->temp_base($corre_dir);
-       
+    {      
         my ( $corre_commands_temp, $corre_output_temp ) =
             map
         {
             my (undef, $filename ) =
                 tempfile(
                     catfile(
-                        CXGN::Tools::Run->temp_base(),
+                        $corre_dir,
                         "$corre_analysis-$_-XXXXXX",
                          ),
                 );
             $filename
         } qw / in out /;
     
-    {
-        my $corre_commands_file = $c->path_to($corre_script);
-        copy( $corre_commands_file, $corre_commands_temp )
-            or die "could not copy '$corre_commands_file' to '$corre_commands_temp'";
+	{
+	    my $corre_commands_file = $c->path_to($corre_script);
+	    copy( $corre_commands_file, $corre_commands_temp )
+		or die "could not copy '$corre_commands_file' to '$corre_commands_temp'";
+	}
+
+
+
+	my $config = {
+	    backend => $c->config->{backend},
+	    temp_base => $corre_dir,
+	    queue => $c->config->{'web_cluster_queue'},
+	    max_cluster_jobs => 1_000_000_000,
+	    out_file         => $out_file_temp,
+	    err_file         => $err_file_temp,
+	    do_cleanup       => 0,
+	};
+	
+	my $cmd = 'Rscript --slave ' 
+	    . "$corre_commands_temp $corre_output_temp" 
+	    . '--args' . "$formatted_phenotype_file $referer $corre_table_file $corre_json_file $data_input_file";
+
+	eval 
+	{
+	    my $job = CXGN::Tools::Run->new($config);
+	    $job->do_not_cleanup(1);
+	 
+	   if ($background_job) {
+	       $job->is_async(1);
+	       $job->run_cluster($cmd);
+	   
+	       #$c->stash->{r_job_tempdir} = $job->tempdir();
+	       $c->stash->{r_job_id} = $job->jobid();
+	       $c->stash->{cluster_job} = $job;
+	   } else {
+	       $job->is_cluster(1);
+	       $job->run_cluster($cmd);
+	       $job->wait;
+	   }	
+	};
+
+	if ($@) {
+	    print STDERR "An error occurred! $@\n";
+	    $c->stash->{Error} = $@ ;
+	    $c->stash->{script_error} = 'Correlation analysis failed.';
+	}
     }
 
-      try 
-      {
-          print STDERR "\nsubmitting correlation job to the cluster..\n";
-          my $r_process = CXGN::Tools::Run->run_cluster(
-              'R', 'CMD', 'BATCH',
-              '--slave',
-              "--args $formatted_phenotype_file $referer $corre_table_file $corre_json_file $data_input_file",
-              $corre_commands_temp,
-              $corre_output_temp,
-              {
-                  working_dir => $corre_dir,
-                  max_cluster_jobs => 1_000_000_000,
-              },
-              );
 
-          $r_process->wait;
-          print STDERR "\ndone with correlation analysis..\n";
-      }
-      catch 
-      {  
+
+
+
+
+	
+	# $c->stash->{input_files}  = $data_input_file;
+	# $c->stash->{output_files} = $tempfile_output;
+	# $c->stash->{r_temp_file}  = "combine-pops-${trait_id}";
+	# $c->stash->{r_script}     = 'R/solGS/combine_populations.r';
+    
+	# $self->run_r_script($c);
+
+
+     
+
+
+    
+    #   try 
+    #   {
+    #       print STDERR "\nsubmitting correlation job to the cluster..\n";
+    #       my $r_process = CXGN::Tools::Run->run_cluster(
+    #           'R', 'CMD', 'BATCH',
+    #           '--slave',
+    #           "--args $formatted_phenotype_file $referer $corre_table_file $corre_json_file $data_input_file",
+    #           $corre_commands_temp,
+    #           $corre_output_temp,
+    #           {
+    #               working_dir => $corre_dir,
+    #               max_cluster_jobs => 1_000_000_000,
+    #           },
+    #           );
+
+    #       $r_process->wait;
+    #       print STDERR "\ndone with correlation analysis..\n";
+    #   }
+    #   catch 
+    #   {  
             
-            my $err = $_;
-            $err =~ s/\n at .+//s; #< remove any additional backtrace
-            #     # try to append the R output
+    #         my $err = $_;
+    #         $err =~ s/\n at .+//s; #< remove any additional backtrace
+    #         #     # try to append the R output
            
-            try
-            { 
-                $err .= "\n=== R output ===\n".file($corre_output_temp)->slurp."\n=== end R output ===\n" 
-            };
+    #         try
+    #         { 
+    #             $err .= "\n=== R output ===\n".file($corre_output_temp)->slurp."\n=== end R output ===\n" 
+    #         };
             
-            $c->stash->{script_error} = "Correlation analysis failed.";
+    #         $c->stash->{script_error} = "Correlation analysis failed.";
                      
-      };       
-    }
+    #   };       
+	# }
+
+
+	
 }
 
 

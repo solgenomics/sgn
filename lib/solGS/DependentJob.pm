@@ -176,20 +176,19 @@ sub check_prerequisite_jobs {
 }
 
 
-sub create_cluster_acccesible_tmp_files {
+sub create_cluster_accesible_tmp_files {
     my ($self, $temp_file_template)  = @_;
 
     $temp_file_template = $self->temp_file_template if !$temp_file_template;
     my $working_dir     = $self->temp_dir;
 
-    CXGN::Tools::Run->temp_base($working_dir);
     my ( $in_file_temp, $out_file_temp, $err_file_temp) =
         map 
     {
         my ( undef, $filename ) =
             tempfile(
                 catfile(
-                    CXGN::Tools::Run->temp_base(),
+                    $working_dir,
                     "${temp_file_template}-$_-XXXXXX",
                 ),
             );
@@ -271,7 +270,7 @@ sub combine_populations {
     my $self = shift;
     
     my $temp_dir      = $self->temp_dir;  
-    my $cluster_files = $self->create_cluster_acccesible_tmp_files();
+    my $cluster_files = $self->create_cluster_accesible_tmp_files();
     my $r_script      = $self->r_script;
     my $args          = $self->script_args;
     my $output_file   = $cluster_files->{out_file_temp};
@@ -325,7 +324,7 @@ sub check_analysis_status {
     
     my $temp_dir       = $self->temp_dir;
     my $report_file    = $self->analysis_report_args_file;
-    my $cluster_files  = $self->create_cluster_acccesible_tmp_files('analysis-status');
+    my $cluster_files  = $self->create_cluster_accesible_tmp_files('analysis-status');
     my $output_details = retrieve($report_file);   
    
     # my $host           = $output_details->{host};

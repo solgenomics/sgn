@@ -173,7 +173,7 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $output_details = $c->stash->{bg_job_output_details};
       
     $c->stash->{r_temp_file} = 'analysis-status';
-    $c->controller('solGS::solGS')->create_cluster_acccesible_tmp_files($c);
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
    
@@ -194,17 +194,37 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
-      my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
+	my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
 
-      my $async =  CXGN::Tools::Run->run_async($cmd,
-					       {
-						   working_dir      => $c->stash->{solgs_tempfiles_dir},
-						   temp_base        => $c->stash->{solgs_tempfiles_dir},
-						   max_cluster_jobs => 1_000_000_000,
-						   out_file         => $out_temp_file,
-						   err_file         => $err_temp_file,
-					       }
-	  );
+	my $config = {
+	    backend => $c->config->{backend},
+	    temp_base => $c->stash->{solgs_tempfiles_dir},
+	    queue => $c->config->{web_cluster_queue},
+	    max_cluster_jobs => 1_000_000_000,
+	    is_async         => 1,
+	    out_file         => $out_temp_file,
+	    err_file         => $err_temp_file,
+	    do_cleanup       => 0,
+	};
+
+	print STDERR "\n creating cxgn tools run object\n";
+	my $async = CXGN::Tools::Run->new($config);
+	print STDERR "\n set no clean up\n";
+	$async->do_not_cleanup(1);
+	print STDERR "\n run command cxgn tools run\n";
+	$async->run_cluster($cmd);
+	print STDERR "\n called run cluster\n";
+	
+	
+	# my $async =  CXGN::Tools::Run->run_async($cmd,
+	# 				       {
+	# 					   working_dir      => $c->stash->{solgs_tempfiles_dir},
+	# 					   temp_base        => $c->stash->{solgs_tempfiles_dir},
+	# 					   max_cluster_jobs => 1_000_000_000,
+	# 					   out_file         => $out_temp_file,
+	# 					   err_file         => $err_temp_file,
+	# 				       }
+	#   );
 
 	# try 
 	# { 
@@ -690,10 +710,10 @@ sub run_analysis {
 	{
 	    my $pop_id = $c->stash->{model_id};
 
-	    if ($pop_id =~ /uploaded/) 
+	    if ($pop_id =~ /uploaded/)		
 	    {
 		$c->controller('solGS::List')->plots_list_phenotype_file($c);
-		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
+		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);		
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	    }
 	    else
