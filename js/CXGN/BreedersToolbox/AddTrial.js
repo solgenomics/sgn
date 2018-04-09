@@ -1248,6 +1248,10 @@ jQuery(document).ready(function ($) {
         var westcott_col = $('#westcott_col').val();
         var westcott_col_between_check = $('#westcott_col_between_check').val();
 
+        var plot_width = $('#add_project_plot_width').val();
+        var plot_length = $('#add_project_plot_length').val();
+        var field_size = $('#new_trial_field_size').val();
+
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,
@@ -1285,6 +1289,9 @@ jQuery(document).ready(function ($) {
                 'westcott_check_2': westcott_check_2,
                 'westcott_col': westcott_col,
                 'westcott_col_between_check': westcott_col_between_check,
+                'field_size': field_size,
+                'plot_width': plot_width,
+                'plot_length': plot_length
             },
             success: function (response) {
                 if (response.error) {

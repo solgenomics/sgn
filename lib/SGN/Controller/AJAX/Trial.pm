@@ -482,6 +482,10 @@ sub save_experimental_design_POST : Args(0) {
     my $trial_name = $c->req->param('project_name');
     my $trial_type = $c->req->param('trial_type');
     my $breeding_program = $c->req->param('breeding_program_name');
+    my $field_size = $c->req->para('field_size');
+    my $plot_width = $c->req->para('plot_width');
+    my $plot_length = $c->req->para('plot_length');
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
     my $folder;
@@ -527,7 +531,7 @@ sub save_experimental_design_POST : Args(0) {
         my $trial_location_design = decode_json($design->[$design_index]);
         #print STDERR Dumper $trial_location_design;
 
-        my $trial_create = CXGN::Trial::TrialCreate->new({
+        my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
             user_name => $user_name, #not implemented
@@ -542,7 +546,19 @@ sub save_experimental_design_POST : Args(0) {
             trial_has_plant_entries => $c->req->param('has_plant_entries'),
             trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
             operator => $user_name
-        });
+        );
+
+        if ($field_size){
+            $trial_info_hash{field_size} = $field_size;
+        }
+        if ($plot_width){
+            $trial_info_hash{plot_width} = $plot_width;
+        }
+        if ($plot_length){
+            $trial_info_hash{plot_length} = $plot_length;
+        }
+
+        my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
         if ($trial_create->trial_name_already_exists()) {
             $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
