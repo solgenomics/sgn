@@ -152,6 +152,8 @@ has 'field_size' => (isa => 'Int', is => 'rw', predicate => 'has_field_size', re
 has 'plot_width' => (isa => 'Int', is => 'rw', predicate => 'has_plot_width', required => 0);
 has 'plot_length' => (isa => 'Int', is => 'rw', predicate => 'has_plot_length', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
+has 'field_trial_is_planned_to_cross' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_cross', required => 1);
+has 'field_trial_is_planned_to_be_genotyped' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_be_genotyped', required => 1);
 
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
@@ -319,6 +321,16 @@ sub save_trial {
 	if ($self->has_trial_has_subplot_entries && $self->get_trial_has_subplot_entries){
 		$project->create_projectprops({
 			$has_subplot_entries_cvterm->name() => $self->get_trial_has_subplot_entries
+		});
+	}
+    if ($self->has_field_trial_is_planned_to_cross && $self->get_field_trial_is_planned_to_cross){
+		$project->create_projectprops({
+			$field_trial_is_planned_to_cross_cvterm->name() => $self->get_field_trial_is_planned_to_cross
+		});
+	}
+    if ($self->has_field_trial_is_planned_to_be_genotyped && $self->get_field_trial_is_planned_to_be_genotyped){
+		$project->create_projectprops({
+			$field_trial_is_planned_to_be_genotyped_cvterm->name() => $self->get_field_trial_is_planned_to_be_genotyped
 		});
 	}
 
