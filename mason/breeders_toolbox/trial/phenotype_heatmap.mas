@@ -97,8 +97,27 @@ $stockref => undef
     </div>
 </div>
 <div id="chart"></div>
-<div class="col-sm-10" id="d_button" style="display:none";>
-  <!--<a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
+<!--<div class="col-sm-10" id="d_button" style="display:none";>
+  <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;
+</div> -->
+  <div class="col-sm-10" id="delete_button_fm" style="display:none";>
+    <a id="delete_field_map_hm_link"><button class="btn btn-danger"  type="button" id="delete_map_hm_button" value="delete_cords" >Delete Map</button></a>
+  </div>
+
+<div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
+   <p>
+       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+       The field coordinates were deleted successfully...
+   </p>
+</div>
+
+<div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
+   <div id="trait_list_dc" name="trait_list">
+       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm field map deletion... <br />
+
+       </label>
+
+   </div>
 </div>
 
 <div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
@@ -519,14 +538,14 @@ jQuery(document).ready( function() {
                         .attr("y", 0 - 90 + gridSize2);
 
                       legend.exit().remove();
-                    
-                    // });  
+                     
                     } ; 
                   
                   heatmapChart(datasets);
                   if (false_coord){
                       alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
                   }
+    
                 }
                 else  {
                     jQuery("#working_modal").modal("hide");
@@ -840,13 +859,14 @@ jQuery(document).ready( function() {
                                                   
                       cards.exit().remove();
                     
-                    // });  
                     } ; 
                   
-                  heatmapChart(datasets);
-                  if (false_coord){
-                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
-                  }
+                    heatmapChart(datasets);
+                    if (false_coord){
+                        alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                    }else{
+                        jQuery("#delete_button_fm").css("display", "inline-block");                  
+                    }
                 }
                 else  {
                     jQuery("#working_modal").modal("hide");
@@ -973,6 +993,7 @@ jQuery(document).ready( function() {
         d3.select("svg").remove();
         jQuery("#d3legend").css("display", "none");
         jQuery("#container_fm").css("display", "none");
+        jQuery("#delete_button_fm").css("display", "none");
         assayed_trait_heatmap_view(selected);
     }
     if (selected == 'fieldmap'){ 
