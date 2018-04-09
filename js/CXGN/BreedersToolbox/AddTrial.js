@@ -1253,6 +1253,9 @@ jQuery(document).ready(function ($) {
         var field_size = $('#new_trial_field_size').val();
         var field_trial_is_planned_to_be_genotyped = $('#add_project_trial_will_be_genotyped').val();
         var field_trial_is_planned_to_cross = $('#add_project_trial_will_be_crossed').val();
+        var add_project_trial_source_select = $('#add_project_trial_source_select').val();
+        var add_project_trial_genotype_trial_select = $('#add_project_trial_genotype_trial_select').val();
+        var add_project_trial_crossing_trial_select = $('#add_project_trial_crossing_trial_select').val();
 
         jQuery.ajax({
            type: 'POST',
@@ -1295,7 +1298,10 @@ jQuery(document).ready(function ($) {
                 'plot_width': plot_width,
                 'plot_length': plot_length,
                 'field_trial_is_planned_to_be_genotyped': field_trial_is_planned_to_be_genotyped,
-                'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross
+                'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross,
+                'add_project_trial_crossing_trial': add_project_trial_crossing_trial_select,
+                'add_project_trial_source': add_project_trial_source_select,
+                'add_project_trial_genotype_trial': add_project_trial_genotype_trial_select
             },
             success: function (response) {
                 if (response.error) {
@@ -1389,17 +1395,19 @@ jQuery(document).ready(function ($) {
     $('#add_project_link').click(function () {
         get_select_box('years', 'add_project_year', {'auto_generate': 1 });
         get_select_box('trial_types', 'add_project_type', {'empty':1} );
-        get_select_box('trials', 'add_project_trial_source', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
-        get_select_box('genotyping_trials', 'add_project_trial_genotype_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
-        get_select_box('crosses', 'add_project_trial_crossing_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        populate_trial_linkage_selects();
         open_project_dialog();
     });
 
     jQuery('#select_breeding_program').change(function(){
-        get_select_box('trials', 'add_project_trial_source', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
-        get_select_box('genotyping_trials', 'add_project_trial_genotype_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
-        get_select_box('crosses', 'add_project_trial_crossing_trial', {'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        populate_trial_linkage_selects();
     });
+
+    function populate_trial_linkage_selects(){
+        get_select_box('trials', 'add_project_trial_source', {'id':'add_project_trial_source_select', 'name':'add_project_trial_source_select', 'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('genotyping_trials', 'add_project_trial_genotype_trial', {'id':'add_project_trial_genotype_trial_select', 'name':'add_project_trial_genotype_trial_select', 'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('crosses', 'add_project_trial_crossing_trial', {'id':'add_project_trial_crossing_trial_select', 'name':'add_project_trial_crossing_trial_select', 'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+    }
 
     jQuery('button[name="new_trial_add_treatments"]').click(function(){
         jQuery('#trial_design_add_treatments').modal('show');
