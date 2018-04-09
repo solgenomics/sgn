@@ -411,7 +411,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
   </table>
 </div>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
 

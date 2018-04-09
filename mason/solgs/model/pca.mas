@@ -32,7 +32,7 @@ my $pop_id = $trial_id if $trial_id;
 }
 
 </style>
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 <& /util/import_javascript.mas, classes => ["solGS.pca"] &>
 
 <&| /page/info_section.mas, 
@@ -48,7 +48,3 @@ my $pop_id = $trial_id if $trial_id;
 <input type="hidden" id="population_id" value="<% $pop_id %>" /> 
 
 </&>
-
-
-
-

@@ -1,6 +1,11 @@
 
 <%args>
 $timestamp
+$preferred_species
+$editable_stock_props
+$programs
+$locations
+$crossing_trials
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -11,10 +16,10 @@ $timestamp
 }
 </style>
   
-  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses' ] &>
 
 
-<&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -23,6 +28,7 @@ $timestamp
                 <li>Seedlots represent physical seed in packets.</li>
                 <li>This seed can be from crosses or for named accessions.</li>
                 <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+                <li>Seed can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
                 <li>Seedlots can belong to breeding programs and organizations.</li>
                 </ul>
 
@@ -30,7 +36,7 @@ $timestamp
                 <ul>
                 <li>1) Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
                 <li>2) Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
-                <li>3) Use the "Seed Inventory" Android Application to scan seedlot barcodes and record weight. Then use "Upload Inventory" to upload this info into database. If you prefer you can create your own CSV file and upload that, if you do not want to use the Seed Inventory Application.</li>
+                <li>3) Use the "Seed Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Seed Inventory Android Application you can create your own CSV file and upload that.</li>
                 <li><b>For more info about the "Seed Inventory" Android Application go to <a href="http://www.wheatgenetics.org/research/software/35-inventory">Seed Inventory</a>.</b></li>
                 <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
                 </ul>
@@ -40,7 +46,7 @@ $timestamp
 </&>
 
 
-<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add New Seedlot</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_bulk_upload">Upload Seedlots</a>]&nbsp;&nbsp;&nbsp;[<a id="seedlot_upload_inventory">Upload Inventory</a>]'&>
+<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a name="add_seedlot_button">Add New Seedlot</a>]&nbsp;&nbsp;&nbsp;[<a name="seedlot_bulk_upload">Upload Seedlots</a>]&nbsp;&nbsp;&nbsp;[<a name="seedlot_upload_inventory">Upload Inventory</a>]'&>
 
 <br/>
 
@@ -112,9 +118,13 @@ $timestamp
 </div>
 </&>
 
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
+<& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
 
 <script>
 jQuery(document).ready(function(){
@@ -139,10 +149,12 @@ jQuery(document).ready(function(){
             { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
             { title: "Breeding Program", "data": "breeding_program_name" },
             { title: "Contents", "data": "contents_html" },
-            { title: "Seedlot Location", "data": "location" },
+            { title: "Location", "data": "location" },
             { title: "Count", "data": "count" },
             { title: "Weight (g)", "data": "weight_gram" },
             { title: "Owners", "data": "owners_string" },
+            { title: "Organization", "data": "organization" },
+            { title: "Box", "data": "box" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {

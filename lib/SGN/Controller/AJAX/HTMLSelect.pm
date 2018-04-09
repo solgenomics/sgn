@@ -488,19 +488,25 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $c = shift;
     my $accessions = $c->req->param('seedlot_content_accession_name') ? [$c->req->param('seedlot_content_accession_name')] : [];
     my $crosses = $c->req->param('seedlot_content_cross_name') ? [$c->req->param('seedlot_content_cross_name')] : [];
+    my $offset = $c->req->param('seedlot_offset') ? $c->req->param('seedlot_offset') : '';
+    my $limit = $c->req->param('seedlot_limit') ? $c->req->param('seedlot_limit') : '';
+    my $search_seedlot_name = $c->req->param('seedlot_name') ? $c->req->param('seedlot_name') : '';
+    my $search_breeding_program_name = $c->req->param('seedlot_breeding_program_name') ? $c->req->param('seedlot_breeding_program_name') : '';
+    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
+    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
         $c->dbic_schema("CXGN::Phenome::Schema"),
-        $c->req->param('seedlot_offset'),
-        $c->req->param('seedlot_limit'),
-        $c->req->param('seedlot_name'),
-        $c->req->param('seedlot_breeding_program_name'),
-        $c->req->param('seedlot_location'),
-        $c->req->param('seedlot_amount'),
+        $offset,
+        $limit,
+        $search_seedlot_name,
+        $search_breeding_program_name,
+        $search_location,
+        $search_amount,
         $accessions,
         $crosses,
-        0
+        1
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -679,6 +685,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
     my $size = $c->req->param("size");
     my @crosses;
     foreach my $project (@$projects) {
@@ -690,7 +697,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     @crosses = sort @crosses;
 
     my $html = simple_selectbox_html(
-      multiple => 1,
+      multiple => $multiple,
       name => $name,
       id => $id,
       size => $size,

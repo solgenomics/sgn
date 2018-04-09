@@ -148,10 +148,15 @@ function runAnovaAnalysis(traits) {
 		data: {'trial_id': trialId, 'traits': [anovaTraits]},
 		url: '/anova/analysis/',      
 		success: function(response) {
-		    
-		    if (response) {		
+		   
+		    if(response.Error) {
+			jQuery("#anova_message").empty();
+			showMessage(response.Error);
+			jQuery("#run_anova").show();
+		    } else {
+		    	
 			var anovaTable = response.anova_html_table;			
-		   	
+		   
 			jQuery("#anova_table").append('<div style="margin-top: 20px">' + anovaTable + '</div>').show();
 		
 			var anovaFile = response.anova_table_file;
@@ -182,12 +187,13 @@ function runAnovaAnalysis(traits) {
 			jQuery("#anova_message").empty();
 			
 			jQuery("#run_anova").show();
-		    } else {
-			showMessage("There is no anova output for this dataset."); 		
-			jQuery("#run_anova").show();
 		    }
-
+		    //} else {
+		//	showMessage("There is no anova output for this dataset."); 		
+		    jQuery("#run_anova").show();
+		 //   }
 		    clearTraitSelection();
+		    
 		},
 		error: function(response) {                          
 		    showMessage("Error occured running the anova analysis.");	    	

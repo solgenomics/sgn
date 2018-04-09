@@ -64,9 +64,15 @@ You can store the highlighted items in any selected box to lists. This is done u
 
 #### Downloading Data
 
-You can download phenotypes and genotypes associated with the highlighted items in the wizard select boxes. This is done using the buttons in the download section at the bottom of the page. **Don’t forget, you must be logged in to download data!**
+You can download trial meta-data, phenotypes and genotypes associated with the highlighted items in the wizard select boxes. This is done using the buttons in the download section at the bottom of the page. **Don’t forget, you must be logged in to download data!**
 
 ![]({{"assets/images/image321.png" | relative_url }})
+
+##### meta-data
+
+Trial meta-data can be downloaded by selecting a subset of trials from the database or based on your search categories.  To download, click on "Download Meta-data", a dialog will appear. Select download format and click the "Submit" button to complete your download. 
+
+![]({{"assets/images/wizard_metadata_download.png" | relative_url }})
 
 ##### Phenotypes
 

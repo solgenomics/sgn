@@ -116,6 +116,7 @@ sub _validate_with_plugin {
         #    push @error_messages, "Cell A$row_name: accession_name must not contain spaces or slashes.";
         #}
         else {
+            $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}=$row_name;
         }
 
@@ -183,6 +184,7 @@ sub _parse_with_plugin {
             $synonyms_string = $worksheet->get_cell($row,4)->value();
         }
         if ($accession_name){
+            $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_accession_names{$accession_name}++;
         }
         if ($species_name){
@@ -335,6 +337,8 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,4)) {
             @synonyms = split ',', $worksheet->get_cell($row,4)->value();
         }
+
+        $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
 
         if (!$accession_name && !$species_name) {
             next;

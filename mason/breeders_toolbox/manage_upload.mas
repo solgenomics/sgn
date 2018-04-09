@@ -3,6 +3,7 @@ $locations
 $breeding_programs
 $timestamp
 $preferred_species => ""
+$editable_stock_props => {}
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
@@ -48,7 +49,7 @@ $preferred_species => ""
 <tbody>
 <tr>
 <td>
-<a id="upload_trial_link"><p>Upload An Existing Trial</p></a>
+<a name="upload_trial_link"><p>Upload An Existing Trial</p></a>
 <a id="add_project_link"><p>Design A New Trial</p></a>
 <a id="add_multiloc_project_link"><p>Design New Multi-location Trial</p></a>
 </td>
@@ -121,7 +122,7 @@ $preferred_species => ""
 <tbody>
 <tr>
 <td>
-<a id="add_accessions_link"><p>Add Accessions Using List</p></a>
+<a name="add_accessions_link"><p>Add Accessions Using List</p></a>
 </td>
 <td>
 <a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
@@ -133,7 +134,7 @@ $preferred_species => ""
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
 
 <div class="well well-sm">
 <h1>Populations</h1><br/>
@@ -168,8 +169,8 @@ $preferred_species => ""
 <tbody>
 <tr>
 <td>
-<a id="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
-<a id="add_seedlot_button"><p>Add A Seedlot</p></a>
+<a name="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
+<a name="add_seedlot_button"><p>Add A Seedlot</p></a>
 </td>
 <td>
 <a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
@@ -219,8 +220,8 @@ $preferred_species => ""
 <a id="create_cross_wishlist" >Create Cross Wishlist</a>
 </td>
 <td>
-<a id="upload_crosses_link"><p>Upload Many New Crosses</p></a>
-<a id="create_cross_link"><p>Add A Cross</p></a>
+<a name="upload_crosses_link"><p>Upload Many New Crosses</p></a>
+<a name="create_cross_link"><p>Add A Cross</p></a>
 <a id="upload_progenies_existing_crosses"><p>Upload Progenies of Existing Crosses</p></a>
 <a id="upload_cross_info"><p>Upload Experimental Info of Existing Crosses</p></a>
 </td>

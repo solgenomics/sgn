@@ -36,6 +36,12 @@ has '_parsed_data' => (
     predicate => '_has_parsed_data',
 );
 
+has 'cross_properties' => (
+    is => 'ro',
+    isa => 'ArrayRef',
+    required => 0,
+);
+
 
 sub parse {
     my $self = shift;
