@@ -60,7 +60,7 @@ $genotyping_plate_sample_type => undef
                 </div>
             </div>
 
-            <button href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-primary">Download Intertek Formatted File</button>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-primary">Download Intertek Formatted File</a>
 
         </div>
         <div class="col-sm-3">
@@ -88,7 +88,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                     <div class="col-sm-11">
                         <h4>Plate Design Info</h4>
 
-                        <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout <button class='btn btn-sm btn-primary' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">xls</button> <button class='btn btn-sm btn-primary' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">csv</button>"  &>
+                        <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout <a class='btn btn-sm btn-primary' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">xls</a> <a class='btn btn-sm btn-primary' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">csv</a>"  &>
 
                             <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
                                 <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
@@ -119,7 +119,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                         <h4>Plate Layout</h4>
 
 % my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
-                        <&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ <button class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</button> } &>
+                        <&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ <a class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</a> } &>
 
                             <div class="well well-sm">
                                 <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>
@@ -153,7 +153,9 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 
 <script>
 
-  load_breeding_program_info(<% $trial_id %>);
-  load_genotyping_status_info(<% $plate_id %>);
+    jQuery(document).ready(function(){
+        load_breeding_program_info(<% $trial_id %>);
+        //load_genotyping_status_info(<% $plate_id %>);
+    });
 
 </script>
