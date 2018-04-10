@@ -266,7 +266,7 @@ $main_production_site_url
                         <span style="font-size:3.5em;" class="glyphicon glyphicon-list-alt"></span>
                     </div>
                     <div class="col-sm-11">
-                        <h4>Trial Design</h4>
+                        <h4>Trial Design Info</h4>
 
                         <&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>1, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button>' &>
 
@@ -522,6 +522,30 @@ $main_production_site_url
 
                         <&| /page/info_section.mas, title => 'Trial JBrowse', collapsible => 1, collapsed => 1 &>
                             <& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="well">
+                <div class="row">
+                    <div class="col-sm-1">
+                        <span style="font-size:3.5em;" class="glyphicon glyphicon-link"></span>
+                    </div>
+                    <div class="col-sm-11">
+                        <h4>Trial Linkage</h4>
+
+                        <&| /page/info_section.mas, title => 'Field Trial to Field Trial Linkage', id => 'field_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                            <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                        </&>
+                        <&| /page/info_section.mas, title => 'Field Trial to Genotyping Trial Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                            <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
+                        </&>
+                        <&| /page/info_section.mas, title => 'Field Trial to Crossing Trial Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                            <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                         </&>
                     </div>
                 </div>
