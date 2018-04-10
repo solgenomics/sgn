@@ -337,7 +337,9 @@ sub save_trial {
 		});
 	}
 
-    my $source_field_trial_ids = $self->set_field_trials_source_field_trials($self->field_trial_from_field_trial);
+    my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
+    my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
+    my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
 
 	my $design_type = $self->get_design_type();
 	if ($design_type eq 'greenhouse') {

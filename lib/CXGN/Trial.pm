@@ -385,7 +385,6 @@ sub set_field_trials_source_field_trials {
             });
         }
     }
-
     my $projects = $self->get_field_trials_source_field_trials();
     return $projects;
 }
@@ -410,7 +409,7 @@ sub get_field_trials_source_field_trials {
         'me.subject_project_id' => $self->get_trial_id(),
         'me.type_id' => $field_trial_from_field_trial_cvterm_id
     }, {
-        join => 'object', '+select' => ['object.name'], '+as' => ['source_trial_name']
+        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
     });
 
     my @projects;
@@ -419,6 +418,130 @@ sub get_field_trials_source_field_trials {
     }
     return  \@projects;
 }
+
+
+=head2 function get_genotyping_trials_from_field_trial()
+
+ Usage:
+ Desc:         return associated genotyping trials for a field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_trials_from_field_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.subject_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->object_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+=head2 function set_genotyping_trials_from_field_trial()
+
+ Usage:
+ Desc:         sets associated genotyping trials for a field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [genotyping_trial_id1, genotyping_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_genotyping_trials_from_field_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'subject_project_id' => $self->get_trial_id(),
+                'object_project_id' => $_,
+                'type_id' => $genotyping_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_genotyping_trials_from_field_trial();
+    return $projects;
+}
+
+
+=head2 function get_crossing_trials_from_field_trial()
+
+ Usage:
+ Desc:         return associated crossing trials for a field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_crossing_trials_from_field_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.subject_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->object_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+=head2 function set_crossing_trials_from_field_trial()
+
+ Usage:
+ Desc:         sets associated crossing trials for a field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [crossing_trial_id1, crossing_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_crossing_trials_from_field_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'subject_project_id' => $self->get_trial_id(),
+                'object_project_id' => $_,
+                'type_id' => $genotyping_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_crossing_trials_from_field_trial();
+    return $projects;
+}
+
+
 
 =head2 function get_project_type()
 
@@ -931,6 +1054,71 @@ sub set_genotyping_plate_sample_type {
     $self->_set_projectprop('genotyping_plate_sample_type', $value);
 }
 
+=head2 accessors get_plot_width(), set_plot_width()
+
+ Usage: For field trials, this records plot width in meters
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plot_width {
+    my $self = shift;
+    return $self->_get_projectprop('plot_width');
+}
+
+sub set_plot_width {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('plot_width', $value);
+}
+
+=head2 accessors get_plot_length(), set_plot_length()
+
+ Usage: For field trials, this records plot length in meters
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plot_length {
+    my $self = shift;
+    return $self->_get_projectprop('plot_length');
+}
+
+sub set_plot_length {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('plot_length', $value);
+}
+
+=head2 accessors get_field_size(), set_field_size()
+
+ Usage: For field trials, this recordsfield size in hectares
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_size {
+    my $self = shift;
+    return $self->_get_projectprop('field_size');
+}
+
+sub set_field_size {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('field_size', $value);
+}
 
 
 sub _get_projectprop {

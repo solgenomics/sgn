@@ -73,7 +73,7 @@ $main_production_site_url
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "[No Trial Name]";
+%   print "<span class='text-danger'>[No Trial Name]</span>";
 % }
                             </div>
                         </td>
@@ -87,7 +87,7 @@ $main_production_site_url
 %  print "$breeding_program_name";
 % }
 % else {
-%  print "No Breeding Program";
+%  print "<span class='text-danger'>[No Breeding Program]</span>";
 % }
                             </span>
                         </td>
@@ -100,7 +100,7 @@ $main_production_site_url
 % if ($location_name) {
 %  print "$location_name";
 % } else {
-%  print "[No Location]";
+%  print "<span class='text-danger'>[No Location]</span>";
 % }
                             </div>
                         </td>
@@ -113,7 +113,7 @@ $main_production_site_url
 % if ($year) {
 %  print "$year";
 % } else {
-%  print "[No Year]";
+%  print "<span class='text-danger'>[No Year]</span>";
 % }
                             </div>
                         </td>
@@ -126,7 +126,7 @@ $main_production_site_url
 % if ($trial_type) {
 %  print "$trial_type";
 % } else {
-% print "[Type not set]";
+% print "<span class='text-danger'>[Type not set]</span>";
 % }
                             </div>
                         </td>
@@ -139,7 +139,7 @@ $main_production_site_url
 % if ($planting_date) {
   <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
 % } else {
-%  print "[No Planting Date]";
+%  print "<span class='text-danger'>[No Planting Date]</span>";
 % }
                             </div>
                         </td>
@@ -152,7 +152,7 @@ $main_production_site_url
 % if ($harvest_date) {
   <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
 % } else {
-%  print "[No Harvest Date]";
+%  print "<span class='text-danger'>[No Harvest Date]</span>";
 % }
                             </div>
                         </td>
@@ -164,7 +164,7 @@ $main_production_site_url
 % if ($trial_description) {
 %  print "$trial_description";
 % } else {
-%  print "[No Description]";
+%  print "<span class='text-danger'>[No Description]</span>";
 % }
                             </div>
                         </td>
