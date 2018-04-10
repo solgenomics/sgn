@@ -602,7 +602,6 @@ jQuery(document).ready( function() {
                 var controls = response.controls;
                 var plots = response.plot_numbers;
                 var stocks = response.stocks;
-                //console.log(stocks); console.log(plots);
                 if (controls){
                     list_of_checks = controls;
                     for (var i = 0; i < stocks.length; i++) {
@@ -1113,7 +1112,6 @@ jQuery(document).ready( function() {
   
   function heatmap_check_change(value) {
       var val = jQuery("#check_list_dropdown").val(value);
-      //console.log(value);
       var ret = value.split(",");
       var valStock = ret[0];
       var valPlot = ret[1];
@@ -1124,8 +1122,7 @@ jQuery(document).ready( function() {
        jQuery("#view_ctrl_button").css("display", "none");
        jQuery("#ctrldiv").css("display", "inline-block");
        
-       var list_of_checks = checks; 
-       //console.log(list_of_checks); 
+       var list_of_checks = checks;  
        var trial_checks_html = "<select class='form-control' id='check_list_dropdown'>";
        trial_checks_html = trial_checks_html + "<option value=''>checks and plot numbers</option>";
        jQuery.each(list_of_checks, function( key, value) {
@@ -1134,35 +1131,8 @@ jQuery(document).ready( function() {
        trial_checks_html = trial_checks_html +"</select>";
        jQuery("#heatmap_trial_checks_dropdown").html(trial_checks_html);
        jQuery("#heatmap_trial_checks_dropdown>select").change(function(){
-           //console.log(this.value);
            heatmap_check_change(this.value);
        });
-  //     new jQuery.ajax({
-  //         type: 'POST',
-  //         traditional: true,
-  //         url: '/ajax/breeders/trial/<% $trial_id %>/heatmapChecks',
-  //         dataType: "json",
-  //         data: {
-  //             'list_of_checks': JSON.stringify(list_of_checks),
-  //             'ctrlFuncDataset': JSON.stringify(ctrlFuncDataset),
-  //         },
-  //         beforeSend: function(){
-  //             jQuery("#working_modal").modal("show");
-  //         },
-  //         success: function(response){
-  //             jQuery("#working_modal").modal("hide");
-  //             if (response.error){
-  //                 alert("Error adjusting stock means:" +response.error);
-  //             }else{
-  //                 jQuery("#delete_trait_dialog_success_message").modal("show");
-  //             }
-  //         },
-  //         error: function(){
-  //             jQuery('#working_modal').modal("hide");
-  //             alert('An error occurred adjusting stock means');
-  //         }
-  //     });
-  //     
    });
       
 });
