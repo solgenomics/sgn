@@ -490,9 +490,9 @@ sub save_experimental_design_POST : Args(0) {
     my $plot_length = $c->req->param('plot_length');
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('field_trial_is_planned_to_be_genotyped');
     my $field_trial_is_planned_to_cross = $c->req->param('field_trial_is_planned_to_cross');
-    my $add_project_trial_source = $c->req->param('add_project_trial_source');
-    my $add_project_trial_genotype_trial = $c->req->param('add_project_trial_genotype_trial');
-    my $add_project_trial_crossing_trial = $c->req->param('add_project_trial_crossing_trial');
+    my $add_project_trial_source = $c->req->param('add_project_trial_source[]');
+    my $add_project_trial_genotype_trial = $c->req->param('add_project_trial_genotype_trial[]');
+    my $add_project_trial_crossing_trial = $c->req->param('add_project_trial_crossing_trial[]');
     my $add_project_trial_source_select = ref($add_project_trial_source) eq 'ARRAY' ? $add_project_trial_source : [$add_project_trial_source];
     my $add_project_trial_genotype_trial_select = ref($add_project_trial_genotype_trial) eq 'ARRAY' ? $add_project_trial_genotype_trial : [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = ref($add_project_trial_crossing_trial) eq 'ARRAY' ? $add_project_trial_crossing_trial : [$add_project_trial_crossing_trial];

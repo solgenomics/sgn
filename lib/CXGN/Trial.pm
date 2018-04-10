@@ -362,7 +362,7 @@ sub get_breeding_programs {
 =head2 function set_field_trials_source_field_trials()
 
  Usage:
- Desc:         sets associated source field trials for a field trial
+ Desc:         sets associated source field trials for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:         an arrayref [source_trial_id1, source_trial_id2]
  Side Effects:
@@ -392,7 +392,7 @@ sub set_field_trials_source_field_trials {
 =head2 function get_field_trials_source_field_trials()
 
  Usage:
- Desc:         return associated source field trials for a field trial
+ Desc:         return associated source field trials for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:
  Side Effects:
@@ -419,11 +419,10 @@ sub get_field_trials_source_field_trials {
     return  \@projects;
 }
 
-
-=head2 function get_genotyping_trials_from_field_trial()
+=head2 function get_field_trials_sourced_from_field_trials()
 
  Usage:
- Desc:         return associated genotyping trials for a field trial
+ Desc:         return associated source field trials for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:
  Side Effects:
@@ -431,21 +430,21 @@ sub get_field_trials_source_field_trials {
 
 =cut
 
-sub get_genotyping_trials_from_field_trial {
+sub get_field_trials_sourced_from_field_trials {
     my $self = shift;
     my $schema = $self->bcs_schema;
-    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+    my $field_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_trial_from_field_trial', 'project_relationship')->cvterm_id();
 
     my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
-        'me.subject_project_id' => $self->get_trial_id(),
-        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $field_trial_from_field_trial_cvterm_id
     }, {
-        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['trial_name']
     });
 
     my @projects;
     while (my $r = $trial_rs->next) {
-        push @projects, [ $r->object_project_id, $r->get_column('source_trial_name') ];
+        push @projects, [ $r->subject_project_id, $r->get_column('trial_name') ];
     }
     return  \@projects;
 }
@@ -453,7 +452,7 @@ sub get_genotyping_trials_from_field_trial {
 =head2 function set_genotyping_trials_from_field_trial()
 
  Usage:
- Desc:         sets associated genotyping trials for a field trial
+ Desc:         sets associated genotyping trials for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:         an arrayref [genotyping_trial_id1, genotyping_trial_id2]
  Side Effects:
@@ -480,11 +479,10 @@ sub set_genotyping_trials_from_field_trial {
     return $projects;
 }
 
-
-=head2 function get_crossing_trials_from_field_trial()
+=head2 function get_genotyping_trials_from_field_trial()
 
  Usage:
- Desc:         return associated crossing trials for a field trial
+ Desc:         return associated genotyping trials for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:
  Side Effects:
@@ -492,10 +490,10 @@ sub set_genotyping_trials_from_field_trial {
 
 =cut
 
-sub get_crossing_trials_from_field_trial {
+sub get_genotyping_trials_from_field_trial {
     my $self = shift;
     my $schema = $self->bcs_schema;
-    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
 
     my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
         'me.subject_project_id' => $self->get_trial_id(),
@@ -511,10 +509,41 @@ sub get_crossing_trials_from_field_trial {
     return  \@projects;
 }
 
+=head2 function get_field_trials_source_of_genotyping_trial()
+
+ Usage:
+ Desc:         return associated field trials for current genotying trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_source_of_genotyping_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->subject_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+
 =head2 function set_crossing_trials_from_field_trial()
 
  Usage:
- Desc:         sets associated crossing trials for a field trial
+ Desc:         sets associated crossing trials for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:         an arrayref [crossing_trial_id1, crossing_trial_id2]
  Side Effects:
@@ -541,6 +570,65 @@ sub set_crossing_trials_from_field_trial {
     return $projects;
 }
 
+=head2 function get_crossing_trials_from_field_trial()
+
+ Usage:
+ Desc:         return associated crossing trials for athe current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_crossing_trials_from_field_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.subject_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->object_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+=head2 function get_field_trials_source_of_crossing_trial()
+
+ Usage:
+ Desc:         return associated crossing trials for athe current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_source_of_crossing_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->subject_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
 
 
 =head2 function get_project_type()
