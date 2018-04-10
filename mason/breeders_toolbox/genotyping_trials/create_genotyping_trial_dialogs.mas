@@ -9,24 +9,34 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="addGenoTrialDialog">Add Genotyping Trial</h4>
-                <br/>
-                <ul class="nav nav-tabs">
-                    <li role="presentation" class="active"><a data-toggle="tab" href="#add_genotyping_trial_home"><span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;&nbsp;Plate Information</a></li>
-                    <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_wells"><span class="glyphicon glyphicon-th"></span>&nbsp;&nbsp;&nbsp;Well Information</a></li>
-                    <li role="presentation"><a data-toggle="tab" href="#add_genotyping_trial_confirm"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;&nbsp;Confirm</a></li>
-                </ul>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form" action="/ajax/breeders/genotypetrial">
+                    <&| /util/workflow.mas, id=> "genotyping_trial_create_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through adding a genotyping trial in the database" &>
+                            <p>Genotyping trials represent 96 or 384 well plates.</p>
+                            <p>Each plate has a globally unique Plate ID.</p>
+                            <p>Each well in the plate has a globally unique tissue sample ID.</p>
+                            <p>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
+                            <p>If you choose to submit your genotyping trial to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
 
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
 
-                        <div class="tab-content">
-                            <div id="add_genotyping_trial_home" class="tab-pane fade in active">
+                        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form" action="/ajax/breeders/genotypetrial">
+
+                            <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
+                                <& /page/page_title.mas, title=>"Provide info about your plate" &>
+                                <br/><br/>
+
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Facility: </label>
-                                    <div class="col-sm-7">
+                                    <label class="col-sm-7 control-label">Genotyping Facility: </label>
+                                    <div class="col-sm-5">
                                         <select class="form-control" id="genotyping_trial_facility_select">
                                             <option value="none">None</option>
                                             <option value="igd">Cornell IGD</option>
@@ -34,19 +44,19 @@
                                             <option value="bgi">BGI</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>-In Coordinate App this is called "Plate ID"<br/>-Should match Vendor Project if you have one</small></label>
-                                    <div class="col-sm-7">
+                                    <label class="col-sm-7 control-label">Genotyping Project Name: <br/><small>-In Coordinate App this is called "Plate ID"<br/>-Should match Vendor Project if you have one</small></label>
+                                    <div class="col-sm-5">
                                         <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="e.g. NextGenCassava"/>
                                     </div>
-                                </div>
+                                </div><br/><br/><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"</small></label>
-                                    <div class="col-sm-7">
+                                    <label class="col-sm-7 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"</small></label>
+                                    <div class="col-sm-5">
                                         <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" placeholder=" e.g. 18DNA00001"/>
                                     </div>
-                                </div>
+                                </div><br/><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Plate Format: </label>
                                     <div class="col-sm-7">
@@ -55,7 +65,7 @@
                                             <option value="384">384 Well</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Sample Type: </label>
                                     <div class="col-sm-7">
@@ -63,33 +73,41 @@
                                             <option value="DNA">DNA</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Breeding Program: </label>
                                     <div class="col-sm-7">
                                         <span id="breeding_program_select_div"></span>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Location: </label>
                                     <div class="col-sm-7">
                                         <span id="location_select_div"></span>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Year: </label>
                                     <div class="col-sm-7">
                                         <span id="year_select_div"></span>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Description: </label>
                                     <div class="col-sm-7">
                                         <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description" maxlength="250"></textarea>
                                     </div>
-                                </div>
-                            </div>
-                            <div id="add_genotyping_trial_wells" class="tab-pane fade in">
+                                </div><br/><br/>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Well Info" &>
+                                <& /page/page_title.mas, title=>"Provide information about the wells in your plate" &>
+                                <br/><br/>
+
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Select One: </label>
                                     <div class="col-sm-9">
@@ -99,7 +117,7 @@
                                             <option value="design">I need to design a completely new plate</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div><br/><br/>
 
                                 <div id="genotyping_trial_well_upload_section">
                                     <h3>You want to upload an existing plate layout</h3>
@@ -173,71 +191,77 @@
                                             <li>Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill 95 wells you should supply a list of 95 elements.</li>
                                             <li>Note: From the most desirable to least desirable list type you can choose: tissue samples, plants, plots, or accessions</li>
                                         </ul>
-                                        <div class="form-group">
-                                            <label class="col-sm-6 control-label">Source Observation Unit List: </label>
-                                            <div class="col-sm-6">
-                                                <span id="accession_select_box_span">[loading...]</span>
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-7 control-label">Source Observation Unit List: </label>
+                                        <div class="col-sm-5">
+                                            <span id="accession_select_box_span">[loading...]</span>
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small></label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_concentration" name="genotyping_well_concentration" type="text" />
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_concentration" name="genotyping_well_concentration" type="text" />
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_volume" name="genotyping_well_volume" type="text" />
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_volume" name="genotyping_well_volume" type="text" />
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all wells)</small> </label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_tissue" name="genotyping_well_tissue" type="text" />
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all wells)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_tissue" name="genotyping_well_tissue" type="text" />
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> NCBI Taxonomy ID: <small>(Official NCBI ID.)</small> </label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_ncbi_taxonomy_id" name="genotyping_well_ncbi_taxonomy_id" type="text" />
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> NCBI Taxonomy ID: <small>(Official NCBI ID.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_ncbi_taxonomy_id" name="genotyping_well_ncbi_taxonomy_id" type="text" />
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Extraction: <small>(If used the same extraction for all wells)</small> </label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_extraction" name="genotyping_well_extraction" type="text" />
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Extraction: <small>(If used the same extraction for all wells)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_extraction" name="genotyping_well_extraction" type="text" />
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Person: <small>(If same person prepared all wells.)</small> </label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_dna_person" name="genotyping_well_dna_person" type="text" />
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Person: <small>(If same person prepared all wells.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_dna_person" name="genotyping_well_dna_person" type="text" />
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Date: <small>(If plated on same date. YYYY/MM/DD)</small> </label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" placeholder="YYYY/MM/DD"/>
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Date: <small>(If plated on same date. YYYY/MM/DD)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" placeholder="YYYY/MM/DD"/>
                                         </div>
-                                        <div class="form-group form-group-sm">
-                                            <label class="col-sm-6 control-label"><i>Optional</i> Notes: <small>(Additional notes for these wells.)</small> </label>
-                                            <div class="col-sm-6">
-                                                <input class="form-control" id="genotyping_well_notes" name="genotyping_well_notes" type="text" />
-                                            </div>
+                                    </div><br/><br/>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Notes: <small>(Additional notes for these wells.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_notes" name="genotyping_well_notes" type="text" />
                                         </div>
-                                    </div>
+                                    </div><br/><br/>
                                 </div>
 
-                            </div>
-                            <div id="add_genotyping_trial_confirm" class="tab-pane fade in">
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Confirm" &>
+                                <& /page/page_title.mas, title=>"Finalize and submit your genotyping trial" &>
+
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <br/><small>Automatic submission currently not working. You can submit it from the Genotyping Trial's detail page or download the information from the Genotyping Trials's detail page and submit it yourself after clicking Submit</small></label>
                                     <div class="col-sm-7">
@@ -251,12 +275,24 @@
                                 <center>
                                 <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
                                 </center>
-                            </div>
+                            </&>
+                            <&| /util/workflow.mas:complete, title=> "Complete" &>
+                                <& /page/page_title.mas, title=>"Complete! Your genotyping trial was saved in the database." &>
 
-                        </div>
+                                <p>
+                                    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                    The trial was saved successfully
+                                </p>
 
-                    </div>
-                </form>
+                                <ul>
+                                    <li>You may want to proceed to the genotyping trial detail page for the trial you just created.</li>
+                                    <li>You can print barcodes for the plate and tissue samplesl.</li>
+                                </ul>
+                                <br/>
+                            </&>
+                        </form>
+                    </&>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

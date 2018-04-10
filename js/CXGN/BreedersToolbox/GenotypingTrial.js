@@ -306,7 +306,9 @@ jQuery(document).ready(function ($) {
                     if (plate_data.genotyping_facility_submit == 'yes'){
                         submit_plate_to_gdf(brapi_plate_data);
                     } else {
-                        location.reload();
+                        Workflow.complete('#add_geno_trial_submit');
+                        Workflow.focus("#genotyping_trial_create_workflow", -1); //Go to success page
+                        Workflow.check_complete("#genotyping_trial_create_workflow");
                     }
                 }
             },
