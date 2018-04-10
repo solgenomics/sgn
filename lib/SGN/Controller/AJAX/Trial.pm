@@ -431,7 +431,9 @@ sub generate_experimental_design_POST : Args(0) {
         my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
         my $field_size_m = $field_size * 10000;
         if ($field_size_m < $total_area){
-            $warning_message = "The generated design would require atleast $total_area square meters, which is larger than the $field_size hectare ($field_size_m square meter) field size you indicated.";
+            $warning_message = "The generated design would require atleast $total_area square meters, which is larger than the $field_size hectare ($field_size_m square meters) field size you indicated.";
+        } else {
+            $warning_message = "The generated design would require atleast $total_area square meters and your field size is $field_size hectare ($field_size_m square meters).";
         }
     }
 
@@ -478,7 +480,7 @@ sub save_experimental_design_POST : Args(0) {
     my @locations;
     my $trial_location;
     my $multi_location;
-    print STDERR Dumper $c->req->params();
+    #print STDERR Dumper $c->req->params();
     my $trial_locations = $c->req->param('trial_location');
     my $trial_name = $c->req->param('project_name');
     my $trial_type = $c->req->param('trial_type');
