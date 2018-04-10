@@ -26,9 +26,22 @@ jQuery(document).ready(function ($) {
     get_select_box("breeding_programs", "breeding_program_select_div", {});
     get_select_box("years", "year_select_div", {});
 
-    get_select_box("locations", "location_select_div", {});
-    get_select_box("breeding_programs", "breeding_program_select_div", {});
-    get_select_box("years", "year_select_div", {});
+    jQuery(document).on('change', '#breeding_program_select', function(){
+        populate_genotyping_trial_linkage_selects();
+    })
+
+    function populate_genotyping_trial_linkage_selects(){
+        get_select_box('trials', 'add_genotyping_trial_source_trial', {'id':'add_genotyping_trial_source_select', 'name':'add_genotyping_trial_source_select', 'breeding_program_id':jQuery('#breeding_program_select').val(), 'multiple':1, 'empty':1} );
+    }
+
+    jQuery('#add_genotyping_trial_sourced_trial_q').change(function(){
+        var val = jQuery(this).val();
+        if(val == 'yes'){
+            jQuery('#add_genotyping_trial_source_trial_section').show();
+        } else {
+            jQuery('#add_genotyping_trial_source_trial_section').hide();
+        }
+    });
 
     jQuery(function() {
         jQuery( "#genotyping_trials_accordion" ).accordion({
@@ -100,6 +113,7 @@ jQuery(document).ready(function ($) {
 
     function open_genotyping_trial_dialog () {
         jQuery('#genotyping_trial_dialog').modal("show");
+        populate_genotyping_trial_linkage_selects();
     }
 
     jQuery('#create_genotyping_trial_link').click(function() {
@@ -286,14 +300,17 @@ jQuery(document).ready(function ($) {
     function store_plate(plate_data) {
         //console.log(plate_data);
         var brapi_plate_data = new Object();
-        $.ajax({
+        var add_project_trial_source_select = jQuery('#add_genotyping_trial_source_select').val();
+
+        jQuery.ajax({
             url: '/ajax/breeders/storegenotypetrial',
             method: 'POST',
             beforeSend: function(){
                 jQuery("#working_modal").modal('show');
             },
             data: {
-                'plate_data': JSON.stringify(plate_data)
+                'plate_data': JSON.stringify(plate_data),
+                'add_project_trial_source': add_project_trial_source_select,
             },
             success : function(response) {
                 jQuery("#working_modal").modal('hide');

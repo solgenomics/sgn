@@ -259,18 +259,46 @@
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                                 </center>
                             </&>
+                            <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
+                                <& /page/page_title.mas, title=>"Is your genotyping trial linked with field trials in the database?" &>
+
+                                <br/>
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Is this genotyping trial sourced from a field trial?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_genotyping_trial_sourced_trial_q" name="add_genotyping_trial_sourced_trial_q">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group" style="display:none" id="add_genotyping_trial_source_trial_section">
+                                        <label class="col-sm-5 control-label">Select the field trial(s): </label>
+                                        <div class="col-sm-7">
+                                            <div id="add_genotyping_trial_source_trial" name="add_genotyping_trial_source_trial">
+                                            </div>
+                                        </div><br/><br/>
+                                    </div><br/><br/>
+                                </div>
+
+                                <br/>
+                                <center>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this);" >Continue to Next Step</button>
+                                <center>
+                            </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
                                 <& /page/page_title.mas, title=>"Finalize and submit your genotyping trial" &>
 
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <br/><small>Automatic submission currently not working. You can submit it from the Genotyping Trial's detail page or download the information from the Genotyping Trials's detail page and submit it yourself after clicking Submit</small></label>
+                                    <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <small>Automatic submission currently not working. You can submit it from the Genotyping Trial's detail page or download the information from the Genotyping Trials's detail page and submit it yourself after clicking Submit</small></label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_trial_facility_submit_select" disabled>
                                             <option value="no">No</option>
                                             <option value="yes">Yes</option>
                                         </select>
                                     </div>
-                                </div>
+                                </div><br/><br/>
                                 <hr>
                                 <center>
                                 <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>

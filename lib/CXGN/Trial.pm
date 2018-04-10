@@ -509,6 +509,36 @@ sub get_genotyping_trials_from_field_trial {
     return  \@projects;
 }
 
+=head2 function set_source_field_trials_for_genotyping_trial()
+
+ Usage:
+ Desc:         sets associated field trials for the current genotyping trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [field_trial_id1, field_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_source_field_trials_for_genotyping_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'object_project_id' => $self->get_trial_id(),
+                'subject_project_id' => $_,
+                'type_id' => $genotyping_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_field_trials_source_of_genotyping_trial();
+    return $projects;
+}
+
 =head2 function get_field_trials_source_of_genotyping_trial()
 
  Usage:

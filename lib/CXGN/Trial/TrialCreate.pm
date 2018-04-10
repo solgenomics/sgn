@@ -32,6 +32,11 @@ Will do the following:
         field_size => $field_size, #(ha)
         plot_width => $plot_width, #(m)
         plot_length => $plot_length, #(m)
+        field_trial_is_planned_to_cross => 'yes', #yes or no
+        field_trial_is_planned_to_be_genotyped => 'no', #yes or no
+        field_trial_from_field_trial => ['source_trial_id1', 'source_trial_id2'],
+        genotyping_trial_from_field_trial => ['genotyping_trial_id1'],
+        crossing_trial_from_field_trial => ['crossing_trial_id1']
     });
     try {
         $trial_create->save_trial();
@@ -59,6 +64,7 @@ Will do the following:
         genotyping_facility => $plate_info->{genotyping_facility},
         genotyping_plate_format => $plate_info->{plate_format},
         genotyping_plate_sample_type => $plate_info->{sample_type},
+        genotyping_trial_from_field_trial => ['field_trial_id1'],
     });
     try {
         $ct->save_trial();
@@ -152,12 +158,17 @@ has 'field_size' => (isa => 'Num', is => 'rw', predicate => 'has_field_size', re
 has 'plot_width' => (isa => 'Num', is => 'rw', predicate => 'has_plot_width', required => 0);
 has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
-has 'field_trial_is_planned_to_cross' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_cross', required => 1);
-has 'field_trial_is_planned_to_be_genotyped' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_be_genotyped', required => 1);
-has 'field_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_field_trial_from_field_trial', required => 1);
-has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_genotyping_trial_from_field_trial', required => 1);
-has 'crossing_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_crossing_trial_from_field_trial', required => 1);
 
+#Trial linkage when saving a field trial
+has 'field_trial_is_planned_to_cross' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_cross', required => 0);
+has 'field_trial_is_planned_to_be_genotyped' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_be_genotyped', required => 0);
+has 'field_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_field_trial_from_field_trial', required => 0);
+has 'crossing_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_crossing_trial_from_field_trial', required => 0);
+
+#Trial linkage when saving either a field trial or genotyping trial
+has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_genotyping_trial_from_field_trial', required => 0);
+
+#Properties for genotyping trials
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
@@ -256,6 +267,11 @@ sub save_trial {
 		description => $self->get_trial_description(),
 	});
 
+    my $t = CXGN::Trial->new({
+		bcs_schema => $chado_schema,
+		trial_id => $project->project_id()
+	});
+
 	my $nd_experiment_type_id;
 	if (!$self->get_is_genotyping) {
 		$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
@@ -282,12 +298,14 @@ sub save_trial {
             $genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
             $genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
         });
-	}
 
-	my $t = CXGN::Trial->new({
-		bcs_schema => $chado_schema,
-		trial_id => $project->project_id()
-	});
+        my $source_field_trial_ids = $t->set_source_field_trials_for_genotyping_trial($self->get_genotyping_trial_from_field_trial);
+	} else {
+        my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
+        my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
+        my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
+    }
+
 	$t->set_location($geolocation->nd_geolocation_id()); # set location also as a project prop
 	$t->set_breeding_program($self->get_breeding_program_id);
 	if ($self->get_trial_type){
@@ -336,10 +354,6 @@ sub save_trial {
 			$field_trial_is_planned_to_be_genotyped_cvterm->name() => $self->get_field_trial_is_planned_to_be_genotyped
 		});
 	}
-
-    my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
-    my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
-    my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
 
 	my $design_type = $self->get_design_type();
 	if ($design_type eq 'greenhouse') {

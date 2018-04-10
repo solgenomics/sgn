@@ -284,6 +284,8 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("plate_data");
+    my $add_project_trial_source = $c->req->param('add_project_trial_source[]');
+    my $add_project_trial_source_select = ref($add_project_trial_source) eq 'ARRAY' ? $add_project_trial_source : [$add_project_trial_source];
     #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
@@ -327,6 +329,7 @@ sub store_genotype_trial_POST : Args(0) {
             genotyping_facility => $plate_info->{genotyping_facility},
             genotyping_plate_format => $plate_info->{plate_format},
             genotyping_plate_sample_type => $plate_info->{sample_type},
+            genotyping_trial_from_field_trial => $add_project_trial_source_select,
         });
 
         $message = $ct->save_trial();
