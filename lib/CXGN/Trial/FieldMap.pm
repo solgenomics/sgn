@@ -145,7 +145,7 @@ sub display_fieldmap {
 		
     }
 	@layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
-	
+	my @plot_numbers;
 	my $false_coord;
 	if (scalar(@col_numbers) < 1){
         @col_numbers = ();
@@ -164,6 +164,7 @@ sub display_fieldmap {
 	}
 	my $plot_popUp;
 	foreach my $hash (@layout_info){
+        push @plot_numbers, $hash->{'plot_number'};
 		if (scalar(@{$hash->{"plant_names"}}) < 1) {
 			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
 		}
@@ -254,6 +255,7 @@ sub display_fieldmap {
 		plot_name => \@plot_name,
 		plot_id => \@plot_id,
 		plot_number => \@plot_number,
+        plot_numbers => \@plot_numbers,
 		max_rep => $max_rep,
 		max_block => $max_block,
 		sudo_plot_no => \@plotcnt,
