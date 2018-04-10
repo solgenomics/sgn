@@ -754,6 +754,18 @@ sub upload_trial_file_POST : Args(0) {
     my $trial_type = $c->req->param('trial_upload_trial_type');
     my $trial_description = $c->req->param('trial_upload_description');
     my $trial_design_method = $c->req->param('trial_upload_design_method');
+    my $field_size = $c->req->param('trial_upload_field_size');
+    my $plot_width = $c->req->param('trial_upload_plot_width');
+    my $plot_length = $c->req->param('trial_upload_plot_length');
+    my $field_trial_is_planned_to_be_genotyped = $c->req->param('upload_trial_trial_will_be_genotyped');
+    my $field_trial_is_planned_to_cross = $c->req->param('upload_trial_trial_will_be_crossed');
+    my $add_project_trial_source = $c->req->param('upload_trial_trial_source_select');
+    my $add_project_trial_genotype_trial = $c->req->param('upload_trial_trial_genotype_trial_select');
+    my $add_project_trial_crossing_trial = $c->req->param('upload_trial_trial_crossing_trial_select');
+    my $add_project_trial_source_select = ref($add_project_trial_source) eq 'ARRAY' ? $add_project_trial_source : [$add_project_trial_source];
+    my $add_project_trial_genotype_trial_select = ref($add_project_trial_genotype_trial) eq 'ARRAY' ? $add_project_trial_genotype_trial : [$add_project_trial_genotype_trial];
+    my $add_project_trial_crossing_trial_select = ref($add_project_trial_crossing_trial) eq 'ARRAY' ? $add_project_trial_crossing_trial : [$add_project_trial_crossing_trial];
+
     my $upload = $c->req->upload('trial_uploaded_file');
     my $parser;
     my $parsed_data;
@@ -851,7 +863,7 @@ sub upload_trial_file_POST : Args(0) {
     my $save;
     my $coderef = sub {
 
-        my $trial_create = CXGN::Trial::TrialCreate->new({
+        my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
             trial_year => $trial_year,
@@ -864,8 +876,25 @@ sub upload_trial_file_POST : Args(0) {
             design => $parsed_data,
             program => $program,
             upload_trial_file => $upload,
-            operator => $c->user()->get_object()->get_username()
-        });
+            operator => $c->user()->get_object()->get_username(),
+            field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
+            field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
+            field_trial_from_field_trial => $add_project_trial_source_select,
+            genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
+            crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+        );
+
+        if ($field_size){
+            $trial_info_hash{field_size} = $field_size;
+        }
+        if ($plot_width){
+            $trial_info_hash{plot_width} = $plot_width;
+        }
+        if ($plot_length){
+            $trial_info_hash{plot_length} = $plot_length;
+        }
+
+        my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         $save = $trial_create->save_trial();
 
         if ($save->{error}){
