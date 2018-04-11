@@ -394,6 +394,14 @@ sub studies_layout {
 			if ($design->{$plot_number}->{plant_ids}){
 				$additional_info{plantDbIds} = $design->{$plot_number}->{plant_ids};
 			}
+            my $image_id = CXGN::Stock->new({
+    			schema => $self->bcs_schema,
+    			stock_id => $design->{$plot_number}->{plot_id},,
+    		});
+    		my @plot_image_ids = $image_id->get_image_ids();
+            $additional_info{plotImageDbIds} = \@plot_image_ids;
+            $additional_info{plotNumber} = $plot_number;
+             
 			$formatted_plot = {
 				studyDbId => $study_id,
 				observationUnitDbId => $design->{$plot_number}->{plot_id},
