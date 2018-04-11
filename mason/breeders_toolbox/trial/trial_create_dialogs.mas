@@ -514,7 +514,7 @@ rect.bordered {
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database?" &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
                                 <br/>
                                 <div class="well">
