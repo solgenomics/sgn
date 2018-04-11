@@ -552,6 +552,44 @@ $main_production_site_url
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="well">
+                <div class="row">
+                    <div class="col-sm-1">
+                        <span style="font-size:3.5em;" class="glyphicon glyphicon-trash"></span>
+                    </div>
+                    <div class="col-sm-11">
+                        <h4>Trial Deletion</h4>
+
+                        <&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+                          <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="well">
+                <div class="row">
+                    <div class="col-sm-1">
+                        <span style="font-size:3.5em;" class="glyphicon glyphicon-inbox"></span>
+                    </div>
+                    <div class="col-sm-11">
+                        <h4>Data Agreement</h4>
+
+% my $data_agreement_link = '<button class="btn btn-sm btn-default" disabled style="margin:3px">Add/edit data agreement</button>';
+% if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-default" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
+                        <&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> $data_agreement_link  &>
+                            <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </&>
 
 <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name" &>
@@ -573,17 +611,6 @@ $main_production_site_url
 <& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $trial_id &>
-
-
-% my $data_agreement_link = '<button class="btn btn-sm btn-default" disabled style="margin:3px">Add/edit data agreement</button>';
-% if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-default" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
-<&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> $data_agreement_link  &>
-<& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
-</&>
-
-<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
-  <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
-</&>
 
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
