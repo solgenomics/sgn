@@ -350,8 +350,7 @@ sub run_anova {
     my $output_file = $c->stash->{anova_output_files};
 
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{anova_temp_dir};
-    $c->stash->{r_temp_file} = "anova-${trial_id}-${trait_id}";
-    
+   
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "anova-${trial_id}-${trait_id}";
