@@ -4347,24 +4347,14 @@ sub submit_cluster_phenotype_query {
 
     $c->stash->{r_temp_file} = 'phenotype-data-query';
     $self->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
+    my $out_file = $c->stash->{out_file_temp};
+    my $err_file = $c->stash->{err_file_temp};
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $config = {
-
-	    backend => $c->config->{backend},
-	    temp_base => $temp_dir,
-	    queue => $c->config->{'web_cluster_queue'},
-	    max_cluster_jobs => 1_000_000_000,
-	    is_async         => 0,
-	    out_file         => $out_temp_file,
-	    err_file         => $err_temp_file,
-	    do_cleanup       => 0,
-	};
-
+    my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
+    
     my $args_file = $self->create_tempfile($temp_dir, 'pheno-data-args_file');
     
     nstore $args, $args_file 
@@ -4405,23 +4395,13 @@ sub submit_cluster_genotype_query {
 
     $c->stash->{r_temp_file} = 'genotype-data-query';
     $self->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
+    my $out_file = $c->stash->{out_file_temp};
+    my $err_file = $c->stash->{err_file_temp};
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
-  
-    my $config = {
 
-	    backend => $c->config->{backend},
-	    temp_base => $temp_dir,
-	    queue => $c->config->{'web_cluster_queue'},
-	    max_cluster_jobs => 1_000_000_000,
-	    is_async         => 0,
-	    out_file         => $out_temp_file,
-	    err_file         => $err_temp_file,
-	    do_cleanup       => 0,
-	};
+    my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
 
     my $args_file = $self->create_tempfile($temp_dir, 'geno-data-args_file');
 
@@ -4967,25 +4947,15 @@ sub create_cluster_accesible_tmp_files {
     my $temp_file_template = $c->stash->{r_temp_file};
 
     my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
-   
-    my ( $in_file_temp, $out_file_temp, $err_file_temp) =
-        map 
-    {
-        my ( undef, $filename ) =
-            tempfile(
-                catfile(
-                    $temp_dir,
-                    "${temp_file_template}-$_-XXXXXX",
-                ),
-            );
-        $filename
-    } 
-    qw / in out err/;
 
+    my $in_file  = $self->create_tempfile($temp_dir, "${temp_file_template}-in");
+    my $out_file = $self->create_tempfile($temp_dir, "${temp_file_template}-out");
+    my $err_file = $self->create_tempfile($temp_dir, "${temp_file_template}-err");
+    
     $c->stash( 
-	in_file_temp  => $in_file_temp,
-	out_file_temp => $out_file_temp,
-	err_file_temp => $err_file_temp,
+	in_file_temp  => $in_file,
+	out_file_temp => $out_file,
+	err_file_temp => $err_file,
 	);
 
 }
@@ -5042,26 +5012,16 @@ sub run_async {
 
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_accesible_tmp_files($c);
+    my $err_file = $c->stash->{err_file_temp};
+    my $out_file = $c->stash->{out_file_temp};
 
-    my $err_file_temp = $c->stash->{err_file_temp};
-    my $out_file_temp = $c->stash->{out_file_temp};
-
-
-    my $config = {
-	temp_base        => $c->stash->{solgs_tempfiles_dir},
-	max_cluster_jobs => 1_000_000_000,
-	out_file         => $out_file_temp,
-	err_file         => $err_file_temp,
-	backend          => $c->config->{backend},
-	queue            => $c->config->{web_cluster_queue},
-	is_async         => 1,
-	
-    };
+    my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
 
     eval 
     {
 	my $job = CXGN::Tools::Run->new($config);
 	$job->do_not_cleanup(1);
+	$job->is_async(1);
 	$job->run_cluster($cmd);
 	
 	$c->stash->{r_job_tempdir} = $job->tempdir();
@@ -5085,9 +5045,9 @@ sub run_r_script {
     my $output_files = $c->stash->{output_files};
 
     $self->create_cluster_accesible_tmp_files($c);
-    my $in_file_temp   = $c->stash->{in_file_temp};
-    my $out_file_temp  = $c->stash->{out_file_temp};
-    my $err_file_temp  = $c->stash->{err_file_temp};
+    my $in_file   = $c->stash->{in_file_temp};
+    my $out_file  = $c->stash->{out_file_temp};
+    my $err_file  = $c->stash->{err_file_temp};
 
     my $dependency      = $c->stash->{dependency};
     my $dependency_type = $c->stash->{dependency_type};
@@ -5098,13 +5058,13 @@ sub run_r_script {
   
     {
         my $r_cmd_file = $c->path_to($r_script);
-        copy($r_cmd_file, $in_file_temp)
-            or die "could not copy '$r_cmd_file' to '$in_file_temp'";
+        copy($r_cmd_file, $in_file)
+            or die "could not copy '$r_cmd_file' to '$in_file'";
     }
   
     if ($dependency && $background_job) 
     {
-	$c->stash->{r_commands_file}    = $in_file_temp;
+	$c->stash->{r_commands_file}    = $in_file;
 	$c->stash->{r_script_args}      = [$input_files, $output_files];
 
 	$c->stash->{gs_model_args_file} = $self->create_tempfile($temp_dir, 'gs_model_args');
@@ -5119,11 +5079,11 @@ sub run_r_script {
 	    $c->stash->{job_type} = 'model';
 
 	    my $model_job = {
-		'r_command_file' => $in_file_temp,
+		'r_command_file' => $in_file,
 		'input_files'    => $input_files,
 		'output_files'   => $output_files,
-		'r_output_file'  => $out_file_temp,
-		'err_temp_file'  => $err_file_temp,
+		'r_output_file'  => $out_file,
+		'err_temp_file'  => $err_file,
 	    };
 
 	    my $model_file = $c->stash->{gs_model_args_file};
@@ -5139,18 +5099,10 @@ sub run_r_script {
     }  
     else 
     {
-	my $config = {
-	    backend => $c->config->{backend},
-	    temp_base => $temp_dir,
-	    queue => $c->config->{'web_cluster_queue'},
-	    max_cluster_jobs => 1_000_000_000,
-	    out_file         => $out_file_temp,
-	    err_file         => $err_file_temp,
-	    do_cleanup       => 0,
-	};
+	my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
 	
 	my $cmd = 'Rscript --slave ' 
-	    . "$in_file_temp $out_file_temp " 
+	    . "$in_file $out_file " 
 	    . '--args ' .  $input_files 
 	    . ' ' . $output_files;
 
@@ -5191,8 +5143,27 @@ sub run_r_script {
     }
    
 }
- 
- 
+
+
+sub create_cluster_config {
+    my ($self, $c, $temp_dir, $out_file, $err_file) = @_;
+
+    my $config = {
+	backend          => $c->config->{backend},
+	temp_base        => $temp_dir,
+	queue            => $c->config->{'web_cluster_queue'},
+	max_cluster_jobs => 1_000_000_000,
+	out_file         => $out_file,
+	err_file         => $err_file,
+	is_async         => 0,
+	do_cleanup       => 0,
+    };
+
+    
+    return $config;
+}
+
+
 sub get_solgs_dirs {
     my ($self, $c) = @_;
         
@@ -5202,20 +5173,22 @@ sub get_solgs_dirs {
     my $tmp_dir         = $c->site_cluster_shared_dir; 
     $tmp_dir            = catdir($tmp_dir, $geno_version);
     my $solgs_dir       = catdir($tmp_dir, "solgs");
-    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
-    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
-    my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
-    my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
-    my $log_dir         = catdir($tmp_dir, 'log', 'cache');
-    my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
-    my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
+    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache');
+    
+    my $solgs_tempfiles   = catdir($tmp_dir, 'solgs', 'tempfiles');  
+    my $correlation_cache = catdir($tmp_dir, 'correlation', 'cache');
+    my $correlation_temp  = catdir($tmp_dir, 'correlation', 'tempfiles');   
+    my $solgs_upload      = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
+    my $pca_dir           = catdir($tmp_dir, 'pca', 'cache');
+    my $histogram_dir     = catdir($tmp_dir, 'histogram', 'cache');
+    my $log_dir           = catdir($tmp_dir, 'log', 'cache');
+    my $anova_cache       = catdir($tmp_dir, 'anova', 'cache');
+    my $anova_temp        = catdir($tmp_dir, 'anova', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
+	 $correlation_cache, $correlation_temp, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
 	 $anova_temp,
 	], 
 	0, 0755
@@ -5225,7 +5198,8 @@ sub get_solgs_dirs {
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_upload,
-              correlation_dir             => $correlation_dir,
+              correlation_temp_dir        => $correlation_temp,
+	      correlation_cache_dir       => $correlation_cache,
 	      pca_dir                     => $pca_dir,
 	      histogram_dir               => $histogram_dir,
 	      analysis_log_dir            => $log_dir,
