@@ -156,15 +156,26 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
             </div>
         </div>
     </div>
-</&>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="well">
+                <div class="row">
+                    <div class="col-sm-1">
+                        <span style="font-size:3.5em;" class="glyphicon glyphicon-trash"></span>
+                    </div>
+                    <div class="col-sm-11">
+                        <h4>Trial Deletion</h4>
 
-<&| /page/info_section.mas, title=>"Delete", collapsible=>1, collapsed=>1, subtitle=>"<font color=\"red\">Deletion cannot be undone</font>" &>
-
-<div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
-<br />
-<br />
-<a id="delete_layout_data_by_trial_id">Delete this genotyping experiment</a>
-
+                        <&| /page/info_section.mas, title=>"Delete", collapsible=>1, collapsed=>1, subtitle=>"<font color=\"red\">Deletion cannot be undone</font>" &>
+                            <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
+                            <br /><br />
+                            <button class="btn btn-default" id="delete_layout_data_by_trial_id">Delete this genotyping experiment</button>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </&>
 
 
