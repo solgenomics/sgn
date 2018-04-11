@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds list type for genotyping_trials.
+This patch adds cvterms for project metadata and trial linkage.
 
 has '+prereq' => (
 	default => sub {
