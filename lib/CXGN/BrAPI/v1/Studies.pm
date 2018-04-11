@@ -371,6 +371,7 @@ sub studies_layout {
 	my $status = $self->status;
 	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id, experiment_type=>'field_layout' });
 	my $design = $tl->get_design();
+    my $design_type = $tl->get_design_type();
 
 	my $plot_data = [];
 	my $formatted_plot = {};
@@ -401,6 +402,7 @@ sub studies_layout {
     		my @plot_image_ids = $image_id->get_image_ids();
             $additional_info{plotImageDbIds} = \@plot_image_ids;
             $additional_info{plotNumber} = $plot_number;
+            $additional_info{designType} = $design_type;
              
 			$formatted_plot = {
 				studyDbId => $study_id,
