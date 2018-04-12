@@ -331,12 +331,13 @@ CXGN.List.prototype = {
         }
 
         html += '<div class="well well-sm"><table id="private_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             html += '<tr><td><b>'+lists[i][1]+'</b></td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
-            html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
+            html += '<td><a onclick="(new CXGN.List()).validate(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
+            html += '<td><a title="View" id="view_list_'+lists[i][1]+'" href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></span></td>';
             html += '<td><a title="Delete" id="delete_list_'+lists[i][1]+'" href="javascript:deleteList('+lists[i][0]+')"><span class="glyphicon glyphicon-remove"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
             if (lists[i][6] == 0){
@@ -353,7 +354,7 @@ CXGN.List.prototype = {
 
         jQuery('#private_list_data_table').DataTable({
             "destroy": true,
-            "columnDefs": [   { "orderable": false, "targets": [3,4,5,6,7] }  ]
+            "columnDefs": [   { "orderable": false, "targets": [3,4,5,6,7,8] }  ]
         });
 
         jQuery('#add_list_button').click(function() {
@@ -399,11 +400,12 @@ CXGN.List.prototype = {
         var html = '';
 
         html += '<table id="public_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>View</th><th>Download</th><th>Copy To Your Lists</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Download</th><th>Copy To Your Lists</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
             html += '<tr><td><b>'+lists[i][1]+'</b></td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
+            html += '<td><a onclick="(new CXGN.List()).validate(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
             html += '<td><a title="View" id="view_public_list_'+lists[i][1]+'" href="javascript:showPublicListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_public_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
             html += '<td><a title="Copy to Your Lists" id="copy_public_list_'+lists[i][1]+'" href="javascript:copyPublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-plus"></span></a></td>';
@@ -414,7 +416,7 @@ CXGN.List.prototype = {
 
         jQuery('#public_list_data_table').DataTable({
             "destroy": true,
-            "columnDefs": [   { "orderable": false, "targets": [3,4,5] }  ]
+            "columnDefs": [   { "orderable": false, "targets": [3,4,5,6] }  ]
         });
     },
 

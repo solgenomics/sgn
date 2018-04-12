@@ -36,6 +36,7 @@ $locations
                             <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
                             </center>
                         </&>
+
                         <&| /util/workflow.mas:step, title=> "Enter trial information" &>
                             <& /page/page_title.mas, title=>"Enter information about the experiment and upload your trial layout" &>
 
@@ -48,6 +49,7 @@ $locations
                             </&>
 
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
+
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Trial Name: </label>
                                     <div class="col-sm-9" >
@@ -90,6 +92,78 @@ $locations
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plot Width (m): </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="trial_upload_plot_width" name="trial_upload_plot_width">
+                                            <option value="">NA</option>
+                                            <option value="0.5">0.5</option>
+                                            <option value="1">1.0</option>
+                                            <option value="1.5">1.5</option>
+                                            <option value="2">2.0</option>
+                                            <option value="2.5">2.5</option>
+                                            <option value="3">3.0</option>
+                                            <option value="3.5">3.5</option>
+                                            <option value="4">4.0</option>
+                                            <option value="4.5">4.5</option>
+                                            <option value="5">5.0</option>
+                                            <option value="5.5">5.5</option>
+                                            <option value="6">6.0</option>
+                                            <option value="6.5">6.5</option>
+                                            <option value="7">7.0</option>
+                                            <option value="7.5">7.5</option>
+                                            <option value="8">8.0</option>
+                                            <option value="8.5">8.5</option>
+                                            <option value="9">9.0</option>
+                                            <option value="9.5">9.5</option>
+                                            <option value="10">10.0</option>
+                                            <option value="10.5">10.5</option>
+                                            <option value="11">11.0</option>
+                                            <option value="11.5">11.5</option>
+                                            <option value="12">12.0</option>
+                                            <option value="12.5">12.5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plot Length (m): </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="trial_upload_plot_length" name="trial_upload_plot_length">
+                                            <option value="">NA</option>
+                                            <option value="0.5">0.5</option>
+                                            <option value="1">1.0</option>
+                                            <option value="1.5">1.5</option>
+                                            <option value="2">2.0</option>
+                                            <option value="2.5">2.5</option>
+                                            <option value="3">3.0</option>
+                                            <option value="3.5">3.5</option>
+                                            <option value="4">4.0</option>
+                                            <option value="4.5">4.5</option>
+                                            <option value="5">5.0</option>
+                                            <option value="5.5">5.5</option>
+                                            <option value="6">6.0</option>
+                                            <option value="6.5">6.5</option>
+                                            <option value="7">7.0</option>
+                                            <option value="7.5">7.5</option>
+                                            <option value="8">8.0</option>
+                                            <option value="8.5">8.5</option>
+                                            <option value="9">9.0</option>
+                                            <option value="9.5">9.5</option>
+                                            <option value="10">10.0</option>
+                                            <option value="10.5">10.5</option>
+                                            <option value="11">11.0</option>
+                                            <option value="11.5">11.5</option>
+                                            <option value="12">12.0</option>
+                                            <option value="12.5">12.5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Field Size (ha): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="trial_upload_field_size" name="trial_upload_field_size" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9" >
                                         <textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" maxlength="250"></textarea>
@@ -117,15 +191,96 @@ $locations
                                         <input type="file" name="trial_uploaded_file" id="trial_uploaded_file" encoding="multipart/form-data" />
                                     </div>
                                 </div>
+
+                                <div class="well">
+                                    <&| /page/info_section.mas, title => 'Trial Linkage', collapsible => 1, collapsed => 1 &>
+                                        <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
+
+                                        <div class="well">
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Is this trial following-up a previous field trial?: </label>
+                                                <div class="col-sm-7">
+                                                    <select class="form-control" id="upload_trial_trial_sourced" name="upload_trial_trial_sourced">
+                                                        <option value="no">No</option>
+                                                        <option value="yes">Yes</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="display:none" id="upload_trial_source_trial_section">
+                                                <label class="col-sm-5 control-label">Select the trial(s) which preceded this trial: </label>
+                                                <div class="col-sm-7">
+                                                    <div id="upload_trial_trial_source" name="upload_trial_trial_source">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="well">
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Will this trial be genotyped?: </label>
+                                                <div class="col-sm-7">
+                                                    <select class="form-control" id="upload_trial_trial_will_be_genotyped" name="upload_trial_trial_will_be_genotyped">
+                                                        <option value="no">No</option>
+                                                        <option value="yes">Yes</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="display:none" id="upload_trial_trial_has_been_genotyped_section">
+                                                <label class="col-sm-5 control-label">Has this trial been genotyped?: </label>
+                                                <div class="col-sm-7">
+                                                    <select class="form-control" id="upload_trial_trial_been_genotyped" name="upload_trial_trial_been_genotyped">
+                                                        <option value="no">No</option>
+                                                        <option value="yes">Yes</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="display:none" id="upload_trial_select_genotyping_trial_section">
+                                                <label class="col-sm-5 control-label">Are genotyping trial(s) (e.g. 96 well plates) from this field trial saved in the database?: </label>
+                                                <div class="col-sm-7">
+                                                    <div id="upload_trial_trial_genotype_trial" name="upload_trial_trial_genotype_trial">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="well">
+                                            <div class="form-group">
+                                                <label class="col-sm-5 control-label">Will crosses be done on this trial?: </label>
+                                                <div class="col-sm-7">
+                                                    <select class="form-control" id="upload_trial_trial_will_be_crossed" name="upload_trial_trial_will_be_crossed">
+                                                        <option value="no">No</option>
+                                                        <option value="yes">Yes</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="display:none" id="upload_trial_select_crossing_trial_section">
+                                                <label class="col-sm-5 control-label">Have crosses been done on this trial?: </label>
+                                                <div class="col-sm-7">
+                                                    <select class="form-control" id="upload_trial_trial_been_crossed" name="upload_trial_trial_been_crossed">
+                                                        <option value="no">No</option>
+                                                        <option value="yes">Yes</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="display:none" id="upload_trial_select_crossing_trials_section">
+                                                <label class="col-sm-5 control-label">Are crossing trial(s) linked to this field trial saved in the database?: </label>
+                                                <div class="col-sm-7">
+                                                    <div id="upload_trial_trial_crossing_trial" name="upload_trial_trial_crossing_trial">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </&>
+                                </div>
+
+                                <br/>
+                                <center>
+                                    <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
+                                    <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this, false);" >Upload Trial</button>
+                                <center>
                             </form>
-
-                            <br/>
-                            <center>
-                            <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
-                            <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this, false);" >Upload Trial</button>
-                            <center>
-
                         </&>
+
                         <&| /util/workflow.mas:step, title=> "Fix missing accessions problem" &>
                             <& /page/page_title.mas, title=>"Fixing the missing accession(s) problem" &>
 
