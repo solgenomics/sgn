@@ -60,9 +60,6 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    jQuery('#create_genotyping_trial_link').click(function () {
-        open_genotyping_trial_dialog();
-    });
 
     var plate_data = new Object();
     jQuery('#add_geno_trial_submit').click(function () {
@@ -116,7 +113,7 @@ jQuery(document).ready(function ($) {
         populate_genotyping_trial_linkage_selects();
     }
 
-    jQuery('#create_genotyping_trial_link').click(function() {
+    jQuery('[name="create_genotyping_trial_link"]').click(function() {
         open_genotyping_trial_dialog();
     });
 
