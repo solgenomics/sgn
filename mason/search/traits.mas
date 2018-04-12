@@ -48,8 +48,7 @@ $trait_cv_name
         </div>
     </div>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/custom_datatable_select_styles.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
     <div class="panel panel-default">
         <div class="panel-body">

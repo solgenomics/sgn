@@ -2,23 +2,20 @@
 jQuery(document).ready(function($) {
 
     jQuery("[name='refresh_jstree_html']").click(function(){
-        refreshTrailJsTree();
-        location.reload();
+        refreshTrailJsTree(1);
     });
 
     jQuery("[name='refresh_crosses_jstree_html']").click(function(){
-        refreshCrossJsTree();
-        location.reload();
+        refreshCrossJsTree(1);
     });
 
     jQuery("[name='refresh_genotyping_trial_jstree_html']").click( function() {
-        refreshGenotypingTrialJsTree();
-        location.reload();
+        refreshGenotypingTrialJsTree(1);
     });
 
 });
 
-function refreshTrailJsTree(){
+function refreshTrailJsTree(refreshpage){
     jQuery.ajax( {
         url: '/ajax/breeders/get_trials_with_folders?type=trial',
         beforeSend: function() {
@@ -26,7 +23,9 @@ function refreshTrailJsTree(){
         },
         success: function(response) {
             jQuery("#working_modal").modal("hide");
-            //location.reload();
+            if (refreshpage == 1){
+                location.reload();
+            }
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
@@ -35,7 +34,7 @@ function refreshTrailJsTree(){
     });
 }
 
-function refreshCrossJsTree(){
+function refreshCrossJsTree(refreshpage){
     jQuery.ajax( {
         url: '/ajax/breeders/get_trials_with_folders?type=cross',
         beforeSend: function() {
@@ -43,7 +42,9 @@ function refreshCrossJsTree(){
         },
         success: function(response) {
             jQuery("#working_modal").modal("hide");
-            //location.reload();
+            if (refreshpage == 1){
+                location.reload();
+            }
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
@@ -52,7 +53,7 @@ function refreshCrossJsTree(){
     });
 }
 
-function refreshGenotypingTrialJsTree(){
+function refreshGenotypingTrialJsTree(refreshpage){
     jQuery.ajax({
         url: '/ajax/breeders/get_trials_with_folders?type=genotyping_trial',
         beforeSend: function() {
@@ -60,11 +61,13 @@ function refreshGenotypingTrialJsTree(){
         },
         success: function(response) {
             jQuery("#working_modal").modal("hide");
-            //location.reload();
+            if (refreshpage == 1){
+                location.reload();
+            }
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
-            alert('An error occurred refreshing crosses jstree html');
+            alert('An error occurred refreshing genotype trial jstree html');
         }
     });
 }

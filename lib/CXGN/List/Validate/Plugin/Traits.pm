@@ -20,7 +20,7 @@ sub validate {
 # For postcomposed terms expects full trait names e.g. tissue metabolite unit time|COMP:0000015
 
     foreach my $term (@$list) {
-        print STDERR $term."\n";
+        #print STDERR $term."\n";
 
         my @parts = split (/\|/ , $term);
         my ($db_name, $accession) = split ":", pop @parts;
@@ -32,7 +32,7 @@ sub validate {
 
         my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
         if ($db_rs->count() == 0) {
-            print STDERR "Problem found with term $term at db $db_name\n";
+            #print STDERR "Problem found with term $term at db $db_name\n";
             push @missing, $term;
         } else {
             my $db = $db_rs->first();
@@ -43,7 +43,7 @@ sub validate {
             );
 
             if ($rs->count == 0) {
-                print STDERR "Problem found with term $term at cvterm rs from accession $accession point 2\n";
+                #print STDERR "Problem found with term $term at cvterm rs from accession $accession point 2\n";
                 push @missing, $term;
             } else {
                 my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});

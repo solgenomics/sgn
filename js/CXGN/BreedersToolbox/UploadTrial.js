@@ -19,6 +19,56 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
+    jQuery('#upload_trial_trial_sourced').change(function(){
+        if(jQuery(this).val() == 'yes'){
+            jQuery('#upload_trial_source_trial_section').show();
+        } else {
+            jQuery('#upload_trial_source_trial_section').hide();
+        }
+    });
+
+    jQuery('#upload_trial_trial_will_be_genotyped').change(function(){
+        if(jQuery(this).val() == 'yes'){
+            jQuery('#upload_trial_trial_has_been_genotyped_section').show();
+        } else {
+            jQuery('#upload_trial_trial_has_been_genotyped_section').hide();
+        }
+    });
+
+    jQuery('#upload_trial_trial_been_genotyped').change(function(){
+        if(jQuery(this).val() == 'yes'){
+            jQuery('#upload_trial_select_genotyping_trial_section').show();
+        } else {
+            jQuery('#upload_trial_select_genotyping_trial_section').hide();
+        }
+    });
+
+    jQuery('#upload_trial_trial_will_be_crossed').change(function(){
+        if(jQuery(this).val() == 'yes'){
+            jQuery('#upload_trial_select_crossing_trial_section').show();
+        } else {
+            jQuery('#upload_trial_select_crossing_trial_section').hide();
+        }
+    });
+
+    jQuery('#upload_trial_trial_been_crossed').change(function(){
+        if(jQuery(this).val() == 'yes'){
+            jQuery('#upload_trial_select_crossing_trials_section').show();
+        } else {
+            jQuery('#upload_trial_select_crossing_trials_section').hide();
+        }
+    });
+
+    jQuery('#trial_upload_breeding_program').change(function(){
+        populate_upload_trial_linkage_selects();
+    });
+
+    function populate_upload_trial_linkage_selects(){
+        get_select_box('trials', 'upload_trial_trial_source', {'id':'upload_trial_trial_source_select', 'name':'upload_trial_trial_source_select', 'breeding_program_name':jQuery('#trial_upload_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('genotyping_trials', 'upload_trial_trial_genotype_trial', {'id':'upload_trial_trial_genotype_trial_select', 'name':'upload_trial_trial_genotype_trial_select', 'breeding_program_name':jQuery('#trial_upload_breeding_program').val(), 'multiple':1, 'empty':1} );
+        get_select_box('crosses', 'upload_trial_trial_crossing_trial', {'id':'upload_trial_trial_crossing_trial_select', 'name':'upload_trial_trial_crossing_trial_select', 'breeding_program_name':jQuery('#trial_upload_breeding_program').val(), 'multiple':1, 'empty':1} );
+    }
+
     function upload_trial_validate_form(){
         var trial_name = $("#trial_upload_name").val();
         var breeding_program = $("#trial_upload_breeding_program").val();
@@ -103,6 +153,7 @@ jQuery(document).ready(function ($) {
     $('[name="upload_trial_link"]').click(function () {
         get_select_box('years', 'trial_upload_year', {'auto_generate': 1 });
         get_select_box('trial_types', 'trial_upload_trial_type', {'empty': 1 });
+        populate_upload_trial_linkage_selects();
         open_upload_trial_dialog();
     });
 
@@ -183,7 +234,7 @@ jQuery(document).ready(function ($) {
                 $("#upload_trial_error_display_second_try").show();
             }
             if (response.success) {
-                refreshTrailJsTree();
+                refreshTrailJsTree(0);
                 jQuery("#upload_trial_error_display_second_try").hide();
                 jQuery('#trial_upload_show_repeat_upload_button').hide();
                 jQuery('[name="upload_trial_completed_message"]').html('<button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>');

@@ -26,9 +26,22 @@ jQuery(document).ready(function ($) {
     get_select_box("breeding_programs", "breeding_program_select_div", {});
     get_select_box("years", "year_select_div", {});
 
-    get_select_box("locations", "location_select_div", {});
-    get_select_box("breeding_programs", "breeding_program_select_div", {});
-    get_select_box("years", "year_select_div", {});
+    jQuery(document).on('change', '#breeding_program_select', function(){
+        populate_genotyping_trial_linkage_selects();
+    })
+
+    function populate_genotyping_trial_linkage_selects(){
+        get_select_box('trials', 'add_genotyping_trial_source_trial', {'id':'add_genotyping_trial_source_select', 'name':'add_genotyping_trial_source_select', 'breeding_program_id':jQuery('#breeding_program_select').val(), 'multiple':1, 'empty':1} );
+    }
+
+    jQuery('#add_genotyping_trial_sourced_trial_q').change(function(){
+        var val = jQuery(this).val();
+        if(val == 'yes'){
+            jQuery('#add_genotyping_trial_source_trial_section').show();
+        } else {
+            jQuery('#add_genotyping_trial_source_trial_section').hide();
+        }
+    });
 
     jQuery(function() {
         jQuery( "#genotyping_trials_accordion" ).accordion({
@@ -100,6 +113,7 @@ jQuery(document).ready(function ($) {
 
     function open_genotyping_trial_dialog () {
         jQuery('#genotyping_trial_dialog').modal("show");
+        populate_genotyping_trial_linkage_selects();
     }
 
     jQuery('#create_genotyping_trial_link').click(function() {
@@ -286,14 +300,17 @@ jQuery(document).ready(function ($) {
     function store_plate(plate_data) {
         //console.log(plate_data);
         var brapi_plate_data = new Object();
-        $.ajax({
+        var add_project_trial_source_select = jQuery('#add_genotyping_trial_source_select').val();
+
+        jQuery.ajax({
             url: '/ajax/breeders/storegenotypetrial',
             method: 'POST',
             beforeSend: function(){
                 jQuery("#working_modal").modal('show');
             },
             data: {
-                'plate_data': JSON.stringify(plate_data)
+                'plate_data': JSON.stringify(plate_data),
+                'add_project_trial_source': add_project_trial_source_select,
             },
             success : function(response) {
                 jQuery("#working_modal").modal('hide');
@@ -306,7 +323,9 @@ jQuery(document).ready(function ($) {
                     if (plate_data.genotyping_facility_submit == 'yes'){
                         submit_plate_to_gdf(brapi_plate_data);
                     } else {
-                        location.reload();
+                        Workflow.complete('#add_geno_trial_submit');
+                        Workflow.focus("#genotyping_trial_create_workflow", -1); //Go to success page
+                        Workflow.check_complete("#genotyping_trial_create_workflow");
                     }
                 }
             },
@@ -359,45 +378,44 @@ jQuery(document).ready(function ($) {
         var trial_id = get_trial_id();
         var yes = confirm("Are you sure you want to delete this experiment with id "+trial_id+" ? This action cannot be undone.");
         if (yes) {
-            jQuery('#working_modal').modal("show");
-            var html = jQuery('#working_msg').html();
-            jQuery('#working_msg').html(html+"Deleting genotyping experiment...<br />");
             jQuery.ajax({
-                async: false,
                 url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#working_msg').html("Deleting genotyping experiment...<br />");
+                },
                 success: function(response) {
                     if (response.error) {
-                        jQuery('#working_modal').modal("hide");
                         alert(response.error);
                     }
                     else {
-                        //Do nothing, as the process continues...
+                        jQuery.ajax({
+                            url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
+                            beforeSend: function(){
+                                jQuery('#working_msg').html("Removing the project entry...");
+                            },
+                            success: function(response) {
+                                jQuery('#working_modal').modal("hide");
+                                jQuery('#working_msg').html('');
+                                if (response.error) {
+                                    alert(response.error);
+                                }
+                                else {
+                                    alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
+                                    window.location.href="/breeders/trial/"+trial_id;
+                                }
+                            },
+                            error: function(response) {
+                                jQuery('#working_modal').modal("hide");
+                                jQuery('#working_msg').html('');
+                                alert("An error occurred.");
+                            }
+                        });
                     }
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
-                    alert("An error occurred.");
-                }
-            });
-            html = jQuery('#working_msg').html();
-            jQuery('#working_msg').html(html+"Removing the project entry...");
-
-            jQuery.ajax({
-                async: false,
-                url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-                success: function(response) {
-                    if (response.error) {
-                        jQuery('#working_modal').modal("hide");
-                        alert(response.error);
-                    }
-                    else {
-                        jQuery('#working_modal').modal("hide");
-                        alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-                        window.location.href="/breeders/trial/"+trial_id;
-                    }
-                },
-                error: function(response) { 
-                    jQuery('#working_modal').modal("hide");
+                    jQuery('#working_msg').html('');
                     alert("An error occurred.");
                 }
             });
