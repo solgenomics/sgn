@@ -226,11 +226,11 @@ jQuery(document).ready(function ($) {
                 $("#upload_trial_error_display_second_try tbody").html(response.error_string);
             }
             if (response.missing_accessions){
-                Workflow.focus("#trial_upload_workflow", 3);
-            } else if(response.missing_seedlots){
                 Workflow.focus("#trial_upload_workflow", 4);
-            } else if(response.error_string){
+            } else if(response.missing_seedlots){
                 Workflow.focus("#trial_upload_workflow", 5);
+            } else if(response.error_string){
+                Workflow.focus("#trial_upload_workflow", 6);
                 $("#upload_trial_error_display_second_try").show();
             }
             if (response.success) {
