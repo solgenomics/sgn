@@ -140,7 +140,7 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     }
 }
 
-sub get_dataset_genotypes :Path('/ajax/dataset/get_genotypes') :Args(0){
+sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args(0){
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param("dataset_id");
@@ -173,39 +173,53 @@ sub get_dataset_genotypes :Path('/ajax/dataset/get_genotypes') :Args(0){
     print "type of PROTOCOL: " . ref($protocol_id). "\n";
 
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
+    my $genotypes_accessions_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
         accession_list=>\@genotype_accessions,
         protocol_id=>$protocol_id
     });
 
-    my $genotypes = $genotypes_search->get_genotype_info();
+    my $result = $genotypes_accessions_search->get_selected_accessions();
 
-    my @genotypes_array = @$genotypes;
+    my @selected_accessions;
 
-    print STDERR "GENOTYPES =" .Dumper(@genotypes_array). "\n";
-    print "type of GENOTYPE: " . ref(@genotypes_array). "\n";
+    foreach my $r(@$result){
+        print STDERR Dumper $r;
 
-    my $marker_value;
-    my @values;
+        my ($selected_id, $selected_uniquename) = @$r;
+        push @selected_accessions, [$selected_id, $selected_uniquename];
 
-    foreach my $genotype_hash (@genotypes_array){
-      $marker_value = $genotype_hash -> {'genotype_hash'}->{"$marker_name"};
-      push @values, $marker_value;
+    }
 
-    };
+    $c->stash->{rest}={data=> \@selected_accessions};
 
-    print STDERR "MARKER VALUE =" .Dumper(\@values). "\n";
-
-
-
-
-
-
-
-
-
-    $c->stash->{rest} = { dataset => $genotypes};
 }
+
+#    my @genotypes_array = @$genotypes;
+
+#    print STDERR "GENOTYPES =" .Dumper(@genotypes_array). "\n";
+#    print "type of GENOTYPE: " . ref(@genotypes_array). "\n";
+
+#    my $marker_value;
+#    my @values;
+
+#    foreach my $genotype_hash (@genotypes_array){
+#      $marker_value = $genotype_hash -> {'genotype_hash'}->{"$marker_name"};
+#      push @values, $marker_value;
+
+#    };
+
+#    print STDERR "MARKER VALUE =" .Dumper(\@values). "\n";
+
+
+
+
+
+
+
+
+
+#    $c->stash->{rest} = { dataset => $genotypes};
+#}
 
 1;
