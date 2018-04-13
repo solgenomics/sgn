@@ -1,0 +1,496 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="upload_seedlot_dialog" name="upload_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="seedlot_upload_dialog">Upload Seedlots</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "upload_seedlot_main_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"What are seedlots?" &>
+                            <ul>
+                            <li>Seedlots represent physical seed in packets.</li>
+                            <li>This seed can be from crosses or for named accessions.</li>
+                            <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+                            <li>Seedlots can belong to breeding programs and organizations.</li>
+                            <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
+                            </ul>
+
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "What seedlots do you have?" &>
+                            <& /page/page_title.mas, title=>"Seedlots fall into two categories" &>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Select One: </label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">
+                                        <option value=""></option>
+                                        <option data-desc="If you have seed lots for named accessions, such as seed that was ordered from a vendor, use this option. Use this option if the seed was not harvested from plots that are in the database; this implies that the seed did not come from a cross you made." value="from_accession">I have seed lots for named accessions</option>
+                                        <option data-desc="If you have seed lots that were harvested from plots that are in the database, use this option. Since you are harvesting seed, this means that a cross was performed and that cross needs to be in the database." value="from_cross">I have seed lots harvested from a plant or plot in the field where a cross was performed</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br/><br/>
+                            <div id="upload_seedlots_types_description">
+                            </div>
+                            <br/>
+                            <center>
+                                <button disabled id="seedlot_upload_type_select_button" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "File format" &>
+                            <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
+                            <br/><br/>
+                            <center>
+                                <div id="upload_seedlots_accessions_template_section" style="display:none">
+                                    <button class="btn btn-info" name="guided_help_seedlot_upload_format_button">Information about file format for uploading seedlots of named accessions</button><br/><br/>
+                                </div>
+                                <div id="upload_seedlots_crosses_template_section" style="display:none">
+                                    <button class="btn btn-info" name="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading seed lots harvested</button><br/><br/>
+                                </div>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Upload seedlots" &>
+                            <& /page/page_title.mas, title=>"Provide basic information about the seedlots and upload your file" &>
+
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="upload_seedlot_breeding_program_div"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Location of seedlot storage: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
+                                    </div>
+                                </div>
+                                <!--
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Population Name: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" name="upload_seedlot_population_name" id="upload_seedlot_population_name" placeholder="Optional">
+                                    </div>
+                                </div>
+                                -->
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Organization Name: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="Optional">
+                                    </div>
+                                </div>
+
+                                <div id="upload_seedlots_accessions_section" style="display:none">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                        <div class="col-sm-9" >
+                                            <input type="file" name="seedlot_uploaded_file" id="seedlot_uploaded_file" encoding="multipart/form-data" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="upload_seedlots_harvested_section" style="display:none">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                        <div class="col-sm-9" >
+                                            <input type="file" name="seedlot_harvested_uploaded_file" id="seedlot_harvested_uploaded_file" encoding="multipart/form-data" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <center>
+                            <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" name="upload_seedlot_button" >Upload Seedlots</button><br/><br/>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Fix errors in file" &>
+                            <& /page/page_title.mas, title=>"Fix all errors in your file" &>
+
+                            <div id="upload_seedlots_missing_accessions_or_crosses_div" style="display:none">
+                                <div id="upload_seedlots_missing_accessions_div" style="display:none">
+                                    <div class="well">
+                                        <ul>
+                                            <li>Accessions must exist in the database prior to adding seedlots of them. The reason for this is that an accession can be exist in many seedlots and therefore exists as a separate entity in the database. We also want to be careful about adding new accessions into the database because we do not want incorrectly duplicated data.</li>
+                                            <li>When adding accessions into the database, you can use either a list of accessions or an Excel file.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div id="upload_seedlots_add_missing_accessions_html">
+                                    </div>
+
+                                    <button class="btn btn-info" name="add_accessions_link">Add your accessions to the database</button><br/><br/>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your accessions are in the database Click Here</button><br/><br/>
+                                </div>
+                                <div id="upload_seedlots_missing_crosses_div" style="display:none">
+                                    <div class="well">
+                                        <ul>
+                                            <li>Crosses must exist in the database before adding your seed lots. The reason for this is that a cross can produce many seed lots and so the cross must exists as a separate entity in the database. We also want to be careful about adding new crosses into the database because we do not want data to be incorrectly linked to duplicates.</li>
+                                        </ul>
+                                    </div>
+                                    <ul>
+                                    <li>When adding crosses into the database, you can upload an Excel file or you can add seedlots one at a time.<br/><br/>
+                                        <ul>
+                                        <li><button class="btn btn-info" name="upload_crosses_link">Upload Excel file</button><br/><br/></li>
+                                        <li><button class="btn btn-info" name="create_cross_link">Add One Cross</button></li>
+                                        </ul>
+                                    </li>
+                                    </ul><br/>
+                                    <center>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your crosses are in the database Click Here</button><br/><br/>
+                                    </center>
+                                </div>
+                            </div>
+                            <div id="upload_seedlots_error_display" style="display:none">
+
+                                <h3>Seedlot Upload Error Messages</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <center>
+                            <div id="upload_seedlots_no_error_messages_accessions_html">
+                            </div>
+                            <div name="upload_seedlots_completed_message">
+                            </div>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Try submitting seedlots again" &>
+                            <& /page/page_title.mas, title=>"Submit your seedlots again. You should have corrected all errors by now, but if not please take a look at the errors in the red box below. You can continue to modify your file and then click Upload until it works." &>
+                            <div id="seedlot_upload_show_repeat_upload_button">
+                                <center>
+                                <button type="button" class="btn btn-lg btn-primary" name="upload_seedlot_button" >Upload Seedlots</button><br/><br/>
+                                </center>
+                            </div>
+                            <center>
+                            <div name="upload_seedlots_completed_message">
+                            </div>
+                            </center>
+
+                            <div id="upload_seedlots_error_display_second_try" style="display:none">
+
+                                <h3>There exist these problems in your file:</h3>
+                                <div class="panel panel-danger">
+                                    <div class="panel-body">
+                                        <table>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your seedlots are now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                The seedlot file was uploaded successfully
+                            </p>
+                            
+                            <ul>
+                                <li>You may want to proceed to the seedlot detail page(s) for the seedlot(s) you just created.</li>
+                                <li>You can print barcodes for the seedlots.</li>
+                            </ul>
+                            <br/>
+                            <center>
+                            <button class="btn btn-primary" name="upload_seedlot_success_complete_button">The seedlots were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </center>
+                        </&>
+                    </&>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlot_upload_spreadsheet_info_dialog" name="seedlot_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information For Named Accessions</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>seedlot_name</td>
+                                <td>accession_name</td>
+                                <td>operator_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>description</td>
+                                <td>box_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>seedlot_name (must be unique)</li>
+                    <li>accession_name (must exist in the database. the accession_name is the unique identifier for the named genotype)</li>
+                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
+                    <li>
+                    amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
+                    <br/><b>AND/OR</b><br/>
+                    weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                    </li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>description (information about why this seedlot is being added)</li>
+                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seedlot_upload_spreadsheet_harvested_info_dialog" name="seedlot_upload_spreadsheet_harvested_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotHarvestedInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotHarvestedInfoDialog">Upload Template Information For Harvested Seedlots</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>seedlot_name</td>
+                                <td>cross_name</td>
+                                <td>operator_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>description</td>
+                                <td>box_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>seedlot_name (must be unique)</li>
+                    <li>cross_name (must exist in the database. a cross_name can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
+                    <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
+                    <li>
+                    amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
+                    <br/><b>AND/OR</b><br/>
+                    weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
+                    </li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>description (information about why this seedlot is being added)</li>
+                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_harvested_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery("#upload_seedlot_location").autocomplete({
+       source: '/ajax/stock/geolocation_autocomplete',
+    });
+
+    jQuery('#upload_seedlots_type_select').change(function(){
+        if (jQuery(this).val() != ''){
+            jQuery('#seedlot_upload_type_select_button').attr('disabled', false);
+            jQuery('#upload_seedlots_types_description').html('<br/><div class="well"><p>'+jQuery(this).find("option:selected").data("desc")+'</p></div>');
+        } else {
+            jQuery('#seedlot_upload_type_select_button').attr('disabled', true);
+            jQuery('#upload_seedlots_types_description').html('');
+        }
+
+        if(jQuery(this).val() == 'from_accession'){
+            jQuery('#upload_seedlots_accessions_template_section').show();
+            jQuery('#upload_seedlots_crosses_template_section').hide();
+            jQuery('#upload_seedlots_accessions_section').show();
+            jQuery('#upload_seedlots_harvested_section').hide();
+        }
+        if(jQuery(this).val() == 'from_cross'){
+            jQuery('#upload_seedlots_crosses_template_section').show();
+            jQuery('#upload_seedlots_accessions_template_section').hide();
+            jQuery('#upload_seedlots_accessions_section').hide();
+            jQuery('#upload_seedlots_harvested_section').show();
+        }
+    });
+
+    jQuery('[name="seedlot_bulk_upload"]').click( function() {
+        jQuery('#upload_seedlot_dialog').modal('show');
+        get_select_box('breeding_programs', 'upload_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
+    });
+
+    jQuery("[name='guided_help_seedlot_upload_format_button']").click( function () {
+        jQuery("#seedlot_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
+    jQuery("[name='guided_help_seedlot_crosses_upload_format_button']").click( function () {
+        jQuery("#seedlot_upload_spreadsheet_harvested_info_dialog" ).modal("show");
+    });
+
+    jQuery('[name="upload_seedlot_button"]').click(function () {
+        upload_seedlot_button();
+    });
+    function upload_seedlot_button() {
+        var uploadSeedlotAccessionsFile = jQuery("#seedlot_uploaded_file").val();
+        var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
+        var location = jQuery("#upload_seedlot_location").val();
+        var breeding_program = jQuery("#upload_seedlot_breeding_program_id").val();
+        jQuery('#upload_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
+        if (breeding_program === '') {
+            alert("Please choose a breeding program");
+            return;
+        }
+        if (location === '') {
+            alert("Please give a location");
+            return;
+        }
+        if (uploadSeedlotAccessionsFile === '' && uploadSeedlotsHarvestedFile == '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_seedlot_form").submit();
+    }
+
+    jQuery('#upload_seedlot_form').iframePostForm({
+        json: true,
+        post: function () {
+        var uploadSeedlotAccessionsFile = jQuery("#seedlot_uploaded_file").val();
+        var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadSeedlotAccessionsFile === '' && uploadSeedlotsHarvestedFile == '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            else if (response.error_string) {
+
+                if (response.missing_accessions || response.missing_crosses) {
+                    jQuery('#upload_seedlots_missing_accessions_or_crosses_div').show();
+                    if (response.missing_accessions){
+                        jQuery('#upload_seedlots_missing_accessions_div').show();
+                        var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_seedlots_missing_accessions' style='display:none'></div><div id='upload_seedlots_add_missing_accessions'></div></div><br/>";
+                        jQuery("#upload_seedlots_add_missing_accessions_html").html(missing_accessions_html);
+
+                        var missing_accessions_vals = '';
+                        for(var i=0; i<response.missing_accessions.length; i++) {
+                            missing_accessions_vals = missing_accessions_vals + response.missing_accessions[i] + '\n';
+                        }
+                        jQuery("#upload_seedlots_missing_accessions").html(missing_accessions_vals);
+                        addToListMenu('upload_seedlots_add_missing_accessions', 'upload_seedlots_missing_accessions', {
+                            selectText: true,
+                            listType: 'accessions'
+                        });
+                    } else if (response.missing_crosses){
+                        jQuery('#upload_seedlots_missing_crosses_div').show();
+                    }
+                } else {
+                    jQuery('#upload_seedlots_missing_accessions_or_crosses_div').hide();
+                    var no_missing_accessions_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing accessions or crosses  Click Here</button><br/><br/>';
+                    jQuery('#upload_seedlots_no_error_messages_accessions_html').html(no_missing_accessions_html);
+                    Workflow.skip('#upload_seedlots_missing_accessions_or_crosses_div', false);
+                }
+
+                jQuery("#upload_seedlots_error_display").show();
+                jQuery("#upload_seedlots_error_display tbody").html(response.error_string);
+                jQuery("#upload_seedlots_error_display_second_try").show();
+                jQuery("#upload_seedlots_error_display_second_try tbody").html(response.error_string);
+            }
+            if (response.missing_accessions || response.missing_crosses){
+                Workflow.focus("#upload_seedlot_main_workflow", 4);
+            } else if(response.error_string){
+                Workflow.focus("#upload_seedlot_main_workflow", 5);
+                jQuery("#upload_seedlots_error_display_second_try").show();
+            }
+            if (response.success) {
+                jQuery("#upload_seedlots_error_display").hide();
+                jQuery("#upload_seedlots_error_display_second_try").hide();
+                jQuery('#seedlot_upload_show_repeat_upload_button').hide();
+                jQuery('[name="upload_seedlots_completed_message"]').html('<button class="btn btn-primary" name="upload_seedlot_success_complete_button">The seedlots were saved to the database with no errors! Congrats Click Here</button><br/><br/>');
+                Workflow.skip('#upload_seedlots_missing_accessions_or_crosses_div', false);
+                Workflow.skip('#upload_seedlots_error_display_second_try', false);
+                Workflow.focus("#upload_seedlot_main_workflow", -1); //Go to success page
+                Workflow.check_complete("#upload_seedlot_main_workflow");
+            }
+
+        }
+    });
+
+    jQuery(document).on('click', '[name="upload_seedlot_success_complete_button"]', function(){
+        alert('Seedlots were saved in the database');
+        jQuery('#upload_seedlot_dialog').modal('hide');
+        //location.reload();
+    });
+});
+</script>

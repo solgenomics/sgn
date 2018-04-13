@@ -98,9 +98,11 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_fieldmap_name",
     design_type => "RCBD",
-    plot_layout_format => "serpentine",
+    operator => "janedoe"
 						    }), "create trial object");
-ok($trial_create->save_trial(), "save trial");
+                            
+my $save = $trial_create->save_trial();
+ok($save->{'trial_id'}, "save trial");
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
@@ -111,7 +113,7 @@ ok(my $trial_id = $trial->project_id());
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $trial_id,
-
+    experiment_type => 'field_layout'
 						    }), "create trial layout object");
 
 #replace trial accession

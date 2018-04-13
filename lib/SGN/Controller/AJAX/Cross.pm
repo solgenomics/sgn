@@ -20,6 +20,8 @@ package SGN::Controller::AJAX::Cross;
 use Moose;
 use Try::Tiny;
 use DateTime;
+use Time::HiRes qw(time);
+use POSIX qw(strftime);
 use Data::Dumper;
 use File::Basename qw | basename dirname|;
 use File::Copy;
@@ -30,6 +32,7 @@ use List::MoreUtils qw /any /;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::UploadFile;
+use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddCrossInfo;
@@ -45,6 +48,7 @@ use JSON;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
+use URI::Encode qw(uri_encode uri_decode);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -58,17 +62,16 @@ sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('R
 
 sub upload_cross_file_POST : Args(0) {
   my ($self, $c) = @_;
+  #print STDERR Dumper $c->req->params();
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my $dbh = $c->dbc->dbh;
-  my $breeding_program_id = $c->req->param('cross_upload_breeding_program');
+  my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
   my $location = $c->req->param('cross_upload_location');
   my $upload = $c->req->upload('crosses_upload_file');
   my $prefix = $c->req->param('upload_prefix');
   my $suffix = $c->req->param('upload_suffix');
-  my $folder_name = $c->req->param('upload_folder_name');
-  my $folder_id = $c->req->param('upload_folder_id');
   my $parser;
   my $parsed_data;
   my $upload_original_name = $upload->filename();
@@ -83,34 +86,33 @@ sub upload_cross_file_POST : Args(0) {
   my %upload_metadata;
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
+  my $user_role;
   my $user_id;
+  my $user_name;
   my $owner_name;
   my $upload_file_type = "crosses excel";#get from form when more options are added
+  my $session_id = $c->req->param("sgn_session_id");
 
-  if (!$c->user()) {
-    print STDERR "User not logged in... not adding a crosses.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
-    return;
-  }
-
-  if ($folder_name) {
-    my $folder = CXGN::Trial::Folder->create({
-      bcs_schema => $chado_schema,
-	    parent_folder_id => '',
-	    name => $folder_name,
-	    breeding_program_id => $breeding_program_id,
-        folder_for_crosses => 1
-    });
-    $folder_id = $folder->folder_id();
-  }
-
-  my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-  my $program = $breeding_program->name();
-  #print STDERR "Breeding program name = $program\n";
-
-  $user_id = $c->user()->get_object()->get_sp_person_id();
-
-  $owner_name = $c->user()->get_object()->get_username();
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
 
   my $uploader = CXGN::UploadFile->new({
     tempfile => $upload_tempfile,
@@ -119,10 +121,11 @@ sub upload_cross_file_POST : Args(0) {
     archive_filename => $upload_original_name,
     timestamp => $timestamp,
     user_id => $user_id,
-    user_role => $c->user()->roles
+    user_role => $user_role
+
   });
 
-  ## Store uploaded temporary file in archive
+  ## Store uploaded temporary file in arhive
   $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
   if (!$archived_filename_with_path) {
@@ -136,30 +139,32 @@ sub upload_cross_file_POST : Args(0) {
   $upload_metadata{'user_id'}=$user_id;
   $upload_metadata{'date'}="$timestamp";
 
-  #parse uploaded file with appropriate plugin
-  $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-  $parser->load_plugin('CrossesExcelFormat');
-  $parsed_data = $parser->parse();
-  #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+    my $cross_properties_json = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties_json;
+    my $cross_properties = \@properties;
 
-  if (!$parsed_data) {
-    my $return_error = '';
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
+    $parser->load_plugin('CrossesExcelFormat');
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
-    if (! $parser->has_parse_errors() ){
-      $return_error = "Could not get parsing errors";
-      $c->stash->{rest} = {error_string => $return_error,};
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
     }
-
-    else {
-      $parse_errors = $parser->get_parse_errors();
-      foreach my $error_string (@{$parse_errors}){
-	$return_error=$return_error.$error_string."<br>";
-      }
-    }
-
-    $c->stash->{rest} = {error_string => $return_error,};
-    return;
-  }
 
   my $cross_add = CXGN::Pedigree::AddCrosses
     ->new({
@@ -168,10 +173,9 @@ sub upload_cross_file_POST : Args(0) {
 	   metadata_schema => $metadata_schema,
 	   dbh => $dbh,
 	   location => $location,
-	   program => $program,
+     crossing_trial_id => $crossing_trial_id,
 	   crosses =>  $parsed_data->{crosses},
-	   owner_name => $owner_name,
-     parent_folder_id => $folder_id
+	   owner_name => $user_name
 	  });
 
   #validate the crosses
@@ -220,23 +224,19 @@ sub upload_cross_file_POST : Args(0) {
   }
 }
 
-  #add additional cross info to crosses
-  my $cv_id = $chado_schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-  my $cross_property_rs = $chado_schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
-  while (my $cross_property_row = $cross_property_rs->next) {
-    my $info_type = $cross_property_row->name;
-    if ($parsed_data->{$info_type}) {
-    print STDERR "Handling info type $info_type\n";
-    my %info_hash = %{$parsed_data->{$info_type}};
-    foreach my $cross_name_key (keys %info_hash) {
-      my $value = $info_hash{$cross_name_key};
-      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, info_type => $info_type, value => $value, } );
-      $cross_add_info->add_info();
+    while (my $info_type = shift (@properties)){
+        if ($parsed_data->{$info_type}) {
+        print STDERR "Handling info type $info_type\n";
+            my %info_hash = %{$parsed_data->{$info_type}};
+            foreach my $cross_name_key (keys %info_hash) {
+                my $value = $info_hash{$cross_name_key};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
+                $cross_add_info->add_info();
+            }
+        }
     }
-  }
-  }
 
-  $c->stash->{rest} = {success => "1",};
+    $c->stash->{rest} = {success => "1",};
 }
 
 
@@ -247,43 +247,21 @@ sub add_cross_POST :Args(0) {
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
-    my $breeding_program_id = $c->req->param('breeding_program_id');
-    my $folder_name = $c->req->param('folder_name');
-    my $folder_id = $c->req->param('folder_id');
-    my $folder;
-
-    if ($folder_name && !$folder_id) {
-      eval {
-        $folder = CXGN::Trial::Folder->create({
-          bcs_schema => $chado_schema,
-          parent_folder_id => '',
-          name => $folder_name,
-          breeding_program_id => $breeding_program_id,
-          folder_for_crosses =>1
-        });
-      };
-
-      if ($@) {
-        $c->stash->{rest} = {error => $@ };
-        return;
-      }
-
-      $folder_id = $folder->folder_id();
-    }
-
-    my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-    my $program = $breeding_program->name();
+    my $crossing_trial_id = $c->req->param('crossing_trial_id');
+    my $female_plot_id = $c->req->param('female_plot');
+    my $male_plot_id = $c->req->param('male_plot');
+    #print STDERR "Female Plot=".Dumper($female_plot)."\n";
 
     if (!$c->user()) {
-  print STDERR "User not logged in... not adding a cross.\n";
-  $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
-  return;
+        print STDERR "User not logged in... not adding a cross.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+        return;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-  print STDERR "User does not have sufficient privileges.\n";
-  $c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
-  return;
+        print STDERR "User does not have sufficient privileges.\n";
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
+        return;
     }
 
     if ($cross_type eq "polycross") {
@@ -299,32 +277,32 @@ sub add_cross_POST :Args(0) {
           my $maternal = $maternal_parents[$i];
           my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
           print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-          my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
+          my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
           if (!$success) {
             return;
           }
           print STDERR "polycross addition  $polycross_name worked successfully\n";
         }
       }
-      elsif ($cross_type eq "reciprocal") {
+    elsif ($cross_type eq "reciprocal") {
         $cross_type = 'biparental';
         my @maternal_parents = split (',', $c->req->param('maternal_parents'));
         for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-          my $maternal = $maternal_parents[$i];
-          for (my $j = 0; $j < scalar @maternal_parents; $j++) {
-            my $paternal = $maternal_parents[$j];
-            if ($maternal eq $paternal) {
-              next;
+            my $maternal = $maternal_parents[$i];
+            for (my $j = 0; $j < scalar @maternal_parents; $j++) {
+                my $paternal = $maternal_parents[$j];
+                if ($maternal eq $paternal) {
+                    next;
+                }
+                my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
+                my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+                if (!$success) {
+                    return;
+                }
             }
-            my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
-            if (!$success) {
-              return;
-            }
-          }
         }
-      }
-      elsif ($cross_type eq "multicross") {
+    }
+    elsif ($cross_type eq "multicross") {
         $cross_type = 'biparental';
         my @maternal_parents = split (',', $c->req->param('maternal_parents'));
         my @paternal_parents = split (',', $c->req->param('paternal_parents'));
@@ -332,20 +310,20 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $paternal = $paternal_parents[$i];
             my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
+            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
             if (!$success) {
               return;
             }
         }
-      }
-      else {
+    }
+    else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
         if (!$success) {
-          return;
+            return;
         }
-      }
+    }
     $c->stash->{rest} = {success => "1",};
   }
 
@@ -359,8 +337,8 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
 
     if ($cross && $cross->type()->name() ne "cross") {
-	$c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
-	return;
+	    $c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
+	    return;
     }
 
     my $cross_obj = CXGN::Cross->new({bcs_schema=>$schema, cross_stock_id=>$cross_id});
@@ -373,31 +351,77 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     };
 }
 
-
-sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
+sub get_cross_parents :Path('/ajax/cross/accession_plot_parents') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $female_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $female_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plot_of', 'stock_relationship')->cvterm_id();
+    my $male_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $male_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plot_of', 'stock_relationship')->cvterm_id();
 
-    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => { 'nd_experiment' =>  'nd_experiment_stocks' }});
+    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock_relationship1.value FROM stock
+        JOIN stock_relationship AS stock_relationship1 ON (stock.stock_id = stock_relationship1.object_id) and stock_relationship1.type_id = ?
+        JOIN stock AS stock1 ON (stock_relationship1.subject_id = stock1.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship2 ON (stock.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+        LEFT JOIN stock AS stock2 on (stock_relationship2.subject_id = stock2.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship3 ON (stock.stock_id = stock_relationship3.object_id) and stock_relationship3.type_id = ?
+        LEFT JOIN stock AS stock3 ON (stock_relationship3.subject_id = stock3.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship4 ON (stock.stock_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
+        LEFT JOIN stock AS stock4 ON (stock_relationship4.subject_id =stock4.stock_id) WHERE stock.stock_id = ?";
 
-    my $props = {};
 
-    print STDERR "PROPS LEN ".$rs->count()."\n";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_accession_cvterm, $female_plot_cvterm, $male_accession_cvterm, $male_plot_cvterm, $cross_id);
 
-    while (my $prop = $rs->next()) {
-	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('nd_experimentprop_id') ];
+    my @cross_parents = ();
+    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $cross_type) = $h->fetchrow_array()){
+        push @cross_parents, [ $cross_type,
+            qq{<a href="/stock/$female_accession_id/view">$female_accession_name</a>},
+            qq{<a href="/stock/$male_accession_id/view">$male_accession_name</a>},
+            qq{<a href="/stock/$female_plot_id/view">$female_plot_name</a>},
+            qq{<a href="/stock/$male_plot_id/view">$male_plot_name</a>}];
     }
 
-    #print STDERR Dumper($props);
-    $c->stash->{rest} = { props => $props };
-
+    $c->stash->{rest} = {data => \@cross_parents}
 
 }
 
-sub save_property_check :Path('/cross/property/check') Args(1) {
+
+
+sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
+    my $cross_json_string = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_info_cvterm})->value();
+
+#    print STDERR Dumper($cross_json_string);
+
+    my $cross_props_hash ={};
+    $cross_props_hash = decode_json $cross_json_string;
+
+#    print STDERR Dumper($cross_props_hash);
+
+    my $cross_properties = $c->config->{cross_properties};
+    my @column_order = split ',',$cross_properties;
+    my @props;
+    my @row;
+    foreach my $key (@column_order){
+        push @row, $cross_props_hash->{$key};
+    }
+
+    push @props,\@row;
+    $c->stash->{rest} = {data => \@props};
+
+}
+
+
+ sub save_property_check :Path('/cross/property/check') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
@@ -407,94 +431,76 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
 
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $type_row = $schema->resultset('Cv::Cvterm')->find( { name => $type } );
 
-    if (! $type_row) {
-	$c->stash->{rest} = { error => "The type '$type' does not exist in the database" };
-	return;
-    }
-
-    my $type_id = $type_row->cvterm_id();
-
-    if ($type =~ m/^number/ || $type =~ m/^days/) { $type = 'number';}
-    if ($type =~ m/^date/) { $type = 'date';}
+    if ($type =~ m/Number/ || $type =~ m/Days/) { $type = 'number';}
+    if ($type =~ m/Date/) { $type = 'date';}
 
     my %suggested_values = (
-  cross_name => '.*',
-	cross_type =>  { 'biparental'=>1, 'self'=>1, 'open'=>1, 'bulk'=>1, 'bulk_self'=>1, 'bulk_open'=>1, 'doubled_haploid'=>1 },
-	number => '\d+',
-	date => '\d{4}\\/\d{2}\\/\d{2}',
-	);
+#  cross_name => '.*',
+#	cross_type =>  { 'biparental'=>1, 'self'=>1, 'open'=>1, 'bulk'=>1, 'bulk_self'=>1, 'bulk_open'=>1, 'doubled_haploid'=>1 },
+	      number => '\d+',
+	      date => '\d{4}\\/\d{2}\\/\d{2}',
+	  );
 
     my %example_values = (
-	date => '2014/03/29',
-  number => 20,
-  cross_type => 'biparental',
-	cross_name => 'nextgen_cross',
-	);
+	      date => '2014/03/29',
+        number => 20,
+#  cross_type => 'biparental',
+#	cross_name => 'nextgen_cross',
+	  );
 
     if (ref($suggested_values{$type})) {
-	if (!exists($suggested_values{$type}->{$value})) { # don't make this case insensitive!
-	    $c->stash->{rest} =  { message => 'The provided value is not in the suggested list of terms. This could affect downstream data processing.' };
-	    return;
-	}
+	      if (!exists($suggested_values{$type}->{$value})) { # don't make this case insensitive!
+	          $c->stash->{rest} =  { message => 'The provided value is not in the suggested list of terms. This could affect downstream data processing.' };
+	          return;
+	      }
     }
     else {
-	if ($value !~ m/^$suggested_values{$type}$/) {
-	    $c->stash->{rest} = { error => 'The provided value is not in a valid format. Format example: "'.$example_values{$type}.'"' };
-	    return;
-	}
+	      if ($value !~ m/^$suggested_values{$type}$/) {
+	          $c->stash->{rest} = { error => 'The provided value is not in a valid format. Format example: "'.$example_values{$type}.'"' };
+	          return;
+	      }
     }
     $c->stash->{rest} = { success => 1 };
 }
+
+
 
 sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $self = shift;
     my $c = shift;
 
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "You must be logged in to add properties." };
-	return;
+	      $c->stash->{rest} = { error => "You must be logged in to add properties." };
+	      return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
-	$c->stash->{rest} = { error => "You do not have sufficient privileges to add properties." };
-	return;
+	      $c->stash->{rest} = { error => "You do not have sufficient privileges to add properties." };
+	      return;
     }
 
     my $cross_id = $c->req->param("cross_id");
-    my $type  = $c->req->param("type");
-    my $value    = $c->req->param("value");
+    my $type = $c->req->param("type");
+    my $value = $c->req->param("value");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $cross_name = $schema->resultset("Stock::Stock")->find({stock_id => $cross_id})->uniquename();
 
-    my $exp_id = $schema->resultset("NaturalDiversity::NdExperiment")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => 'nd_experiment_stocks' })->first()->get_column('nd_experiment_id');
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+        chado_schema => $schema,
+        cross_name => $cross_name,
+        key => $type,
+        value => $value
+    });
+    $cross_add_info->add_info();
 
-    my $type_id;
-    my $type_row = $schema->resultset("Cv::Cvterm")->find( { 'me.name' => $type, 'cv.name' => 'nd_experiment_property' }, { join => { 'cv'}});
-    if ($type_row) {
-	$type_id = $type_row->cvterm_id();
-    }
-    else {
-	$c->stash->{rest} = { error => "The type $type does not exist in the database." };
-	return;
-    }
-
-    my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
-
-    my $row = $rs->first();
-    if (!$row) {
-	$row = $schema->resultset("NaturalDiversity::NdExperimentprop")->create( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id, 'me.value'=>$value, 'me.nd_experiment_id' => $exp_id }, { join => {'nd_experiment' => {'nd_experiment_stocks' }}});
-	$row->insert();
-    }
-    else {
-
-	$row->set_column( 'value' => $value );
-	$row->update();
+    if (!$cross_add_info->add_info()){
+        $c->stash->{rest} = {error_string => "Error saving info",};
+        return;
     }
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { success => 1};
 }
-
 
 sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
     my $self = shift;
@@ -548,68 +554,20 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 
 }
 
-sub get_crosses_with_folders : Path('/ajax/breeders/get_crosses_with_folders') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
-
-    my $projects = $p->get_breeding_programs();
-
-    my $html = "";
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
-
-    print STDERR "Starting get crosses at time ".localtime()."\n";
-    foreach my $project (@$projects) {
-        my %project = ( "id" => $project->[0], "name" => $project->[1]);
-        $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', 'cross');
-    }
-    print STDERR "Finished get crosses at time ".localtime()."\n";
-
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
-    eval { make_path($dir) };
-    if ($@) {
-        print "Couldn't create $dir: $@";
-    }
-    my $filename = $dir."/entire_crosses_jstree_html.txt";
-
-    my $OUTFILE;
-    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
-
-    $c->stash->{rest} = { status => 1 };
-}
-
-sub get_crosses_with_folders_cached : Path('/ajax/breeders/get_crosses_with_folders_cached') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
-    my $filename = $dir."/entire_crosses_jstree_html.txt";
-    my $html = '';
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
-    {
-        local $/;
-        $html = <$fh>;
-    }
-    close($fh);
-
-    #print STDERR $html;
-    $c->stash->{rest} = { html => $html };
-}
-
 sub add_individual_cross {
   my $self = shift;
   my $c = shift;
   my $chado_schema = shift;
   my $cross_name = shift;
   my $cross_type = shift;
-  my $program = shift;
+  my $crossing_trial_id = shift;
+  my $female_plot_id = shift;
+  my $female_plot;
+  my $male_plot_id = shift;
+  my $male_plot;
   my $maternal = shift;
   my $paternal = shift;
-  my $folder_id = shift;
+
   my $owner_name = $c->user()->get_object()->get_username();
   my @progeny_names;
   my $progeny_increment = 1;
@@ -620,12 +578,26 @@ sub add_individual_cross {
   my $prefix = $c->req->param('prefix');
   my $suffix = $c->req->param('suffix');
   my $progeny_number = $c->req->param('progeny_number');
-  my $number_of_flowers = $c->req->param('number_of_flowers');
-  my $number_of_fruits = $c->req->param('number_of_fruits');
-  my $number_of_seeds = $c->req->param('number_of_seeds');
+  my $tag_number = $c->req->param('tag_number');
+  my $pollination_date = $c->req->param('pollination_date');
+  my $number_of_bags = $c->req->param('bag_number');
+  my $number_of_flowers = $c->req->param('flower_number');
+  my $number_of_fruits = $c->req->param('fruit_number');
+  my $number_of_seeds = $c->req->param('seed_number');
   my $visible_to_role = $c->req->param('visible_to_role');
 
-  print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
+  #print STDERR Dumper "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type Number of Flowers: $number_of_flowers";
+
+    if ($female_plot_id){
+        my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
+        $female_plot = $female_plot_rs->name();
+    }
+
+    if ($male_plot_id){
+        my $male_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $male_plot_id});
+        $male_plot = $male_plot_rs->name();
+    }
+
 
   #check that progeny number is an integer less than maximum allowed
   my $maximum_progeny_number = 999; #higher numbers break cross name convention
@@ -649,26 +621,26 @@ return 0;
   }
 
   #check that parents exist in the database
-  if (! $chado_schema->resultset("Stock::Stock")->find({name=>$maternal,})){
+  if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$maternal,})){
     $c->stash->{rest} = {error =>  "Female parent does not exist." };
     return 0;
   }
 
   if ($paternal) {
-    if (! $chado_schema->resultset("Stock::Stock")->find({name=>$paternal,})){
+    if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$paternal,})){
 $c->stash->{rest} = {error =>  "Male parent does not exist." };
 return 0;
     }
   }
 
   #check that cross name does not already exist
-  if ($chado_schema->resultset("Stock::Stock")->find({name=>$cross_name})){
+  if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
     $c->stash->{rest} = {error =>  "cross name already exists." };
     return 0;
   }
 
   #check that progeny do not already exist
-  if ($chado_schema->resultset("Stock::Stock")->find({name=>$cross_name.$prefix.'001'.$suffix,})){
+  if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name.$prefix.'001'.$suffix,})){
     $c->stash->{rest} = {error =>  "progeny already exist." };
     return 0;
   }
@@ -678,10 +650,20 @@ return 0;
   my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
   $cross_to_add->set_female_parent($female_individual);
 
-  if ($paternal) {
-    my $male_individual = Bio::GeneticRelationships::Individual->new(name => $paternal);
-    $cross_to_add->set_male_parent($male_individual);
-  }
+    if ($paternal) {
+        my $male_individual = Bio::GeneticRelationships::Individual->new(name => $paternal);
+        $cross_to_add->set_male_parent($male_individual);
+    }
+
+    if ($female_plot) {
+        my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $female_plot);
+        $cross_to_add->set_female_plot($female_plot_individual);
+    }
+
+    if ($male_plot) {
+        my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $male_plot);
+        $cross_to_add->set_male_plot($male_plot_individual);
+    }
 
 
   $cross_to_add->set_cross_type($cross_type);
@@ -696,10 +678,9 @@ my $cross_add = CXGN::Pedigree::AddCrosses
   phenome_schema => $phenome_schema,
   dbh => $dbh,
   location => $location,
-  program => $program,
+  crossing_trial_id => $crossing_trial_id,
   crosses =>  \@array_of_pedigree_objects,
   owner_name => $owner_name,
-  parent_folder_id => $folder_id
     });
 
 
@@ -737,33 +718,30 @@ if ($progeny_number) {
 
 }
 
-#add number of flowers as an experimentprop if specified
-if ($number_of_flowers) {
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-    $cross_add_info->set_number_of_flowers($number_of_flowers);
-    $cross_add_info->add_info();
-}
+    my @cross_props = (
+        ['Pollination Date',$pollination_date],
+        ['Number of Flowers',$number_of_flowers],
+        ['Number of Fruits',$number_of_fruits],
+        ['Number of Seeds',$number_of_seeds]
+    );
 
-if ($number_of_fruits) {
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-    $cross_add_info->set_number_of_fruits($number_of_fruits);
-    $cross_add_info->add_info();
-}
-
-
-#add number of seeds as an experimentprop if specified
-if ($number_of_seeds) {
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
-    $cross_add_info->set_number_of_seeds($number_of_seeds);
-    $cross_add_info->add_info();
-}
-
+    foreach (@cross_props){
+        if ($_->[1]){
+            my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                chado_schema => $chado_schema,
+                cross_name => $cross_name,
+                key => $_->[0],
+                value => $_->[1]
+            });
+        $cross_add_info->add_info();
+        }
+    }
   };
-  if ($@) {
-$c->stash->{rest} = { error => "An error occurred: $@"};
-return 0;
-  }
-return 1;
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred: $@"};
+        return 0;
+    }
+    return 1;
 
 }
 
@@ -775,6 +753,15 @@ sub create_cross_wishlist_POST : Args(0) {
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
     my $trial_id = $c->req->param('trial_id');
+    #print STDERR Dumper $data;
+
+    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+    my $location = $t->get_location();
+    my $location_name = $location->[1];
+    #if ($location_name ne 'Arusha'){
+    #    $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
+    #    $c->detach();
+    #}
 
     my %selected_cross_hash;
     my %selected_females;
@@ -797,28 +784,26 @@ sub create_cross_wishlist_POST : Args(0) {
     }
     #print STDERR Dumper \%ordered_data;
 
-    my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id });
+    my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
     my $design_layout = $trial->get_design();
     #print STDERR Dumper $design_layout;
 
-    my %accession_plot_hash;
     my %block_plot_hash;
     print STDERR "NUM PLOTS:".scalar(keys %$design_layout);
     while ( my ($key,$value) = each %$design_layout){
-        push @{$accession_plot_hash{$value->{accession_name}}}, $value;
         $block_plot_hash{$value->{block_number}}->{$value->{plot_number}} = $value;
     }
-    #print STDERR Dumper \%accession_plot_hash;
     #print STDERR Dumper \%block_plot_hash;
 
-    my $cross_wishlist_plot_select_html = '<h1>Select Female and Male Plots For Each Desired Cross Below:</h1>';
+    my $cross_wishlist_plot_select_html = '<h1>Select Female <!--and Male -->Plots For Each Desired Cross Below:</h1>';
 
     foreach my $female_accession_name (sort keys %ordered_data){
+        my $decoded_female_accession_name = uri_decode($female_accession_name);
         my $num_seen = 0;
         my $current_males = $ordered_data{$female_accession_name};
         my $current_males_string = join ',', @$current_males;
-        my $encoded_female_accession_name = encode_entities($female_accession_name);
-        $cross_wishlist_plot_select_html .= '<div class="well" id="cross_wishlist_plot_'.$female_accession_name.'_tab" ><h2>Female: '.$female_accession_name.' Males: '.$current_males_string.'</h2><h3>Select All Male Plots <input type="checkbox" id="cross_wishlist_plot_select_all_male_'.$encoded_female_accession_name.'" data-female_accession_name="'.$female_accession_name.'" />   Select All Female Plots <input type="checkbox" id="cross_wishlist_plot_select_all_female_'.$encoded_female_accession_name.'" data-female_accession_name="'.$female_accession_name.'" /></h3><table class="table table-bordered table-hover"><thead>';
+        my $encoded_males_string = uri_encode($current_males_string);
+        $cross_wishlist_plot_select_html .= '<div class="well" id="cross_wishlist_plot_'.$female_accession_name.'_tab" ><h2>Female: '.$decoded_female_accession_name.' Males: '.$current_males_string.'</h2><h3><!--Select All Male Plots <input type="checkbox" name="cross_wishlist_plot_select_all_male" id="cross_wishlist_plot_select_all_male_'.$female_accession_name.'" data-female_accession_name="'.$female_accession_name.'" />   -->Select All Female Plots <input type="checkbox" id="cross_wishlist_plot_select_all_female_'.$female_accession_name.'" name="cross_wishlist_plot_select_all_female" data-female_accession_name="'.$female_accession_name.'" /></h3><table class="table table-bordered table-hover"><thead>';
 
         $cross_wishlist_plot_select_html .= "</thead><tbody>";
         my %current_males = map{$_=>1} @$current_males;
@@ -830,30 +815,30 @@ sub create_cross_wishlist_POST : Args(0) {
                 my $plot_number = $plot_numbers[$_];
                 my $value = $plot_number_obj->{$plot_number};
                 my $accession_name = $value->{accession_name};
-                if ($female_accession_name eq $accession_name && exists($current_males{$accession_name})){
-                    $cross_wishlist_plot_select_html .= '<td><span class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.' Males to Cross:';
-                    my $count = 1;
-                    foreach (@{$ordered_data{$value->{accession_name}}}){
-                        $cross_wishlist_plot_select_html .= ' Male'.$count.': '.$_;
-                        $count ++;
-                    }
-                    $cross_wishlist_plot_select_html .= '">'.$accession_name.'</span><input type="checkbox" data-female_accession_name="'.$female_accession_name.'" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_female_input" /><br/><span class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</span><input type="checkbox" data-female_accession_name="'.$female_accession_name.'" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_male_input" /></td>';
+                #if ($female_accession_name eq $accession_name && exists($current_males{$accession_name})){
+                #    $cross_wishlist_plot_select_html .= '<td><span class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.' Males to Cross:';
+                #    my $count = 1;
+                #    foreach (@{$ordered_data{$value->{accession_name}}}){
+                #        $cross_wishlist_plot_select_html .= ' Male'.$count.': '.$_;
+                #        $count ++;
+                #    }
+                #    $cross_wishlist_plot_select_html .= '">'.$accession_name.'</span><input type="checkbox" data-female_accession_name="'.$female_accession_name.'" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_female_input" /><br/><span class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</span><input type="checkbox" data-female_accession_name="'.$female_accession_name.'" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_male_input" /></td>';
+                #    $num_seen++;
+                #}
+                if ($decoded_female_accession_name eq $accession_name){
+                    $cross_wishlist_plot_select_html .= '<td class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.' Males to Cross: '.$current_males_string;
+                    #my $count = 1;
+                    #foreach (@{$ordered_data{$value->{accession_name}}}){
+                    #    $cross_wishlist_plot_select_html .= ' Male'.$count.': '.$_;
+                    #    $count ++;
+                    #}
+                    $cross_wishlist_plot_select_html .= '">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_female_input" data-female_accession_name="'.$female_accession_name.'" data-male_genotypes_string="'.$encoded_males_string.'" /></td>';
                     $num_seen++;
                 }
-                elsif ($female_accession_name eq $accession_name){
-                    $cross_wishlist_plot_select_html .= '<td class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.' Males to Cross:';
-                    my $count = 1;
-                    foreach (@{$ordered_data{$value->{accession_name}}}){
-                        $cross_wishlist_plot_select_html .= ' Male'.$count.': '.$_;
-                        $count ++;
-                    }
-                    $cross_wishlist_plot_select_html .= '">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_female_input" data-female_accession_name="'.$female_accession_name.'" /></td>';
-                    $num_seen++;
-                }
-                elsif (exists($current_males{$accession_name})){
-                    $cross_wishlist_plot_select_html .= '<td class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_male_input" data-female_accession_name="'.$female_accession_name.'" /></td>';
-                    $num_seen++;
-                }
+                #elsif (exists($current_males{$accession_name})){
+                #    $cross_wishlist_plot_select_html .= '<td class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_male_input" data-female_accession_name="'.$female_accession_name.'" /></td>';
+                #    $num_seen++;
+                #}
                 else {
                     $cross_wishlist_plot_select_html .= '<td title="Not Chosen. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</td>';
                     $num_seen++;
@@ -863,7 +848,8 @@ sub create_cross_wishlist_POST : Args(0) {
         }
         $cross_wishlist_plot_select_html .= '</tbody></table></div>';
 
-        $cross_wishlist_plot_select_html .= '<script>jQuery(document).on("change", "#cross_wishlist_plot_select_all_male_'.$encoded_female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_male_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});jQuery(document).on("change", "#cross_wishlist_plot_select_all_female_'.$encoded_female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});</script>';
+        #$cross_wishlist_plot_select_html .= '<script>jQuery(document).on("change", "#cross_wishlist_plot_select_all_male_'.$female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_male_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});jQuery(document).on("change", "#cross_wishlist_plot_select_all_female_'.$female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});</script>';
+        $cross_wishlist_plot_select_html .= '<script>jQuery(document).on("change", "input[name=\"cross_wishlist_plot_select_all_female\"]", function(){var female_accession = jQuery(this).data("female_accession_name");if(jQuery(this).is(":checked")){jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}else{jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", false);}});}});</script>';
 
         print STDERR "NUM PLOTS SEEN: $num_seen\n";
     }
@@ -875,14 +861,16 @@ sub create_cross_wishlist_submit : Path('/ajax/cross/create_cross_wishlist_submi
 
 sub create_cross_wishlist_submit_POST : Args(0) {
     my ($self, $c) = @_;
-    my $time = DateTime->now();
 
     if (!$c->user){
         $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
         $c->detach();
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $site_name = $c->config->{project_name};
 
+    my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
@@ -890,7 +878,19 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
     my $trial_id = $c->req->param('trial_id');
+    my $ona_form_id = $c->req->param('form_id');
+    my $ona_form_name = $c->req->param('form_name');
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
+    my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
+    my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
+
+    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists are separated by location
+    my $is_test_form;
+    if ($ona_form_name eq $test_ona_form_name){
+        $is_test_form = 1;
+    }
+    #print STDERR Dumper $data;
+    #print STDERR Dumper $selected_plot_ids;
 
     my %individual_cross_plot_ids;
     foreach (@$selected_plot_ids){
@@ -899,6 +899,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
         if (exists($_->{male_plot_id})){
             push @{$individual_cross_plot_ids{$_->{cross_female_accession_name}}->{male_plot_ids}}, $_->{male_plot_id};
+        }
+        if (exists($_->{male_genotypes_string})){
+            my $male_genotypes_string = $_->{male_genotypes_string};
+            my @male_genotypes = split ',', $male_genotypes_string;
+            foreach my $g (@male_genotypes){
+                $individual_cross_plot_ids{$_->{cross_female_accession_name}}->{male_genotypes}->{uri_decode($g)}++;
+            }
         }
     }
     #print STDERR Dumper \%individual_cross_plot_ids;
@@ -927,83 +934,213 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $location_name = $location->[1];
     my $location_id = $location->[0];
     my $trial_name = $trial->get_name();
-    my $planting_date = $trial->get_planting_date();
+    my $planting_date = $trial->get_planting_date() || " ";
+    my $trial_year = $trial->get_year();
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id });
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
     my $design_layout = $trial_layout->get_design();
     #print STDERR Dumper $design_layout;
 
-    my %accession_plot_hash;
+    my $file_type;
+    if ($is_test_form){
+        $file_type = 'cross_wishlist_test_'.$ona_form_id;
+    } elsif ($separate_crosswishlist_by_location){
+        $file_type = 'cross_wishlist_'.$location_name.'_'.$ona_form_id;
+    } else {
+        $file_type = 'cross_wishlist_'.$ona_form_id;
+    }
+    my $previously_saved_metadata_id;
+    my $previous_wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $file_type});
+    my @previous_file_lines;
+    my %previous_file_lookup;
+    my $old_header_row;
+    my @old_header_row_array;
+    if ($previous_wishlist_md_file){
+        my $previous_file_path = $previous_wishlist_md_file->dirname."/".$previous_wishlist_md_file->basename;
+        print STDERR "Previous cross_wishlist $previous_file_path\n";
+        open(my $fh, '<', $previous_file_path)
+            or die "Could not open file '$previous_file_path' $!";
+        $old_header_row = <$fh>;
+        @old_header_row_array = split ',', $old_header_row;
+        while ( my $row = <$fh> ){
+            chomp $row;
+            push @previous_file_lines, $row;
+            my @previous_file_line_contents = split ',', $row;
+            my $previous_female_plot_id = $previous_file_line_contents[0];
+            $previous_female_plot_id =~ s/"//g;
+            $previous_file_lookup{$previous_female_plot_id} = \@previous_file_line_contents;
+        }
+        $previously_saved_metadata_id = $previous_wishlist_md_file->comment;
+        $previous_wishlist_md_file->delete;
+    }
+    #print STDERR Dumper \@previous_file_lines;
+
+    my $germplasm_info_file_type;
+    if ($is_test_form){
+        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_test_'.$ona_form_id;
+    } elsif ($separate_crosswishlist_by_location){
+        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$location_name.'_'.$ona_form_id;
+    } else {
+        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$ona_form_id;
+    }
+
+    my $previously_saved_germplasm_info_metadata_id;
+    my $previous_germplasm_info_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $germplasm_info_file_type});
+    my @previous_germplasm_info_lines;
+    my %seen_info_plots;
+    if ($previous_germplasm_info_md_file){
+        my $previous_file_path = $previous_germplasm_info_md_file->dirname."/".$previous_germplasm_info_md_file->basename;
+        print STDERR "PREVIOUS germplasm_info $previous_file_path\n";
+        open(my $fh, '<', $previous_file_path)
+            or die "Could not open file '$previous_file_path' $!";
+        my $header_row = <$fh>;
+        while ( my $row = <$fh> ){
+            chomp $row;
+            push @previous_germplasm_info_lines, $row;
+            my @previous_file_line_contents = split ',', $row;
+            my $previous_plot_id = $previous_file_line_contents[1];
+            $previous_plot_id =~ s/"//g;
+            $seen_info_plots{$previous_plot_id}++;
+        }
+        $previously_saved_germplasm_info_metadata_id = $previous_germplasm_info_md_file->comment;
+        $previous_germplasm_info_md_file->delete;
+    }
+
+    my $plot_info_file_header = '"PlotName","PlotID","PlotBlockNumber","PlotNumber","PlotRepNumber","PlotRowNumber","PlotColNumber","PlotTier","PlotIsAControl","PlotSourceSeedlotName","PlotSourceSeedlotTransactionOperator","PlotSourceSeedlotNumSeedPerPlot","TrialYear","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionSynonyms","AccessionPedigree","AccessionGenus","AccessionSpecies","AccessionVariety","AccessionDonors","AccessionCountryOfOrigin","AccessionState","AccessionInstituteCode","AccessionInstituteName","AccessionBiologicalStatusOfAccessionCode","AccessionNotes","AccessionNumber","AccessionPUI","AccessionSeedSource","AccessionTypeOfGermplasmStorageCode","AccessionAcquisitionDate","AccessionOrganization","AccessionPopulationName","AccessionProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","CrossWishlistTimestamp","CrossWishlistCreatedByUsername"';
+    my @plot_info_lines;
+
     my %plot_id_hash;
     while ( my ($key,$value) = each %$design_layout){
-        push @{$accession_plot_hash{$value->{accession_name}}}, $value;
-        $plot_id_hash{$value->{plot_id}} = $value;
+        my $plot_id = $value->{plot_id};
+        $plot_id_hash{$plot_id} = $value;
+
+        if (!exists($seen_info_plots{$plot_id})){
+            my $plot_name = $value->{plot_name};
+            my $plot_id = $value->{plot_id};
+            my $accession_name = $value->{accession_name};
+            my $accession_id = $value->{accession_id};
+            my $plot_number = $value->{plot_number};
+            my $block_number = $value->{block_number} || '';
+            my $rep_number = $value->{rep_number} || '';
+            my $row_number = $value->{row_number} || '';
+            my $col_number = $value->{col_number} || '';
+            my $is_a_control = $value->{is_a_control} || '';
+            my $tier = $row_number && $col_number ? $row_number."/".$col_number : '';
+            my $seedlot_name = $value->{seedlot_name} || '';
+            my $seedlot_transaction_operator = $value->{seed_transaction_operator} || '';
+            my $seedlot_num_seed_per_plot = $value->{num_seed_per_plot} || '';
+            my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
+            my $synonyms = join(',',@{$accession_stock->synonyms()});
+            my $pedigree = $accession_stock->get_pedigree_string("Parents");
+            my $genus = $accession_stock->get_genus;
+            my $species = $accession_stock->get_species;
+            my $variety = $accession_stock->variety;
+            my $donors = encode_json($accession_stock->donors);
+            my $countryoforigin = $accession_stock->countryOfOriginCode;
+            my $state = $accession_stock->state;
+            my $institute_code = $accession_stock->state;
+            my $institute_name = $accession_stock->instituteName;
+            my $bio = $accession_stock->biologicalStatusOfAccessionCode;
+            my $notes = $accession_stock->notes;
+            my $accession_number = $accession_stock->accessionNumber;
+            my $pui = $accession_stock->germplasmPUI;
+            my $seedsource = $accession_stock->germplasmSeedSource;
+            my $storage_code = $accession_stock->typeOfGermplasmStorageCode;
+            my $acquisition_date = $accession_stock->acquisitionDate;
+            my $organization = $accession_stock->organization_name;
+            my $population = $accession_stock->population_name || '';
+            my $stock_descendant_hash = $accession_stock->get_descendant_hash();
+            my $descendants = $stock_descendant_hash->{descendants};
+            my @descendents_array;
+            while (my($k,$v) = each %$descendants){
+                push @descendents_array, $v->{name};
+            }
+            my $descendents_string = join ',', @descendents_array;
+            my $t = time;
+            my $entry_timestamp = strftime '%F %T', localtime $t;
+            $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+            push @plot_info_lines, '"'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+            $seen_info_plots{$plot_id}++;
+        }
     }
-    #print STDERR Dumper \%accession_plot_hash;
 
-    my $plot_info_file_header = '"PlotName","PlotID","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionSynonyms","Pedigree","Genus","Species","Variety","Donors","CountryOfOrigin","State","InstituteCode","InstituteName","BiologicalStatusOfAccessionCode","Notes","AccessionNumber","PUI","SeedSource","TypeOfGermplasmStorageCode","AcquisitionDate","Organization","PopulationName","ProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames"';
-    my @plot_info_lines;
-    push @plot_info_lines, $plot_info_file_header;
-
-    my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemalePlotNumber","FemaleBlockNumber","FemaleRepNumber","NumberMales"';
+    my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemalePlotNumber","FemaleBlockNumber","FemaleRepNumber","Timestamp","CrossWishlistCreatedByUsername","NumberMales"';
     my @lines;
     my $max_male_num = 0;
-    my %seen_info_plots;
     foreach my $female_id (keys %individual_cross_plot_ids){
         my $male_ids = $ordered_data{$female_id};
         my $female_plot_ids = $individual_cross_plot_ids{$female_id}->{female_plot_ids};
-        my $male_plot_ids = $individual_cross_plot_ids{$female_id}->{male_plot_ids};
-        my %allowed_male_plot_ids = map {$_=>1} @$male_plot_ids;
+        #my $male_plot_ids = $individual_cross_plot_ids{$female_id}->{male_plot_ids};
+        #my %allowed_male_plot_ids = map {$_=>1} @$male_plot_ids;
+        my %allowed_male_genotypes = %{$individual_cross_plot_ids{$female_id}->{male_genotypes}};
         #print STDERR Dumper $female_plots;
         #print STDERR Dumper $male_ids;
         foreach my $female_plot_id (@$female_plot_ids){
-            my $female = $plot_id_hash{$female_plot_id};
             my $num_males = 0;
-            my $line = '"'.$female->{plot_id}.'","'.$female->{plot_name}.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.$female->{plot_number}.'","'.$female->{block_number}.'","'.$female->{rep_number}.'","';
-
-            if (!exists($seen_info_plots{$female->{plot_id}})){
-                my $female_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$female->{accession_id}});
-                push @plot_info_lines, '"'.$female->{plot_name}.'","'.$female->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.join(',',@{$female_accession_stock->synonyms()}).'","'.$female_accession_stock->get_pedigree_string.'","'.$female_accession_stock->get_genus.'","'.$female_accession_stock->get_species.'","'.$female_accession_stock->variety.'","'.encode_json($female_accession_stock->donors).'","'.$female_accession_stock->countryOfOriginCode.'","'.$female_accession_stock->state.'","'.$female_accession_stock->instituteCode.'","'.$female_accession_stock->instituteName.'","'.$female_accession_stock->biologicalStatusOfAccessionCode.'","'.$female_accession_stock->notes.'","'.$female_accession_stock->accessionNumber.'","'.$female_accession_stock->germplasmPUI.'","'.$female_accession_stock->germplasmSeedSource.'","'.$female_accession_stock->typeOfGermplasmStorageCode.'","'.$female_accession_stock->acquisitionDate.'","'.$female_accession_stock->organization_name.'","'.$female_accession_stock->population_name.'","NA","NA","NA"';
-                $seen_info_plots{$female->{plot_id}}++;
-            }
-
-            my @male_segments;
-            foreach my $male_id (@$male_ids){
-                my $male_plots = $accession_plot_hash{$male_id};
-                foreach my $male (@$male_plots){
-                    if (exists($allowed_male_plot_ids{$male->{plot_id}})){
-                        push @male_segments, ',"'.$male->{plot_id}.'","'.$male->{plot_name}.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.$male->{plot_number}.'","'.$male->{block_number}.'","'.$male->{rep_number}.'"';
-
-                        if (!exists($seen_info_plots{$male->{plot_id}})){
-                            my $male_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$male->{accession_id}});
-                            push @plot_info_lines, '"'.$male->{plot_name}.'","'.$male->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.join(',',@{$male_accession_stock->synonyms()}).'","'.$male_accession_stock->get_pedigree_string.'","'.$male_accession_stock->get_genus.'","'.$male_accession_stock->get_species.'","'.$male_accession_stock->variety.'","'.encode_json($male_accession_stock->donors).'","'.$male_accession_stock->countryOfOriginCode.'","'.$male_accession_stock->state.'","'.$male_accession_stock->instituteCode.'","'.$male_accession_stock->instituteName.'","'.$male_accession_stock->biologicalStatusOfAccessionCode.'","'.$male_accession_stock->notes.'","'.$male_accession_stock->accessionNumber.'","'.$male_accession_stock->germplasmPUI.'","'.$male_accession_stock->germplasmSeedSource.'","'.$male_accession_stock->typeOfGermplasmStorageCode.'","'.$male_accession_stock->acquisitionDate.'","'.$male_accession_stock->organization_name.'","'.$male_accession_stock->population_name.'","NA","NA","NA"';
-                            $seen_info_plots{$male->{plot_id}}++;
-                        }
-
+            if ($previous_file_lookup{$female_plot_id}){
+                $num_males = $previous_file_lookup{$female_plot_id}->[9];
+                $num_males =~ s/"//g;
+                my %seen_males_ids;
+                foreach my $i (10..scalar(@{$previous_file_lookup{$female_plot_id}})-1){
+                    my $previous_male_id = $previous_file_lookup{$female_plot_id}->[$i];
+                    $previous_male_id =~ s/"//g;
+                    $seen_males_ids{$previous_male_id}++;
+                }
+                foreach my $male_id (@$male_ids){
+                    if (!$seen_males_ids{$male_id}){
+                        push @{$previous_file_lookup{$female_plot_id}}, '"'.$male_id.'"';
                         $num_males++;
                     }
                 }
+                $previous_file_lookup{$female_plot_id}->[9] = '"'.$num_males.'"';
+            } else {
+                my $female = $plot_id_hash{$female_plot_id};
+                $num_males = 0;
+                my $plot_name = $female->{plot_name};
+                my $plot_id = $female->{plot_id};
+                my $accession_name = $female->{accession_name};
+                my $accession_id = $female->{accession_id};
+                my $plot_number = $female->{plot_number};
+                my $block_number = $female->{block_number} || '';
+                my $rep_number = $female->{rep_number} || '';
+                my $t = time;
+                my $entry_timestamp = strftime '%F %T', localtime $t;
+                $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+                my $line = '"'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.$entry_timestamp.'","'.$user_name.'","';
+
+                my @male_segments;
+                foreach my $male_id (@$male_ids){
+                    push @male_segments, ',"'.$male_id.'"';
+                    $num_males++;
+                }
+                $line .= $num_males.'"';
+                foreach (@male_segments){
+                    $line .= $_;
+                }
+                push @lines, $line;
             }
-            $line .= $num_males.'"';
-            foreach (@male_segments){
-                $line .= $_;
-            }
-            $line .= "\n";
-            push @lines, $line;
             if ($num_males > $max_male_num){
                 $max_male_num = $num_males;
             }
         }
     }
     for (1 .. $max_male_num){
-        $header .= ',"MalePlotID'.$_.'","MalePlotName'.$_.'","MaleAccessionName'.$_.'","MaleAccessionID'.$_.'","MalePlotNumber'.$_.'","MaleBlockNumber'.$_.'","MaleRepNumber'.$_.'"';
+        $header .= ',"MaleAccessionName'.$_.'"';
     }
 
     my %priority_order_hash;
     foreach (@$data){
         push @{$priority_order_hash{$_->{priority}}}, [$_->{female_id}, $_->{male_id}];
     }
+    my @new_header_row = split ',', $header;
     #print STDERR Dumper \%priority_order_hash;
+    #print STDERR Dumper \@lines;
+    #print STDERR Dumper \@plot_info_lines;
+
+    if (scalar(@old_header_row_array)>scalar(@new_header_row)){
+        chomp $old_header_row;
+        $header = $old_header_row;
+    }
 
     my $dir = $c->tempfiles_subdir('download');
     my ($file_path1, $uri1) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
@@ -1016,39 +1153,50 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         foreach my $p (keys %priority_order_hash){
             my $entries = $priority_order_hash{$p};
             foreach (@$entries){
-                print $F1 $_->[0]."\t".$_->[1]."\t".$p."\n";
+                print $F1 uri_decode($_->[0])."\t".$_->[1]."\t".$p."\n";
             }
         }
     close($F1);
-    #print STDERR Dumper $file_path1;
+    print STDERR Dumper $file_path1;
     #print STDERR Dumper $uri1;
     my $urlencoded_filename1 = $urlencode{$uri1};
     #print STDERR Dumper $urlencoded_filename1;
     #$c->stash->{rest}->{filename} = $urlencoded_filename1;
 
-
     my ($file_path2, $uri2) = $c->tempfile( TEMPLATE => "download/cross_wishlist_XXXXX");
     $file_path2 .= '.csv';
     $uri2 .= '.csv';
     open(my $F, ">", $file_path2) || die "Can't open file ".$file_path2;
-        print $F $header;
-        print $F "\n";
+        print $F $header."\n";
+        foreach (values %previous_file_lookup){
+            my $line_string = join ',', @$_;
+            print $F $line_string."\n";
+        }
         foreach (@lines){
-            print $F $_;
+            print $F $_."\n";
         }
     close($F);
-    #print STDERR Dumper $file_path2;
+    print STDERR Dumper $file_path2;
     #print STDERR Dumper $uri2;
     my $urlencoded_filename2 = $urlencode{$uri2};
     #print STDERR Dumper $urlencoded_filename2;
     #$c->stash->{rest}->{filename} = $urlencoded_filename2;
 
+    my $archive_name;
+    if ($is_test_form){
+        $archive_name = 'cross_wishlist_test.csv';
+    } elsif ($separate_crosswishlist_by_location){
+        $archive_name = 'cross_wishlist_'.$location_name.'.csv';
+    } else {
+        $archive_name = 'cross_wishlist_'.$site_name.'.csv';
+    }
+
     my $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path2,
-       subdirectory => 'cross_wishlist',
+       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'cross_wishlist_'.$location_name.'.csv',
+       archive_filename => $archive_name,
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1056,34 +1204,39 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $uploaded_file = $uploader->archive();
     my $md5 = $uploader->get_md5($uploaded_file);
 
-    my $file_type = 'cross_wishlist_'.$location_name;
-    my $previously_saved_metadata_id;
-    my $previous_wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $file_type});
-    if ($previous_wishlist_md_file){
-        $previously_saved_metadata_id = $previous_wishlist_md_file->comment;
-        $previous_wishlist_md_file->delete;
-    }
-
     my ($file_path3, $uri3) = $c->tempfile( TEMPLATE => "download/cross_wishlist_accession_info_XXXXX");
     $file_path3 .= '.csv';
     $uri3 .= '.csv';
     open(my $F3, ">", $file_path3) || die "Can't open file ".$file_path3;
+        print $F3 $plot_info_file_header."\n";
+        foreach (@previous_germplasm_info_lines){
+            print $F3 $_."\n";
+        }
         foreach (@plot_info_lines){
             print $F3 $_."\n";
         }
     close($F3);
-    #print STDERR Dumper $file_path3;
+    print STDERR Dumper $file_path3;
     #print STDERR Dumper $uri3;
     my $urlencoded_filename3 = $urlencode{$uri3};
     #print STDERR Dumper $urlencoded_filename3;
     #$c->stash->{rest}->{filename} = $urlencoded_filename3;
 
+    my $germplasm_info_archive_name;
+    if ($is_test_form){
+        $germplasm_info_archive_name = 'germplasm_info_test.csv';
+    } elsif ($separate_crosswishlist_by_location){
+        $germplasm_info_archive_name = 'germplasm_info_'.$location_name.'.csv';
+    } else {
+        $germplasm_info_archive_name = 'germplasm_info_'.$site_name.'.csv';
+    }
+
     $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path3,
-       subdirectory => 'cross_wishlist',
+       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
        archive_path => $c->config->{archive_path},
-       archive_filename => 'germplasm_info_'.$location_name.'.csv',
+       archive_filename => $germplasm_info_archive_name,
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1091,16 +1244,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $germplasm_info_uploaded_file = $uploader->archive();
     my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
 
-    my $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$location_name;
-    my $previously_saved_germplasm_info_metadata_id;
-    my $previous_germplasm_info_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $germplasm_info_file_type});
-    if ($previous_germplasm_info_md_file){
-        $previously_saved_germplasm_info_metadata_id = $previous_germplasm_info_md_file->comment;
-        $previous_germplasm_info_md_file->delete;
-    }
+    my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
+    my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
 
     my $ua = LWP::UserAgent->new;
-    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
     my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
 
     my $server_endpoint = "https://api.ona.io/api/v1/metadata";
@@ -1136,7 +1284,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         Content_Type => 'form-data',
         Content => [
             data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>"215418",
+            "xform"=>$ona_form_id,
             "data_type"=>"media",
             "data_value"=>$uploaded_file
         ]
@@ -1175,7 +1323,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         Content_Type => 'form-data',
         Content => [
             data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>"215418",
+            "xform"=>$ona_form_id,
             "data_type"=>"media",
             "data_value"=>$germplasm_info_uploaded_file
         ]
@@ -1226,6 +1374,315 @@ sub list_cross_wishlists_GET : Args(0) {
     #print STDERR Dumper \@files;
     $c->stash->{rest} = {"success" => 1, "files"=>\@files};
 }
+
+
+sub add_crossingtrial : Path('/ajax/cross/add_crossingtrial') : ActionClass('REST') {}
+
+sub add_crossingtrial_POST :Args(0){
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    print STDERR Dumper $c->req->params();
+    my $crossingtrial_name = $c->req->param('crossingtrial_name');
+    my $breeding_program_id = $c->req->param('crossingtrial_program_id');
+    my $location = $c->req->param('crossingtrial_location');
+    my $year = $c->req->param('year');
+    my $project_description = $c->req->param('project_description');
+    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+    $geolocation_lookup->set_location_name($location);
+    if(!$geolocation_lookup->get_geolocation()){
+        $c->stash->{rest}={error => "Location not found"};
+        return;
+    }
+
+    if (!$c->user()){
+        print STDERR "User not logged in... not adding a crossingtrial.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial."};
+        return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
+        print STDERR "User does not have sufficient privileges.\n";
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
+        return;
+    }
+
+    my $error;
+    eval{
+        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+            chado_schema => $schema,
+            dbh => $dbh,
+            breeding_program_id => $breeding_program_id,
+            year => $c->req->param('year'),
+            project_description => $c->req->param('project_description'),
+            crossingtrial_name => $crossingtrial_name,
+            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
+        });
+        my $store_return = $add_crossingtrial->save_crossingtrial();
+        if ($store_return->{error}){
+            $error = $store_return->{error};
+        }
+    };
+
+    if ($@) {
+        $c->stash->{rest} = {error => $@};
+        return;
+    };
+
+    if ($error){
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {success => 1};
+    }
+}
+
+
+sub upload_progenies : Path('/ajax/cross/upload_progenies') : ActionClass('REST'){ }
+
+sub upload_progenies_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('progenies_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "cross_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+#   my $upload_file_type = "crosses excel";#get from form when more options are added
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('ProgeniesExcel');
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->detach();
+    }
+
+    #add the progeny
+    if ($parsed_data){
+        my %progeny_hash = %{$parsed_data};
+        foreach my $cross_name_key (keys %progeny_hash){
+            my $progenies_ref = $progeny_hash{$cross_name_key};
+            my @progenies = @{$progenies_ref};
+
+            my $progeny_add = CXGN::Pedigree::AddProgeny->new({
+                chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progenies,
+                owner_name => $user_name,
+            });
+            if (!$progeny_add->add_progeny()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                return;
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
+
+sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }
+
+sub upload_info_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('crossinfo_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "cross_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    my $cross_properties_json = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties_json;
+    my $cross_properties = \@properties;
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
+    $parser->load_plugin('CrossInfoExcel');
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->detach();
+    }
+
+    while (my $info_type = shift (@properties)){
+        if ($parsed_data->{$info_type}) {
+            print STDERR "Handling info type $info_type\n";
+            my %info_hash = %{$parsed_data->{$info_type}};
+            foreach my $cross_name_key (keys %info_hash){
+                my $value = $info_hash{$cross_name_key};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                    chado_schema => $chado_schema,
+                    cross_name => $cross_name_key,
+                    key => $info_type,
+                    value => $value,
+                });
+                $cross_add_info->add_info();
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
+
 
 ###
 1;#

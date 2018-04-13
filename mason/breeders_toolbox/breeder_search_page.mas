@@ -1,14 +1,25 @@
 
+<%args>
+$dataset_id => undef
+</%args>
+
+
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
 <&| /page/info_section.mas, title=>"Explore the database using metadata" &>
   
-  <& /breeders_toolbox/breeder_search.mas &>
+  <& /breeders_toolbox/breeder_search.mas, dataset_id => $dataset_id &>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Download selected data" &>
 
   <& /breeders_toolbox/breeder_search_download.mas &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Save current selection" &>
+
+  <& /breeders_toolbox/breeder_search_dataset.mas &>
 
 </&>

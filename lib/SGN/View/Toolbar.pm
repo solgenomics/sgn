@@ -387,7 +387,7 @@ sub default_toolbar_data {
                 { name => 'Mapping' },
                 {
                     name => 'Genome Browser (Jbrowse)',
-                    link => '/jbrowse_solgenomics/',
+                    link => '/jbrowse/',
                     desc => 'browse genomic annotations using the fast Jbrowse browser',
                 },
 

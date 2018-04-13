@@ -78,11 +78,11 @@ sub submit :Path('/solgs/submit/intro')  Args(0) {
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
-    $self->gs_traits_index($c);
-    my $gs_traits_index = $c->stash->{gs_traits_index};
+    #$self->gs_traits_index($c);
+    #my $gs_traits_index = $c->stash->{gs_traits_index};
           
     $c->stash(template        => $self->template('/search/solgs.mas'),               
-	      gs_traits_index => $gs_traits_index,           
+	   #   gs_traits_index => $gs_traits_index,           
             );
 
 }
@@ -137,92 +137,31 @@ sub projects_links {
 	my $pr_desc     = $projects->{$pr_id}{project_desc};
 	my $pr_year     = $projects->{$pr_id}{project_year};
 	my $pr_location = $projects->{$pr_id}{project_location};
-  
+
 	my $dummy_name = $pr_name =~ /test\w*/ig;
-	my $dummy_desc = $pr_desc =~ /test\w*/ig;
-        
-	my ($has_genotype, $has_phenotype, $is_gs);
-        
+	#my $dummy_desc = $pr_desc =~ /test\w*/ig;
+	
+	$self->check_population_has_genotype($c);
+	my $has_genotype = $c->stash->{population_has_genotype};
+
 	no warnings 'uninitialized';
 
-	unless ($dummy_name || $dummy_desc || !$pr_name )
+	unless ($dummy_name || !$pr_name )
 	{ 
-
-	    $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
-      
-	    if ($is_gs =~ /genomic selection|training population/)
-	    {              
-		$has_phenotype = 1; 
-	    }
-	    else 
-	    {	    
-		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");
-		if (!-e $pheno_file)
-		{
-		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-
-		    if (!$has_phenotype)
-		    {
-			my $cache_dir = $c->stash->{solgs_cache_dir};
-			my $file_cache  = Cache::File->new(cache_root => $cache_dir);
-			$file_cache->purge();
-
-			my $key        = "phenotype_data_" . $pr_id;
-			my $pheno_file = $file_cache->get($key);
-
-			no warnings 'uninitialized';
-
-			$pheno_file = catfile($cache_dir, "phenotype_data_${pr_id}.txt");
-
-			write_file($pheno_file, "");
-			$file_cache->set($key, $pheno_file, '5 days');
-		    }
-		}
-	    }	  
-	}
-
-	if ($has_phenotype) 
-	{
-	    $c->stash->{pop_id} = $pr_id;
-	    $self->check_population_has_genotype($c);
-	    $has_genotype = $c->stash->{population_has_genotype};
-	}	
-
-	if ($has_genotype && $has_phenotype) 
-	{
-	    unless ($is_gs) 
-	    {
-		my $pr_prop = {'project_id'   => $pr_id, 
-                              'project_type' => 'genomic selection', 
-		};
-               
-		$c->model("solGS::solGS")->set_project_type($pr_prop);                          
-	    }
-
-	    my $pop_prop = {'project_id'      => $pr_id, 
-                           'population type' => 'training population', 
-	    };
-           
-	    my $pop_type =  $c->model("solGS::solGS")->get_population_type($pr_id);
-           
-	    unless ($pop_type) 
-	    {
-		$c->model("solGS::solGS")->set_population_type($pop_prop);
-	    }
-
-	    $self->trial_compatibility_table($c, $has_genotype);
-	    my $match_code = $c->stash->{trial_compatibility_code};
-	   
-	    
+	    #$self->trial_compatibility_table($c, $has_genotype);
+	    #my $match_code = $c->stash->{trial_compatibility_code};
+	   	    
 	    my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
 
-	    $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
+	    #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
 
 	    push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, 
-				   $pr_desc, $pr_location, $pr_year, $match_code
-		];            
-	    
+				   $pr_desc, $pr_location, $pr_year
+		];          
+
+	  
 	}
+
     }
 
     $c->stash->{projects_pages} = \@projects_pages;
@@ -1729,7 +1668,7 @@ sub prediction_pop_analyzed_traits {
 	    my @copy_files = @files;
    
 	    @trait_ids = map { s/prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
- 
+
 	    my @traits = ();
 	    if(@trait_ids) 
 	    {
@@ -2265,7 +2204,7 @@ sub check_training_population :Path('/solgs/check/training/population/') Args(1)
 	$self->projects_links($c, $pr_rs);
 	$training_pop_data = $c->stash->{projects_pages};
     }
-    
+   
     my $ret->{is_training_population} =  $is_training_pop; 
     $ret->{training_pop_data} = $training_pop_data; 
     $ret = to_json($ret);     
@@ -2543,8 +2482,8 @@ sub format_selection_pops {
               my $name = $row->name;
               my $desc = $row->description;
             
-              unless ($name =~ /test/ || $desc =~ /test/)   
-              {
+             # unless ($name =~ /test/ || $desc =~ /test/)   
+             # {
                   my $id_pop_name->{id}    = $prediction_pop_id;
                   $id_pop_name->{name}     = $name;
                   $id_pop_name->{pop_type} = 'selection';
@@ -2567,7 +2506,7 @@ sub format_selection_pops {
                   my $download_prediction = $c->stash->{download_prediction};
 
                   push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
-              }
+             # }
           }
         }
     }
@@ -3053,19 +2992,28 @@ sub traits_with_valid_models {
     
     my @analyzed_traits = @{$c->stash->{analyzed_traits}};  
     my @filtered_analyzed_traits;
+    my @valid_traits_ids;
 
     foreach my $analyzed_trait (@analyzed_traits) 
     {   
         $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
-        my $accuracy_value = $c->stash->{accuracy_value};            
-        if ($accuracy_value > 0)
+        my $av = $c->stash->{accuracy_value};            
+        if ($av && $av =~ m/\d+/ && $av > 0)
         { 
             push @filtered_analyzed_traits, $analyzed_trait;
+
+	    
+	    $c->stash->{trait_abbr} = $analyzed_trait;
+	    $self->get_trait_details_of_trait_abbr($c);
+	    push @valid_traits_ids, $c->stash->{trait_id};
         }     
     }
 
     @filtered_analyzed_traits = uniq(@filtered_analyzed_traits);
+    @valid_traits_ids = uniq(@valid_traits_ids);
+   
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
+    $c->stash->{traits_ids_with_valid_models} = \@valid_traits_ids;
 
 }
 
@@ -3547,12 +3495,12 @@ sub cache_combined_pops_data {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
-    my  $cache_pheno_data = {key       => "phenotype_data_trait_${trait_id}_${combo_pops_id}_combined",
+    my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
                              file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
                              stash_key => 'trait_combined_pheno_file'
     };
       
-    my  $cache_geno_data = {key       => "genotype_data_trait_${trait_abbr}_${combo_pops_id}_combined",
+    my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
                             file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
                             stash_key => 'trait_combined_geno_file'
     };
@@ -3975,27 +3923,29 @@ sub get_all_traits {
 
 sub create_trait_data {
     my ($self, $c) = @_;   
-       
-    my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
-   
+          
     my $acronym_pairs = $self->get_acronym_pairs($c);
-    
-    foreach (@$acronym_pairs)
-    {
-        my $trait_name = $_->[1];
-        $trait_name    =~ s/\n//g;
-        
-	my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
-       
-	if ($trait_id)
-	{
-	    $table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
-	} 
-   }
 
-    $self->all_traits_file($c);
-    my $traits_file =  $c->stash->{all_traits_file};
-    write_file($traits_file, $table);
+    if (@$acronym_pairs)
+    {
+	my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
+	foreach (@$acronym_pairs)
+	{
+	    my $trait_name = $_->[1];
+	    $trait_name    =~ s/\n//g;
+        
+	    my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+       
+	    if ($trait_id)
+	    {
+		$table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
+	    } 
+	}
+
+	$self->all_traits_file($c);
+	my $traits_file =  $c->stash->{all_traits_file};
+	write_file($traits_file, $table);
+    }
 }
 
 
@@ -4066,18 +4016,21 @@ sub get_acronym_pairs {
 
 sub traits_acronym_table {
     my ($self, $c, $acronym_table) = @_;
-    
-    my $table = 'Acronym' . "\t" . 'Trait name' . "\n"; 
-
-    foreach (keys %$acronym_table)
+        
+    if (keys %$acronym_table)
     {
-        $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
-    }
-
-    $self->traits_acronym_file($c);
-    my $acronym_file =  $c->stash->{traits_acronym_file};
+	my $table = 'Acronym' . "\t" . 'Trait name' . "\n";
+ 
+	foreach (keys %$acronym_table)
+	{
+	    $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
+	}
+	
+	$self->traits_acronym_file($c);
+	my $acronym_file =  $c->stash->{traits_acronym_file};
     
-    write_file($acronym_file, $table);
+	write_file($acronym_file, $table);
+    }
 
 }
 
@@ -4119,15 +4072,17 @@ sub analyzed_traits {
     my @traits_ids;
     my @si_traits;
     my @valid_traits_files;
- 
+   
     foreach my $trait_file  (@traits_files) 
     {  
         if (-s $trait_file > 1) 
         { 
-            my $trait = $trait_file;
-            $trait =~ s/gebv_kinship_//;
+            my $trait = basename($trait_file);	   
+            $trait =~ s/gebv_kinship_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
+
+	    my $trait_id;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
@@ -4138,7 +4093,7 @@ sub analyzed_traits {
                     {
                         my $trait_name =  $r->[1];
                         $trait_name    =~ s/\n//g;                                                       
-                        my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+                        $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
                        
                         push @traits_ids, $trait_id;                                               
                     }
@@ -4166,8 +4121,7 @@ sub analyzed_traits {
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
     $c->stash->{analyzed_traits_files}  = \@traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
-    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;
-   
+    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;   
 }
 
 
@@ -4541,8 +4495,13 @@ sub prep_genotype_file {
 
 
 sub phenotype_file {
-    my ($self, $c) = @_;
-    my $pop_id     = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+    my ($self, $c, $pop_id) = @_;
+
+    if (!$pop_id) {
+	$pop_id = $c->stash->{pop_id} 
+	|| $c->stash->{training_pop_id} 
+	|| $c->stash->{trial_id};
+    }
    
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
@@ -4580,6 +4539,7 @@ sub phenotype_file {
 	}	    
     }
 
+    $self->get_all_traits($c);
    
     $c->stash->{phenotype_file} = $pheno_file;   
 
@@ -5026,7 +4986,9 @@ sub create_cluster_acccesible_tmp_files {
 
     my $temp_file_template = $c->stash->{r_temp_file};
 
-    CXGN::Tools::Run->temp_base($c->stash->{solgs_tempfiles_dir});
+    my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
+   
+    CXGN::Tools::Run->temp_base($temp_dir);
     my ( $in_file_temp, $out_file_temp, $err_file_temp) =
         map 
     {
@@ -5138,7 +5100,7 @@ sub run_r_script {
     my $r_script     = $c->stash->{r_script};
     my $input_files  = $c->stash->{input_files};
     my $output_files = $c->stash->{output_files};
-  
+
     $self->create_cluster_acccesible_tmp_files($c);
     my $in_file_temp   = $c->stash->{in_file_temp};
     my $out_file_temp  = $c->stash->{out_file_temp};
@@ -5147,6 +5109,8 @@ sub run_r_script {
     my $dependency      = $c->stash->{dependency};
     my $dependency_type = $c->stash->{dependency_type};
     my $background_job  = $c->stash->{background_job};
+
+    my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
   
     {
         my $r_cmd_file = $c->path_to($r_script);
@@ -5159,7 +5123,6 @@ sub run_r_script {
 	$c->stash->{r_commands_file}    = $in_file_temp;
 	$c->stash->{r_script_args}      = [$input_files, $output_files];
 
-	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
 	$c->stash->{gs_model_args_file} = $self->create_tempfile($temp_dir, 'gs_model_args');
 	
 	if ($r_script =~ /combine_populations/) 
@@ -5198,7 +5161,7 @@ sub run_r_script {
 						  $in_file_temp,
 						  $out_file_temp,
 						  {
-						      working_dir => $c->stash->{solgs_tempfiles_dir},
+						      working_dir => $temp_dir,
 						      max_cluster_jobs => 1_000_000_000,
 						  });
 	try 
@@ -5244,7 +5207,8 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
         
-    my $geno_version    = $c->config->{default_genotyping_protocol};    
+    my $geno_version    = $c->config->{default_genotyping_protocol}; 
+    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
     $geno_version       =~ s/\s+//g;
     my $tmp_dir         = $c->site_cluster_shared_dir;    
     $tmp_dir            = catdir($tmp_dir, $geno_version);
@@ -5256,11 +5220,14 @@ sub get_solgs_dirs {
     my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
     my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
+    my $anova_cache       = catdir($tmp_dir, 'anova', 'cache');
+    my $anova_temp       = catdir($tmp_dir, 'anova', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir
+	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
+	 $anova_temp,
 	], 
 	0, 0755
 	);
@@ -5272,7 +5239,9 @@ sub get_solgs_dirs {
               correlation_dir             => $correlation_dir,
 	      pca_dir                     => $pca_dir,
 	      histogram_dir               => $histogram_dir,
-	      analysis_log_dir            => $log_dir
+	      analysis_log_dir            => $log_dir,
+              anova_cache_dir             => $anova_cache,
+	      anova_temp_dir              => $anova_temp,
         );
 
 }

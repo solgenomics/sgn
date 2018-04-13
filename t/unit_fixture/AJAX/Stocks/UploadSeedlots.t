@@ -27,7 +27,7 @@ print STDERR $sgn_session_id."\n";
 
 my $breeding_program_id = $schema->resultset('Project::Project')->find({name=>'test'})->project_id();
 
-my $file = $f->config->{basepath}."/t/data/stock/seedlot_upload";
+my $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_named_accessions";
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
         'http://localhost:3010/ajax/breeders/seedlot-upload',
@@ -36,7 +36,6 @@ $response = $ua->post(
             seedlot_uploaded_file => [ $file, 'seedlot_upload', Content_Type => 'application/vnd.ms-excel', ],
             "upload_seedlot_breeding_program_id"=>$breeding_program_id,
             "upload_seedlot_location"=>'test_location',
-            "upload_seedlot_population_name"=>"testpop1",
             "upload_seedlot_organization_name"=>"testorg1",
             "sgn_session_id"=>$sgn_session_id
         ]
@@ -46,6 +45,45 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
+$file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/seedlot-upload',
+        Content_Type => 'form-data',
+        Content => [
+            seedlot_harvested_uploaded_file => [ $file, 'seedlot_harvested_upload', Content_Type => 'application/vnd.ms-excel', ],
+            "upload_seedlot_breeding_program_id"=>$breeding_program_id,
+            "upload_seedlot_location"=>'test_location',
+            "upload_seedlot_organization_name"=>"testorg1",
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
+$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_android_app";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/seedlot-inventory-upload',
+        Content_Type => 'form-data',
+        Content => [
+            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_upload', Content_Type => 'application/vnd.ms-excel', ],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 

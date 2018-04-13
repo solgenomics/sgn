@@ -58,7 +58,7 @@ $breeding_program_name => undef
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Folder For Crosses: </label>
+                <label class="col-sm-3 control-label">Folder For Crossing Trials: </label>
                 <div class="col-sm-9" >
                     <input name="new_folder_for_crosses" id="new_folder_for_crosses" type="checkbox"/>
                 </div>
@@ -107,11 +107,11 @@ jQuery(document).ready(function() {
 
   jQuery('#new_folder_dialog_link').click( function() {
     jQuery('#new_folder_dialog').modal("show");
-    
+
     if(jQuery("#new_folder_parent_folder_id").length == 0) {
       get_select_box('folders', 'new_folder_parent_folder_select_div', { 'name' : 'new_folder_parent_folder_id', 'id' : 'new_folder_parent_folder_id', 'breeding_program_id' : jQuery('#new_folder_breeding_program_id').val(), 'empty' : 1  });
     }
-    
+
   });
 
   jQuery("#new_folder_breeding_program_select_div").on('change', "#new_folder_breeding_program_id", function() {
@@ -140,7 +140,7 @@ function new_trial_folder() {
     'beforeSend' : function(){
         jQuery('#working_modal').modal('show');
     },
-    'data': { 
+    'data': {
       'parent_folder_id' : parent_id,
       'folder_name' :  folder_name,
       'breeding_program_id' : breeding_program_id,

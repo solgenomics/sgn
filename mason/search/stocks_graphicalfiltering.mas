@@ -1,0 +1,143 @@
+<%args>
+</%args>
+
+<& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
+
+<&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1, subtitle=>'<i>Open and Close Section to "Refresh Query".</i>&nbsp;&nbsp;&nbsp;<a id="stock_search_graphical_filter_info">Too slow?</a>'&>
+
+<div class="modal fade" id="stock_search_graphical_filter_dialog" name="stock_search_graphical_filter_dialog" tabindex="-1" role="dialog" aria-labelledby="stockSearchGraphicalFilterDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="stockSearchGraphicalFilterDialog">Options For Graphical Filter</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Search Type: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="stock_search_graphical_filter_search_type" name="stock_search_graphical_filter_search_type">
+                                <option value="complete">Complete</option>
+                                <option value="fast">Fast</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" name="stock_search_graphical_filter_dialog_submit" id="stock_search_graphical_filter_dialog_submit" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="well well-sm">
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div id="stock_search_graphical_filter_div" style="margin:1em">
+        [LOADING...]
+        </div>
+    </div>
+</div>
+
+<br/>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div style="overflow:scroll">
+            <table id="stock_search_graphical_filter_results_div" >
+            </table>
+        </div>
+    </div>
+</div>
+
+<br/>
+
+<&| /page/info_section.mas, title => 'Copy Filtered Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names in table to a new or exisiting list</i>'&>
+<div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
+<div id="graphical_filter_result_names" style="display: none;"></div>
+</&>
+
+
+</div>
+
+</&>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#stock_search_graphical_filter_info').click(function(){
+        jQuery('#stock_search_graphical_filter_dialog').modal('show');
+    });
+
+});
+
+var currentGFilter = null;
+function loadBrAPIData(server,parameters,success){
+    var data = {
+        "pageSize" : 10000000,
+        "search_type" : jQuery('#stock_search_graphical_filter_search_type').val()
+    };
+    d3.entries(parameters).forEach(function(entry){
+        data[entry.key] = data[entry.key]||entry.value;
+    });
+    
+    var brapi_Data = BrAPI(server+"/brapi/v1").phenotypes_search(data);
+    
+    if (currentGFilter!=null){
+        $("#stock_search_graphical_filter_results_div").DataTable().destroy();
+        $("#stock_search_graphical_filter_results_div").html("");
+      }
+
+    currentGFilter = GraphicalFilter(
+        brapi_Data,
+        function(d) { // traits/values
+          var traits = {}
+          d.observations.forEach(function(obs){
+            traits[obs.observationVariableName] = obs.value;
+          });
+          return traits;
+        },
+        function(d) {
+          return {
+            'Accession':d.germplasmName
+          }
+        },
+        ["Accession"],
+        function(d) {
+          return d.germplasmDbId
+        }
+      );
+    currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
+    brapi_Data.all(function(){
+      _make_graphical_filtering_list_select();
+      jQuery('#stock_search_graphical_filter_results_div').on( 'draw.dt', function () {
+          _make_graphical_filtering_list_select();
+      });
+    });
+    
+
+    function _make_graphical_filtering_list_select(){
+        var data = currentGFilter.results_table.context[0].aoData;
+        var displayed_rows = currentGFilter.results_table.context[0].aiDisplay;
+        var names = [];
+        for (var i =0; i< displayed_rows.length; i++){
+            var displayed_index = displayed_rows[i];
+            names.push(data[displayed_index].nTr.firstChild.innerText+'\n');
+        }
+        //console.log(names);
+        jQuery('#graphical_filter_result_names').html(names);
+    }
+
+    addToListMenu('graphical_filter_results_to_list_menu', 'graphical_filter_result_names', {
+        listType: 'accessions'
+    });
+}
+
+</script>

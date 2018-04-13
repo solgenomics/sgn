@@ -117,11 +117,8 @@ $trial_name
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_field_map_form" name="edit_field_map_form">
-
                     <p3> Accession was replaced successfully...</p3>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -142,11 +139,8 @@ $trial_name
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="subs_field_map_form" name="subs_field_map_form">
-
                     <p3> Accessions were substituted successfully...</p3>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -171,7 +165,7 @@ $trial_name
                 <h4>
                   Background:
                 </h4>
-                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding or uploading a trial, if that option is enabled or rows and column numbers provided in the trial upload files respectively. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It's a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
+                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding a trial or uploading a trial. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It's a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
 
                 <h4>
                   Editing Options:
@@ -291,7 +285,6 @@ jQuery(document).ready(function () {
 
   function replace_accession_in_trial() {
     jQuery('#replace_trial_accessions_dialog').modal("hide");
-    jQuery('#working_modal').modal("show");
     var old_accession_id = jQuery('#trial_accessions_table').val();
     var new_accession = jQuery('#replace_database_accession').val();
 
@@ -303,7 +296,9 @@ jQuery(document).ready(function () {
               'old_accession_id': old_accession_id,
               'new_accession': new_accession,
       },
-
+      beforeSend: function(){
+        jQuery('#working_modal').modal("show");
+      },
       success: function (response) {
         jQuery('#working_modal').modal("hide");
 
@@ -334,7 +329,6 @@ jQuery(document).ready(function () {
   });
 
   function substitute_plot_accession() {
-    jQuery('#working_modal').modal("show");
 
     var plot_1_info = jQuery('#trial_plot_1_name_table').val();
     var plot_2_info = jQuery('#trial_plot_2_name_table').val();
@@ -347,7 +341,9 @@ jQuery(document).ready(function () {
               'plot_1_info': plot_1_info,
               'plot_2_info': plot_2_info,
       },
-
+      beforeSend: function(){
+        jQuery('#working_modal').modal("show");
+      },
       success: function (response) {
         jQuery('#working_modal').modal("hide");
 
@@ -359,10 +355,11 @@ jQuery(document).ready(function () {
       },
       error: function(){
         jQuery('#working_modal').modal("hide");
+        alert('An error occurred substituting plot accession. Please try again or contact us.');
       }
     });
   }
 
 });
 
-</script
+</script>

@@ -49,12 +49,12 @@ sub search : Path('/ajax/search/trials') Args(0) {
             $_->{year},
             $_->{location_name},
             $_->{trial_type},
-            $_->{design}
+            $_->{design},
+            $_->{project_planting_date},
+            $_->{project_harvest_date}
           ];
     }
     #print STDERR Dumper \@result;
 
     $c->stash->{rest} = { data => \@result };
 }
-
-

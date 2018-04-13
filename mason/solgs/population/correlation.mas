@@ -14,7 +14,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-
 $pop_id   => undef
 $trial_id => undef
 
@@ -46,7 +45,7 @@ $pop_id = $trial_id if $trial_id;
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Phenotypic correlation analysis"
+      title       => "Phenotypic correlation analysis (Pearson)"
 &>
 
 

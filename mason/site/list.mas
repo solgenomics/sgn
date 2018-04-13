@@ -2,7 +2,7 @@
 <!-- Lists dialog -->
 
 <div class="modal fade" id="list_dialog" name="list_dialog" tabindex="-1" role="dialog" aria-labelledby="listDialog">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header" style="text-align:center">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -23,7 +23,7 @@
 </div>
 
 <div class="modal fade" id="public_list_dialog" name="public_list_dialog" tabindex="-1" role="dialog" aria-labelledby="publicListDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header" style="text-align:center">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -43,7 +43,7 @@
 </div>
 
 <div class="modal fade" id="list_item_dialog" name="list_item_dialog" tabindex="-1" role="dialog" aria-labelledby="listItemDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header" style="text-align:center">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -90,7 +90,7 @@
 </div>
 
 <div class="modal fade" id="fuzzy_search_result_display" name="fuzzy_search_result_display" tabindex="-1" role="dialog" aria-labelledby="fuzzySearchResultDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -105,6 +105,60 @@
             <div class="modal-footer">
                 <button id="download_fuzzy_search_result" type="button" class="btn btn-primary" onclick="javascript:downloadFuzzyResponse()" >Download</button>
                 <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="synonym_search_result_display" name="synonym_search_result_display" tabindex="-1" role="dialog" aria-labelledby="synonymSearchResultDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="synonymSearchResultDialog">Synonym Search Results</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="synonym_search_result_display_html">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+              <form id="new-list-from-unames" class="form-inline" style="float:left">
+                <label>Create a New List from Unique Names:</label>
+                <input name="name" type="text" class="form-control" placeholder="List Name...">
+                <button class="btn btn-primary" type="submit">Save</button>
+              </form>
+              <form class="form-inline" style="float:right">
+                <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="availible_seedlots_modal" name="availible_seedlots_modal" tabindex="-1" role="dialog" aria-labelledby="availible_seedlots_modal">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4>Available Seedlots</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <& /tools/available_seedlots.mas &>
+                </div>
+            </div>
+            <div class="modal-footer">
+              <form id="new-list-from-seedlots" class="form-inline" style="float:left">
+                <label>Create a New List from Selected Seedlots:</label>
+                <input name="name" type="text" class="form-control" placeholder="List Name...">
+                <button class="btn btn-primary" type="submit">Save</button>
+              </form>
+              <form class="form-inline" style="float:right">
+                <a href="/breeders/seedlots/" class="btn btn-primary">Manage Seedlots</a>
+                <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </form>
             </div>
         </div>
     </div>

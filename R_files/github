@@ -1,0 +1,9 @@
+Package: sgn
+Title: The SGN websites R packages from github
+Version: 1.9
+Date: 2017-06-22
+Author: Isaak Y Tecle <iyt2@cornell.edu>
+Maintainer: Isaak Y Tecle <iyt2@cornell.edu> 
+Description: The github R code behind the SGN websites 
+Depends: R (>= 3.2.5), solgenomics/rPackages/phenoAnalysis, solgenomics/rPackages/genoDataFilter, reyzaguirre/st4gi
+License: Artistic-3

@@ -47,7 +47,8 @@ retrieves a stock row
 
 sub get_stock {
   my $self = shift;
-  my $stock_rs = $self->_get_stock_resultset();
+  my $stock_type_id = shift;
+  my $stock_rs = $self->_get_stock_resultset($stock_type_id);
   my $stock;
   if ($stock_rs->count > 0) {
     $stock = $stock_rs->first;
@@ -117,9 +118,15 @@ sub get_synonym_hash_lookup {
 
 sub get_owner_hash_lookup {
     my $self = shift;
+    my $stock_ids;
+    my $where_clause = '';
     print STDERR "StockOwner Start:".localtime."\n";
+    if ($stock_ids){
+        my $stock_id_sql = join ',', @$stock_ids;
+        $where_clause = "WHERE stock_id IN ($stock_id_sql)";
+    }
     my $schema = $self->get_schema();
-    my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) ORDER BY sp_person_id;";
+    my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) $where_clause ORDER BY sp_person_id;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;
@@ -148,19 +155,24 @@ sub get_organization_hash_lookup {
 
 sub _get_stock_resultset {
   my $self = shift;
+  my $stock_type_id = shift;
   my $schema = $self->get_schema();
   my $stock_name = $self->get_stock_name();
+  my $search_hash = {
+      'me.is_obsolete' => { '!=' => 't' },
+      -or => [
+          'lower(me.uniquename)' => { like => lc($stock_name) },
+          -and => [
+               'lower(type.name)'       => { like => '%synonym%' },
+               'lower(stockprops.value)' => { like => lc($stock_name) },
+              ],
+         ],
+  };
+  if ($stock_type_id){
+      $search_hash->{'me.type_id'} = $stock_type_id;
+  }
   my $stock_rs = $schema->resultset("Stock::Stock")
-      ->search({ 'me.is_obsolete' => { '!=' => 't' },
-	      -or => [
-		      'lower(me.uniquename)' => { like => lc($stock_name) },
-
-		      -and => [
-			       'lower(type.name)'       => { like => '%synonym%' },
-			       'lower(stockprops.value)' => { like => lc($stock_name) },
-			      ],
-		     ],
-	     },
+      ->search($search_hash,
 	     {
 	      join => { 'stockprops' => 'type'} ,
 	      distinct => 1
@@ -175,7 +187,7 @@ sub _get_stock_resultset_exact {
   my $stock_name = $self->get_stock_name();
   my $stock_rs = $schema->resultset("Stock::Stock")
     ->search({ 'me.is_obsolete' => { '!=' => 't' },
-	      'lower(uniquename)' => lc($stock_name),
+	      'uniquename' => $stock_name,
 	     },
 	     {
 	      join => { 'stockprops' => 'type'} ,
@@ -183,6 +195,57 @@ sub _get_stock_resultset_exact {
 	     }
 	    );
   return $stock_rs;
+}
+
+sub get_stock_synonyms {
+	my $self = shift;
+    my $search_type = shift; # 'stock_id' | 'uniquename' | 'any_name'
+    my $stock_type = shift; # type of stock ex 'accession'
+    my $to_get = shift; # array ref
+	
+	my $schema = $self->get_schema();
+	
+  my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,$stock_type,'stock_type')->cvterm_id;
+  
+	my $table_joins = {
+		join => { 'stockprops' => 'type'},
+		'+select' => ['stockprops.value','type.name'],
+		'+as' => ['stockprop_value','cvterm_name']
+		# join_type => 'FULL_OUTER'
+ 	};
+	my $query = {
+		'me.is_obsolete' => { '!=' => 't' },
+    'me.type_id' => {'=' => $stock_type_id}
+	};
+    if ($search_type eq 'stock_id'){
+		$query->{'me.stock_id'} = {-in=>$to_get};
+  } elsif ($search_type eq 'uniquename'){
+		$query->{'me.uniquename'} = {-in=>$to_get};
+  } elsif ($search_type eq 'any_name'){
+		$query->{'-or'} = [
+			'me.uniquename' => {-in=>$to_get},
+			-and => [
+				'type.name' => 'stock_synonym',
+				'stockprops.value' => {-in=>$to_get}
+			]
+		];
+    } else {
+		die;
+	}
+	my $stock_rs = $schema->resultset("Stock::Stock")
+	  ->search($query,$table_joins);
+    my $synonym_hash = {};
+	while( my $row = $stock_rs->next) {
+  	    my $uname = $row->uniquename;
+		if (not defined $synonym_hash->{$uname}){
+			$synonym_hash->{$uname} = [];
+		}
+    my $cvname = $row->get_column('cvterm_name');
+		if ($cvname && $cvname eq 'stock_synonym'){
+			push @{$synonym_hash->{$uname}}, $row->get_column('stockprop_value');
+		}
+  	}
+	return $synonym_hash;
 }
 
 #######

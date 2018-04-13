@@ -200,7 +200,7 @@ sub parse {
                     return \%parse_result;
                 }
             }
-            
+
             if ( defined($trait_value) && defined($timestamp) ) {
                 if ($trait_value ne '.'){
                     $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];

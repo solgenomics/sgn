@@ -28,6 +28,7 @@ use File::Copy;
 use Data::Dumper;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
+use List::MoreUtils qw /any /;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -172,8 +173,14 @@ sub _prep_upload {
     my $image_zip;
     if ($file_type eq "spreadsheet") {
         print STDERR "Spreadsheet \n";
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed
+        if ($spreadsheet_format eq 'detailed'){
+            $validate_type = "phenotype spreadsheet";
+        }
+        if ($spreadsheet_format eq 'simple'){
+            $validate_type = "phenotype spreadsheet simple";
+        }
         $subdirectory = "spreadsheet_phenotype_upload";
-        $validate_type = "phenotype spreadsheet";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
@@ -206,7 +213,7 @@ sub _prep_upload {
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
-        #print STDERR $user_type."\n";
+        #print STDERR $user_type."\n"; 
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
             return (\@success_status, \@error_status);
@@ -328,6 +335,16 @@ sub update_plot_phenotype_POST : Args(0) {
   print "MY LIST OPTION:  $trait_list_option\n";
   my $plot = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
   my $plot_type_id = $plot->type_id();
+  
+  if (!$c->user()) {
+    print STDERR "User not logged in... not uploading phenotype.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to upload phenotype." };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload phenotype." };
+    return;
+  }
 
   if ($plot_type_id == $accession_cvterm_id) {
     print "You are using accessions\n";
@@ -351,6 +368,8 @@ sub update_plot_phenotype_POST : Args(0) {
   $data{$plot_name}->{$trait} = [$trait_value,$timestamp];
 
   my %phenotype_metadata;
+  $phenotype_metadata{'archived_file'} = 'none';
+  $phenotype_metadata{'archived_file_type'}="direct phenotyping";
   $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
   $phenotype_metadata{'date'}="$timestamp";
   my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;

@@ -1,0 +1,179 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+<div id="trial_treatments_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_treatments_onswitch').one("click", function() {
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/treatments',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                var trial_treatments_html = "<table class='table table-hover table-condensed table-bordered' id='trial_treatments_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
+                for (i=0; i<response.treatments.length; i++) {
+                    trial_treatments_html = trial_treatments_html + "<tr><td><a href='/breeders/trial/" + response.treatments[i][0] +"'>"+ response.treatments[i][1] + "</a></td></tr>";
+                }
+                trial_treatments_html = trial_treatments_html + "</tbody></table>";
+                jQuery('#trial_treatments_html').empty();
+                jQuery('#trial_treatments_html').html(trial_treatments_html);
+                enable_treatments_datatable();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving treatments.");
+            }
+        });
+        
+    });
+
+    jQuery('#trial_detail_page_add_treatment').click(function(){
+        jQuery('#trial_design_add_treatments').modal('show');
+    });
+
+    jQuery('#new_trial_add_treatments_continue').click(function(){
+        var treatment_name = jQuery('#new_treatment_name').val();
+        var treatment_unit = jQuery('#new_treatment_unit').val();
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/layout',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                var design_hash = response.design;
+
+                var html = "";
+                if(treatment_unit == 'plot'){
+                    html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
+                    for (var key in design_hash){
+                        var plot_obj = design_hash[key];
+                        html += "<tr><td><a href='/stock/"+plot_obj.plot_id+"/view'>"+plot_obj.plot_name+"</a></td><td><a href='/stock/"+plot_obj.accession_id+"/view'>"+plot_obj.accession_name+"</a></td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_treatment='"+treatment_name+"' data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-subplot_names='"+JSON.stringify(plot_obj.subplot_names)+"'  data-tissue_sample_names='"+JSON.stringify(plot_obj.tissue_sample_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
+                    }
+                    html += "</tbody></table>";
+                }
+
+                jQuery("#working_modal").modal("hide");
+                jQuery('#trial_design_add_treatment_select_html').html(html);
+                jQuery('#trial_design_add_treatment_select').modal('show');
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving layout.");
+            }
+        });
+
+    });
+
+    jQuery(document).on('change', 'input[name="add_trial_treatment_select_all"]', function(){
+        if(jQuery(this).is(":checked")){
+            jQuery('input[name="add_trial_treatment_input"]').each(function(){
+                jQuery(this).prop("checked", true);
+            });
+        } else {
+            jQuery('input[name="add_trial_treatment_input"]').each(function(){
+                jQuery(this).prop("checked", false);
+            });
+        }
+    });
+
+    jQuery('#new_trial_add_treatments_submit').click(function(){
+        var apply_to_plants;
+        if(jQuery('#new_trial_add_treatments_apply_to_plants').is(":checked")){
+            apply_to_plants = 1;
+        }
+    
+        var design = {};
+        var trial = {};
+        var has_plant_entries;
+        var has_subplot_entries;
+        var has_tissue_sample_entries;
+        jQuery('input[name="add_trial_treatment_input"]').each(function() {
+            if (this.checked){
+                var plot_name = jQuery(this).data('plot_name');
+                var trial_treatment = jQuery(this).data('trial_treatment');
+                var plant_names = jQuery(this).data('plant_names');
+                var subplot_names = jQuery(this).data('subplot_names');
+                var tissue_names = jQuery(this).data('tissue_sample_names');
+                if (trial_treatment in trial){
+                    trial[trial_treatment].push(plot_name);
+                } else {
+                    trial[trial_treatment] = [plot_name];
+                }
+                if (plant_names != 'undefined'){
+                    if(plant_names.length > 0){
+                        has_plant_entries = plant_names.length;
+                    }
+                    for(var i=0; i<plant_names.length; i++){
+                        trial[trial_treatment].push(plant_names[i]);
+                    }
+                }
+                if (subplot_names != 'undefined'){
+                    if(subplot_names.length > 0){
+                        has_subplot_entries = subplot_names.length;
+                    }
+                    for(var i=0; i<subplot_names.length; i++){
+                        trial[trial_treatment].push(subplot_names[i]);
+                    }
+                }
+                if (tissue_names != 'undefined'){
+                    if(tissue_names.length > 0){
+                        has_tissue_sample_entries = tissue_names.length;
+                    }
+                    for(var i=0; i<tissue_names.length; i++){
+                        trial[trial_treatment].push(tissue_names[i]);
+                    }
+                }
+            }
+        });
+        design['treatments'] = trial;
+        //console.log(design);
+
+        jQuery.ajax ( {
+            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/add_treatment',
+            type: 'POST',
+            data: {
+                'design':JSON.stringify(design),
+                'has_plant_entries':has_plant_entries,
+                'has_subplot_entries':has_subplot_entries,
+                'has_tissue_sample_entries':has_tissue_sample_entries
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+                    alert('Treatment saved!');
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error saving treatment.");
+            }
+        });
+    });
+});
+
+function enable_treatments_datatable() {
+    jQuery('#trial_treatments_table_html').DataTable();
+}
+
+</script>

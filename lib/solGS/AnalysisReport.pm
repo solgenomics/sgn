@@ -567,7 +567,7 @@ sub report_status {
 	    From    => $email_from,
 	    To      => $email_to,
 	    Cc      => $email_cc,
-	    Subject => "Analysis result of $analysis_name",
+	    Subject => "solGS Report: $analysis_name",
 	],
 	body => $body,
 	);
@@ -592,13 +592,14 @@ sub multi_modeling_message {
     	    if (ref $output_details->{$k} eq 'HASH')
     	    {
     		if ($output_details->{$k}->{trait_id})
-    		{	  
+    		{
+		    my $trait_name = uc($output_details->{$k}->{trait_name});
+		    my $trait_page = $output_details->{$k}->{trait_page};
+
     		    if ($output_details->{$k}->{success})
     		    {
     			$cnt++;
     			$all_success = 1;
-    			my $trait_name = uc($output_details->{$k}->{trait_name});
-    			my $trait_page = $output_details->{$k}->{trait_page};
     			$message .= "The analysis for $trait_name is done."
     			    ." You can view the model output here:"
     			    ."\n\n$trait_page\n\n";
@@ -606,8 +607,8 @@ sub multi_modeling_message {
     		    else 
     		    {  
     			$all_success = 0; 
-    			my $trait_name = uc($output_details->{$k}->{trait_name});
-    			$message .= "The analysis for $trait_name failed.\n\n";	 
+    			$message .= "The analysis for $trait_name failed.\n\n";	
+			$message .= 'Refering page: ' . $trait_page . "\n\n";
     		    }		
     		}
     	    }
@@ -652,9 +653,9 @@ sub single_modeling_message {
 		    }
 		    else 
 		    {  
-			$message = "The analysis for $trait_name failed."
-			    ."\n\nWe are troubleshooting the cause. " 
-			    . "We will contact you when we find out more.";	 
+			$message  = "The analysis for $trait_name failed.\n\n";
+			$message .= 'Refering page: ' . $trait_page . "\n\n";
+			$message .= "We will troubleshoot the cause and contact you when we find out more.";	 
 		    }		
 		}
 	    }
@@ -699,9 +700,9 @@ sub selection_prediction_message {
     		    }
     		    else 
     		    {  
-    			$message .= "The analysis for $trait_name failed."
-    			    ."\n\nWe are troubleshooting the cause. " 
-    			    . "We will contact you when we find out more.";	 
+			$message  = "The analysis for $trait_name failed.\n\n";
+			$message .= 'Refering page: ' . $prediction_pop_page . "\n\n";
+			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";		 
     		    }
 
     		    if ($cnt > 1) 
@@ -747,10 +748,10 @@ sub population_download_message {
 			my $msg_geno  = $output_details->{$k}->{geno_message};
 			my $msg_pheno = $output_details->{$k}->{pheno_message};
 
-			$message = "Downloading phenotype and genotype data for $pop_name failed.\n"
-			    ."\nPossible causes are:\n$msg_geno\n$msg_pheno\n"
-			    ."\nWe are troubleshooting the cause. " 
-			    . "We will contact you when we find out more.";	 
+			$message  = "Downloading phenotype and genotype data for $pop_name failed.\n";
+			$message .= "\nPossible causes are:\n$msg_geno\n$msg_pheno\n";
+			$message .= 'Refering page: ' . $pop_page . "\n\n";
+			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	 
 		    }
 		}		
 	    }
@@ -776,7 +777,6 @@ sub combine_populations_message {
 	    . "with different marker sets or querying the data for one or more of the\n"
 	    . "populations failed. See details below:\n\n";
 
-	my $troost_mededeling;
 	
     	foreach my $k (keys %{$output_details}) 
 	{
@@ -798,15 +798,14 @@ sub combine_populations_message {
 			else 
 			{  		    
 			    $message .= "Downloading phenotype and genotype data for $pop_name failed.";
-			    $troost_mededeling = "\n\nWe are troubleshooting the cause. " 
-				. "We will contact you when we find out more.";				    
+			    $message .= 'Refering page: ' . $pop_page . "\n\n";
+			    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	    
 			}
 		    }		
 		}
 	    }
 	}
 	
-	$message .= $troost_mededeling; 
     }
     else 
     {

@@ -1,5 +1,41 @@
 package CXGN::Fieldbook::DownloadTrial;
 
+=head1 NAME
+
+CXGN::Fieldbook::DownloadTrial - an object to handle creating a Fieldbook Trial Layout xls file.
+
+=head1 SYNOPSIS
+
+this module is used to create a Fieldbook layout file that can be imported into Fieldbook App. it stores the file on fileserver and saves the file to a user, allowing them to access it later on.
+
+my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
+    bcs_schema => $schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $trial_id,
+    tempfile => '/tmp/fieldbook_file1.xls',
+    archive_path => /archive/path/,
+    user_id => $c->user()->get_object()->get_sp_person_id(),
+    user_name => $c->user()->get_object()->get_username(),
+    data_level => 'plots',
+    treatment_project_ids => [1],
+    selected_columns => {"plot_name"=>1,"block_number"=>1,"plot_number"=>1},
+    selected_trait_ids => [2,3],
+    selected_trait_names => ["harvest index|CO:0000001", "x|CO:00000002"]
+});
+
+my $create_fieldbook_return = $create_fieldbook->download();
+my $error;
+if ($create_fieldbook_return->{'error_messages'}){
+    $error = join ',', @{$create_fieldbook_return->{'error_messages'}};
+}
+my $file_name = $create_fieldbook_return->{'file'};
+my $file_id = $create_fieldbook_return->{'file_id'};
+
+=head1 AUTHORS
+
+=cut
+
 use Moose;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
@@ -15,6 +51,10 @@ use CXGN::Trait;
 use CXGN::List::Transform;
 use CXGN::People::Person;
 use DateTime;
+use CXGN::Stock::Accession;
+use CXGN::Stock;
+use CXGN::Phenotypes::Summary;
+use CXGN::Trial::TrialLayoutDownload;
 
 has 'bcs_schema' => (
     isa => "Bio::Chado::Schema",
@@ -70,6 +110,26 @@ has 'data_level' => (
   
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
+has 'treatment_project_ids' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw'
+);
+
+has 'selected_columns' => (
+    is => 'ro',
+    isa => 'HashRef',
+    default => sub { {"plot_name"=>1, "plot_number"=>1} }
+);
+
+has 'selected_trait_ids'=> (
+    is => 'ro',
+    isa => 'ArrayRef[Int]|Undef',
+);
+
+has 'selected_trait_names'=> (
+    is => 'ro',
+    isa => 'ArrayRef[Str]|Undef',
+);
 
 sub download { 
     my $self = shift;
@@ -85,65 +145,30 @@ sub download {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
-    
+
     my $ws = $wb->add_worksheet();
-    my $trial_layout;
-    print STDERR "\n\nTrial id: ($trial_id)\n\n";
-    try {
-        $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
-    };
-    if (!$trial_layout) {
-        push @error_messages, "Trial does not have valid field design.";
-        $errors{'error_messages'} = \@error_messages;
-        return \%errors;
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $schema,
+        trial_id => $trial_id,
+        data_level => $self->data_level,
+        treatment_project_ids => $self->treatment_project_ids,
+        selected_columns => $self->selected_columns,
+        selected_trait_ids => $self->selected_trait_ids,
+        selected_trait_names => $self->selected_trait_names
+    });
+    my $output = $trial_layout_download->get_layout_output();
+    if ($output->{error_messages}){
+        return $output;
     }
-
-    my $trial_name =  $trial_layout->get_trial_name();
-
-    if ($self->data_level eq 'plots') {
-        $ws->write(0, 0, 'plot_id');
-        $ws->write(0, 1, 'range');
-        $ws->write(0, 2, 'plot');
-        $ws->write(0, 3, 'rep');
-        $ws->write(0, 4, 'accession');
-        $ws->write(0, 5, 'is_a_control');
-    } elsif ($self->data_level eq 'plants') {
-        $ws->write(0, 0, 'plot_id');
-        $ws->write(0, 1, 'range');
-        $ws->write(0, 2, 'plant');
-        $ws->write(0, 3, 'plot');
-        $ws->write(0, 4, 'rep');
-        $ws->write(0, 5, 'accession');
-        $ws->write(0, 6, 'is_a_control');
-    }
-
-    my %design = %{$trial_layout->get_design()};
-    my $row_num = 1;
-    foreach my $key (sort { $a <=> $b} keys %design) {
-        my %design_info = %{$design{$key}};
-        if ($self->data_level eq 'plots') {
-            $ws->write($row_num,0,$design_info{'plot_name'});
-            $ws->write($row_num,1,$design_info{'block_number'});
-            $ws->write($row_num,2,$design_info{'plot_number'});
-            $ws->write($row_num,3,$design_info{'rep_number'});
-            $ws->write($row_num,4,$design_info{'accession_name'});
-            $ws->write($row_num,5,$design_info{'is_a_control'});
-            $row_num++;
-        } elsif ($self->data_level eq 'plants'){
-            my $plant_names = $design_info{'plant_names'};
-            my $plant_num = 1;
-            foreach (@$plant_names) {
-                $ws->write($row_num,0,$_);
-                $ws->write($row_num,1,$design_info{'block_number'});
-                $ws->write($row_num,2,$plant_num);
-                $ws->write($row_num,3,$design_info{'plot_number'});
-                $ws->write($row_num,4,$design_info{'rep_number'});
-                $ws->write($row_num,5,$design_info{'accession_name'});
-                $ws->write($row_num,6,$design_info{'is_a_control'});
-                $plant_num++;
-                $row_num++;
-            }
+    my @output_array = @{$output->{output}};
+    my $row_num = 0;
+    foreach my $l (@output_array){
+        my $col_num = 0;
+        foreach my $c (@$l){
+            $ws->write($row_num, $col_num, $c);
+            $col_num++;
         }
+        $row_num++;
     }
     $wb->close();
 
@@ -154,13 +179,14 @@ sub download {
         $md5->addfile($F);
     close($F);
 
-    my $project = $trial_layout->get_project;
+    my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial_name = $selected_trial->get_name();
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_name = $self->user_name();
     my $subdirectory_name = "tablet_field_layout";
-    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$project->name.".xls");
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trial_name.".xls");
     my $archive_path = $self->archive_path();
     my $file_destination =  catfile($archive_path, $archived_file_name);
 
@@ -195,7 +221,7 @@ sub download {
 
     my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->find(
         {
-            'nd_experiment_projects.project_id' => $project->project_id,
+            'nd_experiment_projects.project_id' => $trial_id,
             type_id => $field_layout_cvterm->cvterm_id(),
         },
         {
@@ -214,7 +240,8 @@ sub download {
     unlink $tempfile;
     
     my $result = $file_row->file_id;
-    return {result => $result, file => $file_destination};
+    print STDERR "FIeldbook file generated $file_destination ".localtime()."\n";
+    return {result => $result, file => $file_destination, file_id=>$file_row->file_id() };
 }
 
 1;

@@ -5,7 +5,7 @@ $deleted_phenotype_files => undef
 $locations => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
 
 <& /page/page_title.mas, title=>"Manage Phenotypic Data" &>
 
@@ -13,20 +13,29 @@ $locations => undef
 
 <!--button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br /-->
 
+<& /fieldbook/create_fieldbook_dialog.mas &>
+<& /fieldbook/create_trait_file_dialog.mas &>
+<& /fieldbook/upload_phenotype_fieldbook.mas &>
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
-<& /fieldbook/upload_phenotype_fieldbook.mas &>
 
-<&| /page/info_section.mas, title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook</a>]    [<a id="upload_spreadsheet_phenotypes_link" >Upload Spreadsheet</a>]' &>
+<div class="well">
+
+<&| /page/info_section.mas, title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]    [<a id="upload_spreadsheet_phenotypes_link" >Upload Spreadsheet</a>]<br/>[<a name="create_fieldbook_link" >Create Fieldbook Layout File</a>]    [<a id="create_new_trait_file_link" >Create Fieldbook Trait File</a>]<br/>[<a name="create_spreadsheet_link" >Create Spreadsheet</a>]' &>
   <br/>
   <& /breeders_toolbox/file_list.mas, files=>$phenotype_files, allow_delete=>1 &>
 
 </&>
 
-<&| /page/info_section.mas, title=>'Your Removed Files', subtitle=>'These files will not be shown anywhere else on the website', is_subsection=>1 &>
+</div>
+<div class="well">
+
+<&| /page/info_section.mas, title=>'Your Obsoleted Files', subtitle=>'These files will not be shown anywhere else on the website', is_subsection=>1 &>
 
   <& /breeders_toolbox/file_list.mas, files=>$deleted_phenotype_files, allow_delete=>0 &>
 
 </&>
+
+</div>
 
 </div>

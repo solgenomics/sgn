@@ -1,0 +1,153 @@
+<h3>Importing CSS</h3>
+
+<p>
+    To import CSS one should use the <code>/util/import_css.mas</code> 
+    mason component instead of a <code>&lt;link&gt;</code> element. This will 
+    ensure that a link is added to the <code>&lt;head&gt;</code> 
+    instead of being part of the <code>&lt;body&gt;</code>. One provides this 
+    mason componant with a list of strings which are one of the following:
+    <ul>
+      <li>The relative path to the CSS file from the /static/css folder.</li>
+      <li>The absolute site path to the CSS file.</li>
+      <li>A URL starting with the scheme name (i.e. 'http://...').</li>
+    </ul>
+    <pre><%text><& /util/import_css.mas, paths => [
+    'bootstrap/v1.css',
+    '/css/jquery.css',
+    'http://foo.bar/buzz.css'
+] &></%text></pre>
+</p>
+
+<hr>
+
+<h3>Importing JavaScript</h3>
+
+<p>
+    To import JavaScript one should use the <code>/util/import_javascript.mas</code> 
+    mason component. This will ensure that the script is loaded in the 
+    <code>&lt;head&gt;</code> instead of being part of the 
+    <code>&lt;body&gt;</code>. One provides this mason componant with a list of 
+    strings which are the path to the JavaScript file with slashes replaced by 
+    periods (e.g. <code>s/\/\./g</code>) and the file extension removed.
+    <pre><%text><& /util/import_javascript.mas, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &></%text></pre>
+</p>
+
+<hr>
+
+<h3>An Example Workflow Explaining Workflows</h3>
+
+<&| /util/workflow.mas , id=> "my_workflow"&>
+
+  <&| /util/workflow.mas:step, title=>"workflow.mas" &>
+    <p>Add a workflow using the <code>/util/workflow.mas</code> mason component</p>
+    <p><pre><%text>&lt;&amp;| /util/workflow.mas, id=> "my_workflow" &amp;&gt;...&lt;/&amp;&gt;</%text></pre></p>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Adding Steps" &>
+    <p>Add steps to the workflow using the <code>/util/workflow.mas:step</code> mason method.</p>
+    <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow" &amp;&gt;
+    &lt;&amp;| /util/workflow.mas:step, title=&gt; "Step A" &amp;&gt;...&lt;/&amp;&gt;
+    &lt;&amp;| /util/workflow.mas:step, title=&gt; "Another Step" &amp;&gt;...&lt;/&amp;&gt;
+    ...
+&lt;/&amp;&gt;</%text></pre>
+    </p>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Completing Steps" &>
+  <p>
+    Use the <code>Workflow.complete(Element)</code> JavaScript function to 
+    complete a step. <code>Element</code> should be any DOM element within the 
+    step you would like to complete.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:step, title=&gt;"workflow.mas" &amp;&gt;
+    ...
+    &lt;button type="button" onclick="Workflow.complete(this);"&gt;Next&lt;/button&gt;
+  &lt;/&amp;&gt;
+  ...
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Skipping Steps" &>
+  <p>
+    Skipping works like completing but marks the step as incomplete. Use
+    <code>Workflow.skip(Element)</code> just like you would 
+    <code>Workflow.complete(Element)</code>.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:step, title=&gt;"workflow.mas" &amp;&gt;
+    ...
+    &lt;button type="button" onclick="Workflow.skip(this);"&gt;Skip&lt;/button&gt;
+  &lt;/&amp;&gt;
+  ...
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button type="button" class="btn btn-default" onclick="Workflow.skip(this);">Skip this Step</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Pending Steps" &>
+  <p>
+    Sometimes a step needs time to complete, such as uploads. You can mark a
+    step as pending using <code>Workflow.pending(Element)</code>. You can later
+    fully complete the step using <code>Workflow.complete(Element)</code>.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:step, title=&gt;"workflow.mas" &amp;&gt;
+    ...
+    &lt;button type="button" onclick="Workflow.pending(this);"&gt;Wait&lt;/button&gt;
+    &lt;button type="button" onclick="Workflow.complete(this,false);"&gt;Complete&lt;/button&gt;
+  &lt;/&amp;&gt;
+  ...
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button id="to_complete" type="button" class="btn btn-primary" onclick="Workflow.pending(this);">Wait and Continue</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Endscreens" &>
+  <p>
+    After the final step is completed, an endscreen will be shown. To set the 
+    content of the endscreen, use the <code>/util/workflow.mas:complete</code> 
+    mason method. You can also optionally set a special endscreen which is shown
+    instead while there are pending steps using 
+    <code>/util/workflow.mas:pending</code>.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  ...
+  &lt;&amp;| /util/workflow.mas:complete &amp;&gt; ... &lt;/&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:pending &amp;&gt; ... &lt;/&amp;&gt;
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Go to endscreen</button>
+  </&>
+  
+  <&| /util/workflow.mas:pending &>
+    <h2>There is still a pending step. Complete it to see the final endscreen.</h2>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(document.querySelector('#to_complete'),false);">Complete Pending Step</button>
+  </&>
+  <&| /util/workflow.mas:complete &>
+    <h1>Congratulations, you've made it through the workflow!</h1>
+    <h4>Here are some other tips and tricks:</h4>
+    <p>To set the currently visible step of the workflow use</p>
+    <pre>var wf = document.querySelector("#my_workflow");
+Workflow.focus(wf,step_index);</pre>
+    <p>
+      By default, <code>Workflow.complete(...)</code>, 
+      <code>Workflow.skip(...)</code>, and <code>Workflow.pending(...)</code> 
+      also change the focus to the next step. Sometimes, you need to set a step 
+      to complete without changing the focus. To do this, pass 
+      <code>false</code> as the second argument.
+    </p>
+    <pre>Workflow.complete(Element,false);
+Workflow.skip(Element,false);
+Workflow.pending(Element,false);</pre>
+  </&>
+</&>

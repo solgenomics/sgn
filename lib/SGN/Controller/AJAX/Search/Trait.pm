@@ -21,6 +21,13 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $trait_cv_name = $c->req->param('trait_cv_name') || $c->config->{trait_cv_name};
     my $limit = $c->req->param('limit');
     my $offset = $c->req->param('offset');
+    my $trait_search_list_id = $c->req->param('trait_search_list_id');
+
+    my $subset_traits = [];
+    if ($trait_search_list_id){
+        my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $trait_search_list_id });
+        $subset_traits = $list->elements();
+    }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -29,7 +36,8 @@ sub search : Path('/ajax/search/traits') Args(0) {
 	    bcs_schema=>$schema,
 	    trait_cv_name => $trait_cv_name,
         limit => $limit,
-        offset => $offset
+        offset => $offset,
+        trait_name_list => $subset_traits
 	 });
     my $data = $trait_search->search();
     my @result;
@@ -39,6 +47,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
 	my $trait_accession = $db_name .":". $accession ;
 	push @result,
 	[
+     '',
 	 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
 	 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
 	 $_->{trait_definition},
@@ -47,5 +56,3 @@ sub search : Path('/ajax/search/traits') Args(0) {
     #print STDERR Dumper \@result;
     $c->stash->{rest} = { data => \@result };
 }
-
-

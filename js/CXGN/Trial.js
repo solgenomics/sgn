@@ -29,59 +29,53 @@ function delete_phenotype_data_by_trial_id(trial_id) {
 
 
 function delete_layout_data_by_trial_id(trial_id) {
-    var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" ? This action cannot be undone.");
+    var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" and the trial entry itself? This action cannot be undone.");
     if (yes) {
 
-	jQuery.ajax( {
-      url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
-      beforeSend: function(){
-        jQuery('#working_modal').modal('show');
-      },
-      success: function(response) {
-        jQuery('#working_modal').modal('hide');
-		    if (response.error) {
-		    alert(response.error);
-		    }
-		    else {
-		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
-		    window.location.href="/breeders/trial/"+trial_id;
-		    }
-       },
-      error: function(response) {
-		    jQuery('#working_modal').modal('hide');
-		    alert("An error occurred.");
-       }
-	 });
-  }
-}
-
-function delete_project_entry_by_trial_id(trial_id) {
-       var yes = confirm("Are you sure you want to delete the trial entry for trial "+trial_id+" ? This action cannot be undone.");
-    if (yes) {
-
-	jQuery.ajax( {
-      url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-      beforeSend: function(){
-        jQuery('#working_modal').modal('show');
-        },
-        success: function(response) {
-          jQuery('#working_modal').modal('hide');
-		      if (response.error) {
-		      alert(response.error);
-		      }
-		      else {
-		      alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-		      window.location.href="/breeders/trial/"+trial_id;
-		      }
-        },
-        error: function(response) {
-		      jQuery('#working_modal').modal('hide');
-		      alert("An error occurred.");
-        }
-	    });
+        jQuery.ajax( {
+            url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+                jQuery('#working_msg').html("Deleting trial layout...<br />");
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    jQuery.ajax({
+                        url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
+                        beforeSend: function(){
+                            jQuery('#working_msg').html("Deleting trial entry...<br />");
+                        },
+                        success: function(response) {
+                            jQuery('#working_modal').modal('hide');
+                            jQuery('#working_msg').html('');
+                            if (response.error) {
+                                alert(response.error);
+                            }
+                            else {
+                                alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
+                                window.location.href="/breeders/trial/"+trial_id;
+                            }
+                        },
+                        error: function(response) {
+                            jQuery('#working_modal').modal('hide');
+                            jQuery('#working_msg').html('');
+                            alert("An error occurred.");
+                        }
+                    });
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                jQuery('#working_msg').html('');
+                alert("An error occurred.");
+            }
+        });
     }
-
 }
+
 
 function associate_breeding_program() {
     var program = jQuery('#breeding_program_select').val();
@@ -181,6 +175,11 @@ function open_derived_trait_dialog() {
     jQuery("#test_xyz").html(trait);
     jQuery('#working_modal').modal("hide");
 
+}
+
+function close_view_plot_image_dialog() {
+    jQuery("#view_plot_image_dialog").modal("hide"); 
+    jQuery("#hm_replace_plot_accessions_dialog").modal("hide"); 
 }
 
 function compute_derived_trait() {
@@ -309,7 +308,7 @@ function trial_detail_page_setup_dialogs() {
 	},
     });
 
-    jQuery('#edit_trial_details').click(function () {
+    jQuery('#edit_trial_details').click(function () { 
         // set up inout handlers
         jQuery('#clear_planting_date').click(function() {
           planting_date_element.val('');
@@ -343,8 +342,8 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#edit_trial_year').data("originalValue", default_year);
 
         var default_type = document.getElementById("edit_trial_type").getAttribute("value");
-        get_select_box('trial_types', 'edit_trial_type', { 'default' : default_type });
-        jQuery('#edit_trial_type').data("originalValue", default_type);
+        get_select_box('trial_types', 'edit_trial_type',  { 'default' : default_type });
+        jQuery('#edit_trial_type option[value="'+default_type+'"]').attr('selected','selected');
 
         //create bootstrap daterangepickers for planting and harvest dates
         var planting_date_element = jQuery("#edit_trial_planting_date");
@@ -420,12 +419,12 @@ function trial_detail_page_setup_dialogs() {
     location.reload();
   });
 
-    jQuery('#delete_phenotype_data_by_trial_id').click(
-	function() {
-	    var trial_id = get_trial_id();
-	    delete_phenotype_data_by_trial_id(trial_id);
-	}
-    );
+    jQuery('#delete_phenotype_data_by_trial_id').click(function() {
+        jQuery('#delete_phenotype_data_dialog').modal("show");
+	//    var trial_id = get_trial_id();
+	//    delete_phenotype_data_by_trial_id(trial_id);
+	});
+
 
     jQuery('#delete_layout_data_by_trial_id').click(
 	function() {
@@ -433,11 +432,6 @@ function trial_detail_page_setup_dialogs() {
 	    delete_layout_data_by_trial_id(trial_id);
 	});
 
-    jQuery('#delete_trial_entry_by_trial_id').click(
-	function() {
-	    var trial_id = get_trial_id();
-	    delete_project_entry_by_trial_id(trial_id);
-	});
 
     jQuery('#view_layout_link').click(function () {
         jQuery('#trial_design_view_layout').dialog("open");
@@ -495,7 +489,7 @@ delete_field_map();
 
 
 
-jQuery('#delete_field_map_link').click(function () {
+jQuery('#delete_field_map_hm_link').click(function () {
     jQuery('#delete_field_map_dialog').dialog("open");
 });
 
@@ -626,56 +620,18 @@ jQuery(document).ready(function ($) {
     $('#upload_trial_coords_link').click(function () {
         open_upload_trial_coord_dialog();
     });
-
-    jQuery("#upload_trial_coord_dialog").dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-	buttons: {
-            "Cancel": function () {
-                jQuery('#upload_trial_coord_dialog').dialog("close");
-            },
-	    "Ok": {text: "Ok", id:"upload_trial_coords_ok_button", click:function () {
-		upload_trial_coord_file();
-                jQuery('#upload_trial_coord_dialog').dialog("close");
-	      }
-	    }
-	}
+    
+    $('#heatmap_upload_trial_coords_link').click(function () {
+        open_upload_trial_coord_dialog();
     });
 
-
-    $("#trial_coord_upload_spreadsheet_info_dialog").dialog( {
-	autoOpen: false,
-	buttons: { "OK" :  function() { $("#trial_coord_upload_spreadsheet_info_dialog").dialog("close"); },},
-	modal: true,
-	position: ['top', 75],
-	width: 900,
-	autoResize:true
+    jQuery('#upload_trial_coords_ok_button').click(function(){
+        upload_trial_coord_file();
     });
 
      $("#trial_coordinates_upload_spreadsheet_format_info").click( function () {
-	$("#trial_coord_upload_spreadsheet_info_dialog" ).dialog("open");
-
+         $("#trial_coord_upload_spreadsheet_info_dialog" ).modal("show");
     });
-
-    $("#trial_coord_upload_success_dialog_message").dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id: "dismiss_trial_coord_upload_dialog",
-                  click: function() {
-		      //$("#upload_trial_form").dialog("close");
-		      //$( this ).dialog( "close" );
-		      location.reload();
-                  },
-                  text: "OK"
-                }
-        }
-
-    });
-
 
      $('#upload_trial_coordinates_form').iframePostForm({
 	json: true,
@@ -692,22 +648,8 @@ jQuery(document).ready(function ($) {
             if (response.error_string) {
 		$("#upload_trial_coord_error_display tbody").html('');
 		$("#upload_trial_coord_error_display tbody").append(response.error_string);
+        jQuery('#upload_trial_coord_error_display').modal('show');
 
-
-		$(function () {
-                    $("#upload_trial_coord_error_display").dialog({
-			modal: true,
-			autoResize:true,
-			width: 650,
-			position: ['top', 250],
-			title: "Errors in uploaded file",
-			buttons: {
-                            Ok: function () {
-				$(this).dialog("close");
-                            }
-			}
-                    });
-		});
 		return;
             }
             if (response.error) {
@@ -715,7 +657,7 @@ jQuery(document).ready(function ($) {
 		return;
             }
             if (response.success) {
-		$('#trial_coord_upload_success_dialog_message').dialog("open");
+		$('#trial_coord_upload_success_dialog_message').modal("show");
 		//alert("File uploaded successfully");
             }
 	}
@@ -732,8 +674,7 @@ jQuery(document).ready(function ($) {
     }
 
     function open_upload_trial_coord_dialog() {
-	     $('#upload_trial_coord_dialog').dialog("open");
-
+	     $('#upload_trial_coord_dialog').modal("show");
     }
 
     function open_replace_trial_accession_dialog() {

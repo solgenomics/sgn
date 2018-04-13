@@ -29,8 +29,9 @@ use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_a
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
 use Scalar::Util 'reftype';
-use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::Stock::RelatedStocks;
+use CXGN::BreederSearch;
 
 use Bio::Chado::Schema;
 
@@ -70,6 +71,7 @@ sub add_stockprop_POST {
         my $req = $c->req;
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
+        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
@@ -78,9 +80,9 @@ sub add_stockprop_POST {
 
         my $message = '';
         if ($prop_type eq 'stock_synonym') {
-            my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+            my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
             my $max_distance = 0.2;
-            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance);
+            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance, 'accession');
             #print STDERR Dumper $fuzzy_search_result;
             my $found_accessions = $fuzzy_search_result->{'found'};
             my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
@@ -101,7 +103,12 @@ sub add_stockprop_POST {
 
         try {
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
+
+            my $dbh = $c->dbc->dbh();
+            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
         };
@@ -715,11 +722,7 @@ sub project_autocomplete_GET :Args(0) {
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
     my @response_list;
-    my $q = "SELECT  distinct project.name FROM
-  nd_experiment_stock JOIN
-  nd_experiment_project USING (nd_experiment_id) JOIN
-  project USING (project_id)
-  WHERE project.name ilike ? ORDER BY project.name";
+    my $q = "SELECT  distinct project.name FROM project WHERE project.name ilike ? ORDER BY project.name LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute( '%'.$term.'%');
     while  (my ($project_name) = $sth->fetchrow_array ) {
@@ -762,31 +765,33 @@ sub project_year_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
-=head2 stock_organization_autocomplete
+=head2 stockproperty_autocomplete
 
-Public Path: /ajax/stock/stock_organization_autocomplete
+Public Path: /ajax/stock/stockproperty_autocomplete
 
-Autocomplete a stock organization. Takes a single GET param,
+Autocomplete a stock property. Takes GET param for term and property,
 C<term>, responds with a JSON array of completions for that term.
-Finds only organization stockprops that are linked with a stock
+Finds stockprop values that are linked with a stock
 
 =cut
 
-sub stock_organization_autocomplete : Local : ActionClass('REST') { }
+sub stockproperty_autocomplete : Local : ActionClass('REST') { }
 
-sub stock_organization_autocomplete_GET :Args(0) {
+sub stockproperty_autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
-
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $term = $c->req->param('term');
+    my $cvterm_name = $c->req->param('property');
     # trim and regularize whitespace
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, 'stock_property')->cvterm_id();
     my @response_list;
-    my $q = "SELECT  distinct value FROM stockprop JOIN cvterm on cvterm_id = type_id WHERE cvterm.name = ? AND value ilike ?";
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute( 'organization' , '%'.$term.'%');
-    while  (my ($organization_name) = $sth->fetchrow_array ) {
-        push @response_list, $organization_name;
+    my $q = "SELECT distinct value FROM stockprop WHERE type_id=? and value ilike ?";
+    my $sth = $schema->storage->dbh->prepare($q);
+    $sth->execute( $cvterm_id, '%'.$term.'%');
+    while  (my ($val) = $sth->fetchrow_array ) {
+        push @response_list, $val;
     }
     $c->stash->{rest} = \@response_list;
 }
@@ -889,6 +894,73 @@ sub accession_autocomplete_GET :Args(0) {
 
     #print STDERR Dumper @response_list;
 
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 accession_or_cross_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub accession_or_cross_autocomplete : Local : ActionClass('REST') { }
+
+sub accession_or_cross_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='cross') ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 cross_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub cross_autocomplete : Local : ActionClass('REST') { }
+
+sub cross_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='cross' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
     $c->stash->{rest} = \@response_list;
 }
 
@@ -1557,7 +1629,13 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my @stocks;
     foreach my $r (@$result){
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      my $url;
+      if ($cvterm_name eq 'seedlot'){
+          $url = qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>};
+      } else {
+          $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
+      }
+      push @stocks, [$url, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1574,7 +1652,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my @stocks;
     foreach my $r (@$result){
       my ($cvterm_name, $stock_id, $stock_name) = @$r;
-      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}];
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1594,7 +1672,7 @@ sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@group};
@@ -1615,7 +1693,7 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};

@@ -12,6 +12,12 @@ function get_select_box(type, div_id, options) {
 	success: function(response) {
       jQuery('#'+div_id).empty();
 	    jQuery('#'+div_id).html(response.select);
+        if (options.live_search) {
+            var select = jQuery("#"+options.id);
+            select.selectpicker('render');
+            select.data('selectpicker').$button.focus();
+            select.data('selectpicker').$button.attr("style","background-color:#fff");
+        }
 	},
 	error: function(response) {
 	    alert("An error occurred");

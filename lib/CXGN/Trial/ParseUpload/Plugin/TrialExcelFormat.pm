@@ -5,6 +5,8 @@ use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::List::Validate;
+use CXGN::Stock::Seedlot;
 
 sub _validate_with_plugin {
     print STDERR "Check 3.1.1 ".localtime();
@@ -14,16 +16,12 @@ sub _validate_with_plugin {
   my %errors;
   my @error_messages;
   my %missing_accessions;
-  my %supported_trial_types;
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
   my %seen_plot_names;
-
-  #currently supported trial types
-  $supported_trial_types{'biparental'} = 1; #both parents required
-  $supported_trial_types{'self'} = 1; #only female parent required
-  $supported_trial_types{'open'} = 1; #only female parent required
+  my %seen_accession_names;
+  my %seen_seedlot_names;
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -55,6 +53,9 @@ sub _validate_with_plugin {
   #get column headers
   my $plot_name_head;
   my $accession_name_head;
+  my $seedlot_name_head;
+  my $num_seed_per_plot_head;
+  my $weight_gram_seed_per_plot_head;
   my $plot_number_head;
   my $block_number_head;
   my $is_a_control_head;
@@ -90,6 +91,22 @@ sub _validate_with_plugin {
   if ($worksheet->get_cell(0,8)) {
       $col_number_head  = $worksheet->get_cell(0,8)->value();
   }
+  if ($worksheet->get_cell(0,9)) {
+    $seedlot_name_head  = $worksheet->get_cell(0,9)->value();
+  }
+  if ($worksheet->get_cell(0,10)) {
+    $num_seed_per_plot_head = $worksheet->get_cell(0,10)->value();
+  }
+  if ($worksheet->get_cell(0,11)) {
+    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,11)->value();
+  }
+
+  my @treatment_names;
+  for (12 .. $col_max){
+      if ($worksheet->get_cell(0,$_)){
+          push @treatment_names, $worksheet->get_cell(0,$_)->value();
+      }
+  }
 
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
     push @error_messages, "Cell A1: plot_name is missing from the header";
@@ -103,32 +120,41 @@ sub _validate_with_plugin {
   if (!$block_number_head || $block_number_head ne 'block_number') {
     push @error_messages, "Cell D1: block_number is missing from the header";
   }
-  if ($is_a_control_head && $is_a_control_head ne 'is_a_control') {
-    push @error_messages, "Cell E1: Column E should contain the header \"is_a_control\"";
+  if (!$is_a_control_head || $is_a_control_head ne 'is_a_control') {
+    push @error_messages, "Cell E1: is_a_control is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$rep_number_head || $rep_number_head ne 'rep_number') {
+    push @error_messages, "Cell F1: rep_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$range_number_head || $range_number_head ne 'range_number') {
+    push @error_messages, "Cell G1: range_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$row_number_head || $row_number_head ne 'row_number') {
+    push @error_messages, "Cell H1: row_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$col_number_head || $col_number_head ne 'col_number') {
+    push @error_messages, "Cell I1: col_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name') {
+    push @error_messages, "Cell J1: seedlot_name is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$num_seed_per_plot_head || $num_seed_per_plot_head ne 'num_seed_per_plot') {
+    push @error_messages, "Cell K1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$weight_gram_seed_per_plot_head || $weight_gram_seed_per_plot_head ne 'weight_gram_seed_per_plot') {
+    push @error_messages, "Cell L1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
 
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-
-  my $rs = $schema->resultset('Stock::Stock')->search(
-      { 'me.is_obsolete' => { '!=' => 't' } },
-      {
-       '+select'=> ['me.uniquename', 'me.type_id'],
-       '+as'=> ['uniquename', 'stock_type_id']
-      }
-  );
-
-  my %plot_check;
-  my %accession_check;
-  while (my $s = $rs->next()) {
-      $plot_check{$s->get_column('uniquename')} = 1;
-      $accession_check{$s->get_column('uniquename'), $s->get_column('stock_type_id')} = 1;
-  }
-
+  my @pairs;
+  my %seen_plot_numbers;
   for my $row ( 1 .. $row_max ) {
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
     my $plot_name;
     my $accession_name;
+    my $seedlot_name;
+    my $num_seed_per_plot = 0;
+    my $weight_gram_seed_per_plot = 0;
     my $plot_number;
     my $block_number;
     my $is_a_control;
@@ -164,6 +190,15 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row, 8)) {
 	     $col_number = $worksheet->get_cell($row, 8)->value();
     }
+    if ($worksheet->get_cell($row,9)) {
+      $seedlot_name = $worksheet->get_cell($row,9)->value();
+    }
+    if ($worksheet->get_cell($row,10)) {
+      $num_seed_per_plot = $worksheet->get_cell($row,10)->value();
+    }
+    if ($worksheet->get_cell($row,11)) {
+      $weight_gram_seed_per_plot = $worksheet->get_cell($row,11)->value();
+    }
 
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
@@ -180,11 +215,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
     }
     else {
-        #plot must not already exist in the database
-        if ($plot_check{$plot_name} ) {
-            push @error_messages, "Cell A$row_name: plot name already exists: $plot_name";
-        }
-
+        $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         #file must not contain duplicate plot names
         if ($seen_plot_names{$plot_name}) {
             push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
@@ -199,46 +230,111 @@ sub _validate_with_plugin {
       push @error_messages, "Cell B$row_name: accession name missing";
     } else {
       #accession name must exist in the database
-      if (!$accession_check{$accession_name, $accession_cvterm->cvterm_id()}) {
-	  if (!$self->_get_accession($accession_name)) {
-	      push @error_messages, "Cell B$row_name: accession name does not exist as a stock or as synonym: $accession_name";
-          $missing_accessions{$accession_name} = 1;
-	  }
-      }
+      $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+      $seen_accession_names{$accession_name}++;
     }
 
       #print STDERR "Check 04 ".localtime();
 
     #plot number must not be blank
     if (!$plot_number || $plot_number eq '') {
-      push @error_messages, "Cell C$row_name: plot number missing";
+        push @error_messages, "Cell C$row_name: plot number missing";
     }
     #plot number must be a positive integer
     if (!($plot_number =~ /^\d+?$/)) {
-      push @error_messages, "Cell C$row_name: plot number is not a positive integer: $plot_number";
+        push @error_messages, "Cell C$row_name: plot number is not a positive integer: $plot_number";
     }
+    #plot number must be unique in file
+    if (exists($seen_plot_numbers{$plot_number})){
+        push @error_messages, "Cell C$row_name: plot number must be unique in your file. You already used this plot number in C".$seen_plot_numbers{$plot_number};
+    } else {
+        $seen_plot_numbers{$plot_number} = $row_name;
+    }
+
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
-      push @error_messages, "Cell D$row_name: block number missing";
+        push @error_messages, "Cell D$row_name: block number missing";
     }
     #block number must be a positive integer
     if (!($block_number =~ /^\d+?$/)) {
-      push @error_messages, "Cell D$row_name: block number is not a positive integer: $block_number";
+        push @error_messages, "Cell D$row_name: block number is not a positive integer: $block_number";
     }
     if ($is_a_control) {
       #is_a_control must be either yes, no 1, 0, or blank
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-	push @error_messages, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+          push @error_messages, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
       }
     }
+    if ($rep_number && !($rep_number =~ /^\d+?$/)){
+        push @error_messages, "Cell F$row_name: rep_number must be a positive integer: $rep_number";
+    }
+    if ($range_number && !($range_number =~ /^\d+?$/)){
+        push @error_messages, "Cell G$row_name: range_number must be a positive integer: $range_number";
+    }
+    if ($row_number && !($row_number =~ /^\d+?$/)){
+        push @error_messages, "Cell H$row_name: row_number must be a positive integer: $row_number";
+    }
+    if ($col_number && !($col_number =~ /^\d+?$/)){
+        push @error_messages, "Cell I$row_name: col_number must be a positive integer: $col_number";
+    }
+
+    if ($seedlot_name){
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $seen_seedlot_names{$seedlot_name}++;
+        push @pairs, [$seedlot_name, $accession_name];
+    }
+    if (defined($num_seed_per_plot) && !($num_seed_per_plot =~ /^\d+?$/)){
+        push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
+    }
+    if (defined($weight_gram_seed_per_plot) && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
+        push @error_messages, "Cell L$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
+    }
+
+    my $treatment_col = 12;
+    foreach my $treatment_name (@treatment_names){
+        if($worksheet->get_cell($row,$treatment_col)){
+            my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
+            if (defined($apply_treatment) && $apply_treatment ne '1'){
+                push @error_messages, "Treatment value in row $row_name should be either 1 or empty";
+            }
+        }
+        $treatment_col++;
+    }
+
   }
 
-    if (scalar( keys %missing_accessions) > 0) {
-        my @missing_accessions_list;
-        foreach (keys %missing_accessions){
-            push @missing_accessions_list, $_;
+    my @accessions = keys %seen_accession_names;
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0) {
+        $errors{'missing_accessions'} = \@accessions_missing;
+        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+    }
+
+    my @seedlot_names = keys %seen_seedlot_names;
+    if (scalar(@seedlot_names)>0){
+        my $seedlot_validator = CXGN::List::Validate->new();
+        my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlot_names)->{'missing'}};
+
+        if (scalar(@seedlots_missing) > 0) {
+            $errors{'missing_seedlots'} = \@seedlots_missing;
+            push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
         }
-        $errors{'missing_accessions'} = \@missing_accessions_list;
+    
+        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
+        if (exists($return->{error})){
+            push @error_messages, $return->{error};
+        }
+    }
+
+    my @plots = keys %seen_plot_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@plots }
+    });
+    while (my $r=$rs->next){
+        push @error_messages, "Cell A".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -273,6 +369,37 @@ sub _parse_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
+  my @treatment_names;
+  for (12 .. $col_max){
+      if ($worksheet->get_cell(0,$_)){
+          push @treatment_names, $worksheet->get_cell(0,$_)->value();
+      }
+  }
+
+  my %seen_accession_names;
+  for my $row ( 1 .. $row_max ) {
+      my $accession_name;
+      if ($worksheet->get_cell($row,1)) {
+          $accession_name = $worksheet->get_cell($row,1)->value();
+          $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+          $seen_accession_names{$accession_name}++;
+      }
+  }
+  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+  my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
+  my @accessions = keys %seen_accession_names;
+  my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+      'me.is_obsolete' => { '!=' => 't' },
+      'stockprops.value' => { -in => \@accessions},
+      'me.type_id' => $accession_cvterm_id,
+      'stockprops.type_id' => $synonym_cvterm_id
+  },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+  my %acc_synonyms_lookup;
+  while (my $r=$acc_synonym_rs->next){
+      $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+  }
+
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
     my $accession_name;
@@ -283,13 +410,18 @@ sub _parse_with_plugin {
     my $range_number;
     my $row_number;
     my $col_number;
+    my $seedlot_name;
+    my $num_seed_per_plot = 0;
+    my $weight_gram_seed_per_plot = 0;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
     }
+    $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,1)) {
       $accession_name = $worksheet->get_cell($row,1)->value();
     }
+    $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
     }
@@ -311,9 +443,38 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,8)) {
 	     $col_number = $worksheet->get_cell($row, 8)->value();
     }
+    if ($worksheet->get_cell($row,9)) {
+        $seedlot_name = $worksheet->get_cell($row, 9)->value();
+    }
+    $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    if ($worksheet->get_cell($row,10)) {
+        $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
+    }
+    if ($worksheet->get_cell($row,11)) {
+        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 11)->value();
+    }
+
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
+    }
+
+    my $treatment_col = 12;
+    foreach my $treatment_name (@treatment_names){
+        if($worksheet->get_cell($row,$treatment_col)){
+            if($worksheet->get_cell($row,$treatment_col)->value()){
+                push @{$design{treatments}->{$treatment_name}}, $plot_name;
+            }
+        }
+        $treatment_col++;
+    }
+
+    if ($acc_synonyms_lookup{$accession_name}){
+        my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+        if (scalar(@accession_names)>1){
+            print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+        }
+        $accession_name = $accession_names[0];
     }
 
     my $key = $row;
@@ -338,55 +499,18 @@ sub _parse_with_plugin {
     if ($col_number) {
 	     $design{$key}->{col_number} = $col_number;
     }
+    if ($seedlot_name){
+        $design{$key}->{seedlot_name} = $seedlot_name;
+        $design{$key}->{num_seed_per_plot} = $num_seed_per_plot;
+        $design{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
+    }
   
   }
-
+  #print STDERR Dumper \%design;
   $self->_set_parsed_data(\%design);
 
   return 1;
 
-}
-
-
-sub _get_accession {
-  my $self = shift;
-  my $accession_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession' , 'stock_type');
-
-  $stock_lookup->set_stock_name($accession_name);
-  $stock = $stock_lookup->get_stock();
-
-  if (!$stock) {
-    return;
-  }
-
-  if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-    return;
-   }
-
-  return $stock;
-
-}
-
-
-sub _get_stock {
-  my $self = shift;
-  my $stock_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-
-  $stock_lookup->set_stock_name($stock_name);
-  $stock = $stock_lookup->get_stock();
-
-  if (!$stock) {
-    return;
-  }
-
-  return $stock;
 }
 
 

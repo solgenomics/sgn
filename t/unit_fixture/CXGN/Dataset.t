@@ -24,6 +24,7 @@ $ds->description("test description");
 
 $ds->name("test");
 $ds->description("test description");
+$ds->sp_person_id(41);
 
 my $sp_dataset_id = $ds->store();
 
@@ -36,20 +37,21 @@ is_deeply($new_ds->plots(), $ds->plots(), "plots store");
 
 is($new_ds->name(), $ds->name(), "name store");
 is($new_ds->description(), $ds->description(), "desc store");
+is($new_ds->sp_person_id(), 41, "dataset owner");
 
-my @datasets = ( 
-    CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()), 
-    CXGN::Dataset::File->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()), 
-    CXGN::Dataset::Cache->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), cache_root => '/tmp/dataset_cache_root'), 	
+my @datasets = (
+    CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()),
+    CXGN::Dataset::File->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()),
+    CXGN::Dataset::Cache->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), cache_root => '/tmp/dataset_cache_root'),
     );
 
-foreach my $ds (@datasets) { 
+foreach my $ds (@datasets) {
     if ($ds->can("cache")) { $ds->cache->clear(); }
     $ds->name("test");
     $ds->description("test description");
 
     $ds->accessions( [ 38913, 38914, 38915 ] );
-    
+
     my $sp_dataset_id = $ds->store();
 
     my $trials = $ds->retrieve_trials();
@@ -69,12 +71,12 @@ foreach my $ds (@datasets) {
                          ]
                        ]
 	      , "trial retrieve test");
-    
-    if ($ds->isa("CXGN::Dataset::File")) { 
+
+    if ($ds->isa("CXGN::Dataset::File")) {
 	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
     }
-	
-    my $traits = $ds ->retrieve_traits();
+
+    my $traits = $ds->retrieve_traits();
 
     is_deeply($traits, [
 		  [
@@ -95,11 +97,11 @@ foreach my $ds (@datasets) {
 		  ]
 	      ]
 	);
-    
+
     my $phenotypes = $ds->retrieve_phenotypes();
-    
+
     my $genotypes = $ds->retrieve_genotypes(1);
-    
+
     my $years = $ds->retrieve_years();
 
     is_deeply($years, [], "Year retrieve test");

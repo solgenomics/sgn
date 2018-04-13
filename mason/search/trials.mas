@@ -19,12 +19,14 @@ $nd_geolocation => 'not_provided'
     <th>Location</th>
     <th>Trial type</th>
     <th>Design</th>
+    <th>Planting Date</th>
+    <th>Harvest Date</th>
 </tr>
 </thead>
 </table>
 
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 <br><br>
 <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trial names currently showing in the search results table to a new or exisiting list</i>'&>
 <br>
@@ -39,7 +41,8 @@ $nd_geolocation => 'not_provided'
 jQuery(document).ready(function () {
 
    var trial_table = jQuery('#trial_search_results').DataTable( {
-       'ajax': '/ajax/search/trials?nd_geolocation=<% $nd_geolocation %>'
+       'ajax': '/ajax/search/trials?nd_geolocation=<% $nd_geolocation %>',
+       "scrollX": true
    });
 
    jQuery('#trial_search_results').on( 'draw.dt', function () {

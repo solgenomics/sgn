@@ -1,6 +1,39 @@
 
 package CXGN::Trial::Download::Plugin::IGDFacilitySpreadsheet;
 
+=head1 NAME
+
+CXGN::Trial::Download::Plugin::IGDFacilitySpreadsheet
+
+=head1 SYNOPSIS
+
+This plugin module is loaded from CXGN::Trial::Download
+
+------------------------------------------------------------------
+
+For downloading the IGD sequencing facility spreadsheet (as used from
+SGN::Controller::BreedersToolbox::Download->download_sequencing_facility_spreadsheet):
+
+my $td = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    format => "IGDFacilitySpreadsheet",
+    filename => $file_path,
+    user_id => $c->user->get_object()->get_sp_person_id(),
+    trial_download_logfile => $c->config->{trial_download_logfile},
+});
+$td->download();
+my $file_name = basename($file_path);
+$c->res->content_type('Application/xls');
+$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+my $output = read_file($file_path, binmode=>':raw');
+$c->res->body($output);
+
+
+=head1 AUTHORS
+
+=cut
+
 use Moose::Role;
 use Spreadsheet::WriteExcel;
 
@@ -14,7 +47,7 @@ sub download {
     my $trial_id = $self->trial_id();
 
     my $t = CXGN::Trial->new( { bcs_schema => $self->bcs_schema(), trial_id => $trial_id });
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $trial_id });
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema(), trial_id => $trial_id, experiment_type=>'genotyping_layout' });
 
     my $layout = $layout->get_design();
     print STDERR "FILENAME: ".$self->filename()."\n";

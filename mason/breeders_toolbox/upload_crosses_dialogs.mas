@@ -1,0 +1,235 @@
+<%args>
+@locations => ()
+</%args>
+
+<div class="modal fade" id="upload_crosses_dialog" name="upload_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossesDialog">Upload Crosses</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "crosses_upload_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"What are crosses?" &>
+                            <ul>
+                                <li>Crosses represent any pollination that occurs.</li>
+                                <li>Crosses can be of different types (biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
+                                <li>Depending on the cross type, an individual cross can be defined as between two accessions (e.g. accession A is the female and accession B is the male in a biparental cross)</li>
+                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are only defined as groups of accessions)</li>
+                                <li>An individual cross can be linked to the specific female plot or plant, as well as the specific male plot or plant.</li>
+                                <li>A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.</li>
+                                <li>A cross can produce seed, which goes into a seedlot.</li>
+                                <li>A cross can ultimately produce progeny, which then become named accessions in the database.</li>
+                            </ul>
+
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "File Formatting" &>
+                            <& /page/page_title.mas, title=>"Make sure your crosses are formatted in the right format" &>
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-info" id="cross_upload_spreadsheet_format_info">Information about file format</button><br/><br/>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Crossing trial" &>
+                            <& /page/page_title.mas, title=>"Select a crossing trial" &>
+
+                            <p>Crossing trials are for grouping crosses together. The grouping is most often done for geographic reasons, such as a group of crosses done in the same field trial. This grouping can be used to encapsulate a crossing block field trial that you have saved in the database (e.g. in Manage Trials your crossing block will appear as a field trial with plots)</p>
+                            <hr>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Crossing Trial: </label>
+                                <div class="col-sm-10">
+                                    <div id="upload_crosses_select_crossingtrial_1" name="upload_crosses_select_crossingtrial_1" >
+                                    </div>
+                                </div>
+                            </div><br/><br/>
+                            <hr>
+
+                            <center>
+                                <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a crossing trial, click here</button><br/><br/>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing trial, go to Next Step</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
+                            <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
+
+                            <br/>
+                                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Crossing Trial: </label>
+                                    <div class="col-sm-10">
+                                        <div id="upload_crosses_select_crossingtrial_2" name="upload_crosses_select_crossingtrial_2" >
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Location of crosses: </label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control" id="cross_upload_location" name="cross_upload_location">
+                                            <option value="">Select Location</option>
+<%perl>
+    foreach my $location (@locations) {
+        print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+    }
+</%perl>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Upload File: </label>
+                                    <div class="col-sm-10">
+                                        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+                                    </div>
+                                </div>
+
+                                <!--
+                                <hr>
+                                <h3>Additional options:</h3>
+
+                                <p>Progeny naming: <i>If generating progeny, use cross name and:</i></p>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Prefix: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Suffix: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="upload_suffix" name="upload_suffix" />
+                                    </div>
+                                </div>
+                                -->
+                            </form>
+
+                            <center>
+                                <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your crosses are now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                The crosses file was uploaded successfully
+                            </p>
+                            
+                            <ul>
+                                <li>You may want to proceed to the cross detail page(s) for the cross(es) you just created.</li>
+                                <li>You can print barcodes for the crosses.</li>
+                                <li>You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).</li>
+                            </ul>
+                            <br/>
+                            <center>
+                            <button class="btn btn-primary" name="upload_crosses_success_complete_button">The crosses were saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </center>
+                        </&>
+
+                    </&><!-- End of workflow -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_cross_error_display" name="upload_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesErrorDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossesErrorDialog">Upload Crosses File Error</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <table>
+    	  <tbody></tbody>
+  	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+% my $cross_properties = $c->config->{cross_properties};
+% my @column_header = split ',',$cross_properties;
+
+<div class="modal fade" id="cross_upload_spreadsheet_info_dialog" name="cross_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossesInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <b>Crosses may be uploaded in an Excel file (.xls)</b>
+                    <br>
+                    (.xlsx format not supported)
+
+                    <br><br>
+                    <b>Header:</b>
+                    <br>
+
+                    The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_name</td>
+                                <td>cross_type</td>
+                                <td>female_parent</td>
+                                <td>male_parent</td>
+                                <td>female_plot</td>
+                                <td>male_plot</td>
+% foreach my $column_header(@column_header){
+                                <td><% $column_header %></td>
+%}
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required columns:</b>
+                    <ul>
+                        <li><b>cross_name</b> (must not conflict with an existing cross name)</li>
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
+                        <li><b>female_parent</b> (must exist in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, must exist in the database)</li>
+                    </ul>
+
+                    <b>Optional columns (dates must be in the format YYYY/MM/DD):</b>
+                    <ul>
+                        <li><b>female_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)</li>
+                        <li><b>male_plot</b> (required in the header, but value may be left blank. When specified, plot name must exist in the database)</li>
+% foreach my $column_header(@column_header){
+                        <li><% $column_header %></li>
+%}
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -20,11 +20,24 @@ CXGN::BreedersToolbox::Accessions - functions for managing accessions
 
 use strict;
 use warnings;
+use Data::Dumper;
 use Moose;
 use SGN::Model::Cvterm;
 
-has 'schema' => ( isa => 'Bio::Chado::Schema',
-                  is => 'rw');
+has 'schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw'
+);
+
+has 'people_schema' => (
+    isa => 'CXGN::People::Schema',
+    is => 'rw'
+);
+
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw'
+);
 
 sub get_all_accessions { 
     my $self = shift;
@@ -107,6 +120,53 @@ sub get_population_members {
         push @accessions_in_population, \%accession_info;
     }
     return \@accessions_in_population;
+}
+
+sub get_possible_seedlots {
+    my $self = shift;
+    my $uniquenames = shift; #array ref to list of accession unique names
+    my $type = shift;
+    my $schema = $self->schema();
+    my $phenome_schema = $self->phenome_schema();
+    my $people_schema = $self->people_schema();
+
+    my $accessions;
+    my $crosses;
+    if ($type eq 'accessions'){
+        $accessions = $uniquenames;
+    }
+    if ($type eq 'crosses'){
+        $crosses = $uniquenames;
+    }
+
+    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+        $schema,
+        $people_schema,
+        $phenome_schema,
+        undef,
+        undef,
+        undef,
+        undef,
+        undef,
+        undef,
+        $accessions,
+        $crosses,
+        1
+    );
+
+    my %seedlot_hash;
+    foreach my $sl (@$list) {
+        push @{$seedlot_hash{$sl->{source_stocks}->[0]->[1]}}, {
+            breeding_program_id => $sl->{breeding_program_id},
+            program => $sl->{breeding_program_name},
+            seedlot => [$sl->{seedlot_stock_uniquename}, $sl->{seedlot_stock_id}],
+            contents => [$sl->{source_stocks}->[0]->[1], $sl->{source_stocks}->[0]->[0]],
+            location => $sl->{location},
+            count => $sl->{current_count},
+            weight_gram => $sl->{current_weight_gram}
+        };
+    }
+    return \%seedlot_hash;
 }
 
 1;

@@ -298,7 +298,7 @@ jQuery('#compose_trait').on('click', function () {
             });
 
             jQuery('#traits_saved_dialog').modal("show");
-            refresh_matviews();
+            refresh_matviews('fullview');
 
         },
         error: function(request, status, err) {

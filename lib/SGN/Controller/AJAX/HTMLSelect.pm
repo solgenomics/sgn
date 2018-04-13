@@ -27,10 +27,13 @@ use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Onto;
+use CXGN::List;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
+use CXGN::Stock::Seedlot;
+use CXGN::Dataset;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -173,17 +176,45 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->req->param("trial_id");
+
+    my $id = $c->req->param("id") || "treatment_select";
+    my $name = $c->req->param("name") || "treatment_select";
+    my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    my $data = $trial->get_treatments();
+
+    if ($empty) {
+        unshift @$data, [ 0, "None" ];
+    }
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => $data,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
 
     my $projects;
-    if (!$breeding_program_id) {
-      $projects = $p->get_breeding_programs();
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
     } else {
-      push @$projects, [$breeding_program_id];
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
     }
 
     my $id = $c->req->param("id") || "html_trial_select";
@@ -191,6 +222,8 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $size = $c->req->param("size");
     my $empty = $c->req->param("empty") || "";
     my $multiple = $c->req->param("multiple") || 0;
+    my $live_search = $c->req->param("live_search") || 0;
+
     my @trials;
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
@@ -204,6 +237,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
+      live_search => $live_search,
       name => $name,
       id => $id,
       size => $size,
@@ -212,11 +246,190 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_genotyping_trials_select : Path('/ajax/html/select/genotyping_trials') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
+
+    my $projects;
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
+    } else {
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my $multiple = $c->req->param("multiple") || 0;
+    my $live_search = $c->req->param("live_search") || 0;
+
+    my @trials;
+    foreach my $project (@$projects) {
+      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$genotyping_trials) {
+          push @trials, $_;
+      }
+    }
+    @trials = sort { $a->[1] cmp $b->[1] } @trials;
+
+    if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
+
+    my $html = simple_selectbox_html(
+      multiple => $multiple,
+      live_search => $live_search,
+      name => $name,
+      id => $id,
+      size => $size,
+      choices => \@trials,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR "Retrieving list items . . .\n";
+
+    my $id = $c->req->param("id") || "label_data_sources_select";
+    my $name = $c->req->param("name") || "label_data_sources_select";
+    my $empty = $c->req->param("empty") || "";
+    my $live_search = $c->req->param("live_search") ? 'data-live-search="true"' : '';
+    my $default = $c->req->param("default") || 0;
+
+    my $user_id = $c->user()->get_sp_person_id();
+    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'plots');
+    my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh(), 'plots');
+
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $projects = $p->get_breeding_programs();
+
+    my (@field_trials, @cross_trials, @genotyping_trials) = [];
+    foreach my $project (@$projects) {
+      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$field_trials) {
+          push @field_trials, $_;
+      }
+      foreach (@$cross_trials) {
+          push @cross_trials, $_;
+      }
+      foreach (@$genotyping_trials) {
+          push @genotyping_trials, $_;
+      }
+    }
+
+    my @choices = [];
+    push @choices, '__Your Plot Lists';
+    foreach my $item (@$lists) {
+        push @choices, [@$item[0], @$item[1]];
+    }
+    push @choices, '__Public Plot Lists';
+    foreach my $item (@$public_lists) {
+        push @choices, [@$item[0], @$item[1]];
+    }
+    push @choices, '__Field Trials';
+    @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
+    foreach my $trial (@field_trials) {
+        push @choices, $trial;
+    }
+    push @choices, '__Genotyping Trials';
+    @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
+    foreach my $trial (@genotyping_trials) {
+        push @choices, $trial;
+    }
+    push @choices, '__Cross Trials';
+    @cross_trials = sort { $a->[1] cmp $b->[1] } @cross_trials;
+    foreach my $trial (@cross_trials) {
+        push @choices, $trial;
+    }
+    #
+    print STDERR "Choices are:\n".Dumper(@choices);
+
+    if ($default) { unshift @choices, [ '', $default ]; }
+
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@choices,
+      params => $live_search,
+      selected_params => 'hidden'
+    );
+
+    $c->stash->{rest} = { select => $html };
+}
+# sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
+#     my $self = shift;
+#     my $c = shift;
+#
+    # my $id = $c->req->param("id") || "label_data_sources_select";
+    # my $name = $c->req->param("name") || "label_data_sources_select";
+    # my $empty = $c->req->param("empty") || "";
+    # my $live_search = $c->req->param("live_search") ? 'data-live-search="true"' : '';
+    # my $default = $c->req->param("default") || 0;
+    #
+    # my $lists = CXGN::List::available_lists($c->dbc->dbh(), $c->user(), 'plots');
+    # my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh(), 'plots');
+    #
+    # my $projects = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
+    # my @trials = [];
+    # foreach my $project (@$projects) {
+    #   my ($field_trials, $cross_trials, $genotyping_trials) = $projects->get_trials_by_breeding_program($project->[0]);
+    #   foreach (@$field_trials) {
+    #       push @trials, $_;
+    #   }
+    # }
+    # @trials = sort { $a->[1] cmp $b->[1] } @trials;
+    #
+    # my @choices = [];
+    # push @choices, '__Your Plot Lists';
+    # foreach my $item (@$lists) {
+    #     push @choices, $item;
+    # }
+    # push @choices, '__Public Plot Lists';
+    # foreach my $item (@$public_lists) {
+    #     push @choices, $item;
+    # }
+    # push @choices, '__Trials';
+    # foreach my $trial (@trials) {
+    #     push @choices, $trial;
+    # }
+    #
+    # print STDERR "Choices are:\n".Dumper(@choices);
+    #
+    # if ($default) { unshift @trials, [ '', $default ]; }
+    #
+    # my $html = simple_selectbox_html(
+    #   name => $name,
+    #   id => $id,
+    #   choices => \@choices,
+    #   params => $live_search
+    # );
+#
+#     $c->stash->{rest} = { select => $html };
+# }
+
 sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $params = _clean_inputs($c->req->params);
     my $names_as_select = $params->{names_as_select}->[0] || 0;
+
+    my %stockprops_values;
+    if ($params->{organization_list} && scalar(@{$params->{organization_list}})>0){
+        $stockprops_values{'organization'} = $params->{organization_list};
+    }
+    if ($params->{pui_list} && scalar(@{$params->{pui_list}})>0){
+        $stockprops_values{'PUI'} = $params->{pui_list};
+    }
+    if ($params->{accession_number_list} && scalar(@{$params->{accession_number_list}})>0){
+        $stockprops_values{'accession number'} = $params->{accession_number_list};
+    }
 
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
@@ -225,8 +438,6 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		match_type=>$params->{match_type}->[0],
 		match_name=>$params->{match_type}->[0],
 		uniquename_list=>$params->{uniquename_list},
-		accession_number_list=>$params->{accession_number_list},
-		pui_list=>$params->{pui_list},
 		genus_list=>$params->{genus_list},
 		species_list=>$params->{species_list},
 		stock_id_list=>$params->{stock_id_list},
@@ -239,11 +450,11 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		minimum_phenotype_value=>$params->{minimum_phenotype_value}->[0],
 		maximum_phenotype_value=>$params->{maximum_phenotype_value}->[0],
 		trial_name_list=>$params->{trial_name_list},
-		trial_id_list=>$params->{'trial_id_list[]'},
+		trial_id_list=>$params->{trial_id_list},
 		breeding_program_id_list=>$params->{breeding_program_id_list},
 		location_name_list=>$params->{location_name_list},
 		year_list=>$params->{year_list},
-		organization_list=>$params->{organization_list},
+        stockprops_values=>\%stockprops_values,
 		limit=>$params->{limit}->[0],
 		offset=>$params->{offset}->[0],
 		minimal_info=>1,
@@ -278,6 +489,69 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
         data_related => $data_related
 	);
 	$c->stash->{rest} = { select => $html };
+}
+
+sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $accessions = $c->req->param('seedlot_content_accession_name') ? [$c->req->param('seedlot_content_accession_name')] : [];
+    my $crosses = $c->req->param('seedlot_content_cross_name') ? [$c->req->param('seedlot_content_cross_name')] : [];
+    my $offset = $c->req->param('seedlot_offset') ? $c->req->param('seedlot_offset') : '';
+    my $limit = $c->req->param('seedlot_limit') ? $c->req->param('seedlot_limit') : '';
+    my $search_seedlot_name = $c->req->param('seedlot_name') ? $c->req->param('seedlot_name') : '';
+    my $search_breeding_program_name = $c->req->param('seedlot_breeding_program_name') ? $c->req->param('seedlot_breeding_program_name') : '';
+    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
+    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
+    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+        $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
+        $c->dbic_schema("CXGN::People::Schema"),
+        $c->dbic_schema("CXGN::Phenome::Schema"),
+        $offset,
+        $limit,
+        $search_seedlot_name,
+        $search_breeding_program_name,
+        $search_location,
+        $search_amount,
+        $accessions,
+        $crosses,
+        1
+    );
+    my @seedlots;
+    foreach my $sl (@$list) {
+        push @seedlots, {
+            breeding_program_id => $sl->{breeding_program_id},
+            breeding_program_name => $sl->{breeding_program_name},
+            seedlot_stock_id => $sl->{seedlot_stock_id},
+            seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
+            location => $sl->{location},
+            location_id => $sl->{location_id},
+            count => $sl->{current_count}
+        };
+    }
+    #print STDERR Dumper \@seedlots;
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my $data_related = $c->req->param("data-related") || "";
+    my @stocks;
+    foreach my $r (@seedlots) {
+        push @stocks, [ $r->{seedlot_stock_id}, $r->{seedlot_stock_uniquename} ];
+    }
+    @stocks = sort { $a->[1] cmp $b->[1] } @stocks;
+
+    if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
+
+    my $html = simple_selectbox_html(
+        multiple => $multiple,
+        name => $name,
+        id => $id,
+        size => $size,
+        choices => \@stocks,
+        data_related => $data_related
+    );
+    $c->stash->{rest} = { select => $html };
 }
 
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
@@ -406,19 +680,23 @@ sub get_composable_cvs_allowed_combinations_select : Path('/ajax/html/select/com
 sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     my $self = shift;
     my $c = shift;
-
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
-
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
+
     my $projects;
-    if (!$breeding_program_id) {
-      $projects = $p->get_breeding_programs();
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
     } else {
-      push @$projects, [$breeding_program_id];
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
     }
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
     my $size = $c->req->param("size");
     my @crosses;
     foreach my $project (@$projects) {
@@ -430,7 +708,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     @crosses = sort @crosses;
 
     my $html = simple_selectbox_html(
-      multiple => 1,
+      multiple => $multiple,
       name => $name,
       id => $id,
       size => $size,
@@ -555,6 +833,32 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $html = '<select><option disabled="1">None</option></select>';
+    my $user_id;
+    if ($c->user()) {
+	if ($user_id = $c->user->get_object()->get_sp_person_id()) {
+
+	    my $datasets = CXGN::Dataset->get_datasets_by_user(
+		$c->dbic_schema("CXGN::People::Schema"),
+		$user_id);
+
+	    print STDERR "Retrieved datasets: ".Dumper($datasets);
+
+	    $html = simple_selectbox_html(
+		name => 'available_datasets',
+		id => 'available_datasets',
+		choices => $datasets,
+		);
+
+	}
+    }
+    $c->stash->{rest} = { select => $html };
+}
+
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
@@ -570,6 +874,7 @@ sub _clean_inputs {
 		}
 		@$ret_val = grep {$_ ne undef} @$ret_val;
 		@$ret_val = grep {$_ ne ''} @$ret_val;
+        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
 		$params->{$_} = $ret_val;
 	}
 	return $params;

@@ -62,14 +62,14 @@ eval {
 	chomp;
 	my ($merge_stock_name, $good_stock_name) = split /\t/;
 	
-	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $good_stock_name } });
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name } );
 	if (!$stock_row) { 
 	    print STDERR "Stock $good_stock_name not found. Skipping...\n";
 	    
 	    next();
 	}
 	
-	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $merge_stock_name } });
+	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name } );
 	if (!$merge_row) { 
 	    print STDERR "Stock $merge_stock_name not available for merging. Skipping\n";
 	    next();

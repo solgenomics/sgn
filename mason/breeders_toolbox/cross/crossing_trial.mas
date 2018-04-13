@@ -1,0 +1,289 @@
+
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/cross/crossing_trial.mas - a mason component to display a crossing trial detail page
+
+=head1
+
+
+=cut
+
+</%doc>
+
+
+<%args>
+$trial_id
+$trial_name
+$breeding_program_id
+$breeding_program_name
+$location_id
+$location_name
+$year => undef
+$trial_type => undef
+$planting_date => undef
+$harvest_date => undef
+$trial_description => undef
+$folder_name => undef
+$folder_id => undef
+</%args>
+
+<style>
+
+@media (min-width: 1200px) {
+    .affix {
+        top:100px;
+        right:0;
+        position:fixed;
+    }
+}
+
+</style>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
+
+<%perl>
+  use Data::Dumper;
+my $start_time = time();
+
+#print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
+</%perl>
+
+<br/>
+
+
+<& /page/page_title.mas, title=>"Details for ".$trial_name &>
+
+<&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '<a id="edit_details"></a>'&>
+
+
+<div class="panel panel-default">
+    <table class="table table-hover" >
+
+        <tr>
+            <td><b>Crossing Trial Name</b></td>
+            <td>
+                <div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "[No Trial Name]";
+% }
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Breeding Program </b></td>
+            <td>
+                <span id="breeding_program">
+% if ($breeding_program_name) {
+%  print "$breeding_program_name";
+% }
+% else {
+%  print "No Breeding Program";
+% }
+                </span>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Location</b></td>
+            <td>
+                <div id="trial_location">
+% if ($location_name) {
+%  print "$location_name";
+% } else {
+%  print "[No Location]";
+% }
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Year</b></td>
+            <td>
+                <div id="trial_year">
+% if ($year) {
+%  print "$year";
+% } else {
+%  print "[No Year]";
+% }
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Trial Type</b></td>
+            <td>
+                <div id="trial_type">
+% if ($trial_type) {
+%  print "$trial_type";
+% } else {
+% print "[Type not set]";
+% }
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Planting Date</b></td>
+            <td>
+                <div id="planting_date">
+% if ($planting_date) {
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
+% } else {
+%  print "[No Planting Date]";
+% }
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Harvest Date</b></td>
+            <td>
+                <div id="harvest_date">
+% if ($harvest_date) {
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
+% } else {
+%  print "[No Harvest Date]";
+% }
+                </div>
+            </td>
+        </tr>
+
+        <tr><td><b>Description</b></td>
+            <td>
+                <div id="trial_description">
+% if ($trial_description) {
+%  print "$trial_description";
+% } else {
+%  print "[No Description]";
+% }
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Folder</b></td>
+            <td>
+                <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+                <br/><br/>
+                <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+<& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+
+
+</&>
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas, title => 'Crosses in this trial', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "crosses_in_trial" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Cross Name</th>
+                                <th>Female Parent</th>
+                                <th>Male Parent</th>
+                                <th>Cross Type</th>
+                                <th>Female Plot</th>
+                                <th>Male Plot</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+ <&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                <table id = "cross_properties_trial" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Cross Name</th>
+% my $cross_properties = $c->config->{cross_properties};
+% my @column_header = split ',',$cross_properties;
+% foreach my $column_header(@column_header){
+                            <th><%$column_header%></th>
+%}
+                        </tr>
+                    </thead>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Progeny Info', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "cross_progenies_trial" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Cross Name</th>
+                            <th>Number of Progenies</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-1">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-link"></span>
+                </div>
+                <div class="col-sm-11">
+                    <h4>Trial Linkage</h4>
+
+                    <&| /page/info_section.mas, title => 'Field Trial to Crossing Trial Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                        <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
+                    </&>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#crosses_in_trial').DataTable({
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
+    });
+
+    jQuery('#cross_properties_trial').DataTable({
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
+    });
+
+    jQuery('#cross_progenies_trial').DataTable({
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
+    });
+
+});
+
+</script>
