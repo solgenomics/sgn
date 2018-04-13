@@ -397,11 +397,11 @@ sub studies_layout {
 			}
             my $image_id = CXGN::Stock->new({
     			schema => $self->bcs_schema,
-    			stock_id => $design->{$plot_number}->{plot_id},,
+    			stock_id => $design->{$plot_number}->{plot_id},
     		});
     		my @plot_image_ids = $image_id->get_image_ids();
             $additional_info{plotImageDbIds} = \@plot_image_ids;
-            $additional_info{plotNumber} = $plot_number;
+            $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
             $additional_info{designType} = $design_type;
              
 			$formatted_plot = {
@@ -414,6 +414,7 @@ sub studies_layout {
 				X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
 				Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
 				entryType => $type,
+                plotNumber => $design->{$plot_number}->{plot_number},
 				germplasmName => $design->{$plot_number}->{accession_name},
 				germplasmDbId => $design->{$plot_number}->{accession_id},
 				additionalInfo => \%additional_info
@@ -421,7 +422,7 @@ sub studies_layout {
 			push @$plot_data, $formatted_plot;
 		}
 		$count++;
-	}
+	} print STDERR Dumper(\@$plot_data);
 	my %result;
     my @data_files;
     if ($format eq 'json'){

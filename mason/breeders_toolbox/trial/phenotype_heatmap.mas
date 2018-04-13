@@ -588,11 +588,14 @@ jQuery(document).ready( function() {
         checks = {};
         jQuery("#ctrldiv").css("display", "none");
         jQuery.ajax( {
-             url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+             //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+             url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=1000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
+                 var data = response.result.data;
+                 console.log(data);
                 var col_length = response.coord_col[0]; 
                 var row_length = response.coord_row[0];
                 var block_max = response.max_block;
