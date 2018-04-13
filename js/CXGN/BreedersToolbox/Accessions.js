@@ -150,6 +150,14 @@ jQuery(document).ready(function ($) {
         jQuery('#manage_populations_delete_dialog').modal('show');
     });
 
+    jQuery('#organization_name_input').autocomplete({
+       source: '/ajax/stock/stockproperty_autocomplete?property=organization',
+    });
+
+    jQuery('#population_name_input').autocomplete({
+       source: '/ajax/stock/population_autocomplete',
+    });
+
     jQuery("#add_accessions_to_population_submit").click(function(){
         jQuery.ajax({
             type: 'POST',
