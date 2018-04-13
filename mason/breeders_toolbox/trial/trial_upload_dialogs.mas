@@ -232,24 +232,6 @@ $locations
                                             </select>
                                         </div>
                                     </div>
-                                    <div style="display:none"><!-- this linkage will be done automatically when a genotyping trial is added -->
-                                    <div class="form-group" style="display:none" id="upload_trial_trial_has_been_genotyped_section">
-                                        <label class="col-sm-5 control-label">Has this trial been genotyped?: </label>
-                                        <div class="col-sm-7">
-                                            <select class="form-control" id="upload_trial_trial_been_genotyped" name="upload_trial_trial_been_genotyped">
-                                                <option value="no">No</option>
-                                                <option value="yes">Yes</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-group" style="display:none" id="upload_trial_select_genotyping_trial_section">
-                                        <label class="col-sm-5 control-label">Are genotyping trial(s) (e.g. 96 well plates) from this field trial saved in the database?: </label>
-                                        <div class="col-sm-7">
-                                            <div id="upload_trial_trial_genotype_trial" name="upload_trial_trial_genotype_trial">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    </div>
                                 </div>
 
                                 <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing trial in the database.</p>
@@ -263,25 +245,6 @@ $locations
                                                 <option value="yes">Yes</option>
                                             </select>
                                         </div>
-                                    </div>
-
-                                    <div style="display:none"><!-- this linkage will be done automatically when a cross is added -->
-                                    <div class="form-group" style="display:none" id="upload_trial_select_crossing_trial_section">
-                                        <label class="col-sm-5 control-label">Have crosses been done on this trial?: </label>
-                                        <div class="col-sm-7">
-                                            <select class="form-control" id="upload_trial_trial_been_crossed" name="upload_trial_trial_been_crossed">
-                                                <option value="no">No</option>
-                                                <option value="yes">Yes</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-group" style="display:none" id="upload_trial_select_crossing_trials_section">
-                                        <label class="col-sm-5 control-label">Are crossing trial(s) linked to this field trial saved in the database?: </label>
-                                        <div class="col-sm-7">
-                                            <div id="upload_trial_trial_crossing_trial" name="upload_trial_trial_crossing_trial">
-                                            </div>
-                                        </div>
-                                    </div>
                                     </div>
                                 </div>
 

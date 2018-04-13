@@ -27,46 +27,12 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    jQuery('#upload_trial_trial_will_be_genotyped').change(function(){
-        if(jQuery(this).val() == 'yes'){
-            jQuery('#upload_trial_trial_has_been_genotyped_section').show();
-        } else {
-            jQuery('#upload_trial_trial_has_been_genotyped_section').hide();
-        }
-    });
-
-    jQuery('#upload_trial_trial_been_genotyped').change(function(){
-        if(jQuery(this).val() == 'yes'){
-            jQuery('#upload_trial_select_genotyping_trial_section').show();
-        } else {
-            jQuery('#upload_trial_select_genotyping_trial_section').hide();
-        }
-    });
-
-    jQuery('#upload_trial_trial_will_be_crossed').change(function(){
-        if(jQuery(this).val() == 'yes'){
-            jQuery('#upload_trial_select_crossing_trial_section').show();
-        } else {
-            jQuery('#upload_trial_select_crossing_trial_section').hide();
-        }
-    });
-
-    jQuery('#upload_trial_trial_been_crossed').change(function(){
-        if(jQuery(this).val() == 'yes'){
-            jQuery('#upload_trial_select_crossing_trials_section').show();
-        } else {
-            jQuery('#upload_trial_select_crossing_trials_section').hide();
-        }
-    });
-
     jQuery('#trial_upload_breeding_program').change(function(){
         populate_upload_trial_linkage_selects();
     });
 
     function populate_upload_trial_linkage_selects(){
         get_select_box('trials', 'upload_trial_trial_source', {'id':'upload_trial_trial_source_select', 'name':'upload_trial_trial_source_select', 'breeding_program_name':jQuery('#trial_upload_breeding_program').val(), 'multiple':1, 'empty':1} );
-        get_select_box('genotyping_trials', 'upload_trial_trial_genotype_trial', {'id':'upload_trial_trial_genotype_trial_select', 'name':'upload_trial_trial_genotype_trial_select', 'breeding_program_name':jQuery('#trial_upload_breeding_program').val(), 'multiple':1, 'empty':1} );
-        get_select_box('crosses', 'upload_trial_trial_crossing_trial', {'id':'upload_trial_trial_crossing_trial_select', 'name':'upload_trial_trial_crossing_trial_select', 'breeding_program_name':jQuery('#trial_upload_breeding_program').val(), 'multiple':1, 'empty':1} );
     }
 
     function upload_trial_validate_form(){
