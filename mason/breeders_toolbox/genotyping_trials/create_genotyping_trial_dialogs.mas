@@ -259,8 +259,11 @@
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your genotyping trial linked with field trials in the database? If you are unsure, you can skip this. This information can be added from the genotyping trial detail page once the trial is saved in the database." &>
+                                <& /page/page_title.mas, title=>"Is your genotyping trial linked with field trials in the database? This information can also be added from the genotyping trial detail page once the trial is saved in the database." &>
 
+                                <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
+
+                                <div style="display:none"><!-- this linkage will be done automatically on genotyping trial addition-->
                                 <br/>
                                 <div class="well">
                                     <div class="form-group">
@@ -279,6 +282,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
                                 </div>
 
                                 <br/>
