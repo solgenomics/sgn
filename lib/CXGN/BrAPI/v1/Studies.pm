@@ -375,13 +375,13 @@ sub studies_layout {
 
 	my $plot_data = [];
 	my $formatted_plot = {};
-	my %additional_info;
 	my $check_id;
 	my $type;
 	my $count = 0;
 	my $offset = $page*$page_size;
 	my $limit = $page_size*($page+1)-1;
 	foreach my $plot_number (sort keys %$design) {
+        my %additional_info;
 		if ($count >= $offset && $count <= ($offset+$limit)){
 			$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
 			if ($check_id == 1) {
@@ -414,7 +414,6 @@ sub studies_layout {
 				X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
 				Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
 				entryType => $type,
-                plotNumber => $design->{$plot_number}->{plot_number},
 				germplasmName => $design->{$plot_number}->{accession_name},
 				germplasmDbId => $design->{$plot_number}->{accession_id},
 				additionalInfo => \%additional_info
@@ -422,7 +421,7 @@ sub studies_layout {
 			push @$plot_data, $formatted_plot;
 		}
 		$count++;
-	} print STDERR Dumper(\@$plot_data);
+	} 
 	my %result;
     my @data_files;
     if ($format eq 'json'){
