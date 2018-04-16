@@ -457,7 +457,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
         }
 
         $c->stash->{pop_id} = $pop_id; 
-        print STDERR "\n population: calling phenotype data..\n"; 
+       
         $self->phenotype_file($c); 
         $self->genotype_file($c); 
         $self->get_all_traits($c);  
@@ -3468,7 +3468,7 @@ sub submit_cluster_compare_trials_markers {
 	    
          });
 
-	$c->stash->{r_job_tempdir} = $compare_trials_job->tempdir();
+	$c->stash->{r_job_tempdir} = $compare_trials_job->job_tempdir();
 	$c->stash->{r_job_id} = $compare_trials_job->job_id();
 	$c->stash->{cluster_job} = $compare_trials_job;
 
@@ -4345,7 +4345,9 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 sub submit_cluster_phenotype_query {
     my ($self, $c, $args) = @_;
 
-    $c->stash->{r_temp_file} = 'phenotype-data-query';
+    my $pop_id = $args->{population_id};
+    
+    $c->stash->{r_temp_file} = "phenotype-data-query-${pop_id}";
     $self->create_cluster_accesible_tmp_files($c);
     my $out_file = $c->stash->{out_file_temp};
     my $err_file = $c->stash->{err_file_temp};
@@ -4355,7 +4357,7 @@ sub submit_cluster_phenotype_query {
 
     my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
     
-    my $args_file = $self->create_tempfile($temp_dir, 'pheno-data-args_file');
+    my $args_file = $self->create_tempfile($temp_dir, "pheno-data-args_file-${pop_id}");
     
     nstore $args, $args_file 
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
@@ -4371,8 +4373,9 @@ sub submit_cluster_phenotype_query {
 	$pheno_job->do_not_cleanup(1);
 
 	if ($background_job) {
+	    $pheno_job->is_async(1);
 	    $pheno_job->run_cluster($cmd);
-	    $c->stash->{r_job_tempdir} = $pheno_job->tempdir();
+	    $c->stash->{r_job_tempdir} = $pheno_job->job_tempdir();
 	    $c->stash->{r_job_id} = $pheno_job->jobid();
 	    $c->stash->{cluster_job} = $pheno_job;
 	} else {
@@ -4393,7 +4396,9 @@ sub submit_cluster_phenotype_query {
 sub submit_cluster_genotype_query {
     my ($self, $c, $args) = @_;
 
-    $c->stash->{r_temp_file} = 'genotype-data-query';
+    my $pop_id = $args->{population_id};
+
+    $c->stash->{r_temp_file} = "genotype-data-query-${pop_id}";
     $self->create_cluster_accesible_tmp_files($c);
     my $out_file = $c->stash->{out_file_temp};
     my $err_file = $c->stash->{err_file_temp};
@@ -4403,7 +4408,7 @@ sub submit_cluster_genotype_query {
 
     my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
 
-    my $args_file = $self->create_tempfile($temp_dir, 'geno-data-args_file');
+    my $args_file = $self->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
 
     nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
@@ -4419,9 +4424,10 @@ sub submit_cluster_genotype_query {
        $geno_job->do_not_cleanup(1);
 
        if ($background_job) {
+	   $geno_job->is_async(1);
 	   $geno_job->run_cluster($cmd);
 
-	   $c->stash->{r_job_tempdir} = $geno_job->tempdir();
+	   $c->stash->{r_job_tempdir} = $geno_job->job_tempdir();
 	   $c->stash->{r_job_id}      = $geno_job->jobid();
 	   $c->stash->{cluster_job}   = $geno_job;
 	} else {
@@ -4995,13 +5001,24 @@ sub run_async {
     my $report_file = $self->create_tempfile($temp_dir, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
+    my $job_config = {
+	backend => $c->config->{backend},
+	web_cluster_queue => $c->config->{web_cluster_queue}
+    };
+
+    my $job_config_file = $self->create_tempfile($temp_dir, 'job_config_file');
+    
+    nstore $job_config, $job_config_file 
+		or croak "job config file: $! serializing job config to $job_config_file ";
+    
     my $cmd = 'mx-run solGS::DependentJob'
 	. ' --dependency_jobs '           . $dependency
     	. ' --dependency_type '           . $dependency_type
 	. ' --temp_dir '                  . $solgs_tmp_dir
     	. ' --temp_file_template '        . $temp_file_template
     	. ' --analysis_report_args_file ' . $report_file
-	. ' --dependent_type '            . $job_type;
+	. ' --dependent_type '            . $job_type
+	. ' --job_config_file '           . $job_config_file;
 
      if ($r_script) 
      {
@@ -5015,16 +5032,15 @@ sub run_async {
     my $err_file = $c->stash->{err_file_temp};
     my $out_file = $c->stash->{out_file_temp};
 
-    my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
+    #my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
 
     eval 
     {
-	my $job = CXGN::Tools::Run->new($config);
+	my $job = CXGN::Tools::Run->new();
 	$job->do_not_cleanup(1);
-	$job->is_async(1);
-	$job->run_cluster($cmd);
-	
-	$c->stash->{r_job_tempdir} = $job->tempdir();
+	#$job->is_async(1);
+	$job->run_async($cmd);
+	$c->stash->{r_job_tempdir} = $job->job_tempdir();
 	$c->stash->{r_job_id} = $job->jobid();
 	$c->stash->{cluster_job} = $job;	
     };
@@ -5125,7 +5141,7 @@ sub run_r_script {
 	       $job->is_async(1);
 	       $job->run_cluster($cmd);
 	   
-	       #$c->stash->{r_job_tempdir} = $job->tempdir();
+	       $c->stash->{r_job_tempdir} = $job->job_tempdir();
 	       $c->stash->{r_job_id} = $job->jobid();
 	       $c->stash->{cluster_job} = $job;
 	   } else {

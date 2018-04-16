@@ -194,67 +194,28 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
-	my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
+	my $cmd = 'mx-run solGS::AnalysisReport '
+	    . '--output_details_file ' . $output_details_file;
 
-	my $config = {
-	    backend => $c->config->{backend},
-	    temp_base => $c->stash->{solgs_tempfiles_dir},
-	    queue => $c->config->{web_cluster_queue},
-	    max_cluster_jobs => 1_000_000_000,
-	    is_async         => 1,
-	    out_file         => $out_temp_file,
-	    err_file         => $err_temp_file,
-	    do_cleanup       => 0,
+	my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $tmp_dir, $out_temp_file, $err_temp_file);
+
+	eval 
+	{
+	    my $job = CXGN::Tools::Run->new($config);
+	    $job->do_not_cleanup(1);	 
+	    $job->is_async(1);
+	    $job->run_async($cmd);
+	   
 	};
 
-	print STDERR "\n creating cxgn tools run object\n";
-	my $async = CXGN::Tools::Run->new($config);
-	print STDERR "\n set no clean up\n";
-	$async->do_not_cleanup(1);
-	print STDERR "\n run command cxgn tools run\n";
-	$async->run_cluster($cmd);
-	print STDERR "\n called run cluster\n";
+	if ($@) {
+	    print STDERR "An error occurred! $@\n";
+	    $c->stash->{status} = $@;
+	}
 	
-	
-	# my $async =  CXGN::Tools::Run->run_async($cmd,
-	# 				       {
-	# 					   working_dir      => $c->stash->{solgs_tempfiles_dir},
-	# 					   temp_base        => $c->stash->{solgs_tempfiles_dir},
-	# 					   max_cluster_jobs => 1_000_000_000,
-	# 					   out_file         => $out_temp_file,
-	# 					   err_file         => $err_temp_file,
-	# 				       }
-	#   );
-
-	# try 
-	# { 
-	#     my $job = CXGN::Tools::Run->run_cluster_perl({           
-	# 	method        => ["solGS::AnalysisReport" => "check_analysis_status"],
-	# 	args          => [$output_details],
-	# 	load_packages => ['solGS::AnalysisReport'],
-	# 	run_opts      => {
-	# 	    out_file    => $out_temp_file,
-	# 	    err_file    => $err_temp_file,
-	# 	    working_dir => $temp_dir,
-	# 	    max_cluster_jobs => 1_000_000_000,
-	# 	},
-	#     });
-	
-	# }
-	# catch 
-	# {
-	#     $status = $_;
-	#     $status =~ s/\n at .+//s;           
-	# };
     }
-
-
-    #if (!$status) 
-    #{ 
-    my $status = $c->stash->{status}; 
-    #}
-   
-    my $ret->{result} = $status;	
+ 
+    my $ret->{result} = $c->stash->{status}; 	
 
     $ret = to_json($ret);
        
