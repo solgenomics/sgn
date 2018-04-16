@@ -176,7 +176,8 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
     my $genotypes_accessions_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
         accession_list=>\@genotype_accessions,
-        protocol_id=>$protocol_id
+        protocol_id=>$protocol_id,
+        marker_name=>$marker_name,
     });
 
     my $result = $genotypes_accessions_search->get_selected_accessions();
