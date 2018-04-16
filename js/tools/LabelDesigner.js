@@ -978,7 +978,7 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     document.getElementById("vertical_gap").value = vertical_gap;
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
-    document.getElementById("plot_filter").value = plot_filter;
+    document.getElementById("plot_filter").value = plot_filter || 'all';
     document.getElementById("sort_order").value = sort_order;
     document.getElementById("copies_per_plot").value = copies_per_plot;
 }
