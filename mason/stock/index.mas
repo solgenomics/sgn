@@ -195,82 +195,75 @@ function jqueryStuff() {
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/search/stocks/>Back to stock search</a>"  &>
+<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' href='/phenome/qtl_form.pl'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' href='/search/stocks/'>Back to stock search</button>"  &>
 
-<div class="row">
-  <div class="col-sm-6">
+    <div class="panel panel-default">
+        <div class="panel-body">
 
-  <& /page/form.mas,
-  object_type=>'stock',
-  object_id=>"$stock_id",
-  form_name=> 'stock_form',
-  server_side_script => '/phenome/stock/stock_ajax_form.pl',
-  form_div_name=>'stock_details',
-  js_object_name=> 'stockForm',
-  page_url => "/stock/$stock_id/view/" ,
-  alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
-  &>
+            <div class="row">
+                <div class="col-sm-6">
 
-  </div>
-  <br /><br />
-  <div class="col-sm-6">
-<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &><br /><br />
-%#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
-%# <& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
-%#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"qrcode" &>
-  </div>
-</div>
+                    <& /page/form.mas,
+                        object_type=>'stock',
+                        object_id=>"$stock_id",
+                        form_name=> 'stock_form',
+                        server_side_script => '/phenome/stock/stock_ajax_form.pl',
+                        form_div_name=>'stock_details',
+                        js_object_name=> 'stockForm',
+                        page_url => "/stock/$stock_id/view/" ,
+                        alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
+                    &>
 
-<div><b>Stock editors: </b> <% $editor_link %></div>
-<br />
+                </div>
+                <div class="col-sm-6">
+                    <br /><br />
+
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &>
+                    <br /><br />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <b>Stock editors: </b> <% $editor_link %>
+    </div>
+    <br />
 % foreach my $db_url (keys %source_dbs) {
-<div><a href=<% $db_url %>><% $source_dbs{$db_url} %></a> </div>
-%}
-<br />
+    <div>
+        <a href="<% $db_url %>" ><% $source_dbs{$db_url} %></a>
+    </div>
+% }
+    <br />
 % my $div_name = join("_", @$resources);
 % my $subtitle = $edit_privs ? "[<a id=\"stock_add_synonym\" href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
-   <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
-      <& /stock/stockprops.mas,
-       stock_id    => $stock_id,
-       props      => $stockprops ,
-       div_name   =>'synonyms',
-       subset     =>$resources,
-       editable   => [ 'stock_synonym' ],
-       edit_privs => $edit_privs   &>
-</&>
+    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
+        <& /stock/stockprops.mas,
+            stock_id    => $stock_id,
+            props      => $stockprops ,
+            div_name   =>'synonyms',
+            subset     =>$resources,
+            editable   => [ 'stock_synonym' ],
+            edit_privs => $edit_privs   &>
+    </&>
+
 %  $div_name = join("_", @editable_stock_props);
 % my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
-      <& /stock/stockprops.mas,
-       stock_id  =>$stock_id,
-       props      => $stockprops,
-        div_name   => 'stockprops',
-	edit_privs => $edit_privs,
-	subset     => \@editable_stock_props,
-	editable   => \@editable_stock_props  &>
+        <& /stock/stockprops.mas,
+            stock_id  =>$stock_id,
+            props      => $stockprops,
+            div_name   => 'stockprops',
+            edit_privs => $edit_privs,
+            subset     => \@editable_stock_props,
+            editable   => \@editable_stock_props  &>
+    </&>
+
+    <&| /page/info_section.mas, title => "Associated loci (" . $stockref->{allele_count} . ")" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
+        <& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
+    </&>
 </&>
-
-
-</&>
-
-
-<&| /page/info_section.mas, title => "Associated loci (" . $stockref->{allele_count} . ")" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
-
-<& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
-
-</&>
-
-
-
-
-% if($is_owner) {
-<&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
-
-</&>
-
-
-% }
 
 <&| /page/info_section.mas, title => "Trials" &>
 
