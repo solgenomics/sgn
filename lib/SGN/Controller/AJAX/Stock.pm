@@ -86,6 +86,10 @@ sub add_stockprop_POST {
             #print STDERR Dumper $fuzzy_search_result;
             my $found_accessions = $fuzzy_search_result->{'found'};
             my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+            if ($fuzzy_search_result->{'error'}){
+                $c->stash->{rest} = { error => "ERROR: ".$fuzzy_search_result->{'error'} };
+                $c->detach();
+            }
             if (scalar(@$found_accessions) > 0){
                 $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
                 $c->detach();
