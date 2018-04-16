@@ -188,39 +188,12 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
         print STDERR Dumper $r;
 
         my ($selected_id, $selected_uniquename) = @$r;
-        push @selected_accessions, [$selected_id, $selected_uniquename];
+        push @selected_accessions, [qq{<a href="/stock/$selected_id/view">$selected_uniquename</a>}];
 
     }
 
     $c->stash->{rest}={data=> \@selected_accessions};
 
 }
-
-#    my @genotypes_array = @$genotypes;
-
-#    print STDERR "GENOTYPES =" .Dumper(@genotypes_array). "\n";
-#    print "type of GENOTYPE: " . ref(@genotypes_array). "\n";
-
-#    my $marker_value;
-#    my @values;
-
-#    foreach my $genotype_hash (@genotypes_array){
-#      $marker_value = $genotype_hash -> {'genotype_hash'}->{"$marker_name"};
-#      push @values, $marker_value;
-
-#    };
-
-#    print STDERR "MARKER VALUE =" .Dumper(\@values). "\n";
-
-
-
-
-
-
-
-
-
-#    $c->stash->{rest} = { dataset => $genotypes};
-#}
 
 1;
