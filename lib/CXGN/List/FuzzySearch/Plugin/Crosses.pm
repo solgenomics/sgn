@@ -7,7 +7,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::BreedersToolbox::StocksFuzzySearch;
 
-sub name { 
+sub name {
     return "crosses";
 }
 
@@ -24,13 +24,18 @@ sub fuzzysearch {
     my $fuzzy = $fuzzy_search_result->{'fuzzy'};
     my $absent = $fuzzy_search_result->{'absent'};
 
-    return {
+    my %return = (
         success => "1",
         absent => $absent,
         fuzzy => $fuzzy,
         found => $found,
-    };
+    );
 
+    if ($fuzzy_search_result->{'error'}){
+        $return{error} = $fuzzy_search_result->{'error'};
+    }
+
+    return \%return;
 }
 
 1;

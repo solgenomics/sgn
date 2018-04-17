@@ -19,6 +19,22 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
+    jQuery('#upload_trial_trial_sourced').change(function(){
+        if(jQuery(this).val() == 'yes'){
+            jQuery('#upload_trial_source_trial_section').show();
+        } else {
+            jQuery('#upload_trial_source_trial_section').hide();
+        }
+    });
+
+    jQuery('#trial_upload_breeding_program').change(function(){
+        populate_upload_trial_linkage_selects();
+    });
+
+    function populate_upload_trial_linkage_selects(){
+        get_select_box('trials', 'upload_trial_trial_source', {'id':'upload_trial_trial_source_select', 'name':'upload_trial_trial_source_select', 'breeding_program_name':jQuery('#trial_upload_breeding_program').val(), 'multiple':1, 'empty':1} );
+    }
+
     function upload_trial_validate_form(){
         var trial_name = $("#trial_upload_name").val();
         var breeding_program = $("#trial_upload_breeding_program").val();
@@ -103,6 +119,7 @@ jQuery(document).ready(function ($) {
     $('[name="upload_trial_link"]').click(function () {
         get_select_box('years', 'trial_upload_year', {'auto_generate': 1 });
         get_select_box('trial_types', 'trial_upload_trial_type', {'empty': 1 });
+        populate_upload_trial_linkage_selects();
         open_upload_trial_dialog();
     });
 
@@ -175,11 +192,11 @@ jQuery(document).ready(function ($) {
                 $("#upload_trial_error_display_second_try tbody").html(response.error_string);
             }
             if (response.missing_accessions){
-                Workflow.focus("#trial_upload_workflow", 2);
-            } else if(response.missing_seedlots){
-                Workflow.focus("#trial_upload_workflow", 3);
-            } else if(response.error_string){
                 Workflow.focus("#trial_upload_workflow", 4);
+            } else if(response.missing_seedlots){
+                Workflow.focus("#trial_upload_workflow", 5);
+            } else if(response.error_string){
+                Workflow.focus("#trial_upload_workflow", 6);
                 $("#upload_trial_error_display_second_try").show();
             }
             if (response.success) {

@@ -43,6 +43,14 @@ sub add_population {
     my $member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
     my $population_id;
 
+    my $previous_pop_rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => $population_name,
+        type_id => $population_cvterm_id,
+    });
+    if ($previous_pop_rs->count() > 0){
+        return { error => "$population_name already used in the database! Use another name or use the existing population entry." };
+    }
+
 	# create population stock entry
 	try {
 	my $pop_rs = $schema->resultset("Stock::Stock")->create(

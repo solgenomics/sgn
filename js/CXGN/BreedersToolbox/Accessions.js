@@ -150,6 +150,14 @@ jQuery(document).ready(function ($) {
         jQuery('#manage_populations_delete_dialog').modal('show');
     });
 
+    jQuery('#organization_name_input').autocomplete({
+       source: '/ajax/stock/stockproperty_autocomplete?property=organization',
+    });
+
+    jQuery('#population_name_input').autocomplete({
+       source: '/ajax/stock/population_autocomplete',
+    });
+
     jQuery("#add_accessions_to_population_submit").click(function(){
         jQuery.ajax({
             type: 'POST',
@@ -359,7 +367,6 @@ jQuery(document).ready(function ($) {
             if (response.error_string) {
                 fullParsedData = undefined;
                 alert(response.error_string);
-                return;
             }
             if (response.success) {
                 fullParsedData = response.full_data;
@@ -443,9 +450,8 @@ function verify_accession_list(accession_list_id) {
             enable_ui();
             if (response.error) {
                 alert(response.error);
-            } else {
-                review_verification_results(response, accession_list_id);
             }
+            review_verification_results(response, accession_list_id);
         },
         error: function () {
             enable_ui();
@@ -655,4 +661,3 @@ function process_fuzzy_options(accession_list_id) {
         }
     });
 }
-
