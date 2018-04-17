@@ -39,7 +39,6 @@ jQuery(document).ready(function ($) {
         var trial_name = $("#trial_upload_name").val();
         var breeding_program = $("#trial_upload_breeding_program").val();
         var location = $("#trial_upload_location").val();
-        var trial_type = $("#trial_upload_trial_type").val();
         var trial_year = $("#trial_upload_year").val();
         var description = $("#trial_upload_description").val();
         var design_type = $("#trial_upload_design_method").val();
@@ -52,9 +51,6 @@ jQuery(document).ready(function ($) {
         }
         else if (location === '') {
             alert("Please give a location");
-        }
-        else if (trial_type === '') {
-            alert("Please give a trial type");
         }
         else if (trial_year === '') {
             alert("Please give a trial year");
