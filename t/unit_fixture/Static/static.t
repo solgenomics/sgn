@@ -231,7 +231,7 @@ $mech->get_ok($_) for
         /js/statistics/simple_statistics.js
     );
 
-#Called by application from sgn/mason/solgs/page/form.mas
+#Called by application from sgn/mason/page/form.mas, sgn/mason/solgs/page/form.mas
 $mech->get_ok($_) for
     qw(
         /js/CXGN/Page/Form/JSFormPage.js
