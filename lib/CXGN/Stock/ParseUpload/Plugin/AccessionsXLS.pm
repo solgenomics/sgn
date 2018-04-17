@@ -441,6 +441,10 @@ sub _parse_with_plugin {
         absent_organisms => $absent_organisms
     );
 
+    if ($fuzzy_search_result->{'error'}){
+        $return_data{error_string} = $fuzzy_search_result->{'error'};
+    }
+
     $self->_set_parsed_data(\%return_data);
     return 1;
 }
