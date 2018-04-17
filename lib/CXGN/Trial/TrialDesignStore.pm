@@ -214,6 +214,7 @@ sub validate_design {
         );
         #plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
     } elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot' || $design_type eq 'Lattice' || $design_type eq 'MAD' || $design_type eq 'greenhouse' || $design_type eq 'westcott'){
+        # valid plot's properties
         @valid_properties = (
             'seedlot_name',
             'num_seed_per_plot',
@@ -667,6 +668,7 @@ sub store {
                         subject_id => $plot->stock_id()
                     });
                 }
+
                 # For genotyping trial, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $plot_cvterm_id){
                     $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
