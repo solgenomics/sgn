@@ -315,8 +315,12 @@ function jqueryStuff() {
                     <div class="col-sm-11">
                         <h4>Trial Usage</h4>
 
-                        <&| /page/info_section.mas, title => "Trials", collapsible=> 1, collapsed=>1 &>
-                            <& /stock/trials.mas, stock_id => $stock_id &>
+                        <&| /page/info_section.mas, id=>"stock_trials_section", title => "Trials", collapsible=> 1, collapsed=>1 &>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <& /stock/trials.mas, stock_id => $stock_id &>
+                                </div>
+                            </div>
                         </&>
                     </div>
                 </div>
@@ -335,13 +339,21 @@ function jqueryStuff() {
                         <h4>Traits Assayed</h4>
 
 % if ($type_name eq 'plot'){
-                        <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" &>
-                            <& /stock/traits.mas, stock_id => $stock_id &>
+                        <&| /page/info_section.mas, id=>"stock_traits_section", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" &>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <& /stock/traits.mas, stock_id => $stock_id &>
+                                </div>
+                            </div>
                         </&>
 % }
 % else {
-                        <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link" &>
-                            <& /stock/traits.mas, stock_id => $stock_id &>
+                        <&| /page/info_section.mas, id=>"stock_traits_section", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link" &>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <& /stock/traits.mas, stock_id => $stock_id &>
+                                </div>
+                            </div>
                         </&>
 % }
                     </div>

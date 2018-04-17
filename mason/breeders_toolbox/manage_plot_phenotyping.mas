@@ -95,7 +95,7 @@ $type_name => "plot"
     </div>
     <div class="col-md-10 col-lg-10">
 
-<&| /page/info_section.mas, title => "Trials" &>
+<&| /page/info_section.mas, id=>"stock_trials_section", title => "Trials", collapsible=> 1, collapsed=>1 &>
 
   <& /stock/trials.mas, stock_id => $stock_id &>
 
@@ -114,7 +114,7 @@ $type_name => "plot"
     <div class="col-md-10 col-lg-10">
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $plot_name, stock_type => $type_name &>
-<&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
+<&| /page/info_section.mas, id=>"stock_traits_section", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
 
   <& /stock/traits.mas, stock_id => $stock_id &>
 
