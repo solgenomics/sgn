@@ -539,11 +539,10 @@ function jqueryStuff() {
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
 
-
-
 <div id="remove_parent_dialog">
-Remove a parent (this will only remove the link to the parent, not the parent accession itself).<br /><br />
-  <div id="remove_parent_list">[loading parent list...]</div>
+    Remove a parent (this will only remove the link to the parent, not the parent accession itself).
+    <br /><br />
+    <div id="remove_parent_list">[loading parent list...]</div>
 </div>
 
 
@@ -587,15 +586,14 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 </&>
 
 <div id="stock_trials_info_popup">
-  <table id="stock_trials_info_table" >
-    <thead>
-    <tr><th>Trait</th><th>Average</th><th>Std dev</th><th>Count</th></tr>
-    </thead>
-  </table>
+    <table id="stock_trials_info_table" >
+        <thead>
+            <tr><th>Trait</th><th>Average</th><th>Std dev</th><th>Count</th></tr>
+        </thead>
+    </table>
 </div>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 
 <script>
     jQuery(document).ready(function() {
@@ -614,19 +612,19 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
             get_remove_parents_list(<% $stock_id %>);
         });
 
-    jQuery.ajax({
-      url: "<% $test_url %>",
-      success: function(response) {
-        if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
-	         jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
-		       }
-        else { // if not found, display message that dataset doesn't exist
-	           jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
-     		   				   }
-						       },
-      error: function() {
-        jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
-      }
-    });
+        jQuery.ajax({
+            url: "<% $test_url %>",
+            success: function(response) {
+                if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
+                    jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
+                }
+                else { // if not found, display message that dataset doesn't exist
+                    jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
+                }
+            },
+            error: function() {
+                jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
+            }
+        });
   });
 </script>
