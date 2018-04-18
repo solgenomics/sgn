@@ -168,7 +168,7 @@ $stockref => undef
                             
                             </div>
                         </div>
-                        
+                         
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Trait ID: </label>
                             <div class="col-sm-8" id="mytrait_id">
@@ -594,8 +594,79 @@ jQuery(document).ready( function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                 var data = response.result.data;
-                 console.log(data);
+                var data = response.result.data;
+                console.log(data);
+                var rows = [];
+                var cols = [];
+                var blocks = [];
+                var checks = [];
+                var accession_ids = [];
+                var accession_names = [];
+                var plot_ids = [];
+                var plot_names = [];
+                var replicates = [];
+                var plot_mums = [];
+                var design;
+                var plotImageDbIds = [];
+                jQuery.each(data, function(key_obj, value_obj) {
+                    console.log(key_obj + " and " +value_obj);
+                    jQuery.each(value_obj, function(key, value) {
+                        if (key == 'X'){
+                            rows.push(value);
+                        }
+                        if (key == 'Y'){
+                            cols.push(value);
+                        }
+                        if (key == 'blockNumber'){
+                            blocks.push(value);
+                        }
+                        if (key == 'entryType'){
+                            checks.push(value);
+                        }
+                        if (key == 'germplasmDbId'){
+                            accession_ids.push(value);
+                        }
+                        if (key == 'germplasmName'){
+                            accession_names.push(value);
+                        }
+                        if (key == 'observationUnitDbId'){
+                            plot_ids.push(value);
+                        }
+                        if (key == 'observationUnitName'){
+                            plot_names.push(value);
+                        }
+                        if (key == 'replicate'){
+                            replicates.push(value);
+                        }
+                        if (key == 'additionalInfo'){
+                            jQuery.each(value, function(key_add, value_add){
+                                if (key_add == 'plotNumber'){
+                                    plot_mums.push(value_add);
+                                }
+                                if (key_add == 'designType'){
+                                    design = value_add;
+                                }
+                                if (key_add == 'plotImageDbIds'){
+                                    plotImageDbIds.push(value_add);
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                console.log("rows "+rows);
+                console.log("cols "+cols);
+                console.log("blocks "+blocks);
+                console.log("checks "+checks);
+                console.log("accession ID "+accession_ids);
+                console.log("accession name "+accession_names);
+                console.log("plot ID "+plot_ids);
+                console.log("plot name "+plot_names);
+                console.log(" rep "+replicates);
+                console.log("plot num "+plot_mums);
+                console.log("Design "+design);
+                console.log("plot Image ID "+plotImageDbIds);
+                
                 var col_length = response.coord_col[0]; 
                 var row_length = response.coord_row[0];
                 var block_max = response.max_block;
