@@ -288,6 +288,8 @@ function jqueryStuff() {
                                     </ul>
                                 </div>
                             </div>
+
+% if ($type_name eq 'accession'){
                             <div class="panel panel-default">
                                 <div class="panel-body panel-body-sm">
 
@@ -296,7 +298,7 @@ function jqueryStuff() {
                                     </&>
                                 </div>
                             </div>
-
+% }
                         </&>
 
                     </div>
@@ -305,6 +307,7 @@ function jqueryStuff() {
         </div>
     </div>
 
+% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
     <div class="row">
         <div class="col-sm-12">
             <div class="well">
@@ -327,7 +330,9 @@ function jqueryStuff() {
             </div>
         </div>
     </div>
+% }
 
+% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
     <div class="row">
         <div class="col-sm-12">
             <div class="well">
@@ -361,7 +366,9 @@ function jqueryStuff() {
             </div>
         </div>
     </div>
+% }
 
+% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'tissue_sample'){
     <div class="row">
         <div class="col-sm-12">
             <div class="well">
@@ -388,6 +395,7 @@ function jqueryStuff() {
             </div>
         </div>
     </div>
+% }
 
 % if ($type_name eq 'accession'){
     <div class="row">
