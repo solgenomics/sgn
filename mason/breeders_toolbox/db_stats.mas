@@ -1,0 +1,55 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js', 'd3pie_min.js' ] &>
+
+<& /page/page_title.mas, title => 'Database Stats' &>
+
+<span id="trial_types_div"></span>
+
+<span id="trials_by_breeding_programs_div"></span><br />
+
+<span id="traits_div"></span>
+
+<span id="stocks_div"></span>
+
+<script>
+  jQuery.ajax({
+    url: '/ajax/dbstats/trial_types',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+  //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('trial_types_div', response);
+      
+    }
+  });
+
+  jQuery.ajax({
+    url: '/ajax/dbstats/trials_by_breeding_program',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+      //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('trials_by_breeding_programs_div', response);
+    }
+  });
+
+  jQuery.ajax({
+    url: '/ajax/dbstats/traits',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+      //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('traits_div', response);
+    }
+  });
+  
+  jQuery.ajax({
+    url: '/ajax/dbstats/stocks',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+      //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('stocks_div', response);
+    }
+  });
+
+</script>
