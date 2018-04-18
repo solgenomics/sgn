@@ -46,7 +46,7 @@ $crossing_trials
 </&>
 
 
-<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a name="add_seedlot_button">Add New Seedlot</a>]&nbsp;&nbsp;&nbsp;[<a name="seedlot_bulk_upload">Upload Seedlots</a>]&nbsp;&nbsp;&nbsp;[<a name="seedlot_upload_inventory">Upload Inventory</a>]'&>
+<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="add_seedlot_button">Add New Seedlot</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_bulk_upload">Upload Seedlots</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>'&>
 
 <br/>
 
