@@ -145,6 +145,7 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
     my $c = shift;
     my $dataset_id = $c->req->param("dataset_id");
     my $marker_name = $c->req->param("marker_name");
+    my $allele_dosage = $c->req->param("allele_dosage");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
     my $dataset = CXGN::Dataset->new(
@@ -178,6 +179,7 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
         accession_list=>\@genotype_accessions,
         protocol_id=>$protocol_id,
         marker_name=>$marker_name,
+        allele_dosage=>$allele_dosage,
     });
 
     my $result = $genotypes_accessions_search->get_selected_accessions();
