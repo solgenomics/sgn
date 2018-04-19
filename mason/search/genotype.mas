@@ -19,20 +19,31 @@
                 <div class="form-horizontal">
                     <div class="form-group">
                         <label class="control-label col-sm-4">Dataset:</label>
-                        <div class="col-sm-8" >
-                            <div class="input-group">
-                                <select class="form-control" id="selected_dataset">
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_dataset">
                                     <option value="">Select a dataset</option>
                                     </select>
-                                </select>
+                                </div>
                             </div>
-                        </div>
                     </div>
                     <div class="form-group">
                         <label class="control-label col-sm-4">Marker Name:</label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="input_marker" placeholder="Enter marker name">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Allele Dosage:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_dosage">
+                                        <option value="">Select Allele Dosage</option>
+                                        <option value="0">0</option>
+                                        <option value="2">2</option>
+                                    </select>
                                         <div class="input-group-btn">
                                             <button class="btn btn-info" id="search_genotypes"><i class="glyphicon glyphicon-search"></i> Genotypes </button>
                                         </div>
@@ -75,7 +86,8 @@ jQuery(document).ready(function (){
             'destroy' : true,
             'ajax':{'url':'/ajax/dataset/get_selected_accessions',
             data:{'dataset_id':$('#selected_dataset').val(),
-                'marker_name':$('#input_marker').val()},
+                'marker_name':$('#input_marker').val(),
+                'allele_dosage':$('#selected_dosage').val()}
             }
         });
     });
