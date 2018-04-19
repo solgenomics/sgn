@@ -56,7 +56,7 @@ sub activity {
     foreach my $week (0..51) { 
 	my $days = $week * 7;
 	my $previous_days = ($week + 1) * 7;
-	my $q = "SELECT count(*) FROM nd_experiment WHERE create_date > (now() - INTERVAL 'DAY $previous_days') and create_date < (now() - INTERVAL 'DAY $days')"; 
+	my $q = "SELECT count(*) FROM nd_experiment WHERE create_date > (now() - INTERVAL '$previous_days DAYS') and create_date < (now() - INTERVAL '$days DAYS')"; 
 	my $h = $self->dbh()->prepare($q);
 	$h->execute();
 	my ($count) = $h->fetchrow_array();
