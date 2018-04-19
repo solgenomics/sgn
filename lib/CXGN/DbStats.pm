@@ -48,6 +48,27 @@ sub basic {
     my $q = "select count(*) from ";
 }
 
+sub activity { 
+    my $self = shift;
+
+    my @counts;
+    my @weeks;
+    foreach my $week (0..51) { 
+	my $days = $week * 7;
+	my $previous_days = ($week + 1) * 7;
+	my $q = "SELECT count(*) FROM nd_experiment WHERE create_date > (now() - INTERVAL 'DAY $previous_days') and create_date < (now() - INTERVAL 'DAY $days')"; 
+	my $h = $self->dbh()->prepare($q);
+	$h->execute();
+	my ($count) = $h->fetchrow_array();
+
+	print STDERR "Activity in week $week = $count\n";
+	
+	push @counts, { letter => $week, frequency => rand() * 10 };
+	#push @weeks, $week;
+    }    
+    return \@counts;
+}
+    
 
 
 1;
