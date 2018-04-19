@@ -63,7 +63,7 @@ sub activity {
 
 	print STDERR "Activity in week $week = $count\n";
 	
-	push @counts, { letter => $week, frequency => rand() * 10 };
+	push @counts, { letter => $week, frequency => $count };
 	#push @weeks, $week;
     }    
     return \@counts;
