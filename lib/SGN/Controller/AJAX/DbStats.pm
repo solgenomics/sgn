@@ -39,8 +39,10 @@ sub traits_measured :Path('/ajax/dbstats/traits') Args(0)  {
     my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
     
     my $traits = $dbstats->traits();
-    
-    my %response = $self->format_response( { title => "Traits", subtitle => "Total traits: ".scalar(@$traits), data => $traits });
+    my $total_traits = 0;
+    foreach my $t (@$traits) { $total_traits += $t->[1]; }
+
+    my %response = $self->format_response( { title => "Traits", subtitle => "Total trait measurements: $total_traits", data => $traits });
  
     print STDERR Dumper(\%response);
     $c->stash->{rest} = \%response;   
@@ -96,6 +98,19 @@ sub basic_stats : Path('/ajax/dbstats/basic') Args(0) {
 
     return $basic;
 
+}
+
+sub activity_stats : Path('/ajax/dbstats/activity') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $dbh = $c->dbc->dbh();
+    my $dbstats = CXGN::DbStats->new({ dbh=> $dbh });
+ 
+    my $data = $dbstats->activity();
+    
+    print STDERR Dumper($data);
+    $c->stash->{rest} = $data;
 }
 
 sub format_response { 
