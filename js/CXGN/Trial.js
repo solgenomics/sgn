@@ -178,8 +178,8 @@ function open_derived_trait_dialog() {
 }
 
 function close_view_plot_image_dialog() {
-    jQuery("#view_plot_image_dialog").modal("hide"); 
-    jQuery("#hm_replace_plot_accessions_dialog").modal("hide"); 
+    jQuery("#view_plot_image_dialog").modal("hide");
+    jQuery("#hm_replace_plot_accessions_dialog").modal("hide");
 }
 
 function compute_derived_trait() {
@@ -308,7 +308,7 @@ function trial_detail_page_setup_dialogs() {
 	},
     });
 
-    jQuery('#edit_trial_details').click(function () { 
+    jQuery('#edit_trial_details').click(function () {
         // set up inout handlers
         jQuery('#clear_planting_date').click(function() {
           planting_date_element.val('');
@@ -620,7 +620,7 @@ jQuery(document).ready(function ($) {
     $('#upload_trial_coords_link').click(function () {
         open_upload_trial_coord_dialog();
     });
-    
+
     $('#heatmap_upload_trial_coords_link').click(function () {
         open_upload_trial_coord_dialog();
     });
@@ -695,9 +695,9 @@ jQuery(document).ready(function ($) {
       open_subtitute_plot_accession_dialog();
     });
 
-    jQuery('#generate_trial_barcode_link').click(function () {
-        $('#generate_trial_barcode_button_dialog').modal("show");
-    });
+    // jQuery('#generate_trial_barcode_link').click(function () {
+    //     $('#generate_trial_barcode_button_dialog').modal("show");
+    // });
 
     jQuery('#trial_plot_barcode').click(function () {
         $('#generate_trial_barcode_button_dialog').modal("hide");

@@ -292,7 +292,7 @@ sub search {
     my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.", ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", ".$columns{'planting_date'}.", ".$columns{'harvest_date'}.", ".$columns{'breeding_program'}.", phenotype.phenotype_id, count(phenotype.phenotype_id) OVER() AS full_count ".$design_layout_select;
     my $from_clause = $columns{'from_clause'};
 
-    my $order_clause = " ORDER BY 2,7,16 DESC";
+    my $order_clause = " ORDER BY 2,7,19 DESC";
 
     my @where_clause;
 

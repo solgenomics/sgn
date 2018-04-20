@@ -26,7 +26,7 @@ jQuery(document).ready(function ($) {
         open_upload_pedigrees_dialog();
     });
 
-    $("#upload_pedigrees_dialog_submit").click( function () { 
+    $("#upload_pedigrees_dialog_submit").click( function () {
         $('#upload_pedigrees_dialog').modal("hide");
         upload_pedigrees_file();
     });
@@ -53,7 +53,7 @@ jQuery(document).ready(function ($) {
             var html;
             archived_file_name = response.archived_file_name;
             if (response.error) {
-                html = '<h3>The Following Issues Were Identified</h3><div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" id="pedigree_upload_overwrite_pedigrees" /></div><p class="bg-warning">'+response.error+'</p>';
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
             }
             else {
                 html = '<h3>There Were No Issues Identified</h3>';

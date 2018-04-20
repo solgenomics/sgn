@@ -47,6 +47,7 @@ sub get_matches {
     my @absent_stocks;
     my @found_stocks;
     my %results;
+    my $error;
     print STDERR "FuzzySearch 1".localtime()."\n";
 
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
@@ -74,7 +75,8 @@ sub get_matches {
     foreach my $stock_name (@stock_list) {
 
         if (exists($uniquename_hash{$stock_name}) && $uniquename_hash{$stock_name} > 1){
-            die "More than one uniquename match for $stock_name of type $stock_type. This should not happen!\n";
+            $error .= "More than one uniquename match for $stock_name of type $stock_type. This should not happen!";
+            next;
         }
 
         if (exists($uniquename_hash{$stock_name})){
@@ -83,19 +85,17 @@ sub get_matches {
         }
 
         if (exists($synonym_uniquename_lookup{$stock_name})){
-            my %match_info = ( name => $stock_name, distance => 0 );
+            my %match_info;
             if (scalar(@{$synonym_uniquename_lookup{$stock_name}}) > 1){
                 my $synonym_lookup_uniquename = join ',', @{$synonym_uniquename_lookup{$stock_name}};
-                die "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!\n";
+                $error .= "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
+                next;
             } elsif (scalar(@{$synonym_uniquename_lookup{$stock_name}}) == 1){
-                $match_info{'unique_names'} = [$stock_name];
-                $match_info{'is_synonym'} = 1;
-                $match_info{'synonym_of'} = $synonym_uniquename_lookup{$stock_name}->[0];
+                $match_info{matched_string} = $stock_name." (SYNONYM OF ".$synonym_uniquename_lookup{$stock_name}->[0].")";
+                $match_info{is_synonym} = 1;
+                $match_info{uniquename} = $synonym_uniquename_lookup{$stock_name}->[0];
             }
-            push @fuzzy_stocks, {
-                name => $stock_name,
-                matches => [\%match_info]
-            };
+            push @found_stocks, \%match_info;
             next;
         }
 
@@ -120,7 +120,8 @@ sub get_matches {
                 my $synonym_lookup_of_matched_string = $synonym_uniquename_lookup{$matched_name} || [];
                 if (scalar(@$synonym_lookup_of_matched_string) > 1){
                     my $synonym_lookup_uniquename = join ',', @$synonym_lookup_of_matched_string;
-                    die "This synonym $matched_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!\n";
+                    $error .= "This synonym $matched_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
+                    next;
                 } elsif (scalar(@$synonym_lookup_of_matched_string) == 1){
                     $match_info{'unique_names'} = [$matched_name];
                     $match_info{'is_synonym'} = 1;
@@ -135,6 +136,10 @@ sub get_matches {
                 matches => \@matches
             };
         }
+    }
+
+    if ($error){
+        $results{'error'} = $error;
     }
 
     $results{'found'} = \@found_stocks;
