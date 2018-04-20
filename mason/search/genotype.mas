@@ -42,6 +42,7 @@
                                     <select class="form-control" id="selected_dosage">
                                         <option value="">Select Allele Dosage</option>
                                         <option value="0">0</option>
+                                        <option value="1">1</option>
                                         <option value="2">2</option>
                                     </select>
                                         <div class="input-group-btn">
