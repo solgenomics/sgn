@@ -186,7 +186,7 @@ sub get_selected_accessions {
 
     my @selected_accessions = ();
     while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
-        push @selected_accessions, [$selected_id, $selected_uniquename]
+        push @selected_accessions, [$selected_id, $selected_uniquename, $allele_dosage]
     }
 
 #    print STDERR DUmper (\@selected_accessions);

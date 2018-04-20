@@ -189,8 +189,8 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
     foreach my $r(@$result){
         print STDERR Dumper $r;
 
-        my ($selected_id, $selected_uniquename) = @$r;
-        push @selected_accessions, [qq{<a href="/stock/$selected_id/view">$selected_uniquename</a>}];
+        my ($selected_id, $selected_uniquename, $allele_dosage) = @$r;
+        push @selected_accessions, [qq{<a href="/stock/$selected_id/view">$selected_uniquename</a>}, $allele_dosage];
 
     }
 
