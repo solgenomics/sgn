@@ -2675,40 +2675,7 @@ sub build_multiple_traits_models {
     { 
 	@selected_traits =  @{$c->stash->{selected_traits}};
     }
-	#$pop_id = $c->stash->{training_pop_id};
 
-    # 	my $params = $c->stash->{analysis_profile};
-    # 	my $args = $params->{arguments};
-
-    # 	my $json = JSON->new();
-    # 	$args = $json->decode($args);
-
-    # 	if (keys %{$args}) 
-    # 	{     
-    # 	    foreach my $k ( keys %{$args} ) 
-    # 	    {
-    # 		if ($k eq 'trait_id') 
-    # 		{
-    # 		    @selected_traits = @{ $args->{$k} };
-    # 		} 
-
-    # 		if (!$pop_id) 
-    # 		{
-    # 		    if ($k eq 'population_id') 
-    # 		    {
-    # 			my @pop_ids = @{ $args->{$k} };
-    # 			$c->stash->{pop_id} = $pop_ids[0];
-    # 		    }
-    # 		}
-		
-    # 		if ($k eq 'selection_pop_id') 
-    # 		{
-    # 		    $prediction_id = $args->{$k};
-    # 		}
-    # 	    }	    
-    # 	} 
-    # }       
-     
     if (!@selected_traits)
     {
 	if ($prediction_id) 
@@ -3398,16 +3365,11 @@ sub compare_genotyping_platforms {
                 $not_matching_pops .= '[ ' . $pop_names[0]. ' and ' . $pop_names[1] . ' ]'; 
                 $not_matching_pops .= ', ' if $cnt != $cnt_pairs;       
             }
-            # else 
-            # {           
-            #     $not_matching_pops = 'not_matching';
-            # }
         }           
     }
 
     $c->stash->{pops_with_no_genotype_match} = $not_matching_pops;
-  
-      
+        
 }
 
 
@@ -3416,73 +3378,47 @@ sub submit_cluster_compare_trials_markers {
 
     $c->stash->{r_temp_file} = 'compare-trials-markers';
     $self->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
+    my $out_file = $c->stash->{out_file_temp};
+    my $err_file = $c->stash->{err_file_temp};
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $status;
- 
-
- 
-    # if ($dependency && $background_job) 
-    # {
-    # 	my $dependent_job_script  = $self->create_tempfile($c, "compare_trials_job", "pl");
-
-    # 	my $cmd = '#!/usr/bin/env perl;' . "\n";
-    # 	$cmd   .= 'use strict;' . "\n";
-    # 	$cmd   .= 'use warnings;' . "\n\n\n";
-    # 	$cmd   .= 'system("Rscript --slave ' 
-    # 	    . $in_file_temp 
-    # 	    . ' --args ' . $input_files . ' ' . $output_files 
-    # 	    . ' | qsub -W ' .  $dependency . '");';
-
-    # 	write_file($dependent_job_script, $cmd);
-    # 	chmod 0755, $dependent_job_script;
+    my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
+    
+    my $args_file = $self->create_tempfile($temp_dir, "compare-trials-args_file");
+    nstore $geno_files, $args_file 
+		or croak "data query script: $! serializing phenotype data query details to $args_file ";
 	
-    # 	$r_job = CXGN::Tools::Run->run_cluster('perl', 
-    #         $dependent_job_script,
-    #         $out_file_temp,
-    #         {
-    #             working_dir => $c->stash->{solgs_tempfiles_dir},
-    #             max_cluster_jobs => 1_000_000_000,
-    #         },
-    #         );
-    # } 
-
-
-    try 
-    { 
-        my $compare_trials_job = CXGN::Tools::Run->run_cluster_perl({
-           
-            method        => ["SGN::Controller::solGS::solGS" => "compare_genotyping_platforms"],
-    	    args          => ['SGN::Context', $geno_files],
-    	    load_packages => ['SGN::Controller::solGS::solGS', 'SGN::Context'],
-    	    run_opts      => {
-    		              out_file    => $out_temp_file,
-			      err_file    => $err_temp_file,
-    		              working_dir => $temp_dir,
-			      max_cluster_jobs => 1_000_000_000,
-	    },
-	    
-         });
-
-	$c->stash->{r_job_tempdir} = $compare_trials_job->job_tempdir();
-	$c->stash->{r_job_id} = $compare_trials_job->job_id();
-	$c->stash->{cluster_job} = $compare_trials_job;
-
-	unless ($background_job)
-	{ 
-	    $compare_trials_job->wait();
-	}
-	
-    }
-    catch 
+    my $cmd = 'mx-run solGS::Cluster ' 
+	. ' --data_type compare_trials '
+	. ' --population_type trials '
+	. ' --args_file ' . $args_file;
+    
+    eval 
     {
-	$status = $_;
-	$status =~ s/\n at .+//s;           
-    }; 
+	my $job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);
+
+	if ($background_job) {
+	    $job->is_async(1);
+	    $job->run_cluster($cmd);
+	    $c->stash->{r_job_tempdir} = $job->job_tempdir();
+	    $c->stash->{r_job_id} = $job->jobid();
+	    $c->stash->{cluster_job} = $job;
+	} else {
+	    $job->is_cluster(1);
+	    $job->run_cluster($cmd);
+	    $job->wait;
+	}	
+    };
+
+    if ($@) {
+	print STDERR "An error occurred! $@\n";
+	$c->stash->{Error} = $@ ;
+    }
+
+    
 
 }
 
@@ -3968,7 +3904,7 @@ sub traits_list_file {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
-   # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+    # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_list_pop' . $pop_id,
                       file      => 'traits_list_pop_' . $pop_id,
