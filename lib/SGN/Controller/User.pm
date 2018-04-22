@@ -1,0 +1,104 @@
+
+package SGN::Controller::User;
+
+use Moose;
+
+BEGIN { extends 'Catalyst::Controller' };
+
+sub new_account :Path('/user/new') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    $c->stash->{template} = '/user/new_account.mas';
+}
+
+sub update_account :Path('/user/update') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    if (! $c->user()) { 
+	$c->res->redirect('/solpeople/login.pl');
+	return;
+    }
+
+    $c->stash->{logged_in_username} = $c->user()->get_username();
+    $c->stash->{private_email} = $c->user()->get_private_email();
+	
+    $c->stash->{template} = '/user/change_account.mas';
+}
+
+sub reset_password :Path('/user/reset_password') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    $c->stash->{template} = '/user/reset_password.mas';
+}
+
+sub confirm_user :Path('/user/confirm') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $confirm_code = $c->req->param('confirm_code');
+    my $username = $c->req->param('username');
+
+    my $sp = CXGN::People::Login->get_login( $c->dbc()->dbh(), $username );
+
+    if ( !$sp ) {
+	confirm_failure($c, "Username \"$username\" was not found.");
+	return;
+    }
+    
+    if ( !$sp->get_confirm_code() ) {
+	confirm_failure($c, "No confirmation is required for user <b>$username</b>. This account has already been confirmed. <p><a href='login.pl'>[Login Page]</a></p>");
+	return;
+    }
+    
+    if ( $sp->get_confirm_code() ne $confirm_code ) {
+	confirm_failure($c, "Confirmation code is not valid!\n");
+	return;
+    }
+    
+    $sp->set_disabled(undef);
+    $sp->set_confirm_code(undef);
+    $sp->set_private_email( $sp->get_pending_email() );
+    
+    $sp->store();
+
+    $c->stash->{template} = '/generic_message.mas';
+    $c->stash->{message} = "Confirmation successful for username <b>$username</b>";
+}
+
+sub confirm_failure {
+    my $self = shift;
+    my $c = shift;
+    my $reason = shift;
+
+    $c->stash->{template} = '/generic_message.mas';
+    $c->stash->{message} = "Sorry, this confirmation code is invalid. Please check that your complete confirmation URL has been pasted correctly into your browser. ($reason)";
+	
+}
+
+sub check_password_reset_token :Path('/user/reset_password_form') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $token = $c->req->param('reset_password_token');
+
+    my $person_id;
+    if ($token) { 
+	my $person_id = CXGN::People::Login->get_login_by_token($c->dbc->dbh(), $token);
+	if (!$person_id) { 
+	    $c->stash->{message} = "The provided password reset link is invalid. Please try again with another link.";
+	    $c->stash->{template} = '/generic_message.mas';
+	    return;
+	}
+	my $person = CXGN::People::Person->new($c->dbc->dbh(), $person_id);
+	$c->stash->{token} = $token;
+	$c->stash->{person_id} = $person_id;
+	$c->stash->{username} = $person->get_username();
+	$c->stash->{template} = '/user/reset_password_form.mas';
+    }
+
+}	
+	
+1;
