@@ -1,16 +1,16 @@
 <h3>Importing CSS</h3>
 
 <p>
-    To import CSS one should use the <code>/util/import_css.mas</code> 
-    mason component instead of a <code>&lt;link&gt;</code> element. This will 
-    ensure that a link is added to the <code>&lt;head&gt;</code> 
-    instead of being part of the <code>&lt;body&gt;</code>. One provides this 
-    mason componant with a list of strings which are one of the following:
-    <ul>
-      <li>The relative path to the CSS file from the /static/css folder.</li>
-      <li>The absolute site path to the CSS file.</li>
-      <li>A URL starting with the scheme name (i.e. 'http://...').</li>
-    </ul>
+  To import CSS one should use the <code>/util/import_css.mas</code> 
+  mason component instead of a <code>&lt;link&gt;</code> element. This will 
+  ensure that a link is added to the <code>&lt;head&gt;</code> 
+  instead of being part of the <code>&lt;body&gt;</code>. One provides this 
+  mason componant with a list of strings which are one of the following:
+  <ul>
+    <li>The relative path to the CSS file from the /static/css folder.</li>
+    <li>The absolute site path to the CSS file.</li>
+    <li>A URL starting with the scheme name (i.e. 'http://...').</li>
+  </ul>
     <pre><%text><& /util/import_css.mas, paths => [
     'bootstrap/v1.css',
     '/css/jquery.css',
@@ -23,14 +23,67 @@
 <h3>Importing JavaScript</h3>
 
 <p>
-    To import JavaScript one should use the <code>/util/import_javascript.mas</code> 
-    mason component. This will ensure that the script is loaded in the 
-    <code>&lt;head&gt;</code> instead of being part of the 
-    <code>&lt;body&gt;</code>. One provides this mason componant with a list of 
-    strings which are the path to the JavaScript file with slashes replaced by 
-    periods (e.g. <code>s/\/\./g</code>) and the file extension removed.
-    <pre><%text><& /util/import_javascript.mas, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &></%text></pre>
+  To import JavaScript one should use the <code>/util/import_javascript.mas</code> 
+  mason component. This will ensure that the script is loaded in the 
+  <code>&lt;head&gt;</code> instead of being part of the 
+  <code>&lt;body&gt;</code>. One provides this mason componant with a list of 
+  strings which are the path to the JavaScript file with slashes replaced by 
+  periods (e.g. <code>s/\/\./g</code>) and the file extension removed.
+  <pre><%text><& /util/import_javascript.mas, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &></%text></pre>
 </p>
+
+<hr>
+
+<h3>Page Sections</h3>
+
+<p></p>
+
+<hr>
+
+<h3>Use of Symbols</h3>
+
+<p>
+  Below is a table with current usages of symbols in the database. 
+  Please add to this tale when you choose to use a new symbol.
+</p>
+<style media="screen">
+  .symbol-table>tbody>tr>td{
+    vertical-align: middle;
+  }
+  .symbol-table>tbody>tr>td:first-of-type>*{
+    font-size:2.5em;
+  }
+</style>
+<table class="table symbol-table">
+  <tr>
+    <th>Symbol</th>
+    <th>Usages and contexts</th>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-qrcode"></span></td>
+    <td>Barcode[Trial Detail]</td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-pencil"></span></td>
+    <td>Record Phenotypes[Trial Detail]</td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-th"></span></td>
+    <td>Field Layout[Trial Detail]</td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-list-alt"></span></td>
+    <td>Trial Design[Trial Detail]</td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-equalizer"></span></td>
+    <td>Stored Phenotypes[Trial Detail]</td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-paperclip"></span></td>
+    <td>Other Data Collected/Associated[Trial Detail]</td>
+  </tr>
+</table>
 
 <hr>
 
