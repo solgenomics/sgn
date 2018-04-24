@@ -194,7 +194,7 @@ function jqueryStuff() {
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' href='/phenome/qtl_form.pl'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' href='/search/stocks/'>Back to stock search</button>"  &>
+<&| /page/info_section.mas, title=>"Stock Detail Summary" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' href='/phenome/qtl_form.pl'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' href='/search/stocks/'>Back to stock search</button>"  &>
 
     <div class="panel panel-default">
         <div class="panel-body">
@@ -226,98 +226,98 @@ function jqueryStuff() {
 
 </&>
 
-<&| /page/info_section.mas, title => "Navigator" , collapsible=> 1, collapsed=>0 &>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-info-sign"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Additional Info</h4>
+<%def .well_section>
+  <%args>
+    $title
+    $icon_class
+  </%args>
+  <div class="row">
+      <div class="col-sm-12">
+          <div class="well">
+              <div class="row">
+                  <div class="col-sm-1">
+                      <span style="font-size:3.5em;" class="<% $icon_class %>"></span>
+                  </div>
+                  <div class="col-sm-11">
+                      <h4><% $title %></h4>
+                      <% $m->content %>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</%def>
+ 
+ <&| .well_section, title => "Additional information", icon_class => "glyphicon glyphicon-info-sign" &>
+     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, collapsed=>1 &>
 
-                        <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, collapsed=>1 &>
-
-                            <div class="panel panel-default">
-                                <div class="panel-body panel-body-sm">
+         <div class="panel panel-default">
+             <div class="panel-body panel-body-sm">
 
 % my $subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_synonym\" >Add Synonym</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Synonym</button>";
-                                    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
-                                        <& /stock/stockprops.mas,
-                                            stock_id    => $stock_id,
-                                            props      => $stockprops ,
-                                            div_name   =>'synonyms',
-                                            subset     =>$resources,
-                                            editable   => [ 'stock_synonym' ],
-                                            edit_privs => $edit_privs   &>
-                                    </&>
+                 <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
+                     <& /stock/stockprops.mas,
+                         stock_id    => $stock_id,
+                         props      => $stockprops ,
+                         div_name   =>'synonyms',
+                         subset     =>$resources,
+                         editable   => [ 'stock_synonym' ],
+                         edit_privs => $edit_privs   &>
+                 </&>
 
-                                </div>
-                            </div>
-                            <div class="panel panel-default">
-                                <div class="panel-body panel-body-sm">
+             </div>
+         </div>
+         <div class="panel panel-default">
+             <div class="panel-body panel-body-sm">
 
 % my $props_subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_props\" >Add Info</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Info</button>";
 
-                                    <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
-                                        <& /stock/stockprops.mas,
-                                            stock_id  =>$stock_id,
-                                            props      => $stockprops,
-                                            div_name   => 'stockprops',
-                                            edit_privs => $edit_privs,
-                                            subset     => \@editable_stock_props,
-                                            editable   => \@editable_stock_props  &>
-                                    </&>
-                                </div>
-                            </div>
-                            <div class="panel panel-default">
-                                <div class="panel-body panel-body-sm">
-                                    <b>Stock editors: </b> <% $editor_link %>
-                                </div>
-                            </div>
-                            <div class="panel panel-default">
-                                <div class="panel-body panel-body-sm">
-                                    <b>External Database Links: </b>
-                                    <ul>
+                 <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
+                     <& /stock/stockprops.mas,
+                         stock_id  =>$stock_id,
+                         props      => $stockprops,
+                         div_name   => 'stockprops',
+                         edit_privs => $edit_privs,
+                         subset     => \@editable_stock_props,
+                         editable   => \@editable_stock_props  &>
+                 </&>
+             </div>
+         </div>
+         <div class="panel panel-default">
+             <div class="panel-body panel-body-sm">
+                 <b>Stock editors: </b> <% $editor_link %>
+             </div>
+         </div>
+         <div class="panel panel-default">
+             <div class="panel-body panel-body-sm">
+                 <b>External Database Links: </b>
+                 <ul>
 % foreach my $db_url (keys %source_dbs) {
-                                        <li>
-                                            <a href="<% $db_url %>" ><% $source_dbs{$db_url} %></a>
-                                        </li>
+                     <li>
+                         <a href="<% $db_url %>" ><% $source_dbs{$db_url} %></a>
+                     </li>
 % }
-                                    </ul>
-                                </div>
-                            </div>
+                 </ul>
+             </div>
+         </div>
 
 % if ($type_name eq 'accession'){
-                            <div class="panel panel-default">
-                                <div class="panel-body panel-body-sm">
+         <div class="panel panel-default">
+             <div class="panel-body panel-body-sm">
 
-                                    <&| /page/info_section.mas, title => "Associated loci (" . $stockref->{allele_count} . ")" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
-                                        <& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
-                                    </&>
-                                </div>
-                            </div>
+                 <&| /page/info_section.mas, title => "Associated loci (" . $stockref->{allele_count} . ")" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
+                     <& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
+                 </&>
+             </div>
+         </div>
 % }
-                        </&>
+     </&>
 
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+ 
+ </&>
 
 % if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-leaf"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Trial Usage</h4>
-
+  <&| .well_section, title => "Trial Usage", icon_class => "glyphicon glyphicon-leaf" &>
                         <&| /page/info_section.mas, id=>"stock_trials_section", title => "Trials", collapsible=> 1, collapsed=>1 &>
                             <div class="panel panel-default">
                                 <div class="panel-body">
@@ -325,24 +325,11 @@ function jqueryStuff() {
                                 </div>
                             </div>
                         </&>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  </&>
 % }
 
 % if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-equalizer"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Traits Assayed</h4>
-
+  <&| .well_section, title => "Traits Assayed", icon_class => "glyphicon glyphicon-equalizer" &>
 % if ($type_name eq 'plot'){
                         <&| /page/info_section.mas, id=>"stock_traits_section", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" &>
                             <div class="panel panel-default">
@@ -361,23 +348,11 @@ function jqueryStuff() {
                             </div>
                         </&>
 % }
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  </&>
 % }
 
 % if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'tissue_sample'){
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-map-marker"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Genotype Marker Data</h4>
+  <&| .well_section, title => "Genotype Marker Data", icon_class => "glyphicon glyphicon-map-marker" &>
 
                         <&| /page/info_section.mas, title=>"Genotype data ", subtitle=> $g_download_link, collapsible => 1 , collapsed => 1 &>
 % print $map_html;
@@ -390,24 +365,11 @@ function jqueryStuff() {
                         </&>
 % }
                         </&>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  </&>
 % }
 
+<&| .well_section, title => "Related Stocks", icon_class => "glyphicon glyphicon-random" &>
 % if ($type_name eq 'accession'){
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-random"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Pedigree</h4>
-
                         <&| /page/info_section.mas, title => "Pedigree", collapsible=> 1, collapsed=>0 &>
 <%perl>
     my $collapsible = 0;
@@ -428,133 +390,59 @@ function jqueryStuff() {
                             <& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
 
                         </&>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 % }
-
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-retweet"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Related Stocks</h4>
-
                         <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>1 &>
                             <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $uniquename, stock_type => $type_name &>
                         </&>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</&>
 
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-camera"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Images</h4>
-
+<&| .well_section, title => "Images", icon_class => "glyphicon glyphicon-camera" &>
                         <&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>0 &>
                             <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
                         </&>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</&>
 
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-book"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Literature Annotation</h4>
-
-                        <&| /page/info_section.mas, title=>"Literature annotation ($pub_count)" , subtitle=>$new_pub_link, id=>"publications" , collapsible=>1, collapsed=>1 &>
+<&| .well_section, title => "Literature Annotation", icon_class => "glyphicon glyphicon-book" &>
+    <&| /page/info_section.mas, title=>"Literature annotation ($pub_count)" , subtitle=>$new_pub_link, id=>"publications" , collapsible=>1, collapsed=>1 &>
 
 % my $pub_count = 0;
 % foreach my $full_accession ( keys %$pubs  ) {
 %   my $pub = CXGN::Chado::Publication->new($dbh, $pubs->{$full_accession}->pub_id );
 %   my ($pub_db_name, $accession) = split ':' , $full_accession;
-                            <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$pub_db_name, accession=>$accession &>
-                            <br >
+        <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$pub_db_name, accession=>$accession &>
+        <br >
 % }
 
-                        </&>
+    </&>
 
-                        <&| /page/info_section.mas,
-                          id   => 'stock_ontology',
-                          title=>"Ontology annotation (" . $stockref->{ontology_count} . ")",
-                          collapsible=>1,
-                          collapsed=>1,
-                          subtitle=>$ontology_subtitle &>
-                          <& /ontology/associate_ontology.mas,
-                          trait_db_name => $trait_ontology_db_name,
-                          object_id     => $stock_id ,
-                          object_name   => "stock",
-                          cvterm_add_uri=> $cvterm_add_uri,
-                          ontology_url  => "/stock/$stock_id/ontologies/",
-                          reference_uri => "/stock/$stock_id/references/",
-                          evidence_with_uri => "/stock/$stock_id/evidences/",
-                          show_form     => $is_owner  &>
-                        </&>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <&| /page/info_section.mas,
+      id   => 'stock_ontology',
+      title=>"Ontology annotation (" . $stockref->{ontology_count} . ")",
+      collapsible=>1,
+      collapsed=>1,
+      subtitle=>$ontology_subtitle &>
+        <& /ontology/associate_ontology.mas,
+        trait_db_name => $trait_ontology_db_name,
+        object_id     => $stock_id ,
+        object_name   => "stock",
+        cvterm_add_uri=> $cvterm_add_uri,
+        ontology_url  => "/stock/$stock_id/ontologies/",
+        reference_uri => "/stock/$stock_id/references/",
+        evidence_with_uri => "/stock/$stock_id/evidences/",
+        show_form     => $is_owner  &>
+    </&>
+</&>
 
 % if ($type_name eq 'accession'){
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-align-left"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>JBrowse Genome Tracks</h4>
-
-                        <&| /page/info_section.mas, title=>"Accession JBrowse", collapsible => 1 , collapsed => 0 &>
-                            <p id="jbrowse_check">[loading...]</p>
-                        </&>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <&| .well_section, title => "JBrowse Genome Tracks", icon_class => "glyphicon glyphicon-align-left" &>
+    <&| /page/info_section.mas, title=>"Accession JBrowse", collapsible => 1 , collapsed => 0 &>
+        <p id="jbrowse_check">[loading...]</p>
+    </&>
+  </&>
 % }
 
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-pencil"></span>
-                    </div>
-                    <div class="col-sm-11" style="overflow:scroll">
-                        <h4>Comments</h4>
-
-                        <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<&| .well_section, title => "Comments", icon_class => "glyphicon glyphicon-comment" &>
+  <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
 </&>
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
