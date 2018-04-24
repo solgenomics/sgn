@@ -14,6 +14,32 @@ __PACKAGE__->config(
    );
 
 
+sub login : Path('/ajax/user/login') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $username = $c->req->param("username");
+    my $password = $c->req->param("password");
+
+    my $login = CXGN::Login->new($c->dbc->dbh());
+    my $login_info = $login->login_user($username, $password);
+
+    if (exists($login_info->{incorrect_password}) && $login_info->{incorrect_password} == 1) { 
+	$c->stash->{rest} = { error => "Login credentials are incorrect. Please try again." };
+    }
+
+    elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) { 
+	$c->stash->{rest} = { error => "This account has been disabled due to $login_info->{account_disabled}. Please contact the database to fix this problem." };
+    }
+
+    else { 
+	$c->stash->{rest} = { message => 'Something happened, but nodoby knows what.' };
+    }
+    $c->stash->{rest} = { message => "Login successful" };
+    
+    
+}
+
 sub new_account :Path('/ajax/user/new') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -74,8 +100,6 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	    return;
 	}
     }   
-    
-    
     
     my $confirm_code = $self->tempname();
     my $new_user = CXGN::People::Login->new($c->dbc->dbh());
@@ -292,16 +316,26 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     $c->stash->{rest} = { message => "Reset link sent. Please check your email and click on the link." };
 }
 
-sub process_reset_password_form :Path('/user/process_reset_password') Args(0) {
+sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(0) {
     my $self = shift;
     my $c = shift;
     
     my $token = $c->req->param("token");
     my $new_password = $c->req->param("");
 
-    
-    my $sp_person_id = CXGN::People::Login->get_login_by_token($c->dbc->dbh, $token);
-    
+    eval { 
+	my $sp_person_id = CXGN::People::Login->get_login_by_token($c->dbc->dbh, $token);
+	
+	my $login = CXGN::People::Login->new($c->dbc->dbh(), $sp_person_id);
+	$login->update_password($new_password);
+	$login->update_confirm_code("");
+    };
+    if ($@) { 
+	$c->stash->{rest} = { error => $@ };
+    }
+    else {
+	$c->stash->{rest} = { message => "The password was successfully updated." };
+    }
 
 }
 
@@ -357,6 +391,89 @@ sub tempname {
     return $rand_string;
 }
 
+sub get_login_button_html :Path('/ajax/user/login_button_html') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    eval { 
+	my $production_site = $c->config->{main_production_site_url};
+	print STDERR "Get login button... site: $production_site\n";
+	if ($c->user()) { 
+	    print STDERR "Detected logged in users...\n";
+	}
+	else { 
+	    print STDERR "No logged in user found!\n";
+	}
+	my $html = "";
+	# if the site is a mirror, gray out the login/logout links
+	if( $c->config->{'is_mirror'} ) {
+	    print STDERR "generating login button for mirror site...\n";
+	    $html = <<HTML;
+	    <a style="line-height: 1.2; text-decoration: underline; background: none" href="$production_site" title="log in on main site">main site</a>
+	} elsif ( $c->config->{disable_login} ) {
+	    <li class="dropdown">
+		<div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
+		<button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+		</div>
+		</li>
+
+HTML
+
+    } elsif ( $c->req->uri->path_query =~ "logout=yes") {
+	print STDERR "generating login button for logout...\n";
+	$html = <<HTML;
+  <li class="dropdown">
+      <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
+	<a href="/user/login">
+          <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
+	</a>
+      </div>
+  </li>
+HTML
+
+} elsif ( $c->user_exists ) {
+    print STDERR "Generate login button for logged in user...\n";
+    my $sp_person_id = $c->user->get_object->get_sp_person_id;
+    my $username = $c->user->get_username();
+    $html = <<HTML;
+  <li>
+      <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
+	<button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username></button>
+	<button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists">
+          Lists <span class="glyphicon glyphicon-list-alt" ></span>
+	</button>
+	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
+	</button>
+	<button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="location.href='/solpeople/login.pl?logout=yes';" title="Logout"></button>
+      </div>
+  </li>
+HTML
+
+  } else {
+      print STDERR "generating regular login button..\n";
+      $html = <<HTML;
+  <li class="dropdown">
+      <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
+	<a href="/user/login">
+          <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px;">Login</button>
+	</a>
+      </div>
+  </li>
+HTML
+
+};
+	if ($@) {
+	    print STDERR "ERROR: $@\n";
+	    $c->stash->{rest} = { error => $@ };
+	}
+	return $c->stash->{rest} = { html => $html };
+    }
+}
+
+
+
+    
+    
+   
 
 
 1;

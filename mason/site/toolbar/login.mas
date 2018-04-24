@@ -1,56 +1,25 @@
 
-% # if the site is a mirror, gray out the login/logout links
-% if( $c->config->{'is_mirror'} ) {
-    <a style="line-height: 1.2; text-decoration: underline; background: none" href="<% $c->config->{main_production_site_url} %>" title="log in on main site">main site</a>
-% } elsif ( $c->config->{disable_login} ) {
+<span id="login_button_html_div" style="white-space:nowrap">[Login]</span>
 
-  <li class="dropdown">
-    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-       <button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button>
-    </div>
-
-  </li>
-
-% } elsif ( $c->req->uri->path_query =~ "logout=yes") {
-
-  <li class="dropdown">
-
-    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-      <a href="/solpeople/login.pl">
-        <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
-      </a>
-    </div>
-
-  </li>
-
-% } elsif ( $c->user_exists ) {
-%   my $sp_person_id = $c->user->get_object->get_sp_person_id;
-  <li>
-
-    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
-      <button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/<% $sp_person_id %>"'' style="margin: 7px 0px 0px 0px" title="My Profile"><% $c->user->get_object->get_username || '' %></button>
-      <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists">
-        Lists <span class="glyphicon glyphicon-list-alt" ></span>
-      </button>
-      <!-- button id="navbar_datasets" name="datasets_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets">
-        Datasets <span class="glyphicon glyphicon-list-alt" ></span>
-      </button -->
-      <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
-      </button>
-      <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="location.href='/solpeople/login.pl?logout=yes';" title="Logout"></button>
-    </div>
-
-  </li>
-
-% } else {
-
-  <li class="dropdown">
-
-    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-      <a href="/solpeople/login.pl">
-        <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px">Login</button>
-      </a>
-    </div>
-
-  </li>
-% }
+<script>
+  function update_login_button() { 
+    alert('Updating login button 2!');
+    jQuery.ajax( { 
+      url: '/ajax/user/login_button_html',
+      error: function(r) { alert('An error occurred'); },
+      success: function(r) { 
+        if (r.error) { alert(r.error); }
+        else { 
+          jQuery('#login_button_html_div').html(r.html);
+          alert(r.html);
+        }
+      }
+    });
+  }
+        
+</script>
+    
+<script>
+  alert('updating login button...');
+  update_login_button();
+</script>
