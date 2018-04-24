@@ -95,6 +95,7 @@ my $this_page = "/stock/$stock_id/view";
 
 my $add_image_link = qq|<a class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">Add new image</a>|;
 my $image_ids =  $stockref->{image_ids} || [] ;
+my $related_image_ids =  $stockref->{related_image_ids} || [] ;
 my $stockprops = $stockref->{props};
 
 
@@ -464,8 +465,12 @@ function jqueryStuff() {
                     <div class="col-sm-11">
                         <h4>Images</h4>
 
-                        <&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>0 &>
+                        <&| /page/info_section.mas, title=>"Images of This Stock(" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>0 &>
                             <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
+                        </&>
+
+                        <&| /page/info_section.mas, title=>"Images of Related Stock(s) (" .  scalar(@$related_image_ids)  . ")", collapsible=>1, collapsed=>0 &>
+                            <& /image/print_images.mas , images=>$related_image_ids , dbh=>$dbh &>
                         </&>
                     </div>
                 </div>
