@@ -5,6 +5,20 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller' };
 
+sub login :Path('/user/login') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    $c->stash->{template} = '/user/login.mas';
+}
+
+sub logout :Path('/user/logout') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+
+}
+
 sub new_account :Path('/user/new') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -78,7 +92,7 @@ sub confirm_failure {
 	
 }
 
-sub check_password_reset_token :Path('/user/reset_password_form') Args(0) { 
+sub reset_password_form :Path('/user/reset_password_form') Args(0) { 
     my $self = shift;
     my $c = shift;
 
@@ -92,13 +106,19 @@ sub check_password_reset_token :Path('/user/reset_password_form') Args(0) {
 	    $c->stash->{template} = '/generic_message.mas';
 	    return;
 	}
+	
 	my $person = CXGN::People::Person->new($c->dbc->dbh(), $person_id);
 	$c->stash->{token} = $token;
 	$c->stash->{person_id} = $person_id;
 	$c->stash->{username} = $person->get_username();
 	$c->stash->{template} = '/user/reset_password_form.mas';
     }
+    else { 
+	$c->stash->{message} = "No token provided. Please try again.";
+	$c->stash->{template} = '/generic_message.mas';
+    }
 
 }	
+
 	
 1;
