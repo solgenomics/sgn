@@ -354,6 +354,262 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
 } 
 
 
+sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
+    my ($self, $c, $trait_id) = @_;
+   
+    my (@pop_ids, $ids);
+  
+    if ($trait_id =~ /\d+/)
+    {
+        $ids = $c->req->param($trait_id);
+        @pop_ids = split(/,/, $ids);
+
+        $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    } 
+   
+    my $combo_pops_id;
+    my $ret->{status} = 0;
+
+    if (scalar(@pop_ids) > 1 )
+    {  
+        $combo_pops_id =  crc(join('', @pop_ids));
+        $c->stash->{combo_pops_id} = $combo_pops_id;
+        $c->stash->{trait_combo_pops} = $ids;
+    
+        $c->stash->{trait_combine_populations} = \@pop_ids;
+
+        $self->multi_pops_phenotype_data($c, \@pop_ids);
+        $self->multi_pops_genotype_data($c, \@pop_ids);
+	$self->multi_pops_geno_files($c, \@pop_ids);
+	$self->multi_pops_pheno_files($c, \@pop_ids);
+
+        my $geno_files = $c->stash->{multi_pops_geno_files};
+        my @g_files = split(/\t/, $geno_files);
+
+        $c->controller('solGS::solGS')->compare_genotyping_platforms($c, \@g_files);
+        my $not_matching_pops =  $c->stash->{pops_with_no_genotype_match};
+     
+        if (!$not_matching_pops) 
+        {
+            $c->controller('solGS::solGS')->cache_combined_pops_data($c);
+
+            my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+            my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+             
+            unless (-s $combined_pops_geno_file  && -s $combined_pops_pheno_file ) 
+            {
+                $c->controller('solGS::solGS')->r_combine_populations($c);
+                
+                $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+                $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+            }
+                       
+            if (-s $combined_pops_pheno_file > 1 && -s $combined_pops_geno_file > 1) 
+            {
+                my $tr_abbr = $c->stash->{trait_abbr};  
+                $c->stash->{data_set_type} = 'combined populations';                
+                $c->controller('solGS::solGS')->get_rrblup_output($c); 
+                my $analysis_result = $c->stash->{combo_pops_analysis_result};
+                  
+                $ret->{pop_ids}       = $ids;
+                $ret->{combo_pops_id} = $combo_pops_id; 
+                $ret->{status}        = $analysis_result;
+	  
+                my $entry = "\n" . $combo_pops_id . "\t" . $ids;
+                $c->controller('solGS::solGS')->catalogue_combined_pops($c, $entry);
+              }           
+        }
+        else 
+        {
+            $ret->{not_matching_pops} = $not_matching_pops;
+        }
+    }
+    else 
+    {
+        my $pop_id = $pop_ids[0];
+        $ret->{redirect_url} = "/solgs/trait/$trait_id/population/$pop_id";
+    }
+       
+    $ret = to_json($ret);
+    
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+   
+}
+
+
+sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm') Args(1) {
+    my ($self, $c, $trait_id) = @_;
+  
+    my (@pop_ids, $ids);
+   
+    if ($trait_id =~ /\d+/)
+    {
+        $ids = $c->req->param('confirm_populations');
+        @pop_ids = split(/,/, $ids);        
+        if (!@pop_ids) {@pop_ids = $ids;}
+
+        $c->stash->{trait_id} = $trait_id;
+    } 
+
+    my $pop_links;
+    my @selected_pops_details;
+
+    foreach my $pop_id (@pop_ids) 
+    {
+        my $markers     = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);                   
+        my @markers     = split(/\t/, $markers);
+        my $markers_num = scalar(@markers);
+       
+        $c->controller('solGS::solGS')->trial_compatibility_table($c, $markers_num);
+        my $match_code = $c->stash->{trial_compatibility_code};
+
+        my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
+       
+	$c->controller('solGS::solGS')->get_projects_details($c, $pop_rs);
+	#my $pop_details  = $self->get_projects_details($c, $pop_rs);
+	my $pop_details  = $c->stash->{projects_details};
+        my $pop_name     = $pop_details->{$pop_id}{project_name};
+        my $pop_desc     = $pop_details->{$pop_id}{project_desc};
+        my $pop_year     = $pop_details->{$pop_id}{project_year};
+        my $pop_location = $pop_details->{$pop_id}{project_location};
+               
+        my $checkbox = qq |<form> <input style="background-color: $match_code;" type="checkbox" checked="checked" name="project" value="$pop_id" /> </form> |;
+        
+        $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+    push @selected_pops_details, [$checkbox,  qq|<a href="/solgs/trait/$trait_id/population/$pop_id" onclick="solGS.waitPage()">$pop_name</a>|, 
+                               $pop_desc, $pop_location, $pop_year, $match_code
+        ];
+  
+    }
+    
+    $c->stash->{selected_pops_details} = \@selected_pops_details;    
+    $c->stash->{template} = $c->controller('solGS::solGS')->template('/search/result/confirm/populations.mas');
+
+}
+
+sub multi_pops_pheno_files {
+    my ($self, $c, $pop_ids) = @_;
+ 
+    my $trait_id = $c->stash->{trait_id};
+    my $dir = $c->stash->{solgs_cache_dir};
+    my $files;
+   
+    if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
+    {
+        foreach my $pop_id (@$pop_ids) 
+        {
+	    my $exp = 'phenotype_data_' . $pop_id . '.txt';
+            $files .= catfile($dir, $exp);
+            $files .= "\t" unless (@$pop_ids[-1] eq $pop_id); 		
+        }
+
+        $c->stash->{multi_pops_pheno_files} = $files;
+
+    }
+    else 
+    {
+        my $exp = 'phenotype_data_' . ${pop_ids} . '.txt';
+        $files = catfile($dir, $exp);
+    }
+
+    if ($trait_id)
+    {
+        my $name = "trait_${trait_id}_multi_pheno_files";
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $tempfile = $c->controller('solGS::solGS')->create_tempfile($temp_dir, $name);
+        write_file($tempfile, $files);
+    }
+ 
+}
+
+
+sub multi_pops_geno_files {
+    my ($self, $c, $pop_ids) = @_;
+ 
+    my $trait_id = $c->stash->{trait_id};
+    my $dir = $c->stash->{solgs_cache_dir};
+    my $files;
+    
+    if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
+    {
+        foreach my $pop_id (@$pop_ids) 
+        {
+            my $exp = 'genotype_data_' . $pop_id . '.txt';
+            $files .= catfile($dir, $exp);        
+            $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);    
+        }
+        $c->stash->{multi_pops_geno_files} = $files;
+    }
+    else 
+    {
+        my $exp = 'genotype_data_' . ${pop_ids} . '.txt';
+        $files = catfile($dir, $exp);
+    }
+
+    if ($trait_id)
+    {
+        my $name = "trait_${trait_id}_multi_geno_files";
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $tempfile = $c->controller('solGS::solGS')->create_tempfile($temp_dir, $name);
+        write_file($tempfile, $files);
+    }
+    
+}
+
+
+sub multi_pops_phenotype_data {
+    my ($self, $c, $pop_ids) = @_;
+   
+    no warnings 'uninitialized';
+    my @job_ids;
+    if (@$pop_ids)
+    {
+        foreach my $pop_id (@$pop_ids)        
+        { 
+            $c->stash->{pop_id} = $pop_id;
+            $c->controller('solGS::solGS')->phenotype_file($c);
+	    push @job_ids, $c->stash->{r_job_id};
+        }
+	
+	if (@job_ids)
+	{
+	    @job_ids = uniq(@job_ids);
+	    $c->stash->{multi_pops_pheno_jobs_ids} = \@job_ids;
+	}
+    }
+    
+   
+  #  $self->multi_pops_pheno_files($c, $pop_ids);
+    
+}
+
+
+sub multi_pops_genotype_data {
+    my ($self, $c, $pop_ids) = @_;
+   
+    no warnings 'uninitialized';
+    my @job_ids;
+    if (@$pop_ids)
+    {
+        foreach my $pop_id (@$pop_ids)        
+        {
+            $c->stash->{pop_id} = $pop_id;
+            $c->controller('solGS::solGS')->genotype_file($c);	    
+	    push @job_ids, $c->stash->{r_job_id};
+        }
+
+	if (@job_ids) 
+	{
+	    @job_ids = uniq(@job_ids);
+	    $c->stash->{multi_pops_geno_jobs_ids} = \@job_ids;
+	}
+    }    
+#  $self->multi_pops_geno_files($c, $pop_ids);
+ 
+}
+
+
 sub build_model_combined_trials_trait {
     my ($self, $c) = @_;
   
