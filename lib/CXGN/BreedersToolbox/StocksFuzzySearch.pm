@@ -85,20 +85,17 @@ sub get_matches {
         }
 
         if (exists($synonym_uniquename_lookup{$stock_name})){
-            my %match_info = ( name => $stock_name, distance => 0 );
+            my %match_info;
             if (scalar(@{$synonym_uniquename_lookup{$stock_name}}) > 1){
                 my $synonym_lookup_uniquename = join ',', @{$synonym_uniquename_lookup{$stock_name}};
                 $error .= "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
                 next;
             } elsif (scalar(@{$synonym_uniquename_lookup{$stock_name}}) == 1){
-                $match_info{'unique_names'} = [$stock_name];
-                $match_info{'is_synonym'} = 1;
-                $match_info{'synonym_of'} = $synonym_uniquename_lookup{$stock_name}->[0];
+                $match_info{matched_string} = $stock_name." (SYNONYM OF ".$synonym_uniquename_lookup{$stock_name}->[0].")";
+                $match_info{is_synonym} = 1;
+                $match_info{uniquename} = $synonym_uniquename_lookup{$stock_name}->[0];
             }
-            push @fuzzy_stocks, {
-                name => $stock_name,
-                matches => [\%match_info]
-            };
+            push @found_stocks, \%match_info;
             next;
         }
 

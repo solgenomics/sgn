@@ -457,6 +457,7 @@ $locations
 jQuery(document).ready(function(){
     jQuery('#guided_help_trial_upload_format_button').click(function(){
         jQuery('#trial_upload_spreadsheet_info_dialog').modal('show');
+        return false;
     });
 })
 </script>

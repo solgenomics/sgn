@@ -158,10 +158,13 @@ sub do_exact_search {
     }
 
     my $rest = {
-	success => "1",
-	absent => \@absent_accessions,
-	found => \@found_accessions,
-	fuzzy => \@fuzzy_accessions
+        success => "1",
+        absent => \@absent_accessions,
+        found => \@found_accessions,
+        fuzzy => \@fuzzy_accessions,
+        absent_organisms => [],
+        fuzzy_organisms => [],
+        found_organisms => []
     };
     #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
