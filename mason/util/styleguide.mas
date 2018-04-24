@@ -40,53 +40,6 @@
 
 <hr>
 
-<h3>Use of Symbols</h3>
-
-<p>
-  Below is a table with current usages of symbols in the database. 
-  Please add to this tale when you choose to use a new symbol.
-</p>
-<style media="screen">
-  .symbol-table>tbody>tr>td{
-    vertical-align: middle;
-  }
-  .symbol-table>tbody>tr>td:first-of-type>*{
-    font-size:2.5em;
-  }
-</style>
-<table class="table symbol-table">
-  <tr>
-    <th>Symbol</th>
-    <th>Usages and contexts</th>
-  </tr>
-  <tr>
-    <td><span class="glyphicon glyphicon-qrcode"></span></td>
-    <td>Barcode[Trial Detail]</td>
-  </tr>
-  <tr>
-    <td><span class="glyphicon glyphicon-pencil"></span></td>
-    <td>Record Phenotypes[Trial Detail]</td>
-  </tr>
-  <tr>
-    <td><span class="glyphicon glyphicon-th"></span></td>
-    <td>Field Layout[Trial Detail]</td>
-  </tr>
-  <tr>
-    <td><span class="glyphicon glyphicon-list-alt"></span></td>
-    <td>Trial Design[Trial Detail]</td>
-  </tr>
-  <tr>
-    <td><span class="glyphicon glyphicon-equalizer"></span></td>
-    <td>Stored Phenotypes[Trial Detail]</td>
-  </tr>
-  <tr>
-    <td><span class="glyphicon glyphicon-paperclip"></span></td>
-    <td>Other Data Collected/Associated[Trial Detail]</td>
-  </tr>
-</table>
-
-<hr>
-
 <h3>An Example Workflow Explaining Workflows</h3>
 
 <&| /util/workflow.mas , id=> "my_workflow"&>
@@ -257,5 +210,171 @@ to create:
     }
     vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
   </script>
-  
-<hr>
+
+
+<h3>Use of Symbols</h3>
+
+<p>
+  Below is a table with current usages of symbols in the database. 
+  Please add to this tale when you choose to use a new symbol.
+</p>
+<style media="screen">
+  .symbol-table>tbody>tr>td{
+    vertical-align: middle;
+  }
+  .symbol-table>tbody>tr>td:first-of-type>*{
+    font-size:2.5em;
+  }
+</style>
+<table class="table symbol-table">
+  <tr>
+    <th>Symbol</th>
+    <th>Usages and contexts</th>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-align-left"></span></td>
+    <td>
+      <ul>
+        <li>JBrowse[Trial Detail]</li>
+        <li>Pedigree[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-book"></span></td>
+    <td>
+      <ul>
+        <li>Literature[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-briefcase"></span></td>
+    <td>
+      <ul>
+        <li>Breeding Program[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-camera"></span></td>
+    <td>
+      <ul>
+        <li>Images[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-cloud"></span></td>
+    <td>
+      <ul>
+        <li>Weather[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-equalizer"></span></td>
+    <td>
+      <ul>
+        <li>Stored Phenotypes[Trial Detail]</li>
+        <li>Traits assayed[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-inbox"></span></td>
+    <td>
+      <ul>
+        <li>Data Agreement[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-info-sign"></span></td>
+    <td>
+      <ul>
+        <li>Additional Information[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-leaf"></span></td>
+    <td>
+      <ul>
+        <li>Trial Usage[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-link"></span></td>
+    <td>
+      <ul>
+        <li>Trial Linkage[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-list-alt"></span></td>
+    <td>
+      <ul>
+        <li>Trial Design[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-paperclip"></span></td>
+    <td>
+      <ul>
+        <li>Other Data Collected/Associated[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-pencil"></span></td>
+    <td>
+      <ul>
+        <li>Record Phenotypes[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-qrcode"></span></td>
+    <td>
+      <ul>
+        <li>Barcode[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-random"></span></td>
+    <td>
+      <ul>
+        <li>Pedigree[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-signal"></span></td>
+    <td>
+      <ul>
+        <li>Analysis[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-th"></span></td>
+    <td>
+      <ul>
+        <li>Field Layout[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-trash"></span></td>
+    <td>
+      <ul>
+        <li>Deletion[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+</table>
