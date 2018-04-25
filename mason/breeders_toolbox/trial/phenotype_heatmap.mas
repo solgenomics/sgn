@@ -595,7 +595,7 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 var data = response.result.data;
-                console.log(data);
+                //console.log(data);
                 var rows = [];
                 var cols = [];
                 var blocks = [];
@@ -608,8 +608,9 @@ jQuery(document).ready( function() {
                 var plot_mums = [];
                 var design;
                 var plotImageDbIds = [];
+                var plant_names = [];
                 jQuery.each(data, function(key_obj, value_obj) {
-                    console.log(key_obj + " and " +value_obj);
+                    //console.log(key_obj + " and " +value_obj);
                     jQuery.each(value_obj, function(key, value) {
                         if (key == 'X'){
                             rows.push(value);
@@ -649,10 +650,25 @@ jQuery(document).ready( function() {
                                 if (key_add == 'plotImageDbIds'){
                                     plotImageDbIds.push(value_add);
                                 }
+                                if (key_add == 'plantNames'){
+                                    var s = value_add.length;
+                                    plant_names.push(s); 
+                                }
                             });
                         }
                     });
                 });
+                var plot_popUp;
+                var result = [];
+                for (var i=0; i<plot_names.length; i++){
+                    if (plant_names[i] < 1) { 
+            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i];
+            		}
+            		else{
+            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i];
+                    }
+            		result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp}) ;
+                }
                 var unique_rows = [];
                 var unique_cols = [];
                 var unique = rows.filter(function(itm, i, rows) {
@@ -668,19 +684,21 @@ jQuery(document).ready( function() {
                 
                 var col_max = Math.max.apply(Math,unique_cols);
                 var row_max = Math.max.apply(Math,unique_rows);
+                var rep_max = Math.max.apply(Math,replicates);
+                var block_max = Math.max.apply(Math,blocks);
                 console.log(unique_rows);
                 console.log(unique_cols);
                 console.log("rows "+rows);
                 console.log("cols "+cols);
                 console.log("blocks "+blocks);
                 console.log("checks "+checks);
-                console.log("accession ID "+accession_ids);
+                console.log("accession ID "+result);
                 console.log("accession name "+accession_names);
-                console.log("plot ID "+plot_ids);
-                console.log("plot name "+plot_names);
+                //.log("plot ID "+plot_ids);
+                //console.log("plot name "+plot_names);
                 console.log(" rep "+replicates);
                 console.log("plot num "+plot_mums);
-                console.log("Design "+design);
+                //console.log("Design "+design);
                 console.log("plot Image ID "+plotImageDbIds);
                 
                 var col_length = cols[0]; 
@@ -751,7 +769,8 @@ jQuery(document).ready( function() {
                       columns = unique_cols;
                       //rows = response.unique_row,
                       //columns = response.unique_col;
-                      datasets = response.result;
+                      //datasets = response.result;
+                      datasets = result;
                      
                   var svg = d3.select("#container_fm").append("svg")
                       .attr("width", width + margin.left + margin.right)
