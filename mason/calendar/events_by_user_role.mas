@@ -254,7 +254,7 @@
 
 jQuery(document).ready(function() {
 
-    jQuery("button[name='personal_calendar_link']").click(function(){
+    jQuery(document).on('click', "button[name='personal_calendar_link']", function() {
         jQuery("#calendar_modal").modal("show");
     });
 

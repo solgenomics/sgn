@@ -1,25 +1,54 @@
 
-<span id="login_button_html_div" style="white-space:nowrap">[Login]</span>
+<span id="login_button_html_div" style="white-space:nowrap;width:200;float:right"><button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button></span>
+
 
 <script>
+
   function update_login_button() { 
-    alert('Updating login button 2!');
+
     jQuery.ajax( { 
       url: '/ajax/user/login_button_html',
       error: function(r) { alert('An error occurred'); },
       success: function(r) { 
         if (r.error) { alert(r.error); }
         else { 
-          jQuery('#login_button_html_div').html(r.html);
-          alert(r.html);
+          jQuery('#login_button_html_div').html(r.html);  
         }
       }
     });
   }
         
+  function logout() { 
+    var answer = confirm("Are you sure you want to log out?");
+
+    if (answer === true) { 
+      jQuery.ajax( { 
+        url: '/ajax/user/logout',
+        error: function(r) { alert('An error occurred'); },
+        success: function(r) { 
+          if (r.error) { alert(r.error); }
+          else { 
+            update_login_button();
+          }
+        }
+      });
+    }
+  }
+  
 </script>
     
 <script>
-  alert('updating login button...');
+
+jQuery(document).ready(function () {
+
   update_login_button();
+   
+  jQuery(document).on('click', 'button[name="site_login_button"]', function() 
+  { 
+    alert('hello');
+    jQuery('#site_login_dialog').modal("show"); 
+    alert('hello2');
+  });
+});
+  
 </script>
