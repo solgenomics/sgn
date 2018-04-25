@@ -26,25 +26,38 @@ sub login : Path('/ajax/user/login') Args(0) {
 
     if (exists($login_info->{incorrect_password}) && $login_info->{incorrect_password} == 1) { 
 	$c->stash->{rest} = { error => "Login credentials are incorrect. Please try again." };
+	return;
     }
 
     elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) { 
 	$c->stash->{rest} = { error => "This account has been disabled due to $login_info->{account_disabled}. Please contact the database to fix this problem." };
+	return;
     }
 
     else { 
 	$c->stash->{rest} = { message => 'Something happened, but nodoby knows what.' };
+	return;
     }
-    $c->stash->{rest} = { message => "Login successful" };
+
+    $c->stash->{rest} = { message => "Login successful" };    
+}
+
+sub logout :Path('/ajax/user/logout') Args(0) { 
+    my $self = shift;
+    my $c = shift;
     
+    my $login = CXGN::Login->new($c->dbc->dbh());
+    $login->logout_user();
     
+    $c->stash->{rest} = { message => "User successfully logged out." };
 }
 
 sub new_account :Path('/ajax/user/new') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
-    if ($c->conf->{is_mirror}) { 
+   
+    print STDERR "Adding new account...\n";
+    if ($c->config->{is_mirror}) { 
 	$c->stash->{template} = '/system_message.mas';
 	$c->stash->{message} = "This site is a mirror site and does not support adding users. Please go to the main site to create an account.";
 	return;
@@ -52,8 +65,9 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     
     
     my ($first_name, $last_name, $username, $password, $confirm_password, $email_address, $organization)
-	= $c->req->param(qw(first_name last_name username password confirm_password email_address organization));
+	= map { $c->req->params->{$_} } (qw|first_name last_name username password confirm_password email_address organization|);
     
+    print STDERR "NEW USER: $first_name, $last_name, etc.\n";
     if ($username) {
 	#
 	# check password properties...
@@ -104,12 +118,13 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     my $confirm_code = $self->tempname();
     my $new_user = CXGN::People::Login->new($c->dbc->dbh());
     $new_user -> set_username($username);
-    $new_user -> set_password($password);
     $new_user -> set_pending_email($email_address);
-    $new_user -> set_confirm_code($confirm_code);
     $new_user -> set_disabled('unconfirmed account');
     $new_user -> set_organization($organization);
     $new_user -> store();
+    
+    $new_user->update_password($password);
+    $new_user->update_confirm_code($confirm_code);
     
     #this is being added because the person object still uses two different objects, despite the fact that we've merged the tables
     my $person_id=$new_user->get_sp_person_id();
@@ -437,28 +452,26 @@ HTML
     $html = <<HTML;
   <li>
       <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
-	<button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username></button>
-	<button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists">
-          Lists <span class="glyphicon glyphicon-list-alt" ></span>
+	<button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
+	<button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
+        Lists <span class="glyphicon glyphicon-list-alt" ></span>
 	</button>
 	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
 	</button>
-	<button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="location.href='/solpeople/login.pl?logout=yes';" title="Logout"></button>
+	<button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
       </div>
   </li>
 HTML
 
   } else {
       print STDERR "generating regular login button..\n";
-      $html = <<HTML;
-  <li class="dropdown">
-      <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
-	<a href="/user/login">
-          <button class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px;">Login</button>
-	</a>
-      </div>
-  </li>
-HTML
+      $html = qq |
+      <li class="dropdown">
+        <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 0px 0px 0px" >
+            <button id="site_login_button" name="site_login_button" class="btn btn-primary" type="button" style="margin: 7px 7px 0px 0px; position-absolute: 10,10,100,10">Login</button>
+        </div>
+      </li>
+ |;
 
 };
 	if ($@) {
@@ -468,12 +481,5 @@ HTML
 	return $c->stash->{rest} = { html => $html };
     }
 }
-
-
-
-    
-    
-   
-
 
 1;
