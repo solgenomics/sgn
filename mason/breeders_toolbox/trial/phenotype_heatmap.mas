@@ -595,7 +595,6 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 var data = response.result.data;
-                //console.log(data);
                 var rows = [];
                 var cols = [];
                 var blocks = [];
@@ -610,7 +609,6 @@ jQuery(document).ready( function() {
                 var plotImageDbIds = [];
                 var plant_names = [];
                 jQuery.each(data, function(key_obj, value_obj) {
-                    //console.log(key_obj + " and " +value_obj);
                     jQuery.each(value_obj, function(key, value) {
                         if (key == 'X'){
                             rows.push(value);
@@ -685,39 +683,14 @@ jQuery(document).ready( function() {
                 var col_max = Math.max.apply(Math,unique_cols);
                 var row_max = Math.max.apply(Math,unique_rows);
                 var rep_max = Math.max.apply(Math,replicates);
-                var block_max = Math.max.apply(Math,blocks);
-                console.log(unique_rows);
-                console.log(unique_cols);
-                console.log("rows "+rows);
-                console.log("cols "+cols);
-                console.log("blocks "+blocks);
-                console.log("checks "+checks);
-                console.log("accession ID "+result);
-                console.log("accession name "+accession_names);
-                //.log("plot ID "+plot_ids);
-                //console.log("plot name "+plot_names);
-                console.log(" rep "+replicates);
-                console.log("plot num "+plot_mums);
-                //console.log("Design "+design);
-                console.log("plot Image ID "+plotImageDbIds);
-                
+                var block_max = Math.max.apply(Math,blocks);                
                 var col_length = cols[0]; 
                 var row_length = rows[0];
-                //var col_length = response.coord_col[0]; 
-                //var row_length = response.coord_row[0];
-                //var block_max = response.max_block;
-                //var rep_max = response.max_rep;
-                //var col_max =  response.max_col;
-                //var row_max =  response.max_row;
-                //var controls = response.controls;
                 var controls = [];
                 var unique_ctrl = [];
                 var plots = plot_mums;
                 var col_max;
-                //var plots = response.plot_numbers;
                 var stocks = accession_names;
-                //var stocks = response.stocks;
-                //if (controls){
                 for (var i = 0; i < checks.length; i++) {
                     if ( checks[i] == "Check") {
                         var s = stocks[i];
@@ -747,7 +720,6 @@ jQuery(document).ready( function() {
                 console.log(plots);
                 var false_coord = response.false_coord;
                 design_type = design;
-                //var design_type = response.design_type;
 
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
@@ -767,9 +739,6 @@ jQuery(document).ready( function() {
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
                       rows = unique_rows,
                       columns = unique_cols;
-                      //rows = response.unique_row,
-                      //columns = response.unique_col;
-                      //datasets = response.result;
                       datasets = result;
                      
                   var svg = d3.select("#container_fm").append("svg")
