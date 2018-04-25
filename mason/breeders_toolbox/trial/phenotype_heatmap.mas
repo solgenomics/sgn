@@ -653,7 +653,21 @@ jQuery(document).ready( function() {
                         }
                     });
                 });
-                
+                var unique_rows = [];
+                var unique_cols = [];
+                var unique = rows.filter(function(itm, i, rows) {
+                    if (i == rows.indexOf(itm)){
+                        unique_rows.push(itm);
+                    }
+                });
+                var unique = cols.filter(function(itm, i, cols) {
+                    if (i == cols.indexOf(itm)){
+                        unique_cols.push(itm);
+                    }
+                });
+
+                console.log(unique_rows);
+                console.log(unique_cols);
                 console.log("rows "+rows);
                 console.log("cols "+cols);
                 console.log("blocks "+blocks);
