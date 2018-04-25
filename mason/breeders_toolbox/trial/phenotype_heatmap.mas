@@ -665,7 +665,9 @@ jQuery(document).ready( function() {
                         unique_cols.push(itm);
                     }
                 });
-
+                
+                var col_max = Math.max.apply(Math,unique_cols);
+                var row_max = Math.max.apply(Math,unique_rows);
                 console.log(unique_rows);
                 console.log(unique_cols);
                 console.log("rows "+rows);
@@ -685,14 +687,15 @@ jQuery(document).ready( function() {
                 var row_length = rows[0];
                 //var col_length = response.coord_col[0]; 
                 //var row_length = response.coord_row[0];
-                var block_max = response.max_block;
-                var rep_max = response.max_rep;
-                var col_max =  response.max_col;
-                var row_max =  response.max_row;
+                //var block_max = response.max_block;
+                //var rep_max = response.max_rep;
+                //var col_max =  response.max_col;
+                //var row_max =  response.max_row;
                 //var controls = response.controls;
                 var controls = [];
                 var unique_ctrl = [];
                 var plots = plot_mums;
+                var col_max;
                 //var plots = response.plot_numbers;
                 var stocks = accession_names;
                 //var stocks = response.stocks;
