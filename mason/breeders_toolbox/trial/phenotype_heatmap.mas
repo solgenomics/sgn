@@ -656,6 +656,23 @@ jQuery(document).ready( function() {
                         }
                     });
                 });
+                
+                for (i=0; i<plot_names.length; i++){
+                    if (rows[i] != '') {
+                    }elsif (rows[i] == ''){
+            			if (blocks[i] && design != 'splitplot'){
+            				var r = blocks[i];
+            				rows.push(r);
+            			}elsif (rows[i] && !blocks[i] && design != 'splitplot'){
+            				var s = replicates[i];
+            				rows.push(s);
+            			}elsif (design == 'splitplot'){
+                            var s = replicates[i];
+            				rows.push(r);
+                        }
+            		}
+                }
+                
                 var plot_popUp;
                 var result = [];
                 for (var i=0; i<plot_names.length; i++){
