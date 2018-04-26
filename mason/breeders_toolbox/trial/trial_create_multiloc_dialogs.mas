@@ -146,13 +146,13 @@ $breeding_programs
                                 <div class="form-group" id="westcott_check_1m_section" style="display: none">
                                   <label class="col-sm-3 control-label">Name of Check 1: </label>
                                   <div class="col-sm-9" >
-                                    <input class="form-control" id="westcott_check_1" name="westcott_check_1" placeholder="Required"></input>
+                                    <input class="form-control" id="westcott_check_1m" name="westcott_check_1m" placeholder="Required"></input>
                                   </div>
                                 </div>
                                 <div class="form-group" id="westcott_check_2m_section" style="display: none">
                                   <label class="col-sm-3 control-label">Name of Check 2: </label>
                                   <div class="col-sm-9" >
-                                    <input class="form-control" id="westcott_check_2" name="westcott_check_2" placeholder="Required"> </input>
+                                    <input class="form-control" id="westcott_check_2m" name="westcott_check_2m" placeholder="Required"> </input>
                                   </div>
                                 </div>      
                                 

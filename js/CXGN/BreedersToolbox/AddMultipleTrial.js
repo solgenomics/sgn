@@ -464,6 +464,15 @@ jQuery(document).ready(function ($) {
 
   });
 
+  jQuery("#westcott_check_1m").autocomplete({
+      appendTo: "#add_multilocation_project_dialog",
+      source: '/ajax/stock/accession_autocomplete',
+  }); 
+  
+  jQuery("#westcott_check_2m").autocomplete({
+      appendTo: "#add_multilocation_project_dialog",
+      source: '/ajax/stock/accession_autocomplete',
+  }); 
 
   jQuery(document).on('change', '#select_list_multi_list_select', function() {
       if (jQuery("#select_multi-design_method").val() == 'greenhouse') {
