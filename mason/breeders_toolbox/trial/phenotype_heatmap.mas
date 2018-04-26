@@ -716,9 +716,7 @@ jQuery(document).ready( function() {
                         }
                     }
                 }
-                console.log(unique_ctrl);
-                console.log(list_of_checks);
-                console.log(checks);
+
                 var false_coord = response.false_coord;
                 design_type = design;
 
