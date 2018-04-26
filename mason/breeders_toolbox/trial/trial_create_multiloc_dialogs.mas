@@ -143,6 +143,20 @@ $breeding_programs
                                     <div class="col-sm-5" id="select_list_multi" name="select_list_multi">
                                     </div>
                                 </div>
+                                <div class="form-group" id="westcott_check_1m_section" style="display: none">
+                                  <label class="col-sm-3 control-label">Name of Check 1: </label>
+                                  <div class="col-sm-9" >
+                                    <input class="form-control" id="westcott_check_1" name="westcott_check_1" placeholder="Required"></input>
+                                  </div>
+                                </div>
+                                <div class="form-group" id="westcott_check_2m_section" style="display: none">
+                                  <label class="col-sm-3 control-label">Name of Check 2: </label>
+                                  <div class="col-sm-9" >
+                                    <input class="form-control" id="westcott_check_2" name="westcott_check_2" placeholder="Required"> </input>
+                                  </div>
+                                </div>      
+                                
+                                                              
                                 <div class="form-group form-group-sm" id="show_list_of_checks_section_multi" style="display: none" >
                                     <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                     <div class="col-sm-5" id="list_of_checks_section_multi" >
@@ -155,7 +169,23 @@ $breeding_programs
                                 </div>
                                 <center>Need to create a list of accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="lists_link" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></center>
                             </div>
-
+                            
+                            <div id="westcott_section" style="display: none" >
+                                <div class="form-group form-group-sm" id="westcott_num_colm_section"  >
+                                    <hr>
+                                    <center><h4>Number of Columns (required):</h4></center>
+                                    <div id="westcott_num_col" >
+                                        <input class="form-control" id="westcott_col" name="westcott_col" placeholder="Required"/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm" id="westcott_num_colm_between_check_section"  >
+                                    <hr>
+                                    <center><h4>Number of columns between two check columns (Optional):</h4></center>
+                                    <div id="westcott_num_col_between_check" >
+                                        <input class="form-control" id="westcott_col_between_check" name="westcott_col_between_check" placeholder="default is 10" />
+                                    </div>
+                                </div>
+                            </div>
                             <!--
                             <div class="well well-sm">
                                 <center><h4>Which seedlots will you grow in the field? <small>This is optional and can be decided later.</small></h4></center>
@@ -175,6 +205,10 @@ $breeding_programs
                                 <div class="col-sm-9" id="greenhouse_num_plants_per_accession_multi" >
                                 </div>
                             </div>
+                            
+                            
+                            
+                            
 
                             <div id="design_info_multi" name="design_info_multi">
                                 <div class="form-group form-group-sm" id="rep_count_section_multi" style="display: none">
