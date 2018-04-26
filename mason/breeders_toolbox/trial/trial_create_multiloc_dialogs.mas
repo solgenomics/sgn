@@ -115,6 +115,7 @@ $breeding_programs
                                         <option title="SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice." value=Lattice>Lattice</option>
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
+                                        <option title="Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)." value=westcott>Westcott Design</option>
                                         <!--
                                         <option title="A greenhouse houses plants in no particular layout design." value="greenhouse" >Greenhouse </option>
                                         -->
