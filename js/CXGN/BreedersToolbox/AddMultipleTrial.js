@@ -123,14 +123,18 @@ jQuery(document).ready(function ($) {
       else {
          use_same_layout = "";
       }
-
+      
+      var westcott_check_1 = $('#westcott_check_1m').val();
+      var westcott_check_2 = $('#westcott_check_2m').val();
+      var westcott_col = $('#westcott_colm').val();
+      var westcott_col_between_check = $('#westcott_col_between_checkm').val();
       var rep_count = $('#rep_count_multi').val();
       var block_size = $('#block_size_multi').val();
       var max_block_size = $('#max_block_size_multi').val();
       var plot_prefix = $('#plot_prefix_multi').val();
       var start_number = $('#start_number_multi').val();
       var increment = $('#increment_multi').val();
-
+alert(westcott_col);
       $.ajax({
           type: 'POST',
           timeout: 3000000,
@@ -160,6 +164,10 @@ jQuery(document).ready(function ($) {
               'start_number': start_number,
               'increment': increment,
               'use_same_layout': use_same_layout,
+              'westcott_check_1': westcott_check_1,
+              'westcott_check_2': westcott_check_2,
+              'westcott_col': westcott_col,
+              'westcott_col_between_check': westcott_col_between_check,
           },
           success: function (response) {
               if (response.error) {
@@ -610,7 +618,10 @@ jQuery(document).ready(function ($) {
 
       var breeding_program_name = jQuery('#select_breeding_program_multi').val();
       var trial_type = jQuery('#add_multi_project_type').val();
-
+      var westcott_check_1 = $('#westcott_check_1m').val();
+      var westcott_check_2 = $('#westcott_check_2m').val();
+      var westcott_col = $('#westcott_colm').val();
+      var westcott_col_between_check = $('#westcott_col_between_checkm').val();
       //var stock_verified = verify_stock_list(stock_list);
       if (desc == '' || year == '') {
          alert('Year and description are required.');
@@ -637,6 +648,10 @@ jQuery(document).ready(function ($) {
               'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
               'has_plant_entries': num_plants_per_plot,
               'has_subplot_entries': num_subplots_per_plot,
+              'westcott_check_1': westcott_check_1,
+              'westcott_check_2': westcott_check_2,
+              'westcott_col': westcott_col,
+              'westcott_col_between_check': westcott_col_between_check,
           },
           success: function (response) {
               if (response.error) {

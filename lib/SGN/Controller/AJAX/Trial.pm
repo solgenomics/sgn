@@ -488,8 +488,8 @@ sub save_experimental_design_POST : Args(0) {
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
-    my $field_trial_is_planned_to_be_genotyped = $c->req->param('field_trial_is_planned_to_be_genotyped');
-    my $field_trial_is_planned_to_cross = $c->req->param('field_trial_is_planned_to_cross');
+    my $field_trial_is_planned_to_be_genotyped = $c->req->param('field_trial_is_planned_to_be_genotyped') || 'No';
+    my $field_trial_is_planned_to_cross = $c->req->param('field_trial_is_planned_to_cross') || 'No';
     my $add_project_trial_source = $c->req->param('add_project_trial_source[]');
     my $add_project_trial_genotype_trial;
     my $add_project_trial_crossing_trial;

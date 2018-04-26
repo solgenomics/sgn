@@ -175,14 +175,14 @@ $breeding_programs
                                     <hr>
                                     <center><h4>Number of Columns (required):</h4></center>
                                     <div id="westcott_num_col" >
-                                        <input class="form-control" id="westcott_col" name="westcott_col" placeholder="Required"/>
+                                        <input class="form-control" id="westcott_colm" name="westcott_colm" placeholder="Required"/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm" id="westcott_num_colm_between_check_section"  >
                                     <hr>
                                     <center><h4>Number of columns between two check columns (Optional):</h4></center>
                                     <div id="westcott_num_col_between_check" >
-                                        <input class="form-control" id="westcott_col_between_check" name="westcott_col_between_check" placeholder="default is 10" />
+                                        <input class="form-control" id="westcott_col_between_checkm" name="westcott_col_between_checkm" placeholder="default is 10" />
                                     </div>
                                 </div>
                             </div>
