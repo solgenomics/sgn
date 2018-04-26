@@ -227,6 +227,7 @@ jQuery(document).ready(function ($) {
           $("#block_number_section_multi").hide();
           $("#block_size_section_multi").hide();
           $("#max_block_section_multi").hide();
+          $("#max_block_size_section_multi").hide();
           $("#row_number_section_multi").hide();
           $("#row_number_per_block_section_multi").hide();
           $("#col_number_per_block_section_multi").hide();
@@ -235,6 +236,11 @@ jQuery(document).ready(function ($) {
           $("#other_parameter_section_multi").hide();
           $("#design_info_multi").show();
           $("#greenhouse_num_plants_per_accession_section_multi").hide();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
       } else if (design_method == "RCBD") {
           $("#trial_multi-design_more_info").show();
           $("#crbd_show_list_of_checks_section_multi").show();
@@ -251,6 +257,11 @@ jQuery(document).ready(function ($) {
           $("#other_parameter_section_multi").hide();
           $("#design_info_multi").show();
           $("#greenhouse_num_plants_per_accession_section_multi").hide();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
       } else if (design_method == "Alpha") {
           $("#trial_multi-design_more_info").show();
           $("#crbd_show_list_of_checks_section_multi").show();
@@ -267,17 +278,30 @@ jQuery(document).ready(function ($) {
           $("#other_parameter_section_multi").hide();
           $("#design_info_multi").show();
           $("#greenhouse_num_plants_per_accession_section_multi").hide();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
       } else if (design_method == "Lattice") {
           $("#FieldMap").show();
           $("#trial_design_more_info").show();
           $("#trial_multi-design_more_info").show();
           $("#crbd_show_list_of_checks_section").show();
+          $("#crbd_show_list_of_checks_section_multi").show();
           $("#show_list_of_checks_section").hide();
+          $("#show_list_of_checks_section_multi").hide();
           $("#rep_count_section").show();
           $("#block_number_section").hide();
           $("#block_size_section").hide();
           $("#max_block_size_section").hide();
+          $("#block_size_section_multi").hide();
+          $("#max_block_size_section_multi").hide();
+          $("#row_number_per_block_section_multi").hide();
+          $("#other_parameter_section_multi").hide();
+          $("#row_number_section_multi").hide();
           $("#row_number_section").hide();
+          $("#rep_count_section_multi").show();
           $("#row_number_per_block_section").hide();
           $("#col_number_per_block_section").hide();
           $("#col_number_section").hide();
@@ -286,6 +310,11 @@ jQuery(document).ready(function ($) {
           $("#design_info").show();
           $("#greenhouse_num_plants_per_accession_section").hide();
           $('#greenhouse_default_num_plants_per_accession').hide();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
       } else if (design_method == "Augmented") {
           $("#trial_multi-design_more_info").show();
           $("#show_list_of_checks_section_multi").show();
@@ -302,6 +331,11 @@ jQuery(document).ready(function ($) {
           $("#other_parameter_section_multi").hide();
           $("#design_info_multi").show();
           $("#greenhouse_num_plants_per_accession_section_multi").hide();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
       } else if (design_method == "") {
           $("#show_list_of_checks_section_multi").hide();
           $("#crbd_show_list_of_checks_section_multi").hide();
@@ -320,6 +354,11 @@ jQuery(document).ready(function ($) {
           $("#other_parameter_section_multi").hide();
           $("#design_info_multi").show();
           $("#greenhouse_num_plants_per_accession_section_multi").hide();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
       }
       else if (design_method == "MAD") {
           $("#trial_multi-design_more_info").show();
@@ -336,6 +375,11 @@ jQuery(document).ready(function ($) {
           $("#row_number_per_block_section_multi").show();
           $("#other_parameter_section_multi").show();
           $("#design_info_multi").show();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
 
           $("#show_other_parameter_options_multi").click(function () {
               if ($('#show_other_parameter_options_multi').is(':checked')) {
@@ -350,7 +394,7 @@ jQuery(document).ready(function ($) {
 
       else if (design_method == 'greenhouse') {
           $("#trial_multi-design_more_info").show();
-          $("#show_list_of_checks_section_multi").hide();
+          $("#show_list_of_checks_section_multi").hide(); 
           $("#rep_count_section_multi").hide();
           $("#block_number_section_multi").hide();
           $("#block_size_section_multi").hide();
@@ -363,7 +407,46 @@ jQuery(document).ready(function ($) {
           $("#other_parameter_section_multi").hide();
           $("#design_info_multi").hide();
           $("#greenhouse_num_plants_per_accession_section_multi").show();
+          $("#westcott_num_colm_section").hide();
+          $("#westcott_num_colm_between_check_section").hide();
+          $("#westcott_check_1m_section").hide();
+          $("#westcott_check_2m_section").hide();
+          $("#westcott_section").hide();
           greenhouse_show_num_plants_section_multi();
+      }
+      else if (design_method == 'westcott') {
+          $("#FieldMap").hide();
+          $("#trial_design_more_info").hide();
+          $("#trial_multi-design_more_info").show();
+          $("#crbd_show_list_of_checks_section").hide();
+          $("#show_list_of_checks_section").hide();
+          $("#crbd_show_list_of_checks_section_multi").hide();
+          $("#show_list_of_checks_section_multi").hide();
+          $("#rep_count_section_multi").hide();
+          $("#rep_count_section").hide();
+          $("#row_number_per_block_section_multi").hide();
+          $("#other_parameter_section_multi").hide();
+          $("#row_number_section_multi").hide();
+          $("#block_number_section").hide();
+          $("#block_size_section").hide();
+          $("#block_size_section_multi").hide();
+          $("#max_block_size_section").hide();
+          $("#max_block_size_section_multi").hide();
+          $("#row_number_section").hide();
+          $("#row_number_per_block_section").hide();
+          $("#col_number_per_block_section").hide();
+          $("#col_number_section").hide();
+          $("#row_number_per_block_section").hide();
+          $("#other_parameter_section").hide();
+          $("#design_info").hide();
+          $("#greenhouse_num_plants_per_accession_section").hide();
+          $('#greenhouse_default_num_plants_per_accession').hide();
+          $("#westcott_section").show();
+          $("#westcott_num_colm_section").show();
+          $("#westcott_num_colm_between_check_section").show();
+          $("#westcott_check_1m_section").show();
+          $("#westcott_check_2m_section").show();
+
       }
 
       else {
