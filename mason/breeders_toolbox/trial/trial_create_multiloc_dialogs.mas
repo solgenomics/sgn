@@ -155,8 +155,7 @@ $breeding_programs
                                     <input class="form-control" id="westcott_check_2m" name="westcott_check_2m" placeholder="Required"> </input>
                                   </div>
                                 </div>      
-                                
-                                                              
+                                                                                              
                                 <div class="form-group form-group-sm" id="show_list_of_checks_section_multi" style="display: none" >
                                     <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                     <div class="col-sm-5" id="list_of_checks_section_multi" >
@@ -206,10 +205,6 @@ $breeding_programs
                                 </div>
                             </div>
                             
-                            
-                            
-                            
-
                             <div id="design_info_multi" name="design_info_multi">
                                 <div class="form-group form-group-sm" id="rep_count_section_multi" style="display: none">
                                     <label class="col-sm-7 control-label">Number of replicates (required): </label>
