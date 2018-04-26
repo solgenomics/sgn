@@ -72,7 +72,7 @@ sub store {
     my $error;
     $stock->set_species($args{organism});
     $stock->set_type_id($args{type_id});
-    $stock->set_name($args{name});
+    $stock->set_name($args{uniquename});
     $stock->set_uniquename($args{uniquename});
     $stock->set_description($args{description});
 
@@ -114,7 +114,7 @@ sub delete {
     $self->print_json() if $check ; #error or no user privileges
 
     my $stock      = $self->get_object();
-    my $stock_name = $stock->get_name();
+    my $stock_name = $stock->get_uniquename();
     my $stock_id = $stock->get_stock_id();
     my %json_hash= $self->get_json_hash();
     my $refering_page="/phenome/stock/view/id/$stock_id";
@@ -207,14 +207,6 @@ sub generate_form {
             );
     }
 
-    $form->add_field(
-        display_name => "Stock name ",
-        field_name   => "name",
-        object       => $stock,
-        getter       => "get_name",
-        setter       => "set_name",
-        validate     => 'string',
-        );
     $form->add_field(
         display_name => "Uniquename ",
         field_name   => "uniquename",
