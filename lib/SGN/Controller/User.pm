@@ -8,7 +8,10 @@ BEGIN { extends 'Catalyst::Controller' };
 sub login :Path('/user/login') Args(0) { 
     my $self = shift;
     my $c = shift;
-    $c->stash->{goto_url} = $c->req->referer();
+
+    $c->stash->{goto_url} = $c->req->param("goto_url");
+
+    print STDERR "GOTOURL=".$c->stash->{goto_url}."\n";
     $c->stash->{template} = '/user/login.mas';
 }
 
