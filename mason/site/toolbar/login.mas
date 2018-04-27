@@ -35,19 +35,13 @@
     }
   }
   
-</script>
-    
-<script>
-
 jQuery(document).ready(function () {
 
   update_login_button();
    
-  jQuery(document).on('click', 'button[name="site_login_button"]', function() 
+  jQuery(document).on('click', 'button[name="site_login_button"]', function(event) 
   { 
-    alert('hello');
-    jQuery('#site_login_dialog').modal("show"); 
-    alert('hello2');
+    jQuery('#site_login_dialog').modal("show");
   });
 });
   

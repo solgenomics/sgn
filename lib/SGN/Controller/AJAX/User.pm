@@ -20,6 +20,7 @@ sub login : Path('/ajax/user/login') Args(0) {
     
     my $username = $c->req->param("username");
     my $password = $c->req->param("password");
+    my $goto_url = $c->req->param("goto_url");
 
     my $login = CXGN::Login->new($c->dbc->dbh());
     my $login_info = $login->login_user($username, $password);
@@ -39,7 +40,10 @@ sub login : Path('/ajax/user/login') Args(0) {
 	return;
     }
 
-    $c->stash->{rest} = { message => "Login successful" };    
+    $c->stash->{rest} = { 
+	message => "Login successful",
+        goto_url => $goto_url 
+    };    
 }
 
 sub logout :Path('/ajax/user/logout') Args(0) { 
