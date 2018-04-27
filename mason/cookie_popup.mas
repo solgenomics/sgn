@@ -1,0 +1,36 @@
+
+<div id="cookie_popup" name="cookie_popup" class="container-fluid" style="align:center; background-color:#ffdddd; width:900px;padding:10px;">
+  This site uses cookies to provide logins and other features. Please accept the use of cookies by clicking on the X.         
+  <a id="cookie_agree_submit" style="float:right">X</a>   
+</div>
+
+<script>
+
+  $('#cookie_agree_submit').click( function () {
+     jQuery.cookie("cookies_approved", "1", { expires: 10000 } );
+     $('#cookie_popup').html("Thank you :-)");
+     $('#cookie_popup').hide();
+  });
+
+  if (jQuery.cookie("cookies_approved") == 1) { 
+			  
+  }
+
+  window.onload=function() {
+    var cookie = jQuery.cookie("cookies_approved");
+  //alert("have cookie: "+cookie);
+
+    if (cookie == undefined) {
+  //alert("showing!");
+
+      $('#cookie_popup').show();
+   //alert("Done!");
+    }
+    else {
+      //alert("Hiding!");
+      $('#cookie_popup').hide();
+
+    }
+  }
+
+</script>

@@ -13,6 +13,7 @@
 <body>
 
 <& header/body.mas &>
+<& /cookie_popup.mas &>
 
 <!-- START CONTENT WRAPPER -->
   <br/>
