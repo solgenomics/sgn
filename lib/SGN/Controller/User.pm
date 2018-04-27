@@ -34,7 +34,7 @@ sub update_account :Path('/user/update') Args(0) {
     my $c = shift;
     
     if (! $c->user()) { 
-	$c->res->redirect('/solpeople/login.pl');
+	$c->res->redirect('/user/login');
 	return;
     }
 
@@ -66,7 +66,7 @@ sub confirm_user :Path('/user/confirm') Args(0) {
     }
     
     if ( !$sp->get_confirm_code() ) {
-	confirm_failure($c, "No confirmation is required for user <b>$username</b>. This account has already been confirmed. <p><a href='login.pl'>[Login Page]</a></p>");
+	confirm_failure($c, "No confirmation is required for user <b>$username</b>. This account has already been confirmed. <p><a href='/user/login'>[Login Page]</a></p>");
 	return;
     }
     

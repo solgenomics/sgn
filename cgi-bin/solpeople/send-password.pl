@@ -44,7 +44,7 @@ END_HEREDOC
     
         <p>Password mailed to $email_address.</p>
     
-        <p>[<a href=/solpeople/login.pl>Login Page</a>]</p>
+        <p>[<a href="/user/login">Login Page</a>]</p>
         <br />
 
 	</div>
@@ -64,7 +64,7 @@ END_HEREDOC
     
         <p>Email address for username \"$username\" was not found. Please check the username and try again, or contact SGN at sgn-feedback\@sgn.cornell.edu for assistance.</p>
     
-        <p>[<a href=/solpeople/login.pl>Login Page</a>]
+        <p>[<a href="/user/login">Login Page</a>]
 
 	</div>
     

@@ -14,7 +14,7 @@ my $login_controller = CXGN::Login->new($dbh);
 if ( $context->get_conf('is_mirror') ) {
     $page->message_page(
         "Sorry, but you cannot log in to this site.",
-"This site is a mirror of <a href=\"http://sgn.cornell.edu\">sgn.cornell.edu</a>. To log in to SGN, go to <a href=\"http://sgn.cornell.edu/solpeople/login.pl\">SGN's login page</a>."
+"This site is a mirror of <a href=\"/user/login\">sgn.cornell.edu</a>. To log in to SGN, go to <a href=\"/user/login\">SGN's login page</a>."
     );
 }
 
@@ -132,7 +132,7 @@ print <<END_HTML;
     <div class="col-sm-2 col-md-3 col-lg-3">
     </div>
     <div class="col-sm-8 col-md-6 col-lg-6" align="center">
-<form class="form-horizontal" role="form" name="login" method="post" action="/solpeople/login.pl">
+<form class="form-horizontal" role="form" name="login" method="post" action="/user/login">
   <div class="form-group">
     <label class="col-sm-3 control-label">Username: </label>
     <div class="col-sm-9">
@@ -155,7 +155,7 @@ print <<END_HTML;
 <br/>
 
 <!--
-<form name="login" method="post" action="/solpeople/login.pl">
+<form name="login" method="post" action="/user/login">
   <table style="padding: 2em" summary="" cellpadding="2" cellspacing="0" border="0" align="center">
   <tr><td>Username</td><td><input class="form-control" id="unamefield" type="text" name="username" size="30" value="" /></td></tr>
   <tr><td colspan="2"></td></tr>

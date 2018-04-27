@@ -51,7 +51,7 @@ use CatalystX::GlobalContext '$c';
 use base qw | CXGN::DB::Object |;
 
 our $LOGIN_COOKIE_NAME = 'sgn_session_id';
-our $LOGIN_PAGE        = '/solpeople/login.pl';
+our $LOGIN_PAGE        = '/user/login';
 our $LOGIN_TIMEOUT     = 7200;                    #seconds for login to timeout
 our $DBH;
 our $EXCHANGE_DBH = 1;
