@@ -101,7 +101,7 @@ var Qtl = {
     {
 	if (userid == null) 
             {
-                window.location="/solpeople/login.pl";
+                window.location="/user/login";
             } 
         else 
             {
