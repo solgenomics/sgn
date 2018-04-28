@@ -1,0 +1,240 @@
+
+<%doc>
+</%doc>
+
+<%args>
+
+</%args>
+
+<%perl>
+  use JSON::Any;
+
+
+</%perl>
+
+
+<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+
+<& /page/page_title.mas, title=>"SolGWAS" &>
+
+<div id="dataset_select"></div>
+
+
+<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/SolGWAS" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+  <input type="hidden" name="outformat" value="0" />
+
+
+  <div class="form-group form-inline">
+    <label class="blast_select_label" for="pheno_select">Phenotypes &nbsp; </label>
+  <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+
+
+
+
+<br>
+
+
+    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
+    <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+    <br>
+
+    </div>
+
+        <div style="text-align: center">
+          <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+        </div>
+        <br />
+
+
+
+</&>
+
+
+
+<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+
+  
+
+  <center>
+    <div id="sgn_blast_graph" style="display:none">
+        <div id="myCanvas">
+          Your browser does not support the HTML5 canvas
+        </div>
+    </div>
+  </center>
+  <br>
+  <div id="SGN_output"></div>
+  
+  <div id="Overview_output"></div>
+  <div id="Coverage_output"></div>
+  <div id="Table_output" style="min-width:900px;"></div>
+  <div id="Bioperl_output"></div>
+  <div id="Basic_output"></div>
+
+</&>
+
+
+
+
+
+<script>
+
+
+jQuery(document).ready(function() {
+  if (isLoggedIn()) {
+    get_select_box("datasets", "dataset_select");
+  }
+  else {
+    alert('You must be logged in to use SolGWAS');
+    }
+  jQuery('#dataset_select').change(function() {  
+    var dataset_id = jQuery('#available_datasets').val();
+    alert("Dataset ID: "+dataset_id);
+    $.ajax({
+      url: '/ajax/solgwas/shared_phenotypes',
+      data: {'dataset_id': dataset_id},
+      success: function(response) {
+        if (response.error) {
+          $('#dataset_select').val('ERROR');
+        }
+        else {
+	  var option_html = '<option selected="selected" value=""> </option>';
+	  for (var i = 0; i < response.options.length; i++) {
+	    option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
+	  }
+	  $('#pheno_select').attr("disabled",false).html(option_html);
+	  
+
+	}
+
+      },
+      error: function(response) {
+        alert("An error occurred, the service may temporarily be unavailable");
+      }
+    });
+  });
+  jQuery('#runGWA').click( function () {
+    if ($('#pheno_select').val() != ""){
+      var dataset_id = $('#available_datasets').val();
+      var trait_id = $('#pheno_select').val();
+      alert("Dataset ID: "+dataset_id);
+      alert("Pheno ID: "+trait_id);
+      $.ajax({
+        url: '/ajax/solgwas/generate_results',
+        data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+        success: function(response) {
+          if (response.error) {
+            $('#dataset_select').val('ERROR');
+          }
+          else {
+            var temp_response = response.dummy_response;
+	    var temp_response2 = response.dummy_response2;
+	    alert("Response ID: "+temp_response);
+    	    alert("Response ID: "+temp_response2);
+
+	  }
+
+
+        },
+        error: function(response) {
+          alert("An error occurred, the service may temporarily be unavailable");
+        }
+      });
+    }  
+  });
+
+
+});
+
+
+
+</script>
+
+
+<!-- STYLE -->
+<style>
+
+h1 {
+  display:none;
+}
+
+.seq_map {
+	color: #777777;
+	width: 700px;
+	position:relative;
+	overflow: auto;
+	align: left;
+}
+
+.blast_select_box {
+  width:300px;
+  margin-right:10px;
+}
+
+.blast_select_label {
+  width:100px;
+  margin-right:10px;
+  line-height: 32px;
+}
+
+.ui-dialog {
+	position:relative;
+}
+
+#region_square {
+	position:absolute;
+	vertical-align:middle;
+}
+.help_dialog {
+	color:blue;
+	cursor:pointer
+}
+#desc_dialog {
+	overflow: auto;
+	position: relative;
+}
+.help_box {
+	background-color:#EEEEFE;
+	border-color:#AAA;
+	border-width:2px;
+	border-style:solid;
+	border-radius:5px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+#sequence {
+  min-height: 80px;
+  max-height: 300px;
+/*  min-width: 700px;*/
+  max-width: 98%;
+}
+
+.download_tag {
+  display:none;
+}
+
+/* BLAST canvas Graph */
+
+.width-1000 {
+  width: 1000px;
+  text-align: center;
+}
+
+#sgn_blast_graph {
+  overflow:hidden;
+}
+
+#myCanvas {
+/*  border-style: solid;*/
+/*  border-width: 1px;*/
+/*  border-color: #ddd;*/
+/*  border-width:0px 1px 1px 1px;*/
+  height:450px;
+  width:1020px;
+  overflow:scroll;
+  overflow-x: hidden;
+}
+
+
+</style>
