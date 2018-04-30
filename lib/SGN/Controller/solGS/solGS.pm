@@ -536,17 +536,6 @@ sub uploaded_population_summary {
 		      protocol            => $protocol,
 		);  
 	}
-
-	# if ($selection_pop_id =~ /uploaded/) 
-	# {
-	#     my $metadata_file_sl = catfile($tmp_dir, "metadata_${user_name}_${selection_pop_id}");    
-	#     my @metadata_sl = read_file($metadata_file_sl) if $selection_pop_id;
-      
-	#     my ($list_name_sl)       = grep {/list_name/} @metadata_sl;      
-	#     my  ($key_sl, $list_name) = split(/\t/, $list_name_sl); 
-   
-	#     $c->stash->{prediction_pop_name} = $list_name;
-	# }
     }
 }
 
@@ -3125,34 +3114,6 @@ sub submit_cluster_compare_trials_markers {
     my $background_job = $c->stash->{background_job};
 
     my $status;
- 
-
- 
-    # if ($dependency && $background_job) 
-    # {
-    # 	my $dependent_job_script  = $self->create_tempfile($c, "compare_trials_job", "pl");
-
-    # 	my $cmd = '#!/usr/bin/env perl;' . "\n";
-    # 	$cmd   .= 'use strict;' . "\n";
-    # 	$cmd   .= 'use warnings;' . "\n\n\n";
-    # 	$cmd   .= 'system("Rscript --slave ' 
-    # 	    . $in_file_temp 
-    # 	    . ' --args ' . $input_files . ' ' . $output_files 
-    # 	    . ' | qsub -W ' .  $dependency . '");';
-
-    # 	write_file($dependent_job_script, $cmd);
-    # 	chmod 0755, $dependent_job_script;
-	
-    # 	$r_job = CXGN::Tools::Run->run_cluster('perl', 
-    #         $dependent_job_script,
-    #         $out_file_temp,
-    #         {
-    #             working_dir => $c->stash->{solgs_tempfiles_dir},
-    #             max_cluster_jobs => 1_000_000_000,
-    #         },
-    #         );
-    # } 
-
 
     try 
     { 
