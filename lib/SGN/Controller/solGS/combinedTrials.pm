@@ -790,6 +790,36 @@ sub build_model_combined_trials_trait {
 }
 
 
+sub predict_selection_pop_combined_pops_model {
+    my ($self, $c) = @_;
+         
+    my $data_set_type     = $c->stash->{data_set_type}; 
+    my $combo_pops_id     = $c->stash->{combo_pops_id};
+    my $model_id          = $c->stash->{model_id};                          
+    my $prediction_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $trait_id          = $c->stash->{trait_id};
+        
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    my $trait_abbr = $c->stash->{trait_abbr};
+
+    my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
+    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+        
+    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+     
+    if (!-s $prediction_pop_gebvs_file)
+    {    
+	$self->cache_combined_pops_data($c);
+ 
+	$self->prediction_population_file($c, $prediction_pop_id);
+  
+	$c->controller('solGS::solGS')->get_rrblup_output($c); 
+    }
+
+}
+
+
+
 sub combine_trait_data {
     my ($self, $c) = @_;
 
