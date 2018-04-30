@@ -793,10 +793,9 @@ sub run_analysis {
 		    $c->controller('solGS::solGS')->genotype_file($c, $selection_pop_id);
 		    $c->stash->{dependency} = $c->stash->{r_job_id};
 		    $c->stash->{dependency_type} = 'download_data';
-		    $c->controller('solGS::solGS')->predict_selection_pop_combined_pops_model($c);
+		    $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
 		}
-	    }
-	    
+	    }	    
 	}
 	else 
 	{

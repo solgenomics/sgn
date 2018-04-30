@@ -445,7 +445,6 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
 
         $c->stash->{model_id}   = $c->req->param('model_id'),
         $c->stash->{list_name} = $c->req->param('list_name'),
-
     }
 
     if ($pop_id )
@@ -1405,7 +1404,7 @@ sub predict_selection_pop_single_trait {
     }
     else
     {  
-	$self->predict_selection_pop_combined_pops_model($c);
+	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
     }
 
 
@@ -1468,35 +1467,6 @@ sub predict_selection_pop_single_pop_model {
 }
 
 
-sub predict_selection_pop_combined_pops_model {
-    my ($self, $c) = @_;
-         
-    my $data_set_type     = $c->stash->{data_set_type}; 
-    my $combo_pops_id     = $c->stash->{combo_pops_id};
-    my $model_id          = $c->stash->{model_id};                          
-    my $prediction_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
-    my $trait_id          = $c->stash->{trait_id};
-        
-    $self->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
-    $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-        
-    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-     
-    if (!-s $prediction_pop_gebvs_file)
-    {    
-	$c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
- 
-	$self->prediction_population_file($c, $prediction_pop_id);
-  
-	$self->get_rrblup_output($c); 
-    }
-
-}
-
-
 sub selection_prediction :Path('/solgs/model') Args(3) {
     my ($self, $c, $training_pop_id, $pop, $selection_pop_id) = @_;
    
@@ -1519,7 +1489,7 @@ sub selection_prediction :Path('/solgs/model') Args(3) {
         $c->stash->{combo_pops_id}     = $combo_pops_id;                            
         $c->stash->{trait_id}          = $trait_id;
        
-	$self->predict_selection_pop_combined_pops_model($c);
+	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
         
         $c->controller('solGS::combinedTrials')->combined_pops_summary($c);        
         $self->trait_phenotype_stat($c);
@@ -1555,7 +1525,7 @@ sub selection_prediction :Path('/solgs/model') Args(3) {
         {  
 	    $c->stash->{trait_abbr} = $trait_abbr;
 	    $self->get_trait_details_of_trait_abbr($c);
-	    $self->predict_selection_pop_combined_pops_model($c);                        
+	    $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);                        
          }
             
         $c->res->redirect("/solgs/models/combined/trials/$training_pop_id");
