@@ -73,7 +73,6 @@
     jQuery('#site_login_dialog').modal('show');
 
     jQuery('#login_form').submit( function(event) { 
-       alert('login!');
        var form_data = jQuery('#login_form').serialize();
        if (!jQuery('#username').val() || !jQuery('#password').val()) { 
          alert('Please enter a username and password');

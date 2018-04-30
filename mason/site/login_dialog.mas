@@ -40,7 +40,6 @@
 <script>
   jQuery(document).ready( function() { 
     jQuery('#login_form').submit( function(event) { 
-       alert('login!');
        event.preventDefault();
        var form_data = jQuery('#login_form').serialize();
        if (!jQuery('#username').val() || !jQuery('#password').val()) { 
@@ -56,7 +55,6 @@
            else { 
               update_login_button();
               jQuery('#site_login_dialog').modal("hide");
-              alert('should now be hidden');
            }
          }
        });
