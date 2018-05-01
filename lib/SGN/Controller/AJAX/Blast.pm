@@ -831,6 +831,9 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
 
     my $bdb = $schema->resultset("BlastDb")->find($db_id) || die "could not find bdb with file_base $db_id";
     my $blastdb_path = File::Spec->catfile($c->config->{blast_db_path}, $bdb->file_base());
+    
+    #sanitize input_string
+    $input_string =~ s/[;\{\}]//g;
 
     my $grepcmd = "grep -i \"$input_string\" $blastdb_path \| sed 's/>//' \| cut -d ' ' -f 1";
     my $output_seq = `$grepcmd`;
