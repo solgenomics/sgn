@@ -204,6 +204,7 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
     my $schema = $c->dbic_schema("SGN::Schema");
 
     my $bdbo;
+    my $seq; 
 
     eval { 
 	$bdbo = CXGN::Blast->new({ blast_db_id => $blast_db_id,
@@ -212,22 +213,21 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
 				 }
 	);
 
-	#     or $c->throw( is_error => 0,
-	# 		  message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");
-	# $seq = $bdbo->get_sequence($id) # returns a Bio::Seq object.
-	#     or $c->throw( is_error => 0,
-	# 		  message => "The sequence could not be found in the blast database with id $blast_db_id.");
+       	$seq = $bdbo->get_sequence($id);
+	if (! $seq) { die "Cannot find sequence with id $id\n"; }
     };
+
+
     if ($@) { 
-	die "ERROR: $@\n";
+	$c->throw( is_error => 0,
+		   message => $@,
+	    );
 	return;
     }
     else { 
 	print STDERR "BLAST DB OK... \n";
     }
-
-    my $seq = $bdbo->get_sequence($id);
-
+    
     # parse the coords param
     my @coords =
 	map {
