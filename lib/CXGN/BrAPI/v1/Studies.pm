@@ -409,7 +409,7 @@ sub studies_layout {
 				observationUnitDbId => $design->{$plot_number}->{plot_id},
 				observationUnitName => $design->{$plot_number}->{plot_name},
 				observationLevel => 'plot',
-				replicate => $design->{$plot_number}->{replicate} ? $design->{$plot_number}->{replicate} : '',
+				replicate => $design->{$plot_number}->{rep_number} ? $design->{$plot_number}->{rep_number} : '',
 				blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
 				X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
 				Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
