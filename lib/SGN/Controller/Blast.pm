@@ -9,7 +9,7 @@ use Storable qw | nstore retrieve |;
 use List::Util qw/sum/;
 use Bio::SeqIO;
 use CXGN::Tools::Text qw/ sanitize_string /;
-#use SGN::Schema;
+use SGN::Schema;
 use CXGN::Blast;
 use CXGN::Blast::SeqQuery;
 
@@ -189,6 +189,8 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
     my $format = $c->req->param('format');
     my $hilite_coords  = $c->req->param('hilite_coords');
     
+    print STDERR "show_match_seq in SGN::Controller::Blast\n";
+
     $format ||= 'html';
     $blast_db_id += 0;
     $id = sanitize_string( $id );
@@ -198,13 +200,33 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
 	return;
     }
     # look up our blastdb
+
     my $schema = $c->dbic_schema("SGN::Schema");
-    my $bdbo = CXGN::BlastDB->from_id($blast_db_id)
-    	or $c->throw( is_error => 0,
-		      message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");
-    my $seq = $bdbo->get_sequence($id) # returns a Bio::Seq object.
-	or $c->throw( is_error => 0,
-		      message => "The sequence could not be found in the blast database with id $blast_db_id.");
+
+    my $bdbo;
+
+    eval { 
+	$bdbo = CXGN::Blast->new({ blast_db_id => $blast_db_id,
+				   sgn_schema => $schema,
+				   dbpath => $c->config->{blast_db_path},
+				 }
+	);
+
+	#     or $c->throw( is_error => 0,
+	# 		  message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");
+	# $seq = $bdbo->get_sequence($id) # returns a Bio::Seq object.
+	#     or $c->throw( is_error => 0,
+	# 		  message => "The sequence could not be found in the blast database with id $blast_db_id.");
+    };
+    if ($@) { 
+	die "ERROR: $@\n";
+	return;
+    }
+    else { 
+	print STDERR "BLAST DB OK... \n";
+    }
+
+    my $seq = $bdbo->get_sequence($id);
 
     # parse the coords param
     my @coords =

@@ -201,7 +201,7 @@ sub make_bioperl_result_writer {
 		   $hit->hsps,
 	    );
 	
-	my $match_seq_url = "show_match_seq.pl?blast_db_id=$db_id;id=$id;$coords_string";
+	my $match_seq_url = "/tools/blast/match/show?blast_db_id=$db_id;id=$id;$coords_string";
 	
 	my $no_js_url = $identifier_url || $match_seq_url;
 	
