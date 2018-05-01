@@ -595,6 +595,7 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 var data = response.result.data;
+                console.log(data);
                 var rows = [];
                 var cols = [];
                 var blocks = [];
@@ -656,22 +657,91 @@ jQuery(document).ready( function() {
                         }
                     });
                 });
-                
-                for (i=0; i<plot_names.length; i++){
-                    if (rows[i] != '') {
-                    }elsif (rows[i] == ''){
+                console.log("my rep "+replicates);
+                var psudo_rows = [];
+                var map_option = 0;
+                for (i=0; i<plot_names.length; i++){ 
+                    if (rows[i] != '') {}
+                    else if (rows[i] == '') {
+                        map_option = 1;
             			if (blocks[i] && design != 'splitplot'){
             				var r = blocks[i];
-            				rows.push(r);
-            			}elsif (rows[i] && !blocks[i] && design != 'splitplot'){
+            				psudo_rows.push(r);
+            			}
+                        else if (replicates[i] && !blocks[i] && design != 'splitplot'){
             				var s = replicates[i];
-            				rows.push(s);
-            			}elsif (design == 'splitplot'){
+            				psudo_rows.push(s);
+            			}
+                        else if (design == 'splitplot'){
                             var s = replicates[i];
-            				rows.push(r);
+                            console.log("my rowS "+s);
+            				psudo_rows.push(s);
                         }
             		}
                 }
+                console.log("my rows "+psudo_rows);
+                var false_coord;
+                if (map_option == 1){
+                    rows = psudo_rows;
+                    false_coord = 'false_coord';
+                    //console.log("psudo rows "+rows);
+                    console.log("my rows "+psudo_rows);
+                }
+                var unique_rows = [];
+                var unique_cols = [];
+                var unique = rows.filter(function(itm, i, rows) {
+                    if (i == rows.indexOf(itm)){
+                        unique_rows.push(itm);
+                    }
+                });
+                
+                function makeArray(count, content) {
+                   var result = [];
+                   var counting = 0;
+                   if(typeof(content) == "function") {
+                       counting = 1;
+                      for(var i=0; i<count; i++) {
+                          result.push(counting);
+                         //result.push(content(i));
+                         counting++;
+                      }
+                   } else {
+                       counting = 1;
+                      for(var i=0; i<count; i++) {
+                         //result.push(content);
+                         result.push(counting);
+                         counting++;
+                      }
+                   }
+                   return result;
+                }
+
+                var psudo_cols = [];
+                var psudo_columns = [];
+                var counts = {};
+                if (map_option == 1){
+                    for (var i = 0; i < rows.length; i++) {
+                        counts[rows[i]] = 1 + (counts[rows[i]] || 0);
+                    }
+                    jQuery.each(counts, function(key, value){
+                        console.log("My KEY"+key+" MY VALUE: "+value);
+                        psudo_cols.push(makeArray(value, key));
+                        //alert(makeArray(8, function(i) { return i*3; }));
+                    });
+                    //for (var i = 0; i < counts.length; i++) {
+                    //    psudo_cols.push(rows[i])
+                    //}
+                    var psudo_columns = [].concat.apply([], psudo_cols);
+                    cols = psudo_columns;
+                    console.log("MY HASH"+psudo_columns);
+                    console.log("MY COLS"+cols);
+                }
+                
+                var unique = cols.filter(function(itm, i, cols) {
+                    if (i == cols.indexOf(itm)){
+                        unique_cols.push(itm);
+                    }
+                }); console.log(unique_cols);
                 
                 var plot_popUp;
                 var result = [];
@@ -684,18 +754,7 @@ jQuery(document).ready( function() {
                     }
             		result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp}) ;
                 }
-                var unique_rows = [];
-                var unique_cols = [];
-                var unique = rows.filter(function(itm, i, rows) {
-                    if (i == rows.indexOf(itm)){
-                        unique_rows.push(itm);
-                    }
-                });
-                var unique = cols.filter(function(itm, i, cols) {
-                    if (i == cols.indexOf(itm)){
-                        unique_cols.push(itm);
-                    }
-                });
+                
                 
                 var col_max = Math.max.apply(Math,unique_cols);
                 var row_max = Math.max.apply(Math,unique_rows);
@@ -734,7 +793,7 @@ jQuery(document).ready( function() {
                     }
                 }
 
-                var false_coord = response.false_coord;
+                //var false_coord = response.false_coord;
                 design_type = design;
 
                 if (col_length && row_length) {
