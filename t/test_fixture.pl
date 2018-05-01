@@ -98,8 +98,8 @@ print STDERR "Done.\n";
 
 my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
 print STDERR "# Loading database fixture... $database_fixture_dump ... ";
-system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
-system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
+system("createdb -p $dbport -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
+system("cat $database_fixture_dump | psql -p $dbport -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
 print STDERR "Done.\n";
 
@@ -117,12 +117,12 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} -d $dbname -e janedoe");
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} --Port $dbport -d $dbname -e janedoe");
 
 # run the materialized views creation script
 #
 print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview\n";
-system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview");
+system("perl bin/refresh_matviews.pl -p $dbport -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview");
 
 
 print STDERR "Done.\n";

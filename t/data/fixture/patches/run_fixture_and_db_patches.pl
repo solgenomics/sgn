@@ -12,7 +12,7 @@ Usage: ./run_fixture_and_db_patches.pl -u <dbuser> -p <dbpassword> -h <dbhost> -
 -s, --startfrom=0   start patches from folder # (Default: 0)
 -t, --test          Do not make permanent changes.      
 
-e.g. `./run_fixture_and_db_patches.pl -u postgres -p postgres -h localhost -d fixture -e janedoe -s 00085 -t`
+e.g. `./run_fixture_and_db_patches.pl -u postgres --p postgres -h localhost -d fixture -e janedoe -s 00085 -t`
 
 =cut
 
@@ -27,6 +27,7 @@ use Cwd qw(abs_path);
 my $dbuser;
 my $dbpass;
 my $host;
+my $dbport = "5432";
 my $db;
 my $editinguser;
 my $startfrom = 0;
@@ -36,6 +37,7 @@ GetOptions(
     "user=s" => \$dbuser,
     "pass=s" => \$dbpass,
     "host=s" => \$host,
+    "Port=s" => \$dbport,
     "db=s" => \$db,
     "editinguser=s" => \$editinguser,
     "startfrom:i" => \$startfrom,
@@ -47,7 +49,7 @@ chdir($fxtr_patch_path);
 my $db_patch_path = abs_path('../../../../db/');
 print STDERR "\nDIR: ".$db_patch_path."\n";
 
-my $cmd = "echo -ne \"$dbpass\n\" | psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
+my $cmd = "echo -ne \"$dbpass\n\" | psql --port $dbport -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
 my @installed = grep { !/^$/ } map { s/^\s+|\s+$//gr } `$cmd`;
 
 chdir($db_patch_path);
@@ -94,7 +96,7 @@ sub run_patches {
     my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
     for (my $j = 0; $j < (scalar @patches); $j++) {
         my $patch = $patches[$j];
-        my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');
+        my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -p $dbport -H $host -D $db -u $editinguser".($test?' -t':'');
         print STDERR $cmd."\n";
         system("bash -c '$cmd'");
         print STDERR "\n\n\n";

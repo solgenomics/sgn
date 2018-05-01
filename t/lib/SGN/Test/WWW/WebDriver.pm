@@ -102,7 +102,7 @@ sub login {
     my $password = shift;
     
     my $d = $self->driver();
-    $self->get("/solpeople/login.pl");
+    $self->get("/user/login");
     $d->find_element("username", "name");
     my $username_field = $d->find_element("username", "name");
     $username_field->send_keys($username);
@@ -114,7 +114,7 @@ sub login {
 
 sub logout { 
     my $self = shift;
-    return $self->get("/solpeople/login.pl?logout=yes");
+    return $self->get("/user/logout");
 }
 
 sub logout_ok { 
