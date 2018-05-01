@@ -9,7 +9,7 @@ print info_section_html( title=> 'Computers',
 
 print info_section_html( title => 'Other Pages', contents => <<EOHTML );
 <ul>
-<li><a href="/help/index.pl">SGN Help Home</a></li>
+<li><a href="/help">SGN Help Home</a></li>
 <li><a href="about_solanaceae.pl">Solanaceae family overview</a></li>
 </ul>
 EOHTML

@@ -10,7 +10,7 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 $d->login_as("submitter");
 
-$d->get_ok("/about/index.pl", "get root url test");
+$d->get_ok("/about", "get root url test");
 
 sleep(1);
 

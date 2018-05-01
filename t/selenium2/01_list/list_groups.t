@@ -10,7 +10,7 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 $d->login_as("submitter");
 
-$d->get_ok("/about/index.pl", "get root url test");
+$d->get_ok("/about", "get root url test");
 
 my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 

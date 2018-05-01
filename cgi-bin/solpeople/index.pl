@@ -18,7 +18,7 @@ print <<END_HEREDOC;
 	    </div>
 	    <div class="boxsubcontent">
               <a class="creativitylinks" href="/content/sgn_data.pl">SGN data overview</a><br />
-              <a class="creativitylinks" href="/about/index.pl">More about SGN</a><br />
+              <a class="creativitylinks" href="/about">More about SGN</a><br />
               <a class="creativitylinks" href="/solanaceae-project/">SOL project</a><br />
               <a class="creativitylinks" href="/solanaceae-project/#SOL_news">SOL newsletter</a><br />
               <a class="creativitylinks" href="/about/tomato_sequencing.pl">International tomato project</a><br />

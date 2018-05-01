@@ -123,16 +123,16 @@
 		      </td>
 		    </tr>
 		    <tr>
-		      <td><a href="/about/index.pl"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;About</a></td>
+		      <td><a href="/about"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;About</a></td>
 		    </tr>
 		    <tr>
 		      <td><a href="/contact/form/"><span class="glyphicon glyphicon-envelope"></span>&nbsp;&nbsp;&nbsp;&nbsp;Contact Us</a></td>
 		    </tr>
 		    <tr>
-		      <td><a href="/help/index.pl"><span class="glyphicon glyphicon-blackboard"></span>&nbsp;&nbsp;&nbsp;&nbsp;Help</a></td>
+		      <td><a href="/help"><span class="glyphicon glyphicon-blackboard"></span>&nbsp;&nbsp;&nbsp;&nbsp;Help</a></td>
 		    </tr>
 		    <tr>
-		      <td><a href="/help/faq.pl"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;FAQ</a></td>
+		      <td><a href="/help/faq"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;FAQ</a></td>
 		    </tr>
 		    <tr>
 		      <td><a href="/forum/topics.pl"><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;&nbsp;&nbsp;Forum</a></td>

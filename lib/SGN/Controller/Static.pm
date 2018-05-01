@@ -23,7 +23,23 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
+sub about :Path('/about') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/about/sgn/index.mas';
+}
 
+sub help :Path('/help') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/help/index.mas';
+}
+
+sub faq :Path('/help/faq') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/help/faq.mas';
+}
 
 sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
     my $self = shift;
