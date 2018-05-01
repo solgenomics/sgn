@@ -193,11 +193,13 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
     $blast_db_id += 0;
     $id = sanitize_string( $id );
     
-    $c->stash->{template} = '/blast/show_seq/input.mas' unless $blast_db_id && defined $id;
- 
+    if (!$blast_db_id || !$id) { 
+	$c->stash->{template} = '/blast/show_seq/input.mas';
+	return;
+    }
     # look up our blastdb
     my $schema = $c->dbic_schema("SGN::Schema");
-    my $bdbo = $schema->resultset("BlastDb")->find($blast_db_id)
+    my $bdbo = CXGN::BlastDB->from_id($blast_db_id)
     	or $c->throw( is_error => 0,
 		      message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");
     my $seq = $bdbo->get_sequence($id) # returns a Bio::Seq object.
