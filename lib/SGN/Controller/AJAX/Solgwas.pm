@@ -104,8 +104,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    $ds-> @$trials_ref = retrieve_genotypes();
     
 
-#    my $cmd = "Rscript /home/vagrant/cxgn/sgn/static/documents/temp_test_solgwas/GWAS_Script.R";
-#    system($cmd);
+    my $cmd = "Rscript /home/vagrant/cxgn/sgn/static/documents/temp_test_solgwas/GWAS_Script.R";
+    system($cmd);
     
     
 #    my $traits = $ds->retrieve_traits();
