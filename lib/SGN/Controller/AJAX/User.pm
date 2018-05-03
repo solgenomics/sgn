@@ -325,7 +325,7 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     foreach my $pid (@person_ids) { 
 	print STDERR "Now processing person with id $pid\n";
 	my $email_reset_token = $self->tempname();
-	$reset_link = $c->req->hostname()."/user/reset_password_form?token=$email_reset_token";
+	$reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
 	my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
 	$person->update_confirm_code($email_reset_token);
 	print STDERR "Sending reset link $reset_link\n";
@@ -367,22 +367,26 @@ sub send_reset_email_message {
     my $reset_link = shift;
 
     my $subject = "[SGN] E-mail Address Confirmation Request";
-
+    my $main_url = $c->config->{main_production_site_url};
 
     my $body = <<END_HEREDOC;
 
-Please do *NOT* reply to this message.
-Use <a href="/contact/form">the contact form</a> to contact us instead.
-	
-Your password can be reset using the following link:
+Hi,
 
-Please click (or cut and paste into your browser) the following link to
-confirm your account and e-mail address:
+you have requested a password reset on $main_url.
+
+If this request did not come from you, please let us know.
+
+To contact us, please do NOT reply to this message; rather, use the contact form ($main_url/contact/form) instead.
+	
+Your password can be reset using the following link, which you can either click or cut and paste into your browser:
 	
 $reset_link
       
 Thank you.
-Sol Genomics Network
+
+Your friends at $main_url
+
 END_HEREDOC
 
    CXGN::Contact::send_email($subject, $body, $private_email);
