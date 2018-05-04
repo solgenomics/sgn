@@ -365,7 +365,7 @@ sub copy_pheno_file_to_anova_dir {
 
     my $trial_id = $c->stash->{trial_id};
 
-    $c->controller('solGS::solGS')->phenotype_file_name($c, $trial_id);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
     my $anova_cache = $c->stash->{anova_cache_dir};

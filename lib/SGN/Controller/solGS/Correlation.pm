@@ -359,7 +359,7 @@ sub run_pheno_correlation_analysis {
     $c->stash->{corre_table_output_file} = $c->stash->{corre_coefficients_table_file};
     $c->stash->{corre_json_output_file}  = $c->stash->{corre_coefficients_json_file};
     
-    $c->controller("solGS::solGS")->formatted_phenotype_file($c);
+    $c->controller("solGS::Files")->formatted_phenotype_file($c);
 
     $c->stash->{referer} = $c->req->referer;
     

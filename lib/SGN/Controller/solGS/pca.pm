@@ -275,13 +275,13 @@ sub _pca_trial_genotype_data {
     if ($referer =~ /solgs\/selection\//) 
     {
 	$c->stash->{selection_pop_id} = $c->stash->{pop_id};	   
-	$c->controller('solGS::solGS')->filtered_selection_genotype_file($c, $pop_id);
+	$c->controller('solGS::Files')->filtered_selection_genotype_file($c, $pop_id);
 	$geno_file = $c->stash->{filtered_selection_genotype_file};
     }
     else
     {
 	$c->stash->{training_pop_id} = $c->stash->{pop_id};	   
-	$c->controller('solGS::solGS')->filtered_training_genotype_file($c, $pop_id);
+	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $pop_id);
 	$geno_file = $c->stash->{filtered_training_genotype_file};
 
     }

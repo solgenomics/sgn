@@ -32,7 +32,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
     
-    $c->controller('solGS::solGS')->trait_phenodata_file($c);    
+    $c->controller('solGS::Files')->trait_phenodata_file($c);    
     my $trait_pheno_file = $c->stash->{trait_phenodata_file}; 
 
 
@@ -107,7 +107,7 @@ sub create_trait_phenodata {
     my $histogram_dir = $c->stash->{histogram_dir};
 
     my $pheno_file = $c->stash->{phenotype_file};
-    my $trait_file = $c->controller("solGS::solGS")->trait_phenodata_file($c);
+    my $trait_file = $c->controller('solGS::Files')->trait_phenodata_file($c);
     my $trait_abbr = $c->stash->{trait_abbr};
  
     if (-s $pheno_file) 

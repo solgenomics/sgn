@@ -566,7 +566,7 @@ sub get_markers_count {
     {
 	my $training_pop_id = $pop_hash->{training_pop_id};
 	$c->stash->{pop_id} = $training_pop_id;
-	$self->filtered_training_genotype_file($c);
+	$self->controller('solGS::Files')->filtered_training_genotype_file($c);
 	$filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
 	if (-s $filtered_geno_file) {
@@ -586,7 +586,7 @@ sub get_markers_count {
     {
 	my $selection_pop_id = $pop_hash->{selection_pop_id};
 	$c->stash->{pop_id} = $selection_pop_id;
-	$self->filtered_selection_genotype_file($c);
+	$self->controller('solGS::Files')->filtered_selection_genotype_file($c);
 	$filtered_geno_file  = $c->stash->{filtered_selection_genotype_file};
 
 	if (-s $filtered_geno_file) {
@@ -637,7 +637,7 @@ sub project_description {
         $self->uploaded_population_summary($c, $pr_id);
     }
     
-    $self->filtered_training_genotype_file($c);
+    $self->controller('solGS::Files')->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
     my $markers_no;
@@ -655,7 +655,7 @@ sub project_description {
 	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
     }
    
-    $self->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
     my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
     my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
  
@@ -852,7 +852,7 @@ sub input_files {
     
     $self->genotype_file($c);  
     $self->phenotype_file($c);
-    $self->formatted_phenotype_file($c);
+    $self->controller('solGS::Files')->formatted_phenotype_file($c);
 
     my $pred_pop_id = $c->stash->{prediction_pop_id} ||$c->stash->{selection_pop_id} ;
     my ($prediction_population_file, $filtered_pred_geno_file);
@@ -897,15 +897,15 @@ sub output_files {
     my $trait    = $c->stash->{trait_abbr}; 
     my $trait_id = $c->stash->{trait_id}; 
     
-    $self->gebv_marker_file($c);  
+    $c->controller(solGS::Files)->marker_effects_file($c);  
     $self->gebv_kinship_file($c); 
     $self->validation_file($c);
-    $self->trait_phenodata_file($c);
-    $self->variance_components_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->variance_components_file($c);
     $self->relationship_matrix_file($c);
-    $self->filtered_training_genotype_file($c);
+    $self->controller('solGS::Files')->filtered_training_genotype_file($c);
 
-    $self->filtered_training_genotype_file($c);
+    $self->controller('solGS::Files')->filtered_training_genotype_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -925,7 +925,7 @@ sub output_files {
 
     my $file_list = join ("\t",
                           $c->stash->{gebv_kinship_file},
-                          $c->stash->{gebv_marker_file},
+                          $c->stash->{marker_effects_file},
                           $c->stash->{validation_file},
                           $c->stash->{trait_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
@@ -1038,7 +1038,7 @@ sub top_blups {
 sub top_markers {
     my ($self, $c) = @_;
     
-    my $markers_file = $c->stash->{gebv_marker_file};
+    my $markers_file = $c->stash->{marker_effects_file};
 
     my $markers = $self->convert_to_arrayref_of_arrays($c, $markers_file);
     
@@ -1434,7 +1434,7 @@ sub model_accuracy {
 sub model_parameters {
     my ($self, $c) = @_;
 
-    $self->variance_components_file($c);
+    $c->controller("solGS::Files")->variance_components_file($c);
     my $file = $c->stash->{variance_components_file};
    
     my @params =  map  { [ split(/\t/, $_) ]}  read_file($file);
@@ -2737,7 +2737,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
   
-    $self->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
     my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
@@ -2762,7 +2762,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 sub trait_phenotype_stat {
     my ($self, $c) = @_; 
     
-    $self->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
@@ -2849,7 +2849,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     
     if ($combo_pops_id)
     {
-	$c->controller->('solGS::combinedTrials')get_combined_pops_list($c, $combo_pops_id);
+	$c->controller->('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
 	$c->stash->{data_set_type} = 'combined populations';
 	$pop_id = $combo_pops_id;
     }
@@ -3521,7 +3521,7 @@ sub phenotype_file {
 	}	
     }
  
-    $self->phenotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
     no warnings 'uninitialized';
@@ -3841,7 +3841,7 @@ sub run_rrblup_trait {
         else
         {       
             if (-s $c->stash->{gebv_kinship_file} == 0 ||
-                -s $c->stash->{gebv_marker_file}  == 0 ||
+                -s $c->stash->{marker_effects_file}  == 0 ||
                 -s $c->stash->{validation_file}   == 0       
                 )
             {  
@@ -3880,7 +3880,7 @@ sub run_rrblup_trait {
         else
         {   
             if (-s $c->stash->{gebv_kinship_file} == 0 ||
-                -s $c->stash->{gebv_marker_file}  == 0 ||
+                -s $c->stash->{marker_effects_file}  == 0 ||
                 -s $c->stash->{validation_file}   == 0       
                 )
             {  
