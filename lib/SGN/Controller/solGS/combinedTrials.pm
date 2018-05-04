@@ -293,7 +293,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $solgs_controller->gebv_kinship_file($c);
     $solgs_controller->blups_file($c);
     $solgs_controller->download_urls($c);
-    $solgs_controller->gebv_marker_file($c);
+    $c->controller(solGS::Files)->marker_effects_file($c);
     $solgs_controller->top_markers($c);
     $solgs_controller->model_parameters($c);
     
@@ -710,7 +710,7 @@ sub combined_pops_summary {
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
   
-    $c->controller('solGS::solGS')->filtered_training_genotype_file($c);
+    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
     $self->cache_combined_pops_data($c);

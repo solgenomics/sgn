@@ -453,7 +453,7 @@ sub structure_output_details {
 	} 
 	else 
 	{	    
-	    $solgs_controller->phenotype_file_name($c, $pop_id);	
+	    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);	
 	    $solgs_controller->genotype_file_name($c, $pop_id);	    
 	    $pheno_file = $c->stash->{phenotype_file_name};
 	    $geno_file  = $c->stash->{genotype_file_name};

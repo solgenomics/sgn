@@ -359,7 +359,7 @@ sub run_pheno_correlation_analysis {
       
     $self->temp_pheno_corre_input_file($c);
     $self->temp_pheno_corre_output_file($c);
-
+   
     $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
     $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
         

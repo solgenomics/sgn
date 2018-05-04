@@ -293,7 +293,7 @@ sub predict_list_selection_pop_single_pop_model {
    
     if (!-s $prediction_pop_gebvs_file)
     {
-	$c->controller('solGS::solGS')->phenotype_file_name($c, $training_pop_id);
+	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	$c->stash->{phenotype_file} =$c->stash->{phenotype_file_name};
 
 	$c->controller('solGS::solGS')->genotype_file_name($c, $training_pop_id);

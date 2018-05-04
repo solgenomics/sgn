@@ -295,7 +295,7 @@ sub _check_combined_trials_model_selection_output {
 sub check_single_trial_training_data {
     my ($self, $c, $pop_id) = @_;
 
-    $c->controller('solGS::solGS')->phenotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $cached_pheno = -s $c->stash->{phenotype_file_name};
   
     $c->controller('solGS::solGS')->genotype_file_name($c, $pop_id);

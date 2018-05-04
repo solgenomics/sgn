@@ -566,7 +566,7 @@ sub get_markers_count {
     {
 	my $training_pop_id = $pop_hash->{training_pop_id};
 	$c->stash->{pop_id} = $training_pop_id;
-	$self->filtered_training_genotype_file($c);
+	$self->controller('solGS::Files')->filtered_training_genotype_file($c);
 	$filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
 	if (-s $filtered_geno_file) {
@@ -586,7 +586,7 @@ sub get_markers_count {
     {
 	my $selection_pop_id = $pop_hash->{selection_pop_id};
 	$c->stash->{pop_id} = $selection_pop_id;
-	$self->filtered_selection_genotype_file($c);
+	$self->controller('solGS::Files')->filtered_selection_genotype_file($c);
 	$filtered_geno_file  = $c->stash->{filtered_selection_genotype_file};
 
 	if (-s $filtered_geno_file) {
@@ -637,7 +637,7 @@ sub project_description {
         $self->uploaded_population_summary($c, $pr_id);
     }
     
-    $self->filtered_training_genotype_file($c);
+    $self->controller('solGS::Files')->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
     my $markers_no;
@@ -655,7 +655,7 @@ sub project_description {
 	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
     }
    
-    $self->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
     my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
     my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
  
@@ -852,7 +852,7 @@ sub input_files {
     
     $self->genotype_file($c);  
     $self->phenotype_file($c);
-    $self->formatted_phenotype_file($c);
+    $self->controller('solGS::Files')->formatted_phenotype_file($c);
 
     my $pred_pop_id = $c->stash->{prediction_pop_id} ||$c->stash->{selection_pop_id} ;
     my ($prediction_population_file, $filtered_pred_geno_file);
@@ -897,35 +897,33 @@ sub output_files {
     my $trait    = $c->stash->{trait_abbr}; 
     my $trait_id = $c->stash->{trait_id}; 
     
-    $self->gebv_marker_file($c);  
-    $self->gebv_kinship_file($c); 
-    $self->validation_file($c);
-    $self->trait_phenodata_file($c);
-    $self->variance_components_file($c);
-    $self->relationship_matrix_file($c);
-    $self->filtered_training_genotype_file($c);
+    $c->controller('solGS::Files')->marker_effects_file($c);  
+    $c->controller('solGS::Files')->rrblup_gebvs_file($c); 
+    $c->controller('solGS::Files')->validation_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->variance_components_file($c);
+    $c->controller('solGS::Files')->relationship_matrix_file($c);
+    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
 
-    $self->filtered_training_genotype_file($c);
+    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
 
     no warnings 'uninitialized';
-   
-    #$prediction_id = "uploaded_${prediction_id" if $c->stash->{uploaded_prediction};
-    
+       
     my $pred_pop_gebvs_file;
     
     if ($prediction_id) 
     {
 	my $identifier    = $pop_id . '_' . $prediction_id;
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+        $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
         $pred_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
     }
 
     my $file_list = join ("\t",
-                          $c->stash->{gebv_kinship_file},
-                          $c->stash->{gebv_marker_file},
+                          $c->stash->{rrblup_gebvs_file},
+                          $c->stash->{marker_effects_file},
                           $c->stash->{validation_file},
                           $c->stash->{trait_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
@@ -937,553 +935,14 @@ sub output_files {
                           
     my $name = "output_files_${trait}_$pop_id"; 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $tempfile = $self->create_tempfile($temp_dir, $name); 
+    my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name); 
     write_file($tempfile, $file_list);
     
     $c->stash->{output_files} = $tempfile;
-
-}
-
-
-<<<<<<< HEAD
-sub gebv_marker_file {
-    my ($self, $c) = @_;
    
-    my $pop_id = $c->stash->{pop_id};
-    my $trait  = $c->stash->{trait_abbr};
-    
-    no warnings 'uninitialized';
-
-    my $data_set_type = $c->stash->{data_set_type};
-       
-    my $cache_data;
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-       
-        $cache_data = {key       => 'gebv_marker_combined_pops_'.  $trait . '_' . $combo_identifier,
-                       file      => 'gebv_marker_'. $trait . '_' . $combo_identifier . '_combined_pops',
-                       stash_key => 'gebv_marker_file'
-        };
-    }
-    else
-    {    
-	$cache_data = {key       => 'gebv_marker_' . $pop_id . '_'.  $trait,
-		       file      => 'gebv_marker_' . $trait . '_' . $pop_id,
-		       stash_key => 'gebv_marker_file'
-	};
-    }
-
-    $self->cache_file($c, $cache_data);
-
 }
 
 
-sub variance_components_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{pop_id};
-    my $trait  = $c->stash->{trait_abbr};
-    
-    my $data_set_type = $c->stash->{data_set_type};
-    
-    my $cache_data;
-
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-
-        $cache_data = {key       => 'variance_components_combined_pops_'.  $trait . "_". $combo_identifier,
-                       file      => 'variance_components_'. $trait . '_' . $combo_identifier. '_combined_pops',
-                       stash_key => 'variance_components_file'
-        };
-    }
-    else 
-    {
-        $cache_data = {key       => 'variance_components_' . $pop_id . '_'.  $trait,
-                       file      => 'variance_components_' . $trait . '_' . $pop_id,
-                       stash_key => 'variance_components_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub trait_phenodata_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id        = $c->stash->{pop_id};
-    my $trait         = $c->stash->{trait_abbr};    
-    my $data_set_type = $c->stash->{data_set_type};
-   
-    my $cache_data;
-
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-        $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
-                       file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
-    else 
-    {
-        $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
-                       file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub filtered_training_genotype_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{pop_id};
-    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
-
-    my $cache_data = { key       => 'filtered_genotype_data_' . $pop_id, 
-                       file      => 'filtered_genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'filtered_training_genotype_file'
-    };
-    
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub filtered_selection_genotype_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
-    
-    my $cache_data = { key       => 'filtered_genotype_data_' . $pop_id, 
-                       file      => 'filtered_genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'filtered_selection_genotype_file'
-    };
-    
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub formatted_phenotype_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{pop_id};
-    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
-
-    my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
-                       file      => 'formatted_phenotype_data_' . $pop_id,
-                       stash_key => 'formatted_phenotype_file'
-    };
-    
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub phenotype_file_name {
-    my ($self, $c, $pop_id) = @_;
-   
-    #my $pop_id = $c->stash->{pop_id};
-    #$pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
-
-    if ($pop_id =~ /uploaded/) 
-    {
-	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-	my $file = catfile($tmp_dir, 'phenotype_data_' . $pop_id . '.txt');
-	$c->stash->{phenotype_file_name} = $file;
-    }
-    else
-    {
-
-	my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
-			   file      => 'phenotype_data_' . $pop_id . '.txt',
-			   stash_key => 'phenotype_file_name'
-	};
-    
-	$self->cache_file($c, $cache_data);
-    }
-}
-
-
-sub genotype_file_name {
-    my ($self, $c, $pop_id) = @_;
-   
-    # my $pop_id = $c->stash->{pop_id};
-    # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
-    # my $pred_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id} ; 
-   
-    if ($pop_id =~ /uploaded/) 
-    {
-	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-	my $file = catfile($tmp_dir, 'genotype_data_' . $pop_id . '.txt');
-	$c->stash->{genotype_file_name} = $file;
-    }
-    else
-    {
-	my $cache_data = { key   => 'genotype_data_' . $pop_id, 
-                       file      => 'genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'genotype_file_name'
-	};
-    
-	$self->cache_file($c, $cache_data);
-    }
-}
-
-
-sub gebv_kinship_file {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-    my $trait  = $c->stash->{trait_abbr};
-    my $data_set_type = $c->stash->{data_set_type};
-        
-    my $cache_data;
-    
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id};
-        $cache_data = {key       => 'gebv_kinship_combined_pops_'.  $combo_identifier . "_" . $trait,
-                       file      => 'gebv_kinship_'. $trait . '_'  . $combo_identifier. '_combined_pops',
-                       stash_key => 'gebv_kinship_file'
-
-        };
-    }
-    else 
-    {
-    
-        $cache_data = {key       => 'gebv_kinship_' . $pop_id . '_'.  $trait,
-                       file      => 'gebv_kinship_' . $trait . '_' . $pop_id,
-                       stash_key => 'gebv_kinship_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-
-}
-
-
-sub relationship_matrix_file {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-    my $data_set_type = $c->stash->{data_set_type};
-        
-    my $cache_data;
-    
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id};
-        $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
-                       file      => 'relationship_matrix_combined_pops_' . $combo_identifier,
-                       stash_key => 'relationship_matrix_file'
-
-        };
-    }
-    else 
-    {
-    
-        $cache_data = {key       => 'relationship_matrix_' . $pop_id,
-                       file      => 'relationship_matrix_' . $pop_id,
-                       stash_key => 'relationship_matrix_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-
-}
-
-
-sub blups_file {
-    my ($self, $c) = @_;
-    
-    my $blups_file = $c->stash->{gebv_kinship_file};
-    $self->top_blups($c, $blups_file);
-}
-
-
-||||||| merged common ancestors
-sub gebv_marker_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{pop_id};
-    my $trait  = $c->stash->{trait_abbr};
-    
-    no warnings 'uninitialized';
-
-    my $data_set_type = $c->stash->{data_set_type};
-       
-    my $cache_data;
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-       
-        $cache_data = {key       => 'gebv_marker_combined_pops_'.  $trait . '_' . $combo_identifier,
-                       file      => 'gebv_marker_'. $trait . '_' . $combo_identifier . '_combined_pops',
-                       stash_key => 'gebv_marker_file'
-        };
-    }
-    else
-    {
-    
-       $cache_data = {key       => 'gebv_marker_' . $pop_id . '_'.  $trait,
-                      file      => 'gebv_marker_' . $trait . '_' . $pop_id,
-                      stash_key => 'gebv_marker_file'
-       };
-    }
-
-    $self->cache_file($c, $cache_data);
-
-}
-
-
-sub variance_components_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{pop_id};
-    my $trait  = $c->stash->{trait_abbr};
-    
-    my $data_set_type = $c->stash->{data_set_type};
-    
-    my $cache_data;
-
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-
-        $cache_data = {key       => 'variance_components_combined_pops_'.  $trait . "_". $combo_identifier,
-                       file      => 'variance_components_'. $trait . '_' . $combo_identifier. '_combined_pops',
-                       stash_key => 'variance_components_file'
-        };
-    }
-    else 
-    {
-        $cache_data = {key       => 'variance_components_' . $pop_id . '_'.  $trait,
-                       file      => 'variance_components_' . $trait . '_' . $pop_id,
-                       stash_key => 'variance_components_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub trait_phenodata_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id        = $c->stash->{pop_id};
-    my $trait         = $c->stash->{trait_abbr};    
-    my $data_set_type = $c->stash->{data_set_type};
-   
-    my $cache_data;
-
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-        $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
-                       file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
-    else 
-    {
-        $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
-                       file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub filtered_training_genotype_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{pop_id};
-    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
-
-    my $cache_data = { key       => 'filtered_genotype_data_' . $pop_id, 
-                       file      => 'filtered_genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'filtered_training_genotype_file'
-    };
-    
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub filtered_selection_genotype_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
-    
-    my $cache_data = { key       => 'filtered_genotype_data_' . $pop_id, 
-                       file      => 'filtered_genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'filtered_selection_genotype_file'
-    };
-    
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub formatted_phenotype_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{pop_id};
-    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
-
-    my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
-                       file      => 'formatted_phenotype_data_' . $pop_id,
-                       stash_key => 'formatted_phenotype_file'
-    };
-    
-    $self->cache_file($c, $cache_data);
-}
-
-
-sub phenotype_file_name {
-    my ($self, $c, $pop_id) = @_;
-   
-    #my $pop_id = $c->stash->{pop_id};
-    #$pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
-
-    if ($pop_id =~ /uploaded/) 
-    {
-	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-	my $file = catfile($tmp_dir, 'phenotype_data_' . $pop_id . '.txt');
-	$c->stash->{phenotype_file_name} = $file;
-    }
-    else
-    {
-
-	my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
-			   file      => 'phenotype_data_' . $pop_id . '.txt',
-			   stash_key => 'phenotype_file_name'
-	};
-    
-	$self->cache_file($c, $cache_data);
-    }
-}
-
-
-sub genotype_file_name {
-    my ($self, $c, $pop_id) = @_;
-   
-    # my $pop_id = $c->stash->{pop_id};
-    # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
-    # my $pred_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id} ; 
-   
-    if ($pop_id =~ /uploaded/) 
-    {
-	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
-	my $file = catfile($tmp_dir, 'genotype_data_' . $pop_id . '.txt');
-	$c->stash->{genotype_file_name} = $file;
-    }
-    else
-    {
-	my $cache_data = { key   => 'genotype_data_' . $pop_id, 
-                       file      => 'genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'genotype_file_name'
-	};
-    
-	$self->cache_file($c, $cache_data);
-    }
-}
-
-
-sub gebv_kinship_file {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-    my $trait  = $c->stash->{trait_abbr};
-    my $data_set_type = $c->stash->{data_set_type};
-        
-    my $cache_data;
-    
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id};
-        $cache_data = {key       => 'gebv_kinship_combined_pops_'.  $combo_identifier . "_" . $trait,
-                       file      => 'gebv_kinship_'. $trait . '_'  . $combo_identifier. '_combined_pops',
-                       stash_key => 'gebv_kinship_file'
-
-        };
-    }
-    else 
-    {
-    
-        $cache_data = {key       => 'gebv_kinship_' . $pop_id . '_'.  $trait,
-                       file      => 'gebv_kinship_' . $trait . '_' . $pop_id,
-                       stash_key => 'gebv_kinship_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-
-}
-
-
-sub relationship_matrix_file {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id};
-    my $data_set_type = $c->stash->{data_set_type};
-        
-    my $cache_data;
-    
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        my $combo_identifier = $c->stash->{combo_pops_id};
-        $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
-                       file      => 'relationship_matrix_combined_pops_' . $combo_identifier,
-                       stash_key => 'relationship_matrix_file'
-
-        };
-    }
-    else 
-    {
-    
-        $cache_data = {key       => 'relationship_matrix_' . $pop_id,
-                       file      => 'relationship_matrix_' . $pop_id,
-                       stash_key => 'relationship_matrix_file'
-        };
-    }
-
-    $self->cache_file($c, $cache_data);
-
-}
-
-
-sub blups_file {
-    my ($self, $c) = @_;
-    
-    my $blups_file = $c->stash->{gebv_kinship_file};
-    $self->top_blups($c, $blups_file);
-}
-
-
-=======
->>>>>>> move files functions to Files controller...
 sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
@@ -1577,7 +1036,7 @@ sub top_blups {
 sub top_markers {
     my ($self, $c) = @_;
     
-    my $markers_file = $c->stash->{gebv_marker_file};
+    my $markers_file = $c->stash->{marker_effects_file};
 
     my $markers = $self->convert_to_arrayref_of_arrays($c, $markers_file);
     
@@ -1973,7 +1432,7 @@ sub model_accuracy {
 sub model_parameters {
     my ($self, $c) = @_;
 
-    $self->variance_components_file($c);
+    $c->controller("solGS::Files")->variance_components_file($c);
     my $file = $c->stash->{variance_components_file};
    
     my @params =  map  { [ split(/\t/, $_) ]}  read_file($file);
@@ -3276,7 +2735,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
   
-    $self->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
     my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
@@ -3301,7 +2760,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 sub trait_phenotype_stat {
     my ($self, $c) = @_; 
     
-    $self->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
@@ -3388,7 +2847,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     
     if ($combo_pops_id)
     {
-	$c->controller->('solGS::combinedTrials')get_combined_pops_list($c, $combo_pops_id);
+	$c->controller->('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
 	$c->stash->{data_set_type} = 'combined populations';
 	$pop_id = $combo_pops_id;
     }
@@ -4027,7 +3486,7 @@ sub phenotype_file {
 	}	
     }
  
-    $self->phenotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
     no warnings 'uninitialized';
@@ -4347,7 +3806,7 @@ sub run_rrblup_trait {
         else
         {       
             if (-s $c->stash->{gebv_kinship_file} == 0 ||
-                -s $c->stash->{gebv_marker_file}  == 0 ||
+                -s $c->stash->{marker_effects_file}  == 0 ||
                 -s $c->stash->{validation_file}   == 0       
                 )
             {  
@@ -4386,7 +3845,7 @@ sub run_rrblup_trait {
         else
         {   
             if (-s $c->stash->{gebv_kinship_file} == 0 ||
-                -s $c->stash->{gebv_marker_file}  == 0 ||
+                -s $c->stash->{marker_effects_file}  == 0 ||
                 -s $c->stash->{validation_file}   == 0       
                 )
             {  
@@ -4655,7 +4114,6 @@ sub run_r_script {
     }
    
 }
-<<<<<<< HEAD
 
 
 sub create_cluster_config {
@@ -4677,184 +4135,6 @@ sub create_cluster_config {
 }
 
 
-sub get_solgs_dirs {
-    my ($self, $c) = @_;
-        
-    my $geno_version    = $c->config->{default_genotyping_protocol}; 
-    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
-    $geno_version       =~ s/\s+//g;
-    my $tmp_dir         = $c->site_cluster_shared_dir; 
-    $tmp_dir            = catdir($tmp_dir, $geno_version);
-    my $solgs_dir       = catdir($tmp_dir, "solgs");
-    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache');
-    
-    my $solgs_tempfiles   = catdir($tmp_dir, 'solgs', 'tempfiles');  
-    my $correlation_cache = catdir($tmp_dir, 'correlation', 'cache');
-    my $correlation_temp  = catdir($tmp_dir, 'correlation', 'tempfiles');   
-    my $solgs_upload      = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir           = catdir($tmp_dir, 'pca', 'cache');
-    my $histogram_dir     = catdir($tmp_dir, 'histogram', 'cache');
-    my $log_dir           = catdir($tmp_dir, 'log', 'cache');
-    my $anova_cache       = catdir($tmp_dir, 'anova', 'cache');
-    my $anova_temp        = catdir($tmp_dir, 'anova', 'tempfiles');
-
-    mkpath (
-	[
-	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $correlation_cache, $correlation_temp, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
-	 $anova_temp,
-	], 
-	0, 0755
-	);
-   
-    $c->stash(solgs_dir                   => $solgs_dir, 
-              solgs_cache_dir             => $solgs_cache, 
-              solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_prediction_upload_dir => $solgs_upload,
-              correlation_temp_dir        => $correlation_temp,
-	      correlation_cache_dir       => $correlation_cache,
-	      pca_dir                     => $pca_dir,
-	      histogram_dir               => $histogram_dir,
-	      analysis_log_dir            => $log_dir,
-              anova_cache_dir             => $anova_cache,
-	      anova_temp_dir              => $anova_temp,
-        );
-
-}
-
-
-sub cache_file {
-    my ($self, $c, $cache_data) = @_;
-  
-    my $cache_dir = $c->stash->{cache_dir};
-   
-    unless ($cache_dir) 
-    {
-	$cache_dir = $c->stash->{solgs_cache_dir};
-    }
-   
-    my $file_cache  = Cache::File->new(cache_root => $cache_dir, 
-				       lock_level => Cache::File::LOCK_NFS()
-	);
-
-    $file_cache->purge();
-
-    my $file  = $file_cache->get($cache_data->{key});
-    
-    no warnings 'uninitialized';
-    
-    unless (-s $file > 1)
-    {      
-        $file = catfile($cache_dir, $cache_data->{file});
-        write_file($file);
-        $file_cache->set($cache_data->{key}, $file, '30 days');
-    }
-
-    $c->stash->{$cache_data->{stash_key}} = $file;
-    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
-}
-
-
-sub template {
-    my ($self, $file) = @_;
-
-    $file =~ s/(^\/)//; 
-    my $dir = '/solgs';
- 
-    return  catfile($dir, $file);
-
-}
-||||||| merged common ancestors
- 
- 
-sub get_solgs_dirs {
-    my ($self, $c) = @_;
-        
-    my $geno_version    = $c->config->{default_genotyping_protocol}; 
-    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
-    $geno_version       =~ s/\s+//g;
-    my $tmp_dir         = $c->site_cluster_shared_dir;    
-    $tmp_dir            = catdir($tmp_dir, $geno_version);
-    my $solgs_dir       = catdir($tmp_dir, "solgs");
-    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
-    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
-    my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
-    my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
-    my $log_dir         = catdir($tmp_dir, 'log', 'cache');
-    my $anova_cache       = catdir($tmp_dir, 'anova', 'cache');
-    my $anova_temp       = catdir($tmp_dir, 'anova', 'tempfiles');
-
-    mkpath (
-	[
-	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
-	 $anova_temp,
-	], 
-	0, 0755
-	);
-   
-    $c->stash(solgs_dir                   => $solgs_dir, 
-              solgs_cache_dir             => $solgs_cache, 
-              solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_prediction_upload_dir => $solgs_upload,
-              correlation_dir             => $correlation_dir,
-	      pca_dir                     => $pca_dir,
-	      histogram_dir               => $histogram_dir,
-	      analysis_log_dir            => $log_dir,
-              anova_cache_dir             => $anova_cache,
-	      anova_temp_dir              => $anova_temp,
-        );
-
-}
-
-
-sub cache_file {
-    my ($self, $c, $cache_data) = @_;
-  
-    my $cache_dir = $c->stash->{cache_dir};
-   
-    unless ($cache_dir) 
-    {
-	$cache_dir = $c->stash->{solgs_cache_dir};
-    }
-   
-    my $file_cache  = Cache::File->new(cache_root => $cache_dir, 
-				       lock_level => Cache::File::LOCK_NFS()
-	);
-
-    $file_cache->purge();
-
-    my $file  = $file_cache->get($cache_data->{key});
-    
-    no warnings 'uninitialized';
-    
-    unless (-s $file > 1)
-    {      
-        $file = catfile($cache_dir, $cache_data->{file});
-        write_file($file);
-        $file_cache->set($cache_data->{key}, $file, '30 days');
-    }
-
-    $c->stash->{$cache_data->{stash_key}} = $file;
-    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
-}
-
-
-sub template {
-    my ($self, $file) = @_;
-
-    $file =~ s/(^\/)//; 
-    my $dir = '/solgs';
- 
-    return  catfile($dir, $file);
-
-}
-=======
->>>>>>> move files functions to Files controller...
-
-
 # sub default :Path {
 #     my ( $self, $c ) = @_; 
 #     $c->forward('search');
@@ -4872,7 +4152,7 @@ Attempt to render a view, if needed.
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $self->get_solgs_dirs($c);
+    $c->controller('solGS::solGS')->get_solgs_dirs($c);
   
 }
 

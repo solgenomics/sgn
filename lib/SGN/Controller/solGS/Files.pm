@@ -1,6 +1,7 @@
 package SGN::Controller::solGS::Files;
 
-
+use Moose;
+use namespace::autoclean;
 
 use File::Spec::Functions qw / catfile catdir/;
 use File::Temp qw / tempfile tempdir /;
@@ -607,3 +608,8 @@ sub template {
     return  catfile($dir, $file);
 
 }
+
+
+###
+1;#
+##
