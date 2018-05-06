@@ -4,6 +4,12 @@
 
 <& /page/page_title.mas, title => "Create New Account" &>
 
+<style>
+.form-group {
+   padding:15px;
+}
+</style>
+
 <form id="new_account_form">
   <div class="container-fluid">
     <div class="row">
@@ -58,10 +64,15 @@
 	      <input class="form-control" type="password" name="confirm_password" value="" />
 	    </div>
 	  </div>
+	  <div class="form-group"><br />
+	    </div>
 	  <div class="form-group">
 	    <label class="col-sm-3 control-label">Email Address: </label>
 	    <div class="col-sm-9">
-	      <input class="form-control" type="text" name="email_address" value="" /><br/>An email will be sent to this address requiring you to confirm its receipt to activate your account.<br/>
+	      <input class="form-control" type="text" name="email_address" value="" />
+	      <div>
+		An email will be sent to this address requiring you to confirm its receipt to activate your account.
+	      </div>
 	    </div>
 	  </div>
 	  <div align="right">
