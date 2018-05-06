@@ -90,6 +90,7 @@
          if (r.error) { alert(r.error); }
          else { 
            alert('New account added. Check your email.');
+           history.back();
          }
        }
      });

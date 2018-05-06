@@ -119,6 +119,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	}
     }   
     
+    print STDERR "Store Login object...\n";
     my $confirm_code = $self->tempname();
     my $new_user = CXGN::People::Login->new($c->dbc->dbh());
     $new_user -> set_username($username);
@@ -127,12 +128,15 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     $new_user -> set_organization($organization);
     $new_user -> store();
     
+    print STDERR "Generated sp_person_id ".$new_user->get_sp_person_id()."\n";
+    print STDERR "Update password and confirm code...\n";
     $new_user->update_password($password);
     $new_user->update_confirm_code($confirm_code);
     
+    print STDERR "Store Person object...\n";
     #this is being added because the person object still uses two different objects, despite the fact that we've merged the tables
     my $person_id=$new_user->get_sp_person_id();
-    my $new_person=CXGN::People::Person->new($self->dbc->dbh(),$person_id);
+    my $new_person=CXGN::People::Person->new($c->dbc->dbh(),$person_id);
     $new_person->set_first_name($first_name);
     $new_person->set_last_name($last_name);
     $new_person->store();
