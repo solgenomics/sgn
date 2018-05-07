@@ -277,7 +277,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	
 	$user_private_email = $private_email;
 
-	$self->send_confirmation_email($args->{username}, $user_private_email, $confirm_code, $c->req->hostname());
+	$self->send_confirmation_email($args->{username}, $user_private_email, $confirm_code, $c->config->{main_production_site_url});
 
     }
 
@@ -288,9 +288,13 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 sub send_confirmation_email {
     my ($self, $username, $private_email, $confirm_code, $host) = @_;
     my $subject = "[SGN] E-mail Address Confirmation Request";
+    
     my $body = <<END_HEREDOC;
+
+You requested an account on the site $host.
+
 Please do *NOT* reply to this message. The return address is not valid. 
-Use <a href="/contact/form">the contact form</a> instead.
+Use the contact form at $host/contact/form instead.
 	
 This message is sent to confirm the private e-mail address for community user
 \"$username\".
