@@ -15,13 +15,6 @@ sub login :Path('/user/login') Args(0) {
     $c->stash->{template} = '/user/login.mas';
 }
 
-sub logout :Path('/user/logout') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-
-
-}
-
 sub new_account :Path('/user/new') Args(0) {
     my $self = shift;
     my $c = shift;
