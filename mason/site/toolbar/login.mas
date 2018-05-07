@@ -4,6 +4,7 @@
 
 <script>
 
+
   function update_login_button() { 
 
     jQuery.ajax( { 
@@ -28,7 +29,7 @@
         success: function(r) { 
           if (r.error) { alert(r.error); }
           else { 
-            update_login_button();
+            location.reload();
           }
         }
       });
