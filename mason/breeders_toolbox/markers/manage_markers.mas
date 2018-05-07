@@ -1,0 +1,29 @@
+
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>'Manage Marker Sets' &>
+
+
+<&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0, subtitle => '[<a name="add_marker_sets">Add New Marker Set</a>]'  &>
+
+    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+    <table id="marker_sets" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Marker Sets</th>
+            </tr>
+        </thead>
+    </table>
+</&>
+
+<script>
+
+
+
+</script>
