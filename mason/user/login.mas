@@ -26,46 +26,6 @@
 
 <& /page/page_title.mas, title=>"Login" &>
 
-<center>
-
-  <!-- <table> -->
-  <!--   <tr><td> -->
-  <!-- 	<div class="container-fluid"> -->
-  <!-- 	  <div class="row"> -->
-  <!-- 	    <div class="panel panel-info"> -->
-  <!--             <div class="panel-heading">Login</div> -->
-	      
-  <!--             <div class="panel-body" style="overflow:hidden"> -->
-  <!-- 		<form id="login_form" name="login_form"> -->
-  <!-- 		  <div style="white-space:nowrap"> -->
-  <!-- 		    <\!-- label class="textlabel" for="username" style="white-space:nowrap;">Username</label -\-> -->
-  <!-- 		    <input class="form-control" style="width:150" id="username" name="username" placeholder="Username" /> -->
-  <!-- 		  </div> -->
-  <!-- 		  <br /> -->
-  <!-- 		  <div> -->
-  <!-- 		    <\!-- label class="textlabel" for="password" >Password</label -\-> -->
-  <!-- 		    <input class="form-control" style="width:150" id="password" name="password" placeholder="Password" type="password" /> -->
-  <!-- 		  </div> -->
-		  
-  <!-- 		  <\!-- input type="hidden" name="goto_url" value="<% $goto_url %>" -\-> -->
-  <!-- 		  <br /> -->
-  <!-- 		  <div> -->
-  <!-- 		    <a href="/user/reset_password">Forgot password?</a> -->
-  <!-- 		    <a href="/user/new" style="float:right">New User</a> -->
-  <!-- 		  </div> -->
-  <!-- 		  <br /> -->
-  <!-- 		  <div> -->
-  <!-- 		    <button class="btn btn-secondary" id="cancel_login" type="reset" >Reset</button> -->
-  <!-- 		    <button class="btn btn-primary" id="submit_password" type="submit" style="float:right">Login</button> -->
-  <!-- 		  </div> -->
-		    
-  <!-- 	      </div> -->
-  <!--         </div> -->
-  <!--   </td></tr> -->
-
-
-
-
 <script>
 
   jQuery(document).ready( function() { 
@@ -85,13 +45,12 @@
          success: function(r) {
            if (r.error) { alert(r.error); }
            else { 
-               alert('<% $goto_url %>');
                window.location.replace('<% $goto_url %> ');
 
            }
          }
        });
-  event.preventDefault();
+       event.preventDefault();
     });
   });
 </script>

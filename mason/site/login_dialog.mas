@@ -53,8 +53,7 @@
          success: function(r) {
            if (r.error) { alert(r.error); }
            else { 
-              update_login_button();
-              jQuery('#site_login_dialog').modal("hide");
+              location.reload();
            }
          }
        });

@@ -91,7 +91,6 @@
 <script>
 
   jQuery('#new_account_form').submit(function(event) { 
-     alert('hello');
      var form_data = jQuery('#new_account_form').serialize();
      alert(JSON.stringify(form_data));
      jQuery.ajax({
