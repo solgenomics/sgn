@@ -71,7 +71,6 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     my ($first_name, $last_name, $username, $password, $confirm_password, $email_address, $organization)
 	= map { $c->req->params->{$_} } (qw|first_name last_name username password confirm_password email_address organization|);
     
-    print STDERR "NEW USER: $first_name, $last_name, etc.\n";
     if ($username) {
 	#
 	# check password properties...
@@ -119,7 +118,6 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	}
     }   
     
-    print STDERR "Store Login object...\n";
     my $confirm_code = $self->tempname();
     my $new_user = CXGN::People::Login->new($c->dbc->dbh());
     $new_user -> set_username($username);
@@ -192,7 +190,6 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	return;
     }
 
-    print STDERR "Person = ".$person->get_username()."\n";
     chomp($args->{current_password});
     if (! $person->verify_password($args->{current_password})) {
 	my $error = "Your current password does not match SGN records.";
@@ -225,7 +222,6 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	    return;
 	}
 
-	print STDERR "Saving new username args->{username} to the database...\n";
 	$person->set_username($new_username);
 	$person->store();
     }
@@ -250,7 +246,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	    return;
 	}
 	
-	print STDERR "Saving new password '$args->{new_password}' to the database\n";
+	print STDERR "Saving new password to the database\n";
 	$person->update_password($args->{new_password});
     }
 
@@ -319,7 +315,6 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
 
     my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
 
-    print STDERR Dumper(\@person_ids);
     if (!@person_ids) { 
 	$c->stash->{rest} = { error => "The provided email ($email) is not associated with any account." };
 	return;
@@ -331,7 +326,6 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
 
     my $reset_link = "";
     foreach my $pid (@person_ids) { 
-	print STDERR "Now processing person with id $pid\n";
 	my $email_reset_token = $self->tempname();
 	$reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
 	my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
@@ -427,13 +421,6 @@ sub get_login_button_html :Path('/ajax/user/login_button_html') Args(0) {
     my $c = shift;
     eval { 
 	my $production_site = $c->config->{main_production_site_url};
-	print STDERR "Get login button... site: $production_site\n";
-	if ($c->user()) { 
-	    print STDERR "Detected logged in users...\n";
-	}
-	else { 
-	    print STDERR "No logged in user found!\n";
-	}
 	my $html = "";
 	# if the site is a mirror, gray out the login/logout links
 	if( $c->config->{'is_mirror'} ) {
