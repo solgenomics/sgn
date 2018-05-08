@@ -215,7 +215,7 @@ sub _pca_list_genotype_data {
     
     if ($referer =~ /solgs\/trait\/\d+\/population\/|solgs\/selection\//) 
     {
-	$c->controller('solGS::solGS')->genotype_file_name($c, $pop_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
 	$geno_file  = $c->stash->{genotype_file_name};
 	$c->stash->{genotype_file} = $geno_file;
  
@@ -233,7 +233,7 @@ sub _pca_list_genotype_data {
 	    
 	    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
 	    my $file = "genotype_data_uploaded_${list_id}";     
-	    $file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $file);    
+	    $file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file);    
 	    
 	    write_file($file, $geno_data);
 	    $c->stash->{genotype_file} = $file; 
@@ -288,7 +288,7 @@ sub _pca_trial_genotype_data {
 
     if (!-s $geno_file) 
     {
-	$c->controller('solGS::solGS')->genotype_file_name($c, $pop_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
 	$geno_file = $c->stash->{genotype_file_name};
     }
 
@@ -306,7 +306,7 @@ sub _pca_trial_genotype_data {
 sub create_pca_dir {
     my ($self, $c) = @_;
      
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
 
 }
 
@@ -326,7 +326,7 @@ sub pca_scores_file {
                       stash_key => 'pca_scores_file'
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -346,7 +346,7 @@ sub pca_variance_file {
                       stash_key => 'pca_variance_file'
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -366,7 +366,7 @@ sub pca_loadings_file {
                       stash_key => 'pca_loadings_file'
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -387,7 +387,7 @@ sub pca_output_files {
     my $pop_id = $c->stash->{pop_id};
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
     my $name = "pca_output_files_${pop_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $file_list);
     
     $c->stash->{output_files} = $tempfile;
@@ -416,7 +416,7 @@ sub run_pca {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

@@ -298,7 +298,7 @@ sub check_single_trial_training_data {
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $cached_pheno = -s $c->stash->{phenotype_file_name};
   
-    $c->controller('solGS::solGS')->genotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
     my $cached_geno = -s $c->stash->{genotype_file_name};
   
     if ($cached_pheno && $cached_geno)
@@ -322,8 +322,8 @@ sub check_single_trial_model_output {
     $c->stash->{trait_abbr} = $trait_abbr;
     $c->stash->{pop_id}     = $pop_id;  
  
-    $c->controller('solGS::solGS')->gebv_kinship_file($c);
-    my $cached_gebv = -s $c->stash->{gebv_kinship_file};
+    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
+    my $cached_gebv = -s $c->stash->{rrblup_gebvs_file};
 
     if ($cached_gebv)
     {
@@ -429,7 +429,7 @@ sub check_combined_trials_training_data {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

@@ -92,7 +92,7 @@ sub create_population_phenotype_data {
 sub create_histogram_dir {
     my ($self, $c) = @_;
     
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
 }
 
 
@@ -177,7 +177,7 @@ sub create_trait_phenodata {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 ####

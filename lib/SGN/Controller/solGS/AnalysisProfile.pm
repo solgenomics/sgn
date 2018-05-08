@@ -190,7 +190,7 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     else  
     { 
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($tmp_dir, 'analysis_report_args');
+	my $output_details_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, 'analysis_report_args');
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
@@ -408,7 +408,7 @@ sub structure_output_details {
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
  
 	    $solgs_controller->get_trait_details($c, $trait_id);	    
-	    $solgs_controller->gebv_kinship_file($c);
+	    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
 	 
 	    my $trait_abbr = $c->stash->{trait_abbr};
 	    my $trait_page;     
@@ -445,7 +445,7 @@ sub structure_output_details {
 		'trait_id'       => $trait_id, 
 		'trait_name'     => $c->stash->{trait_name}, 
 		'trait_page'     => $trait_page,
-		'gebv_file'      => $c->stash->{gebv_kinship_file},
+		'gebv_file'      => $c->stash->{rrblup_gebvs_file},
 		'pop_id'         => $pop_id,
 		'phenotype_file' => $c->stash->{trait_combined_pheno_file},
 		'genotype_file'  => $c->stash->{trait_combined_geno_file},
@@ -473,7 +473,7 @@ sub structure_output_details {
 	else 
 	{	    
 	    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);	
-	    $solgs_controller->genotype_file_name($c, $pop_id);	    
+	    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);	    
 	    $pheno_file = $c->stash->{phenotype_file_name};
 	    $geno_file  = $c->stash->{genotype_file_name};
 	  
@@ -891,7 +891,7 @@ sub analysis_log_file {
 	stash_key => 'analysis_log_file'
     };
 
-    $c->controller('solGS::solGS')->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -980,7 +980,7 @@ sub create_analysis_log_dir {
         
     my $user_id = $c->user->id;
       
-    $c->controller('solGS::solGS')->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
 
     my $log_dir = $c->stash->{analysis_log_dir};
 
@@ -995,7 +995,7 @@ sub create_analysis_log_dir {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 
