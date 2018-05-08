@@ -89,6 +89,7 @@ Please verify your current password to make changes. Select changes desired by c
 <script>
   jQuery(document).ready( function() { 
     jQuery('#change_account_form').submit( function(event) { 
+       event.preventDefault();
        var form_data = jQuery('#change_account_form').serialize();
        alert(JSON.stringify(form_data));
        jQuery.ajax( { 
@@ -102,7 +103,6 @@ Please verify your current password to make changes. Select changes desired by c
            }
          }
        });
-  event.preventDefault();
     });
   });
 
