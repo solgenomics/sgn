@@ -373,7 +373,7 @@ sub check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
     
     my $identifier = $tr_pop_id . '_' . $sel_pop_id;
-    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     
     my $cached_gebv = -s $c->stash->{prediction_pop_gebvs_file};
   

@@ -340,7 +340,7 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     $c->stash->{protocol} = $protocol;
     
     my $identifier    = $model_id . '_' . $selection_pop_id;
-    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
 
     my @stock_rows = read_file($gebvs_file);
@@ -800,7 +800,7 @@ sub predict_selection_pop_combined_pops_model {
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
-    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
         
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
      
@@ -808,7 +808,7 @@ sub predict_selection_pop_combined_pops_model {
     {    
 	$self->cache_combined_pops_data($c);
  
-	$self->prediction_population_file($c, $prediction_pop_id);
+	$c->controller('solGS::Files')->prediction_population_file($c, $prediction_pop_id);
   
 	$c->controller('solGS::solGS')->get_rrblup_output($c); 
     }
@@ -980,15 +980,13 @@ sub find_common_traits {
     $self->get_combined_pops_arrayref($c);
     my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
 
-    my $solgs_controller = $c->controller('solGS::solGS');
-    
     my @common_traits;  
     foreach my $pop_id (@$combined_pops_list)
     {  
 	$c->stash->{pop_id} = $pop_id;
 
-	$solgs_controller->get_single_trial_traits($c);
-	$solgs_controller->traits_list_file($c);
+	$c->controller('solGS::solGS')->get_single_trial_traits($c);
+	$c->controller('solGS::Files')->traits_list_file($c);
 	my $traits_list_file = $c->stash->{traits_list_file};
 
 	my $traits = read_file($traits_list_file);
@@ -1017,7 +1015,7 @@ sub save_common_traits_acronyms {
     my $common_traits = $c->stash->{common_traits};
        
     $c->stash->{pop_id} = $combo_pops_id;
-    $c->controller('solGS::solGS')->traits_list_file($c);
+    $c->controller('solGS::Files')->traits_list_file($c);
     my $traits_file = $c->stash->{traits_list_file};
     write_file($traits_file, join("\t", @$common_traits)) if $traits_file;
   

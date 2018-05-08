@@ -71,7 +71,7 @@ sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) {
 sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
 
-    $c->stash->{template} =  $self->template('/submit/intro.mas');
+    $c->stash->{template} =  $self->controller('solGS::Files')->template('/submit/intro.mas');
 }
 
 
@@ -81,7 +81,7 @@ sub search : Path('/solgs/search') Args() {
     #$self->gs_traits_index($c);
     #my $gs_traits_index = $c->stash->{gs_traits_index};
           
-    $c->stash(template        => $self->template('/search/solgs.mas'),               
+    $c->stash(template        => $self->controller('solGS::Files')->template('/search/solgs.mas'),               
 	   #   gs_traits_index => $gs_traits_index,           
             );
 
@@ -173,7 +173,7 @@ sub search_trials_trait : Path('/solgs/search/trials/trait') Args(1) {
     
     $self->get_trait_details($c, $trait_id);
     
-    $c->stash->{template} = $self->template('/search/trials/trait.mas');
+    $c->stash->{template} = $self->controller('solGS::Files')->template('/search/trials/trait.mas');
 
 }
 
@@ -422,7 +422,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
   
     if (@rows)
     {
-	$c->stash(template   => $self->template('/search/result/traits.mas'),
+	$c->stash(template   => $self->controller('solGS::Files')->template('/search/result/traits.mas'),
 		  result     => \@rows,
 		  query      => $query,
 	    );
@@ -462,7 +462,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
         $self->get_all_traits($c);  
         $self->project_description($c, $pop_id);
  
-        $c->stash->{template} = $self->template('/population.mas');
+        $c->stash->{template} = $self->controller('solGS::Files')->template('/population.mas');
       
         if ($action && $action =~ /selecttraits/ ) {
             $c->stash->{no_traits_selected} = 'none';
@@ -661,7 +661,7 @@ sub project_description {
  
     my $stocks_no = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
     
-    $self->traits_acronym_file($c);
+    $self->controller('solGS::Files')->traits_acronym_file($c);
     my $traits_file = $c->stash->{traits_acronym_file};
     my @lines = read_file($traits_file);
     my $traits_no = scalar(@lines) - 1;
@@ -734,7 +734,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{protocol} = $protocol;
 
     my $identifier    = $training_pop_id . '_' . $selection_pop_id; 
-    $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
     
     my @stock_rows = read_file($gebvs_file);
@@ -744,7 +744,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
  
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 
 
-    $c->stash->{template} = $self->template('/population/selection_trait.mas');
+    $c->stash->{template} = $self->controller('solGS::Files')->template('/population/selection_trait.mas');
     
 } 
 
@@ -789,7 +789,7 @@ sub trait :Path('/solgs/trait') Args(3) {
             } 
             else 
 	    {    
-		$self->traits_acronym_file($c);
+		$self->controller('solGS::Files')->traits_acronym_file($c);
 		my $acronym_file = $c->stash->{traits_acronym_file};
 	
 		if (!-e $acronym_file || !-s $acronym_file) 
@@ -804,7 +804,7 @@ sub trait :Path('/solgs/trait') Args(3) {
 		$self->get_project_owners($c, $pop_id);       
 		$c->stash->{owner} = $c->stash->{project_owners};
                 
-		$c->stash->{template} = $self->template("/population/trait.mas");
+		$c->stash->{template} = $self->controller('solGS::Files')->template("/population/trait.mas");
 	    }	  
 	}
     }
@@ -1115,7 +1115,7 @@ sub predict_selection_pop_single_pop_model {
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $identifier = $training_pop_id . '_' . $prediction_pop_id;
-    $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
     
@@ -1132,7 +1132,7 @@ sub predict_selection_pop_single_pop_model {
 	$c->stash->{pheno_file} = $pheno_file;
 	$c->stash->{geno_file}  = $geno_file;
 	
-	$self->prediction_population_file($c, $prediction_pop_id);
+	$self->controller('solGS::Files')->prediction_population_file($c, $prediction_pop_id);
 	$self->get_rrblup_output($c); 
     }   
 
@@ -1254,7 +1254,7 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
     $c->stash->{pop_id} = $pop_id;
    
     my $identifier = $pop_id . "_" . $prediction_id;
-    $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $prediction_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
     
     unless (!-e $prediction_gebvs_file || -s $prediction_gebvs_file == 0) 
@@ -1633,7 +1633,7 @@ sub rank_genotypes : Private {
                            $c->stash->{gebv_files_of_traits}
         );
    
-    $self->ranked_genotypes_file($c, $pred_pop_id);
+    $self->controller('solGS::Files')->ranked_genotypes_file($c, $pred_pop_id);
     $self->controller('solGS::Files')->selection_index_file($c, $pred_pop_id);
 
     my $output_files = join("\t",
@@ -1703,7 +1703,7 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
 
     $c->stash->{training_pop_id} = $tr_pop_id;
 
-    $self->list_of_prediction_pops_file($c, $tr_pop_id);
+    $self->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
    
     my $ret->{result} = 0;
@@ -1982,7 +1982,7 @@ sub save_selection_pops {
 
     my $training_pop_id  = $c->stash->{training_pop_id};
 
-    $self->list_of_prediction_pops_file($c, $training_pop_id);
+    $self->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $selection_pops_file = $c->stash->{list_of_prediction_pops_file};
 
     my @existing_pops_ids = split(/\n/, read_file($selection_pops_file));
@@ -2020,7 +2020,7 @@ sub search_selection_pops :Path('/solgs/search/selection/populations/') {
 sub list_of_prediction_pops {
     my ($self, $c, $training_pop_id) = @_;
 
-    $self->list_of_prediction_pops_file($c, $training_pop_id);
+    $self->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
   
     my @pred_pops_ids = split(/\n/, read_file($pred_pops_file));
@@ -2345,7 +2345,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      {
          $c->stash->{prediction_pop_id} = $pred_pop_id;
          $c->stash->{population_is} = 'prediction population';
-         $self->prediction_population_file($c, $pred_pop_id);
+         $self->controller('solGS::Files')->prediction_population_file($c, $pred_pop_id);
         
          my $pr_rs = $c->model('solGS::solGS')->project_details($pred_pop_id);
          
@@ -2409,7 +2409,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
    
      my @model_desc = ([qq | <a href="/solgs/population/$pop_id">$project_name</a> |, $project_desc, \@trait_pages]);
      
-     $c->stash->{template}    = $self->template('/population/multiple_traits_output.mas');
+     $c->stash->{template}    = $self->controller('solGS::Files')->template('/population/multiple_traits_output.mas');
      $c->stash->{trait_pages} = \@trait_pages;
      $c->stash->{model_data}  = \@model_desc;
     
@@ -2864,7 +2864,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     if ($page =~ /solgs\/selection\//) 
     {   	
         my $identifier =  $pop_id . '_' . $prediction_pop_id;
-        $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+        $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
    
         $gebv_file = $c->stash->{prediction_pop_gebvs_file}; 
     }
@@ -2912,7 +2912,7 @@ sub get_single_trial_traits {
 
     my $pop_id = $c->stash->{pop_id};
 
-    $self->traits_list_file($c);
+    $c->controller('solGS::Files')->traits_list_file($c);
     my $traits_file = $c->stash->{traits_list_file};
     
     if (!-s $traits_file)
@@ -2938,7 +2938,7 @@ sub get_all_traits {
     
     my $pop_id = $c->stash->{pop_id};
     
-    $self->traits_list_file($c);
+    $c->controller('solGS::Files')->traits_list_file($c);
     my $traits_file = $c->stash->{traits_list_file};
     
     if (!-s $traits_file)
@@ -2953,7 +2953,7 @@ sub get_all_traits {
     
     my $traits = read_file($traits_file);
     
-    $self->traits_acronym_file($c);
+    $self->controller('solGS::Files')->traits_acronym_file($c);
     my $acronym_file = $c->stash->{traits_acronym_file};
    
     unless (-s $acronym_file)
@@ -3044,7 +3044,7 @@ sub traits_acronym_table {
 	    $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
 	}
 	
-	$self->traits_acronym_file($c);
+	$self->controller('solGS::Files')->traits_acronym_file($c);
 	my $acronym_file =  $c->stash->{traits_acronym_file};
     
 	write_file($acronym_file, $table);
@@ -3333,7 +3333,7 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 	    push @traits_list, [$trait_url, $c->stash->{trait_def}];	    
 	}       
        
-	$c->stash( template    => $self->template('/search/traits/list.mas'),
+	$c->stash( template    => $self->controller('solGS::Files')->template('/search/traits/list.mas'),
                    index       => $index,
                    traits_list => \@traits_list
             );
@@ -3451,7 +3451,7 @@ sub submit_cluster_genotype_query {
 sub first_stock_genotype_data {
     my ($self, $c, $pr_id) = @_;
  
-    $self->first_stock_genotype_file($c, $pr_id);
+    $self->controller('solGS::Files')->first_stock_genotype_file($c, $pr_id);
     my $geno_file  = $c->stash->{first_stock_genotype_file};
  
     my $geno_data = $c->model('solGS::solGS')->first_stock_genotype_data($pr_id);
@@ -3493,7 +3493,7 @@ sub phenotype_file {
     
     unless ( -s $pheno_file)
     {  	   	    
-	$self->traits_list_file($c);
+	$c->controller('solGS::Files')->traits_list_file($c);
 	my $traits_file =  $c->stash->{traits_list_file};
 	
 	my $args = {
@@ -3737,14 +3737,14 @@ sub get_rrblup_output {
         if (scalar(@traits) == 1) 
         {
             $self->gs_files($c);
-            $c->stash->{template} = $self->template('population/trait.mas');
+            $c->stash->{template} = $self->controller('solGS::Files')->template('population/trait.mas');
         }
         
         if (scalar(@traits) > 1)    
         {
             $c->stash->{model_id} = $pop_id;
             $self->analyzed_traits($c);
-            $c->stash->{template}    = $self->template('/population/multiple_traits_output.mas'); 
+            $c->stash->{template}    = $self->controller('solGS::Files')->template('/population/multiple_traits_output.mas'); 
             $c->stash->{trait_pages} = \@trait_pages;
         }
     }
@@ -3833,7 +3833,7 @@ sub run_rrblup_trait {
             #$prediction_id = "prediction_id} if $c->stash->{uploaded_prediction};
             my $identifier =  $pop_id . '_' . $prediction_id;
 
-            $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+            $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
             my $pred_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
 
             unless (-s $pred_pop_gebvs_file != 0) 
