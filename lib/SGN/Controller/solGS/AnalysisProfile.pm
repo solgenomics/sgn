@@ -540,12 +540,12 @@ sub structure_output_details {
 		$training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 		if ($training_pop_id =~ /uploaded/)
 		{
-		   $solgs_controller->uploaded_population_summary($c, $training_pop_id);
+		   $c->controller('solGS::solGS')->uploaded_population_summary($c, $training_pop_id);
 		   $training_pop_name   = $c->stash->{project_name};   
 		}
 		else
 		{
-		    $solgs_controller->get_project_details($c, $training_pop_id);
+		    $c->controller('solGS::solGS')->get_project_details($c, $training_pop_id);
 		    $training_pop_name   = $c->stash->{project_name};    
 		}
 		
@@ -557,17 +557,17 @@ sub structure_output_details {
 	    { 
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);
 	        	
-		$solgs_controller->uploaded_population_summary($c, $prediction_pop_id);
+		$c->controller('solGS::solGS')->uploaded_population_summary($c, $prediction_pop_id);
 		$prediction_pop_name = $c->stash->{prediction_pop_name}; 
 	    }
 	    else 
 	    {
-		$solgs_controller->get_project_details($c, $prediction_pop_id);
+		$c->controller('solGS::solGS')->get_project_details($c, $prediction_pop_id);
 		$prediction_pop_name = $c->stash->{project_name};
 	    }
 	    
 	    my $identifier = $training_pop_id . '_' . $prediction_pop_id;
-	    $solgs_controller->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+	    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
 	    my $gebv_file = $c->stash->{prediction_pop_gebvs_file};
 	   
 	    $output_details{'trait_id_' . $trait_id} = {

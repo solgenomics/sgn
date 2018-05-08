@@ -286,7 +286,7 @@ sub predict_list_selection_pop_single_pop_model {
     $c->stash->{uploaded_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
    
     if (!-s $prediction_pop_gebvs_file)
@@ -350,7 +350,7 @@ sub predict_list_selection_pop_combined_pops_model {
     $c->stash->{uploaded_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller("solGS::solGS")->prediction_pop_gebvs_file($c, $identifier, $trait_id);        
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);        
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
   
     if (!-s $prediction_pop_gebvs_file)
@@ -677,7 +677,7 @@ sub plots_list_phenotype_file {
     my $plots_ids = $c->stash->{list_elements_ids};
 
     $c->stash->{pop_id} = $model_id;
-    $c->controller("solGS::solGS")->traits_list_file($c);    
+    $c->controller('solGS::Files')->traits_list_file($c);    
     my $traits_file =  $c->stash->{traits_list_file};
   
     my $data_dir = $c->stash->{solgs_prediction_upload_dir};
