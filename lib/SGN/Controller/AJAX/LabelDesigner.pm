@@ -91,7 +91,16 @@ __PACKAGE__->config(
                 print STDERR "Longest $field is: ".$design{$key}{$field}."\n";
                 my $longest = $design{$key}{$field};
                 unless (ref($longest) || length($longest) < 1) { # skip if not scalar or undefined
-                    $longest_hash{$field} = $design{$key}{$field};
+                    $longest_hash{$field} = $longest;
+                } elsif (ref($longest) eq 'ARRAY') { # if array (ex. plants), sort array by length and take longest
+                    print STDERR "Processing array " . Dumper($longest) . "\n";
+                    # my @array = @{$longest};
+                    my @sorted = sort { length $a <=> length $b } @{$longest};
+                    if (length($sorted[0]) > 0) {
+                        $longest_hash{$field} = $sorted[0];
+                    }
+                } elsif (ref($longest) eq 'HASH') {
+                    print STDERR "Not handling hashes yet\n";
                 }
                 last;
             }
