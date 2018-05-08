@@ -326,7 +326,7 @@ sub trial_compatibility_file {
                       stash_key => 'trial_compatibility_file'
     };
 
-    $self->cache_file($c, $cache_data);
+    $self->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -575,7 +575,7 @@ sub get_markers_count {
 	} 
 	else 
 	{
-	    $self->genotype_file_name($c, $training_pop_id);
+	    $self->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	    my $geno_file  = $c->stash->{genotype_file_name};
 	    my  @geno_lines = read_file($geno_file);
 	    $markers_cnt= scalar(split ('\t', $geno_lines[0])) - 1;	
@@ -595,7 +595,7 @@ sub get_markers_count {
 	} 
 	else 
 	{
-	    $self->genotype_file_name($c, $selection_pop_id);
+	    $self->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id);
 	    my $geno_file  = $c->stash->{genotype_file_name};
 	    my @geno_lines = read_file($geno_file);
 	    $markers_cnt= scalar(split ('\t', $geno_lines[0])) - 1;	
@@ -813,8 +813,8 @@ sub trait :Path('/solgs/trait') Args(3) {
     {
         my $trait_abbr = $c->stash->{trait_abbr};
         my $cache_dir  = $c->stash->{solgs_cache_dir};
-        my $gebv_file  = "gebv_kinship_${trait_abbr}_${pop_id}";       
-        $gebv_file     = $self->grep_file($cache_dir,  $gebv_file);
+        my $gebv_file  = "rrblup_gebvs_${trait_abbr}_${pop_id}";       
+        $gebv_file     = $self->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
 
         my $ret->{status} = 'failed';
         
@@ -839,7 +839,7 @@ sub gs_files {
     $self->output_files($c);
     #$self->input_files($c);
     $self->model_accuracy($c);
-    $self->blups_file($c);
+    $self->controller('solGS::Files')->blups_file($c);
     $self->download_urls($c);
     $self->top_markers($c);
     $self->model_parameters($c);
@@ -883,7 +883,7 @@ sub input_files {
 
     my $name = "input_files_${pop_id}"; 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $tempfile = $self->create_tempfile($temp_dir, $name); 
+    my $tempfile = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name); 
     write_file($tempfile, $input_files);
     $c->stash->{input_files} = $tempfile;
   
@@ -899,12 +899,10 @@ sub output_files {
     
     $c->controller('solGS::Files')->marker_effects_file($c);  
     $c->controller('solGS::Files')->rrblup_gebvs_file($c); 
-    $c->controller('solGS::Files')->validation_file($c);
+    $c->controller('solGS::Files')->validation_file($c);  
     $c->controller("solGS::Files")->trait_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
-    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
@@ -935,7 +933,9 @@ sub output_files {
                           
     my $name = "output_files_${trait}_$pop_id"; 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+
     my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name); 
+
     write_file($tempfile, $file_list);
     
     $c->stash->{output_files} = $tempfile;
@@ -950,8 +950,8 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     my $trait_abbr = $c->stash->{trait_abbr};
    
     my $dir = $c->stash->{solgs_cache_dir};
-    my $blup_exp = "gebv_kinship_${trait_abbr}_${pop_id}";
-    my $blups_file = $self->grep_file($dir, $blup_exp);
+    my $blup_exp = "rrblup_gebvs_${trait_abbr}_${pop_id}";
+    my $blups_file = $self->controller('solGS::Files')->grep_file($dir, $blup_exp);
 
     unless (!-e $blups_file || -s $blups_file == 0) 
     {
@@ -971,8 +971,8 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args(3) {
     my $trait_abbr = $c->stash->{trait_abbr};
   
     my $dir = $c->stash->{solgs_cache_dir};
-    my $marker_exp = "gebv_marker_${trait_abbr}_${pop_id}";
-    my $markers_file = $self->grep_file($dir, $marker_exp);
+    my $marker_exp = "marker_effects_${trait_abbr}_${pop_id}";
+    my $markers_file = $self->controller('solGS::Files')->grep_file($dir, $marker_exp);
 
     unless (!-e $markers_file || -s $markers_file == 0) 
     {
@@ -1054,7 +1054,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
 
     my $dir = $c->stash->{solgs_cache_dir};
     my $val_exp = "cross_validation_${trait_abbr}_${pop_id}";
-    my $validation_file = $self->grep_file($dir, $val_exp);
+    my $validation_file = $self->controller('solGS::Files')->grep_file($dir, $val_exp);
 
     unless (!-e $validation_file || -s $validation_file == 0) 
     {
@@ -1124,10 +1124,10 @@ sub predict_selection_pop_single_pop_model {
 	my $dir = $c->stash->{solgs_cache_dir};
         
 	my $exp = "phenotype_data_${training_pop_id}"; 
-	my $pheno_file = $self->grep_file($dir, $exp);
+	my $pheno_file = $self->controller('solGS::Files')->grep_file($dir, $exp);
 
 	$exp = "genotype_data_${training_pop_id}"; 
-	my $geno_file = $self->grep_file($dir, $exp);
+	my $geno_file = $self->controller('solGS::Files')->grep_file($dir, $exp);
 
 	$c->stash->{pheno_file} = $pheno_file;
 	$c->stash->{geno_file}  = $geno_file;
@@ -1559,14 +1559,14 @@ sub get_gebv_files_of_traits {
     
     my $name = "gebv_files_of_traits_${pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $self->create_tempfile($temp_dir, $name);
+    my $file = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);
    
     write_file($file, $gebv_files);
    
     $c->stash->{gebv_files_of_traits} = $file;
 
     my $name2 = "gebv_files_of_valid_traits_${pop_id}${pred_file_suffix}";
-    my $file2 = $self->create_tempfile($temp_dir, $name2);
+    my $file2 = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name2);
    
     write_file($file2, $valid_gebv_files);
    
@@ -1596,7 +1596,7 @@ sub gebv_rel_weights {
     
     my $name = "rel_weights_${pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $self->create_tempfile($temp_dir, $name);
+    my $file = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($file, $rel_wts);
     
     $c->stash->{rel_weights_file} = $file;
@@ -1634,7 +1634,7 @@ sub rank_genotypes : Private {
         );
    
     $self->ranked_genotypes_file($c, $pred_pop_id);
-    $self->selection_index_file($c, $pred_pop_id);
+    $self->controller('solGS::Files')->selection_index_file($c, $pred_pop_id);
 
     my $output_files = join("\t",
                             $c->stash->{ranked_genotypes_file},
@@ -1646,11 +1646,11 @@ sub rank_genotypes : Private {
     
     my $name = "output_rank_genotypes_${pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $output_file = $self->create_tempfile($temp_dir, $name);
+    my $output_file = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($output_file, $output_files);
        
     $name = "input_rank_genotypes_${pop_id}${pred_file_suffix}";
-    my $input_file = $self->create_tempfile($temp_dir, $name);
+    my $input_file = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($input_file, $input_files);
     
     $c->stash->{output_files} = $output_file;
@@ -1838,7 +1838,7 @@ sub check_population_has_phenotype {
     if ($is_gs !~ /genomic selection/)
     {
 	my $cache_dir  = $c->stash->{solgs_cache_dir};
-	my $pheno_file = $self->grep_file($cache_dir, "phenotype_data_${pr_id}.txt");		 		 
+	my $pheno_file = $self->controller('solGS::Files')->grep_file($cache_dir, "phenotype_data_${pr_id}.txt");		 		 
 
 	if (!-s $pheno_file)
 	{
@@ -1868,7 +1868,7 @@ sub check_population_has_genotype {
 	my $dir       = $c->stash->{solgs_prediction_upload_dir};
 	my $user_id   = $c->user->id;
 	my $file_name = "genotype_data_${pop_id}";
-	$geno_file    = $self->grep_file($dir,  $file_name);
+	$geno_file    = $self->controller('solGS::Files')->grep_file($dir,  $file_name);
 	$has_genotype = 1 if -s $geno_file;  	
     }
 
@@ -1926,7 +1926,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 		my $dir = $c->stash->{solgs_prediction_upload_dir};
 		my $user_id = $c->user->id;
 		my $tr_geno_file = "genotype_data_${training_pop_id}";
-		$training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file);  	
+		$training_pop_geno_file = $self->controller('solGS::Files')->grep_file($dir,  $tr_geno_file);  	
 	    }
 	    else 
 	    {
@@ -1944,7 +1944,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 		    $tr_geno_file = "genotype_data_${training_pop_id}";
 		}
 		
-		$training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file); 
+		$training_pop_geno_file = $self->controller('solGS::Files')->grep_file($dir,  $tr_geno_file); 
 	    }
 
 	    $similarity = $self->compare_marker_set_similarity([$selection_pop_geno_file, $training_pop_geno_file]);
@@ -2216,7 +2216,7 @@ sub build_multiple_traits_models {
 	    {
 		my $name  = "trait_info_${single_trait_id}_pop_${pop_id}";
 		my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-		my $file2 = $self->create_tempfile($temp_dir, $name);
+		my $file2 = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);
 		
 		$c->stash->{trait_file} = $file2;
 		$c->stash->{trait_abbr} = $selected_traits[0];
@@ -2256,18 +2256,18 @@ sub build_multiple_traits_models {
 	    if ($c->stash->{data_set_type} =~ /combined populations/)
 	    {
 		my $identifier = crc($trait_ids);
-		$self->combined_gebvs_file($c, $identifier);
+		$self->controller('solGS::Files')->combined_gebvs_file($c, $identifier);
 	    }  
 	    
 	    my $name = "selected_traits_pop_${pop_id}";
 	    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-	    my $file = $self->create_tempfile($temp_dir, $name);
+	    my $file = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);
 	    
 	    write_file($file, $traits);
 	    $c->stash->{selected_traits_file} = $file;
 
 	    $name     = "trait_info_${single_trait_id}_pop_${pop_id}";
-	    my $file2 = $self->create_tempfile($temp_dir, $name);
+	    my $file2 = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);
 	    
 	    $c->stash->{trait_file} = $file2;
 	    $self->get_rrblup_output($c); 
@@ -2870,8 +2870,8 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     }
     else
     { 
-        $self->gebv_kinship_file($c);
-        $gebv_file = $c->stash->{gebv_kinship_file};
+        $self->controller('solGS::Files')->rrblup_gebvs_file($c);
+        $gebv_file = $c->stash->{rrblup_gebvs_file};
        
     }
 
@@ -2992,7 +2992,7 @@ sub create_trait_data {
 	    } 
 	}
 
-	$self->all_traits_file($c);
+	$self->controller('solGS::Files')->all_traits_file($c);
 	my $traits_file =  $c->stash->{all_traits_file};
 	write_file($traits_file, $table);
     }
@@ -3061,7 +3061,7 @@ sub analyzed_traits {
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
     
-    my @all_files = grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
+    my @all_files = grep { /rrblup_gebvs_[a-zA-Z0-9]/ && -f "$dir/$_" } 
     readdir($dh); 
 
     closedir $dh;
@@ -3080,7 +3080,7 @@ sub analyzed_traits {
         if (-s $trait_file > 1) 
         { 
             my $trait = basename($trait_file);	   
-            $trait =~ s/gebv_kinship_//;	   
+            $trait =~ s/rrblup_gebvs_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
 
@@ -3624,7 +3624,7 @@ sub genotype_file  {
 
     unless ($geno_file)
     {
-	$self->genotype_file_name($c, $pop_id);
+	$self->controller('solGS::Files')->genotype_file_name($c, $pop_id);
 	$geno_file = $c->stash->{genotype_file_name};
     }
 
@@ -3779,10 +3779,10 @@ sub run_rrblup_trait {
 	
 	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
         my $trait_info   = $trait_id . "\t" . $trait_abbr;     
-        my $trait_file  = $self->create_tempfile($temp_dir, "trait_info_${trait_id}");
+        my $trait_file  = $self->controller('solGS::Files')->create_tempfile($temp_dir, "trait_info_${trait_id}");
         write_file($trait_file, $trait_info);
 
-        my $dataset_file  = $self->create_tempfile($temp_dir, "dataset_info_${trait_id}");
+        my $dataset_file  = $self->controller('solGS::Files')->create_tempfile($temp_dir, "dataset_info_${trait_id}");
         write_file($dataset_file, $data_set_type);
  
         my $prediction_population_file = $c->stash->{prediction_population_file};
@@ -3795,7 +3795,7 @@ sub run_rrblup_trait {
                                    $prediction_population_file,
             );
 
-        my $input_file = $self->create_tempfile($temp_dir, "input_files_combo_${trait_abbr}");
+        my $input_file = $self->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_combo_${trait_abbr}");
         write_file($input_file, $input_files);
 
         if ($c->stash->{prediction_pop_id})
@@ -3805,7 +3805,7 @@ sub run_rrblup_trait {
         }
         else
         {       
-            if (-s $c->stash->{gebv_kinship_file} == 0 ||
+            if (-s $c->stash->{rrblup_gebvs_file} == 0 ||
                 -s $c->stash->{marker_effects_file}  == 0 ||
                 -s $c->stash->{validation_file}   == 0       
                 )
@@ -3821,7 +3821,7 @@ sub run_rrblup_trait {
         my $name  = "trait_info_${trait_id}_pop_${pop_id}"; 
     	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
         my $trait_info = $trait_id . "\t" . $trait_abbr;
-        my $file = $self->create_tempfile($temp_dir, $name);    
+        my $file = $self->controller('solGS::Files')->create_tempfile($temp_dir, $name);    
         $c->stash->{trait_file} = $file;       
         write_file($file, $trait_info);
 
@@ -3844,7 +3844,7 @@ sub run_rrblup_trait {
         }
         else
         {   
-            if (-s $c->stash->{gebv_kinship_file} == 0 ||
+            if (-s $c->stash->{rrblup_gebvs_file} == 0 ||
                 -s $c->stash->{marker_effects_file}  == 0 ||
                 -s $c->stash->{validation_file}   == 0       
                 )
@@ -3953,7 +3953,7 @@ sub run_async {
     }
     
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $report_file = $self->create_tempfile($temp_dir, 'analysis_report_args');
+    my $report_file = $self->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
     my $job_config = {
@@ -4038,7 +4038,7 @@ sub run_r_script {
 	$c->stash->{r_commands_file}    = $in_file;
 	$c->stash->{r_script_args}      = [$input_files, $output_files];
 
-	$c->stash->{gs_model_args_file} = $self->create_tempfile($temp_dir, 'gs_model_args');
+	$c->stash->{gs_model_args_file} = $self->controller('solGS::Files')->create_tempfile($temp_dir, 'gs_model_args');
 	
 	if ($r_script =~ /combine_populations/) 
 	{	    
@@ -4088,7 +4088,7 @@ sub run_r_script {
 		$c->stash->{combine_pops_job_id} = $job->jobid();
 	       
 		my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-		$c->stash->{gs_model_args_file} = $self->create_tempfile($temp_dir, 'gs_model_args');
+		$c->stash->{gs_model_args_file} = $self->controller('solGS::Files')->create_tempfile($temp_dir, 'gs_model_args');
 		#$self->run_async($c);
 	    }
 
@@ -4152,7 +4152,7 @@ Attempt to render a view, if needed.
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller('solGS::solGS')->get_solgs_dirs($c);
+    $self->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 
@@ -4192,7 +4192,7 @@ Run for every request to the site.
 #     $c->stash->{c} = $c;
 #     weaken $c->stash->{c};
 
-#     $self->get_solgs_dirs($c);
+#     $self->controller('solGS::Files')->get_solgs_dirs($c);
 #     # gluecode for logins
 #     #
 # #  #   unless( $c->config->{'disable_login'} ) {

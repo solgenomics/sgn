@@ -296,14 +296,14 @@ sub predict_list_selection_pop_single_pop_model {
 	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	$c->stash->{phenotype_file} =$c->stash->{phenotype_file_name};
 
-	$c->controller('solGS::solGS')->genotype_file_name($c, $training_pop_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	$c->stash->{genotype_file} =$c->stash->{genotype_file_name};
 
 	$self->user_prediction_population_file($c, $selection_pop_id); 
 
 	$c->stash->{pop_id} = $c->stash->{training_pop_id};
-	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-	$c->controller("solGS::solGS")->get_rrblup_output($c);
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::solGS')->get_rrblup_output($c);
 	$c->stash->{status} = 'success';
     }
     else 
@@ -427,7 +427,7 @@ sub user_prediction_population_file {
         );
 
     
-    $c->controller("solGS::solGS")->genotype_file_name($c, $pred_pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pred_pop_id);
     my $pred_pop_file = $c->stash->{genotype_file_name};
 
     $c->stash->{genotypes_list_genotype_data_file} = $pred_pop_file;
@@ -583,6 +583,9 @@ sub genotypes_list_genotype_file {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
+    $c->stash->{report_file} = $report_file;
+
     my $status;
     
     my $config = {
@@ -727,7 +730,7 @@ sub plots_list_phenotype_file {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

@@ -55,7 +55,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
         my $phenotype_dir = $c->stash->{solgs_prediction_upload_dir};
         my $userid        = $c->user->id;
         $phenotype_file   = "phenotype_data_${userid}_${pop_id}";
-        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, $phenotype_file);
+        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
     }
     elsif ($referer =~ /qtl/)
     {    
@@ -66,7 +66,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     {
         my $phenotype_dir = $c->stash->{solgs_cache_dir};
         $phenotype_file   = 'phenotype_data_' . $pop_id;
-        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, '\'^' . $phenotype_file . '\'');
+        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, '\'^' . $phenotype_file . '\'');
     }
 
     unless ($phenotype_file)
@@ -158,8 +158,8 @@ sub combine_gebvs_of_traits {
         my $model_id    = $c->stash->{model_id};
         my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
 	my $tmp_dir = $c->stash->{correlation_temp_dir};
-        my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
-   
+        my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
+  
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
@@ -190,8 +190,8 @@ sub create_correlation_phenodata_file {
         my $pheno_exp = "phenodata_${pop_id}";
         my $dir       = catdir($c->config->{solqtl}, 'cache');
        
-	$phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
-       
+        my $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
+ 
         unless ($phenotype_file) 
 	{           
             my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
@@ -219,7 +219,7 @@ sub create_correlation_phenodata_file {
 sub create_correlation_dir {
     my ($self, $c) = @_;
     
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
    
 }
 
@@ -533,7 +533,7 @@ sub run_correlation_analysis {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

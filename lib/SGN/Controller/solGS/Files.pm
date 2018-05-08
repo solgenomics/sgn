@@ -208,7 +208,7 @@ sub genotype_file_name {
 }
 
 
-sub gebv_kinship_file {
+sub rrblup_gebvs_file {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
@@ -222,18 +222,18 @@ sub gebv_kinship_file {
     if ($data_set_type =~ /combined populations/)
     {
         my $combo_identifier = $c->stash->{combo_pops_id};
-        $cache_data = {key       => 'gebv_kinship_combined_pops_'.  $combo_identifier . "_" . $trait,
-                       file      => 'gebv_kinship_'. $trait . '_'  . $combo_identifier. '_combined_pops',
-                       stash_key => 'gebv_kinship_file'
+        $cache_data = {key       => 'rrblup_gebvs_combined_pops_'.  $combo_identifier . "_" . $trait,
+                       file      => 'rrblup_gebvs_'. $trait . '_'  . $combo_identifier. '_combined_pops',
+                       stash_key => 'rrblup_gebvs_file'
 
         };
     }
     else 
     {
     
-        $cache_data = {key       => 'gebv_kinship_' . $pop_id . '_'.  $trait,
-                       file      => 'gebv_kinship_' . $trait . '_' . $pop_id,
-                       stash_key => 'gebv_kinship_file'
+        $cache_data = {key       => 'rrblup_gebvs_' . $pop_id . '_'.  $trait,
+                       file      => 'rrblup_gebvs_' . $trait . '_' . $pop_id,
+                       stash_key => 'rrblup_gebvs_file'
         };
     }
 
@@ -278,7 +278,7 @@ sub relationship_matrix_file {
 sub blups_file {
     my ($self, $c) = @_;
     
-    my $blups_file = $c->stash->{gebv_kinship_file};
+    my $blups_file = $c->stash->{rrblup_gebvs_file};
     $self->top_blups($c, $blups_file);
 }
 
@@ -299,8 +299,8 @@ sub get_solgs_dirs {
     my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
     my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
-    my $anova_cache       = catdir($tmp_dir, 'anova', 'cache');
-    my $anova_temp       = catdir($tmp_dir, 'anova', 'tempfiles');
+    my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
+    my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
 
     mkpath (
 	[
