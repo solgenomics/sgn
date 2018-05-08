@@ -324,7 +324,7 @@ sub login_user {
     if ( $self->login_allowed() ) {
         my $sth = $self->get_sql("user_from_uname_pass");
 
-	print STDERR "NOW LOGGING IN USER $username WITH PASSWORd $password\n";
+	print STDERR "NOW LOGGING IN USER $username\n";
         my $num_rows = $sth->execute( $username, $password );
 
         my ( $person_id, $disabled, $user_prefs, $first_name, $last_name ) = $sth->fetchrow_array();
