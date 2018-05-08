@@ -26,33 +26,18 @@
 
 <& /page/page_title.mas, title=>"Login" &>
 
+<div>
+<center>
+<a href="javascript:history.back();"><button class="btn btn-primary">Go back</button></a>
+</center>
+</div>
+
 <script>
 
-  jQuery(document).ready( function() { 
+  jQuery(document).ready( function() {  
   
-    jQuery('#site_login_dialog').modal('show');
+    jQuery('#site_login_dialog').modal('show'); 
 
-    jQuery('#login_form').submit( function(event) { 
-
-       event.preventDefault();
-  
-       var form_data = jQuery('#login_form').serialize();
-       if (!jQuery('#username').val() || !jQuery('#password').val()) { 
-         alert('Please enter a username and password');
-         return;
-       }
-       jQuery.ajax( { 
-         url: '/ajax/user/login',
-         data: form_data,
-         error: function(r) { alert('An error occurred! Sorry!');  },
-         success: function(r) {
-           if (r.error) { alert(r.error); }
-           else { 
-               window.location.replace('<% $goto_url %> ');
-
-           }
-         }
-       });
-    });
   });
+ 
 </script>
