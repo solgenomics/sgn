@@ -56,7 +56,7 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     $dataset->description($dataset_description);
 
     foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols trial_types trial_designs category_order |) {
-	print STDERR "Storing data: $type. $data{$type}\n";
+#	print STDERR "Storing data: $type. $data{$type}\n";
 
 	my $json = $c->req->param($type);
 	if ($json) {
@@ -124,7 +124,7 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
 	    sp_dataset_id=> $dataset_id,
 	});
 
-    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+#    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
     if ($dataset->sp_person_id() != $logged_in_user) {
 	$c->stash->{rest} = { error => "Only the owner can delete a dataset" };
 	return;
@@ -156,7 +156,7 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
     );
 
     my $dataset_ref = $dataset->get_dataset_data();
-    print STDERR "DATASET =" .Dumper($dataset_ref). "\n";
+#    print STDERR "DATASET =" .Dumper($dataset_ref). "\n";
 
     my %data = %{$dataset_ref};
 
@@ -167,11 +167,11 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
 
     my $protocol_id = $genotype_protocol_ref-> [0];
 
-    print STDERR "ACCESSIONS =" .Dumper(@genotype_accessions). "\n";
-    print "type of ACCESSIONS: " . ref(@genotype_accessions). "\n";
+#    print STDERR "ACCESSIONS =" .Dumper(@genotype_accessions). "\n";
+#    print "type of ACCESSIONS: " . ref(@genotype_accessions). "\n";
 
-    print STDERR "PROTOCOL =" .Dumper($protocol_id). "\n";
-    print "type of PROTOCOL: " . ref($protocol_id). "\n";
+#    print STDERR "PROTOCOL =" .Dumper($protocol_id). "\n";
+#    print "type of PROTOCOL: " . ref($protocol_id). "\n";
 
 
     my $genotypes_accessions_search = CXGN::Genotype::Search->new({
@@ -187,7 +187,7 @@ sub get_selected_accessions :Path('/ajax/dataset/get_selected_accessions') :Args
     my @selected_accessions;
 
     foreach my $r(@$result){
-        print STDERR Dumper $r;
+#        print STDERR Dumper $r;
 
         my ($selected_id, $selected_uniquename, $allele_dosage) = @$r;
         push @selected_accessions, [qq{<a href="/stock/$selected_id/view">$selected_uniquename</a>}, $allele_dosage];
