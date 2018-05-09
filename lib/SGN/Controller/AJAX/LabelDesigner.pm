@@ -31,6 +31,7 @@ __PACKAGE__->config(
         my %longest_hash;
         print STDERR "Data type is $data_type and id is $value\n";
        my ($trial_num, $trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       print STDERR "Num plants 3: " . scalar(keys %{$design});
        print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
@@ -363,6 +364,23 @@ __PACKAGE__->config(
 
    }
 
+   sub process_field {
+       my $field = shift;
+       my $key_number = shift;
+       my $design_info = shift;
+       my %design_info = %{$design_info};
+       #print STDERR "Field is $field\n";
+       if ($field =~ m/Number:/) {
+           our ($placeholder, $start_num, $increment) = split ':', $field;
+           my $length = length($start_num);
+           #print STDERR "Increment is $increment\nKey Number is $key_number\n";
+           my $custom_num =  $start_num + ($increment * $key_number);
+           return sprintf("%0${length}d", $custom_num);
+       } else {
+           return $design_info{$field};
+       }
+   }
+
 sub process_field {
     my $field = shift;
     my $key_number = shift;
@@ -412,8 +430,10 @@ sub get_plot_data {
     my $num_trials = 1;
     my ($trial_id, $design);
     print STDERR "Data type is $data_type and value is $value\n";
-    if ($data_type =~ m/Plot List/) {
-        # get items from list, get trial id from plot id. Or, get plot dta one by one
+    if ($data_type =~ m/Plant List/) {
+    }
+    elsif ($data_type =~ m/Plot List/) {
+        # get items from list, get trial id from plot id. Or, get plot data one by one
         my $plot_data = SGN::Controller::AJAX::List->retrieve_list($c, $value);
         my @plot_list = map { $_->[1] } @$plot_data;
         my $t = CXGN::List::Transform->new();
@@ -447,9 +467,38 @@ sub get_plot_data {
             }
         }
 
-    } elsif ($data_type =~ m/Trial/) {
+    }
+    elsif ($data_type =~ m/Field Trials/) {
         $trial_id = $value;
-        $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+        my $temp_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+        my %temp_design = %{$temp_design};
+        my %plant_design;
+        foreach my $plot_id (keys %temp_design) {
+            #print STDERR "Working on key $plot_id and value: " . Dumper($design{$plot_id});
+            my $plant_ids = $temp_design{$plot_id}->{'plant_ids'};
+            my @plant_ids = @{$plant_ids};
+            my $plant_names = $temp_design{$plot_id}->{'plant_names'};
+            my @plant_names = @{$plant_names};
+            for (my $i=0; $i < scalar(@plant_ids); $i++) {
+                my $plant_id = $plant_ids[$i];
+                my $plant_name = $plant_names[$i];
+                #print STDERR "plant id is $plant_id and name is $plant_name\n";
+                foreach my $property (keys %{$temp_design{$plot_id}}) { $plant_design{$plant_id}->{$property} = $temp_design{$plot_id}->{$property}; }
+                $plant_design{$plant_id}->{'plant_ids'} = $plant_id;
+                $plant_design{$plant_id}->{'plant_names'} = $plant_name;
+                #print STDERR "Added key " . $plant_id . " and value: " . Dumper($plant_design{$plant_id});
+            }
+        }
+
+        $design = \%plant_design;
+    }
+    # elsif ($data_type =~ m/Field Trial Plots/) {
+    #     $trial_id = $value;
+    #     $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+    # }
+    elsif ($data_type =~ m/Genotyping Trial/) {
+        $trial_id = $value;
+        $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'genotyping_layout' })->get_design();
     }
     return ($num_trials, $trial_id, $design);
 }
