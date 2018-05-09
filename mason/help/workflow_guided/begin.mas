@@ -103,7 +103,7 @@ $timestamp
                                         <h4>Prepare a 96 or 384 well plate for a genotyping experiment</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button id="guided_help_genotyping_trial_button" class="btn btn-primary btn-sm">Go</button>
+                                        <button name="create_genotyping_trial_link" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -167,12 +167,13 @@ $timestamp
 
 <& /help/workflow_guided/seedlot_inventory_modal.mas, timestamp=>$timestamp &>
 <& /help/workflow_guided/phenotype_upload_modal.mas &>
-<& /help/workflow_guided/genotyping_trial_modal.mas &>
 <& /help/workflow_guided/trial_barcoding_modal.mas &>
 <& /help/workflow_guided/trial_comparison_modal.mas &>
 
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, breeding_programs=>$breeding_programs, locations=>$locations &>
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>

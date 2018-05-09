@@ -122,10 +122,10 @@ $response = decode_json $mech->content;
 is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
 $mech->post_ok('http://localhost:3010/stock/prop/add',["stock_id"=>"38842", "prop"=>"organization_name_1", "prop_type"=>"organization"] );
 $response = decode_json $mech->content;
-#print STDERR Dumper $response;
+print STDERR Dumper $response;
 $mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>"organization_name_1"})] );
 $response = decode_json $mech->content;
-#print STDERR Dumper $response;
+print STDERR Dumper $response;
 
 is_deeply($response, {'recordsFiltered' => 1,'recordsTotal' => 1,'draw' => undef,'data' => [['<a href="/stock/38842/view">test_accession3</a>','accession','Solanum lycopersicum','test_accession3_synonym1','']]}, 'test stock search 16');
 

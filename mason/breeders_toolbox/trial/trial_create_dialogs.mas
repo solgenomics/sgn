@@ -72,23 +72,23 @@ rect.bordered {
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <&| /util/workflow.mas, id=> "trial_design_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"This workflow will guide you through designing a new trial in the database" &>
-                            <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
-                            <p>To design a trial you need to provide a globally unique trial name. The plot names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
-                            <p>You also need to provide a list of accessions to use. Based on the design you have picked, the accessions will be randomized over the blocks or replicates in the trial.</p>
-                            <p>You can provide a list of accessions to use as controls or checks in your experiment.</p>
-                            <p>Depending on the design you have picked, you will need to provide different design parameters (e.g. for complete block you will need to provide number of blocks, while for alpha lattice you will need to provide block size and number of replicates.).</p>
-                            <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
-                            <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
-                            <br/><br/>
-                            <center>
-                            <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                            </center>
-                        </&>
+                    <form class="form-horizontal" id="create_new_trial_form" name="create_new_trial_form">
 
-                        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
+                        <&| /util/workflow.mas, id=> "trial_design_workflow" &>
+                            <&| /util/workflow.mas:step, title=> "Intro" &>
+                                <& /page/page_title.mas, title=>"This workflow will guide you through designing a new trial in the database" &>
+                                <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
+                                <p>To design a trial you need to provide a globally unique trial name. The plot names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
+                                <p>You also need to provide a list of accessions to use. Based on the design you have picked, the accessions will be randomized over the blocks or replicates in the trial.</p>
+                                <p>You can provide a list of accessions to use as controls or checks in your experiment.</p>
+                                <p>Depending on the design you have picked, you will need to provide different design parameters (e.g. for complete block you will need to provide number of blocks, while for alpha lattice you will need to provide block size and number of replicates.).</p>
+                                <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
+                                <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
 
                             <&| /util/workflow.mas:step, title=> "Trial Information" &>
                                 <& /page/page_title.mas, title=>"Enter basic information about the trial" &>
@@ -98,7 +98,7 @@ rect.bordered {
                                     <div class="col-sm-9">
                                         <input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
                                     </div>
-                                </div><br/><br/>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9">
@@ -108,7 +108,7 @@ rect.bordered {
                                         </%perl>
                                         </select>
                                     </div>
-                                </div><br/><br/>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Location: </label>
                                     <div class="col-sm-9">
@@ -118,26 +118,98 @@ rect.bordered {
                                         </%perl>
                                         </select>
                                     </div>
-                                </div><br/><br/>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Trial Type: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_project_type" name="add_project_type" type="text">
                                         </select>
                                     </div>
-                                </div><br/><br/>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Year: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
                                     </div>
-                                </div><br/><br/>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plot Width (m): </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
+                                            <option value="">NA</option>
+                                            <option value="0.5">0.5</option>
+                                            <option value="1">1.0</option>
+                                            <option value="1.5">1.5</option>
+                                            <option value="2">2.0</option>
+                                            <option value="2.5">2.5</option>
+                                            <option value="3">3.0</option>
+                                            <option value="3.5">3.5</option>
+                                            <option value="4">4.0</option>
+                                            <option value="4.5">4.5</option>
+                                            <option value="5">5.0</option>
+                                            <option value="5.5">5.5</option>
+                                            <option value="6">6.0</option>
+                                            <option value="6.5">6.5</option>
+                                            <option value="7">7.0</option>
+                                            <option value="7.5">7.5</option>
+                                            <option value="8">8.0</option>
+                                            <option value="8.5">8.5</option>
+                                            <option value="9">9.0</option>
+                                            <option value="9.5">9.5</option>
+                                            <option value="10">10.0</option>
+                                            <option value="10.5">10.5</option>
+                                            <option value="11">11.0</option>
+                                            <option value="11.5">11.5</option>
+                                            <option value="12">12.0</option>
+                                            <option value="12.5">12.5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plot Length (m): </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_project_plot_length" name="add_project_plot_length">
+                                            <option value="">NA</option>
+                                            <option value="0.5">0.5</option>
+                                            <option value="1">1.0</option>
+                                            <option value="1.5">1.5</option>
+                                            <option value="2">2.0</option>
+                                            <option value="2.5">2.5</option>
+                                            <option value="3">3.0</option>
+                                            <option value="3.5">3.5</option>
+                                            <option value="4">4.0</option>
+                                            <option value="4.5">4.5</option>
+                                            <option value="5">5.0</option>
+                                            <option value="5.5">5.5</option>
+                                            <option value="6">6.0</option>
+                                            <option value="6.5">6.5</option>
+                                            <option value="7">7.0</option>
+                                            <option value="7.5">7.5</option>
+                                            <option value="8">8.0</option>
+                                            <option value="8.5">8.5</option>
+                                            <option value="9">9.0</option>
+                                            <option value="9.5">9.5</option>
+                                            <option value="10">10.0</option>
+                                            <option value="10.5">10.5</option>
+                                            <option value="11">11.0</option>
+                                            <option value="11.5">11.5</option>
+                                            <option value="12">12.0</option>
+                                            <option value="12.5">12.5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Field Size (ha): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_trial_field_size" name="new_trial_field_size" type="text" />
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="add_project_description" name="add_project_description" maxlength="250"></textarea>
                                     </div>
-                                </div><br/><br/>
+                                </div>
                                 <hr>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Design Type: </label>
@@ -163,12 +235,12 @@ rect.bordered {
                                             <button type="button" class="btn btn-link" data-toggle="modal" data-target="#partial_rep_help_dialog">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>
                                         </div>
                                     </div>
-                                </div><br/><br/>
+                                </div>
                                 <hr>
 
                                 <center>
                                 <button type="button" class="btn btn-lg btn-primary" name="create_trial_validate_form_button" id="create_trial_validate_form_button">First validate the form</button>
-                                <button type="button" class="btn btn-lg btn-primary" disabled onclick="Workflow.complete(this);" name="create_trial_submit">Continue to Next Step</button>
+                                <button type="button" class="btn btn-lg btn-primary" disabled onclick="Workflow.complete(this); return false;" name="create_trial_submit">Continue to Next Step</button>
                                 <center>
 
                             </&>
@@ -182,7 +254,6 @@ rect.bordered {
                                         <label class="col-sm-7 control-label">List of accessions to include (required):</label>
                                         <div class="col-sm-5" id="select_list" name="select_list">
                                         </div>
-                                        <br/><br/>
                                     </div>                                    
                                     <div class="form-group" id="westcott_check_1_section" style="display: none">
                                       <label class="col-sm-3 control-label">Name of Check 1: </label>
@@ -190,7 +261,6 @@ rect.bordered {
                                         <input class="form-control" id="westcott_check_1" name="westcott_check_1" placeholder="Required"></input>
                                       </div>
                                     </div>
-                                    <br/><br/>
                                     <div class="form-group" id="westcott_check_2_section" style="display: none">
                                       <label class="col-sm-3 control-label">Name of Check 2: </label>
                                       <div class="col-sm-9" >
@@ -201,26 +271,22 @@ rect.bordered {
                                         <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                         <div class="col-sm-5" id="list_of_checks_section" >
                                         </div>
-                                        <br/><br/>
                                     </div>
                                     <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section" style="display: none" >
                                         <label class="col-sm-7 control-label">List of checks to include. Checks list should be separate from accessions list. (optional): </label>
                                         <div class="col-sm-5" id="crbd_list_of_checks_section" >
                                         </div>
-                                        <br/><br/>
                                     </div>
 
                                     <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
                                         <label class="col-sm-7 control-label">List of unreplicated accession (required):</label>
                                         <div class="col-sm-5" id="list_of_unrep_accession"  >
                                         </div>
-                                        <br/><br/>
                                     </div>
                                     <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
                                         <label class="col-sm-7 control-label">List of replicated accession (required): </label>
                                         <div class="col-sm-5" id="list_of_rep_accession" >
                                         </div>
-                                        <br/><br/>
                                     </div>
                                     <center>Need to create a list of accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="lists_link" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></center>
                                 </div>
@@ -233,7 +299,6 @@ rect.bordered {
                                             <input class="form-control" id="no_of_row_in_design" name="no_of_row_in_design" placeholder="26"/>
                                         </div>
                                     </div>
-                                    <br/><br/>
                                 </div>
                                 <div class="form-group form-group-sm" id="show_no_of_col_in_design" style="display: none" >
                                     <label class="col-sm-7 control-label">Number of columns in design : </label>
@@ -243,7 +308,6 @@ rect.bordered {
                                             <input class="form-control" id="no_of_col_in_design" name="no_of_col_in_design" placeholder="26"/>
                                         </div>
                                     </div>
-                                    <br/><br/>
                                 </div>
                                 <div class="form-group form-group-sm" id="show_no_of_rep_times" style="display: none" >
                                     <label class="col-sm-7 control-label">Number of times replicated accessions are replicated: </label>
@@ -253,7 +317,6 @@ rect.bordered {
                                             <input class="form-control" id="no_of_rep_times" name="no_of_rep_times" placeholder="4"/>
                                         </div>
                                     </div>
-                                    <br/><br/>
                                 </div>
                                 <div class="form-group form-group-sm" id="show_no_of_block_sequence" style="display: none" >
                                     <label class="col-sm-7 control-label">Block sequence: </label>
@@ -263,7 +326,6 @@ rect.bordered {
                                             <input class="form-control" id="no_of_block_sequence" name="no_of_block_sequence" placeholder="13, 2"/>
                                         </div>
                                     </div>
-                                    <br/><br/>
                                 </div>
                                 <div class="form-group form-group-sm" id="show_no_of_sub_block_sequence" style="display: none" >
                                     <label class="col-sm-7 control-label">Sub-block sequence: </label>
@@ -273,7 +335,6 @@ rect.bordered {
                                             <input class="form-control" id="no_of_sub_block_sequence" name="no_of_sub-block_sequence" placeholder="13, 1"/>
                                         </div>
                                     </div>
-                                    <br/><br/>
                                 </div>
                                 
                                 <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
@@ -281,14 +342,12 @@ rect.bordered {
                                     <div class="col-sm-5" >
                                         <input class="form-control" type="text" id="greenhouse_default_num_plants_per_accession_val" placeholder="1" value="1" />
                                     </div>
-                                    <br/><br/>
                                 </div>
                                 <div class="form-group form-group-sm" id="greenhouse_num_plants_per_accession_section" style="display: none" >
                                     <hr>
                                     <center><h4>Number of Plants:</h4></center>
                                     <div id="greenhouse_num_plants_per_accession" >
                                     </div>
-                                    <br/><br/>
                                 </div>
 
                                 <div class="form-group form-group-sm" id="westcott_num_col_section" style="display: none" >
@@ -304,7 +363,6 @@ rect.bordered {
                                     <div id="westcott_num_col_between_check" >
                                         <input class="form-control" id="westcott_col_between_check" name="westcott_col_between_check" placeholder="default is 10" />
                                     </div>
-                                    <br/><br/>
                                 </div>
 
                                 <div id="design_info" name="design_info">
@@ -313,28 +371,24 @@ rect.bordered {
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="rep_count" name="rep_count" />
                                         </div>
-                                        <br/><br/>
                                     </div>
                                     <div class="form-group form-group-sm" id="block_number_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of blocks (required): </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="block_number" name="block_number" />
                                         </div>
-                                        <br/><br/>
                                     </div>
                                     <div class="form-group form-group-sm" id="row_number_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of field rows (Required): </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="row_number" name="row_number" />
                                         </div>
-                                        <br/><br/>
                                     </div>
                                     <div class="form-group form-group-sm" id="row_number_per_block_section" style="display: none">
                                         <label class="col-sm-7 control-label">Number of Rows Per Block (Optional): </label>
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="row_number_per_block" name="row_number_per_block" />
                                         </div>
-                                        <br/><br/>
                                     </div>
 
                                     <div id="create_trial_with_treatment_section" style="display: none">
@@ -343,25 +397,25 @@ rect.bordered {
                                             <div class="col-sm-5" >
                                                 <input class="form-control" id="create_trial_with_treatment_name_input1" name="create_trial_with_treatment_name_input1" type="text" value="Control" placeholder="Required Treatment 1"/>
                                             </div>
-                                        </div><br/><br/>
+                                        </div>
                                         <div class="form-group form-group-sm" >
                                             <label class="col-sm-7 control-label">Subplot 2 Treatment Name: </label>
                                             <div class="col-sm-5" >
                                                 <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Required Treatment 2"/>
                                             </div>
-                                        </div><br/><br/>
+                                        </div>
                                         <div class="form-group form-group-sm" >
                                             <label class="col-sm-7 control-label">Subplot 3 Treatment Name: </label>
                                             <div class="col-sm-5" >
                                                 <input class="form-control" id="create_trial_with_treatment_name_input3" name="create_trial_with_treatment_name_input3" type="text" placeholder="Optional Treatment 3"/>
                                             </div>
-                                        </div><br/><br/>
+                                        </div>
                                         <div class="form-group form-group-sm" >
                                             <label class="col-sm-7 control-label">Subplot 4 Treatment Name: </label>
                                             <div class="col-sm-5" >
                                                 <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
                                             </div>
-                                        </div><br/><br/>
+                                        </div>
                                     </div>
 
                                     <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
@@ -369,7 +423,6 @@ rect.bordered {
                                         <div class="col-sm-5" >
                                             <input class="form-control" id="num_plants_per_treatment" name="num_plants_per_treatment" />
                                         </div>
-                                        <br/><br/>
                                     </div>
 
                                     <div id="other_parameter_section" style="display:none">
@@ -379,7 +432,7 @@ rect.bordered {
                                             <div class="col-sm-8" >
                                                 <input type="checkbox" id="show_other_parameter_options" />
                                             </div>
-                                        </div><br/><br/>
+                                        </div>
 
                                         <div id="other_parameter_options" style="display:none">
                                             <div class="form-group form-group-sm">
@@ -387,13 +440,13 @@ rect.bordered {
                                                 <div class="col-sm-5" >
                                                     <input type="text" class="form-control" id="col_number_per_block" name="col_number_per_block" />
                                                 </div>
-                                            </div><br/><br/>
+                                            </div>
                                             <div class="form-group form-group-sm">
                                                 <label class="col-sm-7 control-label">Number of field columns: </label>
                                                 <div class="col-sm-5" >
                                                     <input type="text" class="form-control" id="col_number" name="col_number" />
                                                 </div>
-                                            </div><br/><br/>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -402,14 +455,12 @@ rect.bordered {
                                         <div class="col-sm-5" >
                                             <input type="text" class="form-control" id="block_size" name="block_size" />
                                         </div>
-                                        <br/><br/>
                                     </div>
                                     <div class="form-group form-group-sm" id="max_block_size_section" style="display: none">
                                         <label class="col-sm-7 control-label">Maximum block size (required): </label>
                                         <div class="col-sm-5" >
                                             <input type="text" class="form-control" id="max_block_size" name="block_size" />
                                         </div>
-                                        <br/><br/>
                                     </div>
 
                                     <div id="trial_design_seedlots_section" style="display:none">
@@ -420,14 +471,12 @@ rect.bordered {
                                                 <label class="col-sm-7 control-label">List of seedlots for selected accessions (optional):</label>
                                                 <div class="col-sm-5" id="select_seedlot_list" name="select_seedlot_list">
                                                 </div>
-                                                <br/><br/>
                                             </div>
                                             <div class="form-group form-group-sm" id="show_num_seed_per_plot_section" >
                                                 <label class="col-sm-7 control-label">Number of seeds per plot (required if seedlot list given):</label>
                                                 <div class="col-sm-5">
                                                     <input type="number" class="form-control" id="num_seed_per_plot" name="num_seed_per_plot" />
                                                 </div>
-                                                <br/><br/>
                                             </div>
                                             <center>Need a list of seedlots for the selected accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="convert_accessions_to_seedlots" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Search Seedlots for Accessions</button></center>
                                         </div>
@@ -437,9 +486,65 @@ rect.bordered {
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this);" >Continue to Next Step</button>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
                                 <center>
 
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
+
+                                <br/>
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Is this trial following-up a previous field trial?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_sourced" name="add_project_trial_sourced">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="display:none" id="add_trial_source_trial_section">
+                                        <label class="col-sm-5 control-label">Select the trial(s) which preceded this trial: </label>
+                                        <div class="col-sm-7">
+                                            <div id="add_project_trial_source" name="add_project_trial_source">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p>If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping trial (plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.</p>
+
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Will this trial be genotyped?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_will_be_genotyped" name="add_project_trial_will_be_genotyped">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing trial in the database.</p>
+
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Will crosses be done on this trial?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="add_project_trial_will_be_crossed" name="add_project_trial_will_be_crossed">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <br/>
+                                <center>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                <center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Field Map Information" &>
                                 <& /page/page_title.mas, title=>"Specify the number of rows and columns for the entire field" &>
@@ -459,7 +564,7 @@ rect.bordered {
                                     <div class="col-sm-8" >
                                         <input type="checkbox" id="show_field_map_options" />
                                     </div>
-                                </div><br/><br/>
+                                </div>
 
                                 <div id="field_map_options" style="display: none">
                                     <!--<div class="form-group form-group-sm" >
@@ -467,13 +572,13 @@ rect.bordered {
                                         <div class="col-sm-5" >
                                             <input type="text" class="form-control" id="fieldMap_col_number" name="fieldMap_col_number" />
                                         </div>
-                                    </div><br/><br/> -->
+                                    </div> -->
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Number of rows (optional): </label>
                                         <div class="col-sm-5" >
                                           <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" placeholder="Will use number of blocks by default"/>
                                         </div>
-                                    </div><br/><br/>
+                                    </div>
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Plot layout format: </label>
                                         <div class="col-sm-5" >
@@ -483,12 +588,12 @@ rect.bordered {
                                             <option value=serpentine>Serpentine</option>
                                           </select>
                                         </div>
-                                    </div><br/><br/>
+                                    </div>
                                 </div>
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this);" >Continue to Next Step</button>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
                                 <center>
 
                             </&>
@@ -501,7 +606,7 @@ rect.bordered {
                                     <div class="col-sm-8" >
                                         <input type="checkbox" id="show_plot_naming_options" />
                                     </div>
-                                </div><br/><br/>
+                                </div>
 
                                 <div id="plot_naming_options" style="display: none">
                                     <div class="form-group form-group-sm" >
@@ -509,40 +614,46 @@ rect.bordered {
                                         <div class="col-sm-5" >
                                             <input type="text" class="form-control" id="plot_prefix" name="plot_prefix" />
                                         </div>
-                                    </div><br/><br/>
+                                    </div>
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Plot start number: </label>
                                         <div class="col-sm-5" >
                                             <input type="text" class="form-control" id="start_number" name="start_number" />
                                         </div>
-                                    </div><br/><br/>
+                                    </div>
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Plot number increment: </label>
                                         <div class="col-sm-5" >
                                             <input type="text" class="form-control" id="increment" name="increment" />
                                         </div>
-                                    </div><br/><br/>
+                                    </div>
                                 </div>
 
                                 <br/>
                                 <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" name="new_trial_submit" id="new_trial_submit">Continue to Next Step</button>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false); return false;" name="new_trial_submit" id="new_trial_submit">Continue to Next Step</button>
                                 <center>
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Review Designed Trial" &>
-                                <& /page/page_title.mas, title=>"Review the generated trial layout. Make sure to click Submit if you approve of the trial!" &>
+                                <& /page/page_title.mas, title=>"Review the generated trial layout. Make sure to click Submit at the bottom of this page if you approve of the trial!" &>
 
-                                <center><p>Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p></center>
-                                <p></br><div class="d3_legend" id="d3_legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
-                                  <li><span class="d3_block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
-                                  <li><span class="d3_block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
-                                  <li><span class="d3_checks"></span> Checks</li>
-                                  <li><span class="d3_rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-                                  <li><span class="d3_rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+                                <div id="trial_design_warning_message">
                                 </div>
-                                <div id="container_field_map_view" ></div>
-                                <div id="no_map_view_MSG" >No field map to display...</div>
+
+                                <div class="well">
+                                    <center><p>Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p></center>
+                                    <div class="d3_legend" id="d3_legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
+                                        <li><span class="d3_block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+                                        <li><span class="d3_block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+                                        <li><span class="d3_checks"></span> Checks</li>
+                                        <li><span class="d3_rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+                                        <li><span class="d3_rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+                                    </div>
+                                    <div id="container_field_map_view" ></div>
+                                    <div id="no_map_view_MSG" >No field map to display...</div>
+                                </div>
+
                                 <div id="trial_design_view_layout_return">
                                 </div>
                                 <br/>
@@ -582,9 +693,8 @@ rect.bordered {
                                 </center>
                             </&>
 
-                        </form>
-
-                    </&><!-- End of workflow-->
+                        </&><!-- End of workflow-->
+                    </form>    
 
                 </div>
             </div>
