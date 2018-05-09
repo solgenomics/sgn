@@ -3,11 +3,12 @@ package SGN::Controller::solGS::Files;
 use Moose;
 use namespace::autoclean;
 
-use File::Spec::Functions qw / catfile catdir/;
-use File::Temp qw / tempfile tempdir /;
-use File::Slurp qw /write_file read_file/;
-use File::Copy;
 use File::Basename;
+use File::Copy;
+use File::Path qw / mkpath  /;
+use File::Temp qw / tempfile tempdir /;
+use File::Spec::Functions qw / catfile catdir/;
+use File::Slurp qw /write_file read_file/;
 use Cache::File;
 
 

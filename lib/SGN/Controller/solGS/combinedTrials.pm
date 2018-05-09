@@ -99,8 +99,8 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         my $pop_id = $pops_ids[0];
         
         $c->stash->{pop_id} = $pop_id;
-        $solgs_controller->phenotype_file($c);
-        $solgs_controller->genotype_file($c);
+	$c->controller('solGS::solGS')->phenotype_file($c);
+        $c->controller('solGS::solGS')->genotype_file($c);
         
         $ret->{redirect_url} = "/solgs/population/$pop_id";
     }
@@ -129,7 +129,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
   
     $self->combined_trials_desc($c);
   
-    $c->stash->{template} = $solgs_controller->template('/population/combined/combined.mas');
+    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
     
 }
 
@@ -248,7 +248,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
 	my $analyzed_traits = $c->stash->{analyzed_traits};
 	
 	$c->stash->{trait_pages} = \@traits_pages;
-	$c->stash->{template}    = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
+	$c->stash->{template}    = $c->controller('solGS::Files')->template('/population/combined/multiple_traits_output.mas');
 	
 	$self->combined_trials_desc($c);
         
@@ -295,7 +295,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->controller('solGS::solGS')->top_markers($c);
     $c->controller('solGS::solGS')->model_parameters($c);
     
-    $c->stash->{template} = $solgs_controller->template('/model/combined/populations/trait.mas');
+    $c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
 }
 
 
@@ -915,7 +915,7 @@ sub combined_trials_desc {
             $desc .= $pop_id == $combined_pops_list->[-1] ? '.' : ' and ';
         } 
 
-        $solgs_controller->get_project_owners($c, $_);
+        $c->controller('solGS::solGS')->get_project_owners($c, $_);
         my $project_owners = $c->stash->{project_owners};
 
         unless (!$project_owners)
