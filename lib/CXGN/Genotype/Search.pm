@@ -174,14 +174,14 @@ sub get_selected_accessions {
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
-        JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+        JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
         JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
         where genotypeprop.value->>? = ?
         AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ')';
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotyping_experiment_cvterm_id, $marker_name, $allele_dosage, @accessions);
+    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $marker_name, $allele_dosage, @accessions);
 
 
     my @selected_accessions = ();
