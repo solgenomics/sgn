@@ -19,8 +19,25 @@ Future crop improvement relies on harnessing the broader genetic diversity prese
 
 <h4>The team:</h4>
 
-<img src="/img/varitome/varitome_people.png" width="1000"  border="0" usemap="#peoplemap" /> 
+<img src="/img/varitome/varitome_people.png"  border="0" usemap="#peoplemap" /> 
 
+
+<map name="peoplemap">
+<area shape="rect" coords="17,248,295,278" href="http://vanderknaaplab.uga.edu/index.html" />
+<area shape="rect" coords="43,491,295,518" href="http://hos.ufl.edu/kleeweb/index.html" />
+<area shape="rect" coords="99,736,297,757" href="https://solgenomics.net" />
+<area shape="rect" coords="793,371,1088,397" href="http://www.bio.umass.edu/biology/caicedo" />
+<area shape="rect" coords="793,615,1008,634" href="http://rnabio.myfreesites.net/" />
+<area shape="rect" coords="795,1097,994,1117" href="http://bioinfo.bti.cornell.edu" />
+<area shape="poly" coords="375,110,503,111,567,225,501,332,375,332,312,220,374,112,375,112"  nohref="nohref" />
+<area shape="poly" coords="586,229,713,230,775,340,715,449,586,450,521,340,582,230"  nohref="nohref" />
+<area shape="poly" coords="377,352,507,350,569,459,503,573,379,573,313,461,375,351"  nohref="nohref" />
+<area shape="poly" coords="588,471,718,470,778,583,717,689,587,691,523,581,585,469"  nohref="nohref" />
+<area shape="poly" coords="375,592,504,591,566,700,504,812,379,813,314,701"  nohref="nohref" />
+<area shape="poly" coords="584,712,712,712,773,822,712,933,588,934,522,821"  nohref="nohref" />
+<area shape="poly" coords="376,831,505,832,568,944,504,1054,378,1053,314,941"  nohref="nohref" />
+<area shape="poly" coords="585,955,712,955,776,1068,715,1175,585,1174,523,1064"  nohref="nohref" />
+</map>
 
 <h4>The products: </h4>
 <ul>
