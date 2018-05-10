@@ -35,7 +35,10 @@
 <script>
 
   jQuery(document).ready( function() {  
-  
+    
+    jQuery('#goto_url').val('<% $goto_url %>');
+
+
     jQuery('#site_login_dialog').modal('show'); 
 
   });

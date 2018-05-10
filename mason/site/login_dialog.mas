@@ -1,6 +1,10 @@
 
 <!-- Login Dialog -->
 
+<%args>
+$goto_url => ''
+</%args>
+
 <div class="modal fade" id="site_login_dialog" name="site_login_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_dialog_title">
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
@@ -12,7 +16,7 @@
 	<form id="login_form" name="login_form">
 	<div class="container-fluid">
 
-	    <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" />
+	    <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
 	    <br />
 	    <div>
 	      <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
@@ -22,7 +26,9 @@
 	      <a href="/user/reset_password" style="float:left">Forgot password?</a>
 	      <a href="/user/new" style="float:right">New User</a>
 	    </div>
-
+	    
+	    <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
+	    
 	    <div>
 	      <button class="btn btn-secondary" id="cancel_login" type="reset" style="float:left" >Reset</button>
 	      <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right">Login</button>
@@ -51,9 +57,15 @@
          data: form_data,
          error: function(r) { alert('An error occurred! Sorry!');  },
          success: function(r) {
-           if (r.error) { alert(r.error); }
-           else { 
-              location.reload();
+           if (r.error) { 
+             alert(r.error); 
+             return;
+           }
+           if (r.goto_url) { 
+             location.href=r.goto_url;
+           }
+           else {      
+             location.reload();
            }
          }
        });
