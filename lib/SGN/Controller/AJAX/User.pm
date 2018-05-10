@@ -22,6 +22,8 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $password = $c->req->param("password");
     my $goto_url = $c->req->param("goto_url");
 
+    print STDERR "Goto URL = $goto_url\n";
+
     my $login = CXGN::Login->new($c->dbc->dbh());
     my $login_info = $login->login_user($username, $password);
 
@@ -29,21 +31,16 @@ sub login : Path('/ajax/user/login') Args(0) {
 	$c->stash->{rest} = { error => "Login credentials are incorrect. Please try again." };
 	return;
     }
-
     elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) { 
 	$c->stash->{rest} = { error => "This account has been disabled due to $login_info->{account_disabled}. Please contact the database to fix this problem." };
 	return;
     }
-
     else { 
-	$c->stash->{rest} = { message => 'Something happened, but nodoby knows what.' };
-	return;
+	$c->stash->{rest} = { 
+	    message => "Login successful",
+	    goto_url => $goto_url 
+	};    
     }
-
-    $c->stash->{rest} = { 
-	message => "Login successful",
-        goto_url => $goto_url 
-    };    
 }
 
 sub logout :Path('/ajax/user/logout') Args(0) { 
