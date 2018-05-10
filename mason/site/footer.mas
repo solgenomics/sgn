@@ -1,5 +1,6 @@
 
 <!-- & footer/common.mas & -->
+<& footer/common.mas &>
 <& footer/body.mas &>
 </body>
 </html>

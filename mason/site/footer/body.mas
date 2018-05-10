@@ -1,6 +1,4 @@
 
-<<<<<<< HEAD
-
 <!-- LOAD WORKING MODAL, LIST MODAL, AND CALENDAR MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
 
 <& /site/list.mas &>
@@ -91,8 +89,13 @@
 =======
 <& /site/footer/common.mas &>
 >>>>>>> factor out common footer code elements such that footers only neeed to contain site-specific html, and include the new mason component for the common footer elements.
+||||||| merged common ancestors
+<& /site/footer/common.mas &>
+=======
+<!-- NOTE: common footer elements are included in footer.mas using footer/common.mas -->
+>>>>>>> Move common footer element include into the parent footer.mas.
 
-<!-- BEGIN FOOTER -->
+<!-- BEGIN SITE SPECIFIC FOOTER. -->
 
 <br/>
 <div id="pagefooter" class="navbar navbar-default" style="margin-bottom:0px;">
