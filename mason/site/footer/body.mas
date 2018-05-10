@@ -1,7 +1,7 @@
 
-<& /site/footer/common.mas &>
+<!-- NOTE: common footer elements are included in footer.mas using footer/common.mas -->
 
-<!-- BEGIN FOOTER -->
+<!-- BEGIN SITE SPECIFIC FOOTER. -->
 
 <br/>
 <div id="pagefooter" class="navbar navbar-default" style="margin-bottom:0px;">
