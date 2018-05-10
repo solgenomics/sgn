@@ -30,7 +30,22 @@ __PACKAGE__->config(
         my $value = $c->req->param("value");
         my %longest_hash;
         print STDERR "Data type is $data_type and id is $value\n";
-       my ($trial_num, $trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       my ($trial_num, $trial_id, $plot_design, $plant_design) = get_plot_data($c, $schema, $data_type, $value);
+
+       #if plant ids exist, use plant design
+       my %plot_design = %{$plot_design};
+       my @plot_ids = keys %plot_design;
+       my $plant_ids = $plot_design{$plot_ids[0]}->{'plant_ids'};
+       my @plant_ids = @{$plant_ids};
+       my $design;
+
+       if (scalar(@plant_ids) > 0) {
+           $design = $plant_design;
+       } else {
+           $design = $plot_design;
+       }
+
+
        print STDERR "Num plants 3: " . scalar(keys %{$design});
        print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
        if ($trial_num > 1) {
@@ -146,7 +161,21 @@ __PACKAGE__->config(
        my $json = new JSON;
        my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
 
-       my ($trial_num, $trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       my ($trial_num, $trial_id, $plot_design, $plant_design) = get_plot_data($c, $schema, $data_type, $value);
+
+       #if plant ids or names are used in design params, use plant design
+
+       my $design = $plot_design;
+       my $label_params = $design_params->{'label_elements'};
+       foreach my $element (@$label_params) {
+           my %element = %{$element};
+           my $filled_value = $element{'value'};
+           print STDERR "Filled value is $filled_value\n";
+           if ($filled_value eq '{plant_id}' || $filled_value eq '{plant_name}') {
+               $design = $plant_design;
+           }
+       }
+
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
            return;
@@ -181,7 +210,6 @@ __PACKAGE__->config(
        my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
 
-       my $label_params = $design_params->{'label_elements'};
        # if needed retrieve pedigrees in bulk
        my $pedigree_strings;
        foreach my $element (@$label_params) {
@@ -428,8 +456,10 @@ sub get_plot_data {
     my $data_type = shift;
     my $value = shift;
     my $num_trials = 1;
-    my ($trial_id, $design);
-    print STDERR "Data type is $data_type and value is $value\n";
+    my ($trial_id, $plot_design, $plant_design);
+
+    # print STDERR "Data type is $data_type and value is $value\n";
+
     if ($data_type =~ m/Plant List/) {
     }
     elsif ($data_type =~ m/Plot List/) {
@@ -461,46 +491,51 @@ sub get_plot_data {
             foreach my $key (keys %full_design) {
                 if ($full_design{$key}->{'plot_id'} eq $plot_ids[$i]) {
                     print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
-                    $design->{$key} = $full_design{$key};
-                    $design->{$key}->{'list_order'} = $i;
+                    $plot_design->{$key} = $full_design{$key};
+                    $plot_design->{$key}->{'list_order'} = $i;
                 }
             }
         }
 
     }
+    elsif ($data_type =~ m/Genotyping Trial/) {
+        $trial_id = $value;
+        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'genotyping_layout' })->get_design();
+    }
     elsif ($data_type =~ m/Field Trials/) {
         $trial_id = $value;
-        my $temp_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
-        my %temp_design = %{$temp_design};
+        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+        my %plot_design = %{$plot_design};
+        my @plot_ids = keys %plot_design;
+        my $plant_ids = $plot_design{$plot_ids[0]}->{'plant_ids'};
+        my @plant_ids = @{$plant_ids};
+        #check if there are plant ids
         my %plant_design;
-        foreach my $plot_id (keys %temp_design) {
-            #print STDERR "Working on key $plot_id and value: " . Dumper($design{$plot_id});
-            my $plant_ids = $temp_design{$plot_id}->{'plant_ids'};
-            my @plant_ids = @{$plant_ids};
-            my $plant_names = $temp_design{$plot_id}->{'plant_names'};
-            my @plant_names = @{$plant_names};
-            for (my $i=0; $i < scalar(@plant_ids); $i++) {
-                my $plant_id = $plant_ids[$i];
-                my $plant_name = $plant_names[$i];
-                #print STDERR "plant id is $plant_id and name is $plant_name\n";
-                foreach my $property (keys %{$temp_design{$plot_id}}) { $plant_design{$plant_id}->{$property} = $temp_design{$plot_id}->{$property}; }
-                $plant_design{$plant_id}->{'plant_ids'} = $plant_id;
-                $plant_design{$plant_id}->{'plant_names'} = $plant_name;
-                #print STDERR "Added key " . $plant_id . " and value: " . Dumper($plant_design{$plant_id});
+        if (scalar(@plant_ids) > 0) {
+            foreach my $plot_id (keys %plot_design) {
+                #print STDERR "Working on key $plot_id and value: " . Dumper($design{$plot_id});
+                my $plant_ids = $plot_design{$plot_id}->{'plant_ids'};
+                my @plant_ids = @{$plant_ids};
+                my $plant_names = $plot_design{$plot_id}->{'plant_names'};
+                my @plant_names = @{$plant_names};
+                for (my $i=0; $i < scalar(@plant_ids); $i++) {
+                    my $plant_id = $plant_ids[$i];
+                    my $plant_name = $plant_names[$i];
+                    #print STDERR "plant id is $plant_id and name is $plant_name\n";
+                    foreach my $property (keys %{$plot_design{$plot_id}}) { $plant_design{$plant_id}->{$property} = $plot_design{$plot_id}->{$property}; }
+                    $plant_design{$plant_id}->{'plant_id'} = $plant_id;
+                    $plant_design{$plant_id}->{'plant_name'} = $plant_name;
+                    #print STDERR "Added key " . $plant_id . " and value: " . Dumper($plant_design{$plant_id});
+                }
             }
+            $plant_design = \%plant_design;
         }
-
-        $design = \%plant_design;
     }
     # elsif ($data_type =~ m/Field Trial Plots/) {
     #     $trial_id = $value;
     #     $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
     # }
-    elsif ($data_type =~ m/Genotyping Trial/) {
-        $trial_id = $value;
-        $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'genotyping_layout' })->get_design();
-    }
-    return ($num_trials, $trial_id, $design);
+    return ($num_trials, $trial_id, $plot_design, $plant_design);
 }
 
 
