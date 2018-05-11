@@ -438,6 +438,7 @@ function initialize_map (id, locationJSON, table) {
 
     mymap.fitBounds(location_layer.getBounds());
     var layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'bottomright'}).addTo(mymap);
+    var scale = L.control.scale().addTo(mymap);
 
     var popup = L.popup();
 
@@ -498,9 +499,11 @@ function initialize_map (id, locationJSON, table) {
 function style(feature) {
     //console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
 
+    var label = feature.properties.Abbreviation || feature.properties.Id;
     var farmMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'red',
         shape: 'circle',
         prefix: ''
@@ -508,7 +511,8 @@ function style(feature) {
 
     var fieldMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'orange',
         shape: 'circle',
         prefix: ''
@@ -516,7 +520,8 @@ function style(feature) {
 
     var defaultMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'cyan',
         shape: 'circle',
         prefix: ''
@@ -524,7 +529,8 @@ function style(feature) {
 
     var greenhouseMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'green-light',
         shape: 'penta',
         prefix: ''
@@ -532,7 +538,8 @@ function style(feature) {
 
     var screenhouseMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'white',
         shape: 'penta',
         prefix: ''
@@ -540,7 +547,8 @@ function style(feature) {
 
     var labMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'blue',
         shape: 'square',
         prefix: ''
@@ -548,7 +556,8 @@ function style(feature) {
 
     var storageMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'purple',
         shape: 'square',
         prefix: ''
@@ -556,7 +565,8 @@ function style(feature) {
 
     var otherMarker = L.ExtraMarkers.icon({
         icon: 'fa-number',
-        number: feature.properties.Id,
+        // number: feature.properties.Id,
+        innerHTML: '<div style="color: white; position: relative; top: 50%; transform: translateY(-50%); font-size: 80%">'+label+'</div>',
         markerColor: 'pink',
         shape: 'circle',
         prefix: ''
@@ -584,6 +594,9 @@ function onEachFeature(feature, layer) {
         var options = '[<a href="javascript:;" onclick="edit_location('+feature.properties.Id+')">Edit</a>]&nbsp[<a href="javascript:;" onclick="delete_location('+feature.properties.Id+')">Delete</a>]';
         popupContent += '<tr><th>Options</th><td>'+options+'</td></tr></tbody></table>';
         layer.bindPopup(popupContent);
+        layer.on('mouseover', function (e) {
+            this.openPopup();
+        });
 }
 
   function delete_location(id) {
@@ -614,13 +627,13 @@ function onEachFeature(feature, layer) {
         var latlng = coordinate_string.split(',');
         latitude = latlng[0], longitude = latlng[1];
         var coordinates = [parseFloat(latitude),parseFloat(longitude)];
-        
-        
+
+
         // removed because of mixed content restrictions. Can be uncommented once datascience toolkit can be accessed locally or over https
-        
+
         // var dstk = $.DSTK();
         // dstk.coordinates2statistics(coordinates, function(c2s_result) {
-        // 
+        //
         //   dstk.coordinates2politics(coordinates, function(c2p_result) {
             //console.log("elevation result is "+JSON.stringify(c2s_result));
             //console.log("politics result is "+JSON.stringify(c2p_result));
@@ -632,8 +645,8 @@ function onEachFeature(feature, layer) {
             // var elevation = c2s_result[0].statistics.elevation.value;
             // var code= c2p_result[0].politics[0].code.toUpperCase();
             //console.log("elevation is "+elevation+" and code is "+code);
-            
-            
+
+
             $('#location_id').val('');
             $('#location_name').val('');
             $('#location_abbreviation').val('');
