@@ -103,7 +103,7 @@ __PACKAGE__->config(
 
            print STDERR " Searching for longest $field\n";
            #for each field order values by descending length, then save the first one
-           foreach my $key ( sort { length($design{$b}{$field}) <=> length($design{$a}{$field}) or  $a <=> $b } keys %design) {
+           foreach my $key ( sort { length($design{$b}{$field}) <=> length($design{$a}{$field}) or versioncmp($a, $b) } keys %design) {
                 print STDERR "Longest $field is: ".$design{$key}{$field}."\n";
                 my $longest = $design{$key}{$field};
                 unless (ref($longest) || length($longest) < 1) { # skip if not scalar or undefined
@@ -500,7 +500,7 @@ sub get_plot_data {
     }
     elsif ($data_type =~ m/Genotyping Trial/) {
         $trial_id = $value;
-        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'genotyping_layout' })->get_design();
+        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
     }
     elsif ($data_type =~ m/Field Trials/) {
         $trial_id = $value;
