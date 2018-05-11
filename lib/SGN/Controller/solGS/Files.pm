@@ -162,9 +162,8 @@ sub formatted_phenotype_file {
 sub phenotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    #my $pop_id = $c->stash->{pop_id};
-    #$pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
-
+    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+   
     if ($pop_id =~ /uploaded/) 
     {
 	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
@@ -173,7 +172,6 @@ sub phenotype_file_name {
     }
     else
     {
-
 	my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
 			   file      => 'phenotype_data_' . $pop_id . '.txt',
 			   stash_key => 'phenotype_file_name'
@@ -187,10 +185,8 @@ sub phenotype_file_name {
 sub genotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    # my $pop_id = $c->stash->{pop_id};
-    # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
-    # my $pred_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id} ; 
-   
+    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    
     if ($pop_id =~ /uploaded/) 
     {
 	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};

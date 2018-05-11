@@ -911,9 +911,7 @@ sub output_files {
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
 
     no warnings 'uninitialized';
-   
-    #$prediction_id = "uploaded_${prediction_id" if $c->stash->{uploaded_prediction};
-    
+       
     my $pred_pop_gebvs_file;
     
     if ($prediction_id) 
@@ -947,13 +945,13 @@ sub output_files {
 
 sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
- 
+
+    $c->stash->{pop_id} = $pop_id;
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
    
-    my $dir = $c->stash->{solgs_cache_dir};
-    my $blup_exp = "rrblup_gebvs_${trait_abbr}_${pop_id}";
-    my $blups_file = $c->controller('solGS::Files')->grep_file($dir, $blup_exp);
+    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
+    my $blups_file = $c->stash->{rrblup_gebvs_file};
 
     unless (!-e $blups_file || -s $blups_file == 0) 
     {
@@ -968,14 +966,14 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
 
 sub download_marker_effects :Path('/solgs/download/marker/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
- 
+
+    $c->stash->{pop_id} = $pop_id; 
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
-  
-    my $dir = $c->stash->{solgs_cache_dir};
-    my $marker_exp = "marker_effects_${trait_abbr}_${pop_id}";
-    my $markers_file = $c->controller('solGS::Files')->grep_file($dir, $marker_exp);
-
+        
+    $c->controller('solGS::Files')->marker_effects_file($c);
+    my $markers_file = $c->stash->{marker_effects_file};
+    
     unless (!-e $markers_file || -s $markers_file == 0) 
     {
         my @effects =  map { [ split(/\t/) ] }  read_file($markers_file);
@@ -1051,13 +1049,13 @@ sub top_markers {
 sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
     my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
  
+    $c->stash->{pop_id} = $pop_id; 
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
-
-    my $dir = $c->stash->{solgs_cache_dir};
-    my $val_exp = "cross_validation_${trait_abbr}_${pop_id}";
-    my $validation_file = $c->controller('solGS::Files')->grep_file($dir, $val_exp);
-
+        
+    $c->controller('solGS::Files')->validation_file($c);
+    my $validation_file = $c->stash->{validation_file};
+  
     unless (!-e $validation_file || -s $validation_file == 0) 
     {
         my @validation =  map { [ split(/\t/) ] }  read_file($validation_file);
@@ -1123,14 +1121,14 @@ sub predict_selection_pop_single_pop_model {
     
     if (!-s $prediction_pop_gebvs_file)
     {
-	my $dir = $c->stash->{solgs_cache_dir};
-        
-	my $exp = "phenotype_data_${training_pop_id}"; 
-	my $pheno_file = $c->controller('solGS::Files')->grep_file($dir, $exp);
+	my $c->stash->{training_pop_id} = $training_pop_id;
+	$c->controller('solGS::Files')->phenotype_file_name($c);
+	my $pheno_file = $c->stash->{phenotype_file_name};
 
-	$exp = "genotype_data_${training_pop_id}"; 
-	my $geno_file = $c->controller('solGS::Files')->grep_file($dir, $exp);
-
+	my $c->stash->{training_pop_id} = $training_pop_id;
+	$c->controller('solGS::Files')->genotype_file_name($c);
+	my $geno_file = $c->stash->{genotype_file_name};
+      
 	$c->stash->{pheno_file} = $pheno_file;
 	$c->stash->{geno_file}  = $geno_file;
 	
@@ -1199,8 +1197,8 @@ sub selection_prediction :Path('/solgs/model') Args(3) {
         {  
 	    $c->stash->{trait_abbr} = $trait_abbr;
 	    $self->get_trait_details_of_trait_abbr($c);
-	    $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);                        
-         }
+	    $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c); 
+	}
             
         $c->res->redirect("/solgs/models/combined/trials/$training_pop_id");
         $c->detach();
@@ -1233,8 +1231,7 @@ sub list_predicted_selection_pops {
     my @pred_pops;
     
     foreach (@files) 
-    { 
-       
+    {        
         unless ($_ =~ /uploaded/) {
             my ($model_id2, $pred_pop_id, $trait_id) = $_ =~ m/\d+/g;
             
@@ -4178,62 +4175,6 @@ sub begin : Private {
     $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
-
-
-# sub end : Private {
-#     my ( $self, $c ) = @_;
-
-#     return if @{$c->error};
-
-#     # don't try to render a default view if this was handled by a CGI
-#     $c->forward('render') unless $c->req->path =~ /\.pl$/;
-
-#     # enforce a default texest/html content type regardless of whether
-#     # we tried to render a default view
-#     $c->res->content_type('text/html') unless $c->res->content_type;
-
-#     # insert our javascript packages into the rendered view
-#     if( $c->res->content_type eq 'text/html' ) {
-#         $c->forward('/js/insert_js_pack_html');
-#         $c->res->headers->push_header('Vary', 'Cookie');
-#     } else {
-#         $c->log->debug("skipping JS pack insertion for page with content type ".$c->res->content_type)
-#             if $c->debug;
-#     }
-
-# }
-
-=head2 auto
-
-Run for every request to the site.
-
-=cut
-
-# sub auto : Private {
-#     my ($self, $c) = @_;
-#     CatalystX::GlobalContext->set_context( $c );
-#     $c->stash->{c} = $c;
-#     weaken $c->stash->{c};
-
-#     $c->controller('solGS::Files')->get_solgs_dirs($c);
-#     # gluecode for logins
-#     #
-# #  #   unless( $c->config->{'disable_login'} ) {
-#    #      my $dbh = $c->dbc->dbh;
-#    #      if ( my $sp_person_id = CXGN::Login->new( $dbh )->has_session ) {
-
-#    #          my $sp_person = CXGN::People::Person->new( $dbh, $sp_person_id);
-
-#    #          $c->authenticate({
-#    #              username => $sp_person->get_username(),
-#    #              password => $sp_person->get_password(),
-#    #          });
-#    #      }
-#    # }
-
-#     return 1;
-# }
-
 
 
 
