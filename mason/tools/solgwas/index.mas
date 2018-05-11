@@ -133,7 +133,7 @@ jQuery(document).ready(function() {
 	    alert("Response ID: "+temp_response);
     	    alert("Response ID: "+temp_response2);
 	    $('#Solgwas_output').append('<img id="SolGWAS_Figure1" src="/documents/temp_test_solgwas/SolGWAS_Figure1.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure2" src="/documents/temp_test_solgwas/Figure3.png" />');
+	    $('#Solgwas_output').append('<img id="SolGWAS_Figure2" src="/documents/temp_test_solgwas/SolGWAS_Figure3.png" />');
 	    $('#Solgwas_output').append('<img id="SolGWAS_Figure3" src="/documents/temp_test_solgwas/Figure5.png" />');
 	    $('#Solgwas_output').append('<img id="SolGWAS_Figure4" src="/documents/temp_test_solgwas/Figure6.png" />');
 	  }

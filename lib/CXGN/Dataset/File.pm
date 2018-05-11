@@ -18,8 +18,23 @@ override('retrieve_genotypes',
 	     my $protocol_id = shift;
 	     my $file = shift || $self->file_name()."_genotype.txt";
 	     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id);
-	     my $genotype_json = JSON::Any->encode($genotypes);
-	     write_file($file, $genotype_json);
+	     my $genotype_string = "";
+	     foreach my $element (@$genotypes) {
+		 my $genotype_id = $element->{genotypeUniquename};
+		 my $genotype_data_string = "";		 
+		 foreach my $key (sort keys $element->{genotype_hash}) {
+		     my $value = $element->{genotype_hash}->{$key};
+		     my $current_genotype = $value;
+		     $genotype_data_string .= $current_genotype."\t";		     
+		 }
+		 my $s = join "\t", $genotype_id;
+		 $genotype_string .= $s."\t".$genotype_data_string."\n";
+	     }
+     	     write_file($file, $genotype_string);
+
+	     
+#	     my $genotype_json = JSON::Any->encode($genotypes);
+#	     write_file($file, $genotype_json);
 	     return $genotypes;
 	 });
 
