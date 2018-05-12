@@ -695,9 +695,9 @@ jQuery(document).ready(function ($) {
       open_subtitute_plot_accession_dialog();
     });
 
-    // jQuery('#generate_trial_barcode_link').click(function () {
-    //     $('#generate_trial_barcode_button_dialog').modal("show");
-    // });
+    jQuery('#generate_trial_barcode_link').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("show");
+    });
 
     jQuery('#trial_plot_barcode').click(function () {
         $('#generate_trial_barcode_button_dialog').modal("hide");
