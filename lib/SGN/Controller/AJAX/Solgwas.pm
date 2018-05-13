@@ -102,11 +102,13 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     
     $ds -> retrieve_genotypes($protocol_id);
 #    $ds-> @$trials_ref = retrieve_genotypes();
-    
 
-    my $cmd = "Rscript /home/vagrant/cxgn/sgn/static/documents/temp_test_solgwas/GWAS_Script.R";
-    system($cmd);
     
+    my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
+    my $geno_filepath = "." . $tempfile . "_genotype.txt";    
+    my $cmd = "Rscript /home/vagrant/cxgn/sgn/static/documents/temp_test_solgwas/GWAS_Script.R " . $pheno_filepath . " " . $geno_filepath;
+    system($cmd);
+
     
 #    my $traits = $ds->retrieve_traits();
 #    my $phenotypes = $ds->retrieve_phenotypes();
