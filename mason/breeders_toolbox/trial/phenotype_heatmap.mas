@@ -390,11 +390,14 @@ jQuery(document).ready( function() {
 
     function assayed_trait_heatmap_view(selected) {
         jQuery.ajax( {
-             url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected, 
+             //url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected,
+             url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
+                var data = response.result.data;
+                console.log(data);
                 var col_length = response.col[0]; 
                 var row_length = response.row[0];
                 var col_max =  response.col_max;
