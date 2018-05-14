@@ -1,0 +1,43 @@
+<%args>
+$trial_id => ''
+$trial_name => ''
+$identifier => ''
+$plate_id=> ''
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js'] &>
+
+
+<div class="modal fade" id="generate_genotyping_trial_barcode_button_dialog" name="generate_genotyping_trial_barcode_button_dialog" tabindex="-1" role="dialog" aria-labelledby="generateGenotypingTrialBarcodeButtonDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateGenotypingTrialBarcodeButtonDialog">Generate Stock Barcode</h4>
+            </div>
+            <div class="modal-body">
+            <div class="container-fluid">
+                <p>
+                    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                    Generate barcode for tissue samples and plate ID.
+                </p>
+                    <center>
+                    <div class="well">
+                    <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                    </div>
+                <p>
+                    <button type="button" class="btn btn-primary" name="trial_tissue_sample_barcode" id="trial_tissue_sample_barcode">Tissue Samples Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_plateID_barcode" id="trial_plateID_barcode">PlateID Barcode</button>
+                    <button type="button" class="btn btn-primary" name="gotyping_custom_barcode" id="gotyping_custom_barcode">Custom Barcode</button>
+                </p>
+
+                      </center>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button id="geno_trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+          </div>
+      </div>
+  </div>
+</div>

@@ -89,6 +89,8 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                         <h4>Generate barcode labels for samples, accessions or plate ID.</h4>
                     </div>
                     <div class="col-sm-2"> 
+                        <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
+
                         <button id="generate_genotyping_trial_barcode_link" class="btn btn-primary btn-sm">Go</button>
                     </div>
                 </div>

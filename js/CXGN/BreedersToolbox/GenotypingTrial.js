@@ -398,5 +398,9 @@ jQuery(document).ready(function ($) {
             });
         }
     });
+    
+    jQuery('#generate_genotyping_trial_barcode_link').click(function () {
+        jQuery('#generate_genotyping_trial_barcode_button_dialog').modal("show");
+    });
 
 });
