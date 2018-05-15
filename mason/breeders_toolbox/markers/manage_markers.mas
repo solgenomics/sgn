@@ -8,8 +8,55 @@
 
 <& /page/page_title.mas, title=>'Manage Marker Sets' &>
 
+<&| /page/info_section.mas, title=>'Add New Marker Set'&>
 
-<&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0, subtitle => '[<a name="add_marker_sets">Add New Marker Set</a>]'  &>
+<div class="row" id="new_markers_form" >
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Name:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="marker_name" placeholder="Enter marker name">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Allele Dosage:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="allele_dosage">
+                                        <option value="">Select Allele Dosage</option>
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Save marker set:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="save_marker_set">Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+
+<&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0&>
 
     <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
