@@ -254,6 +254,44 @@ $plate_id=> ''
 </div>
 
 
+<div class="modal fade" id="genotrial_barcode_dialog" name="genotrial_barcode_dialog" tabindex="-1" role="dialog" aria-labelledby="GenoTrialBarcodeDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="GenoTrialBarcodeDialog">Generate Trial Barcode</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Generate genotyping trial barcode.
+                    </p>
+                    <center>
+                        <div class="well">
+                            <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                        </div>
+
+                        
+                        <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/trial/download/trial_QRcode" >
+                            <label class="col-sm-4 control-label">List of Trial Names: </label>
+                            <div class="col-sm-8" id="geno_trial_name">
+                                <textarea class="form-control" id="stock_names" name="stock_names" > <%$trial_name%> </textarea>
+                            </div>
+                    </center>
+             </div>
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-primary type="submit" type="submit" value="Download Barcodes">Download Barcodes</button>
+                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
 
 
 <script>
@@ -303,7 +341,5 @@ jQuery(document).ready(function () {
         });
     });
     
-    
-        
 });
 </script>
