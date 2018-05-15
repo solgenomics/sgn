@@ -205,5 +205,9 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         load_breeding_program_info(<% $trial_id %>);
         //load_genotyping_status_info(<% $plate_id %>);
     });
+    
+    jQuery('#genotyping_custom_barcode').click(function () {
+        location.href = '/tools/label_designer';
+    });
 
 </script>

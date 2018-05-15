@@ -28,7 +28,7 @@ $plate_id=> ''
                 <p>
                     <button type="button" class="btn btn-primary" name="trial_tissue_sample_barcode" id="trial_tissue_sample_barcode">Tissue Samples Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_plateID_barcode" id="trial_plateID_barcode">PlateID Barcode</button>
-                    <button type="button" class="btn btn-primary" name="gotyping_custom_barcode" id="gotyping_custom_barcode">Custom Barcode</button>
+                    <button type="button" class="btn btn-primary" name="genotyping_custom_barcode" id="genotyping_custom_barcode">Custom Barcode</button>
                 </p>
 
                       </center>
