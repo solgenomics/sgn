@@ -53,13 +53,13 @@ if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("kinship", trait, sep = "_")
+kinshipTrait <- paste("rrblup_gebvs", trait, sep = "_")
 blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
-markerTrait <- paste("marker", trait, sep = "_")
+markerTrait <- paste("marker_effects", trait, sep = "_")
 markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")

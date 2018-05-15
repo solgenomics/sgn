@@ -276,7 +276,7 @@ sub blups_file {
     my ($self, $c) = @_;
     
     my $blups_file = $c->stash->{rrblup_gebvs_file};
-    $self->top_blups($c, $blups_file);
+    $c->controller('solGS::solGS')->top_blups($c, $blups_file);
 }
 
 
