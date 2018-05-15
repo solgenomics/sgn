@@ -276,7 +276,7 @@ $plate_id=> ''
                         <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/trial/download/trial_QRcode" >
                             <label class="col-sm-4 control-label">List of Trial Names: </label>
                             <div class="col-sm-8" id="geno_trial_name">
-                                <textarea class="form-control" id="stock_names" name="stock_names" > <%$trial_name%> </textarea>
+                                <textarea class="form-control" id="trial_names_2" name="trial_names_2" ><%$trial_name%></textarea>
                             </div>
                     </center>
              </div>
