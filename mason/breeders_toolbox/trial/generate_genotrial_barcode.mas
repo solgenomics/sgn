@@ -59,7 +59,7 @@ $plate_id=> ''
                     </p>
                     <center>
                         <div class="well">
-                            <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                            <& /util/barcode.mas, identifier => "$identifier $trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                         </div>
                     </center>
 
@@ -269,7 +269,7 @@ $plate_id=> ''
                     </p>
                     <center>
                         <div class="well">
-                            <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                            <& /util/barcode.mas, identifier => "$identifier $trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                         </div>
 
                         
