@@ -282,6 +282,27 @@ jQuery(document).ready(function () {
         });
     });
     
+    jQuery('#trial_tissue_sample_barcode').click(function() {
+
+        jQuery.ajax ( {
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/tissue_samples',
+
+                success: function(response){
+                    var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                    for (i=0; i<response.trial_tissue_samples.length; i++) {
+                        trial_accessions_html = trial_accessions_html + response.trial_tissue_samples[i][1] + "\n";
+                    }
+                    trial_accessions_html = trial_accessions_html + "</textarea>";
+                    jQuery('#geno_trial_accessions').empty();
+                    jQuery('#geno_trial_accessions').html(trial_accessions_html);
+                },
+                error: function(response){
+                    alert("Error retrieving accessions.");
+                }
+        });
+    });
+    
     
         
 });

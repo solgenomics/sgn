@@ -407,5 +407,10 @@ jQuery(document).ready(function ($) {
         $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
         $('#generate_genotrial_barcode_dialog').modal("show");
     });
+    
+    jQuery('#trial_tissue_sample_barcode').click(function () {
+        $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
+        $('#generate_genotrial_barcode_dialog').modal("show");
+    });
 
 });
