@@ -1125,7 +1125,6 @@ sub predict_selection_pop_single_pop_model {
 	$c->controller('solGS::Files')->phenotype_file_name($c);
 	my $pheno_file = $c->stash->{phenotype_file_name};
 
-	my $c->stash->{training_pop_id} = $training_pop_id;
 	$c->controller('solGS::Files')->genotype_file_name($c);
 	my $geno_file = $c->stash->{genotype_file_name};
       
