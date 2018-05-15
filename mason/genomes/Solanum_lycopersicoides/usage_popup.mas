@@ -1,0 +1,72 @@
+
+<div class="modal fade" id="usage_policy" name="usage_policy" tabindex="-1" role="dialog" aria-labelledby="usagePolicyDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="usagePolicyDialog">Please Note: S.lycopersicoides Data Access Agreement</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	     <h4>Solanum lycopersicoides genome adheres to the <a href="https://www.nature.com/nature/journal/v461/n7261/full/461168a.html"> Toronto Agreement</a> on prepublication data release.</h4>
+The Boyce Thompson Institute and RWTH Aachen University are pleased to make the pre-publication 
+ Solanum lycopersicoides LA2951 genome sequences publicly available as a resource for plant breeding and biology. 
+
+ By accessing these data, I hereby agree to respect the rights of the consortium to analyze and 
+ publish the first global analyses in a peer-reviewed publication according to the Toronto agreement. 
+ This includes: 
+ 1) whole chromosome or whole genome level analyses on genes, gene families, and repetitive sequences and 
+ 2) comparative analyses with other organisms. 
+ Studies that do not overlap with those planned by the consortium may be undertaken following an agreement. 
+ Please contact  <a href="mailto:usadel@bio1.rwth-aachen.de">Dr. Bjorn Usadel</a> or  <a href="mailto:srs57@cornell.edu">Dr. Susan Strickler</a>  
+ to discuss such possibilities. 
+
+ The data may be freely downloaded and used by all who respect the restrictions described above.
+ <b>Any use of the S. lycopersicoides genome data prior to its publication must follow the agreement 
+ and must credit "The Solanum lycopersicoides Genome Consortium".</b>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" id="usage_policy_disagree_submit">Don't Agree</button>
+        <button type="button" class="btn btn-primary" id="usage_policy_agree_submit">Agree</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+
+  jQuery('#usage_policy_agree_submit').click( function () {
+     jQuery.cookie("data_usage_policy_approved", "1", { expires: 10000 } );
+     jQuery('#usage_policy').modal("hide");
+  });
+
+  jQuery('#usage_policy_disagree_submit').click( function () {
+     document.location.href="/";
+  });
+
+
+  if (jQuery.cookie("data_usage_policy_approved") == 1) { 
+    document.write('<div class="well well-sm">You have already accepted the data usage policy. Thank you. For more information, you can access the <a href="https://www.nature.com/nature/journal/v461/n7261/full/461168a.html"> Toronto Agreement publication </div>');
+  }
+
+  window.onload=function() {
+    var cookie = jQuery.cookie("data_usage_policy_approved");
+  //alert("have cookie: "+cookie);
+
+    if (cookie == undefined) {
+    //  alert("showing!");
+
+      jQuery('#usage_policy').modal("show");
+  //alert("Done!");
+    }
+    else {
+      //alert("Hiding!");
+      jQuery('#usage_policy').modal("hide");
+
+    }
+  }
+
+</script>

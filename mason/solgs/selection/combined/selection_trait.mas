@@ -55,7 +55,7 @@ my $model_link = "<a href=\"/solgs/model/combined/populations/$combo_pops_id/tra
   &>
 
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas, 
    title => "GEBVs for $trait_name ($trait_abbr) in $selection_pop_name"

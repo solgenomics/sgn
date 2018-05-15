@@ -56,13 +56,17 @@ window.onload = function initialize() {
 
     jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", '.wiz-update', function () {
 	//if (window.console) console.log("refreshing materialized views . . .");
-	refresh_matviews();
+	refresh_matviews("fullview");
     });
 
     jQuery('#wizard_download_phenotypes_button').click( function () {
         jQuery('#download_wizard_phenotypes_dialog').modal("show");
     });
 
+    jQuery('#wizard_download_metadata_button').click( function () {
+        jQuery('#download_wizard_metadata_dialog').modal("show");
+    });
+    
     jQuery('#download_wizard_phenotypes_submit_button').on('click', function (event) {
         event.preventDefault();
         var selected_trials = get_selected_results('trials');
@@ -75,6 +79,7 @@ window.onload = function initialize() {
         var selected_years = get_selected_results('years');
         var format = jQuery("#download_wizard_phenotypes_format").val();
         var timestamp = jQuery("#download_wizard_phenotypes_timestamp_option").val();
+        var exclude_phenotype_outlier = jQuery("#download_wizard_phenotypes_exclude_outliers").val();
         var trait_contains = jQuery("#download_wizard_phenotype_trait_contains").val();
         var trait_contains_array = trait_contains.split(",");
         var data_level = jQuery("#download_wizard_phenotypes_level_option").val();
@@ -84,7 +89,19 @@ window.onload = function initialize() {
         console.log("plot list="+JSON.stringify(selected_plots));
 
         if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_trait_components.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&trait_component_list="+JSON.stringify(selected_trait_components)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&search_type="+search_type);
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&trait_component_list="+JSON.stringify(selected_trait_components)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&search_type="+search_type+"&include_row_and_column_numbers=1&exclude_phenotype_outlier="+exclude_phenotype_outlier);
+        } else {
+            alert("No filters selected for download.");
+        }
+    });
+
+    jQuery('#download_wizard_metadata_submit_button').on('click', function (event) {
+        event.preventDefault();
+        var selected_trials = get_selected_results('trials');
+        var format = jQuery("#download_wizard_metadata_format").val();
+        var data_level = 'metadata';
+        if (selected_trials.length !== 0 ) {
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&dataLevel="+data_level);
         } else {
             alert("No filters selected for download.");
         }
@@ -340,6 +357,8 @@ function update_download_options(this_section, categories) {
     if (isLoggedIn()) {
         jQuery('#wizard_download_phenotypes_button').prop( 'title', 'Click to Download Trial Phenotypes');
         jQuery('#wizard_download_phenotypes_button').removeAttr('disabled');
+        jQuery('#wizard_download_metadata_button').prop( 'title', 'Click to Download Trial Metadata');
+        jQuery('#wizard_download_metadata_button').removeAttr('disabled');
     }
 
     for (i=0; i < categories.length; i++) {
@@ -349,6 +368,7 @@ function update_download_options(this_section, categories) {
         selected_trials = 1;
         var trial_html = '<font color="green">'+data[i].length+' trials selected</font></div>';
         jQuery('#selected_trials').html(trial_html);
+        jQuery('#selected_trials_metadata').html(trial_html);
       }
       if (categories[i] === 'accessions' && data[i]) {
         selected_accessions = 1;
@@ -374,6 +394,7 @@ function update_download_options(this_section, categories) {
     //console.log("accessions-selected="+accessions_selected);
     if (selected_trials !== 1) {
       jQuery('#selected_trials').html('No trials selected');
+      jQuery('#selected_trials_metadata').html('No trials selected');
     }
     if (selected_accessions !== 1) {
       jQuery('#selected_accessions').html('No accessions selected');
@@ -583,9 +604,12 @@ function add_data_refresh() {
     }
 }
 
-function refresh_matviews() {
+// matview_select is either:
+// "fullview" for refreshing materialized phenoview, genoview, traits, and stockprop
+// "stockprop" for refreshing materialized stockprop
+function refresh_matviews(matview_select) {
     jQuery.ajax( {
-	url: '/ajax/breeder/refresh',
+	url: '/ajax/breeder/refresh?matviews='+matview_select,
 	timeout: 60000,
 	method: 'POST',
 	beforeSend: function() {

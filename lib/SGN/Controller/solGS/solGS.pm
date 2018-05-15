@@ -1668,7 +1668,7 @@ sub prediction_pop_analyzed_traits {
 	    my @copy_files = @files;
    
 	    @trait_ids = map { s/prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
- 
+
 	    my @traits = ();
 	    if(@trait_ids) 
 	    {
@@ -2992,19 +2992,28 @@ sub traits_with_valid_models {
     
     my @analyzed_traits = @{$c->stash->{analyzed_traits}};  
     my @filtered_analyzed_traits;
+    my @valid_traits_ids;
 
     foreach my $analyzed_trait (@analyzed_traits) 
     {   
         $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
-        my $accuracy_value = $c->stash->{accuracy_value};            
-        if ($accuracy_value > 0)
+        my $av = $c->stash->{accuracy_value};            
+        if ($av && $av =~ m/\d+/ && $av > 0)
         { 
             push @filtered_analyzed_traits, $analyzed_trait;
+
+	    
+	    $c->stash->{trait_abbr} = $analyzed_trait;
+	    $self->get_trait_details_of_trait_abbr($c);
+	    push @valid_traits_ids, $c->stash->{trait_id};
         }     
     }
 
     @filtered_analyzed_traits = uniq(@filtered_analyzed_traits);
+    @valid_traits_ids = uniq(@valid_traits_ids);
+   
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
+    $c->stash->{traits_ids_with_valid_models} = \@valid_traits_ids;
 
 }
 
@@ -3486,12 +3495,12 @@ sub cache_combined_pops_data {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
-    my  $cache_pheno_data = {key       => "phenotype_data_trait_${trait_id}_${combo_pops_id}_combined",
+    my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
                              file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
                              stash_key => 'trait_combined_pheno_file'
     };
       
-    my  $cache_geno_data = {key       => "genotype_data_trait_${trait_abbr}_${combo_pops_id}_combined",
+    my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
                             file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
                             stash_key => 'trait_combined_geno_file'
     };
@@ -3914,27 +3923,29 @@ sub get_all_traits {
 
 sub create_trait_data {
     my ($self, $c) = @_;   
-       
-    my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
-   
+          
     my $acronym_pairs = $self->get_acronym_pairs($c);
-    
-    foreach (@$acronym_pairs)
-    {
-        my $trait_name = $_->[1];
-        $trait_name    =~ s/\n//g;
-        
-	my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
-       
-	if ($trait_id)
-	{
-	    $table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
-	} 
-   }
 
-    $self->all_traits_file($c);
-    my $traits_file =  $c->stash->{all_traits_file};
-    write_file($traits_file, $table);
+    if (@$acronym_pairs)
+    {
+	my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n"; 
+	foreach (@$acronym_pairs)
+	{
+	    my $trait_name = $_->[1];
+	    $trait_name    =~ s/\n//g;
+        
+	    my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+       
+	    if ($trait_id)
+	    {
+		$table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";  	
+	    } 
+	}
+
+	$self->all_traits_file($c);
+	my $traits_file =  $c->stash->{all_traits_file};
+	write_file($traits_file, $table);
+    }
 }
 
 
@@ -4005,18 +4016,21 @@ sub get_acronym_pairs {
 
 sub traits_acronym_table {
     my ($self, $c, $acronym_table) = @_;
-    
-    my $table = 'Acronym' . "\t" . 'Trait name' . "\n"; 
-
-    foreach (keys %$acronym_table)
+        
+    if (keys %$acronym_table)
     {
-        $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
-    }
-
-    $self->traits_acronym_file($c);
-    my $acronym_file =  $c->stash->{traits_acronym_file};
+	my $table = 'Acronym' . "\t" . 'Trait name' . "\n";
+ 
+	foreach (keys %$acronym_table)
+	{
+	    $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
+	}
+	
+	$self->traits_acronym_file($c);
+	my $acronym_file =  $c->stash->{traits_acronym_file};
     
-    write_file($acronym_file, $table);
+	write_file($acronym_file, $table);
+    }
 
 }
 
@@ -4058,15 +4072,17 @@ sub analyzed_traits {
     my @traits_ids;
     my @si_traits;
     my @valid_traits_files;
- 
+   
     foreach my $trait_file  (@traits_files) 
     {  
         if (-s $trait_file > 1) 
         { 
-            my $trait = $trait_file;
-            $trait =~ s/gebv_kinship_//;
+            my $trait = basename($trait_file);	   
+            $trait =~ s/gebv_kinship_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
+
+	    my $trait_id;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
@@ -4077,7 +4093,7 @@ sub analyzed_traits {
                     {
                         my $trait_name =  $r->[1];
                         $trait_name    =~ s/\n//g;                                                       
-                        my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+                        $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
                        
                         push @traits_ids, $trait_id;                                               
                     }
@@ -4105,8 +4121,7 @@ sub analyzed_traits {
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
     $c->stash->{analyzed_traits_files}  = \@traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
-    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;
-   
+    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;   
 }
 
 
@@ -5192,7 +5207,8 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
         
-    my $geno_version    = $c->config->{default_genotyping_protocol};    
+    my $geno_version    = $c->config->{default_genotyping_protocol}; 
+    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
     $geno_version       =~ s/\s+//g;
     my $tmp_dir         = $c->site_cluster_shared_dir;    
     $tmp_dir            = catdir($tmp_dir, $geno_version);

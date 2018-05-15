@@ -86,15 +86,8 @@ sub validate {
         for my $col_num ($num_col_before_traits .. $num_cols-1) {
             my $value_string = $columns[$col_num];
             #print STDERR $value_string."\n";
-            my ($value, $timestamp) = split /,/, $value_string;
-            if (!$timestamp_included) {
-                if ($timestamp) {
-                    $parse_result{'error'} = "Timestamp found in value, but 'Timestamps Included' is not selected.";
-                    print STDERR "Timestamp wrongly found in value.\n";
-                    return \%parse_result;
-                }
-            }
             if ($timestamp_included) {
+                my ($value, $timestamp) = split /,/, $value_string;
                 if (!$timestamp) {
                     $parse_result{'error'} = "No timestamp found in value, but 'Timestamps Included' is selected.";
                     print STDERR "Timestamp not found in value.\n";
@@ -177,19 +170,18 @@ sub parse {
                     $value_string = $columns[$col_num];
                 }
                 #print STDERR $value_string."\n";
-                my ($value, $timestamp) = split /,/, $value_string;
-                if (!$timestamp) {
-                    $timestamp = '';
-                }
-                if (!defined($value)) {
-                    $value = '';
+                my $timestamp = '';
+                my $value = '';
+                if ($timestamp_included){
+                    ($value, $timestamp) = split /,/, $value_string;
+                } else {
+                    $value = $value_string;
                 }
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
-                my @treatments;
                 if ( defined($value) && defined($timestamp) ) {
                     if ($value ne '.'){
-                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp, \@treatments];
+                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
                     }
                 } else {
                     $parse_result{'error'} = "Value or timestamp missing.";

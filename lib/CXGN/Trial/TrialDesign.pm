@@ -18,6 +18,7 @@ This module uses the the R CRAN package "Agricolae" to calculate experimental de
 
  Jeremy D. Edwards (jde22@cornell.edu)
  Aimin Yan (ay247@cornell.edu)
+
 =cut
 
 use Moose;
@@ -62,6 +63,10 @@ has 'sub_block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_sub_blo
 has 'block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_block_sequence', clearer => 'clear_block_sequence');
 has 'col_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_col_in_design_number',clearer => 'clear_col_in_design_number');
 has 'row_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_row_in_design_number',clearer => 'clear_row_in_design_number');
+has 'westcott_col' => (isa => 'Int',is => 'rw',predicate => 'has_westcott_col',clearer => 'clear_westcott_col');
+has 'westcott_col_between_check' => (isa => 'Int',is => 'rw',predicate => 'has_westcott_col_between_check',clearer => 'clear_westcott_col_between_check');
+has 'westcott_check_1' => (isa => 'Str',is => 'rw',predicate => 'has_westcott_check_1',clearer => 'clear_westcott_check_1');
+has 'westcott_check_2' => (isa => 'Str',is => 'rw',predicate => 'has_westcott_check_2',clearer => 'clear_westcott_check_2');
 
 subtype 'RandomizationMethodType',
   as 'Str',
@@ -73,7 +78,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "westcott" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -108,6 +113,9 @@ sub calculate_design {
     }
     elsif ($self->get_design_type() eq "p-rep") {
       $design = _get_p_rep_design($self);
+    }
+    elsif ($self->get_design_type() eq "westcott") {
+      $design = _get_westcott_design($self);
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -144,56 +152,78 @@ sub _get_genotyping_plate {
     my $self = shift;
     my %gt_design;
     my @stock_list;
-    my $number_of_stocks;
+
     if ($self->has_stock_list()) {
-	@stock_list = @{$self->get_stock_list()};
-	$number_of_stocks = scalar(@stock_list);
-	if ($number_of_stocks > 95) {
-	    die "Need fewer than 96 stocks per plate (at least one blank!)";
-	}
+        @stock_list = @{$self->get_stock_list()};
+        my $number_of_stocks = scalar(@stock_list);
+        if ($number_of_stocks > $self->get_block_size) {
+            die "Too many to fit on one plate! $number_of_stocks > ".$self->get_block_size;
+        }
     }
     else {
-	die "No stock list specified\n";
+        die "No stock list specified\n";
     }
 
-    my $blank = "";
-    if ($self->has_blank()) {
-	$blank = $self->get_blank();
-	print STDERR "Using previously set blank $blank\n";
+    my $blank = $self->get_blank ? $self->get_blank : ' ';
+
+    if ($self->get_block_size == '96'){
+        foreach my $row ("A".."H") {
+            foreach my $col (1..12) {
+                my $well= sprintf "%s%02d", $row, $col;
+
+                if ($well eq $blank) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well."_BLANK",
+                        stock_name => "BLANK",
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 1
+                    };
+                }
+                elsif (@stock_list) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well,
+                        stock_name => shift(@stock_list),
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 0
+                    };
+                }
+            }
+        }
     }
-    else {
-	my $well_no = int(rand() * $number_of_stocks)+1;
-	my $well_row = chr(int(($well_no-1) / 12) + 65);
-	my $well_col = ($well_no -1) % 12 +1;
-	$blank = sprintf "%s%02d", $well_row, $well_col;
-	print STDERR "Using randomly assigned blank $blank\n";
+    if ($self->get_block_size == '384'){
+        foreach my $row ("A".."P") {
+            foreach my $col (1..24) {
+                my $well= sprintf "%s%02d", $row, $col;
+
+                if ($well eq $blank) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well."_BLANK",
+                        stock_name => "BLANK",
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 1
+                    };
+                }
+                elsif (@stock_list) {
+                    $gt_design{$well} = {
+                        plot_name => $self->get_trial_name()."_".$well,
+                        stock_name => shift(@stock_list),
+                        plot_number => $well,
+                        row_number => $row,
+                        col_number => $col,
+                        is_blank => 0
+                    };
+                }
+            }
+        }
     }
 
-    my $count = 0;
-
-    foreach my $row ("A".."H") {
-	foreach my $col (1..12) {
-	    $count++;
-	    my $well= sprintf "%s%02d", $row, $col;
-	    #my $well = $row.$col;
-
-	    if ($well eq $blank) {
-		$gt_design{$well} = {
-		    plot_name => $self->get_trial_name()."_".$well."_BLANK",
-		    stock_name => "BLANK",
-		};
-	    }
-	    elsif (@stock_list) {
-		$gt_design{$well} =
-		{ plot_name => $self->get_trial_name()."_".$well,
-		  stock_name => shift(@stock_list),
-		};
-	    }
-	    #print STDERR Dumper(\%gt_design);
-	}
-    }
     return \%gt_design;
-
 }
 
 sub isint{
@@ -383,6 +413,99 @@ sub _get_crd_design {
 
     %crd_design = %{_build_plot_names($self,\%crd_design)};
     return \%crd_design;
+}
+
+sub _get_westcott_design {
+    my $self = shift;
+    my %westcott_design;
+    my $rbase = R::YapRI::Base->new();
+    my @stock_list;
+    my $stock_data_matrix;
+    my @control_list;
+    my %control_names_lookup;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @stock_names;
+    my @block_numbers;
+    my @converted_plot_numbers;
+    my $westcott_col;
+    my $westcott_check_2;
+    my $westcott_check_1;
+    my $westcott_col_between_check;
+    
+    if ($self->has_stock_list()) {
+      @stock_list = @{$self->get_stock_list()};
+    } else {
+      die "No stock list specified\n";
+    }
+    if ($self->has_control_list_crbd()) {
+      @control_list = @{$self->get_control_list_crbd()};
+      %control_names_lookup = map { $_ => 1 } @control_list;
+      $self->_check_controls_and_accessions_lists;
+    }
+    if ($self->has_westcott_col()) {
+      $westcott_col = $self->get_westcott_col();
+    }
+    if ($self->has_westcott_check_2()) {
+      $westcott_check_2 = $self->get_westcott_check_2();
+    }
+    if ($self->has_westcott_check_1()) {
+      $westcott_check_1 = $self->get_westcott_check_1();
+    }
+    if ($self->has_westcott_col_between_check()) {
+      $westcott_col_between_check = $self->get_westcott_col_between_check();
+    }
+    
+    $stock_data_matrix =  R::YapRI::Data::Matrix->new({
+        name => 'stock_data_matrix',
+        rown => 1,
+        coln => scalar(@stock_list),
+        data => \@stock_list,
+    });
+    
+    $r_block = $rbase->create_block('r_block');
+    $stock_data_matrix->send_rbase($rbase, 'r_block'); 
+    $r_block->add_command('library(devtools)');
+    $r_block->add_command('library(st4gi)');
+    $r_block->add_command('geno <-  stock_data_matrix[1,]');
+    $r_block->add_command('ch1 <- "'.$westcott_check_1.'"'); 
+    $r_block->add_command('ch2 <- "'.$westcott_check_2.'"');
+    $r_block->add_command('nc <- '.$westcott_col); 
+    if ($westcott_col_between_check){
+        $r_block->add_command('ncb <- '.$westcott_col_between_check);
+        $r_block->add_command('westcott<-cd.w(geno, ch1, ch2, nc, ncb=ncb)');
+    }
+    else{
+        $r_block->add_command('westcott<-cd.w(geno, ch1, ch2, nc)');
+    }
+    $r_block->add_command('westcott<-westcott$book');
+    $r_block->add_command('westcott<-as.matrix(westcott)');
+    $r_block->run_block();
+    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','westcott');
+    @plot_numbers = $result_matrix->get_column("plot");
+    @stock_names = $result_matrix->get_column("geno");
+    my @row_numbers = $result_matrix->get_column("row");
+    my @col_numbers = $result_matrix->get_column("col");
+    @block_numbers = $result_matrix->get_column("row");
+    
+    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)}; 
+    
+    for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+      my %plot_info;
+      $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+      $plot_info{'stock_name'} = $stock_names[$i];
+      $plot_info{'block_number'} = $block_numbers[$i];
+      $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+      $plot_info{'row_number'} = $row_numbers[$i];
+      $plot_info{'col_number'} = $col_numbers[$i];
+
+      $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
+    }
+    %westcott_design = %{_build_plot_names($self,\%westcott_design)};
+
+    return \%westcott_design;   
+
 }
 
 sub _get_p_rep_design {

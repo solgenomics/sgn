@@ -17,9 +17,7 @@
 <script type="text/javascript" src="/js/jqplot/plugins/jqplot.pointLabels.min.js"></script>
 <script type="text/javascript" src="/js/jqplot/plugins/jqplot.highlighter.min.js"></script>
 
-<link rel="stylesheet" type="text/css" href="/js/jqplot/jquery.jqplot.css">
-<link rel="stylesheet" type="text/css" href="/js/jqplot/jquery.jqplot.min.css">
-
+<& /util/import_css.mas, paths => ['/js/jqplot/jquery.jqplot.css','/js/jqplot/jquery.jqplot.min.css'] &>
 
 
 <& /util/import_javascript.mas, classes => ['Text.Markup', 'sprintf', 'jquery', 'jqueryui', 'CXGN.List'] &>
@@ -441,4 +439,3 @@ function dump(arr,level) {
 });
 
 </script>
-

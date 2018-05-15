@@ -3,9 +3,8 @@
 $trial_id
 </%args>
 
-<a id="delete_phenotype_data_by_trial_id" role="button">Delete trait data</a><br />
-<a id="delete_layout_data_by_trial_id" role="button">Delete layout data</a><br />
-<a id="delete_trial_entry_by_trial_id" role="button" >Delete trial entry</a><br />
+<button class="btn btn-default" id="delete_phenotype_data_by_trial_id" role="button">1. Delete trait data</button><br/><br/>
+<button class="btn btn-default" id="delete_layout_data_by_trial_id" role="button">2. Delete layout data and trial entry completely</button><br/><br/>
 
 <div class="modal  fade" id="delete_phenotype_data_dialog" name="delete_phenotype_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeletePhenoDataDialog">
     <div class="modal-dialog " role="document">
@@ -140,6 +139,10 @@ function delete_selected_assayed_traits() {
           alert('An error occurred deleting trait');
       }
   });
+
+    jQuery('#delete_traits_dialog_success_message').on('hidden.bs.modal', function () {
+        location.reload();
+    })
 
 }
 </script>

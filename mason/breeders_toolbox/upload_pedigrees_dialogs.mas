@@ -10,6 +10,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+            <div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" checked id="pedigree_upload_overwrite_pedigrees" /></div>
  	  <table class="table table-hover">
     	    <tbody></tbody>
   	  </table>

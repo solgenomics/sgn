@@ -1,6 +1,6 @@
 <& /util/import_javascript.mas, classes => [ "calendar.moment_min", "calendar.fullcalendar_min", "jquery.dataTables", "calendar.fullcalendar_gcal_min", "calendar.bootstrap_datepicker_min" ] &>
 
-<link rel="stylesheet" href="/css/datepicker.css" />
+<& /util/import_css.mas, paths => ['/css/datepicker.css'] &>
 
 <style>
 .fc-center h2 {

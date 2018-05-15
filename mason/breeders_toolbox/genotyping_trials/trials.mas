@@ -10,40 +10,6 @@ $trials_by_breeding_project => ()
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
- <style>
-  /* IE has layout issues when sorting (see #5413) */
-  .group { zoom: 1 }
-  .genotyping_trial_list_table  {border-spacing:7px;}
-  </style>
-
-
-<div id="new_submission_process_explanation">
-<b>Instructions:</b><br />Please note the changes to the submission process for the Cornell genotyping facility (all database users). 
-<ol><li>Go to <a href=" https://slims.biotech.cornell.edu">slims.biotech.cornell.edu</a> to get a tab delimited spreadsheet file containing information on the genotyping trial name and where to insert the blank.</li>
-<li>Use the "Create IGD Genotyping Trial" link on this page to upload the file, together with a list of accessions.</li>
-<li>Use the link on the trial detail page to create the file to proceed with the submission.</li>
-</ol>
-</div>
-
-<div id="genotyping_trials_accordion">
-  <%perl>
-  foreach my $p (sort keys %$trials_by_breeding_project){
-    print '<div class="group">';
-    print '<h3 class="ui-accordion-header">'.$p.'</h3>'."\n";
-    print '<div>';
-    print '<p>';
-    print '<table class="genotyping_trial_list_table">';
-    #print "<tr><td colspan=\"3\"><h4>$p</h4></td></tr>\n";
-    foreach my $t (@{$trials_by_breeding_project->{$p}}) {
-      print "<tr><td colspan=\"3\"><a href=\"/breeders_toolbox/trial/$t->[0]\">$t->[1]</td><td>$t->[2]</td></tr>\n";
-    }
-    print '</table>';
-    print '</p>';
-    print '</div>';
-    print '</div>';
-  }
-  </%perl>
-
-</div>
 
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/genotyping_trial_tree.mas &>

@@ -24,6 +24,7 @@ var fullParsedData;
 var infoToAdd;
 var accessionListFound;
 var speciesNames;
+var doFuzzySearch;
 
 function disable_ui() {
     jQuery('#working_modal').modal("show");
@@ -148,6 +149,14 @@ jQuery(document).ready(function ($) {
         population_name = jQuery(this).data('population_name');
         jQuery('#delete_population_name').html(population_name);
         jQuery('#manage_populations_delete_dialog').modal('show');
+    });
+
+    jQuery('#organization_name_input').autocomplete({
+       source: '/ajax/stock/stockproperty_autocomplete?property=organization',
+    });
+
+    jQuery('#population_name_input').autocomplete({
+       source: '/ajax/stock/population_autocomplete',
     });
 
     jQuery("#add_accessions_to_population_submit").click(function(){
@@ -359,16 +368,16 @@ jQuery(document).ready(function ($) {
             if (response.error_string) {
                 fullParsedData = undefined;
                 alert(response.error_string);
-                return;
             }
             if (response.success) {
                 fullParsedData = response.full_data;
-                review_verification_results(response, response.list_id);
+                doFuzzySearch = 1;
+                review_verification_results(doFuzzySearch, response, response.list_id);
             }
         }
     });
 
-    $('#add_accessions_link').click(function () {
+    $('[name="add_accessions_link"]').click(function () {
         var list = new CXGN.List();
         accessionList;
         accession_list_id;
@@ -378,6 +387,7 @@ jQuery(document).ready(function ($) {
         infoToAdd;
         accessionListFound;
         speciesNames;
+        doFuzzySearch;
         $('#add_accessions_dialog').modal("show");
         $('#review_found_matches_dialog').modal("hide");
         $('#review_fuzzy_matches_dialog').modal("hide");
@@ -422,7 +432,7 @@ function openWindowWithPost(fuzzyResponse) {
 
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
-    doFuzzySearch = jQuery('#fuzzy_check').attr('checked'); //fuzzy search is always checked in a hidden input
+    doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
     //alert("should be disabled");
     //alert(accession_list);
 
@@ -443,9 +453,8 @@ function verify_accession_list(accession_list_id) {
             enable_ui();
             if (response.error) {
                 alert(response.error);
-            } else {
-                review_verification_results(response, accession_list_id);
             }
+            review_verification_results(doFuzzySearch, response, accession_list_id);
         },
         error: function () {
             enable_ui();
@@ -454,7 +463,7 @@ function verify_accession_list(accession_list_id) {
     });
 }
 
-function review_verification_results(verifyResponse, accession_list_id){
+function review_verification_results(doFuzzySearch, verifyResponse, accession_list_id){
     var i;
     var j;
     accessionListFound = {};
@@ -487,7 +496,7 @@ function review_verification_results(verifyResponse, accession_list_id){
 
     }
 
-    if (verifyResponse.fuzzy.length > 0) {
+    if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
         fuzzyResponse = verifyResponse.fuzzy;
         var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.fuzzy.length; i++) {
@@ -520,7 +529,7 @@ function review_verification_results(verifyResponse, accession_list_id){
     }
 
     jQuery('#review_found_matches_hide').click(function(){
-        if (verifyResponse.fuzzy.length > 0){
+        if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
             jQuery('#review_fuzzy_matches_dialog').modal('hide');
@@ -651,8 +660,7 @@ function process_fuzzy_options(accession_list_id) {
             }
         },
         error: function () {
-            alert('An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym!');
+            alert('An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym! Also do not use any special characters!');
         }
     });
 }
-

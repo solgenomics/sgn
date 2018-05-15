@@ -27,7 +27,7 @@ print STDERR $sgn_session_id."\n";
 
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_trial'})->project_id();
 
-my $file = $f->config->{basepath}."/t/data/stock/seedlot_upload";
+my $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
         'http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/upload_additional_file',

@@ -1,258 +1,9 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'brapi.GraphicalFiltering', 'd3.d3v4Min' ] &>
+<& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
 
-<style>
-
-.brush .selection, .brush-out-indicator {
-  stroke: #22BBEE;
-  stroke-width: 1px;
-  fill: #78D4F3;
-  fill-opacity: 0.1;
-}
-
-.filter-negated>.filter-panel .brush .selection,
-.filter-negated>.filter-panel .brush-out-indicator {
-  stroke: #EE0022;
-  fill: #F65E73;
-}
-
-.select_container{
-  margin-top: 0.5em;
-}
-
-#filter_div .dropdown-menu > li > a {
-  color: #2e6da4;
-  line-height: 2em !important;
-}
-
-.brush-out-indicator {
-    stroke-width: 4px;
-    stroke-dasharray: 4 2;
-}
-
-.bar text {
-  font-family: inherit;
-}
-
-.x-axis {
-  font-family: inherit;
-}
-
-#filter_div {
-  font-size: 16px;
-}
-
-.filter-panel-range .tick text{
-  text-anchor: center;
-}
-.filter-panel-range .tick:first-of-type text{
-  text-anchor: start;
-}
-.filter-panel-range .tick:last-of-type text{
-  text-anchor: end;
-}
-
-.filter-item{
-  display: inline-block;
-  vertical-align: middle;
-  border-color: rgba(100, 100, 100, 1);
-  min-height: 2.5em;
-  overflow:visible;
-  padding: 0.25em 0.25em 0.25em 0.25em;
-  text-align: left;
-}
-
-.filter-remove{
-  width:1em;
-  height:1em;
-  top:-0.25em;
-  right:-0.25em;
-  background:#b55;
-  border-radius:0.5em;
-  position:absolute;
-}
-
-.filter-range-form{
-  padding:0;
-}
-
-.filter-operator {
-    font-weight: bold;
-    vertical-align: middle;
-    text-align: center;
-    display: inline-block;
-    box-sizing: border-box;
-    font-size: 0.8em;
-    margin: 0px -1px -1px 4px;
-    height: 2em;
-    border-radius: 0;
-    border: solid;
-    border-width: thin;
-    border-color: #999;
-    overflow: hidden;
-    min-width: 6em;
-}
-
-.filter-wrapper .filter-operator-init{
-  visibility: hidden;
-}
-
-.filter-item:first-child:nth-last-child(2)
->.filter-operator-init,
-.filter-item:first-child:nth-last-child(1)
->.filter-operator-init {
-  width:0;
-  min-width: 0;
-}
-
-.filter-operator::before {
-  display: inline-block;
-  height: 2em;
-  margin: 0 0 0 0.25em;
-  padding: 0.35em 0.3em 0 0.1em;
-}
-.filter-operator-and, .filter-operator-init{
-  background: #f5f5f5;
-  color: rgba(100, 100, 100, 1);
-}
-.filter-operator-and::before{
-  content: "AND";
-}
-.filter-operator-or{
-  color: #f5f5f5;
-  background: rgba(100, 100, 100, 1);
-}
-.filter-operator-or::before{
-  content: "OR";
-}
-.filter-operator-init::before{
-  content:"WHERE";
-}
-.filter-operator-not::after {
-    background: #A6E5FA;
-    color: rgba(100, 100, 100, 1);
-    content: "NOT";
-    display: block;
-    float: right;
-    height: 2em;
-    margin: 0 0 0 -0.05em;
-    padding: 0.35em 0.3em 0 0.3em;
-}
-.filter-negated>.filter-operator-not::after{
-  background: #FCB1BB;
-}
-
-.filter-wrapper {
-  position: relative;
-  display: inline-block;
-  vertical-align: middle;
-  overflow:visible;
-  background: rgba(221, 221, 221, 0.1);
-  border: solid;
-  border-color: #999;
-  border-width: thin;
-  border-radius: 3px;
-  padding: 0.4em;
-  min-height: 2.6em;
-  text-align: left;
-}
-#filter_div > .filter-wrapper{
-  min-width: 100%;
-}
-.filter-wrapper::-webkit-scrollbar {
-    width: 0.75em;
-    height: 0.75em;
-    background: #ccc;
-    border-radius: 3px;
-    -webkit-box-shadow: inset 0 0 6px rgba(255,255,255,0.3);
-}
-.filter-wrapper::-webkit-scrollbar-thumb {
-  background-color: #999;
-  border-radius: 3px;
-}
-
-
-.filter-panel {
-  width: 20em;
-  display: inline-block;
-  vertical-align: middle;
-  position: relative;
-  border-color: #999;
-  margin: 0;
-}
-
-.filter-panel .panel-heading {
-  padding: 0.5em;
-  border-radius: 3px;
-}
-
-.filter-panel .panel-heading select {
-  width: 100%;
-}
-
-.filter-panel .panel-body {
-  padding: 0;
-}
-
-.filter-range-form {
-    padding: 0.1em;
-    display: block;
-    text-align: center;
-    font-size: 0.8em;
-    width:6em;
-    margin: 0.5em;
-}
-.filter-range-form:first-of-type{
-  float: left;
-  clear:left;
-}
-.filter-range-form:last-of-type{
-  float: right;
-  clear:right;
-}
-.filter-panel .filter-status{
-  display: block;
-  font-size: 0.8em;
-  width:100%;
-  text-align: center;
-  padding-top: 0.6rem;
-}
-
-.filter-status::after {
-    content: " selected.";
-}
-
-.filter-negated>.filter-panel>.panel-body>.filter-status::after {
-    content: " deselected.";
-}
-
-.filter-wrapper .dropdown{
-  display: inline-block;
-  width: 2.5em;
-}
-.filter-wrapper .dropdown button{
-  padding: 0.5em;
-  width: 2.5em;
-  height: 2.5em;
-}
-.filter-wrapper .dropdown button::before {
-    content: "+";
-    font-size: 2em;
-    line-height: 0.3em;
-}
-
-#filtered_results_wrap {
-  margin-top: 1em;
-}
-
-#new-list-form input[name="name"]{
-  display: inline-block;
-  width:10em;
-}
-
-</style>
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
 
 <&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1, subtitle=>'<i>Open and Close Section to "Refresh Query".</i>&nbsp;&nbsp;&nbsp;<a id="stock_search_graphical_filter_info">Too slow?</a>'&>
 
@@ -325,170 +76,56 @@ jQuery(document).ready(function () {
         jQuery('#stock_search_graphical_filter_dialog').modal('show');
     });
 
-
-var run = false;
-jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
-    var stock_type = jQuery('#stock_type_select option:selected').text();
-    if (stock_type == 'accession'){
-        jQuery.ajax ({
-            url : '/ajax/search/stocks',
-            data : {
-                minimal_info : 1,
-                any_name : jQuery('#any_name').val(),
-                any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                stock_type : jQuery('#stock_type_select').val(),
-                organism : jQuery('#organism_select').val(),
-                person : jQuery('#person').val(),
-                trait : jQuery('#trait').val(),
-                minimum_trait_value : jQuery('#minimum_trait_value').val(),
-                maximum_trait_value : jQuery('#maximum_trait_value').val(),
-                project : jQuery('#project').val(),
-                location : jQuery('#location').val(),
-                year : jQuery('#year').val(),
-                breeding_program : jQuery('#breeding_program').val(),
-                organization : jQuery('#organization').val(),
-                property_term : jQuery('#editable_stockprop_search_term').val(),
-                property_value : jQuery('#editable_stockprop_search_value').val(),
-                introgression_parent : jQuery('#introgression_parent').val(),
-                introgression_backcross_parent : jQuery('#introgression_backcross_parent').val(),
-                introgression_map_version : jQuery('#introgression_map_version').val(),
-                introgression_chromosome : jQuery('#introgression_chromosome').val(),
-                introgression_start_position_bp : jQuery('#introgression_start_position_bp').val(),
-                introgression_end_position_bp : jQuery('#introgression_end_position_bp').val()
-            },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-                jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
-            },
-            success: function(response){
-                //console.log(response);
-                jQuery("#working_modal").modal("hide");
-                var stock_ids = [];
-                for (var i=0; i<response.data.length; i++){
-                    stock_ids.push(response.data[i][0]);
-                }
-
-                if (run) {
-                    jQuery("#stock_search_graphical_filter_results_div").DataTable().destroy();
-                    jQuery("#stock_search_graphical_filter_results_div").html("");
-                }
-                run = true;
-                params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
-                loadBrAPIData("<% $c->config->{main_production_site_url} %>",params,function(response){
-                    useBrAPIData(response,true);
-                });
-
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving accessions in graphical filtering.");
-            }
-        });
-    } else {
-        jQuery('#stock_search_graphical_filter_div').html("Graphical Filtering only configured for accessions. Currently searching across "+stock_type+". Change your search to accesions to use graphical filtering.");
-    }
 });
 
-});
-
-
+var currentGFilter = null;
 function loadBrAPIData(server,parameters,success){
-    var base_url = server;
-    var load_url = base_url+"/brapi/v1/phenotypes-search";
     var data = {
         "pageSize" : 10000000,
-        "page" : 0,
         "search_type" : jQuery('#stock_search_graphical_filter_search_type').val()
     };
     d3.entries(parameters).forEach(function(entry){
         data[entry.key] = data[entry.key]||entry.value;
     });
-    //console.log(load_url);
-    //console.log(data);
-
-    jQuery.ajax({
-    type: "POST",
-        url: load_url,
-        data: data,
-        success: success,
-    });
-};
-
-// filters and modifies the response and then creates the root filter object
-// and datatable
-function useBrAPIData(response,groupByAccession){
-    //console.log(response);
-    var traits = {};
-    var data = response.result.data
-    .map(function(observeUnit){
-      var newObj = {};
-      d3.entries(observeUnit).forEach(function(entry){
-        if (entry.key!="observations"){
-            newObj[entry.key] = entry.value;
-        }
-      });
-      observeUnit.observations.forEach(function(obs){
-            newObj[obs.observationVariableName] = obs.value;
-            traits[obs.observationVariableName] = true;
-      });
-      return newObj;
-    });
-    var trait_names = d3.keys(traits);
-    data.forEach(function(datum){
-    trait_names.forEach(function(trait){
-      if (datum[trait]==undefined||datum[trait]==null||datum[trait]==NaN){
-        datum[trait] = null
+    
+    var brapi_Data = BrAPI(server+"/brapi/v1").phenotypes_search(data);
+    
+    if (currentGFilter!=null){
+        $("#stock_search_graphical_filter_results_div").DataTable().destroy();
+        $("#stock_search_graphical_filter_results_div").html("");
       }
-    })
-    });
-    var tableCols = [
-    {title:"Study",data:"studyName"},
-    {title:"Name",data:"observationUnitName"},
-    {title:"Accession",data:"germplasmName"},
-    ];
-    if (groupByAccession){
-        var grouped = d3.nest().key(function(d){return d.germplasmDbId}).entries(data);
-        var newdata = grouped.map(function(group){
-          var newDatum = {};
-          newDatum.germplasmName = group.values[0].germplasmName;
-          newDatum.germplasmDbId = group.key;
-          newDatum.count = group.values.length;
-          newDatum.group = group.values;
-          trait_names.forEach(function(trait_key){
-            var avg = d3.mean(group.values,function(d){
-              if (d[trait_key]!==null){
-                return d[trait_key];
-              }
-            });
-            newDatum[trait_key] = avg==undefined?null:avg;
+
+    currentGFilter = GraphicalFilter(
+        brapi_Data,
+        function(d) { // traits/values
+          var traits = {}
+          d.observations.forEach(function(obs){
+            traits[obs.observationVariableName] = obs.value;
           });
-          return newDatum;
-        });
-        var tableCols = [
-          {title:"Accession", data:"germplasmName"},
-          {title:"Unit Count", data:"count"}
-        ];
-        data = newdata;
-    }
-
-
-    // use the list of shared traits to create dataTables columns
-    tableCols = tableCols.concat(trait_names.map(function(d){
-        return {title:d,data:d.replace(/\./g, "\\.")};
-    }));
-
-    // create the root filter object and datatable
-    var gfilter = GraphicalFilter();
-    gfilter.create("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div",data,tableCols,trait_names);
-    _make_graphical_filtering_list_select();
-
-    jQuery('#stock_search_graphical_filter_results_div').on( 'draw.dt', function () {
-        _make_graphical_filtering_list_select();
+          return traits;
+        },
+        function(d) {
+          return {
+            'Accession':d.germplasmName
+          }
+        },
+        ["Accession"],
+        function(d) {
+          return d.germplasmDbId
+        }
+      );
+    currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
+    brapi_Data.all(function(){
+      _make_graphical_filtering_list_select();
+      jQuery('#stock_search_graphical_filter_results_div').on( 'draw.dt', function () {
+          _make_graphical_filtering_list_select();
+      });
     });
+    
 
     function _make_graphical_filtering_list_select(){
-        var data = gfilter.results_table.context[0].aoData;
-        var displayed_rows = gfilter.results_table.context[0].aiDisplay;
+        var data = currentGFilter.results_table.context[0].aoData;
+        var displayed_rows = currentGFilter.results_table.context[0].aiDisplay;
         var names = [];
         for (var i =0; i< displayed_rows.length; i++){
             var displayed_index = displayed_rows[i];

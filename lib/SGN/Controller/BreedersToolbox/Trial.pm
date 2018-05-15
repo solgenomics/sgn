@@ -13,7 +13,7 @@ use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_
 use CXGN::Trial::Download;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
-use CXGN::List;
+use CXGN::List; 
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -51,6 +51,7 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #print STDERR "Check 1: ".localtime()."\n";
+    print STDERR "TRIAL INIT...\n\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
@@ -98,8 +99,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
-
-    $c->stash->{has_plant_entries} = $trial->has_plant_entries();
+    
+    $c->stash->{has_col_and_row_numbers} = $trial->has_col_and_row_numbers();
+    $c->stash->{has_plant_entries} = $trial->has_plant_entries(); 
     $c->stash->{has_subplot_entries} = $trial->has_subplot_entries();
     $c->stash->{has_tissue_sample_entries} = $trial->has_tissue_sample_entries();
     $c->stash->{phenotypes_fully_uploaded} = $trial->get_phenotypes_fully_uploaded();
@@ -120,20 +122,34 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
 
-    if ($design_type eq "genotyping_plate") {
-	if ($format eq "as_table") {
-	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
-	}
-	else {
-	    $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
-	}
+    #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
+    if ($design_type eq "genotyping_plate") {
+        $c->stash->{plate_id} = $c->stash->{trial_id};
+        $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
+        $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
+        $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
+        $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
+        if ($trial->get_genotyping_plate_format){
+            $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
+        }
+        if ($format eq "as_table") {
+            $c->stash->{template} = '/breeders_toolbox/genotyping_trials/format/as_table.mas';
+        }
+        else {
+            $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
+        }
     }
     elsif ($design_type eq "treatment"){
         $c->stash->{template} = '/breeders_toolbox/treatment.mas';
     }
     else {
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
+    }
+
+    if ($trial_type_data->[1] eq "crossing_trial"){
+        print STDERR "It's a crossing trial!\n\n";
+        $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
     }
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
@@ -167,7 +183,7 @@ sub trait_info :Path('/breeders/trial') Args(3) {
     $c->stash->{template}   = '/breeders_toolbox/trial_trait.mas';
 }
 
-
+##DEPRECATED by /breeders/trials
 sub trial_tree : Path('/breeders/trialtree') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -181,7 +197,7 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
 #For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument, as that is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
 sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
-    my $c = shift;
+    my $c = shift; 
     my $what = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
@@ -215,7 +231,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
     if ($data_level eq 'plate'){
-        $selected_cols = {'plot_number'=>1, 'plot_name'=>1, 'accession_name'=>1, 'genotyping_project_name'=>1, 'genotyping_user_id'=>1, 'location_name'=>1, 'genus'=>1, 'species'=>1, 'trial_name'=>1, 'pedigree'=>1};
+        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
     }
     my $selected_trait_list_id = $c->req->param('trait_list_id');
     my @selected_trait_names;
@@ -260,6 +276,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if (($format eq "xls") && ($what eq "basic_trial_excel")) {
         $plugin = "BasicExcel";
     }
+    if ( ($format eq "intertekxls") && ($what eq "layout")) {
+        $plugin = "GenotypingTrialLayoutIntertekXLS";
+    }
 
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
@@ -286,6 +305,10 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     });
 
     my $error = $download->download();
+
+    if ($format eq 'intertekxls'){
+        $format = 'xls';
+    }
 
     my $file_name = $trial_id . "_" . "$what" . ".$format";
     $c->res->content_type('Application/'.$format);
