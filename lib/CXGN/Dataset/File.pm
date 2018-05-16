@@ -18,10 +18,10 @@ override('retrieve_genotypes',
 	     my $protocol_id = shift;
 	     my $file = shift || $self->file_name()."_genotype.txt";
 	     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id);
-	     my $genotype_string = "marker";
+	     my $genotype_string = "";
 	     my $genotype_example = $genotypes->[0];
 	     foreach my $key (sort keys $genotype_example->{genotype_hash}) {
-		 $genotype_string .= "\t".$key;
+		 $genotype_string .= $key."\t";
 	     }
 	     $genotype_string .= "\n";
 	     foreach my $element (@$genotypes) {
