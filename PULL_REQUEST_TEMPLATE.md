@@ -8,7 +8,7 @@ Description <!-- Describe your changes in detail. -->
 
 Checklist <!-- Put an `x` in all the boxes that apply, or check them once submitted.-->
 ---------------------------------------------------------------------------------------
-- [ ] Refactoring
+- [ ] Refactoring only
 - [ ] Documentation only
 - [ ] Fixture update only
 - [ ] Bug fix
