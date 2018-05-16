@@ -41,7 +41,6 @@ coefpvalues <- rcor.test(geneticData,
                          use="pairwise"
                          )
 
-
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat
 

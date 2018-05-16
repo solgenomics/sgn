@@ -135,7 +135,7 @@ sub trait_acronyms {
 sub combine_gebvs_of_traits {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_gebv_files_of_traits($c);  
+    $c->controller('solGS::solGS')->get_gebv_files_of_traits($c);  
     my $gebvs_files = $c->stash->{gebv_files_of_valid_traits};
     
     if (!-s $gebvs_files) 
@@ -269,13 +269,13 @@ sub genetic_correlation_output_files {
     $model_id    = $c->stash->{model_id};
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id; 
 
-    my $solgs_controller = $c->controller("solGS::solGS");
-    my $tmp_dir = $c->stash->{correlation_temp_dir};
-    my $corre_json_file  = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_coefficients_json_${identifier}");
-    my $corre_table_file = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_coefficients_table_${identifier}");
-   
-    $c->stash->{genetic_corre_coefficients_table_file} = $corre_table_file;
-    $c->stash->{genetic_corre_coefficients_json_file}  = $corre_json_file;
+    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $corre_json_file  = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "genetic_corre_json_${identifier}");
+    my $corre_table_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "genetic_corre_table_${identifier}");
+
+    $c->stash->{genetic_corre_table_file} = $corre_table_file;
+    $c->stash->{genetic_corre_json_file}  = $corre_json_file;
+
 }
 
 

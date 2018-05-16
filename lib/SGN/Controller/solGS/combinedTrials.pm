@@ -282,9 +282,10 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
         $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list}; 
     }
 
-    $self->combined_pops_summary($c);
-   
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+   
+    $self->combined_pops_summary($c);
+      
     $c->controller('solGS::solGS')->trait_phenotype_stat($c);    
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller('solGS::solGS')->model_accuracy($c);
@@ -716,7 +717,6 @@ sub combined_pops_summary {
     my @unfiltered_geno_rows = read_file($combined_pops_geno_file);
  
     my $markers_no;
-    my @geno_lines;
 
     if (-s $filtered_geno_file) {
 	my @rows = read_file($filtered_geno_file);
@@ -1082,9 +1082,9 @@ sub r_combine_populations  {
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
     
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir    = $c->stash->{solgs_tempfiles_dir};
     my $trait_info  = $trait_id . "\t" . $trait_abbr;
-    my $trait_file  = $$c->controller('solGS::Files')->create_tempfile($temp_dir, "trait_info_${trait_id}");
+    my $trait_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "trait_info_${trait_id}");
     write_file($trait_file, $trait_info); 
   
     my $input_files = join ("\t",
