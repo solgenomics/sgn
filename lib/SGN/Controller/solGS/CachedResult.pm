@@ -231,11 +231,13 @@ sub _check_selection_pop_all_traits_output {
     $c->controller("solGS::solGS")->traits_with_valid_models($c);
     my $training_models_traits = $c->stash->{traits_ids_with_valid_models};
  
-    if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+    if ($sel_traits_ids) 
     {
-	$c->stash->{rest}{cached} = 1;
+	if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+	{
+	    $c->stash->{rest}{cached} = 1;
+	}
     }
-
 }
 
 

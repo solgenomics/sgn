@@ -1121,7 +1121,7 @@ sub predict_selection_pop_single_pop_model {
     
     if (!-s $prediction_pop_gebvs_file)
     {
-	my $c->stash->{training_pop_id} = $training_pop_id;
+	$c->stash->{training_pop_id} = $training_pop_id;
 	$c->controller('solGS::Files')->phenotype_file_name($c);
 	my $pheno_file = $c->stash->{phenotype_file_name};
 
@@ -2845,7 +2845,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     
     if ($combo_pops_id)
     {
-	$c->controller->('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
 	$c->stash->{data_set_type} = 'combined populations';
 	$pop_id = $combo_pops_id;
     }

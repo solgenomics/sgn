@@ -558,9 +558,8 @@ sub prediction_population_file {
     
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
-    my ($fh, $tempfile) = tempfile("prediction_population_${pred_pop_id}-XXXXX", 
-                                   DIR => $tmp_dir
-        );
+    my $file = "prediction_population_${pred_pop_id}";
+    my $tempfile = $self->create_tempfile($tmp_dir, $file);
 
     $c->stash->{prediction_pop_id} = $pred_pop_id;
 
@@ -569,11 +568,12 @@ sub prediction_population_file {
 
     my $geno_files = $filtered_geno_file;  
   
-    $self->genotype_file($c, $pred_pop_id);
-    $geno_files .= "\t" . $c->stash->{pred_genotype_file};   
-  
-    $fh->print($geno_files);
-    $fh->close; 
+    $c->controller('solGS::solGS')->genotype_file($c, $pred_pop_id);
+    
+    $self->genotype_file_name($c, $pred_pop_id);
+    $geno_files .= "\t" . $c->stash->{genotype_file_name};  
+
+    write_file($tempfile, $geno_files); 
 
     $c->stash->{prediction_population_file} = $tempfile;
   
