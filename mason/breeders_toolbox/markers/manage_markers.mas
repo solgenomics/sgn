@@ -4,11 +4,12 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables','CXGN.BreedersToolbox.MarkerSet'] &>
 
 <& /page/page_title.mas, title=>'Manage Marker Sets' &>
 
-<&| /page/info_section.mas, title=>'Add New Marker Set'&>
+
+<&| /page/info_section.mas, title=>'Add new marker set'&>
 
 <div class="row" id="new_markers_form" >
     <div class="col-sm-1">
@@ -16,6 +17,45 @@
     <div class="col-sm-12 well">
         <div class="row">
             <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Set Name:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-info" id="save_marker_set">Save new marker set</button>
+                                        </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Add markers in marker set'&>
+
+<div class="row" id="new_markers_form" >
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Set Name:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_marker_set">
+                                        <option value="">Select a marker set</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
                 <div class="form-horizontal">
                     <div class="form-group">
                         <label class="control-label col-sm-4">Marker Name:</label>
@@ -35,25 +75,20 @@
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                     </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Save marker set:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
-                                    <div class="input-group-btn">
-                                        <button class="btn btn-info" id="save_marker_set">Save</button>
-                                    </div>
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-info" id="add_marker">Add marker</button>
+                                        </div>
                                 </div>
                             </div>
                     </div>
                 </div>
+                </div>
             </div>
         </div>
     </div>
- </&>
+</div>
+
+</&>
 
 
 <&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0&>
@@ -68,9 +103,3 @@
         </thead>
     </table>
 </&>
-
-<script>
-
-
-
-</script>
