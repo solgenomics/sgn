@@ -183,28 +183,29 @@ sub get_phenotype_matrix {
     print STDERR "Construct Pheno Matrix Start:".localtime."\n";
     my @unique_plot_list = ();
     my %seen_plots;
+
     foreach my $d (@$data) {
         my ($year, $project_name, $stock_name, $location, $cvterm, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id) = @$d;
 
         if ($cvterm){
-            if (!exists($seen_plots{$plot_id})) {
-                push @unique_plot_list, $plot_id;
-                $seen_plots{$plot_id} = 1;
-            }
- 
-            #my $cvterm = $trait."|".$cvterm_accession;
-            if ($include_timestamp && $timestamp_value) {
-                $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
-            } else {
-                $plot_data{$plot_id}->{$cvterm} = $value;
-            }
-            my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-            if ($self->include_row_and_column_numbers){
-                $plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number,$row_number,$col_number];
-            } else {
-                $plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number];
-            }
-            $traits{$cvterm}++;
+           if (!exists($seen_plots{$plot_id})) {
+               push @unique_plot_list, $plot_id;
+               $seen_plots{$plot_id} = 1;
+           }
+
+           #my $cvterm = $trait."|".$cvterm_accession;
+           if ($include_timestamp && $timestamp_value) {
+               $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
+           } else {
+               $plot_data{$plot_id}->{$cvterm} = $value;
+           }
+           my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
+           if ($self->include_row_and_column_numbers){
+               $plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number,$row_number,$col_number];
+           } else {
+               $plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number];
+           }
+           $traits{$cvterm}++;
         }
     }
     #print STDERR Dumper \%plot_data;
@@ -213,9 +214,9 @@ sub get_phenotype_matrix {
     my @info = ();
     my @line;
     if ($self->include_row_and_column_numbers){
-        @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber' );
+       @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber' );
     } else {
-        @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber' );
+       @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber' );
     }
 
     # generate header line

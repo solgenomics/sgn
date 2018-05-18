@@ -34,6 +34,8 @@ geolocation_property	adm3	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	region	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	alternative_name	From BrAPI	03/27/2017	nm529	00076
+list_types	genotyping_trials		03/23/2018	nm529	00092
+list_types	tissue_samples		02/15/2018	nm529	00091
 list_types	seedlots		07/20/2017	nm529	00081
 list_types	subplots		08/23/2017	nm529	00084
 list_types	accessions
@@ -93,6 +95,12 @@ project_property	active	From BrAPI	03/27/2017	nm529	00076
 project_property	breeding_program_abbreviation	From BrAPI	03/27/2017	nm529	00076
 project_property	phenotypes_fully_uploaded	To determine when a trial has all phenotypes uploaded	06/09/2017	nm529	00078
 project_property	trial_layout_json	A json string holding a trial's cached layout	10/12/2017	nm529	00087
+project_property	genotyping_facility	For genotyping trials to indicate where the plate was submitted	2/16/2017	nm529	00091
+project_property	genotyping_facility_submitted	For genotyping trials to indicate if the plate was submitted to geno facility	2/16/2017	nm529	00091
+project_property	genotyping_facility_status	For genotyping trials to indicate the status of a plate submitted to geno facility	2/16/2017	nm529	00091
+project_property	genotyping_plate_format	For genotyping trials to indicate if 96 well or other	2/16/2017	nm529	00091
+project_property	genotyping_plate_sample_type	For genotyping trials to indicate the type of sample in plate e.g. DNA	2/16/2017	nm529	00091
+project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_type	Advanced Yeld Trials				00052
@@ -158,6 +166,13 @@ stock_property	introgression_map_version	For indicating map version of introgres
 stock_property	introgression_chromosome	For indicating chromosome number of introgression	12/20/2017	nm529	00088
 stock_property	introgression_start_position_bp	For indicating introgression start position in bp	12/20/2017	nm529	00088
 stock_property	introgression_end_position_bp	For indicating introgression end position in bp	12/20/2017	nm529	00088
+stock_property	is_blank	For indicating blank well in genotype plate	2/15/2018	nm529	00091
+stock_property	concentration	For indicating concentration in genotype plate well	2/15/2018	nm529	00091
+stock_property	volume	For indicating volume in genotype plate well	2/15/2018	nm529	00091
+stock_property	dna_person	For indicating dna_person in genotype plate well	2/15/2018	nm529	00091
+stock_property	extraction	For indicating extraction in genotype plate well	2/15/2018	nm529	00091
+stock_property	tissue_type	For indicating tissue type in genotype plate well	2/15/2018	nm529	00091
+stock_property	ncbi_taxonomy_id	For indicating ncbi taxonomy id in genotype plate well	2/15/2018	nm529	00091
 stock_relationship	cross_relationship				00052
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052

@@ -587,5 +587,46 @@ sub add_bulk {
 	return \%response;
 }
 
+sub delete_bulk {
+    my $self = shift;
+    my $item_ids = shift;
+    my $items_ids_sql = join ',', @$item_ids;
+
+    my $q = "DELETE FROM sgn_people.list_item WHERE list_id=? AND list_item_id IN ($items_ids_sql)";
+    my $h = $self->dbh()->prepare($q);
+    $h->execute($self->list_id());
+    return;
+}
+
+sub sort_items {
+    no warnings 'uninitialized';
+    my $self = shift;
+    my $sort = shift;
+    my $items = $self->retrieve_elements_with_ids($self->list_id);
+    my @contents;
+    my @item_ids;
+    foreach (@$items){
+        push @item_ids, $_->[0];
+        push @contents, $_->[1];
+    }
+    my @sorted;
+    if ($sort eq 'ASC'){
+        @sorted = map  { $_->[0] }
+            sort { $a->[1] <=> $b->[1] }
+            map  { [$_, $_=~/(\d+)/ ] }
+            @contents;
+    } elsif ($sort eq 'DESC'){
+        @sorted = map  { $_->[0] }
+            sort { $b->[1] <=> $a->[1] }
+            map  { [$_, $_=~/(\d+)/ ] }
+            @contents;
+    } else {
+        return;
+    }
+
+    $self->delete_bulk(\@item_ids);
+    $self->add_bulk(\@sorted, $self->list_id);
+    return 1;
+}
 
 1;

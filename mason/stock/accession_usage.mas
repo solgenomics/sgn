@@ -4,12 +4,11 @@
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /page/page_title.mas, title=>'Accession Usage' &>
 
 <&| /page/info_section.mas, title => 'Accession Usage for Trials', collapsible=>1, collapsed=>1 &>
-
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <table id="accession_usage_trials" width="100%" class="table table-hover table-striped">
 <thead>
@@ -25,8 +24,6 @@
 
 <&| /page/info_section.mas, title => 'Accession Usage as Female Parent', collapsible=>1, collapsed=>1 &>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
-
 <table id="accession_usage_female" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
@@ -39,8 +36,6 @@
 </&>
 
 <&| /page/info_section.mas, title => 'Accession Usage as Male Parent', collapsible=>1, collapsed=>1 &>
-
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <table id="accession_usage_male" width="100%" class="table table-hover table-striped">
 <thead>

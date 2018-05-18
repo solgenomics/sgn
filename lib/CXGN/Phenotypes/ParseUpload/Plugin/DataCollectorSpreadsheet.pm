@@ -201,10 +201,9 @@ sub parse {
                 }
             }
 
-            my @treatments;
             if ( defined($trait_value) && defined($timestamp) ) {
                 if ($trait_value ne '.'){
-                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp, \@treatments];
+                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
                 }
             } else {
                 $parse_result{'error'} = "Value or timestamp missing.";

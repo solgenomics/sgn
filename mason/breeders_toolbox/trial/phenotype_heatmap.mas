@@ -426,7 +426,8 @@ jQuery(document).ready( function() {
 
                         d.row = +d.row;
                         d.col = +d.col;
-                        d.pheno = +d.pheno;    
+                        d.pheno = +d.pheno;  
+                    });      
 
                       var colorScale = d3.scale.quantile()
                           .domain([0, buckets - 1, d3.max(datasets, function (d) { return d.pheno; })])
@@ -517,7 +518,7 @@ jQuery(document).ready( function() {
 
                       legend.exit().remove();
                     
-                     });  
+                    // });  
                     } ; 
                   
                   heatmapChart(datasets);
@@ -563,6 +564,7 @@ jQuery(document).ready( function() {
                 var row_max =  response.max_row;
                 var controls = response.controls;
                 var false_coord = response.false_coord;
+                var design_type = response.design_type;
 
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
@@ -617,6 +619,7 @@ jQuery(document).ready( function() {
                         d.row = +d.row;
                         d.col = +d.col;
                         d.blkn = +d.blkn;   
+                    });
                                                 
                       var cards = svg.selectAll(".col")
                           .data(datasets, function(d) {return d.row+':'+d.col;});
@@ -832,7 +835,7 @@ jQuery(document).ready( function() {
                                                   
                       cards.exit().remove();
                     
-                     });  
+                    // });  
                     } ; 
                   
                   heatmapChart(datasets);

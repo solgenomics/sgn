@@ -5,17 +5,102 @@ CXGN::Stock::Seedlot - a class to represent seedlots in the database
 
 =head1 DESCRIPTION
 
-CXGN::Stock::Seedlot inherits from CXGN::Stock. The required fields are:
+CXGN::Stock::Seedlot inherits from CXGN::Stock.
 
-uniquename
+To create a new seedlot do:
+#Seedlot can either be from an accession or a cross, therefore, supply an accession_stock_id OR a cross_stock_id here
 
-location_code
+my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+$sl->uniquename($seedlot_uniquename);
+$sl->location_code($location_code);
+$sl->accession_stock_id($accession_id);
+$sl->cross_stock_id($cross_id);
+$sl->organization_name($organization);
+$sl->population_name($population_name);
+$sl->breeding_program_id($breeding_program_id);
+my $return = $sl->store();
+my $seedlot_id = $return->{seedlot_id};
+
+#The first transaction is between the accession_stock_id OR cross_stock_id that you specified above and the new seedlot created.
+my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+$transaction->factor(1);
+$transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
+$transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
+$transaction->amount($amount);
+$transaction->timestamp($timestamp);
+$transaction->description($description);
+$transaction->operator($operator);
+$transaction->store();
+
+$sl->set_current_count_property();
+
+$phenome_schema->resultset("StockOwner")->find_or_create({
+    stock_id     => $seedlot_id,
+    sp_person_id =>  $user_id,
+});
+
+-------------------------------------------------------------------------------
+
+To Update or Edit a seedlot do:
+
+my $seedlot = CXGN::Stock::Seedlot->new( 
+    schema => $schema,
+    seedlot_id => $seedlot_id,
+);
+$seedlot->name($seedlot_name);
+$seedlot->uniquename($seedlot_name);
+$seedlot->breeding_program_id($breeding_program_id);
+$seedlot->organization_name($organization);
+$seedlot->location_code($location);
+$seedlot->accession_stock_id($accession_id);
+$seedlot->cross_stock_id($cross_id);
+$seedlot->population_name($population);
+my $return = $seedlot->store();
+
+------------------------------------------------------------------------------
+
+To Search Across Seedlots do:
+# This is different from CXGN::Stock::Search in that is retrieves information pertinent to seedlots like location and current count
+
+my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+    $c->dbic_schema("Bio::Chado::Schema"),
+    $offset,
+    $limit,
+    $seedlot_name,
+    $breeding_program,
+    $location,
+    $minimum_count,
+    $contents_accession,
+    $contents_cross
+);
+
+------------------------------------------------------------------------------
+
+To Retrieve a single seedlot do:
+
+my $seedlot = CXGN::Stock::Seedlot->new( 
+    schema => $schema,
+    seedlot_id => $seedlot_id,
+);
+# You can access all seedlot accessors from here such as (you can also access all CXGN::Stock accessors):
+my $uniquename => $seedlot->uniquename(),
+my $seedlot_id => $seedlot->seedlot_id(),
+my $current_count => $seedlot->current_count(),
+my $location_code => $seedlot->location_code(),
+my $breeding_program => $seedlot->breeding_program_name(),
+my $organization_name => $seedlot->organization_name(),
+my $population_name => $seedlot->population_name(),
+my $accession => $seedlot->accession(),
+my $cross => $seedlot->cross(),
+
+------------------------------------------------------------------------------
 
 Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
+Nick MOrales <nm529@cornell.edu>
 
 =head1 ACCESSORS & METHODS
 
@@ -33,6 +118,8 @@ use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use Try::Tiny;
+use CXGN::Stock::StockLookup;
+use CXGN::Stock::Search;
 
 =head2 Accessor seedlot_id()
 
@@ -170,14 +257,17 @@ after 'stock_id' => sub {
 sub list_seedlots {
     my $class = shift;
     my $schema = shift;
+    my $people_schema = shift;
+    my $phenome_schema = shift;
     my $offset = shift;
     my $limit = shift;
     my $seedlot_name = shift;
     my $breeding_program = shift;
     my $location = shift;
     my $minimum_count = shift;
-    my $contents_accession = shift;
-    my $contents_cross = shift;
+    my $contents_accession = shift; #arrayref of uniquenames
+    my $contents_cross = shift; #arrayref of uniquenames
+    my $exact_match_uniquenames = shift;
 
     print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
@@ -187,14 +277,12 @@ sub list_seedlots {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
+    my $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
-    #$search_criteria{'nd_experiment.type_id'} = $experiment_cvterm_id;
-    #$search_criteria{'nd_experiment_stocks.type_id'} = $experiment_cvterm_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
-    $search_criteria{'stockprops.type_id'} = $current_count_cvterm_id;
     if ($seedlot_name) {
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
@@ -204,28 +292,40 @@ sub list_seedlots {
     if ($location) {
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
-    if ($contents_accession) {
-        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents_accession.'%' };
+    if ($contents_accession && scalar(@$contents_accession)>0) {
         $search_criteria{'subject.type_id'} = $accession_type_id;
+        if ($exact_match_uniquenames){
+            $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
+        } else {
+            foreach (@$contents_accession){
+                push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
+            }
+        }
     }
-    if ($contents_cross) {
-        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents_cross.'%' };
+    if ($contents_cross && scalar(@$contents_cross)>0) {
         $search_criteria{'subject.type_id'} = $cross_type_id;
+        if ($exact_match_uniquenames){
+            $search_criteria{'subject.uniquename'} = { -in => $contents_cross };
+        } else {
+            foreach (@$contents_cross){
+                push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
+            }
+        }
     }
     if ($minimum_count) {
         $search_criteria{'stockprops.value' }  = { '>' => $minimum_count };
     }
-
+    #print STDERR Dumper \%search_criteria;
+    #$schema->storage->debug(1);
     my $rs = $schema->resultset("Stock::Stock")->search(
         \%search_criteria,
         {
             join => [
                 {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }},
-                {'stock_relationship_objects' => 'subject'},
-                'stockprops'
+                {'stock_relationship_objects' => 'subject'}
             ],
-            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
-            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id', 'current_count'],
+            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
+            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id'],
             order_by => {-asc=>'project.name'},
             #distinct => 1
         }
@@ -236,7 +336,9 @@ sub list_seedlots {
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
     }
+    my %seen_seedlot_ids;
     while (my $row = $rs->next()) {
+        $seen_seedlot_ids{$row->stock_id}++;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_id} = $row->stock_id;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_uniquename} = $row->uniquename;
         $unique_seedlots{$row->uniquename}->{seedlot_stock_description} = $row->description;
@@ -244,11 +346,44 @@ sub list_seedlots {
         $unique_seedlots{$row->uniquename}->{breeding_program_id} = $row->get_column('breeding_program_id');
         $unique_seedlots{$row->uniquename}->{location} = $row->get_column('location');
         $unique_seedlots{$row->uniquename}->{location_id} = $row->get_column('location_id');
-        $unique_seedlots{$row->uniquename}->{current_count} = $row->get_column('current_count');
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
     }
+    #print STDERR Dumper \%unique_seedlots;
+
+    my @seen_seedlot_ids = keys %seen_seedlot_ids;
+    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+    my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
+
+    my $stock_search = CXGN::Stock::Search->new({
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        phenome_schema=>$phenome_schema,
+        stock_id_list=>\@seen_seedlot_ids,
+        stock_type_id=>$type_id,
+        stockprop_columns_view=>{'current_count'=>1, 'current_weight_gram'=>1, 'organization'=>1, 'location_code'=>1},
+        minimal_info=>1,  #for only returning stock_id and uniquenames
+        display_pedigree=>0 #to calculate and display pedigree
+    });
+    my ($stocksearch_result, $records_stock_total) = $stock_search->search();
+    #print STDERR Dumper $result;
+    my %stockprop_hash;
+    foreach (@$stocksearch_result){
+        $stockprop_hash{$_->{stock_id}} = $_;
+    }
+
     my @seedlots;
     foreach (sort keys %unique_seedlots){
+        my $owners = $owners_hash->{$unique_seedlots{$_}->{seedlot_stock_id}};
+        my @owners_html;
+        foreach (@$owners){
+            push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';
+        }
+        my $owners_string = join ', ', @owners_html;
+        $unique_seedlots{$_}->{owners_string} = $owners_string;
+        $unique_seedlots{$_}->{organization} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{organization} : 'NA';
+        $unique_seedlots{$_}->{box} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{location_code} : 'NA';
+        $unique_seedlots{$_}->{current_count} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_count} : 'NA';
+        $unique_seedlots{$_}->{current_weight_gram} = $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} ? $stockprop_hash{$unique_seedlots{$_}->{seedlot_stock_id}}->{current_weight_gram} : 'NA';
         push @seedlots, $unique_seedlots{$_};
     }
     #print STDERR Dumper \@seedlots;
@@ -258,7 +393,7 @@ sub list_seedlots {
 # class method
 =head2 Class method: verify_seedlot_stock_lists()
 
- Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, \@stock_names, \@seedlot_names);
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, $people_schema, $phenome_schema, \@stock_names, \@seedlot_names);
  Desc:         Class method that verifies if a given list of seedlots is valid for a given list of accessions
  Ret:          success or error
  Args:         $schema, $stock_names, $seedlot_names
@@ -269,6 +404,8 @@ sub list_seedlots {
 sub verify_seedlot_stock_lists {
     my $class = shift;
     my $schema = shift;
+    my $people_schema = shift;
+    my $phenome_schema = shift;
     my $stock_names = shift;
     my $seedlot_names = shift;
     my $error = '';
@@ -318,7 +455,7 @@ sub verify_seedlot_stock_lists {
     my %selected_accessions = map {$_=>1} @stock_names;
     my %seedlot_hash;
 
-    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema});
+    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema, people_schema=>$people_schema, phenome_schema=>$phenome_schema});
     my $possible_seedlots = $ac->get_possible_seedlots(\@stock_names);
     my %allowed_seedlots;
     while (my($key,$val) = each %$possible_seedlots){
@@ -433,12 +570,38 @@ sub verify_seedlot_accessions {
         return \%return;
     }
 
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my %seen_accession_names;
+    foreach (@pairs){
+        $seen_accession_names{$_->[1]}++;
+    }
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+
+    my @accessions = keys %seen_accession_names;
+    my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+        'me.is_obsolete' => { '!=' => 't' },
+        'stockprops.value' => { -in => \@accessions},
+        'me.type_id' => $accession_cvterm_id,
+        'stockprops.type_id' => $synonym_cvterm_id
+    },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+    my %acc_synonyms_lookup;
+    while (my $r=$acc_synonym_rs->next){
+        $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+    }
+
     foreach (@pairs){
         my $seedlot_name = $_->[0];
         my $accession_name = $_->[1];
+
+        if ($acc_synonyms_lookup{$accession_name}){
+            my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+            if (scalar(@accession_names)>1){
+                print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+            }
+            $accession_name = $accession_names[0];
+        }
 
         my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$accession_name, 'subject.type_id'=>$accession_cvterm_id});
         if (!$seedlot_rs->first){
@@ -604,8 +767,13 @@ sub _update_content_stock_id {
     while (my $r=$acc_rs->next){
         $r->delete();
     }
-    my $error = $self->_store_seedlot_accession();
-    $error = $self->_store_seedlot_cross();
+    my $error;
+    if ($self->accession_stock_id){
+        $error = $self->_store_seedlot_accession();
+    }
+    if ($self->cross_stock_id){
+        $error = $self->_store_seedlot_cross();
+    }
     return $error;
 }
 
@@ -696,11 +864,17 @@ sub current_count {
 
     my $count = 0;
     foreach my $t (@$transactions) {
-        $count += $t->amount() * $t->factor();
+        if ($t->amount() ne 'NA'){
+            $count += $t->amount() * $t->factor();
+        }
+    }
+    if ($count == 0 && scalar(@$transactions)>0){
+        $count = 'NA';
     }
     return $count;
 }
 
+# It is convenient and also much faster to retrieve a single value for the current_count, rather than calculating it from the transactions.
 sub set_current_count_property {
     my $self = shift;
     my $current_count = $self->current_count();
@@ -715,12 +889,64 @@ sub set_current_count_property {
     return $current_count;
 }
 
+# It is convenient and also much faster to retrieve a single value for the current_count, rather than calculating it from the transactions.
 sub get_current_count_property {
     my $self = shift;
     my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_count', 'stock_property');
     my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
-    return $recorded_current_count->value();
+    return $recorded_current_count ? $recorded_current_count->value() : '';
 }
+
+=head2 Method current_weight()
+
+ Usage:        my $current_weight = $sl->current_weight();
+ Desc:         returns the current weight of seeds in the seedlot
+ Ret:          a number
+ Args:         none
+ Side Effects: retrieves transactions from db and calculates weight
+ Example:
+
+=cut
+
+sub current_weight {
+    my $self = shift;
+    my $transactions = $self->transactions();
+
+    my $weight = 0;
+    foreach my $t (@$transactions) {
+        if ($t->weight_gram() ne 'NA'){
+            $weight += $t->weight_gram() * $t->factor();
+        }
+    }
+    if ($weight == 0 && scalar(@$transactions)>0){
+        $weight = 'NA';
+    }
+    return $weight;
+}
+
+# It is convenient and also much faster to retrieve a single value for the current_weight, rather than calculating it from the transactions.
+sub set_current_weight_property {
+    my $self = shift;
+    my $current_weight = $self->current_weight();
+    my $current_weight_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
+    my $stock = $self->stock();
+    my $recorded_current_weight = $stock->find_related('stockprops', {'me.type_id'=>$current_weight_cvterm->cvterm_id});
+    if ($recorded_current_weight){
+        $recorded_current_weight->update({'value'=>$current_weight});
+    } else {
+        $stock->create_stockprops({$current_weight_cvterm->name() => $current_weight});
+    }
+    return $current_weight;
+}
+
+# It is convenient and also much faster to retrieve a single value for the current_weight, rather than calculating it from the transactions.
+sub get_current_weight_property {
+    my $self = shift;
+    my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_weight_gram', 'stock_property');
+    my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
+    return $recorded_current_count ? $recorded_current_count->value() : '';
+}
+
 
 sub _add_transaction {
     my $self = shift;
@@ -860,6 +1086,10 @@ sub delete {
         } else {
             my $nd_experiment = $nd_experiment_rs->first();
             $nd_experiment->delete();
+            my $stock_owner_rs = $self->phenome_schema->resultset("StockOwner")->find({stock_id=>$self->stock_id});
+            if ($stock_owner_rs){
+                $stock_owner_rs->delete();
+            }
             $stock->delete();
         }
     }

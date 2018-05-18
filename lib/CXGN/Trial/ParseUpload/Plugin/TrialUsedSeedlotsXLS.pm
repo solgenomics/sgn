@@ -46,6 +46,7 @@ sub _validate_with_plugin {
     my $seedlot_name_head;
     my $plot_name_head;
     my $amount_head;
+    my $weight_head;
     my $description_head;
 
     if ($worksheet->get_cell(0,0)) {
@@ -58,7 +59,10 @@ sub _validate_with_plugin {
         $amount_head  = $worksheet->get_cell(0,2)->value();
     }
     if ($worksheet->get_cell(0,3)) {
-        $description_head  = $worksheet->get_cell(0,3)->value();
+        $weight_head  = $worksheet->get_cell(0,3)->value();
+    }
+    if ($worksheet->get_cell(0,4)) {
+        $description_head  = $worksheet->get_cell(0,4)->value();
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
@@ -68,10 +72,13 @@ sub _validate_with_plugin {
         push @error_messages, "Cell B1: plot_name is missing from the header";
     }
     if (!$amount_head || $amount_head ne 'num_seed_per_plot') {
-        push @error_messages, "Cell C1: num_seed_per_plot is missing from the header (header must be present even if value is optional)";
+        push @error_messages, "Cell C1: num_seed_per_plot is missing from the header";
+    }
+    if (!$weight_head || $weight_head ne 'weight_gram_seed_per_plot') {
+        push @error_messages, "Cell D1: weight_gram_seed_per_plot is missing from the header";
     }
     if (!$description_head || $description_head ne 'description') {
-        push @error_messages, "Cell D1: description is missing from the header (header must be present even if value is optional)";
+        push @error_messages, "Cell E1: description is missing from the header (header must be present even if value is optional)";
     }
 
     my %seen_seedlot_names;
@@ -81,7 +88,8 @@ sub _validate_with_plugin {
         my $row_name = $row+1;
         my $seedlot_name;
         my $plot_name;
-        my $amount = 0;
+        my $amount = 'NA';
+        my $weight = 'NA';
         my $description;
 
         if ($worksheet->get_cell($row,0)) {
@@ -94,7 +102,10 @@ sub _validate_with_plugin {
             $amount =  $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $description =  $worksheet->get_cell($row,3)->value();
+            $weight =  $worksheet->get_cell($row,3)->value();
+        }
+        if ($worksheet->get_cell($row,4)) {
+            $description =  $worksheet->get_cell($row,4)->value();
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
@@ -117,8 +128,8 @@ sub _validate_with_plugin {
             $seen_plot_names{$plot_name}++;
         }
 
-        if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell C$row_name: num_seed_per_plot missing";
+        if ($amount eq 'NA' && $weight eq 'NA') {
+            push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
         }
 
         push @pairs, [$seedlot_name, $plot_name];
@@ -212,7 +223,8 @@ sub _parse_with_plugin {
     for my $row ( 1 .. $row_max ) {
         my $seedlot_name;
         my $plot_name;
-        my $amount = 0;
+        my $amount = 'NA';
+        my $weight = 'NA';
         my $description;
 
         if ($worksheet->get_cell($row,0)) {
@@ -225,7 +237,10 @@ sub _parse_with_plugin {
             $amount =  $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $description =  $worksheet->get_cell($row,3)->value();
+            $weight =  $worksheet->get_cell($row,3)->value();
+        }
+        if ($worksheet->get_cell($row,4)) {
+            $description =  $worksheet->get_cell($row,4)->value();
         }
 
         #skip blank lines
@@ -240,6 +255,7 @@ sub _parse_with_plugin {
             plot_name => $plot_name,
             plot_stock_id => $plot_lookup{$plot_name},
             amount => $amount,
+            weight_gram => $weight,
             description => $description
         };
     }

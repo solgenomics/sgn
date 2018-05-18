@@ -750,8 +750,132 @@ sub remove_planting_date {
 
 sub get_phenotypes_fully_uploaded {
     my $self = shift;
+    return $self->_get_projectprop('phenotypes_fully_uploaded');
+}
 
-    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotypes_fully_uploaded', 'project_property')->cvterm_id;
+sub set_phenotypes_fully_uploaded {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('phenotypes_fully_uploaded', $value);
+}
+
+
+=head2 accessors get_genotyping_facility(), set_genotyping_facility()
+
+ Usage: For genotyping trials, a genotyping facility can be set as a projectprop value e.g. 'igd'
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_facility {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_facility');
+}
+
+sub set_genotyping_facility {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_facility', $value);
+}
+
+=head2 accessors get_genotyping_facility_submitted(), set_genotyping_facility_submitted()
+
+ Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility and the plate is stored in out system, this stockprop can be set to 'yes'
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_facility_submitted {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_facility_submitted');
+}
+
+sub set_genotyping_facility_submitted {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_facility_submitted', $value);
+}
+
+=head2 accessors get_genotyping_facility_status(), set_genotyping_facility_status()
+
+ Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility, the status of that plate can be set here
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_facility_status {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_facility_status');
+}
+
+sub set_genotyping_facility_status {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_facility_status', $value);
+}
+
+=head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
+
+ Usage: For genotyping trials, this records if it is 96 wells or 384 or other
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_plate_format {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_plate_format');
+}
+
+sub set_genotyping_plate_format {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_plate_format', $value);
+}
+
+=head2 accessors get_genotyping_plate_sample_type(), set_genotyping_plate_sample_type()
+
+ Usage: For genotyping trials, this records sample type of plate e.g. DNA
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_plate_sample_type {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_plate_sample_type');
+}
+
+sub set_genotyping_plate_sample_type {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_plate_sample_type', $value);
+}
+
+
+
+sub _get_projectprop {
+    my $self = shift;
+    my $term = shift;
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $term, 'project_property')->cvterm_id;
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
         project_id => $self->get_trial_id(),
         type_id => $cvterm_id,
@@ -764,12 +888,11 @@ sub get_phenotypes_fully_uploaded {
     }
 }
 
-sub set_phenotypes_fully_uploaded {
+sub _set_projectprop {
     my $self = shift;
+    my $term = shift;
     my $value = shift;
-
-    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotypes_fully_uploaded', 'project_property')->cvterm_id;
-
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $term, 'project_property')->cvterm_id;
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
         project_id => $self->get_trial_id(),
         type_id => $cvterm_id,
@@ -777,7 +900,6 @@ sub set_phenotypes_fully_uploaded {
     $row->value($value);
     $row->update();
 }
-
 
 =head2 function delete_phenotype_data()
 
@@ -2127,6 +2249,43 @@ sub create_tissue_samples {
     return 1;
 }
 
+=head2 function has_col_and_row_numbers()
+
+	Usage:        $trial->has_col_and_row_numbers();
+	Desc:         Some trials require tissue_samples from plants. This function will determine if a trial has row and column numbers for fieldMap spreadsheet download.
+	Ret:          Returns 1 if trial has row and column numbers, 0 if the trial does not.
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub has_col_and_row_numbers {
+	my $self = shift;
+	my $chado_schema = $self->bcs_schema();
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
+    my $design = $layout->get_design();
+    
+    my (@row_numbers, @col_numbers);
+    foreach my $plot (keys %$design) {
+        my $row_number = $design->{$plot}->{row_number};
+        my $col_number = $design->{$plot}->{col_number};
+        if ($row_number){
+            push @row_numbers, $row_number;
+        }
+        if ($col_number){
+            push @col_numbers, $col_number;
+        }
+    }
+    
+    if (scalar(@row_numbers) ne '0' && scalar(@col_numbers) ne '0'){
+		return 1;
+	} else {
+		return 0;
+	}
+
+}
+
 =head2 function has_tissue_sample_entries()
 
 	Usage:        $trial->has_tissue_sample_entries();
@@ -2248,7 +2407,6 @@ sub get_accessions {
 
 	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
@@ -2268,8 +2426,6 @@ sub get_accessions {
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
 
-#Removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
-
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());
 	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
@@ -2277,6 +2433,45 @@ sub get_accessions {
 	}
 
 	return \@accessions;
+}
+
+=head2 get_tissue_sources
+
+    Usage:        my $tissue_sources = $t->get_tissue_sources();
+    Desc:         retrieves the sources for the tisue_samples in a trial. in field_layout trials this can only be plants. In genotyping_layout trials the source of a tissue_sample can be tissue_samples, plants, plots, or accessions
+    Ret:          an arrayref of { uniquename => acc_name, type=>'plant', stock_id => stock_id }
+    Args:         none
+    Side Effects:
+    Example:
+
+=cut
+
+sub get_tissue_sources {
+    my $self = shift;
+    my @tissue_samples;
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type' )->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+    my $q = "SELECT DISTINCT(stock.stock_id), stock.uniquename, cvterm.name
+        FROM stock
+        JOIN cvterm on (stock.type_id = cvterm.cvterm_id)
+        JOIN stock_relationship on (stock.stock_id = stock_relationship.object_id)
+        JOIN stock as tissue_sample on (tissue_sample.stock_id = stock_relationship.subject_id)
+        JOIN nd_experiment_stock on (tissue_sample.stock_id=nd_experiment_stock.stock_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_project using(nd_experiment_id)
+        JOIN project using(project_id)
+        WHERE tissue_sample.type_id = $tissue_sample_cvterm_id
+        AND stock_relationship.type_id = $tissue_sample_of_cvterm_id
+        AND project.project_id = ?
+        GROUP BY (stock.stock_id, cvterm.name)
+        ORDER BY (stock.stock_id);";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    while (my ($stock_id, $uniquename, $type) = $h->fetchrow_array()) {
+        push @tissue_samples, {uniquename=>$uniquename, type=>$type, stock_id=>$stock_id };
+    }
+    return \@tissue_samples;
 }
 
 =head2 get_plants
@@ -2757,7 +2952,7 @@ sub delete_assayed_trait {
 	if (scalar(@$pheno_ids) > 0){
 		$search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
 	}
-	$schema->storage->debug(1);
+	#$schema->storage->debug(1);
 	if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
 		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
 		$search_params,
@@ -2772,7 +2967,7 @@ sub delete_assayed_trait {
 			push @nd_expt_ids, $nd_expt_id;
 			$res->delete;
 		}
-        print STDERR Dumper(\@nd_expt_ids);
+        #print STDERR Dumper(\@nd_expt_ids);
 		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});

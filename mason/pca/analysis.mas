@@ -16,7 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.pca"] &>
 
 <style>

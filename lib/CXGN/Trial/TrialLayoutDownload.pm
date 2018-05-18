@@ -95,7 +95,7 @@ has 'selected_trait_names'=> (
     isa => 'ArrayRef[Str]|Undef',
 );
 
-sub get_layout_output {
+sub get_layout_output { 
     my $self = shift;
     my $trial_id = $self->trial_id();
     my $schema = $self->schema();
@@ -155,13 +155,14 @@ sub get_layout_output {
         return \%errors;
     }
 
-    print STDERR Dumper $design;
+    #print STDERR Dumper $design;
 
     my %selected_cols = %{$self->selected_columns};
+    my @selected_col_keys = keys %selected_cols;
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my @selected_trait_names = $self->selected_trait_names() ? @{$self->selected_trait_names} : ();
     my $summary_values = [];
-    if (scalar(@selected_traits)>0){
+    if (scalar(@selected_traits)>0){ 
         my $summary = CXGN::Phenotypes::Summary->new({
             bcs_schema=>$schema,
             trait_list=>\@selected_traits,
@@ -201,7 +202,7 @@ sub get_layout_output {
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plate') {
-        @possible_cols = ('plot_number','plot_name','accession_name','pedigree','genus','species','trial_name','genotyping_project_name','genotyping_user_id','location_name');
+        @possible_cols = ('trial_name', 'acquisition_date', 'plot_name', 'plot_number', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank');
     }
 
     my @header;
@@ -225,36 +226,51 @@ sub get_layout_output {
     foreach (@selected_trait_names){
         push @header, $_;
     }
-
-    push @output, \@header;
-
-    foreach my $key (sort { $a <=> $b} keys %$design) {
-        my $design_info = $design->{$key};
-        if ($self->data_level eq 'plots') {
-            push @output, _construct_ouput_for_plots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
+    push @output, \@header; 
+    my (@rows, @cols);
+    if ($self->data_level eq 'plot_fieldMap' ) {
+        my %hash;
+        foreach my $key (keys %$design) {
+            my $design_info = $design->{$key};
+            my $row_num = $design_info->{row_number};
+            my $col_num = $design_info->{col_number};
+            my $accession = $design_info->{accession_name};
+            $hash{$row_num}->{$col_num} = $accession; 
+            push @rows, $row_num;
+            push @cols, $col_num;     
         }
-        if ($self->data_level eq 'subplots' && $has_subplots) {
-            push @output, _construct_ouput_for_subplots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-        }
-        if ($self->data_level eq 'plants' && $has_plants) {
-            if ($has_subplots){
-                push @output, _construct_ouput_for_plants_with_subplots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-            } else {
-                push @output, _construct_ouput_for_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
+        print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
+        return {output => \%hash, rows => \@rows, cols => \@cols};
+    }
+    else{
+        foreach my $key (sort { $a <=> $b} keys %$design) {
+            my $design_info = $design->{$key};
+            if ($self->data_level eq 'plots' ) {
+                push @output, _construct_ouput_for_plots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
             }
-        }
-        if ($self->data_level eq 'field_trial_tissue_samples' && $has_tissue_samples) {
-            #Tissue samples require that trial has plants before tissues sample can be created, so this should always be true.
-            if ($has_plants){
+            if ($self->data_level eq 'subplots' && $has_subplots) {
+                push @output, _construct_ouput_for_subplots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
+            }
+            if ($self->data_level eq 'plants' && $has_plants) {
                 if ($has_subplots){
-                    push @output, _construct_ouput_for_tissue_samples_with_subplots_and_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
+                    push @output, _construct_ouput_for_plants_with_subplots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
                 } else {
-                    push @output, _construct_ouput_for_tissue_samples_with_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
+                    push @output, _construct_ouput_for_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
                 }
             }
-        }
-        if ($self->data_level eq 'plate') {
-            push @output, _construct_ouput_for_wells_in_plate($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name);
+            if ($self->data_level eq 'field_trial_tissue_samples' && $has_tissue_samples) {
+                #Tissue samples require that trial has plants before tissues sample can be created, so this should always be true.
+                if ($has_plants){
+                    if ($has_subplots){
+                        push @output, _construct_ouput_for_tissue_samples_with_subplots_and_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
+                    } else {
+                        push @output, _construct_ouput_for_tissue_samples_with_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
+                    }
+                }
+            }
+            if ($self->data_level eq 'plate') {
+                push @output, _construct_ouput_for_wells_in_plate($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name);
+            }
         }
     }
 
@@ -653,26 +669,11 @@ sub _construct_ouput_for_wells_in_plate {
     my $location_name = shift;
     my $trial_name = shift;
 
-    my $acc_pedigree = '';
-    if (exists($selected_cols->{'pedigree'})){
-        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_pedigree = $accession->get_pedigree_string('Parents');
-    }
     my $line;
     foreach (@$possible_cols){
         if ($selected_cols->{$_}){
-            if ($_ eq 'location_name'){
-                push @$line, $location_name;
-            } elsif ($_ eq 'trial_name'){
+            if ($_ eq 'trial_name'){
                 push @$line, $trial_name;
-            } elsif ($_ eq 'pedigree'){
-                push @$line, $acc_pedigree;
-            } elsif ($_ eq 'genus'){
-                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                push @$line, $accession->genus;
-            } elsif ($_ eq 'species'){
-                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                push @$line, $accession->species;
             } else {
                 push @$line, $design_info->{$_};
             }

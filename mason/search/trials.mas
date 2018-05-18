@@ -26,7 +26,7 @@ $nd_geolocation => 'not_provided'
 </table>
 
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 <br><br>
 <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trial names currently showing in the search results table to a new or exisiting list</i>'&>
 <br>

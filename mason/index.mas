@@ -1,6 +1,10 @@
 <%args>
 $schema
 $phenotype_files => undef
+$breeding_programs => undef
+$locations => undef
+$preferred_species => undef
+$editable_stock_props => {}
 </%args>
 
 <& homepage/carousel.mas &>

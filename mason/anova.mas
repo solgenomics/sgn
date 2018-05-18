@@ -19,7 +19,7 @@ $pop_id   => undef,
 
 </%args>
 
-<link rel="stylesheet" href="/static/css/anova.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/anova.css'] &>
 
 <& /util/import_javascript.mas, classes => ["anova"] &>
 

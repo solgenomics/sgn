@@ -100,15 +100,23 @@ $cross_uniquename => ''
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Amount (number of seeds): </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_amount" placeholder="Required">
+                        <input class="form-control" id="seedlot_amount" placeholder="Amount OR Weight(g) Required">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Weight (g): </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_weight" placeholder="Amount OR Weight(g) Required">
+                    </div>
+                </div>
+                <!--
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Population: </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_population_name" placeholder="Optional">
                     </div>
                 </div>
+                -->
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Organization: </label>
                     <div class="col-sm-9" >
@@ -150,7 +158,7 @@ jQuery(document).ready(function(){
        source: '/ajax/stock/cross_autocomplete',
     });
 
-    jQuery('#add_seedlot_button').click( function() {
+    jQuery('[name="add_seedlot_button"]').click( function() {
         jQuery('#add_seedlot_dialog').modal('show');
         get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
     });
@@ -164,13 +172,14 @@ jQuery(document).ready(function(){
         var population_name = jQuery('#seedlot_population_name').val();
         var organization = jQuery('#seedlot_organization').val();
         var amount = jQuery('#seedlot_amount').val();
+        var weight = jQuery('#seedlot_weight').val();
         var timestamp = jQuery('#seedlot_timestamp').val();
         var description = jQuery('#seedlot_description').val();
         var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
 
         if (name == '') { alert("Please provide a name"); return; }
         else if (location == '') { alert("Please provide a location"); return; }
-        else if (amount == '') { alert("Please provide an amount"); return; }
+        else if (amount == '' && weight == '') { alert("Please provide an seed count amount or a weight in grams!"); return; }
         else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
         else if (accession_uniquename == '' && cross_uniquename == '') {
             alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
@@ -191,22 +200,28 @@ jQuery(document).ready(function(){
                     'seedlot_organization': organization,
                     'seedlot_population_name': population_name,
                     'seedlot_amount':amount,
+                    'seedlot_weight':weight,
                     'seedlot_timestamp':timestamp,
                     'seedlot_description':description,
                     'seedlot_breeding_program_id':breeding_program_id
                 },
+                beforeSend: function(response){
+                    jQuery('#working_modal').modal('show');
+                },
                 success: function(response) { 
+                    jQuery('#working_modal').modal('hide');
                     if (response.success == 1) { 
                         alert("The seedlot has been created.");
                         jQuery('#add_seedlot_dialog').modal('hide');
                         //seedlots_table.ajax.reload();
-                        document.location.reload();
+                        //document.location.reload();
                     }
                     if (response.error) {
                         alert(response.error);
                     }
                 },
                 error: function(response){
+                    jQuery('#working_modal').modal('hide');
                     alert('An error occurred creating seed lot');
                 }
             });

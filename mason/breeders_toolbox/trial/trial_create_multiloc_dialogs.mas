@@ -360,7 +360,6 @@ $breeding_programs
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The trial was saved successfully
                     </p>
-                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
                 </div>
             </div>
             <div class="modal-footer">

@@ -5,17 +5,19 @@ use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::List::Validate;
 
 sub _validate_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
-  my @errors;
+  my $cross_properties = $self->get_cross_properties();
+  my @error_messages;
+  my %errors;
   my %supported_cross_types;
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
-  my %seen_cross_names;
 
   #currently supported cross types
   $supported_cross_types{'biparental'} = 1; #both parents required
@@ -29,17 +31,25 @@ sub _validate_with_plugin {
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
   if ( !$excel_obj ) {
-    push @errors,  $parser->error();
-    $self->_set_parse_errors(\@errors);
+    push @error_messages,  $parser->error();
+    $errors{'error_messages'} = \@error_messages;
+    $self->_set_parse_errors(\%errors);
     return;
   }
 
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
+  if (!$worksheet) {
+      push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
+      $errors{'error_messages'} = \@error_messages;
+      $self->_set_parse_errors(\%errors);
+      return;
+  }
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
   if (($col_max - $col_min)  < 3 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
-    push @errors, "Spreadsheet is missing header or required column";
-    $self->_set_parse_errors(\@errors);
+    push @error_messages, "Spreadsheet is missing header or contains no row";
+    $errors{'error_messages'} = \@error_messages;
+    $self->_set_parse_errors(\%errors);
     return;
   }
 
@@ -70,148 +80,173 @@ sub _validate_with_plugin {
     $male_plot_head  = $worksheet->get_cell(0,5)->value();
   }
 
-#  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-#  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
-
-  for my $column ( 6 .. $col_max ) {
-    my $header_string = $worksheet->get_cell(0,$column)->value();
-  }
-#    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
-#    if ($matching_cross_property_row->first) {
-#      my $matching_term = $matching_cross_property_row->first->name;
-#      if (!$matching_term) {
-#        push @errors, "Header property $header_string is not supported\n";
-#      }
-#    }
-#  }
-
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
-    push @errors, "Cell A1: cross_name is missing from the header";
+    push @error_messages, "Cell A1: cross_name is missing from the header";
   }
   if (!$cross_type_head || $cross_type_head ne 'cross_type') {
-    push @errors, "Cell B1: cross_type is missing from the header";
+    push @error_messages, "Cell B1: cross_type is missing from the header";
   }
   if (!$female_parent_head || $female_parent_head ne 'female_parent') {
-    push @errors, "Cell C1: female_parent is missing from the header";
+    push @error_messages, "Cell C1: female_parent is missing from the header";
   }
   if (!$male_parent_head || $male_parent_head ne 'male_parent') {
-    push @errors, "Cell D1: male_parent is missing from the header";
+    push @error_messages, "Cell D1: male_parent is missing from the header";
   }
 
-  for my $row ( 1 .. $row_max ) {
-    my $row_name = $row+1;
-    my $cross_name;
-    my $cross_type;
-    my $female_parent;
-    my $male_parent;
-    my $female_plot_name;
-    my $male_plot_name;
-    my $cross_stock;
-
-    if ($worksheet->get_cell($row,0)) {
-      $cross_name = $worksheet->get_cell($row,0)->value();
-    }
-    if ($worksheet->get_cell($row,1)) {
-      $cross_type = $worksheet->get_cell($row,1)->value();
-    }
-    if ($worksheet->get_cell($row,2)) {
-      $female_parent =  $worksheet->get_cell($row,2)->value();
-    }
-    #skip blank lines or lines with no name, type and parent
-    if (!$cross_name && !$cross_type && !$female_parent) {
-      next;
-    }
-    if ($worksheet->get_cell($row,3)) {
-      $male_parent =  $worksheet->get_cell($row,3)->value();
-    }
-    if ($worksheet->get_cell($row,4)) {
-      $female_plot_name =  $worksheet->get_cell($row,4)->value();
-    }
-    if ($worksheet->get_cell($row,5)) {
-      $male_plot_name =  $worksheet->get_cell($row,5)->value();
+    my %valid_properties;
+    my @properties = @{$cross_properties};
+    foreach my $property(@properties){
+        $valid_properties{$property} = 1;
     }
 
     for my $column ( 6 .. $col_max ) {
-      if ($worksheet->get_cell($row,$column)) {
-        my $info_value = $worksheet->get_cell($row,$column)->value();
-        my $info_type = $worksheet->get_cell(0,$column)->value();
-        if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
-          push @errors, "Cell $info_type:$row_name: is not a positive integer: $info_value";
-        }
-        elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
-          push @errors, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
-        }
-      }
-    }
+        my $header_string = $worksheet->get_cell(0,$column)->value();
 
-    #cross name must not be blank
-    if (!$cross_name || $cross_name eq '') {
-      push @errors, "Cell A$row_name: cross name missing";
-    } else {
-
-    #cross must not already exist in the database
-      if ($self->_get_cross($cross_name)) {
-	push @errors, "Cell A$row_name: cross name already exists: $cross_name";
-      }
-      if ($seen_cross_names{$cross_name}) {
-	push @errors, "Cell A$row_name: duplicate cross name at cell A".$seen_cross_names{$cross_name}.": $cross_name";
-      }
-      $seen_cross_names{$cross_name}=$row_name;
-    }
-
-    #cross type must not be blank
-    if (!$cross_type || $cross_type eq '') {
-      push @errors, "Cell B$row_name: cross type missing";
-    } else {
-      #cross type must be supported
-      if (!$supported_cross_types{$cross_type}){
-	push @errors, "Cell B$row_name: cross type not supported: $cross_type";
-      }
-    }
-
-    #female parent must not be blank
-    if (!$female_parent || $female_parent eq '') {
-        push @errors, "Cell C$row_name: female parent missing";
-    } else {
-      #female parent must exist in the database
-    if (!$self->_get_accession($female_parent)) {
-	      push @errors, "Cell C$row_name: female parent does not exist: $female_parent";
+        if (!$valid_properties{$header_string}){
+            push @error_messages, "Invalid info type: $header_string";
         }
     }
 
-    #male parent must not be blank if type is biparental or bulk
-    if (!$male_parent || $male_parent eq '') {
-        if ($cross_type eq ( 'biparental' || 'bulk' )) {
-	          push @errors, "Cell D$row_name: male parent required for biparental and bulk crosses";
+    my %seen_cross_names;
+    my %seen_accession_names;
+    my %seen_plot_names;
+
+    for my $row ( 1 .. $row_max ) {
+        my $row_name = $row+1;
+        my $cross_name;
+        my $cross_type;
+        my $female_parent;
+        my $male_parent;
+        my $female_plot_name;
+        my $male_plot_name;
+
+        if ($worksheet->get_cell($row,0)) {
+            $cross_name = $worksheet->get_cell($row,0)->value();
         }
-    } else {
-      #male parent must exist in the database
-    if (!$self->_get_accession($male_parent)) {
-	          push @errors, "Cell D$row_name: male parent does not exist: $male_parent";
-      }
+        if ($worksheet->get_cell($row,1)) {
+            $cross_type = $worksheet->get_cell($row,1)->value();
+        }
+        if ($worksheet->get_cell($row,2)) {
+            $female_parent =  $worksheet->get_cell($row,2)->value();
+        }
+        #skip blank lines or lines with no name, type and parent
+        if (!$cross_name && !$cross_type && !$female_parent) {
+            next;
+        }
+        if ($worksheet->get_cell($row,3)) {
+            $male_parent =  $worksheet->get_cell($row,3)->value();
+        }
+        if ($worksheet->get_cell($row,4)) {
+            $female_plot_name =  $worksheet->get_cell($row,4)->value();
+        }
+        if ($worksheet->get_cell($row,5)) {
+            $male_plot_name =  $worksheet->get_cell($row,5)->value();
+        }
+
+        for my $column ( 6 .. $col_max ) {
+            if ($worksheet->get_cell($row,$column)) {
+                my $info_value = $worksheet->get_cell($row,$column)->value();
+                my $info_type = $worksheet->get_cell(0,$column)->value();
+                if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
+                    push @error_messages, "Cell $info_type:$row_name: is not a positive integer: $info_value";
+                }
+                elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
+                    push @error_messages, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
+                }
+            }
+        }
+
+        #cross name must not be blank
+        if (!$cross_name || $cross_name eq '') {
+            push @error_messages, "Cell A$row_name: cross name missing";
+        } elsif ($cross_name =~ /\s/ || $cross_name =~ /\// || $cross_name =~ /\\/ ) {
+            push @error_messages, "Cell A$row_name: cross_name must not contain spaces or slashes.";
+        } elsif ($seen_cross_names{$cross_name}) {
+            push @error_messages, "Cell A$row_name: duplicate cross name: $cross_name";
+        } 
+
+        #cross type must not be blank
+        if (!$cross_type || $cross_type eq '') {
+            push @error_messages, "Cell B$row_name: cross type missing";
+        } else {
+        #cross type must be supported
+            if (!$supported_cross_types{$cross_type}){
+                push @error_messages, "Cell B$row_name: cross type not supported: $cross_type";
+            }
+        }
+
+        #female parent must not be blank
+        if (!$female_parent || $female_parent eq '') {
+            push @error_messages, "Cell C$row_name: female parent missing";
+        }
+
+        #male parent must not be blank if type is biparental or bulk
+        if (!$male_parent || $male_parent eq '') {
+            if ($cross_type eq ( 'biparental' || 'bulk' )) {
+                push @error_messages, "Cell D$row_name: male parent required for biparental and bulk crosses";
+            }
+        }
+
+        if ($cross_name){
+            $seen_cross_names{$cross_name}++;
+        }
+
+        if ($female_parent){
+            $seen_accession_names{$female_parent}++;
+        }
+
+        if ($male_parent){
+            $seen_accession_names{$male_parent}++;
+        }
+
+        if ($female_plot_name){
+            $seen_plot_names{$female_plot_name}++;
+        }
+
+        if ($male_plot_name){
+            $seen_plot_names{$male_plot_name}++;
+        }
+
     }
 
-      #female plot must exist in the database
-    if ($female_plot_name){
-        if (!$self->_get_plot($female_plot_name)){
-            push @errors, "Cell E$row_name: female plot does not exist: $female_plot_name";
-        }
+    my @accessions = keys %seen_accession_names;
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+
+    my $population_validator = CXGN::List::Validate->new();
+    my @parents_missing = @{$population_validator->validate($schema,'populations',\@accessions_missing)->{'missing'}};
+
+    if (scalar(@parents_missing) > 0) {
+        push @error_messages, "The following accessions or populations are not in the database as uniquenames or synonyms: ".join(',',@parents_missing);
+        $errors{'missing_accessions'} = \@parents_missing;
     }
 
-      #female plot must exist in the database
-    if ($male_plot_name){
-        if (!$self->_get_plot($male_plot_name)){
-            push @errors, "Cell F$row_name: male plot does not exist: $male_plot_name";
-        }
-    }
-}
-  #store any errors found in the parsed file to parse_errors accessor
-  if (scalar(@errors) >= 1) {
-    $self->_set_parse_errors(\@errors);
-    return;
-  }
+    my @plots = keys %seen_plot_names;
+    my $plot_validator = CXGN::List::Validate->new();
+    my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
-  return 1; #returns true if validation is passed
+    if (scalar(@plots_missing) > 0) {
+        push @error_messages, "The following plots are not in the database as uniquenames or synonyms: ".join(',',@plots_missing);
+        $errors{'missing_plots'} = \@plots_missing;
+    }
+
+    my @crosses = keys %seen_cross_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@crosses }
+    });
+    while (my $r=$rs->next){
+        push @error_messages, "Cross name already exists in database: ".$r->uniquename;
+    }
+
+    #store any errors found in the parsed file to parse_errors accessor
+    if (scalar(@error_messages) >= 1) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
+    }
+
+    return 1; #returns true if validation is passed
 
 }
 
@@ -236,16 +271,12 @@ sub _parse_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
-#  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
-#  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
-
   for my $column ( 6 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
-#    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
-#    if ($matching_cross_property_row->first) {
+
       $properties_columns{$column} = $header_string;
       $additional_properties{$header_string} = ();
-#    }
+
   }
 
   for my $row ( 1 .. $row_max ) {

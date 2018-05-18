@@ -4,23 +4,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
-  <link rel="stylesheet" href="/css/new_sgn.css" type="text/css" />
   <link rel="search" type="application/opensearchdescription+xml" title="SGN Sol Search" href="/documents/sgn_sol_search.xml" />
-  <link rel="stylesheet" href="/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css" type="text/css" />
+  <& /util/import_css.mas, paths => [
+    '/css/new_sgn.css',
+    '/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css',
+    '/css/jstree/themes/default/style.min.css',
+    '/css/fullcalendar.min.css',
+    '/documents/inc/datatables/jquery.dataTables.css',
+    '/css/bootstrap.min.css',
+    '/css/bootstrap-toggle/bootstrap-toggle.min.css',
+    '/css/ladda-themeless.min.css',
+    '/css/daterangepicker.css',
+    '/css/buttons/buttons.bootstrap.min.css',
+    '/css/bootstrap3-xl-class.css',
+    '/css/bootstrap-select.min.css'
+  ] &>
+  
   <!-- <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" /> -->
-  <link rel="stylesheet" href="/css/jstree/themes/default/style.min.css">
-  <link rel="stylesheet" href="/css/fullcalendar.min.css" />
-  <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
-  <link rel="stylesheet" href="/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/css/bootstrap-toggle/bootstrap-toggle.min.css">
-  <link rel="stylesheet" href="/css/ladda-themeless.min.css">
-  <link rel="stylesheet" type="text/css" href="/css/daterangepicker.css">
   <!-- <link rel="stylesheet" type="text/css" href="/css/dataTables.bootstrap.min.css"> -->
-  <link rel="stylesheet" type="text/css" href="/css/buttons/buttons.bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="/css/bootstrap3-xl-class.css">
-  <link rel="stylesheet" type="text/css" href="/css/bootstrap-select.min.css">
-
-  <% $c->assets->export() %>
 
 <script language="javascript" type="text/javascript"> 
    JSAN = {};

@@ -116,7 +116,7 @@ sub save_crossingtrial {
     $crossing_trial->set_project_type($project_type_cvterm_id);
     $crossing_trial->set_year($self->get_year());
     $crossing_trial->set_breeding_program($self->get_breeding_program_id);
-    return {success=>1};
+    return {success=>1, trial_id=>$crossing_trial->get_trial_id};
 }
 
 

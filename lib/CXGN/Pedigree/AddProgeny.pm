@@ -64,102 +64,84 @@ sub add_progeny {
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
 
-  #add all progeny in a single transaction
-  my $coderef = sub {
+    #add all progeny in a single transaction
+    my $coderef = sub {
 
-    my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
+        my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
 
-    my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship');
+        my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship');
 
-    my $member_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'member_of', 'stock_relationship');
+        my $member_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'member_of', 'stock_relationship');
 
-    my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+        my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 
-    my $cross_name_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
+        my $cross_name_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
 
-    #Get stock of type cross matching cross name
-    $cross_stock = $self->_get_cross($self->get_cross_name());
-    if (!$cross_stock) {
-      print STDERR "Cross could not be found\n";
-      return;
-    }
+       #Get stock of type cross matching cross name
+        $cross_stock = $self->_get_cross($self->get_cross_name());
+        if (!$cross_stock) {
+            print STDERR "Cross could not be found\n";
+            return;
+        }
 
     #Get organism id from cross
-    $organism_id = $cross_stock->organism_id();
+        $organism_id = $cross_stock->organism_id();
 
-    #get experiment
-    #my $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
-    #  ->find({
-	  #    'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
-	  #   },
-	  #   {
-	  #    join => 'nd_experiment_stocks',
-	  #   });
-    #if (!$experiment) {
-    #  print STDERR "\n\n\nCross experiment could not be found\n";
-    #  return;
-    #}
+        $female_parent = $chado_schema->resultset("Stock::StockRelationship")
+            ->find ({
+                object_id => $cross_stock->stock_id(),
+                type_id => $female_parent_cvterm->cvterm_id(),
+            });
 
-    #$female_parent = $chado_schema->resultset("Stock::Stock")
-    #  ->find({
-	  #    'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
-	  #    'nd_experiment_stocks.type_id'  =>  $female_parent_cvterm->cvterm_id(),
-	  #   },
-	  #   {
-	  #    join => 'nd_experiment_stocks',
-	  #   });
-
-    #$male_parent = $chado_schema->resultset("Stock::Stock")
-    #  ->find({
-	  #    'nd_experiment_stocks.nd_experiment_id' => $experiment->nd_experiment_id(),
-	  #    'nd_experiment_stocks.type_id'  =>  $male_parent_cvterm->cvterm_id(),
-	  #   },
-	  #   {
-	  #    join => 'nd_experiment_stocks',
-	  #   });
-
-    foreach my $progeny_name (@progeny_names) {
-
-      #create progeny
-      my $accession_stock = $chado_schema->resultset("Stock::Stock")
-	->create({
-		  organism_id => $organism_id,
-		  name       => $progeny_name,
-		  uniquename => $progeny_name,
-		  type_id     => $accession_cvterm->cvterm_id,
-		 } );
-
-      #add stock_id of cross to an array so that the owner can be associated in the phenome schema after the transaction on the chado schema completes
-      push (@added_stock_ids,  $accession_stock->stock_id());
+        $male_parent = $chado_schema->resultset("Stock::StockRelationship")
+            ->find ({
+                object_id => $cross_stock->stock_id(),
+                type_id => $male_parent_cvterm->cvterm_id(),
+            });
 
 
-      #create relationship to cross population
-      $accession_stock
-	->find_or_create_related('stock_relationship_objects', {
 
-								type_id => $member_cvterm->cvterm_id(),
-								object_id => $cross_stock->stock_id(),
-								subject_id => $accession_stock->stock_id(),
-							       } );
-      #create relationship to female parent
-      if ($female_parent) {
-	$accession_stock
-	  ->find_or_create_related('stock_relationship_objects', {
-								  type_id => $female_parent_cvterm->cvterm_id(),
-								  object_id => $accession_stock->stock_id(),
-								  subject_id => $female_parent->stock_id(),
-								 });
-      }
+        foreach my $progeny_name (@progeny_names) {
 
-      #create relationship to male parent
-      if ($male_parent) {
-       	$accession_stock
-       	  ->find_or_create_related('stock_relationship_objects', {
-       								  type_id => $male_parent_cvterm->cvterm_id(),
-       								  object_id => $accession_stock->stock_id(),
-       								  subject_id => $male_parent->stock_id(),
-       								 });
-      }
+        #create progeny
+        my $accession_stock = $chado_schema->resultset("Stock::Stock")
+            ->create({
+                organism_id => $organism_id,
+                name       => $progeny_name,
+                uniquename => $progeny_name,
+                type_id    => $accession_cvterm->cvterm_id,
+            });
+
+        #add stock_id of cross to an array so that the owner can be associated in the phenome schema after the transaction on the chado schema completes
+        push (@added_stock_ids,  $accession_stock->stock_id());
+
+
+        #create relationship to cross population
+        $accession_stock
+            ->find_or_create_related('stock_relationship_objects', {
+                type_id => $member_cvterm->cvterm_id(),
+                object_id => $cross_stock->stock_id(),
+                subject_id => $accession_stock->stock_id(),
+            });
+        #create relationship to female parent
+        if ($female_parent) {
+            $accession_stock
+                ->find_or_create_related('stock_relationship_objects', {
+                type_id => $female_parent_cvterm->cvterm_id(),
+                object_id => $accession_stock->stock_id(),
+                subject_id => $female_parent->subject_id(),
+						    });
+        }
+
+        #create relationship to male parent
+        if ($male_parent) {
+       	    $accession_stock
+       	        ->find_or_create_related('stock_relationship_objects', {
+                    type_id => $male_parent_cvterm->cvterm_id(),
+                    object_id => $accession_stock->stock_id(),
+                    subject_id => $male_parent->subject_id(),
+                });
+        }
 
     }
 

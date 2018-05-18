@@ -40,7 +40,6 @@ use Catalyst qw/
      Static::Simple
      SmartURI
      Authentication
-     Assets
      +SGN::Authentication::Store
      Authorization::Roles
      +SGN::Role::Site::Config

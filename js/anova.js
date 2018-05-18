@@ -148,38 +148,52 @@ function runAnovaAnalysis(traits) {
 		data: {'trial_id': trialId, 'traits': [anovaTraits]},
 		url: '/anova/analysis/',      
 		success: function(response) {
-		    
-		    if (response) {		
+		   
+		    if(response.Error) {
+			jQuery("#anova_message").empty();
+			showMessage(response.Error);
+			jQuery("#run_anova").show();
+		    } else {
+		    	
 			var anovaTable = response.anova_html_table;			
-		   	
+		   
 			jQuery("#anova_table").append('<div style="margin-top: 20px">' + anovaTable + '</div>').show();
 		
 			var anovaFile = response.anova_table_file;
 			var modelFile = response.anova_model_file;
 			var meansFile = response.adj_means_file;
+			var diagnosticsFile = response.anova_diagnostics_file;
 
 			var fileNameAnova = anovaFile.split('/').pop();
 			var fileNameModel = modelFile.split('/').pop();
 			var fileNameMeans = meansFile.split('/').pop();
-		
+			var fileNameDiagnostics = diagnosticsFile.split('/').pop()
 			
 			anovaFile = "<a href=\"" + anovaFile +  "\" download=" + fileNameAnova + ">[Anova table]</a>";
 			modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">[Model Summary]</a>";
 			meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">[Adjusted Means]</a>";
+			
+			diagnosticsFile = "<a href=\"" + diagnosticsFile
+			    +  "\" download=" + fileNameDiagnostics + ">[Model Diagnostics]</a>";
 		
 			jQuery("#anova_table")
-			    .append('<br /> <strong>Download:</strong> ' + anovaFile + ' | ' + modelFile + ' | ' + meansFile)
+			    .append('<br /> <strong>Download:</strong> '
+				    + anovaFile + ' | '
+				    + modelFile + ' | '
+				    + meansFile + ' | '
+				    + diagnosticsFile)
 			    .show();
 			
 			jQuery("#anova_message").empty();
 			
 			jQuery("#run_anova").show();
-		    } else {
-			showMessage("There is no anova output for this dataset."); 		
-			jQuery("#run_anova").show();
 		    }
-
+		    //} else {
+		//	showMessage("There is no anova output for this dataset."); 		
+		    jQuery("#run_anova").show();
+		 //   }
 		    clearTraitSelection();
+		    
 		},
 		error: function(response) {                          
 		    showMessage("Error occured running the anova analysis.");	    	

@@ -118,9 +118,15 @@ sub get_synonym_hash_lookup {
 
 sub get_owner_hash_lookup {
     my $self = shift;
+    my $stock_ids;
+    my $where_clause = '';
     print STDERR "StockOwner Start:".localtime."\n";
+    if ($stock_ids){
+        my $stock_id_sql = join ',', @$stock_ids;
+        $where_clause = "WHERE stock_id IN ($stock_id_sql)";
+    }
     my $schema = $self->get_schema();
-    my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) ORDER BY sp_person_id;";
+    my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) $where_clause ORDER BY sp_person_id;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;
@@ -181,7 +187,7 @@ sub _get_stock_resultset_exact {
   my $stock_name = $self->get_stock_name();
   my $stock_rs = $schema->resultset("Stock::Stock")
     ->search({ 'me.is_obsolete' => { '!=' => 't' },
-	      'lower(uniquename)' => lc($stock_name),
+	      'uniquename' => $stock_name,
 	     },
 	     {
 	      join => { 'stockprops' => 'type'} ,

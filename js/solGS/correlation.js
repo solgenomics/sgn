@@ -156,7 +156,7 @@ function formatGenCorInputData (popId, type, indexFile) {
         url: '/correlation/genetic/data/',
         success: function(response) {
            
-            if(response.status == 'success') {
+            if (response.status == 'success') {
                 gebvsFile = response.gebvs_file;
                    
                 var divPlace;
@@ -171,7 +171,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'gebvs_file': gebvsFile,
                     'div_place' : divPlace,
                 };
-              
+          
                 runGenCorrelationAnalysis(args);
 
             } else {
@@ -259,6 +259,11 @@ function runPhenoCorrelationAnalysis () {
 		                    + popId + "\">Download correlation coefficients</a>";
 
 		jQuery("#correlation_canvas").append("<br />[ " + corrDownload + " ]").show();
+	
+		if(document.URL.match('/breeders/trial/')) {
+		    displayTraitAcronyms(response.acronyms);
+		}
+		
                 jQuery("#correlation_message").empty();
 		jQuery("#run_pheno_correlation").hide();
             } else {
@@ -541,3 +546,40 @@ function plotCorrelation (data, divPlace) {
 }
 
 
+
+function createAcronymsTable (tableId) {
+    
+    var table = '<table id="' + tableId + '" class="table" style="width:100%;text-align:left">';
+    table    += '<thead><tr>';
+    table    += '<th>Acronyms</th><th>Trait</th>'; 
+    table    += '</tr></thead>';
+    table    += '</table>';
+
+    return table;
+
+}
+
+
+function displayTraitAcronyms (acronyms) {
+  
+    if (acronyms) {
+	var tableId = 'traits_acronyms';	
+	var table = createAcronymsTable(tableId);
+
+	jQuery('#correlation_canvas').append(table); 
+	   
+	jQuery('#' + tableId).dataTable({
+		    'searching'    : true,
+		    'ordering'     : true,
+		    'processing'   : true,
+		    'lengthChange' : false,
+                    "bInfo"        : false,
+                    "paging"       : false,
+                    'oLanguage'    : {
+		                     "sSearch": "Filter traits: "
+		                    },
+		    'data'         : acronyms,
+	    });
+    }
+   
+}
