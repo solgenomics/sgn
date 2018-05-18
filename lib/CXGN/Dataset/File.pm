@@ -25,7 +25,7 @@ override('retrieve_genotypes',
 	     }
 	     $genotype_string .= "\n";
 	     foreach my $element (@$genotypes) {
-		 my $genotype_id = $element->{genotypeUniquename};
+		 my $genotype_id = $element->{germplasmDbId};
 		 my $genotype_data_string = "";		 
 		 foreach my $key (sort keys $element->{genotype_hash}) {
 		     my $value = $element->{genotype_hash}->{$key};
