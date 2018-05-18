@@ -7,6 +7,7 @@
 
 options(echo = FALSE)
 
+library(methods)
 library(rrBLUP)
 library(plyr)
 library(stringr)
@@ -18,6 +19,7 @@ library(genoDataFilter)
 library(phenoAnalysis)
 library(caret)
 library(dplyr)
+
 
 allArgs <- commandArgs()
 

@@ -12,6 +12,7 @@ options(echo = FALSE)
 #library(dplyr)
 library(data.table)
 library(phenoAnalysis)
+library(methods)
 
 
 allArgs     <- commandArgs()
@@ -28,22 +29,17 @@ message('pheno file: ', phenoDataFile)
 traitsFile <- grep("traits", inputFiles, value = TRUE)
 message('traits file: ', traitsFile)
 
-#phenoDataFile <- '/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/cache/phenotype_data_139.txt';
-#phenoDataFile <- '/mnt/hgfs/cxgn/phenotype_data_RCBD_1596.txt';
-#phenoDataFile <- '/mnt/hgfs/cxgn/1-block_rcbd.txt'
 
 phenoData <- fread(phenoDataFile,
-                     na.strings=c("NA", "-", " ", ".", ".."))
+                   na.strings=c("NA", "-", " ", ".", ".."))
 
 phenoData <- data.frame(phenoData)
 
 traits  <- scan(traitsFile,
                 what = "character")
-print(traits)
 
 traits  <- strsplit(traits, "\t")
 
-#traits <- 'dry.yield.CO_334.0000014'
 
 #needs more work for multi traits anova
 for (trait in traits) {
@@ -83,10 +79,9 @@ for (trait in traits) {
     errorFile  <- grep("anova_error",
                        outputFiles,
                        value = TRUE)
-
- 
-    anovaOut <- runAnova(phenoData, trait)
     
+    anovaOut <- runAnova(phenoData, trait)
+  
     if (class(anovaOut)[1] == 'merModLmerTest') {
     
         png(diagnosticsFile, 960, 480)

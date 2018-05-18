@@ -173,7 +173,7 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     my $output_details = $c->stash->{bg_job_output_details};
       
     $c->stash->{r_temp_file} = 'analysis-status';
-    $c->controller('solGS::solGS')->create_cluster_acccesible_tmp_files($c);
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
    
@@ -194,47 +194,28 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
-      my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
+	my $cmd = 'mx-run solGS::AnalysisReport '
+	    . '--output_details_file ' . $output_details_file;
 
-      my $async =  CXGN::Tools::Run->run_async($cmd,
-					       {
-						   working_dir      => $c->stash->{solgs_tempfiles_dir},
-						   temp_base        => $c->stash->{solgs_tempfiles_dir},
-						   max_cluster_jobs => 1_000_000_000,
-						   out_file         => $out_temp_file,
-						   err_file         => $err_temp_file,
-					       }
-	  );
+	my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $tmp_dir, $out_temp_file, $err_temp_file);
 
-	# try 
-	# { 
-	#     my $job = CXGN::Tools::Run->run_cluster_perl({           
-	# 	method        => ["solGS::AnalysisReport" => "check_analysis_status"],
-	# 	args          => [$output_details],
-	# 	load_packages => ['solGS::AnalysisReport'],
-	# 	run_opts      => {
-	# 	    out_file    => $out_temp_file,
-	# 	    err_file    => $err_temp_file,
-	# 	    working_dir => $temp_dir,
-	# 	    max_cluster_jobs => 1_000_000_000,
-	# 	},
-	#     });
+	eval 
+	{
+	    my $job = CXGN::Tools::Run->new($config);
+	    $job->do_not_cleanup(1);	 
+	    $job->is_async(1);
+	    $job->run_async($cmd);
+	   
+	};
+
+	if ($@) {
+	    print STDERR "An error occurred! $@\n";
+	    $c->stash->{status} = $@;
+	}
 	
-	# }
-	# catch 
-	# {
-	#     $status = $_;
-	#     $status =~ s/\n at .+//s;           
-	# };
     }
-
-
-    #if (!$status) 
-    #{ 
-    my $status = $c->stash->{status}; 
-    #}
-   
-    my $ret->{result} = $status;	
+ 
+    my $ret->{result} = $c->stash->{status}; 	
 
     $ret = to_json($ret);
        
@@ -690,10 +671,10 @@ sub run_analysis {
 	{
 	    my $pop_id = $c->stash->{model_id};
 
-	    if ($pop_id =~ /uploaded/) 
+	    if ($pop_id =~ /uploaded/)		
 	    {
 		$c->controller('solGS::List')->plots_list_phenotype_file($c);
-		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
+		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);		
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	    }
 	    else
