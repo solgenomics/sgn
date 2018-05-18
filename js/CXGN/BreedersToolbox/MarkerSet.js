@@ -17,4 +17,34 @@ jQuery(document).ready(function (){
         alert("Added new marker set");
         return list_id
     });
+
+    $("#add_marker").click(function(){
+        var markerSetName = $('#selected_marker_set').val();
+        if (!markerSetName) {
+            alert("Marker set name is required");
+            return;
+        }
+
+        var markerName = $('#marker_name').val();
+        if (!markerName) {
+            alert("Marker name is required");
+            return;
+        }
+
+        var dosage = $('#allele_dosage').val();
+        if (!dosage) {
+            alert("Allele dosage is required");
+            return;
+        }
+
+        var markerDosage = {};
+        markerDosage[markerName] = dosage;
+
+        var markerDosageString = JSON.stringify(markerDosage);
+
+        var markerAdded = lo.addToList(markerSetName, markerDosageString);
+        alert("Added"+markerDosageString);
+        return markerSetName;
+
+    });
 });
