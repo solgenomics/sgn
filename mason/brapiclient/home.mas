@@ -39,7 +39,7 @@
         <option value="https://yambase.org">yambase.org</option>
         <option value="https://fernbase.org">fernbase.org</option>
         <option value="https://solgenomics.net">solgenomics.net</option>
-	<option value="https://www.crop-diversity.org/mgis/">crop-diversity.org</option>
+	<option value="https://www.crop-diversity.org/mgis">crop-diversity.org</option>
     </select>
 
 </div>
