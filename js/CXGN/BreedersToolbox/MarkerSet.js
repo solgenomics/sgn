@@ -27,6 +27,12 @@ jQuery(document).ready(function (){
             return;
         }
 
+        var protocol = $('#selected_protocol').val();
+        if (!protocol) {
+            alert("Genotyping protocol is required");
+            return;
+        }
+
         var markerName = $('#marker_name').val();
         if (!markerName) {
             alert("Marker name is required");
@@ -40,7 +46,8 @@ jQuery(document).ready(function (){
         }
 
         var markerDosage = {};
-        markerDosage[markerName] = dosage;
+        markerDosage[protocol] = {};
+        markerDosage[protocol][markerName] = dosage;
 
         var markerDosageString = JSON.stringify(markerDosage);
 
