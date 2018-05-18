@@ -3,6 +3,8 @@ jQuery(document).ready(function (){
 
     var lo = new CXGN.List();
 
+    get_select_box('genotyping_protocol','selected_protocol');
+
     $('#selected_marker_set').html(lo.listSelect('selected_marker_set', ['markers']));
 
     $("#save_marker_set").click(function(){
