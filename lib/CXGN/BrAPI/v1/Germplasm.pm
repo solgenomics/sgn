@@ -222,8 +222,8 @@ sub germplasm_pedigree {
 		%result = (
 			germplasmDbId=>$stock_id,
 			pedigree=>$pedigree_string,
-			parent1Id=>$parents->{'mother_id'},
-			parent2Id=>$parents->{'father_id'}
+			parent1DbId=>$parents->{'mother_id'},
+			parent2DbId=>$parents->{'father_id'}
 		);
 	}
 

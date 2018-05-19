@@ -33,7 +33,7 @@ sub calls {
 	my @available = (
 		['token', ['json'], ['POST','DELETE'] ],
 		['calls', ['json'], ['GET'] ],
-		['observationLevels', ['json'], ['GET'] ],
+		['observationlevels', ['json'], ['GET'] ],
 		['germplasm-search', ['json'], ['GET','POST'] ],
 		['germplasm/id', ['json'], ['GET'] ],
 		['germplasm/id/pedigree', ['json'], ['GET'] ],
@@ -55,7 +55,7 @@ sub calls {
 		['studies-search', ['json'], ['GET','POST'] ],
 		['studies/id', ['json'], ['GET'] ],
 		['studies/id/germplasm', ['json'], ['GET'] ],
-		['studies/id/observationVariables', ['json'], ['GET'] ],
+		['studies/id/observationvariables', ['json'], ['GET'] ],
 		['studies/id/observationunits', ['json'], ['GET'] ],
 		['studies/id/table', ['json','csv','xls','tsv'], ['GET'] ],
 		['studies/id/layout', ['json'], ['GET'] ],

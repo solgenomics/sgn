@@ -319,7 +319,7 @@ sub crops_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) : ActionClass('REST') { }
+sub observation_levels : Chained('brapi') PathPart('observationlevels') Args(0) : ActionClass('REST') { }
 
 sub observation_levels_GET {
 	my $self = shift;
@@ -1495,7 +1495,7 @@ sub studies_info_GET {
 }
 
 
-sub studies_observation_variables : Chained('studies_single') PathPart('observationVariables') Args(0) : ActionClass('REST') { }
+sub studies_observation_variables : Chained('studies_single') PathPart('observationvariables') Args(0) : ActionClass('REST') { }
 
 sub studies_observation_variables_POST {
 	my $self = shift;
@@ -1553,7 +1553,7 @@ sub studies_layout_GET {
 }
 
 
-=head2 brapi/v1/studies/<studyDbId>/observationUnits?observationVariableDbId=2
+=head2 brapi/v1/studies/<studyDbId>/observationunits?observationVariableDbId=2
 
  Usage: To retrieve phenotypic values on a the plot level for an entire trial
  Desc:
@@ -1796,8 +1796,7 @@ sub studies_observations_granular_GET {
                  "data": [
                          {
                              "instanceNumber" : 1,
-                             "observationVariableId": "CO_321:0000045",
-                             //"observationVariableDbId": 35,
+                             "observationVariableDbId": 35,
                              "season": "2005",
                              "observationValue" : "red",
                              "observationTimeStamp": null,
@@ -1807,8 +1806,7 @@ sub studies_observations_granular_GET {
                          },
                          {
                              "instanceNumber" : 1,
-                             "observationVariableId": "http://www.cropontology.org/rdf/CO_321:0000025",
-                             //"observationVariableDbId": 35,
+                             "observationVariableDbId": 35,
                              "season": null,
                              "observationValue" :  32,
                              "observationTimeStamp": "2006-07-03::10:00",
