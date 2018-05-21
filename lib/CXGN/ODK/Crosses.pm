@@ -437,8 +437,6 @@ sub save_ona_cross_info {
         #    });
 
         #The database should only store the last pull from ONA, which will contain all info from ONA
-        my $h_del1 = $metadata_schema->storage->dbh->prepare("DELETE FROM metadata.md_metadata WHERE metadata_id IN (SELECT metadata_id FROM metadata.md_files WHERE filetype = ?)");
-        my $r_del1 = $h_del1->execute($file_type);
         my $h_del2 = $metadata_schema->storage->dbh->prepare("DELETE FROM metadata.md_files WHERE filetype = ?");
         my $r_del2 = $h_del2->execute($file_type);
 
