@@ -51,13 +51,13 @@ if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("kinship", trait, sep = "_")
+kinshipTrait <- paste("rrblup_gebvs", trait, sep = "_")
 blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
-markerTrait <- paste("marker", trait, sep = "_")
+markerTrait <- paste("marker_effects", trait, sep = "_")
 markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
@@ -528,6 +528,7 @@ if(!is.null(validationAll)) {
            )
 }
 
+
 if (!is.null(ordered.markerEffects)) {
     fwrite(ordered.markerEffects,
            file  = markerFile,
@@ -535,7 +536,8 @@ if (!is.null(ordered.markerEffects)) {
            sep   = "\t",
            quote = FALSE,
            )
-  }
+}
+
 
 if (!is.null(ordered.trGEBV)) {
     fwrite(ordered.trGEBV,
@@ -545,6 +547,7 @@ if (!is.null(ordered.trGEBV)) {
            quote = FALSE,
            )
 }
+
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
@@ -564,6 +567,7 @@ if (length(combinedGebvsFile) != 0 ) {
     }
 }
 
+
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
     fwrite(traitPhenoData,
            file  = traitPhenoFile,
@@ -572,6 +576,7 @@ if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
            quote = FALSE,
            )
 }
+
 
 if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
   fwrite(filteredGenoData,
@@ -619,6 +624,7 @@ if (file.info(relationshipMatrixFile)$size == 0) {
          quote = FALSE,
          )
 }
+
 
 if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
   fwrite(formattedPhenoData,
