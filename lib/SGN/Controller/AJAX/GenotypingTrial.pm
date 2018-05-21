@@ -284,8 +284,6 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("plate_data");
-    my $add_project_trial_source = $c->req->param('add_project_trial_source[]');
-    my $add_project_trial_source_select = ref($add_project_trial_source) eq 'ARRAY' ? $add_project_trial_source : [$add_project_trial_source];
     #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
@@ -304,6 +302,25 @@ sub store_genotype_trial_POST : Args(0) {
         $c->stash->{rest} = { error => "Unknown breeding program" };
         $c->detach();
     }
+
+    my $field_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id;
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
+    my %source_stock_names;
+    foreach (values %{$plate_info->{design}}){
+        $source_stock_names{$_->{stock_name}}++;
+    }
+    my @source_stock_names = keys %source_stock_names;
+
+    #If plots or plants or tissue samples are provided as the source, we can get the field trial and use it to save the link between genotyping trial and field trial directly.
+    my %field_trial_ids;
+    my $plant_rs = $schema->resultset('Stock::Stock')->search({'me.uniquename' => {-in => \@source_stock_names}, 'me.type_id' => {-in => [$plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id]}, 'nd_experiment_stocks.type_id'=>$field_nd_experiment_type_id, 'nd_experiment.type_id'=>$field_nd_experiment_type_id}, {'join' => {'nd_experiment_stocks' => {'nd_experiment' => 'nd_experiment_projects'}}, '+select'=>['nd_experiment_projects.project_id'], '+as'=>['trial_id']});
+    while(my $r=$plant_rs->next){
+        $field_trial_ids{$r->get_column('trial_id')}++;
+    }
+    my @field_trial_ids = keys %field_trial_ids;
+    #print STDERR Dumper \@field_trial_ids;
 
     print STDERR "Creating the genotyping trial...\n";
 
@@ -329,7 +346,7 @@ sub store_genotype_trial_POST : Args(0) {
             genotyping_facility => $plate_info->{genotyping_facility},
             genotyping_plate_format => $plate_info->{plate_format},
             genotyping_plate_sample_type => $plate_info->{sample_type},
-            genotyping_trial_from_field_trial => $add_project_trial_source_select,
+            genotyping_trial_from_field_trial => \@field_trial_ids,
         });
 
         $message = $ct->save_trial();

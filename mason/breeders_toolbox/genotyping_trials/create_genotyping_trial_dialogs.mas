@@ -259,27 +259,9 @@
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your genotyping trial linked with field trials in the database? If you are unsure, you can skip this. This information can be added from the genotyping trial detail page once the trial is saved in the database." &>
+                                <& /page/page_title.mas, title=>"Is your genotyping trial linked with field trials in the database? This information can also be added from the genotyping trial detail page once the trial is saved in the database." &>
 
-                                <br/>
-                                <div class="well">
-                                    <div class="form-group">
-                                        <label class="col-sm-5 control-label">Is this genotyping trial sourced from a field trial?: </label>
-                                        <div class="col-sm-7">
-                                            <select class="form-control" id="add_genotyping_trial_sourced_trial_q" name="add_genotyping_trial_sourced_trial_q">
-                                                <option value="no">No</option>
-                                                <option value="yes">Yes</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-group" style="display:none" id="add_genotyping_trial_source_trial_section">
-                                        <label class="col-sm-5 control-label">Select the field trial(s): </label>
-                                        <div class="col-sm-7">
-                                            <div id="add_genotyping_trial_source_trial" name="add_genotyping_trial_source_trial">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
 
                                 <br/>
                                 <center>

@@ -71,7 +71,7 @@ function PedigreeViewer(server,auth,urlFunc){
         function load_nodes(stock_ids,callback){
             var germplasm = brapijs.data(stock_ids);
             var pedigrees = germplasm.germplasm_pedigree(function(d){return {'germplasmDbId':d}});
-            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d}},"map");
+            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d, 'pageSize':1000000}},"map");
             pedigrees.join(progenies,germplasm).filter(function(ped_pro_germId){
                 if (ped_pro_germId[0]===null || ped_pro_germId[1]===null) {
                     console.log("Failed to load progeny or pedigree for "+ped_pro_germId[2]);

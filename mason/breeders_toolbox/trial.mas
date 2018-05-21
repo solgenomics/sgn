@@ -251,7 +251,7 @@ $main_production_site_url
                         </&>
 
                         <%doc><&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1  &>
-                            <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &> 
+                            <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
                         </&></%doc>
                     </div>
                 </div>
@@ -786,6 +786,10 @@ jQuery(document).ready(function () {
             }
 
         });
+    });
+
+    jQuery('#custom_barcode').click(function () {
+        location.href = '/tools/label_designer';
     });
 
     jQuery('#direct_phenotyping_link').click(function () {
