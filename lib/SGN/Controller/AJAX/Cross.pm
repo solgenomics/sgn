@@ -1078,7 +1078,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         foreach my $female_plot_id (@$female_plot_ids){
             my $num_males = 0;
             if ($previous_file_lookup{$female_plot_id}){
-                $num_males = $previous_file_lookup{$female_plot_id}->[9];
+                $num_males = $previous_file_lookup{$female_plot_id}->[10];
                 $num_males =~ s/"//g;
                 my %seen_males_ids;
                 foreach my $i (11..scalar(@{$previous_file_lookup{$female_plot_id}})-1){
