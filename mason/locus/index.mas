@@ -45,6 +45,7 @@ Naama Menda <nm249@cornell.edu>
   $cvterm_add_uri => ''
   $cvterm_autocomplete_uri => undef
   $trait_db_name => 'SP'
+  $blast_url => '/tools/blast/'
 </%args>
 
 <%once>
@@ -341,6 +342,18 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 
 <&| /page/info_section.mas, title=>"Sequence annotations" , collapsible=>1, collapsed=>0 &>
+   <&| /page/info_section.mas, title => "Genome features",
+        collapsible   => 1,
+        collapsed     => 0,
+        is_subsection => 1,
+    &>
+%if ($feature) {
+      <& /locus/print_mrna_features.mas,
+	feature   => $feature,
+	blast_url => $blast_url,
+    &>
+%}    
+   </&>
 
     <&| /page/info_section.mas, title => "Gene model matches",
         collapsible   => 1,
@@ -354,7 +367,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
         id => 'locus_unigenes',
         subtitle => $new_unigene_link,
         collapsible => 1,
-        collapsed =>  0 ,
+        collapsed =>  1 ,
         is_subsection => 1,
    &>
       <& /locus/associate_unigene.mas,
@@ -368,7 +381,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   <&| /page/info_section.mas, title => "GenBank accessions",
               subtitle => $new_genbank_link,
               collapsible => 1,
-              collapsed =>  0 ,
+              collapsed =>  1 ,
               is_subsection => 1,
   &>
          <% $genbank %>

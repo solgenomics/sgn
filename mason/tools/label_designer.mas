@@ -286,7 +286,7 @@
                     <div class="col-md-1"></div>
                     <div class="col-md-3">
                         <center>
-                        <br><label>Filter Plots:</label>
+                        <br><label>Filter by Rep:</label>
                             <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
                             </select><br>
                         </center>
