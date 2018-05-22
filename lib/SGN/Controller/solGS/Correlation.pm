@@ -55,7 +55,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
         my $phenotype_dir = $c->stash->{solgs_prediction_upload_dir};
         my $userid        = $c->user->id;
         $phenotype_file   = "phenotype_data_${userid}_${pop_id}";
-        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, $phenotype_file);
+        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
     }
     elsif ($referer =~ /qtl/)
     {    
@@ -66,7 +66,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     {
         my $phenotype_dir = $c->stash->{solgs_cache_dir};
         $phenotype_file   = 'phenotype_data_' . $pop_id;
-        $phenotype_file   = $c->controller('solGS::solGS')->grep_file($phenotype_dir, '\'^' . $phenotype_file . '\'');
+        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, '\'^' . $phenotype_file . '\'');
     }
 
     unless ($phenotype_file)
@@ -135,7 +135,7 @@ sub trait_acronyms {
 sub combine_gebvs_of_traits {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_gebv_files_of_traits($c);  
+    $c->controller('solGS::solGS')->get_gebv_files_of_traits($c);  
     my $gebvs_files = $c->stash->{gebv_files_of_valid_traits};
    
     if (!-s $gebvs_files) 
@@ -159,7 +159,7 @@ sub combine_gebvs_of_traits {
         my $model_id    = $c->stash->{model_id};
         my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-        my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
+        my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
    
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
@@ -187,7 +187,7 @@ sub create_correlation_phenodata_file {
         my $pheno_exp = "phenodata_${pop_id}";
         my $dir       = catdir($c->config->{solqtl}, 'cache');
        
-        my $phenotype_file = $c->controller("solGS::solGS")->grep_file($dir, $pheno_exp);
+        my $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
        
         unless ($phenotype_file) 
 	{           
@@ -213,7 +213,7 @@ sub create_correlation_phenodata_file {
 sub create_correlation_dir {
     my ($self, $c) = @_;
     
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
    
 }
 
@@ -263,11 +263,10 @@ sub genetic_correlation_output_files {
     $model_id    = $c->stash->{model_id};
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id; 
 
-    my $solgs_controller = $c->controller("solGS::solGS");
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $corre_json_file  = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_json_${identifier}");
-    my $corre_table_file = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_table_${identifier}");
-   
+    my $corre_json_file  = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "genetic_corre_json_${identifier}");
+    my $corre_table_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "genetic_corre_table_${identifier}");
+
     $c->stash->{genetic_corre_table_file} = $corre_table_file;
     $c->stash->{genetic_corre_json_file}  = $corre_json_file;
 }
@@ -359,7 +358,7 @@ sub run_pheno_correlation_analysis {
     $c->stash->{corre_table_output_file} = $c->stash->{corre_coefficients_table_file};
     $c->stash->{corre_json_output_file}  = $c->stash->{corre_coefficients_json_file};
     
-    $c->controller("solGS::solGS")->formatted_phenotype_file($c);
+    $c->controller("solGS::Files")->formatted_phenotype_file($c);
 
     $c->stash->{referer} = $c->req->referer;
     
@@ -503,7 +502,7 @@ sub run_correlation_analysis {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 
