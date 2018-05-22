@@ -32,16 +32,30 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $subset_traits = [];
     if ($trait_search_list_id){
         my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $trait_search_list_id });
-        $subset_traits = $list->elements();
+        foreach (@{$list->elements()}){
+            my @trait = split '\|', $_;
+            pop @trait;
+            my $trait_name = join '\|', @trait;
+            push @$subset_traits, $trait_name;
+        }
     }
 
+    if ($params->{trait_any_name}){
+        push @$subset_traits, $params->{trait_any_name};
+    }
+
+    my $definitions;
+    if ($params->{trait_definition}){
+        push @$definitions, $params->{trait_definition};
+    }
 
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
         trait_cv_name => $trait_cv_name,
         limit => $limit,
         offset => $offset,
-        trait_name_list => $subset_traits
+        trait_name_list => $subset_traits,
+        trait_definition_list => $definitions
     });
     my ($data, $records_total) = $trait_search->search();
     my @result;

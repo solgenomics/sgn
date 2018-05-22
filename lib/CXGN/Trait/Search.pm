@@ -103,59 +103,57 @@ sub search {
     my $trait_cv = $schema->resultset("Cv::Cv")->search( { name => $trait_cv_name } )->single;
     my $trait_cv_id = $trait_cv->cv_id;
 
-    my %trait_id_list;
-    if ($self->trait_id_list){
-        %trait_id_list = map { $_ => 1} @{$self->trait_id_list};
+    my %and_conditions;
+    $and_conditions{cv_id} = $trait_cv_id;
+
+    if ($self->trait_id_list && scalar(@{$self->trait_id_list}) > 0){
+        $and_conditions{cvterm_id} = { -in => $self->trait_id_list };
     }
 
-    my %trait_definition_list;
-    if ($self->trait_definition_list){
-        %trait_definition_list = map { $_ => 1} @{$self->trait_definition_list};
-    }
-
-    my %trait_name_list;
-    my $trait_name_string;
-    if ($self->trait_name_list){
-        %trait_name_list = map { $_ => 1} @{$self->trait_name_list};
-        foreach (@{$self->trait_name_list}){
-            $trait_name_string .= $_;
+    if ($self->trait_definition_list && scalar(@{$self->trait_definition_list}) > 0){
+        foreach (@{$self->trait_definition_list}){
+            my @words = split '\s', $_;
+            my $match_string = join '%', @words;
+            push @{$and_conditions{'me.definition'}}, {'ilike' => '%'.$match_string.'%'};
         }
     }
-    my $trait_name_is_exact = $self->trait_name_is_exact;
+
+    if ($self->trait_name_list && scalar(@{$self->trait_name_list}) > 0){
+        my $trait_name_is_exact = $self->trait_name_is_exact;
+        if ($trait_name_is_exact){
+            $and_conditions{'me.name'} = { -in => $self->trait_name_list };
+        } else {
+            foreach (@{$self->trait_name_list}){
+                push @{$and_conditions{'me.name'}}, {'ilike' => '%'.$_.'%'};
+            }
+        }
+    }
+
     my $sort_by = $self->sort_by;
     my $order_by = $self->order_by || 'me.name';
 
-    my $trait_rs;
+    my %where_join = (
+        is_obsolete => 0,
+        is_relationshiptype => 0
+    );
 
     if ($is_variable) {
-        # pre-fetch some information; more efficient
         my $variable_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', $trait_cv_name)->cvterm_id();
-
-        $trait_rs = $schema->resultset("Cv::Cvterm")->search(
-            { cv_id => $trait_cv_id },
-            {
-                join   =>  'cvterm_relationship_subjects' ,
-                where  => {
-                    'type_id'    => $variable_of_cvterm_id,
-                    'is_obsolete' => 0,
-                    'is_relationshiptype' => 0,
-                } ,
-                order_by => { '-asc' => $order_by }
-            }
-        );
-    } else { 
-        $trait_rs = $schema->resultset("Cv::Cv")->search(
-            { 'me.cv_id' => $trait_cv_id },
-            {
-                join   => { 'cvterms' },
-                where  => {
-                    'is_obsolete' => 0,
-                    'is_relationshiptype' => 0,
-                },
-                order_by => { '-asc' => $order_by }
-            }
-        );
+        $where_join{'cvterm_relationship_subjects.type_id'} = $variable_of_cvterm_id;
     }
+
+    #$schema->storage->debug(1);
+    my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
+        \%and_conditions,
+        {
+            join => ['cvterm_relationship_subjects', {'dbxref' => 'db'} ],
+            where => \%where_join,
+            order_by => { '-asc' => $order_by },
+            '+select' => ['db.name', 'dbxref.accession'],
+            '+as' => ['db_name', 'db_accession']
+        }
+    );
+
     my @result;
     my %traits = ();
 
@@ -167,39 +165,12 @@ sub search {
     }
 
     while ( my $t = $trait_rs->next() ) {
-        my $trait_id = $t->cvterm_id();
-       
-        my $trait_name = $t->name();
-
-        $traits{$trait_name}->{trait_id} = $trait_id;
-        $traits{$trait_name}->{trait_definition} = $t->definition();
-        $traits{$trait_name}->{db_name} = $t->dbxref->db->name();
-        $traits{$trait_name}->{accession} = $t->dbxref->accession();
-    }
-
-    foreach my $t ( sort( keys(%traits) ) ) {
-        no warnings 'uninitialized';
-	
-        if (scalar(keys %trait_id_list)>0){
-            next
-                unless ( exists( $trait_id_list{$traits{$t}->{trial_id}} ) );
-        }
-        if (scalar(keys %trait_name_list)>0){
-            if ($self->trait_name_is_exact){
-                next
-                    unless ( exists( $trait_name_list{$t} ) );
-            } else {
-                next
-                    unless ( index($trait_name_string, $t) != -1 );
-            }
-        }
-
         push @result, {
-            trait_id => $traits{$t}->{trait_id},
-            trait_name => $t,
-            trait_definition => $traits{$t}->{trait_definition},
-            db_name => $traits{$t}->{db_name},
-            accession=> $traits{$t}->{accession},
+            trait_id => $t->cvterm_id,
+            trait_name => $t->name,
+            trait_definition => $t->definition,
+            db_name => $t->get_column('db_name'),
+            accession=> $t->get_column('db_accession'),
         };
     }
 
