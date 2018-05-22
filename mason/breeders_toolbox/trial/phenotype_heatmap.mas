@@ -386,25 +386,28 @@ var value = 'plot';
 var selected;
 var phenotypes_id = [];
 var ctrlFuncDataset;
+var newData;
 jQuery(document).ready( function() {
 
-    function assayed_trait_heatmap_view(selected) {
+    function assayed_trait_heatmap_view(selected, assayedTraitDataset) {
         var selectedTrait = selected;
-        alert(selectedTrait)
-        jQuery.ajax( {
+        var traitDataset = assayedTraitDataset
+        alert(selectedTrait);
+        alert(traitDataset);
+        //jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected,
-             url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
-             beforeSend: function() {
-               jQuery("#working_modal").modal("show");
-             },
-             success: function(response) {
-                var data = response.result.data; 
-                var datasort = data.sort(function(obj1, obj2) {
+        //     url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
+        //     beforeSend: function() {
+        //       jQuery("#working_modal").modal("show");
+        //     },
+        //     success: function(response) {
+        //        var data = response.result.data; 
+        //        var datasort = data.sort(function(obj1, obj2) {
 	                   // Ascending: first plotNumber less than the previous
-	               return obj1.plotNumber - obj2.plotNumber;
-               });
-               var newData = datasort;
-               console.log(newData);
+	    //           return obj1.plotNumber - obj2.plotNumber;
+        //       });
+        //       var newData = datasort;
+               console.log(traitDataset);
                 var rows = [];
                 var cols = [];
                 var blocks = [];
@@ -421,7 +424,7 @@ jQuery(document).ready( function() {
                 var trait_names = [];
                 var trait_ids = [];
 
-                jQuery.each(newData, function(key_obj, value_obj) {
+                jQuery.each(traitDataset, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
                         if (key == 'X'){
                             rows.push(value);
@@ -648,11 +651,11 @@ jQuery(document).ready( function() {
                     jQuery("#trait_heatmap").css("display", "none");
                     jQuery("#trial_no_rowColMSG").css("display", "inline-block");
                 }
-             },
-             error: function(reponse) {
-                alert('Error displaying traits assayed heatmap');   
-             }
-        });    
+            // },
+            // error: function(reponse) {
+            //    alert('Error displaying traits assayed heatmap');   
+            // }
+        //});    
     }
     var image = [];
     var image_ids = [];
@@ -1244,7 +1247,26 @@ jQuery(document).ready( function() {
             error: function(response){
                 alert('Error retrieving traits assayed in this trial');
             }
-        });        
+        });
+                        
+        jQuery.ajax( {
+            url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
+            //beforeSend: function() {
+            //    jQuery("#working_modal").modal("show");
+            //},
+            success: function(response) {
+                var data = response.result.data; 
+                var datasort = data.sort(function(obj1, obj2) {
+           	// Ascending: first plotNumber less than the previous
+                    return obj1.plotNumber - obj2.plotNumber;
+       	        });
+       	    newData = datasort;
+            console.log(newData);
+            },
+            error: function(reponse) {
+                alert('Error displaying traits assayed heatmap');   
+            }
+        });            
     });
     
     jQuery('#pheno_heatmap_offswitch').click( function() {
@@ -1261,6 +1283,8 @@ jQuery(document).ready( function() {
 
   jQuery(document).on('change', '#trait_list_dropdown', function () {
     selected = jQuery("#trait_list_dropdown").val();
+    assayedTraitDataset = newData;
+    console.log(assayedTraitDataset);
     if (selected == ''){ }
     if (jQuery.isNumeric(selected)){
         d3.select("svg").remove();
@@ -1269,7 +1293,7 @@ jQuery(document).ready( function() {
         jQuery("#delete_button_fm").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
         jQuery("#view_ctrl_button").css("display", "inline-block");
-        assayed_trait_heatmap_view(selected);
+        assayed_trait_heatmap_view(selected, assayedTraitDataset); 
 
     }
     if (selected == 'fieldmap'){ 
