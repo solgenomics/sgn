@@ -396,8 +396,32 @@ jQuery(document).ready( function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                var data = response.result.data;
-                console.log(data);
+                var data = response.result.data; 
+                var datasort = data.sort(function(obj1, obj2) {
+	                   // Ascending: first plotNumber less than the previous
+	               return obj1.plotNumber - obj2.plotNumber;
+               });
+               var newData = datasort;
+               console.log(newData);
+                var rows = [];
+                var cols = [];
+                var blocks = [];
+
+                jQuery.each(newData, function(key_obj, value_obj) {
+                    jQuery.each(value_obj, function(key, value) {
+                        if (key == 'X'){
+                            rows.push(value);
+                        }
+                        if (key == 'Y'){
+                            cols.push(value);
+                        }
+                        if (key == 'blockNumber'){
+                            blocks.push(value);
+                        }
+                    });    
+                });
+                
+                
                 var col_length = response.col[0]; 
                 var row_length = response.row[0];
                 var col_max =  response.col_max;
