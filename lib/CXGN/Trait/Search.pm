@@ -51,6 +51,11 @@ has 'trait_cv_name' => (
     is => 'rw',
 );
 
+has 'ontology_db_id' => (
+    isa => 'Int|Undef',
+    is => 'rw',
+);
+
 has 'trait_definition_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
@@ -97,14 +102,21 @@ sub search {
     my $schema = $self->bcs_schema();
 
     my $is_variable = $self->is_variable();
-    my $trait_cv_name = $self->trait_cv_name() ;
-
-
-    my $trait_cv = $schema->resultset("Cv::Cv")->search( { name => $trait_cv_name } )->single;
-    my $trait_cv_id = $trait_cv->cv_id;
+    my $trait_cv_name = $self->trait_cv_name();
+    my $ontology_db_id = $self->ontology_db_id();
 
     my %and_conditions;
-    $and_conditions{cv_id} = $trait_cv_id;
+
+    if ($trait_cv_name){
+        my $trait_cv = $schema->resultset("Cv::Cv")->search( { name => $trait_cv_name } )->single;
+        my $trait_cv_id = $trait_cv->cv_id;
+
+        $and_conditions{cv_id} = $trait_cv_id;
+    }
+
+    if ($ontology_db_id){
+        $and_conditions{'db.db_id'} = $ontology_db_id;
+    }
 
     if ($self->trait_id_list && scalar(@{$self->trait_id_list}) > 0){
         $and_conditions{cvterm_id} = { -in => $self->trait_id_list };
@@ -138,8 +150,11 @@ sub search {
     );
 
     if ($is_variable) {
-        my $variable_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', $trait_cv_name)->cvterm_id();
-        $where_join{'cvterm_relationship_subjects.type_id'} = $variable_of_cvterm_id;
+        my $variable_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', $trait_cv_name);
+        if ($variable_of_cvterm){
+            my $variable_of_cvterm_id = $variable_of_cvterm->cvterm_id();
+            $where_join{'cvterm_relationship_subjects.type_id'} = $variable_of_cvterm_id;
+        }
     }
 
     #$schema->storage->debug(1);

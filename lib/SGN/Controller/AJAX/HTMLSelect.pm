@@ -567,6 +567,54 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_ontologies : Path('/ajax/html/select/ontologies') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        page_size => 1000000,
+        page => 0,
+        status => []
+    });
+
+    #Using code pattern found in SGN::Controller::Ontology->onto_browser
+    my $onto_root_namespaces = $c->config->{onto_root_namespaces};
+    my @namespaces = split ", ", $onto_root_namespaces;
+    foreach my $n (@namespaces) {
+        $n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
+    }
+
+    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces});
+    #print STDERR Dumper $result;
+
+    my @ontos;
+    foreach my $o (@{$result->{result}->{data}}) {
+        push @ontos, [$o->{ontologyDbId}, $o->{ontologyName}." (".$o->{description}.")" ];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my $data_related = $c->req->param("data-related") || "";
+
+    @ontos = sort { $a->[1] cmp $b->[1] } @ontos;
+
+    if ($empty) { unshift @ontos, [ "", "Please select an ontology" ]; }
+
+    my $html = simple_selectbox_html(
+        multiple => $multiple,
+        name => $name,
+        id => $id,
+        size => $size,
+        choices => \@ontos,
+        data_related => $data_related
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
