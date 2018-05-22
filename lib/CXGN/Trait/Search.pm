@@ -34,7 +34,8 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Calendar;
 
-has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1,
 );
@@ -97,12 +98,11 @@ sub search {
 
     my $is_variable = $self->is_variable();
     my $trait_cv_name = $self->trait_cv_name() ;
-      
 
-    my $trait_cv = $schema->resultset("Cv::Cv")->search(
-	{ name => $trait_cv_name } )->single;
+
+    my $trait_cv = $schema->resultset("Cv::Cv")->search( { name => $trait_cv_name } )->single;
     my $trait_cv_id = $trait_cv->cv_id;
-   
+
     my %trait_id_list;
     if ($self->trait_id_list){
         %trait_id_list = map { $_ => 1} @{$self->trait_id_list};
@@ -126,37 +126,35 @@ sub search {
     my $order_by = $self->order_by || 'me.name';
 
     my $trait_rs;
-    
-    if ($is_variable) { 
-	# pre-fetch some information; more efficient
-	my $variable_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', $trait_cv_name)->cvterm_id();
-    
- 
 
-	$trait_rs = $schema->resultset("Cv::Cvterm")->search(
-	    { cv_id => $trait_cv_id },
-	    {
-		join   =>  'cvterm_relationship_subjects' ,
-		where  => { 
-		    'type_id'    => $variable_of_cvterm_id,
-		    'is_obsolete' => 0,
-		    'is_relationshiptype' => 0,
-		} ,
-        order_by => { '-asc' => $order_by }
-	    }
-	    );
+    if ($is_variable) {
+        # pre-fetch some information; more efficient
+        my $variable_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', $trait_cv_name)->cvterm_id();
+
+        $trait_rs = $schema->resultset("Cv::Cvterm")->search(
+            { cv_id => $trait_cv_id },
+            {
+                join   =>  'cvterm_relationship_subjects' ,
+                where  => {
+                    'type_id'    => $variable_of_cvterm_id,
+                    'is_obsolete' => 0,
+                    'is_relationshiptype' => 0,
+                } ,
+                order_by => { '-asc' => $order_by }
+            }
+        );
     } else { 
-	$trait_rs = $schema->resultset("Cv::Cv")->search(
-	    { 'me.name' => $trait_cv_name },
-	    {
-		join   => { 'cvterms' },
-		where  => { 
-		    'is_obsolete' => 0,
-		    'is_relationshiptype' => 0,
-		},
-        order_by => { '-asc' => $order_by }
-	    }
-	    );
+        $trait_rs = $schema->resultset("Cv::Cv")->search(
+            { 'me.cv_id' => $trait_cv_id },
+            {
+                join   => { 'cvterms' },
+                where  => {
+                    'is_obsolete' => 0,
+                    'is_relationshiptype' => 0,
+                },
+                order_by => { '-asc' => $order_by }
+            }
+        );
     }
     my @result;
     my %traits = ();
@@ -175,37 +173,37 @@ sub search {
 
         $traits{$trait_name}->{trait_id} = $trait_id;
         $traits{$trait_name}->{trait_definition} = $t->definition();
-	$traits{$trait_name}->{db_name} = $t->dbxref->db->name();
-	$traits{$trait_name}->{accession} = $t->dbxref->accession();
+        $traits{$trait_name}->{db_name} = $t->dbxref->db->name();
+        $traits{$trait_name}->{accession} = $t->dbxref->accession();
     }
-    
+
     foreach my $t ( sort( keys(%traits) ) ) {
-	no warnings 'uninitialized';
+        no warnings 'uninitialized';
 	
-	if (scalar(keys %trait_id_list)>0){
-	    next
-		unless ( exists( $trait_id_list{$traits{$t}->{trial_id}} ) );
-	}
-	if (scalar(keys %trait_name_list)>0){
-	    if ($self->trait_name_is_exact){
+        if (scalar(keys %trait_id_list)>0){
+            next
+                unless ( exists( $trait_id_list{$traits{$t}->{trial_id}} ) );
+        }
+        if (scalar(keys %trait_name_list)>0){
+            if ($self->trait_name_is_exact){
                 next
                     unless ( exists( $trait_name_list{$t} ) );
             } else {
                 next
-		    unless ( index($trait_name_string, $t) != -1 );
+                    unless ( index($trait_name_string, $t) != -1 );
             }
         }
 
         push @result, {
             trait_id => $traits{$t}->{trait_id},
             trait_name => $t,
-	    trait_definition => $traits{$t}->{trait_definition},
-	    db_name => $traits{$t}->{db_name},
-	    accession=> $traits{$t}->{accession},
-	};
+            trait_definition => $traits{$t}->{trait_definition},
+            db_name => $traits{$t}->{db_name},
+            accession=> $traits{$t}->{accession},
+        };
     }
 
-    return \@result;
+    return (\@result, $records_total);
 }
 
 1;
