@@ -8,98 +8,73 @@ $trait_cv_name
 
 <& /page/page_title.mas, title => "Trait Search" &>
 
-<div class="well well-sm">
 
-    <div class="panel panel-default">
-        <div class="panel-body">
-
-            <div class="container-fluid">
-                <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
-                    <div id="trait_search_form" class="form-horizontal well">
-                        <div class="form-group form-group-sm">
-                            <label class="col-sm-3 control-label">Trait Name: </label>
-                            <div class="col-sm-9" >
-                                <input type="text" class="form-control" id="trait_search_name" placeholder="Search any trait name or piece of name"/>
-                            </div>
-                        </div>
-                        <div class="form-group form-group-sm">
-                            <label class="col-sm-3 control-label">Definition: </label>
-                            <div class="col-sm-9" >
-                                <input type="text" class="form-control" id="trait_search_definition" placeholder="Search any word or piece of definition"/>
-                            </div>
-                        </div>
+    <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+        <div id="trait_search_form" class="form-horizontal well">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Trait Name: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="trait_search_name" placeholder="Search any trait name or piece of name"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Definition: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="trait_search_definition" placeholder="Search any word or piece of definition"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Subset Traits: </label>
+                <div class="col-sm-9" >
+                    <div id="trait_search_list_select">
+                        [LOADING...]
                     </div>
-
-                    <center>
-                        <button class="btn btn-primary" id="submit_trait_search" />Search</button>
-                    </center>
-                </&>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="panel panel-default">
-        <div class="panel-body">
+        <center>
+            <button class="btn btn-primary" id="submit_trait_search" />Search</button>
+        </center>
+    </&>
 
-            <div class="container-fluid">
-                <form class="form-horizontal" role="form">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Subset Traits: </label>
-                        <div class="col-sm-9" >
-                            <div id="trait_search_list_select">
-                                [LOADING...]
-                            </div>
-                        </div>
-                    </div>
-                </form>
+    <&| /page/info_section.mas, title => 'Results', collapsible=>1, collapsed=>0 &>
+
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+
+                    <table id="trait_search_results" width="100%" class="table table-hover table-striped">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Trait ID</th>
+                        <th>Trait Name</th>
+                        <th>Definition</th>
+                    </tr>
+                    </thead>
+                    </table>
+
+                    <button type="button" class="selectAll-dt">Select All</button>
+                    <button type="button" class="deselectAll-dt">Deselect All</button>
+
+                </div>
             </div>
 
-        </div>
-    </div>
+            <div class="panel panel-default">
+                <div class="panel-body">
 
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <div class="container-fluid">
-                <&| /page/info_section.mas, title => 'Results', collapsible=>1, collapsed=>0 &>
+                    <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
+                    <br>
+                    <p><em><span id="trait_result_count">0</span> trait(s) selected.</em></p>
+                    <div style="text-align:right" id="traits_to_list_menu"></div>
+                    <div id="trait_result_names" style="display: none;"></div>
+                    </&>
 
-                    <div class="well well-sm">
-                        <div class="panel panel-default">
-                            <div class="panel-body">
-
-                                <table id="trait_search_results" width="100%" class="table table-hover table-striped">
-                                <thead>
-                                  <tr>
-                                    <th></th>
-                                    <th>Trait ID</th>
-                                    <th>Trait Name</th>
-                                    <th>Definition</th>
-                                </tr>
-                                </thead>
-                                </table>
-
-                                <button type="button" class="selectAll-dt">Select All</button>
-                                <button type="button" class="deselectAll-dt">Deselect All</button>
-
-                            </div>
-                        </div>
-
-                        <div class="panel panel-default">
-                            <div class="panel-body">
-
-                                <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
-                                <br>
-                                <p><em><span id="trait_result_count">0</span> trait(s) selected.</em></p>
-                                <div style="text-align:right" id="traits_to_list_menu"></div>
-                                <div id="trait_result_names" style="display: none;"></div>
-                                </&>
-
-                            </div>
-                        </div>
-                    </div>
-                </&>
+                </div>
             </div>
         </div>
-    </div>
+    </&>
 
 </div>
 
