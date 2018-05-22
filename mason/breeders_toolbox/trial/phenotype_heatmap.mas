@@ -389,6 +389,8 @@ var ctrlFuncDataset;
 jQuery(document).ready( function() {
 
     function assayed_trait_heatmap_view(selected) {
+        var selectedTrait = selected;
+        alert(selectedTrait)
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected,
              url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
@@ -406,6 +408,18 @@ jQuery(document).ready( function() {
                 var rows = [];
                 var cols = [];
                 var blocks = [];
+                var accession_names = [];
+                var accession_ids = [];
+                var pheno_ids = [];
+                var pheno_values = [];
+                var plot_names = [];
+                var replicates = [];
+                var plot_mums = [];
+                var check = [];
+                var replicates = [];
+                var plot_ids = [];
+                var trait_names = [];
+                var trait_ids = [];
 
                 jQuery.each(newData, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
@@ -418,10 +432,51 @@ jQuery(document).ready( function() {
                         if (key == 'blockNumber'){
                             blocks.push(value);
                         }
+                        if (key == 'entryType'){
+                            check.push(value);
+                        }
+                        if (key == 'germplasmDbId'){
+                            accession_ids.push(value);
+                        }
+                        if (key == 'germplasmName'){
+                            accession_names.push(value);
+                        }
+                        if (key == 'observationUnitDbId'){
+                            plot_ids.push(value);
+                        }
+                        if (key == 'observationUnitName'){
+                            plot_names.push(value);
+                        }
+                        if (key == 'replicate'){
+                            replicates.push(value);
+                        }
+                        if (key == 'observations'){
+                            jQuery.each(value, function(key_add1, value_add1){
+                                jQuery.each(value_add1, function(key_add, value_add){
+                                    if (key_add == 'observationVariableDbId'){
+                                        if (selectedTrait ===  value_add){ alert(key_add);
+                                            if (key_add == 'observationDbId'){
+                                                pheno_ids.push(value_add);
+                                            }
+                                            if (key_add == 'observationVariableDbId'){
+                                                trait_ids.push(value_add);
+                                            }
+                                            if (key_add == 'observationVariableName'){
+                                                trait_names.push(value_add);
+                                            }
+                                            if (key_add == 'value'){
+                                                pheno_values.push(value_add); 
+                                            }
+                                        }
+                                    } 
+                                    
+                                });
+                            });
+                        }
                     });    
                 });
                 
-                
+                console.log(pheno_values);
                 var col_length = response.col[0]; 
                 var row_length = response.row[0];
                 var col_max =  response.col_max;
