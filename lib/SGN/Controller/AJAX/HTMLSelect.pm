@@ -23,7 +23,7 @@ use Moose;
 
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
-use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use CXGN::Page::FormattingHelpers qw | simple_selectbox_html simple_checkbox_html |;
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Onto;
@@ -567,7 +567,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
-sub get_ontologies : Path('/ajax/html/select/ontologies') Args(0) {
+sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -579,7 +579,7 @@ sub get_ontologies : Path('/ajax/html/select/ontologies') Args(0) {
     });
 
     #Using code pattern found in SGN::Controller::Ontology->onto_browser
-    my $onto_root_namespaces = $c->config->{onto_root_namespaces};
+    my $onto_root_namespaces = $c->config->{trait_variable_onto_root_namespaces};
     my @namespaces = split ", ", $onto_root_namespaces;
     foreach my $n (@namespaces) {
         $n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
@@ -595,20 +595,13 @@ sub get_ontologies : Path('/ajax/html/select/ontologies') Args(0) {
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
-    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
-    my $size = $c->req->param("size");
-    my $empty = $c->req->param("empty") || "";
     my $data_related = $c->req->param("data-related") || "";
 
     @ontos = sort { $a->[1] cmp $b->[1] } @ontos;
 
-    if ($empty) { unshift @ontos, [ "", "Please select an ontology" ]; }
-
-    my $html = simple_selectbox_html(
-        multiple => $multiple,
+    my $html = simple_checkbox_html(
         name => $name,
         id => $id,
-        size => $size,
         choices => \@ontos,
         data_related => $data_related
     );

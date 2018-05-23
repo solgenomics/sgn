@@ -23,10 +23,10 @@ sub search : Path('/ajax/search/traits') Args(0) {
     #print STDERR Dumper $params;
 
     my $trait_cv_name = $params->{trait_cv_name} || $c->config->{trait_cv_name};
-    my $ontology_db_id;
-    if ($params->{ontology_db_id}){
+    my $ontology_db_ids;
+    if ($params->{'ontology_db_id[]'}){
         $trait_cv_name = undef;
-        $ontology_db_id = $params->{ontology_db_id};
+        $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
     }
 
     my $rows = $params->{length};
@@ -58,7 +58,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
         trait_cv_name => $trait_cv_name,
-        ontology_db_id => $ontology_db_id,
+        ontology_db_id_list => $ontology_db_ids,
         limit => $limit,
         offset => $offset,
         trait_name_list => $subset_traits,

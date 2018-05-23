@@ -12,7 +12,7 @@ $trait_cv_name
     <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
         <div id="trait_search_form" class="form-horizontal well">
             <div class="form-group form-group-sm">
-                <label class="col-sm-3 control-label">Ontology Name: </label>
+                <label class="col-sm-3 control-label">Select Ontology Name(s): </label>
                 <div class="col-sm-9" >
                     <div id="trait_search_ontology_select"></div>
                 </div>
@@ -88,7 +88,7 @@ $trait_cv_name
 
 jQuery(document).ready(function () {
 
-    get_select_box('ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'id' : 'trait_search_ontology_select_id', 'empty':0, 'multiple':0 });
+    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id' });
 
     var lo = new CXGN.List();
     jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits'));
@@ -112,6 +112,11 @@ jQuery(document).ready(function () {
     _draw_trait_search_result_table();
 
     function _draw_trait_search_result_table (){
+        var selectedontologies = [];
+        jQuery(document).find('input[name="trait_search_ontology_select_id"]:checked').each(function (i, ob) {
+            selectedontologies.push(jQuery(ob).val());
+        });
+
         trait_table = jQuery('#trait_search_results').DataTable( {
             'destroy': true,
             'searching' : false,
@@ -133,7 +138,7 @@ jQuery(document).ready(function () {
                     d.trait_search_list_id  = jQuery('#trait_search_list_select_list_select').val();
                     d.trait_any_name  = jQuery('#trait_search_name').val();
                     d.trait_definition  = jQuery('#trait_search_definition').val();
-                    d.ontology_db_id = jQuery('#trait_search_ontology_select_id').val();
+                    d.ontology_db_id = selectedontologies;
                 }
             },
             "order": [[ 1, "asc" ]]

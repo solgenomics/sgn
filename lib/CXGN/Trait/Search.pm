@@ -10,6 +10,7 @@ my $trait_search = CXGN::Trait::Search->new({
     bcs_schema=>$schema,
     is_variable=>$is_variable,
     trait_cv_name=>$cv_name,
+    onto_root_namespaces=>\@ontology_db_ids,
     trait_definition_list=>\@trait_definitions,
     trait_id_list=>\@trait_ids,
     trait_name_list=>\@trait_names,
@@ -51,8 +52,8 @@ has 'trait_cv_name' => (
     is => 'rw',
 );
 
-has 'ontology_db_id' => (
-    isa => 'Int|Undef',
+has 'ontology_db_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -103,7 +104,7 @@ sub search {
 
     my $is_variable = $self->is_variable();
     my $trait_cv_name = $self->trait_cv_name();
-    my $ontology_db_id = $self->ontology_db_id();
+    my $ontology_db_ids = $self->ontology_db_id_list();
 
     my %and_conditions;
 
@@ -114,8 +115,8 @@ sub search {
         $and_conditions{cv_id} = $trait_cv_id;
     }
 
-    if ($ontology_db_id){
-        $and_conditions{'db.db_id'} = $ontology_db_id;
+    if ($ontology_db_ids && scalar(@$ontology_db_ids) > 0){
+        $and_conditions{'db.db_id'} = {'-in' => $ontology_db_ids};
     }
 
     if ($self->trait_id_list && scalar(@{$self->trait_id_list}) > 0){
