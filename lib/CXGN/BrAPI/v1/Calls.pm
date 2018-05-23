@@ -73,6 +73,7 @@ sub calls {
 		['variables', ['json'], ['GET'] ],
 		['variables/id', ['json'], ['GET'] ],
 		['variables-search', ['json'], ['GET','POST'] ],
+		['samples-search', ['json'], ['GET','POST'] ],
 		['samples/id', ['json'], ['GET'] ],
 	);
 

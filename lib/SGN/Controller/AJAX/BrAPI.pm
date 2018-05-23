@@ -2250,18 +2250,38 @@ sub observationvariable_detail_GET {
 }
 
 
-sub samples_list : Chained('brapi') PathPart('samples') Args(0) : ActionClass('REST') { }
+sub samples_list : Chained('brapi') PathPart('samples-search') Args(0) : ActionClass('REST') { }
 
 sub samples_list_POST {
     my $self = shift;
     my $c = shift;
-    $c->forward('samples_search_POST');
+    _sample_search_process($self, $c);
 }
 
 sub samples_list_GET {
     my $self = shift;
     my $c = shift;
-    $c->forward('samples_search_GET');
+    _sample_search_process($self, $c);
+}
+
+sub _sample_search_process {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Samples');
+    my $brapi_package_result = $brapi_module->search({
+        sampleDbId => $clean_inputs->{sampleDbId},
+        sampleName => $clean_inputs->{sampleName},
+        plateDbId => $clean_inputs->{plateDbId},
+        plateName => $clean_inputs->{plateName},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        germplasmName => $clean_inputs->{germplasmName},
+        observationUnitDbId => $clean_inputs->{observationUnitDbId},
+        observationUnitName => $clean_inputs->{observationUnitName},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

@@ -323,7 +323,7 @@ sub _retrieve_accession {
         { 'join' => 'object' }
     )->search_related('object');
     if ($accession_rs->count != 1){
-        die "There is more than one or no (".$accession_rs->count.") accession linked here!\n";
+        die "There is more than one or no (".$accession_rs->count.") (".$self->uniquename.") accession linked here!\n";
     }
     if ($accession_rs->count == 1){
         $self->get_accession([$accession_rs->first->stock_id, $accession_rs->first->uniquename]);
