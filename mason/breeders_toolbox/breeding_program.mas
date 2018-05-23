@@ -1,0 +1,28 @@
+
+<%args>
+$program
+$user => undef
+</%args>
+
+<%perl>
+my $delete_flag = 0;
+if ($user && $user->check_roles("curator")) {
+    $delete_flag = 1;
+}
+
+my $program_name = $program->get_name;
+</%perl>
+
+
+<& /page/page_title.mas, title=>"Breeding Program $program_name" &>
+
+
+
+
+
+
+
+    	  
+
+
+
