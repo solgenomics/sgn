@@ -114,6 +114,7 @@ sub germplasm_search {
 
 	my @data;
 	foreach (@$result){
+        my @type_of_germplasm_storage_codes = split ',', $_->{'type of germplasm storage code'};
 		push @data, {
 			germplasmDbId=>$_->{stock_id},
 			defaultDisplayName=>$_->{stock_name},
@@ -128,7 +129,7 @@ sub germplasm_search {
 			instituteName=>$_->{'institute name'},
 			biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'},
 			countryOfOriginCode=>$_->{'country of origin'},
-			typeOfGermplasmStorageCode=>$_->{'type of germplasm storage code'},
+			typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
 			genus=>$_->{genus},
 			species=>$_->{species},
 			speciesAuthority=>$_->{speciesAuthority},
