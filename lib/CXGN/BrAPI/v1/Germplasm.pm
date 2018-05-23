@@ -105,7 +105,7 @@ sub germplasm_search {
 		stock_id_list=>\@germplasm_ids,
 		stock_type_id=>$accession_type_cvterm_id,
         stockprops_values=>\%stockprops_values,
-        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1},
+        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
 		limit=>$limit,
 		offset=>$offset,
         display_pedigree=>1
@@ -115,6 +115,14 @@ sub germplasm_search {
 	my @data;
 	foreach (@$result){
         my @type_of_germplasm_storage_codes = split ',', $_->{'type of germplasm storage code'};
+        my @ncbi_taxon_ids = split ',', $_->{'ncbi_taxonomy_id'};
+        my @taxons;
+        foreach (@ncbi_taxon_ids){
+            push @taxons, {
+                sourceName => 'NCBI',
+                taxonId => $_
+            };
+        }
 		push @data, {
 			germplasmDbId=>$_->{stock_id},
 			defaultDisplayName=>$_->{stock_name},
@@ -132,6 +140,7 @@ sub germplasm_search {
 			typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
 			genus=>$_->{genus},
 			species=>$_->{species},
+            taxonIds=>\@taxons,
 			speciesAuthority=>$_->{speciesAuthority},
 			subtaxa=>$_->{subtaxa},
 			subtaxaAuthority=>$_->{subtaxaAuthority},
