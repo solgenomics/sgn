@@ -125,7 +125,7 @@ sub germplasm_search {
         }
         push @data, {
             germplasmDbId=>$_->{stock_id},
-            defaultDisplayName=>$_->{stock_name},
+            defaultDisplayName=>$_->{uniquename},
             germplasmName=>$_->{uniquename},
             accessionNumber=>$_->{'accession number'},
             germplasmPUI=>$_->{'PUI'},
@@ -193,7 +193,7 @@ sub germplasm_detail {
     my %result = (
         germplasmDbId=>$result->[0]->{stock_id},
         defaultDisplayName=>$result->[0]->{uniquename},
-        germplasmName=>$result->[0]->{stock_name},
+        germplasmName=>$result->[0]->{uniquename},
         accessionNumber=>$result->[0]->{'accession number'},
         germplasmPUI=>$result->[0]->{'PUI'},
         pedigree=>$result->[0]->{pedigree},
@@ -241,6 +241,40 @@ sub germplasm_pedigree {
         my $pedigree_string = $s->get_pedigree_string('Parents');
         %result = (
             germplasmDbId=>$stock_id,
+            pedigree=>$pedigree_string,
+            parent1Id=>$parents->{'mother_id'},
+            parent2Id=>$parents->{'father_id'}
+        );
+    }
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
+}
+
+sub germplasm_pedigree_2 {
+    my $self = shift;
+    my $inputs = shift;
+    my $stock_id = $inputs->{stock_id};
+    my $notation = $inputs->{notation};
+    my $status = $self->status;
+    if ($notation) {
+        push @$status, { 'info' => 'Notation not yet implemented. Returns a simple parent1/parent2 string.' };
+        if ($notation ne 'purdy') {
+            push @$status, { 'error' => 'Unsupported notation code. Allowed notation: purdy' };
+        }
+    }
+
+    my %result;
+    my @data_files;
+    my $total_count = 0;
+    my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
+    if ($s) {
+        $total_count = 1;
+        my $parents = $s->get_parents();
+        my $pedigree_string = $s->get_pedigree_string('Parents');
+        %result = (
+            germplasmDbId=>$stock_id,
+            defaultDisplayName=>$s->uniquename,
             pedigree=>$pedigree_string,
             parent1DbId=>$parents->{'mother_id'},
             parent2DbId=>$parents->{'father_id'}
@@ -298,6 +332,71 @@ sub germplasm_progeny {
         $last_item = $total_count-1;
     }
     my $result = { 
+        defaultDisplayName=>$stock->uniquename,
+        germplasmDbId=>$stock_id,
+        data=>[@{$full_data}[$page_size*$page .. $last_item]]
+    };
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm progeny result constructed');
+}
+
+sub germplasm_progeny_2 {
+    my $self = shift;
+    my $inputs = shift;
+    my $stock_id = $inputs->{stock_id};
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    #print STDERR Dumper $stock_id;
+    my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({
+        'type_id'=> $accession_cvterm,
+        'stock_id'=> $stock_id,
+    });
+    my $edges = $self->bcs_schema()->resultset("Stock::StockRelationship")->search(
+        [
+            {
+                'me.subject_id' => $stock_id,
+                'me.type_id' => $father_cvterm,
+                'object.type_id'=> $accession_cvterm
+            },
+            {
+                'me.subject_id' => $stock_id,
+                'me.type_id' => $mother_cvterm,
+                'object.type_id'=> $accession_cvterm
+            }
+        ],
+        {
+            join => 'object',
+            '+select' => ['object.uniquename'],
+            '+as' => ['progeny_uniquename']
+        }
+    );
+    my $full_data = [];
+    while (my $edge = $edges->next) {
+        if ($edge->type_id==$mother_cvterm){
+            push @{$full_data}, {
+                germplasmDbId => $edge->object_id,
+                defaultDisplayName => $edge->get_column('progeny_uniquename'),
+                parentType => "FEMALE"
+            };
+        } else {
+            push @{$full_data}, {
+                germplasmDbId => $edge->object_id,
+                defaultDisplayName => $edge->get_column('progeny_uniquename'),
+                parentType => "MALE"
+            };
+        }
+    }
+    my $total_count = scalar @{$full_data};
+    my $last_item = $page_size*($page+1)-1;
+    if($last_item > $total_count-1){
+        $last_item = $total_count-1;
+    }
+    my $result = {
         defaultDisplayName=>$stock->uniquename,
         germplasmDbId=>$stock_id,
         data=>[@{$full_data}[$page_size*$page .. $last_item]]
