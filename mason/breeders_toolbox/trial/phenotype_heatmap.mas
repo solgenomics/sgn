@@ -391,7 +391,7 @@ jQuery(document).ready( function() {
 
     function assayed_trait_heatmap_view(selected, assayedTraitDataset) {
         var selectedTrait = selected;
-        var traitDataset = assayedTraitDataset
+        var traitDataset = assayedTraitDataset;
         alert(selectedTrait);
         alert(traitDataset);
         //jQuery.ajax( {
@@ -456,8 +456,7 @@ jQuery(document).ready( function() {
                         if (key == 'observations'){
                             jQuery.each(value, function(key_add1, value_add1){
                                 jQuery.each(value_add1, function(key_add, value_add){
-                                    if (key_add == 'observationVariableDbId'){
-                                        if (selectedTrait ===  value_add){ alert(key_add);
+                                        if (selectedTrait ==  value_add ){
                                             if (key_add == 'observationDbId'){
                                                 pheno_ids.push(value_add);
                                             }
@@ -471,8 +470,6 @@ jQuery(document).ready( function() {
                                                 pheno_values.push(value_add); 
                                             }
                                         }
-                                    } 
-                                    
                                 });
                             });
                         }
