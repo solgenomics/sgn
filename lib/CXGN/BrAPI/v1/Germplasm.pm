@@ -114,7 +114,7 @@ sub germplasm_search {
 
 	my @data;
 	foreach (@$result){
-        my @type_of_germplasm_storage_codes = split ',', $_->{'type of germplasm storage code'};
+        my @type_of_germplasm_storage_codes = $_->{'type of germplasm storage code'} ? split ',', $_->{'type of germplasm storage code'} : ();
         my @ncbi_taxon_ids = split ',', $_->{'ncbi_taxonomy_id'};
         my @taxons;
         foreach (@ncbi_taxon_ids){
@@ -174,13 +174,22 @@ sub germplasm_detail {
 		stock_id_list=>[$stock_id],
 		stock_type_id=>$accession_cvterm_id,
         display_pedigree=>1,
-        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1},
+        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
 	});
 	my ($result, $total_count) = $stock_search->search();
 
 	if ($total_count != 1){
 		return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId did not return 1 result');
 	}
+    my @type_of_germplasm_storage_codes = $result->[0]->{'type of germplasm storage code'} ? split ',', $result->[0]->{'type of germplasm storage code'} : ();
+    my @ncbi_taxon_ids = split ',', $result->[0]->{'ncbi_taxonomy_id'};
+    my @taxons;
+    foreach (@ncbi_taxon_ids){
+        push @taxons, {
+            sourceName => 'NCBI',
+            taxonId => $_
+        };
+    }
 	my %result = (
 		germplasmDbId=>$result->[0]->{stock_id},
 		defaultDisplayName=>$result->[0]->{uniquename},
@@ -195,9 +204,10 @@ sub germplasm_detail {
 		instituteName=>$result->[0]->{'institute name'},
 		biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'},
 		countryOfOriginCode=>$result->[0]->{'country of origin'},
-		typeOfGermplasmStorageCode=>$result->[0]->{'type of germplasm storage code'},
+		typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
 		genus=>$result->[0]->{genus},
 		species=>$result->[0]->{species},
+        taxonIds=>\@taxons,
 		speciesAuthority=>$result->[0]->{speciesAuthority},
 		subtaxa=>$result->[0]->{subtaxa},
 		subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
