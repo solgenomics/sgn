@@ -13,7 +13,7 @@
   });
 
   if (jQuery.cookie("cookies_approved") == 1) { 
-			  
+     $('#cookie_popup').hide();
   }
 
   window.onload=function() {
