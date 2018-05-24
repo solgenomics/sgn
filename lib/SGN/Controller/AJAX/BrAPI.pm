@@ -1512,7 +1512,8 @@ sub studies_observation_variables_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_observation_variables(
-		$c->stash->{study_id}
+		$c->stash->{study_id},
+        $c->config->{supportedCrop}
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
