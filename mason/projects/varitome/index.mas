@@ -4,8 +4,8 @@
 
 <& /page/page_title.mas, title=>"Varitome project: Exploitation of genetic and epigenetic variation in the regulation of tomato fruit quality traits" &>
 
-<&| /page/info_section.mas, title => '' &>
-<img src="/img/varitome/tomato_domestication.jpg" align="center" width="900" height="500" />
+<&| /page/info_section.mas, title => ''  &>
+<img src="/img/varitome/varitome_tomatoes.jpg" align="center"/>
 
 </&>
 <&| /page/info_section.mas, title => 'Major goals' &>
