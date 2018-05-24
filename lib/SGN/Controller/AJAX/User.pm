@@ -136,7 +136,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     $new_person->set_last_name($last_name);
     $new_person->store();
     
-    my $host = $c->req()->hostname();
+    my $host = $c->config->{main_production_site_url};
     my $subject="[SGN] Email Address Confirmation Request";
     my $body=<<END_HEREDOC;
     
