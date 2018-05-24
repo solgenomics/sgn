@@ -423,6 +423,8 @@ jQuery(document).ready( function() {
                 var plot_ids = [];
                 var trait_names = [];
                 var trait_ids = [];
+                var design;
+                var plot_mums = [];
 
                 jQuery.each(traitDataset, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
@@ -444,6 +446,9 @@ jQuery(document).ready( function() {
                         if (key == 'germplasmName'){
                             accession_names.push(value);
                         }
+                        if (key == 'plotNumber'){
+                            plot_mums.push(value);
+                        }
                         if (key == 'observationUnitDbId'){
                             plot_ids.push(value);
                         }
@@ -452,6 +457,9 @@ jQuery(document).ready( function() {
                         }
                         if (key == 'replicate'){
                             replicates.push(value);
+                        }
+                        if (key == 'designType'){
+                            design = value;
                         }
                         if (key == 'observations'){
                             //iterate through object keys
@@ -468,13 +476,112 @@ jQuery(document).ready( function() {
                     });    
                 });
                 
+                
+                
+                
+                
+                var psudo_rows = [];
+                var map_option = 0;
+                for (i=0; i<plot_names.length; i++){ 
+                    if (rows[i] != '') {}
+                    else if (rows[i] == '') {
+                        map_option = 1;
+            			if (blocks[i] && design != 'splitplot'){
+            				var r = blocks[i];
+            				psudo_rows.push(r);
+            			}
+                        else if (replicates[i] && !blocks[i] && design != 'splitplot'){
+            				var s = replicates[i];
+            				psudo_rows.push(s);
+            			}
+                        else if (design == 'splitplot'){
+                            var s = replicates[i];
+            				psudo_rows.push(s);
+                        }
+            		}
+                }
+
+                var false_coord;
+                if (map_option == 1){
+                    rows = psudo_rows;
+                    false_coord = 'false_coord';
+                }
+                var unique_rows = [];
+                var unique_cols = [];
+                var unique = rows.filter(function(itm, i, rows) {
+                    if (i == rows.indexOf(itm)){
+                        unique_rows.push(itm);
+                    }
+                });
+                
+                function makeArray(count, content) {
+                   var result = [];
+                   var counting = 0;
+                   if(typeof(content) == "function") {
+                       counting = 1;
+                      for(var i=0; i<count; i++) {
+                          result.push(counting);
+                         counting++;
+                      }
+                   } else {
+                       counting = 1;
+                      for(var i=0; i<count; i++) {
+                         result.push(counting);
+                         counting++;
+                      }
+                   }
+                   return result;
+                }
+
+                var psudo_cols = [];
+                var psudo_columns = [];
+                var counts = {};
+                if (map_option == 1){
+                    for (var i = 0; i < rows.length; i++) {
+                        counts[rows[i]] = 1 + (counts[rows[i]] || 0);
+                    }
+                    jQuery.each(counts, function(key, value){
+                        psudo_cols.push(makeArray(value, key));
+                    });
+                    var psudo_columns = [].concat.apply([], psudo_cols);
+                    cols = psudo_columns;
+                }
+                var unique = cols.filter(function(itm, i, cols) {
+                    if (i == cols.indexOf(itm)){
+                        unique_cols.push(itm);
+                    }
+                });
+                
+                var plot_popUp;
+                var result = [];
+                for (var i=0; i<plot_names.length; i++){ 
+        			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nvalue:"+pheno_values[i];
+            		result.push({plotname:plot_names[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], col:cols[i], pheno:pheno_values[i], plot_msg:plot_popUp, pheno_id:pheno_ids[i]}) ;
+                }
+                
+                
+                
+                
+                
                 console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(trait_names);
-                var col_length = response.col[0]; 
-                var row_length = response.row[0];
-                var col_max =  response.col_max;
-                var row_max =  response.row_max;
-                var false_coord = response.false_coord;
-                phenotypes_id = response.phenoID;
+                
+                var col_max = Math.max.apply(Math,unique_cols);
+                var row_max = Math.max.apply(Math,unique_rows);
+                var rep_max = Math.max.apply(Math,replicates);
+                var block_max = Math.max.apply(Math,blocks);                
+                var col_length = cols[0]; 
+                var row_length = rows[0];
+                var controls = [];
+                var unique_ctrl = [];
+                var plots = plot_mums;
+                var col_max;
+                
+                // var col_length = response.col[0]; 
+                // var row_length = response.row[0];
+                // var col_max =  response.col_max;
+                // var row_max =  response.row_max;
+                // var false_coord = response.false_coord;
+                // phenotypes_id = response.phenoID;
 
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
@@ -497,9 +604,9 @@ jQuery(document).ready( function() {
                       legendElementWidth = gridSize2*2,
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-                      rows = response.unique_row,
-                      columns = response.unique_col;
-                      datasets = response.result;
+                      rows = unique_rows,
+                      columns = unique_cols;
+                      datasets = result;
                       ctrlFuncDataset = datasets;
                 
                   var svg = d3.select("#container_heatmap").append("svg")
