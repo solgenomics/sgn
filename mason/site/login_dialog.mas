@@ -1,0 +1,77 @@
+
+<!-- Login Dialog -->
+
+<%args>
+$goto_url => ''
+</%args>
+
+<div class="modal fade" id="site_login_dialog" name="site_login_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_dialog_title">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="text-align:center">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title" id="site_login_dialog_title">Login</h3>
+      </div>
+      <div class="modal-body">
+	<form id="login_form" name="login_form">
+	<div class="container-fluid">
+
+	    <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
+	    <br />
+	    <div>
+	      <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
+	    </div>	    
+	    <br />
+	    <div style="margin-bottom:40px">
+	      <a href="/user/reset_password" style="float:left">Forgot password?</a>
+	      <a href="/user/new" style="float:right">New User</a>
+	    </div>
+	    
+	    <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
+	    
+	    <div>
+	      <button class="btn btn-secondary" id="cancel_login" type="reset" style="float:left" >Reset</button>
+	      <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right">Login</button>
+	    </div>	    
+	</div>
+	</form>
+      </div>
+      <div class="modal-footer">
+        <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  jQuery(document).ready( function() { 
+    jQuery('#login_form').submit( function(event) { 
+       event.preventDefault();
+       var form_data = jQuery('#login_form').serialize();
+       if (!jQuery('#username').val() || !jQuery('#password').val()) { 
+         alert('Please enter a username and password');
+         return;
+       }
+       jQuery.ajax( { 
+         url: '/ajax/user/login',
+         data: form_data,
+         error: function(r) { alert('An error occurred! Sorry!');  },
+         success: function(r) {
+           if (r.error) { 
+             alert(r.error); 
+             return;
+           }
+           if (r.goto_url) { 
+             location.href=r.goto_url;
+           }
+           else {      
+             location.reload();
+           }
+         }
+       });
+    });
+ });
+</script>
+
+
+<!-- End login dialog -->

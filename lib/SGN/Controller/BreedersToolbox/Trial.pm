@@ -58,7 +58,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #print STDERR $format;
     my $user = $c->user();
     if (!$user) {
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -203,7 +203,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $user = $c->user();
     if (!$user) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
