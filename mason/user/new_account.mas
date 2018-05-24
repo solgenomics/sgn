@@ -89,11 +89,12 @@
 
   jQuery('#new_account_form').submit(function(event) { 
      var form_data = jQuery('#new_account_form').serialize();
-     alert(JSON.stringify(form_data));
+     //alert(JSON.stringify(form_data));
      jQuery.ajax({
        url: '/ajax/user/new',
        data: form_data,
        success: function(r) {
+           console.log(r);
          if (r.error) { alert(r.error); }
          else { 
            alert('New account added. Check your email.');
