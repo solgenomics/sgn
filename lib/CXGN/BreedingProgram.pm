@@ -18,11 +18,7 @@ use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
 
-has 'program_id' => (
-    is => 'rw',
-    isa => 'Int',
-    required => 1,
-    );
+
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -32,7 +28,6 @@ has 'schema' => (
 sub BUILD {
     my $self = shift;
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id;
-    
     my $row = $self->schema->resultset("Project::Project")->find( 
 	{ project_id             => $self->get_program_id(),
 	  'projectprops.type_id' => $breeding_program_cvterm_id },
@@ -154,7 +149,14 @@ sub get_accession_cvterm_id {
 
 sub get_trials {
     my $self = shift;
-    my $trials_rs = $self->project_relationship_object_projects->subject_projects;
+    my $project_obj = $self->get_project_object;
+    
+    my $trials_rs;
+    my $trial_rel_rs = $project_obj->project_relationship_object_projects;
+
+    if ($trial_rel_rs) {
+	$trials_rs = $trial_rel_rs->search_related('subject_project');
+    }
     
     return $trials_rs;
 }

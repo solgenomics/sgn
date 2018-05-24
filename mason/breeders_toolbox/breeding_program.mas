@@ -11,6 +11,7 @@ if ($user && $user->check_roles("curator")) {
 }
 
 my $program_name = $program->get_name;
+my $program_id   = $program->get_program_id;
 </%perl>
 
 
@@ -18,7 +19,11 @@ my $program_name = $program->get_name;
 
 
 
+<&| /page/info_section.mas, title => "Trials" &>
 
+  <& /breeders_toolbox/program/trials.mas, program_id => $program_id &>
+
+</&>
 
 
 
