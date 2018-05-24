@@ -10,83 +10,80 @@
 }
 </style>
 
-<form id="new_account_form">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-sm-2 col-md-2 col-lg-2">
-      </div>
-      <div class="col-sm-8 col-md-8 col-lg-8" >
-	<div class="panel panel-danger">
-          <div class="panel-heading">Notice</div>
-	  <div class="panel-body">
-            <ul>
-	      <li><b>Before</b> creating a new account, please check if you <b>already have an account</b> using the <a href="/search/direct_search.pl?search=directory">directory search</a>. </li>
-	      <li>A link will be emailed to you. Please click on it to activate the account.</li>
-	      <li><b>All fields are required.</b></li>
-	    </ul>
-	  </div>
-	</div>
-	
-	<form class="form-horizontal" role="form" name="submit_userdata" method="post" action="new-account.pl">
-	  <div class="form-group">
-	    <label class="col-sm-3 control-label">First Name: </label>
-	    <div class="col-sm-9">
-	      <input class="form-control" type="text" name="first_name" value="" />
-	    </div>
-	  </div>
-	  <div class="form-group">
-	    <label class="col-sm-3 control-label">Last Name: </label>
-	    <div class="col-sm-9">
-	      <input class="form-control" type="text" name="last_name" value="" />
-	    </div>
-	  </div>
-	  <div class="form-group">
-	    <label class="col-sm-3 control-label">Organization: </label>
-	    <div class="col-sm-9">
-	      <input class="form-control" type="text" name="organization" value="" />
-	    </div>
-	  </div>
-	  <div class="form-group">
-	    <label class="col-sm-3 control-label">Username: </label>
-	    <div class="col-sm-9">
-	      <input class="form-control" type="text" name="username" value="" /><br/>Username must be at least 7 characters long.
-	    </div>
-	  </div>
-	  <div class="form-group">
-	    <label class="col-sm-3 control-label">Password: </label>
-	    <div class="col-sm-9">
-	      <input class="form-control" type="password" name="password" value="" /><br/>Password must be at least 7 characters long and different from your username.
-	    </div>
-	  </div>
-	  <div class="form-group">
-	    <label class="col-sm-3 control-label">Confirm Password: </label>
-	    <div class="col-sm-9">
-	      <input class="form-control" type="password" name="confirm_password" value="" />
-	    </div>
-	  </div>
-	  <div class="form-group"><br />
-	    </div>
-	  <div class="form-group">
-	    <label class="col-sm-3 control-label">Email Address: </label>
-	    <div class="col-sm-9">
-	      <input class="form-control" type="text" name="email_address" value="" />
-	      <div>
-		An email will be sent to this address requiring you to confirm its receipt to activate your account.
-	      </div>
-	    </div>
-	  </div>
-	  <div align="right">
-	    <button class="btn btn-default" type="reset" >Reset</button>
-	    <button class="btn btn-primary" type="submit" name="create_account" >Create Account</button>
-	  </div>
-	</form>    
-      </div>
-      <div class="col-sm-2 col-md-2 col-lg-2">
-      </div>
+<div class="row">
+    <div class="col-sm-10 col-sm-offset-1">
+
+        <form id="new_account_form">
+            <div class="container-fluid">
+                <div class="panel panel-danger">
+                    <div class="panel-heading">Notice</div>
+                    <div class="panel-body">
+                        <ul>
+                            <li><b>Before</b> creating a new account, please check if you <b>already have an account</b> using the <a href="/search/direct_search.pl?search=directory">directory search</a>. </li>
+                            <li>A link will be emailed to you. Please click on it to activate the account.</li>
+                            <li><b>All fields are required.</b></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <form class="form-horizontal" role="form" name="submit_userdata" method="post" action="new-account.pl">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">First Name: </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="text" name="first_name" value="" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Last Name: </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="text" name="last_name" value="" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Organization: </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="text" name="organization" value="" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Username: </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="text" name="username" value="" />
+                            <p class="help-block">Username must be at least 7 characters long.</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Password: </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="password" name="password" value="" />
+                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Confirm Password: </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="password" name="confirm_password" value="" />
+                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Email Address: </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" type="text" name="email_address" value="" />
+                            <p class="help-block">An email will be sent to this address requiring you to confirm its receipt to activate your account.</p>
+                        </div>
+                    </div>
+
+                    <div align="right">
+                        <button class="btn btn-default btn-lg" type="reset" >Reset</button>
+                        <button class="btn btn-primary btn-lg" type="submit" name="create_account" >Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </form>
+
     </div>
-  </div>
-  <br/>
-</form>
+</div>
 
 <script>
 
