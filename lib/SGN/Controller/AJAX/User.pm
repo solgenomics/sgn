@@ -149,7 +149,7 @@ This message is sent to confirm the email address for community user
 Please click (or cut and paste into your browser) the following link to
 confirm your account and email address:
 
-https://$host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
+  $host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
 
 Thank you,
 Sol Genomics Network
