@@ -10,8 +10,7 @@
 <& /site/list.mas &>
 <& /site/dataset.mas &>
 <& /calendar/events_by_user_role.mas &>
-
-<!-- & /site/login_dialog.mas & -->
+<& /site/login_dialog.mas &>
 
 <!--
 <div id="working" style="text-align : center;">
