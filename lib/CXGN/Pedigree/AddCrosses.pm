@@ -12,7 +12,7 @@ CXGN::Pedigree::AddCrosses - a module to add cross experiments.
 
 =head1 DESCRIPTION
 
-Adds an array of crosses. The stock names used in the cross must already exist in the database, and the verify function does this check.   This module is intended to be used in independent loading scripts and interactive dialogs.
+Adds an array of crosses. The parents used in the cross must already exist in the database, and the verify function does this check.   This module is intended to be used in independent loading scripts and interactive dialogs.
 
 =head1 AUTHORS
 
@@ -81,12 +81,9 @@ sub add_crosses {
   #add all crosses in a single transaction
   my $coderef = sub {
 
-      #get cvterms for parents and offspring
+      #get cvterms for parents
       my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
-
       my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_parent', 'stock_relationship');
-      #my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
-
 
       #get cvterm for cross_experiment
       my $cross_experiment_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type');
@@ -94,13 +91,15 @@ sub add_crosses {
       #get cvterm for stock type cross
       my $cross_stock_type_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
 
-      #get cvterm for female_plot_of
+      #get cvterm for female and male plots
       my $female_plot_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_plot_of', 'stock_relationship');
-
-      #get cvterm for male_plot_of
       my $male_plot_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_plot_of', 'stock_relationship');
 
-      print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
+      #get cvterm for female and male plants
+      my $female_plant_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_plant_of', 'stock_relationship');
+      my $male_plant_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_plant_of', 'stock_relationship');
+
+#      print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
 
       #lookup location by name
       $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
@@ -124,6 +123,10 @@ sub add_crosses {
     my $male_plot_name;
     my $female_plot;
     my $male_plot;
+    my $female_plant_name;
+    my $male_plant_name
+    my $female_plant;
+    my $male_plant;
 
       $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
 
@@ -147,6 +150,18 @@ sub add_crosses {
 	      $male_plot_name = $pedigree->get_male_plot()->get_name();
 	      $male_plot = $self->_get_plot($male_plot_name);
 	  }
+
+    if ($pedigree->has_female_plant()) {
+	      $female_plant_name = $pedigree->get_female_plant()->get_name();
+	      $female_plant = $self->_get_plant($female_plant_name);
+	  }
+
+    if ($pedigree->has_male_plant()) {
+	      $male_plant_name = $pedigree->get_male_plant()->get_name();
+	      $male_plant = $self->_get_plant($male_plant_name);
+	  }
+
+
 
 	  #organism of cross experiment will be the same as the female parent
 	  if ($female_parent) {
@@ -231,6 +246,26 @@ sub add_crosses {
         } );
     }
 
+    #link cross to female_plant
+    if ($female_plant) {
+        $cross_stock->find_or_create_related('stock_relationship_objects', {
+            type_id => $female_plant_of_cvterm->cvterm_id(),
+            object_id => $cross_stock->stock_id(),
+            subject_id => $female_plant->stock_id(),
+        } );
+    }
+
+    #link cross to male_plant
+    if ($male_plant) {
+        $cross_stock->find_or_create_related('stock_relationship_objects', {
+            type_id => $male_plant_of_cvterm->cvterm_id(),
+            object_id => $cross_stock->stock_id(),
+            subject_id => $male_plant->stock_id(),
+        } );
+    }
+
+
+
     #link the stock of type cross to the experiment
     $experiment->find_or_create_related('nd_experiment_stocks' , {
 	      stock_id => $cross_stock->stock_id(),
@@ -276,12 +311,9 @@ sub validate_crosses {
   my $chado_schema = $self->get_chado_schema();
   my @crosses = @{$self->get_crosses()};
   my $invalid_cross_count = 0;
-  #my $program;
   my $crossing_trial_lookup;
   my $crossing_trial;
-  #my $location_lookup;
   my $trial_lookup;
-  #my $program_lookup;
   my $geolocation = '';
 
 
@@ -397,6 +429,25 @@ sub _get_plot {
 
   if (!$stock) {
     print STDERR "Name in pedigree is not a plot\n";
+    return;
+  }
+
+  return $stock;
+}
+
+sub _get_plant {
+  my $self = shift;
+  my $plant_name = shift;
+  my $chado_schema = $self->get_chado_schema();
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+  my $stock;
+  my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type');
+
+  $stock_lookup->set_stock_name($plant_name);
+  $stock = $stock_lookup->get_stock_exact();
+
+  if (!$stock) {
+    print STDERR "Name in pedigree is not a plant type\n";
     return;
   }
 
