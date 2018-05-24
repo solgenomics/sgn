@@ -218,6 +218,7 @@ sub germplasm_detail {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
 }
 
+# Waiting for pedigree tree to be updated to new brapi spec to switch to germplasm_pedigree_2
 sub germplasm_pedigree {
     my $self = shift;
     my $inputs = shift;
@@ -276,8 +277,16 @@ sub germplasm_pedigree_2 {
             germplasmDbId=>$stock_id,
             defaultDisplayName=>$s->uniquename,
             pedigree=>$pedigree_string,
+            crossingPlan=>'',
+            crossingYear=>'',
+            familyCode=>'',
             parent1DbId=>$parents->{'mother_id'},
-            parent2DbId=>$parents->{'father_id'}
+            parent1Name=>$parents->{'mother'},
+            parent1Type=>'FEMALE',
+            parent2DbId=>$parents->{'father_id'},
+            parent2Name=>$parents->{'father'},
+            parent2Type=>'MALE',
+            siblings=>[]
         );
     }
 
@@ -285,6 +294,7 @@ sub germplasm_pedigree_2 {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
 }
 
+# Waiting for pedigree tree to be updated to new brapi spec to switch to germplasm_progeny_2
 sub germplasm_progeny {
     my $self = shift;
     my $inputs = shift;
@@ -399,7 +409,7 @@ sub germplasm_progeny_2 {
     my $result = {
         defaultDisplayName=>$stock->uniquename,
         germplasmDbId=>$stock_id,
-        data=>[@{$full_data}[$page_size*$page .. $last_item]]
+        progeny=>[@{$full_data}[$page_size*$page .. $last_item]]
     };
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
