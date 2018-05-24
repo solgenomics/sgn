@@ -136,7 +136,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     $new_person->set_last_name($last_name);
     $new_person->store();
     
-    my $host = $c->req()->hostname();
+    my $host = $c->config->{main_production_site_url};
     my $subject="[SGN] Email Address Confirmation Request";
     my $body=<<END_HEREDOC;
     
@@ -149,7 +149,7 @@ This message is sent to confirm the email address for community user
 Please click (or cut and paste into your browser) the following link to
 confirm your account and email address:
 
-https://$host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
+  $host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
 
 Thank you,
 Sol Genomics Network
@@ -295,7 +295,7 @@ This message is sent to confirm the private e-mail address for community user
 Please click (or cut and paste into your browser) the following link to
 confirm your account and e-mail address:
 	
-http://$host/user/confirm?username=$username&confirm=$confirm_code
+  $host/user/confirm?username=$username&confirm=$confirm_code
       
 Thank you.
 Sol Genomics Network
