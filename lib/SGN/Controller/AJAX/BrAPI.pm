@@ -388,7 +388,7 @@ sub seasons_process {
 
 =cut
 
-sub study_types : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
+sub study_types : Chained('brapi') PathPart('studytypes') Args(0) : ActionClass('REST') { }
 
 sub study_types_POST {
 	my $self = shift;
@@ -1490,7 +1490,8 @@ sub studies_info_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_detail(
-		$c->stash->{study_id}
+		$c->stash->{study_id},
+        $c->config->{main_production_site_url}
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }

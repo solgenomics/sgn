@@ -94,7 +94,7 @@ sub study_types {
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@project_type_ids, $page_size, $page);
 	foreach (@$data_window){
 		push @data, {
-			studyTypeDbId=>$_->[0],
+			#studyTypeDbId=>$_->[0],
 			name=>$_->[1],
 			description=>$_->[2],
 		};
@@ -213,6 +213,7 @@ sub studies_germplasm {
 sub studies_detail {
 	my $self = shift;
 	my $study_id = shift;
+    my $main_production_site_url = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -256,12 +257,33 @@ sub studies_detail {
 				push @$brapi_contacts, {
 					contactDbId => $_->{sp_person_id},
 					name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
+                    instituteName => $_->{organization},
 					email => $_->{email},
 					type => $_->{user_type},
-					orcid =>$_->{phone_number}
+					orcid => ''
 				};
 			}
 			my $location = CXGN::Trial::get_all_locations($self->bcs_schema, $location_id)->[0];
+
+            my $additional_files = $t->get_additional_uploaded_files();
+            my @data_links;
+            foreach (@$additional_files){
+                push @data_links, {
+                    type => 'Additional File',
+                    name => $_->[4],
+                    url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
+                };
+            }
+
+            my $phenotype_files = $t->get_phenotype_metadata();
+            foreach (@$additional_files){
+                push @data_links, {
+                    type => 'Uploaded Phenotype File',
+                    name => $_->[4],
+                    url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
+                };
+            }
+
 			%result = (
 				studyDbId=>$t->get_trial_id(),
 				studyName=>$t->get_name(),
@@ -269,6 +291,7 @@ sub studies_detail {
 				trialName=>$folder->project_parent->name(),
 				studyType=>$project_type,
 				seasons=>\@years,
+                studyDescription=>$t->get_description(),
 				locationDbId=>$location_id,
 				locationName=>$location_name,
 				programDbId=>$folder->breeding_program->project_id(),
@@ -277,6 +300,7 @@ sub studies_detail {
 				endDate => $harvest_date,
 				additionalInfo=>\%additional_info,
 				active=>'',
+                license=>$t->get_data_agreement(),
 				location=> {
 					locationDbId => $location->[0],
 					locationType=>$location->[8],
@@ -289,7 +313,9 @@ sub studies_detail {
 					altitude=>$location->[4],
 					additionalInfo=> $location->[7]
 				},
-				contacts=>$brapi_contacts
+				contacts=>$brapi_contacts,
+                dataLinks=>\@data_links,
+                lastUpdate=>{}
 			);
 		} else {
 			return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not a study');

@@ -29,6 +29,8 @@ sub calls {
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 
+    $page_size = 1000;
+
 	my $status = $self->status;
 	my @available = (
 		['token', ['json'], ['POST','DELETE'] ],
@@ -46,10 +48,10 @@ sub calls {
 		['markerprofiles/id', ['json'], ['GET'] ],
 		['markerprofiles/methods', ['json'], ['GET'] ],
 		['allelematrix-search', ['json','tsv','csv','xls'], ['GET','POST'] ],
-		['programs', ['json'], ['GET'] ],
+		['programs', ['json'], ['GET','POST'] ],
 		['crops', ['json'], ['GET'] ],
 		['seasons', ['json'], ['GET','POST'] ],
-		['studyTypes', ['json'], ['GET','POST'] ],
+		['studytypes', ['json'], ['GET','POST'] ],
 		['trials', ['json'], ['GET','POST'] ],
 		['trials/id', ['json'], ['GET'] ],
 		['studies-search', ['json'], ['GET','POST'] ],
