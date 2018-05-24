@@ -50,10 +50,18 @@ Future crop improvement relies on harnessing the broader genetic diversity prese
 
 <&| /page/info_section.mas, title => 'The products' &>
 
-<ul>
-<li>List of accessions and passport data</li>
-<li>SRA reads (link to NCBI)</li>
-</ul>
+  <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+    
+    <& /breeders_toolbox/program/trials.mas, program_id => 54 &>
+      
+</&>
+
+<&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+
+  <& /breeders_toolbox/program/traits.mas, program_id => 54  &>
+
+</&>
+
 
 </&>
 
