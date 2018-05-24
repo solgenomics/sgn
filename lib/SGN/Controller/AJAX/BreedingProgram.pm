@@ -95,9 +95,10 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
 	push @trial_ids , $trial_id;
     }
     my $trial_ids = join ',', map { "?" } @trial_ids;
-
-
-    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+    my @phenotype_data;
+    
+    if ( $trial_ids ) {
+	my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value),
         to_char(avg(phenotype.value::real), 'FM999990.990'),
@@ -120,31 +121,29 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id 
         ORDER BY cvterm.name ASC
        ;");
+	
+	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+	$h->execute( @trial_ids , $numeric_regex);
+    
+        while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute( @trial_ids , $numeric_regex);
-
-    my @phenotype_data;
-
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
-
-        my $cv = 0;
-        if ($stddev && $average != 0) {
-            $cv = ($stddev /  $average) * 100;
-            $cv = $round->round($cv) . '%';
-        }
-        if ($average) { $average = $round->round($average); }
-        if ($min) { $min = $round->round($min); }
-        if ($max) { $max = $round->round($max); }
-        if ($stddev) { $stddev = $round->round($stddev); }
-
-        my @return_array;
-        
-       
-        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
-        push @phenotype_data, \@return_array;
+	    my $cv = 0;
+	    if ($stddev && $average != 0) {
+		$cv = ($stddev /  $average) * 100;
+		$cv = $round->round($cv) . '%';
+	    }
+	    if ($average) { $average = $round->round($average); }
+	    if ($min) { $min = $round->round($min); }
+	    if ($max) { $max = $round->round($max); }
+	    if ($stddev) { $stddev = $round->round($stddev); }
+	    
+	    my @return_array;
+	    
+	    
+	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+	    push @phenotype_data, \@return_array;
+	}
     }
-
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
