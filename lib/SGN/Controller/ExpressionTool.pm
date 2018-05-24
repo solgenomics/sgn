@@ -23,7 +23,7 @@ sub input :Path('/tools/expression/')  :Args(0) {
 sub expression_atlas :Path('/tools/expression_atlas/')  :Args(0) {
     my ($self, $c) = @_;
     if (!$c->user()) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         $c->detach;
     }
     $c->stash->{user_name} = $c->user->get_object->get_username;

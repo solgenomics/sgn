@@ -171,7 +171,7 @@ solGS.waitPage = function (page, args) {
 
     function loginUser () {
 
-	window.location = '/solpeople/login.pl?goto_url=' + window.location.pathname;
+	window.location = '/user/login?goto_url=' + window.location.pathname;
 	
     }
 

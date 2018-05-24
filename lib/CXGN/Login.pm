@@ -51,7 +51,7 @@ use CatalystX::GlobalContext '$c';
 use base qw | CXGN::DB::Object |;
 
 our $LOGIN_COOKIE_NAME = 'sgn_session_id';
-our $LOGIN_PAGE        = '/solpeople/login.pl';
+our $LOGIN_PAGE        = '/user/login';
 our $LOGIN_TIMEOUT     = 7200;                    #seconds for login to timeout
 our $DBH;
 our $EXCHANGE_DBH = 1;
@@ -305,6 +305,17 @@ sub login_allowed {
     }
 }
 
+=head2 login_user
+
+ Usage:        $login->login_user($username, $password);
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub login_user {
     my $self = shift;
     my ( $username, $password ) = @_;
@@ -312,9 +323,13 @@ sub login_user {
       ;    #information about whether login succeeded, and if not, why not
     if ( $self->login_allowed() ) {
         my $sth = $self->get_sql("user_from_uname_pass");
+
+	print STDERR "NOW LOGGING IN USER $username\n";
         my $num_rows = $sth->execute( $username, $password );
 
         my ( $person_id, $disabled, $user_prefs, $first_name, $last_name ) = $sth->fetchrow_array();
+
+	print STDERR "FOUND: $person_id\n";
         if ( $num_rows > 1 ) {
             die "Duplicate entries found for username '$username'";
         }
@@ -468,7 +483,7 @@ sub set_sql {
 				sgn_people.sp_person 
 			WHERE 
 				UPPER(username)=UPPER(?) 
-				AND password=?",
+				AND (sp_person.password = crypt(?, sp_person.password))",
 
         cookie_string_exists =>
 

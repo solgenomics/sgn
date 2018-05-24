@@ -1,0 +1,109 @@
+
+<%args>
+  $logged_in_username
+  $private_email => ''
+</%args>
+
+<& /page/page_title.mas, title => "Update User Information" &>
+
+Please verify your current password to make changes. Select changes desired by checking the appropriate checkbox and entering the new information. <br /><br />
+
+<style>
+
+.textlabel {
+  width: 200px;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  float:left;     
+}
+
+.input { 
+  width: 200px;
+  white-space:nowrap;
+}
+
+.checkboxes { 
+  width: 20px;
+  text-align: left;
+}
+
+.form-control { 
+  width: 200px;
+}
+
+</style>
+
+<form id="change_account_form" name="change_account_form"> 
+<div>
+  <label class="textlabel" for="current_password" id="current_password_label">Current password <font color="red">*</font></label>
+  <input type="password" class="form-control" id="current_password" name="current_password" />
+</div>
+
+<br />
+<h4><input type="checkbox" id="change_password" name="change_password">Change password</input></h4>
+
+<div>
+  <label class="textlabel" for="new_password" >New password</label>
+  <input class="form-control" id="new_password" name="new_password" type="password" />
+</div>
+
+<div>
+  <label class="textlabel" for="confirm_password" >Confirm password</label>
+  <input class="form-control" id="confirm_password" name="confirm_password" type="password" />
+</div>
+<br />
+<br />
+
+<h4><input type="checkbox" id="change_email" name="change_email">Change email</input></h4>
+<div>Your private e-mail address is not publically displayed online. It is used only for SGN staff to contact you about changes to your record or for e-mailing your password to you. Changing your private e-mail address will trigger a confirmation message from SGN to verify the address is usable by SGN.</div><br />
+<div>
+  <label class="textlabel" for="private_email" >New email</label>
+  <input class="form-control" id="private_email" name="private_email" value="<% $private_email %>" />
+</div>
+<div>
+  <label class="textlabel" for="confirm_email" >Confirm email</label>
+  <input class="form-control" id="confirm_email" name="confirm_email" value="<% $private_email %>" />
+</div>
+
+<br />
+<br />
+<h4><input class="checkboxes" type="checkbox" id="change_username" name="change_username">Change username</input></h4>
+<div>
+  <label class="textlabel" for="new_username">New username</label>
+  <input class="form-control" id="new_username" name="new_username" value="<% $logged_in_username %>" />
+</div>
+
+<br />
+
+<br />
+<br />
+<button class="btn btn-secondary" type="clear_form" id="clear_form">Reset form</button>
+
+<button type="submit" class="btn btn-primary" id="submit_account_info">Change Account Information</button>
+
+</form>
+
+
+<script>
+  jQuery(document).ready( function() { 
+    jQuery('#change_account_form').submit( function(event) { 
+       event.preventDefault();
+       var form_data = jQuery('#change_account_form').serialize();
+       alert(JSON.stringify(form_data));
+       jQuery.ajax( { 
+         url: '/ajax/user/update',
+         data: form_data,
+         error: function(r) { alert('An error occurred! Sorry!');  },
+         success: function(r) {
+           if (r.error) { alert(r.error); }
+           else { 
+             alert(r.message);
+           }
+         }
+       });
+    });
+  });
+
+</script>

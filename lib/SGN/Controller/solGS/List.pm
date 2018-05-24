@@ -143,7 +143,7 @@ sub solgs_list_login_message :Path('/solgs/list/login/message') Args(0) {
     my $page = $c->req->param('page');
 
     my $message = "This is a private data. If you are the owner, "
-	. "please <a href=\"/solpeople/login.pl?goto_url=$page\">login</a> to view it.";
+	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
 
     $c->stash->{message} = $message;
 
