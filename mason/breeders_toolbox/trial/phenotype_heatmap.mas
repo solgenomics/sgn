@@ -454,29 +454,49 @@ jQuery(document).ready( function() {
                             replicates.push(value);
                         }
                         if (key == 'observations'){
-                            jQuery.each(value, function(key_add1, value_add1){
-                                jQuery.each(value_add1, function(key_add, value_add){
-                                        if (selectedTrait ==  value_add ){
-                                            if (key_add == 'observationDbId'){
-                                                pheno_ids.push(value_add);
-                                            }
-                                            if (key_add == 'observationVariableDbId'){
-                                                trait_ids.push(value_add);
-                                            }
-                                            if (key_add == 'observationVariableName'){
-                                                trait_names.push(value_add);
-                                            }
-                                            if (key_add == 'value'){
-                                                pheno_values.push(value_add); 
-                                            }
-                                        }
-                                });
+                            //iterate through object keys
+                            value.forEach(function(item) {
+                              //get the value of name
+                              if (selectedTrait == item.observationVariableDbId){
+                                  pheno_ids.push(item.observationDbId);
+                                  trait_ids.push(item.observationVariableDbId);
+                                  trait_names.push(item.observationVariableName);
+                                  pheno_values.push(item.value);
+                              }
+                              //var val = item.name
+                              //push the name string in the array
+                              //arrNames.push(val);
                             });
-                        }
+                            //console.log(arrNames); //prints ["someone1", "someone2"]
+                            // jQuery.each(value, function(key_add1, value_add1){
+                            //     //jQuery.each(value_add1, function(key_add, value_add){ 
+                            //     
+                            //             if (selectedTrait ==  value.observationVariableDbId ){ u= u +1;
+                            //                 pheno_ids.push(value.observationDbId);
+                            //                 trait_ids.push(value.observationVariableDbId);
+                            //                 trait_names.push(value.observationVariableName);
+                            //                 pheno_values.push(value.value);
+                            //                 //if (key_add == 'observationDbId'){
+                            //                     //pheno_ids.push(value_add);
+                            //                 //}
+                            //                 //if (key_add == 'observationVariableDbId'){
+                            //                     //trait_ids.push(value_add);
+                            //                 //}
+                            //                 //if (key_add == 'observationVariableName'){
+                            //                     //trait_names.push(value_add);
+                            //                 //}
+                            //                 //if (key_add == 'value'){
+                            //                     //pheno_values.push(value_add); 
+                            //                 //} 
+                            //                 
+                            //             } 
+                            //     //});
+                            // }); console.log(u);
+                        } 
                     });    
                 });
                 
-                console.log(pheno_values);
+                console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(trait_names);
                 var col_length = response.col[0]; 
                 var row_length = response.row[0];
                 var col_max =  response.col_max;
