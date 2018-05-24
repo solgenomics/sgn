@@ -295,7 +295,7 @@ This message is sent to confirm the private e-mail address for community user
 Please click (or cut and paste into your browser) the following link to
 confirm your account and e-mail address:
 	
-http://$host/user/confirm?username=$username&confirm=$confirm_code
+  $host/user/confirm?username=$username&confirm=$confirm_code
       
 Thank you.
 Sol Genomics Network
