@@ -9,6 +9,7 @@ use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::Cross;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -271,22 +272,46 @@ sub germplasm_pedigree_2 {
     my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
     if ($s) {
         $total_count = 1;
+        my $uniquename = $s->uniquename;
         my $parents = $s->get_parents();
         my $pedigree_string = $s->get_pedigree_string('Parents');
+        my $female_name = $parents->{'mother'};
+        my $male_name = $parents->{'father'};
+        my $female_id = $parents->{'mother_id'};
+        my $male_id = $parents->{'father_id'};
+
+        my $cross_info = CXGN::Cross->get_cross_info_for_progeny($self->bcs_schema, $female_id, $male_id, $stock_id);
+        my $cross_id = $cross_info ? $cross_info->[0] : '';
+        my $cross_name = $cross_info ? $cross_info->[1] : '';
+        my $cross_year = $cross_info ? $cross_info->[3] : '';
+        my $cross_type = $cross_info ? $cross_info->[2] : '';
+
+        my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
+        #print STDERR Dumper $progenies;
+        my @siblings;
+        foreach (@$progenies){
+            if ($_->[5] ne $uniquename){
+                push @siblings, {
+                    germplasmDbId => $_->[4],
+                    defaultDisplayName => $_->[5]
+                };
+            }
+        }
+
         %result = (
             germplasmDbId=>$stock_id,
-            defaultDisplayName=>$s->uniquename,
+            defaultDisplayName=>$uniquename,
             pedigree=>$pedigree_string,
-            crossingPlan=>'',
-            crossingYear=>'',
-            familyCode=>'',
-            parent1DbId=>$parents->{'mother_id'},
-            parent1Name=>$parents->{'mother'},
+            crossingPlan=>$cross_type,
+            crossingYear=>$cross_year,
+            familyCode=>$cross_name,
+            parent1DbId=>$female_id,
+            parent1Name=>$female_name,
             parent1Type=>'FEMALE',
-            parent2DbId=>$parents->{'father_id'},
-            parent2Name=>$parents->{'father'},
+            parent2DbId=>$male_id,
+            parent2Name=>$male_name,
             parent2Type=>'MALE',
-            siblings=>[]
+            siblings=>\@siblings
         );
     }
 
