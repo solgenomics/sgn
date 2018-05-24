@@ -1466,6 +1466,7 @@ sub programs_list_GET {
 	my $brapi_package_result = $brapi_module->programs_list({
 		program_names => $clean_inputs->{programName},
 		abbreviations => $clean_inputs->{abbreviation},
+        crop => $c->config->{supportedCrop}
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
