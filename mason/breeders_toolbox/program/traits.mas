@@ -1,0 +1,43 @@
+
+<%args>
+$program_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+  
+
+  <div id="pheno_summary_table_div">
+    <table id="phenotype_summary_data" class="display">
+      <thead>
+        <tr>
+          <th>Trait</th>
+          <th>Mean</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Std Dev</th>
+          <th>CV</th>
+          <th>Count</th>
+          <th>Histogram</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+  
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#phenotype_summary_data').DataTable( { 
+      'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
+    });
+  });
+
+
+</script>

@@ -4,8 +4,8 @@
 
 <& /page/page_title.mas, title=>"Varitome project: Exploitation of genetic and epigenetic variation in the regulation of tomato fruit quality traits" &>
 
-<&| /page/info_section.mas, title => '' &>
-<img src="/img/varitome/tomato_domestication.jpg" align="center" width="900" height="500" />
+<&| /page/info_section.mas, title => ''  &>
+<img src="/img/varitome/varitome_tomatoes.jpg" align="center"/>
 
 </&>
 <&| /page/info_section.mas, title => 'Major goals' &>
@@ -50,10 +50,38 @@ Future crop improvement relies on harnessing the broader genetic diversity prese
 
 <&| /page/info_section.mas, title => 'The products' &>
 
-<ul>
-<li>List of accessions and passport data</li>
-<li>SRA reads (link to NCBI)</li>
-</ul>
+
+<&| /page/info_section.mas, title => "SNPs" , collapsible=>1 &>
+
+<%perl>
+my $jbrowse_path = $c->config->{jbrowse_path} ;
+my $data_source = "varitome";
+my $jbrowse_url = $jbrowse_path . "/$data_source&tracks=DNA,gene_models,all_variants" ;
+my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
+   
+</%perl>
+
+% if ( $jbrowse_path ) {
+
+  <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe">
+  <p>Your browser does not support iframes.</p> </iframe>
+
+% }
+
+</&>
+
+  <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+    
+    <& /breeders_toolbox/program/trials.mas, program_id => 54 &>
+      
+</&>
+
+<&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+
+  <& /breeders_toolbox/program/traits.mas, program_id => 54  &>
+
+</&>
+
 
 </&>
 
