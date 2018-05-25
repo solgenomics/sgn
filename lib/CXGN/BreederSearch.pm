@@ -332,6 +332,7 @@ sub refresh_matviews {
     my $dbpass = shift;
     my $materialized_view = shift || 'fullview'; #Can be 'fullview' or 'stockprop'
     my $refresh_type = shift || 'concurrent';
+    my $basepath = shift;
     my $refresh_finished = 0;
     my $async_refresh;
 
@@ -346,33 +347,14 @@ sub refresh_matviews {
     }
     else {
         try {
-            my $run = CXGN::Tools::Run->new({
-                backend => 'Slurm',
-                # temp_base => $tmp_output,
-                # queue => $web_cluster_queue,
-                # working_dir => $tmp_output,
-                # temp_dir => $tmp_output,
-                #
-                # # temp_base => $c->config->{'cluster_shared_tempdir'},
-                # # queue => $c->config->{'web_cluster_queue'},
-                # # working_dir => $c->config->{'cluster_shared_tempdir'},
-                #
-                # # don't block and wait if the cluster looks full
-                # max_cluster_jobs => 1_000_000_000,
-            });
-            my $include_path = 'export PERL5LIB="$PERL5LIB:/home/production/cxgn/local-lib/lib/perl5";';
             if ($refresh_type eq 'concurrent') {
                 print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
-                my $command_string = "$include_path perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c";
-                my @command = split '\s', $command_string;
-
-                $async_refresh = $run->run_cluster(@command);
+                $async_refresh = CXGN::Tools::Run->new();
+                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
             } else {
                 print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
-                my $command_string = "$include_path perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view";
-                my @command = split '\s', $command_string;
-
-                $async_refresh = $run->run_cluster(@command);
+                $async_refresh = CXGN::Tools::Run->new();
+                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
             }
 
             for (my $i = 1; $i < 10; $i++) {
