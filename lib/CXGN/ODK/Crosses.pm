@@ -436,6 +436,10 @@ sub save_ona_cross_info {
         #        comment => $encoded_odk_cross_hash
         #    });
 
+        #The database should only store the last pull from ONA, which will contain all info from ONA
+        my $h_del2 = $metadata_schema->storage->dbh->prepare("DELETE FROM metadata.md_files WHERE filetype = ?");
+        my $r_del2 = $h_del2->execute($file_type);
+
         my $h = $metadata_schema->storage->dbh->prepare("INSERT INTO metadata.md_metadata (create_person_id) VALUES (?) RETURNING metadata_id");
         my $r = $h->execute($self->sp_person_id);
         my $metadata_id = $h->fetchrow_array();
@@ -1068,7 +1072,11 @@ sub create_odk_cross_progress_tree {
     my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
     $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
     print STDERR $wishlist_file_name_loc."\n";
-    my $location_id = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc})->nd_geolocation_id;
+    my $location_id;
+    my $location = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
+    if ($location){
+        $location_id = $location->nd_geolocation_id;
+    }
     my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $self->cross_wishlist_file_name});
     my $iita_breeding_program_id = $bcs_schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
     my $t = Time::Piece->new();

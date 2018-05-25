@@ -231,11 +231,13 @@ sub _check_selection_pop_all_traits_output {
     $c->controller("solGS::solGS")->traits_with_valid_models($c);
     my $training_models_traits = $c->stash->{traits_ids_with_valid_models};
  
-    if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+    if ($sel_traits_ids) 
     {
-	$c->stash->{rest}{cached} = 1;
+	if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+	{
+	    $c->stash->{rest}{cached} = 1;
+	}
     }
-
 }
 
 
@@ -295,10 +297,10 @@ sub _check_combined_trials_model_selection_output {
 sub check_single_trial_training_data {
     my ($self, $c, $pop_id) = @_;
 
-    $c->controller('solGS::solGS')->phenotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $cached_pheno = -s $c->stash->{phenotype_file_name};
   
-    $c->controller('solGS::solGS')->genotype_file_name($c, $pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
     my $cached_geno = -s $c->stash->{genotype_file_name};
   
     if ($cached_pheno && $cached_geno)
@@ -322,8 +324,8 @@ sub check_single_trial_model_output {
     $c->stash->{trait_abbr} = $trait_abbr;
     $c->stash->{pop_id}     = $pop_id;  
  
-    $c->controller('solGS::solGS')->gebv_kinship_file($c);
-    my $cached_gebv = -s $c->stash->{gebv_kinship_file};
+    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
+    my $cached_gebv = -s $c->stash->{rrblup_gebvs_file};
 
     if ($cached_gebv)
     {
@@ -373,7 +375,7 @@ sub check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
     
     my $identifier = $tr_pop_id . '_' . $sel_pop_id;
-    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     
     my $cached_gebv = -s $c->stash->{prediction_pop_gebvs_file};
   
@@ -409,7 +411,7 @@ sub check_combined_trials_training_data {
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
      $c->stash->{combo_pops_id} = $combo_pops_id;
 
-    $c->controller('solGS::solGS')->cache_combined_pops_data($c);
+    $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
   
     my $cached_pheno = -s $c->stash->{trait_combined_pheno_file};
     my $cached_geno  = -s $c->stash->{trait_combined_geno_file};
@@ -429,7 +431,7 @@ sub check_combined_trials_training_data {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

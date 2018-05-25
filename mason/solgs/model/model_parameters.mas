@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-model/model_parameters.mas - displays model parameters
+model/model_parameters.mas - displays model variance components and SNP heritability
 
 =AUTHOR
 
@@ -25,10 +25,10 @@ $model_parameters
 <&| /page/info_section.mas, 
     collapsible => 1, 
     collapsed   => 0, 
-    title       => "Model Parameters"
+    title       => "Variance components"
 &>     
   <& /page/columnar_table.mas,
-     headings   => ["Parameters", "Estimates"], 
+     headings   => ["Variance Components", "Estimates"], 
      data        => $model_parameters,
     __alt_freq   => 2,
     __alt_width  => 1,
