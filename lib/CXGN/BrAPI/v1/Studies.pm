@@ -498,7 +498,7 @@ sub observation_units {
         $unique_observation_units{$_->[1]}++;
         push @{$obs_unit_hash{$_->[1]}}, $_;
     }
-    print STDERR Dumper \%obs_unit_hash;
+    #print STDERR Dumper \%obs_unit_hash;
 
     my %obs_hash;
     my $total_count = scalar(keys %unique_observation_units);
@@ -507,63 +507,63 @@ sub observation_units {
     my $limit = $page_size*($page+1)-1;
     foreach my $obs_unit_id (sort keys %unique_observation_units) {
         if ($count >= $offset && $count <= ($offset+$limit)){
-			my $observations = $obs_unit_hash{$obs_unit_id};
+            my $observations = $obs_unit_hash{$obs_unit_id};
             foreach my $o (@$observations){
-    			my $pheno_uniquename = $o->[5];
-    			my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
-    			my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
+                my $pheno_uniquename = $o->[5];
+                my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
+                my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
 
-    			if(exists($obs_hash{$o->[0]})){
-    				my $observations = $obs_hash{$o->[0]}->{observations};
-    				push @$observations, {
-    					observationDbId => $o->[4],
-    					observationVariableDbId => $o->[2],
-    					observationVariableName => $o->[3],
-    					collector => $operator,
-    					observationTimeStamp => $timestamp,
-    					value => $o->[7]
-    				};
-    				 $obs_hash{$o->[0]}->{observations} = $observations;
-    			} else {
-    				my $prop_hash = $self->get_stockprop_hash($o->[0]);
-    				$obs_hash{$o->[0]} = {
-    					observationUnitDbId => $o->[0],
-    					observationUnitName => $o->[1],
-    					germplasmDbId => $o->[8],
-    					germplasmName => $o->[9],
-    					pedigree => $self->germplasm_pedigree_string($o->[8]),
-    					entryNumber => $prop_hash->{'entry number'} ? join ',', @{$prop_hash->{'entry number'}} : '',
-    					entryType => $prop_hash->{'is a control'} ? 'Check' : 'Test',
-    					plotNumber => $prop_hash->{'plot number'} ? join ',', @{$prop_hash->{'plot number'}} : '',
-    					plantNumber => '',
-    					blockNumber => $prop_hash->{'block'} ? join ',', @{$prop_hash->{'block'}} : '',,
-    					X => $prop_hash->{'row_number'} ? join ',', @{$prop_hash->{'row_number'}} : '',
-    					Y=> $prop_hash->{'col_number'} ? join ',', @{$prop_hash->{'col_number'}} : '',
-    					replicate=> $prop_hash->{'replicate'} ? join ',', @{$prop_hash->{'replicate'}} : '',
-    					observations => [{
-    						observationDbId => $o->[4],
-    						observationVariableDbId => $o->[2],
-    						observationVariableName => $o->[3],
-    						collector => $operator,
-    						observationTimeStamp => $timestamp,
-    						value => $o->[7]
-    					}],
-    				}
-    			}
+                if(exists($obs_hash{$o->[0]})){
+                    my $observations = $obs_hash{$o->[0]}->{observations};
+                    push @$observations, {
+                        observationDbId => $o->[4],
+                        observationVariableDbId => $o->[2],
+                        observationVariableName => $o->[3],
+                        collector => $operator,
+                        observationTimeStamp => $timestamp,
+                        value => $o->[7]
+                    };
+                    $obs_hash{$o->[0]}->{observations} = $observations;
+                } else {
+                    my $prop_hash = $self->get_stockprop_hash($o->[0]);
+                    $obs_hash{$o->[0]} = {
+                        observationUnitDbId => $o->[0],
+                        observationUnitName => $o->[1],
+                        germplasmDbId => $o->[8],
+                        germplasmName => $o->[9],
+                        pedigree => $self->germplasm_pedigree_string($o->[8]),
+                        entryNumber => $prop_hash->{'entry number'} ? join ',', @{$prop_hash->{'entry number'}} : '',
+                        entryType => $prop_hash->{'is a control'} ? 'Check' : 'Test',
+                        plotNumber => $prop_hash->{'plot number'} ? join ',', @{$prop_hash->{'plot number'}} : '',
+                        plantNumber => '',
+                        blockNumber => $prop_hash->{'block'} ? join ',', @{$prop_hash->{'block'}} : '',,
+                        X => $prop_hash->{'row_number'} ? join ',', @{$prop_hash->{'row_number'}} : '',
+                        Y=> $prop_hash->{'col_number'} ? join ',', @{$prop_hash->{'col_number'}} : '',
+                        replicate=> $prop_hash->{'replicate'} ? join ',', @{$prop_hash->{'replicate'}} : '',
+                        observations => [{
+                            observationDbId => $o->[4],
+                            observationVariableDbId => $o->[2],
+                            observationVariableName => $o->[3],
+                            collector => $operator,
+                            observationTimeStamp => $timestamp,
+                            value => $o->[7]
+                        }],
+                    }
+                }
             }
-		}
-		$count++;
-	}
+        }
+        $count++;
+    }
 
-	my @data_out;
-	foreach (sort keys %obs_hash){
-		push @data_out, $obs_hash{$_};
-	}
+    my @data_out;
+    foreach (sort keys %obs_hash){
+        push @data_out, $obs_hash{$_};
+    }
 
-	my %result = (data=>\@data_out);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations result constructed');
+    my %result = (data=>\@data_out);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations result constructed');
 }
 
 sub studies_table {
