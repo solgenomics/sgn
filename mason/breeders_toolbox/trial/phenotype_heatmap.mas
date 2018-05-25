@@ -391,23 +391,26 @@ jQuery(document).ready( function() {
 
     function assayed_trait_heatmap_view(selected, assayedTraitDataset) {
         var selectedTrait = selected;
-        var traitDataset = assayedTraitDataset;
-        alert(selectedTrait);
-        alert(traitDataset);
-        //jQuery.ajax( {
+        //var traitDataset = assayedTraitDataset;
+        //alert(selectedTrait);
+        //alert(traitDataset);
+        jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected,
-        //     url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
-        //     beforeSend: function() {
-        //       jQuery("#working_modal").modal("show");
-        //     },
-        //     success: function(response) {
-        //        var data = response.result.data; 
-        //        var datasort = data.sort(function(obj1, obj2) {
-	                   // Ascending: first plotNumber less than the previous
-	    //           return obj1.plotNumber - obj2.plotNumber;
-        //       });
-        //       var newData = datasort;
-               console.log(traitDataset);
+            //url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
+        url: '/brapi/v1/phenotypes-search?observationLevel=plot&studyDbIds='+trial_id+'&observationVariableDbIds='+selectedTrait+'&pageSize=1000&page=0',
+            beforeSend: function() {
+              jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+               var data = response.result.data; 
+               alert(data);
+               var datasort = data.sort(function(obj1, obj2) {
+	                  // Ascending: first plotNumber less than the previous
+	              return obj1.plotNumber - obj2.plotNumber;
+              });
+              var newData = datasort;
+               //console.log(traitDataset);
+               console.log(newData);
                 var rows = [];
                 var cols = [];
                 var blocks = [];
@@ -427,7 +430,7 @@ jQuery(document).ready( function() {
                 var plot_mums = [];
                 var observ_object = [];
 
-                jQuery.each(traitDataset, function(key_obj, value_obj) {
+                jQuery.each(newData, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
                         if (key == 'X'){
                             rows.push(value);
@@ -463,54 +466,55 @@ jQuery(document).ready( function() {
                             design = value;
                         }
                         if (key == 'observations'){
-                            observ_object.push(value);
+                            //observ_object.push(value);
+                            var obs_object = value[0];
                             //iterate through object keys
-                            // value.forEach(function(item) {
+                             obs_object.forEach(function(item) {
                             //   //get the value of name
                             //   if (selectedTrait == item.observationVariableDbId){
-                            //       pheno_ids.push(item.observationDbId);
-                            //       trait_ids.push(item.observationVariableDbId);
-                            //       trait_names.push(item.observationVariableName);
-                            //       pheno_values.push(item.value);
+                                   pheno_ids.push(item.observationDbId);
+                                   trait_ids.push(item.observationVariableDbId);
+                                   trait_names.push(item.observationVariableName);
+                                   pheno_values.push(item.value);
                             //   }
-                            // });
+                             });
                         } 
                     });    
                 });
-                var plotNames = [];
-                for (i=0; i<plot_names.length; i++){
-                    plotNames.push(plot_names[i])
-                    var s = observ_object[i];
-                    s.forEach(function(item) {
-                         if (selectedTrait == item.observationVariableDbId){
-                            jQuery.each(item, function(key, value) {
-                                if (key == 'observationDbId'){
-                                    pheno_ids.push(value);
-                                }
-                                if (key == 'observationVariableDbId'){
-                                    trait_ids.push(value);
-                                }
-                                if (key == 'observationVariableName'){
-                                    trait_names.push(value);
-                                }
-                                if (key == 'value'){
-                                    pheno_values.push(value);
-                                }
-                            });
-                         }
-                         
-                        
-                    //   //get the value of name
-                      
-                    //        pheno_ids.push(item.observationDbId);
-                    //        trait_ids.push(item.observationVariableDbId);
-                    //        trait_names.push(item.observationVariableName);
-                    //        pheno_values.push(item.value);
-                    //    }
-                    });
-                }
+                // var plotNames = []; 
+                // for (i=0; i<plot_names.length; i++){
+                //     plotNames.push(plot_names[i])
+                //     var s = observ_object[i];
+                //     s.forEach(function(item) {
+                //          if (selectedTrait == item.observationVariableDbId){
+                //             jQuery.each(item, function(key, value) {
+                //                 if (key == 'observationDbId'){
+                //                     pheno_ids.push(value);
+                //                 }
+                //                 if (key == 'observationVariableDbId'){
+                //                     trait_ids.push(value);
+                //                 }
+                //                 if (key == 'observationVariableName'){
+                //                     trait_names.push(value);
+                //                 }
+                //                 if (key == 'value'){
+                //                     pheno_values.push(value);
+                //                 }
+                //             });
+                //          }
+                //          
+                //     
+                //     //   //get the value of name
+                //       
+                //     //        pheno_ids.push(item.observationDbId);
+                //     //        trait_ids.push(item.observationVariableDbId);
+                //     //        trait_names.push(item.observationVariableName);
+                //     //        pheno_values.push(item.value);
+                //     //    }
+                //     });
+                // }
                 
-                console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(trait_names); console.log(plotNames);
+                console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(trait_names);
                 
                 var psudo_rows = [];
                 var map_option = 0;
@@ -779,11 +783,11 @@ jQuery(document).ready( function() {
                     jQuery("#trait_heatmap").css("display", "none");
                     jQuery("#trial_no_rowColMSG").css("display", "inline-block");
                 }
-            // },
-            // error: function(reponse) {
-            //    alert('Error displaying traits assayed heatmap');   
-            // }
-        //});    
+            },
+             error: function(reponse) {
+                alert('Error displaying traits assayed heatmap');   
+            }
+        });    
     }
     var image = [];
     var image_ids = [];
@@ -1389,7 +1393,7 @@ jQuery(document).ready( function() {
                     return obj1.plotNumber - obj2.plotNumber;
        	        });
        	    newData = datasort;
-            console.log(newData);
+            //console.log(newData);
             },
             error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
@@ -1412,7 +1416,7 @@ jQuery(document).ready( function() {
   jQuery(document).on('change', '#trait_list_dropdown', function () {
     selected = jQuery("#trait_list_dropdown").val();
     assayedTraitDataset = newData;
-    console.log(assayedTraitDataset);
+    //console.log(assayedTraitDataset);
     if (selected == ''){ }
     if (jQuery.isNumeric(selected)){
         d3.select("svg").remove();
