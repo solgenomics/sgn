@@ -51,6 +51,8 @@ sub locations_list {
 			latitude=>$_->[2],
 			longitude=>$_->[3],
 			altitude=>$_->[4],
+            instituteName=>'',
+            instituteAddress=>'',
 			additionalInfo=> $_->[7]
 		};
 	}

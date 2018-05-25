@@ -232,10 +232,10 @@ sub search_table {
     );
 
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
 }
 
-sub search_table_csv {
+sub search_table_csv_or_tsv {
     my $self = shift;
     my $inputs = shift;
     my $format = $inputs->{format} || 'json';
@@ -278,7 +278,7 @@ sub search_table_csv {
         @data = $phenotypes_search->get_phenotype_matrix();
     }
     catch {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search Table');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search CSV');
     }
 
     my %result;
@@ -292,7 +292,7 @@ sub search_table_csv {
     });
     my @data_files = $file_response->get_datafiles();
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search csv result constructed');
 }
 
 1;

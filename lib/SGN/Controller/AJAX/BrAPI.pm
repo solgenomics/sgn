@@ -1920,7 +1920,7 @@ sub process_phenotypes_search_csv {
 
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-	my $brapi_package_result = $brapi_module->search_table_csv({
+	my $brapi_package_result = $brapi_module->search_table_csv_or_tsv({
 		trait_ids => $clean_inputs->{observationVariableDbId},
 		accession_ids => $clean_inputs->{germplasmDbId},
 		study_ids => $clean_inputs->{studyDbId},
@@ -1963,7 +1963,7 @@ sub process_phenotypes_search_tsv {
 
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-	my $brapi_package_result = $brapi_module->search_table_tsv({
+	my $brapi_package_result = $brapi_module->search_table_csv_or_tsv({
 		trait_ids => $clean_inputs->{observationVariableDbId},
 		accession_ids => $clean_inputs->{germplasmDbId},
 		study_ids => $clean_inputs->{studyDbId},
