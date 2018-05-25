@@ -467,19 +467,14 @@ jQuery(document).ready( function() {
                         }
                         if (key == 'observations'){
                             //observ_object.push(value);
-                        var valueObs = value[0];
-                        //console.log(valueObs);
-                            //iterate through object keys
-                        
-                            //   //get the value of name
+                            var valueObs = value[0];
+
                             //   if (selectedTrait == item.observationVariableDbId){
-                                   pheno_ids.push(valueObs.observationDbId);
-                                   trait_ids.push(valueObs.observationVariableDbId);
-                                   trait_names.push(valueObs.observationVariableName);
-                                   pheno_values.push(valueObs.value);
+                           pheno_ids.push(valueObs.observationDbId);
+                           trait_ids.push(valueObs.observationVariableDbId);
+                           trait_names.push(valueObs.observationVariableName);
+                           pheno_values.push(valueObs.value);
                             //   }
-                            
-                        
                         } 
                     });    
                 });
@@ -597,12 +592,6 @@ jQuery(document).ready( function() {
             		result.push({plotname:plot_names[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], col:cols[i], pheno:pheno_values[i], plot_msg:plot_popUp, pheno_id:pheno_ids[i]}) ;
                 }
                 
-                
-                
-                
-                
-                
-                
                 var col_max = Math.max.apply(Math,unique_cols);
                 var row_max = Math.max.apply(Math,unique_rows);
                 var rep_max = Math.max.apply(Math,replicates);
@@ -613,13 +602,6 @@ jQuery(document).ready( function() {
                 var unique_ctrl = [];
                 var plots = plot_mums;
                 var col_max;
-                
-                // var col_length = response.col[0]; 
-                // var row_length = response.row[0];
-                // var col_max =  response.col_max;
-                // var row_max =  response.row_max;
-                // var false_coord = response.false_coord;
-                // phenotypes_id = response.phenoID;
 
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
@@ -789,11 +771,11 @@ jQuery(document).ready( function() {
              error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
             }
-        });    
+        });
     }
     var image = [];
     var image_ids = [];
-    function btnClick(n){                        
+    function btnClick(n){
       if (n.length == 0){
          jQuery("#hm_view_plot_image_submit").addClass("disabled");
       } else {
