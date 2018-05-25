@@ -416,69 +416,28 @@ sub _parse_with_plugin {
 }
 
 
-sub _get_accession {
-    my $self = shift;
-    my $accession_name = shift;
-    my $chado_schema = $self->get_chado_schema();
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-    my $stock;
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+#sub _get_accession {
+#    my $self = shift;
+#    my $accession_name = shift;
+#    my $chado_schema = $self->get_chado_schema();
+#    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+#    my $stock;
+#    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 
-    $stock_lookup->set_stock_name($accession_name);
-    $stock = $stock_lookup->get_stock_exact();
+#    $stock_lookup->set_stock_name($accession_name);
+#    $stock = $stock_lookup->get_stock_exact();
 
-    if (!$stock) {
-        return;
-    }
+#    if (!$stock) {
+#        return;
+#    }
 
-    if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-        return;
-    }
+#    if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
+#        return;
+#    }
 
-    return $stock;
+#    return $stock;
 
-}
-
-sub _get_plot {
-    my $self = shift;
-    my $plot_name = shift;
-    my $chado_schema = $self->get_chado_schema();
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-    my $stock;
-    my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type');
-
-    $stock_lookup->set_stock_name($plot_name);
-    $stock = $stock_lookup->get_stock_exact();
-
-    if (!$stock) {
-        return;
-    }
-
-    if ($stock->type_id() != $plot_cvterm->cvterm_id()) {
-        return;
-    }
-
-    return $stock;
-
-}
-
-
-sub _get_cross {
-    my $self = shift;
-    my $cross_name = shift;
-    my $chado_schema = $self->get_chado_schema();
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-    my $stock;
-
-    $stock_lookup->set_stock_name($cross_name);
-    $stock = $stock_lookup->get_stock_exact();
-
-    if (!$stock) {
-        return;
-    }
-
-    return $stock;
-}
+#}
 
 
 1;
