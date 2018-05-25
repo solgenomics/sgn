@@ -99,9 +99,11 @@ jQuery(document).ready(function() {
           $('#dataset_select').val('ERROR');
         }
         else {
-	  var option_html = '<option selected="selected" value=""> </option>';
+	    alert(response.options);
+	    	    alert(response.options.length);
+	var option_html = '<option selected="selected" value=""> </option>';
 	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
+	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
 	  }
 	  $('#pheno_select').attr("disabled",false).html(option_html);
 	  
