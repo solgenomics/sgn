@@ -63,6 +63,7 @@ sub calls {
 		['studies/id/layout', ['json'], ['GET'], ['1.0'] ],
 		['studies/id/observations', ['json'], ['GET'], ['1.0'] ],
 		['phenotypes-search', ['json'], ['GET','POST'], ['1.0'] ],
+		['phenotypes-search/table', ['json'], ['GET','POST'], ['1.0'] ],
 		['traits', ['json'], ['GET'], ['1.0'] ],
 		['traits/id', ['json'], ['GET'], ['1.0'] ],
 		['maps', ['json'], ['GET'], ['1.0'] ],
