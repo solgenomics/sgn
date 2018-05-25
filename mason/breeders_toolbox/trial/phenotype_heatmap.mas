@@ -425,6 +425,7 @@ jQuery(document).ready( function() {
                 var trait_ids = [];
                 var design;
                 var plot_mums = [];
+                var observ_object = [];
 
                 jQuery.each(traitDataset, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
@@ -462,23 +463,54 @@ jQuery(document).ready( function() {
                             design = value;
                         }
                         if (key == 'observations'){
+                            observ_object.push(value);
                             //iterate through object keys
-                            value.forEach(function(item) {
-                              //get the value of name
-                              if (selectedTrait == item.observationVariableDbId){
-                                  pheno_ids.push(item.observationDbId);
-                                  trait_ids.push(item.observationVariableDbId);
-                                  trait_names.push(item.observationVariableName);
-                                  pheno_values.push(item.value);
-                              }
-                            });
+                            // value.forEach(function(item) {
+                            //   //get the value of name
+                            //   if (selectedTrait == item.observationVariableDbId){
+                            //       pheno_ids.push(item.observationDbId);
+                            //       trait_ids.push(item.observationVariableDbId);
+                            //       trait_names.push(item.observationVariableName);
+                            //       pheno_values.push(item.value);
+                            //   }
+                            // });
                         } 
                     });    
                 });
+                var plotNames = [];
+                for (i=0; i<plot_names.length; i++){
+                    plotNames.push(plot_names[i])
+                    var s = observ_object[i];
+                    s.forEach(function(item) {
+                         if (selectedTrait == item.observationVariableDbId){
+                            jQuery.each(item, function(key, value) {
+                                if (key == 'observationDbId'){
+                                    pheno_ids.push(value);
+                                }
+                                if (key == 'observationVariableDbId'){
+                                    trait_ids.push(value);
+                                }
+                                if (key == 'observationVariableName'){
+                                    trait_names.push(value);
+                                }
+                                if (key == 'value'){
+                                    pheno_values.push(value);
+                                }
+                            });
+                         }
+                         
+                        
+                    //   //get the value of name
+                      
+                    //        pheno_ids.push(item.observationDbId);
+                    //        trait_ids.push(item.observationVariableDbId);
+                    //        trait_names.push(item.observationVariableName);
+                    //        pheno_values.push(item.value);
+                    //    }
+                    });
+                }
                 
-                
-                
-                
+                console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(trait_names); console.log(plotNames);
                 
                 var psudo_rows = [];
                 var map_option = 0;
@@ -563,7 +595,7 @@ jQuery(document).ready( function() {
                 
                 
                 
-                console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(trait_names);
+                
                 
                 var col_max = Math.max.apply(Math,unique_cols);
                 var row_max = Math.max.apply(Math,unique_rows);
