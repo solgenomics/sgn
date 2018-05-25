@@ -283,26 +283,28 @@ sub blups_file {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
         
-    my $geno_version    = $c->config->{default_genotyping_protocol}; 
-    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
-    $geno_version       =~ s/\s+//g;
-    my $tmp_dir         = $c->site_cluster_shared_dir;    
-    $tmp_dir            = catdir($tmp_dir, $geno_version);
-    my $solgs_dir       = catdir($tmp_dir, "solgs");
-    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
-    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
-    my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
-    my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
-    my $log_dir         = catdir($tmp_dir, 'log', 'cache');
-    my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
-    my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
+    my $geno_version      = $c->config->{default_genotyping_protocol}; 
+    $geno_version         = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
+    $geno_version         =~ s/\s+//g;
+    my $tmp_dir           = $c->site_cluster_shared_dir;    
+    $tmp_dir              = catdir($tmp_dir, $geno_version);
+    my $solgs_dir         = catdir($tmp_dir, "solgs");
+    my $solgs_cache       = catdir($tmp_dir, 'solgs', 'cache'); 
+    my $solgs_tempfiles   = catdir($tmp_dir, 'solgs', 'tempfiles');  
+    my $correlation_cache = catdir($tmp_dir, 'correlation', 'cache');
+    my $correlation_temp  = catdir($tmp_dir, 'correlation', 'tempfiles'); 
+    my $solgs_upload      = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
+    my $pca_cache         = catdir($tmp_dir, 'pca', 'cache');
+    my $pca_temp          = catdir($tmp_dir, 'pca', 'tempfiles');
+    my $histogram_dir     = catdir($tmp_dir, 'histogram', 'cache');
+    my $log_dir           = catdir($tmp_dir, 'log', 'cache');
+    my $anova_cache       = catdir($tmp_dir, 'anova', 'cache');
+    my $anova_temp        = catdir($tmp_dir, 'anova', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
+	 $correlation_cache, $correlation_temp, $pca_cache, $pca_temp, $histogram_dir, $log_dir, $anova_cache,
 	 $anova_temp,
 	], 
 	0, 0755
@@ -312,8 +314,10 @@ sub get_solgs_dirs {
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_upload,
-              correlation_dir             => $correlation_dir,
-	      pca_dir                     => $pca_dir,
+              correlation_cache_dir       => $correlation_cache,
+	      correlation_temp_dir        => $correlation_temp,
+	      pca_cache_dir               => $pca_cache,
+	      pca_temp_dir                => $pca_temp,
 	      histogram_dir               => $histogram_dir,
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,

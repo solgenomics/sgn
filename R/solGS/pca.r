@@ -11,63 +11,27 @@ options(echo = FALSE)
 library(randomForest)
 library(data.table)
 library(genoDataFilter)
-#library(SNPRelate)
-#library(parallel)
-#library(tidyr)
+library(tibble)
+library(dplyr)
 
 allArgs <- commandArgs()
 
-outFile <- grep("output_files",
-                allArgs,
-                ignore.case = TRUE,
-                perl = TRUE,
-                value = TRUE
-                )
+outputFile  <- grep("output_files", allArgs, value = TRUE)
+outputFiles <- scan(outputFile, what = "character")
 
-outFiles <- scan(outFile,
-                 what = "character"
-                 )
+inputFile  <- grep("input_files", allArgs, value = TRUE)
+inputFiles <- scan(inputFile, what = "character")
 
-genoDataFile <- grep("genotype_data",
-                   allArgs,
-                   ignore.case = TRUE,
-                   fixed = FALSE,
-                   value = TRUE
-                   )
+scoresFile       <- grep("pca_scores", outputFiles, value = TRUE)
+loadingsFile     <- grep("pca_loadings", outputFiles, value = TRUE)
+varianceFile     <- grep("pca_variance", outputFiles, value = TRUE)
+combinedDataFile <- grep("combined_pca_data_file", outputFiles, value = TRUE)
 
-#genoDataFile2 <- c('/mnt/hgfs/cxgn/genotype_data_108.txt')
-
-scoresFile <- grep("pca_scores",
-                        outFiles,
-                        ignore.case = TRUE,
-                        fixed = FALSE,
-                        value = TRUE
-                        )
-
-loadingsFile <- grep("pca_loadings",
-                        outFiles,
-                        ignore.case = TRUE,
-                        fixed = FALSE,
-                        value = TRUE
-                        )
-
-varianceFile <- grep("pca_variance",
-                        outFiles,
-                        ignore.case = TRUE,
-                        fixed = FALSE,
-                        value = TRUE
-                        )
-
-message("genotype file: ", genoDataFile)
 message("pca scores file: ", scoresFile)
 message("pca loadings file: ", loadingsFile)
 message("pca variance file: ", varianceFile)
+message("combined data file: ", combinedDataFile)
 
-if (is.null(genoDataFile))
-{
-  stop("genotype dataset missing.")
-  q("no", 1, FALSE)
-}
 
 if (is.null(scoresFile))
 {
@@ -81,27 +45,53 @@ if (is.null(loadingsFile))
   q("no", 1, FALSE)
 }
 
-genoData <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
-filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, ignore.case = TRUE, perl=TRUE, value = TRUE)
+genoData <- c()
+genoMetadata <- c()
 
-message("filtered genotype file: ", filteredGenoFile)
+filteredGenoFile <- c()
 
-if (is.null(filteredGenoFile) == TRUE) {
-  ##genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData, maf=0)
+if (length(inputFiles) > 1 ) {   
+    allGenoFiles <- inputFiles
+    genoData <- combineGenoData(allGenoFiles)
+    
+    genoMetaData   <- genoData %>% select(trial) %>% data.frame
+    genoData$trial <- NULL
+ 
 } else {
-  genoData           <- as.data.frame(genoData)
-  rownames(genoData) <- genoData[, 1]
-  genoData[, 1]      <- NULL
+    genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
+    genoData <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
+    filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, value = TRUE)
+
+    if (!is.null(genoData)) { 
+        genoData <- data.frame(genoData)
+        genoData <- column_to_rownames(genoData, 'V1')
+    
+    } else {
+        genoData <- fread(filteredGenoFile)
+    }
 }
 
-message("No. of geno missing values, ", sum(is.na(genoData)) )
+if (is.null(genoData)) {
+  stop("There is no genotype dataset.")
+  q("no", 1, FALSE)
+}
+
+
 genoDataMissing <- c()
-if (sum(is.na(genoData)) > 0) {
-  genoDataMissing <- c('yes')
-  genoData <- na.roughfix(genoData)
+if (is.null(filteredGenoFile) == TRUE) {
+    ##genoDataFilter::filterGenoData
+    
+    genoData <- filterGenoData(genoData, maf=0.01)
+    genoData <- column_to_rownames(genoData, 'rn')
+
+    message("No. of geno missing values, ", sum(is.na(genoData)) )
+    if (sum(is.na(genoData)) > 0) {
+        genoDataMissing <- c('yes')
+        genoData <- na.roughfix(genoData)
+    }
 }
 
+genoData <- data.frame(genoData)
 ## nCores <- detectCores()
 ## message('no cores: ', nCores)
 ## if (nCores > 1) {
@@ -111,13 +101,21 @@ if (sum(is.na(genoData)) > 0) {
 ## }
 
 pcsCnt <- 10
-
-pca <- prcomp(genoData, retx=TRUE)
-pca <- summary(pca)
+pca    <- prcomp(genoData, retx=TRUE)
+pca    <- summary(pca)
 
 scores   <- data.frame(pca$x)
 scores   <- scores[, 1:pcsCnt]
 scores   <- round(scores, 3)
+
+## ### mock grouping
+## cnt <- nrow(scores) 
+## grp <- c(rep('grp1', 0.5*cnt), rep('grp2', 0.5*cnt))
+
+## if (cnt%%2 == 1) { grp <- c(grp, 'grp2')}
+## scores$trial <- grp
+## head(scores)
+## ####
 
 scores   <- scores[order(row.names(scores)), ]
 
@@ -154,6 +152,16 @@ fwrite(variances,
        quote     = FALSE,
        )
 
+
+if (length(inputFiles) > 1) {
+    fwrite(genoData,
+       file      = combinedDataFile,
+       sep       = "\t",
+       row.names = TRUE,
+       quote     = FALSE,
+       )
+
+}
 
 ## if (!is.null(genoDataMissing)) {
 ## fwrite(genoData,

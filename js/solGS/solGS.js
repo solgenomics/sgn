@@ -84,16 +84,16 @@ solGS.waitPage = function (page, args) {
 			},
 		    }, 
 		    
-		    // No: { 
-		    // 	text: 'No, I will wait...',
-		    // 	class: 'btn btn-primary',
-                    //     id   : 'no_queue',
-		    // 	click: function() { 
-		    // 	    jQuery(this).dialog("close");
+		    No: { 
+		    	text: 'No, I will wait...',
+		    	class: 'btn btn-primary',
+                        id   : 'no_queue',
+		    	click: function() { 
+		    	    jQuery(this).dialog("close");
 			    
-		    // 	    displayAnalysisNow(page, args);
-		    // 	},
-		    // },
+		    	    displayAnalysisNow(page, args);
+		    	},
+		    },
 		    
 		    Cancel: { 
 			text: 'Cancel',

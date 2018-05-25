@@ -8,7 +8,7 @@
 
 JSAN.use("CXGN.List");
 JSAN.use("jquery.blockUI");
-
+JSAN.use('solGS.solGS')
 
 jQuery(document).ready( function() {
     
@@ -18,7 +18,7 @@ jQuery(document).ready( function() {
     
         var list = new CXGN.List();
         
-        var listMenu = list.listSelect("pca_genotypes", ['accessions']);
+        var listMenu = list.listSelect("pca_genotypes", ['accessions', 'trials']);
        
 	if (listMenu.match(/option/) != null) {
             
@@ -45,12 +45,13 @@ jQuery(document).ready( function() {
 
 function checkPcaResult () {
     
-    var popId = getPopulationId();
-
+    var popId = solGS.getPopulationDetails();
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        url: '/pca/check/result/' + popId,
+	data: {'training_pop_id' : popId.training_pop_id, 'selection_pop_id': popId.selection_pop_id},
+        url: '/pca/check/result/',
         success: function(response) {
             if (response.result) {
 		pcaResult();					
@@ -138,15 +139,13 @@ function loadPcaGenotypesList(listId) {
 
 function pcaResult () {
 
-    var popId  = getPopulationId();
+    var popId  = solGS.getPopulationDetails();
     var listId = getListId();
-   
-    if (!listId && popId.match(/uploaded_/)) {	
-	listId = popId.replace("uploaded_", "");
-    } else if (listId) {
-	popId = 'uploaded_' + listId;
+ 
+    if (listId) {
+	popId['training_pop_id'] = 'uploaded_' + listId;
     }
-
+   
     var listName;
     var listType;
     
@@ -156,7 +155,7 @@ function pcaResult () {
 	listType = genoList.listType;
     }
     
-    if (listId || popId) {
+    if (listId || popId.training_pop_id || popId.selection_pop_id) {
 	jQuery("#pca_message").html("Running PCA... please wait...");
 	jQuery("#run_pca").hide();
     }  
@@ -164,12 +163,13 @@ function pcaResult () {
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'population_id': popId, 
+        data: {'training_pop_id': popId.training_pop_id,
+	       'selection_pop_id': popId.selection_pop_id,
 	       'list_id': listId, 
 	       'list_name': listName, 
 	       'list_type': listType,
 	      },
-        url: '/pca/result/' + popId,
+        url: '/pca/result',
         success: function(response) {
             if (response.status === 'success') {
 	
@@ -177,7 +177,7 @@ function pcaResult () {
 		var variances = response.pca_variances;
 		
 		if (response.pop_id) {
-		    popId = response.pop_id;
+		    var popId = response.pop_id;
 		}
 		
 		var plotData = { 'scores': scores, 
@@ -256,40 +256,15 @@ function getPcaGenotypesListData(listId) {
 }
 
 
-function getPopulationId () {
-
-    var populationId = jQuery("#population_id").val();
-    
-    if (!populationId) {       
-        populationId = jQuery("#model_id").val() || jQuery("#training_pop_id").val();
-    }
-
-    if (!populationId) {
-        populationId = jQuery("#combo_pops_id").val();
-    }
-
-    var page = window.location.pathname;
-
-    if (page.match(/solgs\/selection/)) {
-	
-	populationId = jQuery("#selection_pop_id").val();
-    } 
-  
-    
-    return populationId;
-        
-}
-
-
 function setListId (listId) {
      
     var existingListId = jQuery("#list_id").doesExist();
-    
+   
     if (existingListId) {
 	jQuery("#list_id").remove();
     }
     
-    jQuery("#pca_canvas").append("<input type=\"hidden\" id=\"list_id\" value=\"" + listId + "\"></input>");
+    jQuery("#pca_canvas").append('<input type="hidden" id="list_id" value=' + listId + '></input>');
 
 }
 
@@ -313,15 +288,15 @@ function plotPca(plotData){
 
     jQuery.each(scores, function(i, pc) {
                    
-	pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[1]), 'pc2': parseFloat(pc[2])}] );
+	pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[1]), 'pc2': parseFloat(pc[2]), 'grp':pc[11] }]);
 	pc1.push(parseFloat(pc[1]));
 	pc2.push(parseFloat(pc[2]));
  
     });
-     
+
     var height = 300;
     var width  = 500;
-    var pad    = {left:40, top:20, right:40, bottom: 100}; 
+    var pad    = {left:40, top:20, right:40, bottom:100}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
    
@@ -437,12 +412,14 @@ function plotPca(plotData){
         .attr("font-size", 12)
         .style("fill", "red")
 
+    var grpColor = d3.scale.category10();
+
     pcaPlot.append("g")
         .selectAll("circle")
         .data(pc12)
         .enter()
         .append("circle")
-        .attr("fill", "#9A2EFE")
+        .style("fill", function(d) {return grpColor(d[0].grp); })
         .attr("r", 3)
         .attr("cx", function(d) { 
             var xVal = d[0].pc1;            
@@ -475,7 +452,7 @@ function plotPca(plotData){
         .on("mouseout", function(d) { 
             d3.select(this)
                 .attr("r", 3)
-                .style("fill", "#9A2EFE")
+                .style("fill", function(d) {return grpColor(d[0].grp); })
             d3.selectAll("text#dLabel").remove();            
         });
 

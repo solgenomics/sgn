@@ -24,9 +24,13 @@ sub pca_analysis :Path('/pca/analysis/') Args(0) {
 
 
 sub check_result :Path('/pca/check/result/') Args(1) {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c) = @_;
 
-    $c->stash->{pop_id} = $pop_id;
+    my $training_pop_id  = $c->req->param('training_pop_id');
+    my $selection_pop_id = $c->req->param('selection_pop_id');
+
+    $c->stash->{pop_id} = $training_pop_id;
+    my $pop_id = $training_pop_id;
 
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
@@ -46,11 +50,14 @@ sub check_result :Path('/pca/check/result/') Args(1) {
 }
 
 
-sub pca_result :Path('/pca/result/') Args(1) {
-    my ($self, $c, $pop_id) = @_;
+sub pca_result :Path('/pca/result/') Args() {
+    my ($self, $c) = @_;
     
-    $c->stash->{pop_id} = $pop_id || $c->req->param('population_id');
-
+    my $training_pop_id  = $c->req->param('training_pop_id');
+    my $selection_pop_id = $c->req->param('selection_pop_id');
+    
+    my $pop_id = $training_pop_id || $selection_pop_id;
+    $c->stash->{pop_id} = $pop_id;
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
@@ -66,15 +73,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
     
     my @genotype_files_list;
     my $geno_file;
-    if ($c->stash->{genotype_files_list}) 
-    {
-	@genotype_files_list = @{$c->stash->{genotype_files_list}};
-	$geno_file = $genotype_files_list[0] if !$genotype_files_list[1];
-    }
-    else 
-    {
-	$geno_file = $c->stash->{genotype_file};
-    }
+  
 
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
@@ -83,10 +82,11 @@ sub pca_result :Path('/pca/result/') Args(1) {
     my $pca_variance_file = $c->stash->{pca_variance_file};
  
     my $ret->{status} = 'PCA analysis failed.';
-    if( !-s $pca_scores_file) 
+    if( !-s $pca_scores_file)
     {
-	if (!-s $geno_file )
+	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{
+	  
 	    $ret->{status} = 'There is no genotype data. Aborted PCA analysis.';                
 	}
 	else 
@@ -117,8 +117,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
 sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
     my ($self, $c, $id) = @_;
     
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
     my $pca_file = catfile($pca_dir,  "pca_scores_${id}");
   
     unless (!-e $pca_file || -s $pca_file <= 1) 
@@ -224,7 +223,6 @@ sub _pca_list_genotype_data {
     {
 	if ($list_type eq 'accessions') 
 	{
-
 	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 	    my @genotypes_list = @{$list->elements};
 
@@ -236,8 +234,7 @@ sub _pca_list_genotype_data {
 	    $file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file);    
 	    
 	    write_file($file, $geno_data);
-	    $c->stash->{genotype_file} = $file; 
-	    
+	    $c->stash->{genotype_file} = $file; 	    
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
@@ -245,6 +242,9 @@ sub _pca_list_genotype_data {
 	    my @trials_list = @{$list->elements};
 	
 	    my @genotype_files;
+	    
+	    my @trials_ids;
+	    
 	    foreach (@trials_list) 
 	    {
 		my $trial_id = $c->model("solGS::solGS")
@@ -255,9 +255,15 @@ sub _pca_list_genotype_data {
 		$c->stash->{pop_id} = $trial_id; 
 		$self->_pca_trial_genotype_data($c);
 		push @genotype_files, $c->stash->{genotype_file};
+		push @trials_ids, $trial_id;
 	    }
 
 	    $c->stash->{genotype_files_list} = \@genotype_files;
+
+	    $c->stash->{pops_ids_list} = \@trials_ids;
+	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+	    
 	}
     }
 
@@ -270,44 +276,19 @@ sub _pca_trial_genotype_data {
     my $referer = $c->req->referer;
     my $pop_id = $c->stash->{pop_id};
 
-    my $geno_file;
- 
-    if ($referer =~ /solgs\/selection\//) 
-    {
-	$c->stash->{selection_pop_id} = $c->stash->{pop_id};	   
-	$c->controller('solGS::Files')->filtered_selection_genotype_file($c, $pop_id);
-	$geno_file = $c->stash->{filtered_selection_genotype_file};
-    }
-    else
-    {
-	$c->stash->{training_pop_id} = $c->stash->{pop_id};	   
-	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $pop_id);
-	$geno_file = $c->stash->{filtered_training_genotype_file};
-
-    }
-
-    if (!-s $geno_file) 
-    {
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-	$geno_file = $c->stash->{genotype_file_name};
-    }
-
+    $c->controller('solGS::Files')->genotype_file_name($c);
+    my $geno_file = $c->stash->{genotype_file_name};
+  
     if (-s $geno_file)
-    {    
+    {  
 	$c->stash->{genotype_file} = $geno_file;
     }
     else
-    {	
-	$c->controller("solGS::solGS")->genotype_file($c);
+    {
+	$c->controller('solGS::solGS')->genotype_file($c);
+	
     }
    
-}
-
-sub create_pca_dir {
-    my ($self, $c) = @_;
-     
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
-
 }
 
 
@@ -316,8 +297,7 @@ sub pca_scores_file {
     
     my $pop_id = $c->stash->{pop_id};
 
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
@@ -336,8 +316,7 @@ sub pca_variance_file {
     
     my $pop_id = $c->stash->{pop_id};
 
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
@@ -356,8 +335,7 @@ sub pca_loadings_file {
     
     my $pop_id = $c->stash->{pop_id};
 
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
@@ -377,20 +355,61 @@ sub pca_output_files {
     $self->pca_scores_file($c);
     $self->pca_loadings_file($c);
     $self->pca_variance_file($c);
+    $self->combined_pca_trials_data_file($c);
 
     my $file_list = join ("\t",
                           $c->stash->{pca_scores_file},
                           $c->stash->{pca_loadings_file},
 			  $c->stash->{pca_variance_file},
+			  $c->stash->{combined_pca_data_file},
 	);
      
     my $pop_id = $c->stash->{pop_id};
-    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tmp_dir = $c->stash->{pca_temp_dir};
     my $name = "pca_output_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $file_list);
     
-    $c->stash->{output_files} = $tempfile;
+    $c->stash->{pca_output_files} = $tempfile;
+
+}
+
+
+sub combined_pca_trials_data_file {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{combo_pops_id};
+    my $tmp_dir = $c->stash->{pca_temp_dir};
+    my $name = "combined_pca_data_file_${pop_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    
+    $c->stash->{combined_pca_data_file} = $tempfile;
+    
+}
+
+
+sub pca_input_files {
+    my ($self, $c) = @_;
+          
+    my $pop_id = $c->stash->{pop_id};
+    my $tmp_dir = $c->stash->{pca_temp_dir};
+    my $name = "pca_input_files_${pop_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+
+    my $files;
+
+    if ($c->stash->{genotype_files_list}) 
+    {
+	$files = join("\t", @{$c->stash->{genotype_files_list}});			      
+    }
+    else 
+    {
+	$files = $c->stash->{genotype_file};
+    }
+    
+    write_file($tempfile, $files);
+    
+    $c->stash->{pca_input_files} = $tempfile;
 
 }
 
@@ -400,11 +419,16 @@ sub run_pca {
     
     my $pop_id = $c->stash->{pop_id};
 
-    my $pca_output_file = $self->pca_output_files($c);
-    my $geno_file = $c->stash->{genotype_file};
+    $self->pca_output_files($c);
+    my $output_file = $c->stash->{pca_output_files};
 
-    $c->stash->{input_files}  = $geno_file;
-    $c->stash->{output_files} = $pca_output_file;
+    $self->pca_input_files($c);
+    my $input_file = $c->stash->{pca_input_files};
+
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{pca_temp_dir};
+    
+    $c->stash->{input_files}  = $input_file;
+    $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "pca-${pop_id}";
     $c->stash->{r_script}     = 'R/solGS/pca.r';
 
