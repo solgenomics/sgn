@@ -143,7 +143,7 @@ sub solgs_list_login_message :Path('/solgs/list/login/message') Args(0) {
     my $page = $c->req->param('page');
 
     my $message = "This is a private data. If you are the owner, "
-	. "please <a href=\"/solpeople/login.pl?goto_url=$page\">login</a> to view it.";
+	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
 
     $c->stash->{message} = $message;
 
@@ -286,22 +286,22 @@ sub predict_list_selection_pop_single_pop_model {
     $c->stash->{uploaded_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
    
     if (!-s $prediction_pop_gebvs_file)
     {
-	$c->controller('solGS::solGS')->phenotype_file_name($c, $training_pop_id);
+	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	$c->stash->{phenotype_file} =$c->stash->{phenotype_file_name};
 
-	$c->controller('solGS::solGS')->genotype_file_name($c, $training_pop_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	$c->stash->{genotype_file} =$c->stash->{genotype_file_name};
 
 	$self->user_prediction_population_file($c, $selection_pop_id); 
 
 	$c->stash->{pop_id} = $c->stash->{training_pop_id};
-	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-	$c->controller("solGS::solGS")->get_rrblup_output($c);
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::solGS')->get_rrblup_output($c);
 	$c->stash->{status} = 'success';
     }
     else 
@@ -350,14 +350,14 @@ sub predict_list_selection_pop_combined_pops_model {
     $c->stash->{uploaded_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller("solGS::solGS")->prediction_pop_gebvs_file($c, $identifier, $trait_id);        
+    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);        
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
   
     if (!-s $prediction_pop_gebvs_file)
     {    
 	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id); 
 	
-	$c->controller("solGS::solGS")->cache_combined_pops_data($c);
+	$c->controller("solGS::combinedTrials")->cache_combined_pops_data($c);
 	    
 	my $pheno_file = $c->stash->{trait_combined_pheno_file};
 	my $geno_file  = $c->stash->{trait_combined_geno_file};
@@ -425,7 +425,7 @@ sub user_prediction_population_file {
         );
 
     
-    $c->controller("solGS::solGS")->genotype_file_name($c, $pred_pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pred_pop_id);
     my $pred_pop_file = $c->stash->{genotype_file_name};
 
     $c->stash->{genotypes_list_genotype_data_file} = $pred_pop_file;
@@ -602,7 +602,7 @@ sub genotypes_list_genotype_file {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $report_file = $c->controller('solGS::solGS')->create_tempfile($temp_dir, 'geno-data-query-report-args');
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
     $c->stash->{report_file} = $report_file;
 
     my $status;
@@ -677,7 +677,7 @@ sub plots_list_phenotype_file {
     my $plots_ids = $c->stash->{list_elements_ids};
 
     $c->stash->{pop_id} = $model_id;
-    $c->controller("solGS::solGS")->traits_list_file($c);    
+    $c->controller('solGS::Files')->traits_list_file($c);    
     my $traits_file =  $c->stash->{traits_list_file};
   
     my $data_dir = $c->stash->{solgs_prediction_upload_dir};
@@ -738,7 +738,7 @@ sub plots_list_phenotype_file {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

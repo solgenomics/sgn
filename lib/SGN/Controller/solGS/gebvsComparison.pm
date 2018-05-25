@@ -101,9 +101,9 @@ sub get_training_pop_gebv_file {
     if ($pop_id && $trait_id) 
     {
 	my $dir  = $c->stash->{solgs_cache_dir};
-	my $file = "gebv_kinship_${trait_abbr}_${pop_id}";
+	my $file = "rrblup_gebvs_${trait_abbr}_${pop_id}";
        
-	$gebv_file = $c->controller('solGS::solGS')->grep_file($dir, $file);
+	$gebv_file = $c->controller('solGS::Files')->grep_file($dir, $file);
 
     }
 
@@ -126,7 +126,7 @@ sub get_selection_pop_gebv_file {
 	my $dir  = $c->stash->{solgs_cache_dir};
 	my $identifier = $training_pop_id . "_" . $selection_pop_id;
 	my $file = "prediction_pop_gebvs_${identifier}_${trait_id}";
-	$gebv_file = $c->controller('solGS::solGS')->grep_file($dir, $file);
+	$gebv_file = $c->controller('solGS::Files')->grep_file($dir, $file);
     }
 
     $c->stash->{selection_gebv_file} = $gebv_file;
@@ -156,7 +156,7 @@ sub check_population_type {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

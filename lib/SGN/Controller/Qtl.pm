@@ -508,7 +508,7 @@ sub qtl_form : PathPart('qtl/form') Chained Args {
     
     unless ($userid) 
     {
-       $c->res->redirect( '/solpeople/login.pl' );
+       $c->res->redirect( '/user/login' );
     }
     
     $type = 'intro' if !$type; 

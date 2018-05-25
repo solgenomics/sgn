@@ -156,9 +156,9 @@ function formatGenCorInputData (popId, type, indexFile) {
         url: '/correlation/genetic/data/',
         success: function(response) {
            
-            if(response.status == 'success') {
+            if(response.result) {
                 gebvsFile = response.gebvs_file;
-                   
+              
                 var divPlace;
                 if(indexFile) {
                     divPlace = '#si_correlation_canvas';
