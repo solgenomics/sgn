@@ -1366,7 +1366,7 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
 
 =cut
 
-sub allelematrix : Chained('brapi') PathPart('allelematrix-search') Args(0) : ActionClass('REST') { }
+sub allelematrix : Chained('brapi') PathPart('allelematrices-search') Args(0) : ActionClass('REST') { }
 
 sub allelematrix_POST {
 	my $self = shift;

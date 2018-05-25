@@ -47,7 +47,7 @@ sub calls {
 		['markerprofiles', ['json'], ['GET'], ['1.0'] ],
 		['markerprofiles/id', ['json'], ['GET'], ['1.0'] ],
 		['markerprofiles/methods', ['json'], ['GET'], ['1.0'] ],
-		['allelematrix-search', ['json','tsv','csv','xls'], ['GET','POST'], ['1.0'] ],
+		['allelematrices-search', ['json','tsv','csv','xls'], ['GET','POST'], ['1.0'] ],
 		['programs', ['json'], ['GET','POST'], ['1.0'] ],
 		['crops', ['json'], ['GET'], ['1.0'] ],
 		['seasons', ['json'], ['GET','POST'], ['1.0'] ],
