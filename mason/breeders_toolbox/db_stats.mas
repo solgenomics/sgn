@@ -1,5 +1,6 @@
 
 <%args>
+$breeding_programs
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js', 'd3pie_min.js' ] &>
@@ -38,6 +39,27 @@
     
 </&>
 
+<&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
+
+%  foreach (@$breeding_programs){
+
+    <div class="well">
+
+        <h3>Breeding Program: <% $_->[1] %></h3>
+
+        <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+            <& /breeders_toolbox/program/trials.mas, program_id => $_->[0] &>
+        </&>
+
+        <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0]  &>
+        </&>
+
+    </div>
+
+%  }
+
+</&>
 
 <script>
   jQuery.ajax({

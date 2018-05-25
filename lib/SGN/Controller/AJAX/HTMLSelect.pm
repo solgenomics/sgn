@@ -23,7 +23,7 @@ use Moose;
 
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
-use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use CXGN::Page::FormattingHelpers qw | simple_selectbox_html simple_checkbox_html |;
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Onto;
@@ -562,6 +562,47 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
         id => $id,
         size => $size,
         choices => \@stocks,
+        data_related => $data_related
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        page_size => 1000000,
+        page => 0,
+        status => []
+    });
+
+    #Using code pattern found in SGN::Controller::Ontology->onto_browser
+    my $onto_root_namespaces = $c->config->{trait_variable_onto_root_namespaces};
+    my @namespaces = split ", ", $onto_root_namespaces;
+    foreach my $n (@namespaces) {
+        $n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
+    }
+
+    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces});
+    #print STDERR Dumper $result;
+
+    my @ontos;
+    foreach my $o (@{$result->{result}->{data}}) {
+        push @ontos, [$o->{ontologyDbId}, $o->{ontologyName}." (".$o->{description}.")" ];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $data_related = $c->req->param("data-related") || "";
+
+    @ontos = sort { $a->[1] cmp $b->[1] } @ontos;
+
+    my $html = simple_checkbox_html(
+        name => $name,
+        id => $id,
+        choices => \@ontos,
         data_related => $data_related
     );
     $c->stash->{rest} = { select => $html };

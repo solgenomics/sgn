@@ -1848,17 +1848,138 @@ sub process_phenotypes_search {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
 	my $brapi_package_result = $brapi_module->search({
-		trait_ids => $clean_inputs->{observationVariableDbIds},
-		accession_ids => $clean_inputs->{germplasmDbIds},
-		study_ids => $clean_inputs->{studyDbIds},
-		location_ids => $clean_inputs->{locationDbIds},
-		years => $clean_inputs->{seasonDbIds},
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		accession_ids => $clean_inputs->{germplasmDbId},
+		study_ids => $clean_inputs->{studyDbId},
+		location_ids => $clean_inputs->{locationDbId},
+		years => $clean_inputs->{seasonDbId},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
+
+sub phenotypes_search_table_POST {
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search_table($self, $c);
+}
+
+sub phenotypes_search_table_GET {
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search_table($self, $c);
+}
+
+sub process_phenotypes_search_table {
+	my $self = shift;
+	my $c = shift;
+	my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
+	my $brapi_package_result = $brapi_module->search_table({
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		accession_ids => $clean_inputs->{germplasmDbId},
+		study_ids => $clean_inputs->{studyDbId},
+		location_ids => $clean_inputs->{locationDbId},
+		years => $clean_inputs->{seasonDbId},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub phenotypes_search_csv : Chained('brapi') PathPart('phenotypes-search/csv') Args(0) : ActionClass('REST') { }
+
+sub phenotypes_search_csv_POST {
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search_csv($self, $c);
+}
+
+sub phenotypes_search_csv_GET {
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search_csv($self, $c);
+}
+
+sub process_phenotypes_search_csv {
+	my $self = shift;
+	my $c = shift;
+	my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $dir = $c->tempfiles_subdir('download');
+	my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+	my $temp_file_name = $time_stamp . "phenotype_download_csv"."_XXXX";
+	my ($file_path, $uri) = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
+	my $brapi_package_result = $brapi_module->search_table_csv({
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		accession_ids => $clean_inputs->{germplasmDbId},
+		study_ids => $clean_inputs->{studyDbId},
+		location_ids => $clean_inputs->{locationDbId},
+		years => $clean_inputs->{seasonDbId},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
+        format => 'csv',
+		main_production_site_url => $c->config->{main_production_site_url},
+		file_path => $file_path,
+		file_uri => $uri
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub phenotypes_search_tsv : Chained('brapi') PathPart('phenotypes-search/tsv') Args(0) : ActionClass('REST') { }
+
+sub phenotypes_search_tsv_POST {
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search_tsv($self, $c);
+}
+
+sub phenotypes_search_tsv_GET {
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search_tsv($self, $c);
+}
+
+sub process_phenotypes_search_tsv {
+	my $self = shift;
+	my $c = shift;
+	my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $dir = $c->tempfiles_subdir('download');
+	my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+	my $temp_file_name = $time_stamp . "phenotype_download_tsv"."_XXXX";
+	my ($file_path, $uri) = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
+	my $brapi_package_result = $brapi_module->search_table_tsv({
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		accession_ids => $clean_inputs->{germplasmDbId},
+		study_ids => $clean_inputs->{studyDbId},
+		location_ids => $clean_inputs->{locationDbId},
+		years => $clean_inputs->{seasonDbId},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
+        format => 'tsv',
+		main_production_site_url => $c->config->{main_production_site_url},
+		file_path => $file_path,
+		file_uri => $uri
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 
 sub traits_list : Chained('brapi') PathPart('traits') Args(0) : ActionClass('REST') { }
 
