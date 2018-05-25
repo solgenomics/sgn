@@ -154,7 +154,7 @@ sub search {
 	my %result = (data=>\@data_window);
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations result constructed');
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search result constructed');
 }
 
 1;
