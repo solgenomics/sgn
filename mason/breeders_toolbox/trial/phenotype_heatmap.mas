@@ -397,7 +397,7 @@ jQuery(document).ready( function() {
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected,
             //url: '/brapi/v1/studies/'+trial_id+'/observationunits?observationLevel=plot&pageSize=1000&page=0', 
-        url: '/brapi/v1/phenotypes-search?observationLevel=plot&studyDbIds='+trial_id+'&observationVariableDbIds='+selectedTrait+'&pageSize=1000&page=0',
+        url: '/brapi/v1/phenotypes-search?observationLevel=plot&studyDbId='+trial_id+'&observationVariableDbId='+selectedTrait+'&pageSize=1000&page=0',
             beforeSend: function() {
               jQuery("#working_modal").modal("show");
             },
@@ -467,17 +467,19 @@ jQuery(document).ready( function() {
                         }
                         if (key == 'observations'){
                             //observ_object.push(value);
-                            var obs_object = value[0];
+                        var valueObs = value[0];
+                        //console.log(valueObs);
                             //iterate through object keys
-                             obs_object.forEach(function(item) {
+                        
                             //   //get the value of name
                             //   if (selectedTrait == item.observationVariableDbId){
-                                   pheno_ids.push(item.observationDbId);
-                                   trait_ids.push(item.observationVariableDbId);
-                                   trait_names.push(item.observationVariableName);
-                                   pheno_values.push(item.value);
+                                   pheno_ids.push(valueObs.observationDbId);
+                                   trait_ids.push(valueObs.observationVariableDbId);
+                                   trait_names.push(valueObs.observationVariableName);
+                                   pheno_values.push(valueObs.value);
                             //   }
-                             });
+                            
+                        
                         } 
                     });    
                 });
