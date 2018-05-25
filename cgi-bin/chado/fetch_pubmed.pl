@@ -150,7 +150,7 @@ END_HTML
     }
     $page->footer();
 }
-else { $page->client_redirect('/solpeople/login.pl'); }
+else { $page->client_redirect('/user/login'); }
 
 
 

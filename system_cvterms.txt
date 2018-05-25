@@ -68,6 +68,11 @@ organism_property	organism_synonym				00052
 organism_property	species authority	From BrAPI	03/27/2017	nm529	00076
 organism_property	subtaxa	From BrAPI	03/27/2017	nm529	00076
 organism_property	subtaxa authority	From BrAPI	03/27/2017	nm529	00076
+project_property	plot_width		04/05/2018	nm529	00093
+project_property	plot_length		04/05/2018	nm529	00093
+project_property	field_size		04/05/2018	nm529	00093
+project_property	field_trial_is_planned_to_be_genotyped		04/05/2018	nm529	00093
+project_property	field_trial_is_planned_to_cross		04/05/2018	nm529	00093
 project_property	breeding_program				00051
 project_property	data_agreement
 project_property	design
@@ -103,6 +108,9 @@ project_property	genotyping_plate_sample_type	For genotyping trials to indicate 
 project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
+project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
+project_relationship	genotyping_trial_from_field_trial	For linking genotyping trials to the source field trials 	4/6/18	nm529	00093
+project_relationship	crossing_trial_from_field_trial	For linking crossing trials to the source field trials 	4/6/18	nm529	00093
 project_type	Advanced Yeld Trials				00052
 project_type	Advanced Yield Trial
 project_type	Clonal Evaluation
@@ -172,7 +180,7 @@ stock_property	volume	For indicating volume in genotype plate well	2/15/2018	nm5
 stock_property	dna_person	For indicating dna_person in genotype plate well	2/15/2018	nm529	00091
 stock_property	extraction	For indicating extraction in genotype plate well	2/15/2018	nm529	00091
 stock_property	tissue_type	For indicating tissue type in genotype plate well	2/15/2018	nm529	00091
-stock_property	ncbi_taxonomy_id	For indicating ncbi taxonomy id in genotype plate well	2/15/2018	nm529	00091
+stock_property	ncbi_taxonomy_id	For indicating ncbi taxonomy	2/15/2018	nm529	00091
 stock_relationship	cross_relationship				00052
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052

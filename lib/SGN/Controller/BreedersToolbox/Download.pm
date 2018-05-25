@@ -41,7 +41,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/usr/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -197,13 +197,13 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $user = $c->user();
     if (!$user && !$sgn_session_id) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     } elsif (!$user && $sgn_session_id) {
         my $login = CXGN::Login->new($schema->storage->dbh);
         my $logged_in = $login->query_from_cookie($sgn_session_id);
         if (!$logged_in){
-            $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
             return;
         }
     }

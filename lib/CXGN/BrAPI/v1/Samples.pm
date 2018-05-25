@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::TissueSample;
+use CXGN::Stock::TissueSample::Search;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
@@ -94,6 +95,78 @@ sub detail {
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
     my @data_files;
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Sample get result constructed');
+}
+
+sub search {
+    my $self = shift;
+    my $search_params = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my @data;
+
+    my $limit = $page_size*($page+1)-1;
+	my $offset = $page_size*$page;
+
+    my @tissue_ids = $search_params->{sampleDbId} ? @{$search_params->{sampleDbId}} : ();
+    my @tissue_names = $search_params->{sampleName} ? @{$search_params->{sampleName}} : ();
+    my @geno_trial_ids = $search_params->{plateDbId} ? @{$search_params->{plateDbId}} : ();
+    my @geno_trial_names = $search_params->{plateName} ? @{$search_params->{plateName}} : ();
+    my @accession_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbId}} : ();
+    my @accession_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
+    my @obs_ids = $search_params->{observationUnitDbId} ? @{$search_params->{observationUnitDbId}} : ();
+    my @obs_names = $search_params->{observationUnitName} ? @{$search_params->{observationUnitName}} : ();
+    
+    my $sample_search = CXGN::Stock::TissueSample::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        tissue_sample_db_id_list => \@tissue_ids,
+        tissue_sample_name_list => \@tissue_names,
+        plate_db_id_list => \@geno_trial_ids,
+        plate_name_list => \@geno_trial_names,
+        germplasm_db_id_list => \@accession_ids,
+        germplasm_name_list => \@accession_names,
+        observation_unit_db_id_list => \@obs_ids,
+        observation_unit_name_list => \@obs_names,
+        limit => $limit,
+        offset => $offset
+    });
+    my ($search_res, $total_count) = $sample_search->search();
+    foreach (@$search_res){
+        push @data, {
+            sampleDbId => $_->{sampleDbId},
+            sampleName => $_->{sampleName},
+            observationUnitDbId => $_->{observationUnitDbId},
+            observationUnitName => $_->{observationUnitName},
+            observationUnitType => $_->{observationUnitType},
+            germplasmDbId => $_->{germplasmDbId},
+            germplasmName => $_->{germplasmName},
+            studyDbId => $_->{studyDbId},
+            studyName => $_->{studyName},
+            plotDbId => $_->{plotDbId},
+            plotName => $_->{plotName},
+            plantDbId => $_->{plantDbId},
+            plantName => $_->{plantName},
+            sourceSampleDbId => $_->{sourceSampleDbId},
+            sourceSampleName => $_->{sourceSampleName},
+            plateDbId => $_->{plateDbId},
+            plateName => $_->{plateName},
+            plateIndex => 0,
+            takenBy => $_->{dna_person},
+            sampleTimestamp => $_->{acquisition_date},
+            sampleType => $_->{tissue_type},
+            tissueType => $_->{tissue_type},
+            extraction => $_->{extraction},
+            notes => $_->{notes},
+            well => $_->{well},
+            concentration => $_->{concentration},
+            volume => $_->{volume},
+            is_blank => $_->{is_blank}
+        };
+    }
+    my %result = (data => \@data);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    my @data_files;
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Sample search result constructed');
 }
 
 1;

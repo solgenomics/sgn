@@ -41,7 +41,7 @@ has 'project_description' => (isa => 'Str',
     required => 1,
     );
 
-has 'nd_geolocation_id' => (isa => 'Int',
+has 'nd_geolocation_id' => (isa => 'Int|Undef',
     is => 'rw',
     required => 1,
     );
@@ -112,7 +112,9 @@ sub save_crossingtrial {
         trial_id => $project->project_id()
     });
 
-    $crossing_trial->set_location($self->get_nd_geolocation_id());
+    if ($self->get_nd_geolocation_id()){
+        $crossing_trial->set_location($self->get_nd_geolocation_id());
+    }
     $crossing_trial->set_project_type($project_type_cvterm_id);
     $crossing_trial->set_year($self->get_year());
     $crossing_trial->set_breeding_program($self->get_breeding_program_id);

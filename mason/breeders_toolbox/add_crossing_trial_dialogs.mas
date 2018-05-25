@@ -63,15 +63,15 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-lable">Year:</label>
+                                    <label class="col-sm-2 control-label">Year:</label>
                                     <div class="col-sm-10">
-                                        <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
+                                        <div id="crosses_add_project_year" name="crosses_add_project_year" ></div>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">Description:</label>
                                     <div class="col-sm-10">
-                                        <textarea class="form-control" id="add_project_description" name="add_project_description"  name="add_project_description"></textarea>
+                                        <textarea class="form-control" id="crosses_add_project_description" name="crosses_add_project_description" ></textarea>
                                     </div>
                                 </div>
                             </form>

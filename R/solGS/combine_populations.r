@@ -109,15 +109,15 @@ for (popPhenoFile in allPhenoFiles) {
      if (cnt == 1 ) {
          print('no need to combine, yet')       
          combinedPhenoPops <- phenoTrait
+         
      } else {
          print('combining...phenotypes')
-            
-         combinedPhenoPops           <- full_join(combinedPhenoPops, phenoTrait, by='genotypes')
-         rownames(combinedPhenoPops) <- combinedPhenoPops[, 1]
-         combinedPhenoPops[, 1]      <- NULL            
-     }
-    
-}
+       
+         combinedPhenoPops <- full_join(combinedPhenoPops, phenoTrait, by='genotypes')           
+     }    
+ }
+
+combinedPhenoPops <- column_to_rownames(combinedPhenoPops, var='genotypes')
 
 # #fill in missing data in combined phenotype dataset
 # #using row means

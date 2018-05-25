@@ -29,11 +29,13 @@ sub calls {
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 
+    $page_size = 1000;
+
 	my $status = $self->status;
 	my @available = (
 		['token', ['json'], ['POST','DELETE'] ],
 		['calls', ['json'], ['GET'] ],
-		['observationLevels', ['json'], ['GET'] ],
+		['observationlevels', ['json'], ['GET'] ],
 		['germplasm-search', ['json'], ['GET','POST'] ],
 		['germplasm/id', ['json'], ['GET'] ],
 		['germplasm/id/pedigree', ['json'], ['GET'] ],
@@ -46,16 +48,16 @@ sub calls {
 		['markerprofiles/id', ['json'], ['GET'] ],
 		['markerprofiles/methods', ['json'], ['GET'] ],
 		['allelematrix-search', ['json','tsv','csv','xls'], ['GET','POST'] ],
-		['programs', ['json'], ['GET'] ],
+		['programs', ['json'], ['GET','POST'] ],
 		['crops', ['json'], ['GET'] ],
 		['seasons', ['json'], ['GET','POST'] ],
-		['studyTypes', ['json'], ['GET','POST'] ],
+		['studytypes', ['json'], ['GET','POST'] ],
 		['trials', ['json'], ['GET','POST'] ],
 		['trials/id', ['json'], ['GET'] ],
 		['studies-search', ['json'], ['GET','POST'] ],
 		['studies/id', ['json'], ['GET'] ],
 		['studies/id/germplasm', ['json'], ['GET'] ],
-		['studies/id/observationVariables', ['json'], ['GET'] ],
+		['studies/id/observationvariables', ['json'], ['GET'] ],
 		['studies/id/observationunits', ['json'], ['GET'] ],
 		['studies/id/table', ['json','csv','xls','tsv'], ['GET'] ],
 		['studies/id/layout', ['json'], ['GET'] ],
@@ -73,6 +75,7 @@ sub calls {
 		['variables', ['json'], ['GET'] ],
 		['variables/id', ['json'], ['GET'] ],
 		['variables-search', ['json'], ['GET','POST'] ],
+		['samples-search', ['json'], ['GET','POST'] ],
 		['samples/id', ['json'], ['GET'] ],
 	);
 

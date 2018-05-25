@@ -51,7 +51,7 @@ sub search {
 	my $self = shift;
 	my $inputs = shift;
 	my $data_level = $inputs->{data_level} || 'plot';
-	my $search_type = $inputs->{search_type} || 'complete';
+	my $search_type = $inputs->{search_type} || 'fast';
 	my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
 	my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();

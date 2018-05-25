@@ -319,7 +319,7 @@ sub crops_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) : ActionClass('REST') { }
+sub observation_levels : Chained('brapi') PathPart('observationlevels') Args(0) : ActionClass('REST') { }
 
 sub observation_levels_GET {
 	my $self = shift;
@@ -388,7 +388,7 @@ sub seasons_process {
 
 =cut
 
-sub study_types : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
+sub study_types : Chained('brapi') PathPart('studytypes') Args(0) : ActionClass('REST') { }
 
 sub study_types_POST {
 	my $self = shift;
@@ -1466,6 +1466,7 @@ sub programs_list_GET {
 	my $brapi_package_result = $brapi_module->programs_list({
 		program_names => $clean_inputs->{programName},
 		abbreviations => $clean_inputs->{abbreviation},
+        crop => $c->config->{supportedCrop}
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1489,13 +1490,14 @@ sub studies_info_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_detail(
-		$c->stash->{study_id}
+		$c->stash->{study_id},
+        $c->config->{main_production_site_url}
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
 
-sub studies_observation_variables : Chained('studies_single') PathPart('observationVariables') Args(0) : ActionClass('REST') { }
+sub studies_observation_variables : Chained('studies_single') PathPart('observationvariables') Args(0) : ActionClass('REST') { }
 
 sub studies_observation_variables_POST {
 	my $self = shift;
@@ -1510,7 +1512,8 @@ sub studies_observation_variables_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_observation_variables(
-		$c->stash->{study_id}
+		$c->stash->{study_id},
+        $c->config->{supportedCrop}
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1553,7 +1556,7 @@ sub studies_layout_GET {
 }
 
 
-=head2 brapi/v1/studies/<studyDbId>/observationUnits?observationVariableDbId=2
+=head2 brapi/v1/studies/<studyDbId>/observationunits?observationVariableDbId=2
 
  Usage: To retrieve phenotypic values on a the plot level for an entire trial
  Desc:
@@ -1796,8 +1799,7 @@ sub studies_observations_granular_GET {
                  "data": [
                          {
                              "instanceNumber" : 1,
-                             "observationVariableId": "CO_321:0000045",
-                             //"observationVariableDbId": 35,
+                             "observationVariableDbId": 35,
                              "season": "2005",
                              "observationValue" : "red",
                              "observationTimeStamp": null,
@@ -1807,8 +1809,7 @@ sub studies_observations_granular_GET {
                          },
                          {
                              "instanceNumber" : 1,
-                             "observationVariableId": "http://www.cropontology.org/rdf/CO_321:0000025",
-                             //"observationVariableDbId": 35,
+                             "observationVariableDbId": 35,
                              "season": null,
                              "observationValue" :  32,
                              "observationTimeStamp": "2006-07-03::10:00",
@@ -2252,18 +2253,38 @@ sub observationvariable_detail_GET {
 }
 
 
-sub samples_list : Chained('brapi') PathPart('samples') Args(0) : ActionClass('REST') { }
+sub samples_list : Chained('brapi') PathPart('samples-search') Args(0) : ActionClass('REST') { }
 
 sub samples_list_POST {
     my $self = shift;
     my $c = shift;
-    $c->forward('samples_search_POST');
+    _sample_search_process($self, $c);
 }
 
 sub samples_list_GET {
     my $self = shift;
     my $c = shift;
-    $c->forward('samples_search_GET');
+    _sample_search_process($self, $c);
+}
+
+sub _sample_search_process {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Samples');
+    my $brapi_package_result = $brapi_module->search({
+        sampleDbId => $clean_inputs->{sampleDbId},
+        sampleName => $clean_inputs->{sampleName},
+        plateDbId => $clean_inputs->{plateDbId},
+        plateName => $clean_inputs->{plateName},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        germplasmName => $clean_inputs->{germplasmName},
+        observationUnitDbId => $clean_inputs->{observationUnitDbId},
+        observationUnitName => $clean_inputs->{observationUnitName},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

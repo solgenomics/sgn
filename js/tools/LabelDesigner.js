@@ -978,7 +978,7 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     document.getElementById("vertical_gap").value = vertical_gap;
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
-    document.getElementById("plot_filter").value = plot_filter;
+    document.getElementById("plot_filter").value = plot_filter || 'all';
     document.getElementById("sort_order").value = sort_order;
     document.getElementById("copies_per_plot").value = copies_per_plot;
 }
@@ -1021,7 +1021,7 @@ function addPlotFilter(reps) {
         reps[newkey] = key;
         delete reps[key];
     });
-    reps['All Plots'] = 'all';
+    reps['All'] = 'all';
 
     d3.select("#plot_filter").selectAll("option").remove();
     d3.select("#plot_filter").selectAll("option")
@@ -1216,13 +1216,13 @@ function saveLabelDesign() {
 }
 
 function fillInPlaceholders(match, placeholder) { // replace placeholders with actual values
-    //console.log("Placeholder is "+placeholder);
-    if (placeholder.match(/Number:/)) {
-        var parts = placeholder.split(':');
-        return parts[1];
-    } else {
-        return add_fields[placeholder];
-    }
+        var filled = add_fields[placeholder];
+        // console.log("Filling "+placeholder+" with "+filled);
+        if (typeof filled === 'undefined') {
+            // console.log(placeholder+" is undefined. Alerting with warning");
+            alert("Missing field. Your selected design includes the field "+placeholder+" which is not available from the selected data source. Please pick a different saved design or data source, or remove the undefined field from the design area.")
+        }
+        return filled;
 }
 
 function showLoadOption() {

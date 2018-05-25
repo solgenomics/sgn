@@ -94,7 +94,7 @@ sub study_types {
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@project_type_ids, $page_size, $page);
 	foreach (@$data_window){
 		push @data, {
-			studyTypeDbId=>$_->[0],
+			#studyTypeDbId=>$_->[0],
 			name=>$_->[1],
 			description=>$_->[2],
 		};
@@ -213,6 +213,7 @@ sub studies_germplasm {
 sub studies_detail {
 	my $self = shift;
 	my $study_id = shift;
+    my $main_production_site_url = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -256,12 +257,33 @@ sub studies_detail {
 				push @$brapi_contacts, {
 					contactDbId => $_->{sp_person_id},
 					name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
+                    instituteName => $_->{organization},
 					email => $_->{email},
 					type => $_->{user_type},
-					orcid =>$_->{phone_number}
+					orcid => ''
 				};
 			}
 			my $location = CXGN::Trial::get_all_locations($self->bcs_schema, $location_id)->[0];
+
+            my $additional_files = $t->get_additional_uploaded_files();
+            my @data_links;
+            foreach (@$additional_files){
+                push @data_links, {
+                    type => 'Additional File',
+                    name => $_->[4],
+                    url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
+                };
+            }
+
+            my $phenotype_files = $t->get_phenotype_metadata();
+            foreach (@$additional_files){
+                push @data_links, {
+                    type => 'Uploaded Phenotype File',
+                    name => $_->[4],
+                    url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
+                };
+            }
+
 			%result = (
 				studyDbId=>$t->get_trial_id(),
 				studyName=>$t->get_name(),
@@ -269,6 +291,7 @@ sub studies_detail {
 				trialName=>$folder->project_parent->name(),
 				studyType=>$project_type,
 				seasons=>\@years,
+                studyDescription=>$t->get_description(),
 				locationDbId=>$location_id,
 				locationName=>$location_name,
 				programDbId=>$folder->breeding_program->project_id(),
@@ -277,6 +300,7 @@ sub studies_detail {
 				endDate => $harvest_date,
 				additionalInfo=>\%additional_info,
 				active=>'',
+                license=>$t->get_data_agreement(),
 				location=> {
 					locationDbId => $location->[0],
 					locationType=>$location->[8],
@@ -289,7 +313,9 @@ sub studies_detail {
 					altitude=>$location->[4],
 					additionalInfo=> $location->[7]
 				},
-				contacts=>$brapi_contacts
+				contacts=>$brapi_contacts,
+                dataLinks=>\@data_links,
+                lastUpdate=>{}
 			);
 		} else {
 			return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not a study');
@@ -305,6 +331,7 @@ sub studies_detail {
 sub studies_observation_variables {
 	my $self = shift;
 	my $study_id = shift;
+    my $crop = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -329,10 +356,14 @@ sub studies_observation_variables {
 				name => $trait->display_name,
 				ontologyDbId => $trait->db_id,
 				ontologyName => $trait->db,
+                language => 'EN',
+                synonyms => [],
+                crop => $crop,
 				trait => {
 					traitDbId => $trait->cvterm_id,
 					name => $trait->name,
 					description => $trait->definition,
+                    xref => $trait->term
 				},
 				method => {},
 				scale => {
@@ -452,94 +483,97 @@ sub studies_layout {
 
 
 sub observation_units {
-	my $self = shift;
-	my $inputs = shift;
-	my $study_id = $inputs->{study_id};
-	my $data_level = $inputs->{data_level} || 'plot';
-	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
-	my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
-	my $phenotype_data;
-	if ($data_level eq 'all') {
-		$phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all', ['plot_of','plant_of'], 'accession', 'subject');
-	} elsif ($data_level eq 'plot') {
-		$phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', ['plot_of'], 'accession', 'subject');
-	} elsif ($data_level eq 'plant') {
-		$phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', ['plant_of'], 'accession', 'subject');
-	}
-	#print STDERR Dumper $phenotype_data;
+    my $self = shift;
+    my $inputs = shift;
+    my $study_id = $inputs->{study_id};
+    my $data_level = $inputs->{data_level} || 'plot';
+    my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+    my $phenotype_data;
+    if ($data_level eq 'all') {
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all', ['plot_of','plant_of'], 'accession', 'subject');
+    } elsif ($data_level eq 'plot') {
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', ['plot_of'], 'accession', 'subject');
+    } elsif ($data_level eq 'plant') {
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', ['plant_of'], 'accession', 'subject');
+    }
+    #print STDERR Dumper $phenotype_data;
 
-	my %unique_observation_units;
-	my %obs_unit_hash;
-	foreach (@$phenotype_data){
-		$unique_observation_units{$_->[1]}++;
-		$obs_unit_hash{$_->[1]} = $_;
-	}
+    my %unique_observation_units;
+    my %obs_unit_hash;
+    foreach (@$phenotype_data){
+        $unique_observation_units{$_->[1]}++;
+        push @{$obs_unit_hash{$_->[1]}}, $_;
+    }
+    #print STDERR Dumper \%obs_unit_hash;
 
-	my %obs_hash;
-	my $total_count = scalar(keys %unique_observation_units);
-	my $count = 0;
-	my $offset = $page*$page_size;
-	my $limit = $page_size*($page+1)-1;
-	foreach my $obs_unit_id (sort keys %unique_observation_units) {
-		if ($count >= $offset && $count <= ($offset+$limit)){
-			my $o = $obs_unit_hash{$obs_unit_id};
-			my $pheno_uniquename = $o->[5];
-			my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
-			my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
+    my %obs_hash;
+    my $total_count = scalar(keys %unique_observation_units);
+    my $count = 0;
+    my $offset = $page*$page_size;
+    my $limit = $page_size*($page+1)-1;
+    foreach my $obs_unit_id (sort keys %unique_observation_units) {
+        if ($count >= $offset && $count <= ($offset+$limit)){
+            my $observations = $obs_unit_hash{$obs_unit_id};
+            foreach my $o (@$observations){
+                my $pheno_uniquename = $o->[5];
+                my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
+                my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
 
-			if(exists($obs_hash{$o->[0]})){
-				my $observations = $obs_hash{$o->[0]}->{observations};
-				push @$observations, {
-					observationDbId => $o->[4],
-					observationVariableDbId => $o->[2],
-					observationVariableName => $o->[3],
-					collector => $operator,
-					observationTimeStamp => $timestamp,
-					value => $o->[7]
-				};
-				 $obs_hash{$o->[0]}->{observations} = $observations;
-			} else {
-				my $prop_hash = $self->get_stockprop_hash($o->[0]);
-				$obs_hash{$o->[0]} = {
-					observationUnitDbId => $o->[0],
-					observationUnitName => $o->[1],
-					germplasmDbId => $o->[8],
-					germplasmName => $o->[9],
-					pedigree => $self->germplasm_pedigree_string($o->[8]),
-					entryNumber => $prop_hash->{'entry number'} ? join ',', @{$prop_hash->{'entry number'}} : '',
-					entryType => $prop_hash->{'is a control'} ? 'Check' : 'Test',
-					plotNumber => $prop_hash->{'plot number'} ? join ',', @{$prop_hash->{'plot number'}} : '',
-					plantNumber => '',
-					blockNumber => $prop_hash->{'block'} ? join ',', @{$prop_hash->{'block'}} : '',,
-					X => $prop_hash->{'row_number'} ? join ',', @{$prop_hash->{'row_number'}} : '',
-					Y=> $prop_hash->{'col_number'} ? join ',', @{$prop_hash->{'col_number'}} : '',
-					replicate=> $prop_hash->{'replicate'} ? join ',', @{$prop_hash->{'replicate'}} : '',
-					observations => [{
-						observationDbId => $o->[4],
-						observationVariableDbId => $o->[2],
-						observationVariableName => $o->[3],
-						collector => $operator,
-						observationTimeStamp => $timestamp,
-						value => $o->[7]
-					}],
-				}
-			}
-		}
-		$count++;
-	}
+                if(exists($obs_hash{$o->[0]})){
+                    my $observations = $obs_hash{$o->[0]}->{observations};
+                    push @$observations, {
+                        observationDbId => $o->[4],
+                        observationVariableDbId => $o->[2],
+                        observationVariableName => $o->[3],
+                        collector => $operator,
+                        observationTimeStamp => $timestamp,
+                        value => $o->[7]
+                    };
+                    $obs_hash{$o->[0]}->{observations} = $observations;
+                } else {
+                    my $prop_hash = $self->get_stockprop_hash($o->[0]);
+                    $obs_hash{$o->[0]} = {
+                        observationUnitDbId => $o->[0],
+                        observationUnitName => $o->[1],
+                        germplasmDbId => $o->[8],
+                        germplasmName => $o->[9],
+                        pedigree => $self->germplasm_pedigree_string($o->[8]),
+                        entryNumber => $prop_hash->{'entry number'} ? join ',', @{$prop_hash->{'entry number'}} : '',
+                        entryType => $prop_hash->{'is a control'} ? 'Check' : 'Test',
+                        plotNumber => $prop_hash->{'plot number'} ? join ',', @{$prop_hash->{'plot number'}} : '',
+                        plantNumber => '',
+                        blockNumber => $prop_hash->{'block'} ? join ',', @{$prop_hash->{'block'}} : '',,
+                        X => $prop_hash->{'row_number'} ? join ',', @{$prop_hash->{'row_number'}} : '',
+                        Y=> $prop_hash->{'col_number'} ? join ',', @{$prop_hash->{'col_number'}} : '',
+                        replicate=> $prop_hash->{'replicate'} ? join ',', @{$prop_hash->{'replicate'}} : '',
+                        observations => [{
+                            observationDbId => $o->[4],
+                            observationVariableDbId => $o->[2],
+                            observationVariableName => $o->[3],
+                            collector => $operator,
+                            observationTimeStamp => $timestamp,
+                            value => $o->[7]
+                        }],
+                    }
+                }
+            }
+        }
+        $count++;
+    }
 
-	my @data_out;
-	foreach (sort keys %obs_hash){
-		push @data_out, $obs_hash{$_};
-	}
+    my @data_out;
+    foreach (sort keys %obs_hash){
+        push @data_out, $obs_hash{$_};
+    }
 
-	my %result = (data=>\@data_out);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations result constructed');
+    my %result = (data=>\@data_out);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations result constructed');
 }
 
 sub studies_table {
