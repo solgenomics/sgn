@@ -5,7 +5,7 @@
 <& /page/page_title.mas, title=>"Varitome project: Exploitation of genetic and epigenetic variation in the regulation of tomato fruit quality traits" &>
 
 <&| /page/info_section.mas, title => ''  &>
-<img src="/img/varitome/varitome_tomatoes.jpg" align="center"/>
+<center><img src="/img/varitome/varitome_tomatoes.jpg" align="center"/></center>
 
 </&>
 <&| /page/info_section.mas, title => 'Major goals' &>
@@ -25,9 +25,9 @@ Future crop improvement relies on harnessing the broader genetic diversity prese
 
 <&| /page/info_section.mas, title => 'The team' &>
 
-
+<center>
 <img src="/img/varitome/varitome_people.png"  border="0" usemap="#peoplemap" /> 
-
+</center>
 
 <map name="peoplemap">
 <area shape="rect" coords="17,248,295,278" href="http://vanderknaaplab.uga.edu/index.html" />
@@ -62,10 +62,10 @@ my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
 </%perl>
 
 % if ( $jbrowse_path ) {
-
-  <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe">
+<center>
+  <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="350" width="1000"  name="jbrowse_iframe">
   <p>Your browser does not support iframes.</p> </iframe>
-
+</center>
 % }
 
 </&>
