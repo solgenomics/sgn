@@ -235,4 +235,64 @@ sub search_table {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search result constructed');
 }
 
+sub search_table_csv {
+    my $self = shift;
+    my $inputs = shift;
+    my $format = $inputs->{format} || 'json';
+	my $file_path = $inputs->{file_path};
+	my $file_uri = $inputs->{file_uri};
+    my $data_level = $inputs->{data_level} || 'plot';
+    my $search_type = $inputs->{search_type} || 'fast';
+    my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
+    my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
+    my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
+    my @study_ids_array = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
+    my @location_ids_array = $inputs->{location_ids} ? @{$inputs->{location_ids}} : ();
+    my @years_array = $inputs->{years} ? @{$inputs->{years}} : ();
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+
+    my $factory_type;
+    if ($search_type eq 'complete'){
+        $factory_type = 'Native';
+    }
+    if ($search_type eq 'fast'){
+        $factory_type = 'MaterializedView';
+    }
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+        bcs_schema=>$self->bcs_schema,
+        data_level=>$data_level,
+        search_type=>$factory_type,
+        trial_list=>\@study_ids_array,
+        trait_list=>\@trait_ids_array,
+        include_timestamp=>1,
+        year_list=>\@years_array,
+        location_list=>\@location_ids_array,
+        accession_list=>\@accession_ids_array,
+        include_row_and_column_numbers=>1,
+        exclude_phenotype_outlier=>$exclude_phenotype_outlier
+    );
+    my @data;
+    try {
+        @data = $phenotypes_search->get_phenotype_matrix();
+    }
+    catch {
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search Table');
+    }
+
+    my %result;
+	my $total_count = 0;
+
+    my $file_response = CXGN::BrAPI::FileResponse->new({
+        absolute_file_path => $file_path,
+        absolute_file_uri => $inputs->{main_production_site_url}.$file_uri,
+        format => $format,
+        data => \@data
+    });
+    my @data_files = $file_response->get_datafiles();
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search result constructed');
+}
+
 1;
