@@ -143,18 +143,19 @@ sub search {
 	}
 	my $total_count = scalar(keys %obs_units);
 	my $count = 0;
+	my $window_count = 0;
 	my $offset = $page*$page_size;
-	my $limit = $page_size*($page+1)-1;
 	foreach my $obs_unit_id (sort keys %obs_units) {
-		if ($count >= $offset && $count <= ($offset+$limit)){
+		if ($count >= $offset && $window_count < $page_size){
 			push @data_window, $obs_units{$obs_unit_id};
+            $window_count++;
 		}
         $count++;
 	}
 	my %result = (data=>\@data_window);
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search result constructed');
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
 }
 
 sub search_table {
@@ -231,7 +232,7 @@ sub search_table {
         data=>\@data_window
     );
 
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
 }
 
@@ -239,8 +240,8 @@ sub search_table_csv_or_tsv {
     my $self = shift;
     my $inputs = shift;
     my $format = $inputs->{format} || 'json';
-	my $file_path = $inputs->{file_path};
-	my $file_uri = $inputs->{file_uri};
+       my $file_path = $inputs->{file_path};
+       my $file_uri = $inputs->{file_uri};
     my $data_level = $inputs->{data_level} || 'plot';
     my $search_type = $inputs->{search_type} || 'fast';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
@@ -282,7 +283,7 @@ sub search_table_csv_or_tsv {
     }
 
     my %result;
-	my $total_count = 0;
+    my $total_count = 0;
 
     my $file_response = CXGN::BrAPI::FileResponse->new({
         absolute_file_path => $file_path,

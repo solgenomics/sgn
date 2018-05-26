@@ -284,6 +284,7 @@ sub studies_detail {
                 };
             }
 
+            my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 			%result = (
 				studyDbId=>$t->get_trial_id(),
 				studyName=>$t->get_name(),
@@ -300,13 +301,15 @@ sub studies_detail {
 				endDate => $harvest_date,
 				additionalInfo=>\%additional_info,
 				active=>'',
-                license=>$t->get_data_agreement(),
+                license=>$data_agreement,
 				location=> {
 					locationDbId => $location->[0],
 					locationType=>$location->[8],
 					name=> $location->[1],
 					abbreviation=>$location->[9],
 					countryCode=> $location->[6],
+                    instituteName=>'',
+                    instituteAddress=>$location->[10],
 					countryName=> $location->[5],
 					latitude=>$location->[2],
 					longitude=>$location->[3],
@@ -315,7 +318,10 @@ sub studies_detail {
 				},
 				contacts=>$brapi_contacts,
                 dataLinks=>\@data_links,
-                lastUpdate=>{}
+                lastUpdate=>{
+                    version => '',
+                    timestamp => ''
+                }
 			);
 		} else {
 			return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not a study');
@@ -409,10 +415,10 @@ sub studies_layout {
 	my $check_id;
 	my $type;
 	my $count = 0;
+    my $window_count = 0;
 	my $offset = $page*$page_size;
-	my $limit = $page_size*($page+1)-1;
 	foreach my $plot_number (sort keys %$design) {
-		if ($count >= $offset && $count <= ($offset+$limit)){
+		if ($count >= $offset && $window_count < $page_size){
 			$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
 			if ($check_id == 1) {
 				$type = 'Check';
@@ -440,6 +446,7 @@ sub studies_layout {
 				additionalInfo => \%additional_info
 			};
 			push @$plot_data, $formatted_plot;
+            $window_count++;
 		}
 		$count++;
 	}
@@ -503,10 +510,10 @@ sub observation_units {
     my %obs_hash;
     my $total_count = scalar(keys %unique_observation_units);
     my $count = 0;
+    my $window_count = 0;
     my $offset = $page*$page_size;
-    my $limit = $page_size*($page+1)-1;
     foreach my $obs_unit_id (sort keys %unique_observation_units) {
-        if ($count >= $offset && $count <= ($offset+$limit)){
+        if ($count >= $offset && $window_count < $page_size){
             my $observations = $obs_unit_hash{$obs_unit_id};
             foreach my $o (@$observations){
                 my $pheno_uniquename = $o->[5];
@@ -551,6 +558,7 @@ sub observation_units {
                     }
                 }
             }
+            $window_count++;
         }
         $count++;
     }

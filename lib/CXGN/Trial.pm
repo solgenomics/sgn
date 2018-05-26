@@ -305,6 +305,7 @@ sub get_all_locations {
         my $country_code = '';
         my $location_type = '';
         my $abbreviation = '';
+        my $address = '';
 
         while (my $sp = $loc_props->next()) {
             if ($sp->get_column('cvterm_name') eq 'country_name') {
@@ -315,12 +316,14 @@ sub get_all_locations {
                 $location_type = $sp->get_column('value');
             } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
                 $abbreviation = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'geolocation address') {
+                $address = $sp->get_column('value');
             } else {
                 $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation],
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address],
     }
 
     return \@locations;
