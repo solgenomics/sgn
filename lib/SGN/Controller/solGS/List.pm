@@ -359,7 +359,7 @@ sub predict_list_selection_pop_combined_pops_model {
     {    
 	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id); 
 	
-	$c->controller("solGS::solGS")->cache_combined_pops_data($c);
+	$c->controller("solGS::combinedTrials")->cache_combined_pops_data($c);
 	    
 	my $pheno_file = $c->stash->{trait_combined_pheno_file};
 	my $geno_file  = $c->stash->{trait_combined_geno_file};

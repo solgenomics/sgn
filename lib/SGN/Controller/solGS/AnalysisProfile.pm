@@ -419,7 +419,7 @@ sub structure_output_details {
 		$trait_page = $base . "solgs/model/combined/trials/$combo_pops_id/trait/$trait_id";
 
 		$c->stash->{combo_pops_id} = $combo_pops_id;
-		$solgs_controller->cache_combined_pops_data($c);		
+		$c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);		
 	    }
 
 	    $output_details{'trait_id_' . $trait_abbr} = {
@@ -570,8 +570,8 @@ sub structure_output_details {
 	my $combined_pops_page = $base . "solgs/populations/combined/$combo_pops_id";
 	my @combined_pops_ids = @{$c->stash->{combo_pops_list}};
 
-	$solgs_controller->multi_pops_pheno_files($c, \@combined_pops_ids);	
-	$solgs_controller->multi_pops_geno_files($c, \@combined_pops_ids);
+	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, \@combined_pops_ids);	
+	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, \@combined_pops_ids);
 
 	my $multi_ph_files = $c->stash->{multi_pops_pheno_files};
 	my @pheno_files = split(/\t/, $multi_ph_files);
@@ -686,7 +686,7 @@ sub run_analysis {
 	elsif ($analysis_page =~ /solgs\/populations\/combined\//)
 	{
 	    my $combo_pops_id = $c->stash->{combo_pops_id};
-	    #$c->controller('solGS::solGS')->get_combined_pops_list($c, $combo_pops_id);
+	    #$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
 	    $c->controller("solGS::combinedTrials")->prepare_multi_pops_data($c);	
 	    
 	    $c->stash->{dependency} = $c->stash->{prerequisite_jobs};
@@ -698,7 +698,7 @@ sub run_analysis {
 		$c->controller("solGS::solGS")->run_async($c);
 	    }
 	    #my $combined_pops_list = $c->controller("solGS::combinedTrials")->get_combined_pops_arrayref($c);
-	    #$c->controller('solGS::solGS')->multi_pops_geno_files($c, $combined_pops_list);
+	    #$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $combined_pops_list);
 	    #my $g_files = $c->stash->{multi_pops_geno_files};
 	    #my @geno_files = split(/\t/, $g_files);
 	    #$c->controller('solGS::solGS')->submit_cluster_compare_trials_markers($c, \@geno_files);
