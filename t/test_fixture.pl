@@ -64,10 +64,12 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-#print STDERR Dumper($cfg);
+print STDERR Dumper($cfg);
 my $db_user_password = $config->{dbpass};
-my $dbhost = $config->{db_host} || 'localhost';
+my $dbhost = $config->{dbhost} || 'localhost';
+my $dbport = $config->{dbport} || '5432';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
+print STDERR "Using $dbhost:$dbport\n";
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
 
@@ -88,8 +90,8 @@ $dbname .= $$;
 print STDERR "# Writing a .pgpass file... ";
 # format = hostname:port:database:username:password
 open(my $PGPASS, ">", "$ENV{HOME}/.pgpass") || die "Can't open .pgpass for writing.";
-print $PGPASS "$dbhost:5432:$dbname:web_usr:$db_user_password\n";
-print $PGPASS "$dbhost:5432:*:postgres:$db_postgres_password\n";
+print $PGPASS "$dbhost:$dbport:$dbname:web_usr:$db_user_password\n";
+print $PGPASS "$dbhost:$dbport:*:postgres:$db_postgres_password\n";
 close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
 print STDERR "Done.\n";

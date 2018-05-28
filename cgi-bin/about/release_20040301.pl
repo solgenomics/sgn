@@ -111,7 +111,7 @@ print<<END_HEREDOC;
         sent to you that allows you to modify and complete the
         information in your entry. If you are not yet in the
         database, you can add yourself at
-        http://sgn.cornell.edu/solpeople/login.pl. You will
+        http://sgn.cornell.edu/user/login. You will
         have to create an account first and then you can add your
         information.</p>
 </li>

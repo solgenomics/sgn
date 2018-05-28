@@ -240,7 +240,7 @@ sub require_logged_in : Private {
     $c->forward('get_user');
 
     unless( $c->stash->{person_id} ) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
 
     return 1;
