@@ -107,13 +107,13 @@ sub observation_variable_ontologies {
 				$info = decode_json($dbxref_description);
 			}
 			push @available, {
-                ontologyDbId=>$db_id,
+                ontologyDbId=>qq|$db_id|,
                 ontologyName=>$db_name." (".$cv_name.")",
                 description=>$cvterm_name,
-                authors=>$info->{authors},
+                authors=>$info->{authors} ? $info->{authors} : '',
                 version=>$dbxref_version,
-                copyright=>$info->{copyright},
-                licence=>$info->{licence}
+                copyright=>$info->{copyright} ? $info->{copyright} : '',
+                licence=>$info->{licence} ? $info->{licence} : ''
 			};
 		}
 	}
@@ -194,25 +194,26 @@ sub observation_variable_search {
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
 		push @data, {
-			observationVariableDbId => $cvterm_id,
+			observationVariableDbId => qq|$cvterm_id|,
 			name => $cvterm_name."|".$db_name.":".$accession,
-			ontologyDbId => $db_id,
+			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
 			trait => {
-				traitDbId => $cvterm_id,
+				traitDbId => qq|$cvterm_id|,
 				name => $cvterm_name,
 				description => $cvterm_definition,
+                class => ''
 			},
 			method => {},
 			scale => {
 				scaleDbId =>'',
 				name =>'',
 				datatype=>$trait->format,
-				decimalPlaces=>'',
+				decimalPlaces=>undef,
 				xref=>'',
 				validValues=> {
-					min=>$trait->minimum,
-					max=>$trait->maximum,
+					min=>$trait->minimum ? $trait->minimum : undef,
+					max=>$trait->maximum ? $trait->maximum : undef,
 					categories=>\@brapi_categories
 				}
 			},
