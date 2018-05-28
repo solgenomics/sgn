@@ -104,8 +104,8 @@ $dialog_name => undef
             <div class="form-group">
                 <label class="col-sm-3 control-label">Download Type: </label>
                 <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="trial_search_type" id="trial_search_type" value="complete" checked>Complete</label>
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="trial_search_type" id="trial_search_type" value="fast" >Fast (plots only)</label>
+                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="trial_search_type" value="complete" checked>Complete</label>
+                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="trial_search_type" value="fast" >Fast (plots only)</label>
                 </div>
             </div>
 </&>
