@@ -38,7 +38,7 @@ sub observation_levels {
 
 	my $status = $self->status;
 	my @available = (
-		'plant','plot','all'
+		'plant','plot','tissue_sample','all'
 	);
 
 	my @data;

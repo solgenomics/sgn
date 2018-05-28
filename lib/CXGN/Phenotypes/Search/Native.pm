@@ -294,6 +294,8 @@ sub search {
 
     my $order_clause = " ORDER BY 2,7,19 DESC";
 
+    my $group_by = " GROUP BY (".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", plot_name, ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", ".$columns{'planting_date'}.", ".$columns{'harvest_date'}.", ".$columns{'breeding_program'}.", phenotype.phenotype_id ".$design_layout_select.")";
+
     my @where_clause;
 
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
@@ -387,7 +389,7 @@ sub search {
         $offset_clause = " OFFSET ".$self->offset;
     }
 
-    my  $q = $select_clause . $from_clause . $where_clause . $order_clause . $limit_clause . $offset_clause;
+    my  $q = $select_clause . $from_clause . $where_clause . $group_by . $order_clause . $limit_clause . $offset_clause;
 
     print STDERR "QUERY: $q\n\n";
 

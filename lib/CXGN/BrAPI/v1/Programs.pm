@@ -72,12 +72,14 @@ sub programs_list {
 				push @sp_person_names, $username;
 			}
 		}
+        my $names = join ',', @sp_person_names;
 		push @data, {
 			programDbId=>$_->[0],
 			name=>$_->[1],
 			abbreviation=>$prop_hash->{breeding_program_abbreviation} ? join ',', @{$prop_hash->{breeding_program_abbreviation}} : '',,
 			objective=>$_->[2],
-			leadPerson=> join ',', @sp_person_names,
+			leadPerson=> $names,
+            commonCropName => $inputs->{crop}
 		};
 	}
 
