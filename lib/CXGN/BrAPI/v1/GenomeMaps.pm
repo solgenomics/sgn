@@ -72,8 +72,9 @@ sub list {
         if ($map_type eq 'genetic'){
             $map_type = 'Genetic';
         }
+        my $map_id = $m->get_id();
 	    	my %map_info = (
-		    mapDbId =>  qq|$m->get_id()|,
+		    mapDbId =>  "$map_id",
 			name => $m->get_short_name(),
 			species => $m->get_organism() ? $m->get_organism() : '',
 			type => $map_type,
