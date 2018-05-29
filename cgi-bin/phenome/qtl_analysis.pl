@@ -1110,10 +1110,9 @@ sub outfile_list
 
 =head2 cache_temp_path
 
- Usage: my ($rqtl_cache_path, $rqtl_temp_path, $tempimages_path) = $self->cache_temp_path();
- Desc: creates the 'r_qtl/cache' and 'r_qtl/tempfiles' subdirs in the /data/prod/tmp,              
- Ret: /data/prod/tmp/r_qtl/cache, /data/prod/tmp/r_qtl/tempfiles, 
-      /data/local/cxgn/sgn/documents/tempfiles/temp_images
+ Usage: my ($solqtl_cache, $solqtl_tempfiles, $solqtl_temp_images) = $self->cache_temp_path();
+ Desc: creates the 'solqtl/cache', 'solqtl/tempfiles', and 'solqtl/temp_images', subdirs in the /export/prod/tmp,              
+ Ret: returns the dirs above
  Args: none
  Side Effects:
  Example:
@@ -1121,15 +1120,20 @@ sub outfile_list
 =cut
 
 sub cache_temp_path {
+    my $geno_version = $c->config->{default_genotyping_protocol}; 
+    $geno_version    = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
+    $geno_version    =~ s/\s+//g;
+    my $tmp_dir      = $c->site_cluster_shared_dir;    
+    $tmp_dir         = catdir($tmp_dir, $geno_version);
     
-    my $prod_rqtl_path  = $c->config->{solqtl};
-    my $tempimages_path = File::Spec->catfile($prod_rqtl_path, "temp_images" );
-    my $rqtl_cache_path = "$prod_rqtl_path/cache"; 
-    my $rqtl_temp_path  = "$prod_rqtl_path/tempfiles";
-  
-    mkpath ([$rqtl_cache_path, $rqtl_temp_path, $tempimages_path], 0, 0755);
+    my $solqtl_dir         = catdir($tmp_dir, 'solqtl');
+    my $solqtl_cache       = catdir($tmp_dir, 'solqtl', 'cache'); 
+    my $solqtl_tempfiles   = catdir($tmp_dir, 'solqtl', 'tempfiles');  
+    my $solqtl_temp_images = catdir($tmp_dir, 'solqtl', 'temp_images');
+
+    mkpath ([$solqtl_cache, $solqtl_tempfiles, $solqtl_temp_images], 0, 0755);
    
-    return $rqtl_cache_path, $rqtl_temp_path, $tempimages_path;
+    return $solqtl_cache, $solqtl_tempfiles, $solqtl_temp_images;
 
 }
 
@@ -1193,63 +1197,25 @@ sub crosstype_file {
 
 =cut
 
-sub run_r
-{
+sub run_r {
     my $self = shift;
 
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
+    my ($solqtl_cache, $solqtl_temp, $solqtl_tempimages) = $self->cache_temp_path();
     my $prod_permu_file = $self->permu_file();
-    my $file_in         = $self->infile_list();
-    my ( $file_out, $qtl_summary, $peak_markers ) = $self->outfile_list();
+    my $input_file      = $self->infile_list();
+    my ($output_file, $qtl_summary, $peak_markers) = $self->outfile_list();
     my $stat_file = $self->stat_files();
 
-    CXGN::Tools::Run->temp_base($prod_temp_path);
-
-    my ( $r_in_temp, $r_out_temp ) =
-      map {
-        my ( undef, $filename ) =
-          tempfile(
-                    File::Spec->catfile(
-                                         CXGN::Tools::Run->temp_base(),
-                                         "qtl_analysis.pl-$_-XXXXXX",
-                                       ),
-                  );
-        $filename
-      } qw / in out /;
-
-    #copy our R commands into a cluster-accessible tempfile
-    {
-        my $r_cmd_file = $c->path_to('R/solGS/qtl_analysis.r');
-        copy( $r_cmd_file, $r_in_temp )
-          or die "could not copy '$r_cmd_file' to '$r_in_temp'";
-    }
-
-    try {
-        # now run the R job on the cluster
-        my $r_process = CXGN::Tools::Run->run_cluster(
-            'R', 'CMD', 'BATCH',
-            '--slave',
-            "--args $file_in $file_out $stat_file",
-            $r_in_temp,
-            $r_out_temp,
-            {
-                working_dir => $prod_temp_path,
-
-                # don't block and wait if the cluster looks full
-                max_cluster_jobs => 1_000_000_000,
-            },
-           );
-
-        $r_process->wait;       #< wait for R to finish
-    } catch {
-        my $err = $_;
-        $err =~ s/\n at .+//s; #< remove any additional backtrace
-   #     # try to append the R output
-        try{ $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" };
-        # die with a backtrace
-        Carp::confess $err;
-    };
+    my $pop_id = $self->get_object_id();
+    my $trait_id = $self->get_trait_id();
+    
+    $c->stash->{analysis_tempfiles_dir} = $solqtl_temp;
+    $c->stash->{r_temp_file} = 'solqtl-${pop_id}-${trait_id}';
+    $c->stash->{input_file}  = $input_file;
+    $c->stash->{output_file} = $output_file;
+    $c->stash->{r_script}    = 'R/solGS/qtl_analysis.r';
+    
+    $c->controller('solGS::solGS')->run_r_script($c);
 
     return $qtl_summary, $peak_markers;
 
