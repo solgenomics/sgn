@@ -156,8 +156,12 @@ function formatGenCorInputData (popId, type, indexFile) {
         url: '/correlation/genetic/data/',
         success: function(response) {
            
+<<<<<<< HEAD
             if (response.result) {
 
+=======
+            if(response.result) {
+>>>>>>> master
                 gebvsFile = response.gebvs_file;
               
                 var divPlace;

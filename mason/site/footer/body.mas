@@ -1,204 +1,107 @@
 
-<!-- LOAD WORKING MODAL, LIST MODAL, AND CALENDAR MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
-
-<& /site/list.mas &>
-<& /site/dataset.mas &>
-<& /calendar/events_by_user_role.mas &>
-<& /site/login_dialog.mas &>
-
-<!--
-<div id="working" style="text-align : center;">
-  <img src="/img/wheel.gif" />
-  <div id="working_msg"></div>
-</div>
--->
-
-<div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
-  <div class="modal-dialog modal-sm" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-	<center>
-        <h4 class="modal-title" id="workingModalDialog">Working</h4>
-	</center>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <center>
-	  <img src="/img/wheel.gif" />
-    	  <div id="working_msg"></div>
-	  </center>
-        </div>
-      </div>
-      <div class="modal-footer">
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- END CONTENT WRAPPER -->
-
-      </div>
-      <div class="col-md-1 col-lg-1 col-xl-2">
-      </div>
-    </div>
-  </div>
-||||||| merged common ancestors
-
-<!-- LOAD WORKING MODAL, LIST MODAL, AND CALENDAR MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
-
-<& /site/list.mas &>
-<& /site/dataset.mas &>
-<& /calendar/events_by_user_role.mas &>
-
-<!--
-<div id="working" style="text-align : center;">
-  <img src="/img/wheel.gif" />
-  <div id="working_msg"></div>
-</div>
--->
-
-<div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
-  <div class="modal-dialog modal-sm" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-	<center>
-        <h4 class="modal-title" id="workingModalDialog">Working</h4>
-	</center>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <center>
-	  <img src="/img/wheel.gif" />
-    	  <div id="working_msg"></div>
-	  </center>
-        </div>
-      </div>
-      <div class="modal-footer">
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- END CONTENT WRAPPER -->
-
-      </div>
-      <div class="col-md-1 col-lg-1 col-xl-2">
-      </div>
-    </div>
-  </div>
-=======
-<& /site/footer/common.mas &>
->>>>>>> factor out common footer code elements such that footers only neeed to contain site-specific html, and include the new mason component for the common footer elements.
-||||||| merged common ancestors
-<& /site/footer/common.mas &>
-=======
-<!-- NOTE: common footer elements are included in footer.mas using footer/common.mas -->
->>>>>>> Move common footer element include into the parent footer.mas.
-
 <!-- BEGIN SITE SPECIFIC FOOTER. -->
 
 <br/>
 <div id="pagefooter" class="navbar navbar-default" style="margin-bottom:0px;">
-   
-  <br/>
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-md-1 col-lg-1 col-xl-2">
-      </div>
-      <div class="col-xs-12 col-sm-12 col-md-10 col-lg-10 col-xl-8">
-        <div class="container-fluid">
-    	  <div class="row">
 
-      	    <div class="col-sm-9 col-md-9 col-lg-9">
+    <br/>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-1 col-lg-1 col-xl-2">
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-10 col-lg-10 col-xl-8">
+                <div class="container-fluid">
+                    <div class="row">
 
-	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px; overflow:scroll;">
-	        <div class="panel-heading"></div>
+                        <div class="col-sm-9 col-md-9 col-lg-9">
 
-		  <table class="center table hidden-xs" style="margin-bottom:-4px;">
-	    	  <tbody>
-            	    <tr>
-              	      <td>
-                	<a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
-              	      </td>
-              	      <td>
-            		<a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0"/></a>
-              	      </td>
-              	      <td>
-                	<a href="http://www.gmod.org/" class="footer"><img width="100" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" border="0" style="padding-top:15px"/></a>
-              	      </td>
-              	      <td>
-                	<a href="http://www.nifa.usda.gov/" class="footer"><img width="80" alt="USDA NIFA" src="/documents/img/usda_logo2.png" title="USDA NIFA" border="0" style="padding-top:15px"/></a>
-              	      </td>
-            	    </tr>
-	    	  </tbody>
-          	</table>
+                            <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px; overflow:scroll;">
+                                <div class="panel-heading"></div>
 
-	        <ul class="visible-xs-block list-inline center nav-justified">
-            	  <li>
-              	  <a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-top:5px"/></a>
-            	  </li>
-            	  <li>
-              	  <a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0" style="padding-top:5px"/></a>
-            	  </li>
-            	  <li>
-              	  <a href="http://www.gmod.org/" class="footer"><img width="100" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" border="0" style="padding-top:15px"/></a>
-            	  </li>
-            	  <li>
-              	  <a href="http://www.nifa.usda.gov/" class="footer"><img width="80" alt="USDA NIFA" src="/documents/img/usda_logo2.png" title="USDA NIFA" border="0" style="padding-top:12px"/></a>
-            	  </li>
-          	</ul>
+                                <table class="center table hidden-xs" style="margin-bottom:-4px;">
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0"/></a>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.gmod.org/" class="footer"><img width="100" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" border="0" style="padding-top:15px"/></a>
+                                            </td>
+                                            <td>
+                                                <a href="http://www.nifa.usda.gov/" class="footer"><img width="80" alt="USDA NIFA" src="/documents/img/usda_logo2.png" title="USDA NIFA" border="0" style="padding-top:15px"/></a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
 
-	      </div>
+                                <ul class="visible-xs-block list-inline center nav-justified">
+                                    <li>
+                                        <a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-top:5px"/></a>
+                                    </li>
+                                    <li>
+                                        <a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0" style="padding-top:5px"/></a>
+                                    </li>
+                                    <li>
+                                        <a href="http://www.gmod.org/" class="footer"><img width="100" alt="Powered by GMOD" src="/documents/img/powered_by_gmod_150x71.png" title="Powered by GMOD" border="0" style="padding-top:15px"/></a>
+                                    </li>
+                                    <li>
+                                        <a href="http://www.nifa.usda.gov/" class="footer"><img width="80" alt="USDA NIFA" src="/documents/img/usda_logo2.png" title="USDA NIFA" border="0" style="padding-top:12px"/></a>
+                                    </li>
+                                </ul>
 
-	      <div class="well" >
-	        <small>SGN is supported by <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>, <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at <a class="footer" href="http://bti.cornell.edu">BTI.</a>
-    		<br />
-    		Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> | <a href="/legal.pl">Disclaimer</a></small>
-              </div>
-	    </div>
+                            </div>
 
-	    <div class="col-sm-3 col-md-3 col-lg-3" >
-	      <div class="panel panel-info">
-		<table class="table table-hover">
-		  <tbody>
-		    <tr>
-		      <td>
-		        <a href="http://facebook.com/solgenomics" class="footer"><img width="20" alt="Facebook" src="/documents/img/facebook_icon.png" title="SGN Facebook" border="0" /></a>
-			<a href="http://twitter.com/solgenomics" class="footer"><img width="20" alt="Twitter" src="/documents/img/twitter_icon.png" title="SGN Twitter" border="0"/></a>
-			<!--<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
-			<a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>-->
-		      </td>
-		    </tr>
-		    <tr>
-		      <td><a href="/about/index.pl"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;About</a></td>
-		    </tr>
-		    <tr>
-		      <td><a href="/contact/form/"><span class="glyphicon glyphicon-envelope"></span>&nbsp;&nbsp;&nbsp;&nbsp;Contact Us</a></td>
-		    </tr>
-		    <tr>
-		      <td><a href="/help/index.pl"><span class="glyphicon glyphicon-blackboard"></span>&nbsp;&nbsp;&nbsp;&nbsp;Help</a></td>
-		    </tr>
-		    <tr>
-		      <td><a href="/help/faq.pl"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;FAQ</a></td>
-		    </tr>
-		    <tr>
-		      <td><a href="/forum/topics.pl"><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;&nbsp;&nbsp;Forum</a></td>
-		    </tr>
-		  </tbody>
-		</table>
-	      </div>
-	    </div>
+                            <div class="well" >
+                                <small>SGN is supported by <a class="footer" href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=0820612">NSF (#0820612)</a>, <a class="footer" href="http://www.usda.gov">USDA CSREES</a> and hosted at <a class="footer" href="http://bti.cornell.edu">BTI.</a>
+                                    <br />
+                                    Cite SGN using <a class="footer" href="http://nar.oxfordjournals.org/content/early/2014/11/26/nar.gku1195.full" target="_new"> Fernandez-Pozo et al, 2014</a> | <a href="/legal.pl">Disclaimer</a></small>
+                            </div>
+                        </div>
 
-	  </div>
-	</div>
-      </div>
+                        <div class="col-sm-3 col-md-3 col-lg-3" >
+                            <div class="panel panel-info">
+                                <table class="table table-hover">
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <a href="http://facebook.com/solgenomics" class="footer"><img width="20" alt="Facebook" src="/documents/img/facebook_icon.png" title="SGN Facebook" border="0" /></a>
+                                                <a href="http://twitter.com/solgenomics" class="footer"><img width="20" alt="Twitter" src="/documents/img/twitter_icon.png" title="SGN Twitter" border="0"/></a>
+                                                <!--<a href="http://linkedin.com/solgenomics" class="footer"><img width="20" alt="LinkedIn" src="/documents/img/linkedin_icon.png" title="SGN LinkedIn" border="0"/></a>
+                                                <a href="http://googleplus.com/solgenomics" class="footer"><img width="20" alt="GooglePlus" src="/documents/img/googleplus_icon.png" title="SGN Google Plus" border="0"/></a>-->
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><a href="/about/index.pl"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;About</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td><a href="/contact/form/"><span class="glyphicon glyphicon-envelope"></span>&nbsp;&nbsp;&nbsp;&nbsp;Contact Us</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td><a href="/help/index.pl"><span class="glyphicon glyphicon-blackboard"></span>&nbsp;&nbsp;&nbsp;&nbsp;Help</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td><a href="/help/faq.pl"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;&nbsp;&nbsp;&nbsp;FAQ</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td><a href="/forum/topics.pl"><span class="glyphicon glyphicon-comment"></span>&nbsp;&nbsp;&nbsp;&nbsp;Forum</a></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-      <div class="col-md-1 col-lg-1 col-xl-2">
-      </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-1 col-lg-1 col-xl-2">
+            </div>
+        </div>
     </div>
-  </div>
 
-</div>
 </div>
 
 

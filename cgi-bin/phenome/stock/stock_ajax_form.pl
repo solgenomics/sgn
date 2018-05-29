@@ -69,25 +69,11 @@ sub store {
     my $initial_stock_id = $stock_id;
 
     my $error;
-<<<<<<< HEAD
-    $stock->set_species($args{organism});
-    $stock->set_type_id($args{type_id});
-    $stock->set_name($args{uniquename});
-    $stock->set_uniquename($args{uniquename});
-    $stock->set_description($args{description});
-||||||| merged common ancestors
-    $stock->set_species($args{organism});
-    $stock->set_type_id($args{type_id});
-    $stock->set_name($args{name});
-    $stock->set_uniquename($args{uniquename});
-    $stock->set_description($args{description});
-=======
     $stock->species($args{organism});
     $stock->type_id($args{type_id});
     $stock->name($args{uniquename});
     $stock->uniquename($args{uniquename});
     $stock->description($args{description});
->>>>>>> store stock owner for new stocks, use CXGN::Stock instead of deprecated Chado class
 
 
     my $message = $stock->exists_in_database();
@@ -127,13 +113,7 @@ sub delete {
     $self->print_json() if $check ; #error or no user privileges
 
     my $stock      = $self->get_object();
-<<<<<<< HEAD
-    my $stock_name = $stock->get_uniquename();
-||||||| merged common ancestors
-    my $stock_name = $stock->get_name();
-=======
-    my $stock_name = $stock->name();
->>>>>>> store stock owner for new stocks, use CXGN::Stock instead of deprecated Chado class
+    my $stock_name = $stock->uniquename();
     my $stock_id = $stock->get_stock_id();
     my %json_hash= $self->get_json_hash();
     my $refering_page="/stock/$stock_id/view";
