@@ -116,8 +116,7 @@ sub _validate_with_plugin {
 
     my %seen_cross_names;
     my %seen_accession_names;
-    my %seen_plot_names;
-    my %seen_plant_names;
+    my %seen_plot_plant_names;
 
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
@@ -125,10 +124,8 @@ sub _validate_with_plugin {
         my $cross_type;
         my $female_parent;
         my $male_parent;
-        my $female_plot_name;
-        my $male_plot_name;
-        my $female_plant_name;
-        my $male_plant_name;
+        my $female_plot_plant_name;
+        my $male_plot_plant_name;
 
         if ($worksheet->get_cell($row,0)) {
             $cross_name = $worksheet->get_cell($row,0)->value();
@@ -152,19 +149,11 @@ sub _validate_with_plugin {
         }
 
         if ($worksheet->get_cell($row,4)) {
-            if ($female_plot_plant_header eq 'female_plot'){
-                $female_plot_name =  $worksheet->get_cell($row,4)->value();
-            } elsif ($female_plot_plant_header eq 'female_plant'){
-                $female_plant_name =  $worksheet->get_cell($row,4)->value();
-            }
+            $female_plot_plant_name =  $worksheet->get_cell($row,4)->value();
         }
 
         if ($worksheet->get_cell($row,5)) {
-            if ($male_plot_plant_header eq 'male_plot'){
-                $male_plot_name =  $worksheet->get_cell($row,5)->value();
-            } elsif ($male_plot_plant_header eq 'male_plant'){
-                $male_plant_name =  $worksheet->get_cell($row,5)->value();
-            }
+            $male_plot_plant_name =  $worksheet->get_cell($row,5)->value();
         }
 
         for my $column ( 6 .. $col_max ) {
@@ -220,24 +209,13 @@ sub _validate_with_plugin {
             $seen_accession_names{$male_parent}++;
         }
 
-        if ($female_plot_name){
-            $seen_plot_names{$female_plot_name}++;
+        if ($female_plot_plant_name){
+            $seen_plot_plant_names{$female_plot_plant_name}++;
         }
 
-        if ($male_plot_name){
-            $seen_plot_names{$male_plot_name}++;
+        if ($male_plot_plant_name){
+            $seen_plot_plant_names{$male_plot_plant_name}++;
         }
-
-        if ($female_plant_name){
-            $seen_plant_names{$female_plant_name}++;
-        }
-
-        if ($male_plant_name){
-            $seen_plant_names{$male_plant_name}++;
-        }
-
-
-
     }
 
     my @accessions = keys %seen_accession_names;
@@ -252,22 +230,24 @@ sub _validate_with_plugin {
         $errors{'missing_accessions'} = \@parents_missing;
     }
 
-    my @plots = keys %seen_plot_names;
-    my $plot_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plots)->{'missing'}};
+    if (($female_plot_plant_header eq 'female_plot') && ($male_plot_plant_header eq 'male_plot')) {
+        my @plots = keys %seen_plot_plant_names;
+        my $plot_validator = CXGN::List::Validate->new();
+        my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
-    if (scalar(@plots_missing) > 0) {
-        push @error_messages, "The following plots are not in the database as uniquenames or synonyms: ".join(',',@plots_missing);
-        $errors{'missing_plots'} = \@plots_missing;
-    }
+        if (scalar(@plots_missing) > 0) {
+            push @error_messages, "The following plots are not in the database as uniquenames or synonyms: ".join(',',@plots_missing);
+            $errors{'missing_plots'} = \@plots_missing;
+        }
+    } elsif (($female_plot_plant_header eq 'female_plant') && ($male_plot_plant_header eq 'male_plant')) {
+        my @plants = keys %seen_plot_plant_names;
+        my $plant_validator = CXGN::List::Validate->new();
+        my @plants_missing = @{$plant_validator->validate($schema,'plants',\@plants)->{'missing'}};
 
-    my @plants = keys %seen_plant_names;
-    my $plant_validator = CXGN::List::Validate->new();
-    my @plants_missing = @{$plant_validator->validate($schema,'plants',\@plants)->{'missing'}};
-
-    if (scalar(@plants_missing) > 0) {
-        push @error_messages, "The following plants are not in the database as uniquenames or synonyms: ".join(',',@plants_missing);
-        $errors{'missing_plants'} = \@plants_missing;
+        if (scalar(@plants_missing) > 0) {
+            push @error_messages, "The following plants are not in the database as uniquenames or synonyms: ".join(',',@plants_missing);
+            $errors{'missing_plants'} = \@plants_missing;
+        }
     }
 
     my @crosses = keys %seen_cross_names;
@@ -332,15 +312,11 @@ sub _parse_with_plugin {
         my $male_plant;
         my $cross_stock;
 
-        if ($worksheet->get_cell($row,0)) {
-            $cross_name = $worksheet->get_cell($row,0)->value();
-        }
-        if ($worksheet->get_cell($row,1)) {
-            $cross_type = $worksheet->get_cell($row,1)->value();
-        }
-        if ($worksheet->get_cell($row,2)) {
-            $female_parent =  $worksheet->get_cell($row,2)->value();
-        }
+        $cross_name = $worksheet->get_cell($row,0)->value();
+
+        $cross_type = $worksheet->get_cell($row,1)->value();
+
+        $female_parent =  $worksheet->get_cell($row,2)->value();
 
         #skip blank lines or lines with no name, type and parent
         if (!$cross_name && !$cross_type && !$female_parent) {
