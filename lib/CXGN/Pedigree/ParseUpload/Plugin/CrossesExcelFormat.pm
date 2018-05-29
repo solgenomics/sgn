@@ -312,11 +312,17 @@ sub _parse_with_plugin {
         my $male_plant;
         my $cross_stock;
 
-        $cross_name = $worksheet->get_cell($row,0)->value();
+        if ($worksheet->get_cell($row,0)) {
+            $cross_name = $worksheet->get_cell($row,0)->value();
+        }
 
-        $cross_type = $worksheet->get_cell($row,1)->value();
+        if ($worksheet->get_cell($row,1)) {
+            $cross_type = $worksheet->get_cell($row,1)->value();
+        }
 
-        $female_parent =  $worksheet->get_cell($row,2)->value();
+        if ($worksheet->get_cell($row,2)) {
+            $female_parent =  $worksheet->get_cell($row,2)->value();
+        }
 
         #skip blank lines or lines with no name, type and parent
         if (!$cross_name && !$cross_type && !$female_parent) {
