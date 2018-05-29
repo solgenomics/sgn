@@ -899,20 +899,11 @@ sub output_files {
     
     $c->controller('solGS::Files')->marker_effects_file($c);  
     $c->controller('solGS::Files')->rrblup_gebvs_file($c); 
-<<<<<<< HEAD
-    $c->controller('solGS::Files')->validation_file($c);  
-=======
     $c->controller('solGS::Files')->validation_file($c);
->>>>>>> master
     $c->controller("solGS::Files")->trait_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-<<<<<<< HEAD
-=======
-
-    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
->>>>>>> master
 
     my $prediction_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -946,11 +937,7 @@ sub output_files {
     write_file($tempfile, $file_list);
     
     $c->stash->{output_files} = $tempfile;
-<<<<<<< HEAD
-   
-=======
 
->>>>>>> master
 }
 
 
@@ -2711,11 +2698,8 @@ sub submit_cluster_compare_trials_markers {
 	    
          });
 
-<<<<<<< HEAD
-	$c->stash->{r_job_tempdir} = $compare_trials_job->job_tempdir();
-=======
 	$c->stash->{r_job_tempdir} = $compare_trials_job->tempdir();
->>>>>>> master
+
 	$c->stash->{r_job_id} = $compare_trials_job->job_id();
 	$c->stash->{cluster_job} = $compare_trials_job;
 
@@ -4125,7 +4109,6 @@ sub run_r_script {
     }
    
 }
-<<<<<<< HEAD
 
 
 sub create_cluster_config {
@@ -4145,8 +4128,6 @@ sub create_cluster_config {
     
     return $config;
 }
-=======
->>>>>>> master
 
 
 # sub default :Path {

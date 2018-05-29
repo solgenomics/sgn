@@ -154,14 +154,9 @@ function formatGenCorInputData (popId, type, indexFile) {
         dataType: 'json',
         data: {'model_id': modelDetail.population_id, 'corr_population_id': popId, 'type' : type, 'index_file': indexFile},
         url: '/correlation/genetic/data/',
-        success: function(response) {
-           
-<<<<<<< HEAD
+        success: function(response) {           
             if (response.result) {
 
-=======
-            if(response.result) {
->>>>>>> master
                 gebvsFile = response.gebvs_file;
               
                 var divPlace;

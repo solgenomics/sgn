@@ -157,15 +157,10 @@ sub combine_gebvs_of_traits {
         my $pred_pop_id = $c->stash->{prediction_pop_id};
         my $model_id    = $c->stash->{model_id};
         my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
-<<<<<<< HEAD
+
 	my $tmp_dir = $c->stash->{correlation_temp_dir};
         my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
   
-=======
-	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-        my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
-   
->>>>>>> master
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
@@ -197,11 +192,7 @@ sub create_correlation_phenodata_file {
         my $dir       = catdir($c->config->{solqtl}, 'cache');
        
         my $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
-<<<<<<< HEAD
- 
-=======
-       
->>>>>>> master
+
         unless ($phenotype_file) 
 	{           
             my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
@@ -370,25 +361,11 @@ sub run_pheno_correlation_analysis {
     $self->temp_pheno_corre_input_file($c);
     $self->temp_pheno_corre_output_file($c);
    
-<<<<<<< HEAD
     $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
     $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
         
     $c->stash->{correlation_type} = "pheno-correlation";
-=======
-    $self->create_correlation_phenodata_file($c);
-    $c->stash->{data_input_file} = $c->stash->{phenotype_file};
-    
-    $self->pheno_correlation_output_files($c);
-    $c->stash->{corre_table_output_file} = $c->stash->{corre_coefficients_table_file};
-    $c->stash->{corre_json_output_file}  = $c->stash->{corre_coefficients_json_file};
-    
-    $c->controller("solGS::Files")->formatted_phenotype_file($c);
 
-    $c->stash->{referer} = $c->req->referer;
-    
-    $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
->>>>>>> master
     $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
     
     $self->run_correlation_analysis($c);
