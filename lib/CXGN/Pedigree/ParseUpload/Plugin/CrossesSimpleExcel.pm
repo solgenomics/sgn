@@ -1,4 +1,4 @@
-package CXGN::Pedigree::ParseUpload::Plugin::CrossesAccessionsExcel;
+package CXGN::Pedigree::ParseUpload::Plugin::CrossesSimpleExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
