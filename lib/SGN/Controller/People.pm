@@ -2,6 +2,8 @@
 package SGN::Controller::People;
 
 use Moose;
+
+use URI::FromHash 'uri';
 use CXGN::Login;
 use CXGN::People::Person;
 use Data::Dumper;
@@ -30,7 +32,8 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
     #will redirect user to login page if they are not logged in.
     my $user_id=CXGN::Login->new($dbh)->verify_session();
     if (!$user_id) {
-        $c->res->redirect('/solpeople/login.pl');
+	
+        $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         $c->detach();
     }
     my $users_profile;
