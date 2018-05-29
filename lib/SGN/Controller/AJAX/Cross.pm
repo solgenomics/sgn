@@ -68,8 +68,20 @@ sub upload_cross_file_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
     my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
     my $location = $c->req->param('cross_upload_location');
-    my $crosses_plantplot_upload = $c->req->upload('crosses_plantplot_upload_file');
+    my $crosses_plotplant_upload = $c->req->upload('crosses_plotplant_upload_file');
     my $crosses_simple_upload = $c->req->upload('crosses_simple_upload_file');
+    my $upload;
+    my $upload_type;
+    if ($crosses_plotplant_upload) {
+        $upload = $crosses_plotplant_upload;
+        $upload_type = 'CrossesExcelFormat';
+        }
+
+    if ($crosses_simple_upload) {
+        $upload = $crosses_simple_upload;
+        $upload_type = 'CrossesSimpleExcel';
+    }
+
     my $prefix = $c->req->param('upload_prefix');
     my $suffix = $c->req->param('upload_suffix');
     my $parser;
@@ -144,16 +156,6 @@ sub upload_cross_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
-
-    my $upload_type;
-    if ($crosses_plantplot_upload) {
-        $upload_type = 'CrossesExcelFormat'
-    }
-
-    if ($crosses_simple_upload) {
-        $upload_type = 'CrossesSimpleExcel'
-    }
-
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";

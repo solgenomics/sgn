@@ -122,7 +122,7 @@ sub add_crosses {
             my $female_plot;
             my $male_plot;
             my $female_plant_name;
-            my $male_plant_name
+            my $male_plant_name;
             my $female_plant;
             my $male_plant;
 
@@ -419,6 +419,7 @@ sub _get_plot {
     if (!$stock) {
         print STDERR "Name in pedigree is not a plot\n";
         return;
+    }
 
 
     return $stock;
