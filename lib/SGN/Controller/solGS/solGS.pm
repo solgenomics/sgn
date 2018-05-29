@@ -3357,7 +3357,7 @@ sub submit_cluster_phenotype_query {
 
     my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
     
-    my $args_file = $self->create_tempfile($temp_dir, "pheno-data-args_file-${pop_id}");
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "pheno-data-args_file-${pop_id}");
     
     nstore $args, $args_file 
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
@@ -3408,7 +3408,7 @@ sub submit_cluster_genotype_query {
 
     my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
 
-    my $args_file = $self->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
 
     nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
@@ -3897,7 +3897,7 @@ sub run_rrblup  {
 }
 
 
-sub create_cluster_acccesible_tmp_files {
+sub create_cluster_accesible_tmp_files {
     my ($self, $c) = @_;
 
     my $temp_file_template = $c->stash->{r_temp_file};
@@ -3956,7 +3956,7 @@ sub run_async {
 	web_cluster_queue => $c->config->{web_cluster_queue}
     };
 
-    my $job_config_file = $self->create_tempfile($temp_dir, 'job_config_file');
+    my $job_config_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'job_config_file');
     
     nstore $job_config, $job_config_file 
 		or croak "job config file: $! serializing job config to $job_config_file ";

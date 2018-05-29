@@ -433,7 +433,7 @@ sub temp_pheno_corre_output_file {
      
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "pheno_corre_output_files_${pop_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $files);
     
     $c->stash->{temp_pheno_corre_output_file} = $tempfile;
@@ -449,7 +449,7 @@ sub temp_pheno_corre_input_file {
     $self->create_correlation_phenodata_file($c);
     my $pheno_file = $c->stash->{phenotype_file};
     
-    $c->controller("solGS::solGS")->formatted_phenotype_file($c);
+    $c->controller("solGS::Files")->formatted_phenotype_file($c);
     my $formatted_pheno_file = $c->stash->{formatted_phenotype_file};
     
     my $files = join ("\t",
@@ -460,7 +460,7 @@ sub temp_pheno_corre_input_file {
      
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "pheno_corre_input_files_${pop_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $files);
     
     $c->stash->{temp_pheno_corre_input_file} = $tempfile;
@@ -481,7 +481,7 @@ sub temp_geno_corre_output_file {
      
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "geno_corre_output_files_${pop_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $files);
     
     $c->stash->{temp_geno_corre_output_file} = $tempfile;
@@ -502,7 +502,7 @@ sub temp_geno_corre_input_file {
      
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "geno_corre_input_files_${pop_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $files);
     
     $c->stash->{temp_geno_corre_input_file} = $tempfile;
