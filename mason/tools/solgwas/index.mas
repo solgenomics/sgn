@@ -13,7 +13,7 @@
 </%perl>
 
 
-<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 <& /page/page_title.mas, title=>"SolGWAS" &>
 
@@ -144,7 +144,11 @@ jQuery(document).ready(function() {
       $.ajax({
         url: '/ajax/solgwas/generate_results',
         data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+	beforeSend: function() {
+          jQuery("#working_modal").modal("show");
+	},
         success: function(response) {
+	  jQuery("#working_modal").modal("hide");
           if (response.error) {
             $('#dataset_select').val('ERROR');
           }
