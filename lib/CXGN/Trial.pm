@@ -1392,7 +1392,7 @@ sub get_phenotype_metadata {
 
 =head2 function delete_phenotype_metadata()
 
- Usage:        $trial->delete_metadata($metadata_schema, $phenome_schema);
+ Usage:        $trial->delete_phenotype_metadata($metadata_schema, $phenome_schema);
  Desc:         obsoletes the metadata entries for this trial.
  Ret:
  Args:
@@ -1450,7 +1450,7 @@ sub delete_phenotype_metadata {
 
 =head2 function delete_metadata()
 
- Usage:        $trial->delete_metadata($metadata_schema, $phenome_schema);
+ Usage:        $trial->delete_metadata();
  Desc:         obsoletes the metadata entries for this trial.
  Ret:
  Args:
