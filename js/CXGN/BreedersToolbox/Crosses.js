@@ -172,14 +172,22 @@ jQuery(document).ready(function($) {
 
     });
 
-    $("#cross_upload_spreadsheet_format_info").click(function() {
-        $("#cross_upload_spreadsheet_info_dialog").modal("show");
-    });
-
     $("[name='upload_crosses_link']").click(function() {
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
         $("#upload_crosses_dialog").modal("show");
+    });
+
+    $("#cross_accession_info_format").click(function() {
+        $("#cross_accession_info_dialog").modal("show");
+    });
+
+    $("#cross_plot_info_format").click(function() {
+        $("#cross_plot_info_dialog").modal("show");
+    });
+
+    $("#cross_plant_info_format").click(function() {
+        $("#cross_plant_info_dialog").modal("show");
     });
 
     jQuery("#cross_file_format_option").change(function(){
@@ -196,8 +204,8 @@ jQuery(document).ready(function($) {
         }
         if (jQuery(this).val() == "xls_cross_plant" ){
             jQuery("#xls_cross_plant_section").show();
-          jQuery("#xls_cross_plot_section").hide();
-          jQuery("#xls_cross_accession_section").hide();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_accession_section").hide();
         }
     });
 
