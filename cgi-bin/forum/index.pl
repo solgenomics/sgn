@@ -23,7 +23,7 @@ print<<END_HEREDOC;
       </p>
       <h4>How to use it</h4>
       <p>
-      You can <a href="topics.pl">browse</a> the message board by topic. If you want to create new discussion topics or post messages, you need to <a href="/solpeople/login.pl">log in</a>.
+      You can <a href="topics.pl">browse</a> the message board by topic. If you want to create new discussion topics or post messages, you need to <a href="/user/login">log in</a>.
       </p>
       
       <h4>Topics</h4>

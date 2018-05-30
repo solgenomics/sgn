@@ -107,7 +107,7 @@ my $stockprops = $stockref->{props};
 my $resources = [ 'stock_synonym', 'solcap number'];
 
 my $allele_div = "stock_alleles";
-my $new_locus_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new locus]</a> | : '' ;
+my $new_locus_link = !$person_id ? qq|<a href="/user/login">[log-in to associate new locus]</a> | : '' ;
 
 #owner
 my $owners = $stockref->{owners};

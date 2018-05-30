@@ -142,7 +142,7 @@ CXGN.Page.Form.JSFormPage.prototype = {
 		     }
 
 		    if (x.login) { 	
-			window.location =  '/solpeople/login.pl' ;
+			window.location =  '/user/login' ;
 			x.error = undef;
 		    }
 		    if (x.error) { alert("error: " + x.error); }
