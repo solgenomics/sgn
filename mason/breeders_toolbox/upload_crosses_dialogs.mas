@@ -31,19 +31,11 @@
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "File Formatting" &>
-                            <& /page/page_title.mas, title=>"Make sure your crosses are formatted in the right format" &>
-                            <br/><br/>
-                            <center>
-                            <button class="btn btn-info" id="cross_upload_spreadsheet_format_info">Information about file format</button><br/><br/>
-                            <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
-                            </center>
-                        </&>
 
                         <&| /util/workflow.mas:step, title=> "Crossing trial" &>
                             <& /page/page_title.mas, title=>"Select a crossing trial" &>
 
-                            <p>Crossing trials are for grouping crosses together. The grouping is most often done for geographic reasons, such as a group of crosses done in the same field trial. This grouping can be used to encapsulate a crossing block field trial that you have saved in the database (e.g. in Manage Trials your crossing block will appear as a field trial with plots)</p>
+                            <p>Crossing trials are for grouping crosses together. The grouping is most often done for crosses in the same field trial, the same year, or for crosses that have the same breeding objective.</p>
                             <hr>
 
                             <div class="form-group">
@@ -87,11 +79,105 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">Upload File: </label>
-                                    <div class="col-sm-10">
-                                        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+                                    <label class="col-sm-2 control-label">Select One: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="cross_file_format_option">
+                                            <option value="xls_cross_accession">I am uploading an Excel file with accession names for parents</option>
+                                            <option value="xls_cross_plot">I am uploading an Excel file with accession and plot names for parents</option>
+                                            <option value="xls_cross_plant">I am uploading an Excel file with accession and plant names for parents</option>
+                                        </select>
                                     </div>
                                 </div>
+                                <div id="xls_cross_accession_section">
+                                    <h3>You want to upload crosses in an Excel file with accession names for parents</h3>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="cross_accession_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an XLS File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="xls_cross_accession_file" id="xls_cross_accession_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="xls_cross_plot_section" style="display:none">
+                                    <h3>You want to upload crosses in an Excel file with accession and plot names for parents</h3>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="cross_plot_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an XLS File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="xls_cross_plot_file" id="xls_cross_plot_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="xls_cross_plant_section" style="display:none">
+                                    <h3>You want to upload crosses in an Excel file with accession and plant names for parents</h3>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="cross_plant_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an XLS File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="xls_cross_plant_file" id="xls_cross_plant_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
 
                                 <!--
                                 <hr>
@@ -124,7 +210,7 @@
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                                 The crosses file was uploaded successfully
                             </p>
-                            
+
                             <ul>
                                 <li>You may want to proceed to the cross detail page(s) for the cross(es) you just created.</li>
                                 <li>You can print barcodes for the crosses.</li>

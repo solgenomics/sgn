@@ -182,6 +182,26 @@ jQuery(document).ready(function($) {
         $("#upload_crosses_dialog").modal("show");
     });
 
+    jQuery("#cross_file_format_option").change(function(){
+        if (jQuery(this).val() == "xls_cross_accession"){
+            jQuery("#xls_cross_accession_section").show();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_plant_section").hide();
+        }
+        if(jQuery(this).val() == "xls_cross_plot"){
+            jQuery("#xls_cross_plot_section").show();
+            jQuery("#xls_cross_accession_section").hide();
+            jQuery("#xls_cross_plant_section").hide();
+
+        }
+        if (jQuery(this).val() == "xls_cross_plant" ){
+            jQuery("#xls_cross_plant_section").show();
+          jQuery("#xls_cross_plot_section").hide();
+          jQuery("#xls_cross_accession_section").hide();
+        }
+    });
+
+
     $("#upload_crosses_submit").click(function() {
         upload_crosses_file();
     });
