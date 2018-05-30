@@ -1337,7 +1337,7 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
 
 
 
-=head2 brapi/v1/allelematrix?markerprofileDbId=100&markerprofileDbId=101
+=head2 brapi/v1/allelematrices-search?markerprofileDbId=100&markerprofileDbId=101
 
  Usage: Gives a matrix data structure for a given list of markerprofileDbIds
  Desc:
@@ -1366,7 +1366,21 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
 
 =cut
 
-sub allelematrix : Chained('brapi') PathPart('allelematrices-search') Args(0) : ActionClass('REST') { }
+sub allelematrices : Chained('brapi') PathPart('allelematrices-search') Args(0) : ActionClass('REST') { }
+
+sub allelematrices_POST {
+	my $self = shift;
+	my $c = shift;
+	allelematrix_search_process($self, $c);
+}
+
+sub allelematrices_GET {
+	my $self = shift;
+	my $c = shift;
+	allelematrix_search_process($self, $c);
+}
+
+sub allelematrix : Chained('brapi') PathPart('allelematrix-search') Args(0) : ActionClass('REST') { }
 
 sub allelematrix_POST {
 	my $self = shift;

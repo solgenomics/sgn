@@ -25,10 +25,10 @@
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trials_phenotypes_level_option">
+                        <option value="all">All</option>
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
                         <option value="subplot">Subplots</option>
-                        <option value="all">All</option>
                     </select>
                 </div>
             </div>

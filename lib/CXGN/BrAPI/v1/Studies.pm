@@ -73,9 +73,9 @@ sub seasons {
 	foreach (@$data_window){
 		my ($year, $season) = split '\|', $_->[0];
 		push @data, {
-			seasonsDbId=>$_->[1],
-			season=>$season,
-			year=>$year
+			seasonDbId=>$_->[1],
+			season=>$season ? $season : '',
+			year=>$year ? $year : ''
 		};
 	}
 	my %result = (data=>\@data);
@@ -96,7 +96,7 @@ sub study_types {
 		push @data, {
 			#studyTypeDbId=>$_->[0],
 			name=>$_->[1],
-			description=>$_->[2],
+			description=>$_->[2] ? $_->[2] : '',
 		};
 	}
 	my %result = (data=>\@data);
@@ -149,15 +149,15 @@ sub studies_search {
 			description => $_->{description},
 		);
 		my %data_obj = (
-			studyDbId => $_->{trial_id},
-			studyName => $_->{trial_name},
-			trialDbId => $_->{folder_id},
+			studyDbId => qq|$_->{trial_id}|,
+			name => $_->{trial_name},
+			trialDbId => qq|$_->{folder_id}|,
 			trialName => $_->{folder_name},
 			studyType => $_->{trial_type},
 			seasons => [$_->{year}],
 			locationDbId => $_->{location_id},
 			locationName => $_->{location_name},
-			programDbId => $_->{breeding_program_id},
+			programDbId => qq|$_->{breeding_program_id}|,
 			programName => $_->{breeding_program_name},
 			startDate => $_->{project_harvest_date},
 			endDate => $_->{project_planting_date},
