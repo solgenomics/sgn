@@ -35,7 +35,7 @@
                         <&| /util/workflow.mas:step, title=> "Crossing trial" &>
                             <& /page/page_title.mas, title=>"Select a crossing trial" &>
 
-                            <p>Crossing trials are for grouping crosses together. The grouping is most often done for crosses in the same field trial, the same year, or for crosses that have the same breeding objective.</p>
+                            <p>Crossing trials are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
                             <hr>
 
                             <div class="form-group">
