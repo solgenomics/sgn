@@ -108,7 +108,7 @@
                                                         <div class="form-group">
                                                             <label class="col-sm-6 control-label">Select an XLS File: </label>
                                                             <div class="col-sm-6">
-                                                                <input type="file" name="xls_cross_accession_file" id="xls_cross_accession_file" encoding="multipart/form-data" />
+                                                                <input type="file" name="xls_crosses_simple_file" id="xls_crosses_simple_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -137,7 +137,7 @@
                                                         <div class="form-group">
                                                             <label class="col-sm-6 control-label">Select an XLS File: </label>
                                                             <div class="col-sm-6">
-                                                                <input type="file" name="xls_cross_plot_file" id="xls_cross_plot_file" encoding="multipart/form-data" />
+                                                                <input type="file" name="xls_crosses_plots_file" id="xls_crosses_plots_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -166,7 +166,7 @@
                                                         <div class="form-group">
                                                             <label class="col-sm-6 control-label">Select an XLS File: </label>
                                                             <div class="col-sm-6">
-                                                                <input type="file" name="xls_cross_plant_file" id="xls_cross_plant_file" encoding="multipart/form-data" />
+                                                                <input type="file" name="xls_crosses_plants_file" id="xls_crosses_plants_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -175,9 +175,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-
-
 
                                 <!--
                                 <hr>

@@ -68,14 +68,19 @@ sub upload_cross_file_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
     my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
     my $location = $c->req->param('cross_upload_location');
-    my $crosses_plotplant_upload = $c->req->upload('crosses_plotplant_upload_file');
-    my $crosses_simple_upload = $c->req->upload('crosses_simple_upload_file');
+    my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
+    my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
+    my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
     my $upload;
     my $upload_type;
-    if ($crosses_plotplant_upload) {
-        $upload = $crosses_plotplant_upload;
+    if ($crosses_plots_upload) {
+        $upload = $crosses_plots_upload;
         $upload_type = 'CrossesExcelFormat';
         }
+    if ($crosses_plants_upload) {
+            $upload = $crosses_plants_upload;
+            $upload_type = 'CrossesExcelFormat';
+            }
 
     if ($crosses_simple_upload) {
         $upload = $crosses_simple_upload;

@@ -441,12 +441,20 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        var uploadFile = $("#crosses_upload_file").val();
-        $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
-        if (uploadFile === '') {
-            alert("Please select a file");
-            return;
+        var uploadFileXlsSimple = $("#xls_crosses_simple_file").val();
+        if (uploadFileXlsSimple === ''){
+            var uploadFileXlsPlots = $("#xls_crosses_plots_file").val();
+            if (uploadFileXlsPlots === ''){
+                var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
+                if (uploadFileXlsPlants === '') {
+                    alert("Please select a file");
+                    return;
+                }
+            }
         }
+
+        $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
+
         $("#upload_crosses_form").submit();
     }
 
