@@ -70,13 +70,13 @@ $stockref => undef
 </style>
 
 <div class="well well-sm">
-<div class="form-group form-group-sm" id="traitdiv" >
-    <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
-    <div class="col-sm-12">
-        <div id="heatmap_traits_assayed_dropdown">
+    <div class="form-group form-group-sm" id="traitdiv" >
+        <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
+        <div class="col-sm-12">
+            <div id="heatmap_traits_assayed_dropdown">
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 <div class="well well-sm">
@@ -104,9 +104,6 @@ $stockref => undef
 <!--<div class="col-sm-10" id="d_button" style="display:none";>
   <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;
 </div> -->
-  <div class="col-sm-10" id="delete_button_fm" style="display:none";>
-    <a id="delete_field_map_hm_link"><button class="btn btn-danger"  type="button" id="delete_map_hm_button" value="delete_cords" >Delete Map</button></a>
-  </div>
 
 </div>
 
@@ -859,8 +856,6 @@ jQuery(document).ready( function() {
                     heatmapChart(datasets);
                     if (false_coord){
                         alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
-                    }else{
-                        jQuery("#delete_button_fm").css("display", "inline-block");                  
                     }
                 }
                 else  {
@@ -988,7 +983,6 @@ jQuery(document).ready( function() {
         d3.select("svg").remove();
         jQuery("#d3legend").css("display", "none");
         jQuery("#container_fm").css("display", "none");
-        jQuery("#delete_button_fm").css("display", "none");
         assayed_trait_heatmap_view(selected);
     }
     if (selected == 'fieldmap'){ 
