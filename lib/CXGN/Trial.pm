@@ -1922,7 +1922,7 @@ sub get_stock_phenotypes_for_traits {
  Usage:
  Desc:         returns the cvterm_id and name for traits assayed
  Ret:
- Args:
+ Args:          stock_type can be the cvterm name for a specific stock type like 'plot'. not providing stock_type will return all traits assayed in the trial. trait_format can be for only returning numeric, categorical, etc traits. not providing trait_format will return all trait types.
  Side Effects:
  Example:
 
@@ -1930,25 +1930,33 @@ sub get_stock_phenotypes_for_traits {
 
 sub get_traits_assayed {
     my $self = shift;
-	my $stock_type = shift;
+    my $stock_type = shift;
+    my $trait_format = shift;
     my $dbh = $self->bcs_schema->storage()->dbh();
 
     my @traits_assayed;
 
-	my $q;
-	if ($stock_type) {
-		my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
-	} else {
-		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
-	}
+    my $cvtermprop_join = '';
+    my $cvtermprop_where = '';
+    if ($trait_format){
+        my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'trait_format', 'cvterm_property')->cvterm_id();
+        $cvtermprop_join = ' JOIN cvtermprop ON (cvtermprop.cvterm_id = cvterm.cvterm_id) ';
+        $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
+    }
+
+    my $q;
+    if ($stock_type) {
+        my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+    } else {
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+    }
 
     my $traits_assayed_q = $dbh->prepare($q);
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $traits_assayed_q->execute($self->get_trial_id(), $numeric_regex );
+    $traits_assayed_q->execute($self->get_trial_id());
     while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-	push @traits_assayed, [$trait_id, $trait_name];
+        push @traits_assayed, [$trait_id, $trait_name];
     }
     return \@traits_assayed;
 }
