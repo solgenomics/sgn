@@ -109,7 +109,7 @@ sub search {
 			$obs_units{$_->[16]}->{observations} = $observations;
 		} else {
 			$obs_units{$_->[16]} = {
-				observationUnitDbId => $_->[16],
+				observationUnitDbId => qq|$_->[16]|,
 				observationLevel => $_->[20],
 				observationLevels => $_->[20],
 				plotNumber => $_->[9],
@@ -117,9 +117,9 @@ sub search {
 				blockNumber => $_->[8],
 				replicate => $_->[7],
 				observationUnitName => $_->[6],
-				germplasmDbId => $_->[15],
+				germplasmDbId => qq|$_->[15]|,
 				germplasmName => $_->[2],
-				studyDbId => $_->[13],
+				studyDbId => qq|$_->[13]|,
 				studyName => $_->[1],
 				studyLocationDbId => $_->[14],
 				studyLocation => $_->[3],
@@ -130,10 +130,10 @@ sub search {
 				entryNumber => '',
 				treatments => [],
 				observations => [{
-					observationDbId => $_->[21],
-					observationVariableDbId => $_->[12],
+					observationDbId => qq|$_->[21]|,
+					observationVariableDbId => qq|$_->[12]|,
 					observationVariableName => $_->[4],
-					observationTimestamp => $_->[17],
+					observationTimeStamp => $_->[17],
 					season => $_->[0],
 					collector => '',
 					value => $_->[5],

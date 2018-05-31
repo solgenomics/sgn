@@ -1638,7 +1638,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $design_type = $layout->get_design_type();
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        "MaterializedView",
+        "Native",
         {
             bcs_schema=> $schema,
             data_level=> 'plot',

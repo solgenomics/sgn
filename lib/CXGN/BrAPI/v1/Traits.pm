@@ -65,7 +65,7 @@ sub list {
 		$total_count = $count;
 		my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
 		push @data, {
-			traitDbId => $cvterm_id,
+			traitDbId => qq|$cvterm_id|,
 			traitId => $db_name.":".$accession,
 			name => $cvterm_name,
 			description => $cvterm_definition,

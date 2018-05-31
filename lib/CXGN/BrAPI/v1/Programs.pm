@@ -74,7 +74,7 @@ sub programs_list {
 		}
         my $names = join ',', @sp_person_names;
 		push @data, {
-			programDbId=>$_->[0],
+			programDbId=>qq|$_->[0]|,
 			name=>$_->[1],
 			abbreviation=>$prop_hash->{breeding_program_abbreviation} ? join ',', @{$prop_hash->{breeding_program_abbreviation}} : '',,
 			objective=>$_->[2],

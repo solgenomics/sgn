@@ -35,7 +35,7 @@ $trial_id
 </div>
 
 <div class="modal  fade" id="delete_individual_phenotype_data_dialog" name="delete_individual_phenotype_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeleteIndividualPhenoDataDialog">
-    <div class="modal-dialog " role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -47,8 +47,8 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_individual_trait_data_form" name="delete_individual_trait_data_form">
                     
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Traits:<br/><small>(Select traits to delete)</small></label>
-                        <div class="col-sm-9" >
+                        <label class="col-sm-2 control-label">Trait(s):<br/><small>(Select traits to delete)</small></label>
+                        <div class="col-sm-10" >
                             <div id="retrieve_assayed_trial_traits">
                             </div>
                         </div>
@@ -110,7 +110,7 @@ jQuery(document).ready(function() {
 });
 
 function retrieve_trial_traits() {
-    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>' });
+    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>', 'size':'20px' });
 }
 
 function delete_selected_assayed_traits() {
