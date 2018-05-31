@@ -69,6 +69,7 @@ $stockref => undef
     
 </style>
 
+<div class="well well-sm">
 <div class="form-group form-group-sm" id="traitdiv" >
     <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
     <div class="col-sm-12">
@@ -76,8 +77,11 @@ $stockref => undef
         </div>
     </div>
 </div>
+</div>
 
-<p></br><div class="d3legend" id="d3legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
+<div class="well well-sm">
+
+<div class="d3legend" id="d3legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
   <li><span class="d3block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
   <li><span class="d3block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
   <li><span class="d3checks"></span> Checks</li>
@@ -103,6 +107,8 @@ $stockref => undef
   <div class="col-sm-10" id="delete_button_fm" style="display:none";>
     <a id="delete_field_map_hm_link"><button class="btn btn-danger"  type="button" id="delete_map_hm_button" value="delete_cords" >Delete Map</button></a>
   </div>
+
+</div>
 
 <div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
    <p>

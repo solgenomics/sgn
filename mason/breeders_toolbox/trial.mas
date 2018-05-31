@@ -237,17 +237,37 @@ $main_production_site_url
                         <span style="font-size:3.5em;" class="glyphicon glyphicon-th"></span>
                     </div>
                     <div class="col-sm-11">
-                        <h4>Field Layout Tools</h4>
 
-% my $subtitle;
+% my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
+% my $buttons = '';
 % if ($has_col_and_row_numbers){
-%     $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload trial coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="edit_field_map_link">Edit Field Map</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_fieldmap_download_layout_button">Download FieldMap Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
+%     $buttons = '<button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % }else{
-%    $subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload trial coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="edit_field_map_link">Edit Field Map</button> <button class="btn btn-sm btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
+%    $buttons = '<button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % }
 
-                        <&| /page/info_section.mas, id => "pheno_heatmap", title=>"Trial Heatmap", collapsible=>1, collapsed => 1, subtitle=> $subtitle &>
-                            <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+                        <&| /page/info_section.mas, id => "pheno_heatmap", title=>"<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", collapsible=>1, collapsed => 1, subtitle=> $subtitle &>
+
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <h4>Available Actions:</h4>
+                                        </div>
+                                        <div class="col-sm-9">
+                                            <div style="float:right">
+                                                <% $buttons %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+                                </div>
+                            </div>
                         </&>
 
                         <%doc><&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1  &>
