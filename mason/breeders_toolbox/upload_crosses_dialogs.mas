@@ -82,13 +82,14 @@
                                     <label class="col-sm-2 control-label">Select One: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="cross_file_format_option">
+                                            <option value="">Select a file format that you want to upload</option>
                                             <option value="xls_cross_accession">I am uploading an Excel file with <b>accession names</b> for parents</option>
                                             <option value="xls_cross_plot">I am uploading an Excel file with <b>accession and plot names<b> for parents</option>
                                             <option value="xls_cross_plant">I am uploading an Excel file with <b>accession and plant names<b> for parents</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div id="xls_cross_accession_section">
+                                <div id="xls_cross_accession_section" style="display:none">
                                     <h3>You want to upload crosses in an Excel file with accession names for parents</h3>
                                     <div class="well well-sm">
                                         <div class="row">

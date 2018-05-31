@@ -191,6 +191,11 @@ jQuery(document).ready(function($) {
     });
 
     jQuery("#cross_file_format_option").change(function(){
+        if (jQuery(this).val() == ""){
+            jQuery("#xls_cross_accession_section").hide();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_plant_section").hide();
+      }
         if (jQuery(this).val() == "xls_cross_accession"){
             jQuery("#xls_cross_accession_section").show();
             jQuery("#xls_cross_plot_section").hide();
@@ -447,7 +452,7 @@ jQuery(document).ready(function($) {
             if (uploadFileXlsPlots === ''){
                 var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
                 if (uploadFileXlsPlants === '') {
-                    alert("Please select a file");
+                    alert("Please select your file format and select a file");
                     return;
                 }
             }
