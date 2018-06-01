@@ -120,9 +120,17 @@ pheno_mod$germplasmDbId<-factor(as.character(pheno_mod$germplasmDbId), levels=ro
 pheno_mod <- pheno_mod[order(pheno_mod$germplasmDbId),]
 ##Creating file for GWAS function from rrBLUP package
 pheno_mod$locationDbId<- as.factor(pheno_mod$locationDbId)
+# Check the number of levels in the pheno_mod$locationDbId
+location_levels <- nlevels(pheno_mod$locationDbId)
+print("Number of Levels:")
+location_levels
 # Check model.matrix
-#X<-model.matrix(~-1+pheno_mod$locationDbId, data=pheno_mod)
+# Set model.matrix to include locationDbId in the model, but not if this factor has only one level...
+if (nlevels(pheno_mod$locationDbId) > 1) {
+X<-model.matrix(~-1+locationDbId, data=pheno_mod)
+} else {
 X<-model.matrix(~-1, data=pheno_mod)
+}
 pheno.gwas <- data.frame(GID=pheno_mod$germplasmDbId,X,PHENO=pheno_mod$pheno_vector)
 pheno.gwas[1:5,1:2]
 geno.gwas <- geno.gwas[rownames(geno.gwas)%in%pheno.gwas$GID,]
@@ -172,7 +180,7 @@ png("SolGWAS_Figure5.png")
 plot(gwasresults$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
      main="Naïve model (K=NULL,n.PC=0)",xaxt="n",xlab="Position",ylim=c(0,14))
 #axis(1,at=c(1:length(unique(gwasresults$chr))),labels=unique(gwasresults$chr))
-axis(1,at=c(0,440,880,1320,1760))
+axis(1,at=c(0,100,200,300,400,500))
 abline(a=NULL,b=NULL,h=alpha_bonferroni,col="red",lwd=2)
 #abline(a=NULL,b=NULL,h=alpha_FDR_Yield,col="red",lwd=2,lty=2)
 legend(1,13.5, c("Bonferroni") ,
@@ -199,7 +207,7 @@ alpha_bonferroni2
 png("SolGWAS_Figure7.png")
 plot(gwasresults2$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
      main="Q model (K=NULL,n.PC=6)",xaxt="n",xlab="Position",ylim=c(0,14))
-axis(1,at=c(0,440,880,1320,1760))
+axis(1,at=c(0,100,200,300,400,500))
 abline(a=NULL,b=NULL,h=alpha_bonferroni2,col="red",lwd=2)
 legend(1,13.5, c("Bonferroni") ,
        lty=1, col=c('red'), bty='n', cex=1,lwd=2)
@@ -226,7 +234,7 @@ png("SolGWAS_Figure9.png")
 plot(gwasresults3$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
      main="K model (K=K.mat,n.PC=0)",xaxt="n",xlab="Position",ylim=c(0,14))
 #axis(1,at=c(1:length(unique(gwasresults3$chr))),labels=unique(gwasresults3$chr))
-axis(1,at=c(0,440,880,1320,1760))
+axis(1,at=c(0,100,200,300,400,500))
 abline(a=NULL,b=NULL,h=alpha_bonferroni3,col="red",lwd=2)
 #abline(a=NULL,b=NULL,h=alpha_FDR_Yield,col="red",lwd=2,lty=2)
 legend(1,13.5, c("Bonferroni") ,
@@ -253,7 +261,7 @@ png("SolGWAS_Figure11.png")
 plot(gwasresults4$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
      main="Q+K model (K=K.mat,n.PC=6)",xaxt="n",xlab="Position",ylim=c(0,14))
 #axis(1,at=c(1:length(unique(gwasresults4$chr))),labels=unique(gwasresults4$chr))
-axis(1,at=c(0,440,880,1320,1760))
+axis(1,at=c(0,100,200,300,400,500))
 abline(a=NULL,b=NULL,h=alpha_bonferroni,col="red",lwd=2)
 #abline(a=NULL,b=NULL,h=alpha_FDR_Yield,col="red",lwd=2,lty=2)
 legend(1,13.5, c("Bonferroni") ,
