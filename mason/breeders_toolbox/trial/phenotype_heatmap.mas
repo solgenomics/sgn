@@ -538,7 +538,7 @@ jQuery(document).ready( function() {
                   
                   heatmapChart(datasets);
                   if (false_coord){
-                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                      alert("Pseudo row and column numbers have been used in displaying the heat map. Plot's row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the true field layout.");
                   }
     
                 }

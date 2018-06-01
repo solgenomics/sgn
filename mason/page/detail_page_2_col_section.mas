@@ -1,0 +1,123 @@
+<%args>
+$trial_id => undef
+$trial_name => undef
+$stock_id => undef
+$col1_width_class => "col-sm-1"
+$col2_width_class => "col-sm-11"
+$icon_class => "glyphicon glyphicon-th"
+$info_section_id => "2col_id"
+$info_section_title => "A title"
+$info_section_subtitle => "A subtitle"
+$buttons_html => undef
+
+$has_plant_entries => undef
+$has_subplot_entries => undef
+$has_tissue_sample_entries => undef
+$has_expression_atlas => undef
+$expression_atlas_url => undef
+$site_project_name => undef
+$sgn_session_id => undef
+$user_name => undef
+$main_production_site_url => undef
+$trial_phenotype_files => undef
+$hidap_enabled => undef
+$location_name => undef
+</%args>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="<% $col1_width_class %>">
+                    <span style="font-size:3.5em;" class="<% $icon_class %>"></span>
+                </div>
+                <div class="<% $col2_width_class %>">
+
+                    <&| /page/info_section.mas, id => $info_section_id, title => $info_section_title, collapsible=>1, collapsed => 1, subtitle=> $info_section_subtitle &>
+
+% if ($buttons_html){
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <% $buttons_html %>
+                            </div>
+                        </div>
+% }
+
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+
+% if ($info_section_id eq 'pheno_heatmap'){
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+% }
+% if ($info_section_id eq 'trial_design_section'){
+                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries &>
+% }
+% if ($info_section_id eq 'trial_detail_traits_assayed'){
+
+% if ($has_expression_atlas) {
+                                <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name, main_production_site_url=>$main_production_site_url &>
+% }
+
+                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+
+% }
+% if ($info_section_id eq 'compute_derived_traits'){
+                                <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+% }
+% if ($info_section_id eq 'trial_upload_files'){
+                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files &>
+% }
+% if ($info_section_id eq 'trial_analysis_tools'){
+                                <!-- Phenotypic correlation analysis -->
+                                <& /solgs/population/correlation.mas,
+                                    trial_id => $trial_id
+                                &>
+
+                                <& /anova.mas,
+                                    trial_id => $trial_id
+                                &>
+
+                                <!-- Population structure analysis PCA -->
+                                <& /solgs/model/pca.mas,
+                                    trial_id => $trial_id
+                                &>
+
+% if ($hidap_enabled) {
+                                <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
+% }
+% }
+% if ($info_section_id eq 'trial_weather_data'){
+                                <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+% }
+% if ($info_section_id eq 'trial_jbrowse_data'){
+                                <& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
+%}
+% if ($info_section_id eq 'trial_linkage_section'){
+                                <&| /page/info_section.mas, title => 'Field Trial to Field Trial Linkage', id => 'field_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                                </&>
+                                <&| /page/info_section.mas, title => 'Field Trial to Genotyping Trial Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
+                                </&>
+                                <&| /page/info_section.mas, title => 'Field Trial to Crossing Trial Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
+                                </&>
+%}
+% if ($info_section_id eq 'trial_deletion_section'){
+                                <&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+                                    <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
+                                </&>
+%}
+% if ($info_section_id eq 'trial_data_agreement_section'){
+                                <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
+% }
+
+                            </div>
+                        </div>
+                    </&>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
