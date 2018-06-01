@@ -5,9 +5,6 @@ $stock_uniquename => undef
 $stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 % if ($stock_type eq 'accession' || $stock_type eq 'plant' || $stock_type eq 'plot' || $stock_type eq 'subplot' || $stock_type eq 'tissue_sample'){
 
     <&| /page/info_section.mas, id=>'related_stocks_in_trial', title => 'Related stocks in trials', collapsible=>1, collapsed=>1 &>
