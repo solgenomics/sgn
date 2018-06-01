@@ -291,18 +291,20 @@ sub get_solgs_dirs {
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
-    my $correlation_dir = catdir($tmp_dir, 'correlation', 'cache');   
     my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
-    my $pca_dir         = catdir($tmp_dir, 'pca', 'cache');
     my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
     my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
     my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
+    my $corre_cache     = catdir($tmp_dir, 'correlation', 'cache');
+    my $corre_temp      = catdir($tmp_dir, 'correlation', 'tempfiles');
+    my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
+    my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $correlation_dir, $pca_dir, $histogram_dir, $log_dir, $anova_cache,
+	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
 	 $anova_temp,
 	], 
 	0, 0755
@@ -312,8 +314,10 @@ sub get_solgs_dirs {
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_upload,
-              correlation_dir             => $correlation_dir,
-	      pca_dir                     => $pca_dir,
+              correlation_cache_dir       => $corre_cache,
+	      correlation_temp_dir        => $corre_temp,
+	      pca_cache_dir               => $pca_cache,
+	      pca_temp_dir                => $pca_temp,
 	      histogram_dir               => $histogram_dir,
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,

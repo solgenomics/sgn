@@ -71,7 +71,7 @@ function PedigreeViewer(server,auth,urlFunc){
         function load_nodes(stock_ids,callback){
             var germplasm = brapijs.data(stock_ids);
             var pedigrees = germplasm.germplasm_pedigree(function(d){return {'germplasmDbId':d}});
-            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d, 'pageSize':1000000}},"map");
+            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d}},"map");
             pedigrees.join(progenies,germplasm).filter(function(ped_pro_germId){
                 if (ped_pro_germId[0]===null || ped_pro_germId[1]===null) {
                     console.log("Failed to load progeny or pedigree for "+ped_pro_germId[2]);
@@ -79,13 +79,27 @@ function PedigreeViewer(server,auth,urlFunc){
                 }
                 return true;
             }).map(function(ped_pro_germId){
+                var mother = null, 
+                    father = null;
+                if(ped_pro_germId[0].parent1Type=="FEMALE"){
+                    mother = ped_pro_germId[0].parent1DbId;
+                }
+                if(ped_pro_germId[0].parent1Type=="MALE"){
+                    father = ped_pro_germId[0].parent1DbId;
+                }
+                if(ped_pro_germId[0].parent2Type=="FEMALE"){
+                    mother = ped_pro_germId[0].parent2DbId;
+                }
+                if(ped_pro_germId[0].parent2Type=="MALE"){
+                    father = ped_pro_germId[0].parent2DbId;
+                }
                 return {
                     'id':ped_pro_germId[2],
-                    'mother_id':ped_pro_germId[0].parent1Id,
-                    'father_id':ped_pro_germId[0].parent2Id,
+                    'mother_id':mother,
+                    'father_id':father,
                     'name':ped_pro_germId[1].defaultDisplayName,
-                    'children':ped_pro_germId[1].data.filter(Boolean).map(function(d){
-                        return d.progenyGermplasmDbId;
+                    'children':ped_pro_germId[1].progeny.filter(Boolean).map(function(d){
+                        return d.germplasmDbId;
                     })
                 };
             }).each(function(node){

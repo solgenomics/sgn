@@ -305,6 +305,7 @@ sub get_all_locations {
         my $country_code = '';
         my $location_type = '';
         my $abbreviation = '';
+        my $address = '';
 
         while (my $sp = $loc_props->next()) {
             if ($sp->get_column('cvterm_name') eq 'country_name') {
@@ -315,12 +316,14 @@ sub get_all_locations {
                 $location_type = $sp->get_column('value');
             } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
                 $abbreviation = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'geolocation address') {
+                $address = $sp->get_column('value');
             } else {
                 $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation],
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address],
     }
 
     return \@locations;
@@ -1919,7 +1922,7 @@ sub get_stock_phenotypes_for_traits {
  Usage:
  Desc:         returns the cvterm_id and name for traits assayed
  Ret:
- Args:
+ Args:          stock_type can be the cvterm name for a specific stock type like 'plot'. not providing stock_type will return all traits assayed in the trial. trait_format can be for only returning numeric, categorical, etc traits. not providing trait_format will return all trait types.
  Side Effects:
  Example:
 
@@ -1927,25 +1930,33 @@ sub get_stock_phenotypes_for_traits {
 
 sub get_traits_assayed {
     my $self = shift;
-	my $stock_type = shift;
+    my $stock_type = shift;
+    my $trait_format = shift;
     my $dbh = $self->bcs_schema->storage()->dbh();
 
     my @traits_assayed;
 
-	my $q;
-	if ($stock_type) {
-		my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
-	} else {
-		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
-	}
+    my $cvtermprop_join = '';
+    my $cvtermprop_where = '';
+    if ($trait_format){
+        my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'trait_format', 'cvterm_property')->cvterm_id();
+        $cvtermprop_join = ' JOIN cvtermprop ON (cvtermprop.cvterm_id = cvterm.cvterm_id) ';
+        $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
+    }
+
+    my $q;
+    if ($stock_type) {
+        my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+    } else {
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+    }
 
     my $traits_assayed_q = $dbh->prepare($q);
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $traits_assayed_q->execute($self->get_trial_id(), $numeric_regex );
+    $traits_assayed_q->execute($self->get_trial_id());
     while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-	push @traits_assayed, [$trait_id, $trait_name];
+        push @traits_assayed, [$trait_id, $trait_name];
     }
     return \@traits_assayed;
 }
@@ -3216,10 +3227,10 @@ sub get_trial_contacts {
 	);
 
 	while(my $prop = $prop_rs->next()) {
-		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email, user_type, phone_number FROM sgn_people.sp_person WHERE sp_person_id=?;";
+		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email, user_type, phone_number, organization FROM sgn_people.sp_person WHERE sp_person_id=?;";
 		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
 		$h->execute($prop->value);
-		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email, $user_type, $phone) = $h->fetchrow_array()){
+		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email, $user_type, $phone, $organization) = $h->fetchrow_array()){
 			push @contacts, {
 				sp_person_id => $sp_person_id,
 				salutation => $salutation,
@@ -3228,12 +3239,43 @@ sub get_trial_contacts {
 				username => $username,
 				email => $email,
 				type => $user_type,
-				phone_number => $phone
+				phone_number => $phone,
+                organization => $organization
 			};
 		}
 	}
 
 	return \@contacts;
+}
+
+
+=head2 function get_data_agreement()
+
+	Usage:        $trial->get_data_agreement();
+	Desc:         return data agreement saved for trial.
+	Ret:          
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub get_data_agreement {
+    my $self = shift;
+    my $chado_schema = $self->bcs_schema();
+    my $cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'data_agreement', 'project_property' );
+
+    my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+        type_id => $cvterm->cvterm_id(),
+        project_id => $self->get_trial_id(),
+    });
+
+    if ($rs) {
+        return $rs->value();
+    } else {
+        return;
+	}
+
 }
 
 =head2 suppress_plot_phenotype

@@ -113,7 +113,7 @@ sub delete {
     $self->print_json() if $check ; #error or no user privileges
 
     my $stock      = $self->get_object();
-    my $stock_name = $stock->name();
+    my $stock_name = $stock->uniquename();
     my $stock_id = $stock->get_stock_id();
     my %json_hash= $self->get_json_hash();
     my $refering_page="/stock/$stock_id/view";
