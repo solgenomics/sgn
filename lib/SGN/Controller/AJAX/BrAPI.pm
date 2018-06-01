@@ -1843,35 +1843,43 @@ sub studies_observations_granular_GET {
 sub phenotypes_search : Chained('brapi') PathPart('phenotypes-search') Args(0) : ActionClass('REST') { }
 
 sub phenotypes_search_POST {
-	my $self = shift;
-	my $c = shift;
-	process_phenotypes_search($self, $c);
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
+    my $brapi_package_result = $brapi_module->search({
+        trait_ids => $clean_inputs->{observationVariableDbIds},
+        accession_ids => $clean_inputs->{germplasmDbIds},
+        study_ids => $clean_inputs->{studyDbIds},
+        location_ids => $clean_inputs->{locationDbIds},
+        years => $clean_inputs->{seasonDbIds},
+        data_level => $clean_inputs->{observationLevel}->[0],
+        search_type => $clean_inputs->{search_type}->[0],
+        exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub phenotypes_search_GET {
 	my $self = shift;
 	my $c = shift;
-	process_phenotypes_search($self, $c);
-}
-
-sub process_phenotypes_search {
-	my $self = shift;
-	my $c = shift;
-	my $auth = _authenticate_user($c);
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-	my $brapi_package_result = $brapi_module->search({
-		trait_ids => $clean_inputs->{observationVariableDbId},
-		accession_ids => $clean_inputs->{germplasmDbId},
-		study_ids => $clean_inputs->{studyDbId},
-		location_ids => $clean_inputs->{locationDbId},
-		years => $clean_inputs->{seasonDbId},
-		data_level => $clean_inputs->{observationLevel}->[0],
-		search_type => $clean_inputs->{search_type}->[0],
-		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
-	});
-	_standard_response_construction($c, $brapi_package_result);
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
+    my $brapi_package_result = $brapi_module->search({
+        trait_ids => $clean_inputs->{observationVariableDbId},
+        accession_ids => $clean_inputs->{germplasmDbId},
+        study_ids => $clean_inputs->{studyDbId},
+        location_ids => $clean_inputs->{locationDbId},
+        years => $clean_inputs->{seasonDbId},
+        data_level => $clean_inputs->{observationLevel}->[0],
+        search_type => $clean_inputs->{search_type}->[0],
+        exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
@@ -1896,11 +1904,11 @@ sub process_phenotypes_search_table {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
 	my $brapi_package_result = $brapi_module->search_table({
-		trait_ids => $clean_inputs->{observationVariableDbId},
-		accession_ids => $clean_inputs->{germplasmDbId},
-		study_ids => $clean_inputs->{studyDbId},
-		location_ids => $clean_inputs->{locationDbId},
-		years => $clean_inputs->{seasonDbId},
+		trait_ids => $clean_inputs->{observationVariableDbIds},
+		accession_ids => $clean_inputs->{germplasmDbIds},
+		study_ids => $clean_inputs->{studyDbIds},
+		location_ids => $clean_inputs->{locationDbIds},
+		years => $clean_inputs->{seasonDbIds},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
@@ -1935,11 +1943,11 @@ sub process_phenotypes_search_csv {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
 	my $brapi_package_result = $brapi_module->search_table_csv_or_tsv({
-		trait_ids => $clean_inputs->{observationVariableDbId},
-		accession_ids => $clean_inputs->{germplasmDbId},
-		study_ids => $clean_inputs->{studyDbId},
-		location_ids => $clean_inputs->{locationDbId},
-		years => $clean_inputs->{seasonDbId},
+		trait_ids => $clean_inputs->{observationVariableDbIds},
+		accession_ids => $clean_inputs->{germplasmDbIds},
+		study_ids => $clean_inputs->{studyDbIds},
+		location_ids => $clean_inputs->{locationDbIds},
+		years => $clean_inputs->{seasonDbIds},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
@@ -1978,11 +1986,11 @@ sub process_phenotypes_search_tsv {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
 	my $brapi_package_result = $brapi_module->search_table_csv_or_tsv({
-		trait_ids => $clean_inputs->{observationVariableDbId},
-		accession_ids => $clean_inputs->{germplasmDbId},
-		study_ids => $clean_inputs->{studyDbId},
-		location_ids => $clean_inputs->{locationDbId},
-		years => $clean_inputs->{seasonDbId},
+		trait_ids => $clean_inputs->{observationVariableDbIds},
+		accession_ids => $clean_inputs->{germplasmDbIds},
+		study_ids => $clean_inputs->{studyDbIds},
+		location_ids => $clean_inputs->{locationDbIds},
+		years => $clean_inputs->{seasonDbIds},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
