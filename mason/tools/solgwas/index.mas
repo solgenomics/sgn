@@ -108,7 +108,7 @@ jQuery(document).ready(function() {
     }
   jQuery('#dataset_select').change(function() {  
     var dataset_id = jQuery('#available_datasets').val();
-    alert("Dataset ID: "+dataset_id);
+//    alert("Dataset ID: "+dataset_id);
     $.ajax({
       url: '/ajax/solgwas/shared_phenotypes',
       data: {'dataset_id': dataset_id},
@@ -117,8 +117,8 @@ jQuery(document).ready(function() {
           $('#dataset_select').val('ERROR');
         }
         else {
-	    alert(response.options);
-	    	    alert(response.options.length);
+//	    alert(response.options);
+//	    	    alert(response.options.length);
 	var option_html = '<option selected="selected" value=""> </option>';
 	  for (var i = 0; i < response.options.length; i++) {
 	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
@@ -139,8 +139,8 @@ jQuery(document).ready(function() {
     if ($('#pheno_select').val() != ""){
       var dataset_id = $('#available_datasets').val();
       var trait_id = $('#pheno_select').val();
-      alert("Dataset ID: "+dataset_id);
-      alert("Pheno ID: "+trait_id);
+      //alert("Dataset ID: "+dataset_id);
+      //alert("Pheno ID: "+trait_id);
       $.ajax({
         url: '/ajax/solgwas/generate_results',
         data: {'dataset_id': dataset_id, 'trait_id': trait_id},
@@ -155,8 +155,8 @@ jQuery(document).ready(function() {
           else {
             var temp_response = response.dummy_response;
 	    var temp_response2 = response.dummy_response2;
-	    alert("Response ID: "+temp_response);
-    	    alert("Response ID: "+temp_response2);
+	    //alert("Response ID: "+temp_response);
+    	    //alert("Response ID: "+temp_response2);
 
 	    $('#Solgwas_output').append('<img id="SolGWAS_Figure1" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure1.png" />');
 	    $('#Solgwas_output').append('<img id="SolGWAS_Figure2" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure3.png" />');

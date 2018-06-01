@@ -136,7 +136,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
     my $geno_filepath = "." . $tempfile . "_genotype.txt";
     $trait_id =~ tr/ /./;
-    my $cmd = "Rscript /home/vagrant/cxgn/sgn/R/solgwas/GWAS_Script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id;
+    my $cmd = "Rscript /home/vagrant/cxgn/sgn/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id;
     system($cmd);
 
     
