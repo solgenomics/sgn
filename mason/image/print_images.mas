@@ -67,7 +67,7 @@ if ($images && !$image_objects) {
 ###print qq{  <script src="jquery.colorbox-min.js"></script> };
 
 if ($image_objects)  { # don't display anything for empty list of images
-  $image_html .= qq|<table class="table table-bordered"><thead><tr><th>Image</th><th>Description</th><th>Stock Type</th></tr></thead><tbody>|;
+  $image_html .= qq|<table class="table table-bordered"><thead><tr><th><button class="btn btn-sm btn-default" id="print_images_multi_image_view">View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>|;
   my $i = 0;
   foreach my $image_ob (@$image_objects) {
     $count++;
@@ -75,6 +75,7 @@ if ($image_objects)  { # don't display anything for empty list of images
     my $image_name        = $image_ob->get_name();
     my $image_description = $image_ob->get_description();
     my $image_img  = $image_ob->get_image_url("medium");
+    my $original_img  = $image_ob->get_image_url("large");
     my $small_image = $image_ob->get_image_url("thumbnail");
     my $image_page  = "/image/view/$image_id";
 
@@ -82,8 +83,9 @@ if ($image_objects)  { # don't display anything for empty list of images
 
     my $colorbox =
       qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" /></a> |;
+    my $multi_open_colorbox =  qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$original_img" alt="$image_description" /></a> |;
     my $fhtml =
-      qq|<tr><td>|
+      qq|<tr><td><input type="checkbox" name="print_images_checkbox" data-html_text='$multi_open_colorbox'></td><td>|
         . $colorbox
           . $image_name
             . "</td><td>"
@@ -99,11 +101,24 @@ if ($image_objects)  { # don't display anything for empty list of images
       }
   $image_html .= "</tbody></table>";  #close the table tag or the first 3 figures
 
-  $image_html .= "<script> jQuery(document).ready(function() { jQuery('a.stock_image_group').colorbox(); }); </script>\n";
+  $image_html .= "<script>
+  jQuery(document).ready(function() {
+      jQuery('a.stock_image_group').colorbox();
+      jQuery(document).on('click', '#print_images_multi_image_view', function(){
+          var colorbox_html = '';
+          jQuery(\"input:checkbox[name='print_images_checkbox']:checked\").each(function(){
+              var html = jQuery(this).data('html_text');
+              colorbox_html = colorbox_html + html + '<br/>';
+          });
+          if (colorbox_html != ''){
+              jQuery.colorbox({html:colorbox_html});
+          }
+      });
+  }); </script>\n";
 
 }
 $m_image_html .=
-  "<table class='table table-bordered'><thead><tr><th>Image</th><th>Description</th><th>Stock Type</th></tr></thead><tbody>";  #open table tag for the hidden figures #4 and on
+  "<table class='table table-bordered'><thead><tr><th><button class='btn btn-sm btn-default' id='print_images_multi_image_view'>View Selected</button></th><th>Image</th><th>Description</th><th>Type</th></tr></thead><tbody>";  #open table tag for the hidden figures #4 and on
 my $more = scalar(@more_is);
 foreach (@more_is) { $m_image_html .= $_; }
 
