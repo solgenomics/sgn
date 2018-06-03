@@ -16,6 +16,7 @@ sub trial_comparison_input :Path('/tools/trial/comparison/list') Args(0) {
 	$c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
+    $c->stash->{main_production_site_url} = $c->config->{main_production_site_url};
     $c->stash->{template} = '/tools/trial_comparison/index.mas';
 
 }

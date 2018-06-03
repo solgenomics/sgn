@@ -5,7 +5,7 @@
 </%doc>
 
 <%args> 
-
+$main_production_site_url
 </%args>
 
 <& '/page/page_title.mas', title => "Compare trials" &>
@@ -99,7 +99,7 @@
       var ids = list.transform2Ids(trial_list_id, item_data);
       console.log("ids: ",ids);
 
-      BrAPI("/brapi/v1")
+      BrAPI("<% $main_production_site_url %>/brapi/v1")
         .phenotypes_search({
             "studyDbIds" : ids,
             "observationLevel" : $('#unit_select').val(),
