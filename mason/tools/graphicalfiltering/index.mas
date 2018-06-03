@@ -6,6 +6,7 @@
 <%args>
 
 $ajaxRequestString => ""
+$main_production_site_url
 
 </%args>
 
@@ -76,7 +77,7 @@ $ajaxRequestString => ""
     var list_id = $("#filter_list_select").val(),
         unit = $("#type_list_select").val(),
         group = $('#accession_group').is(":checked"),
-        brapi = BrAPI("/brapi/v1");
+        brapi = BrAPI("<% $main_production_site_url %>/brapi/v1");
     if (!unit) return;
     var list_contents = list.transform2Ids(list_id),
         list_type = list.getListType(list_id);

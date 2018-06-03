@@ -35,6 +35,7 @@ sub graphical_filtering :Path('/tools/graphicalfiltering') {
   }
   print STDERR $ajaxRequestString;
   $c->stash->{ajaxRequestString} = $ajaxRequestString;
+  $c->stash->{main_production_site_url} = $c->config->{main_production_site_url};
 
   $c->stash->{template} = '/tools/graphicalfiltering/index.mas';
 }
