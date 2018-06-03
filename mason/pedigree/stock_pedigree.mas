@@ -27,6 +27,7 @@ $stock_id - the id of the stock for which pedigree information will be displayed
 
 <%args>
 $stock_id
+$main_production_site_url
 </%args>
 
 <style>
@@ -207,7 +208,7 @@ $stock_id
 (function() {
     'use strict';
     var STOCK_ID = "<% $stock_id %>";
-    var base_url="/brapi/v1";
+    var base_url="<% $main_production_site_url %>/brapi/v1";
     var pdg = PedigreeViewer(base_url,undefined,function(dbId){
         return "/stock/"+dbId+"/view";
     });

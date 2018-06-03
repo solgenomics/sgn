@@ -276,6 +276,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	barcode_tempdir  => $barcode_tempdir,
 	barcode_tempuri   => $barcode_tempuri,
 	identifier_prefix => $c->config->{identifier_prefix},
+        main_production_site_url => $c->config->{main_production_site_url}
         );
 }
 

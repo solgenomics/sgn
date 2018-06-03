@@ -53,7 +53,7 @@ $barcode_tempdir => undef
 $barcode_tempuri => undef
 $identifier_prefix => 'SGN'
 $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
-
+$main_production_site_url
 </%args>
 
 
@@ -316,7 +316,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 % if ($type_name eq 'accession'){
 
 <&| /page/info_section.mas, title=>"Pedigree and Descendants" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
-  <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
+  <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree, main_production_site_url => $main_production_site_url &>
 </&>
 
 <& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
