@@ -1,0 +1,26 @@
+<%args>
+$col1_width_class => "col-sm-3"
+$col2_width_class => "col-sm-7"
+$col3_width_class => "col-sm-2"
+$icon_class => "glyphicon glyphicon-qrcode"
+$title => "A title."
+$button_id => "3col_id"
+$button_text => "Go"
+</%args>
+
+
+<div class="well">
+    <div class="row">
+        <div class="<% $col1_width_class %>">
+            <span style="font-size:2.5em;" class="<% $icon_class %>"></span>
+        </div>
+        <div class="<% $col2_width_class %>">
+            <h4><% $title %></h4>
+        </div>
+        <div class="<% $col3_width_class %>">
+            <button id="<% $button_id %>" class="btn btn-primary btn-sm"><% $button_text %></button>
+        </div>
+    </div>
+</div>
+
+
