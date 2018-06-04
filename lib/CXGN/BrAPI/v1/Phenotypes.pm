@@ -48,29 +48,25 @@ has 'status' => (
 
 
 sub search {
-	my $self = shift;
-	my $inputs = shift;
-	my $data_level = $inputs->{data_level} || 'plot';
-	my $search_type = $inputs->{search_type} || 'fast';
-	my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
-	my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
-	my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
-	my @study_ids_array = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
-	my @location_ids_array = $inputs->{location_ids} ? @{$inputs->{location_ids}} : ();
-	my @years_array = $inputs->{years} ? @{$inputs->{years}} : ();
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
+    my $self = shift;
+    my $inputs = shift;
+    my $data_level = $inputs->{data_level} || 'all';
+    my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
+    my $phenotype_min_value = $inputs->{phenotype_min_value};
+    my $phenotype_max_value = $inputs->{phenotype_max_value};
+    my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
+    my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
+    my @study_ids_array = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
+    my @location_ids_array = $inputs->{location_ids} ? @{$inputs->{location_ids}} : ();
+    my @years_array = $inputs->{years} ? @{$inputs->{years}} : ();
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
 
-	my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
-    }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
-    }
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        $factory_type,    #can be either 'MaterializedView', or 'Native'
+        'MaterializedViewTable',
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level,
@@ -81,81 +77,70 @@ sub search {
             location_list=>\@location_ids_array,
             accession_list=>\@accession_ids_array,
             include_row_and_column_numbers=>1,
-            exclude_phenotype_outlier=>$exclude_phenotype_outlier
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+            limit=>$limit,
+            offset=>$offset,
+            phenotype_min_value=>$phenotype_min_value,
+            phenotype_max_value=>$phenotype_max_value
         }
     );
-    my $data;
-    try {
-        $data = $phenotypes_search->search();
-    }
-    catch {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search');
-    }
+    my $data = $phenotypes_search->search();
     #print STDERR Dumper $data;
-	my @data_window;
-	my %obs_units;
-	foreach (@$data){
-		if (exists($obs_units{$_->[16]})){
-			my $observations = $obs_units{$_->[16]}->{observations};
-			push @$observations, {
-				observationDbId => $_->[21],
-				observationVariableDbId => $_->[12],
-				observationVariableName => $_->[4],
-				observationTimestamp => $_->[17],
-				season => $_->[0],
-				collector => '',
-				value => $_->[5],
-			};
-			$obs_units{$_->[16]}->{observations} = $observations;
-		} else {
-			$obs_units{$_->[16]} = {
-				observationUnitDbId => qq|$_->[16]|,
-				observationLevel => $_->[20],
-				observationLevels => $_->[20],
-				plotNumber => $_->[9],
-				plantNumber => '',
-				blockNumber => $_->[8],
-				replicate => $_->[7],
-				observationUnitName => $_->[6],
-				germplasmDbId => qq|$_->[15]|,
-				germplasmName => $_->[2],
-				studyDbId => qq|$_->[13]|,
-				studyName => $_->[1],
-				studyLocationDbId => $_->[14],
-				studyLocation => $_->[3],
-				programName => '',
-				X => $_->[10],
-				Y => $_->[11],
-				entryType => '',
-				entryNumber => '',
-				treatments => [],
-				observations => [{
-					observationDbId => qq|$_->[21]|,
-					observationVariableDbId => qq|$_->[12]|,
-					observationVariableName => $_->[4],
-					observationTimeStamp => $_->[17],
-					season => $_->[0],
-					collector => '',
-					value => $_->[5],
-				}]
-			};
-		}
-	}
-	my $total_count = scalar(keys %obs_units);
-	my $count = 0;
-	my $window_count = 0;
-	my $offset = $page*$page_size;
-	foreach my $obs_unit_id (sort keys %obs_units) {
-		if ($count >= $offset && $window_count < $page_size){
-			push @data_window, $obs_units{$obs_unit_id};
-            $window_count++;
-		}
-        $count++;
-	}
-	my %result = (data=>\@data_window);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+
+    my @data_window;
+    my $total_count = 0;
+    foreach my $obs_unit (@$data){
+        my @brapi_observations;
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            push @brapi_observations, {
+                observationDbId => $_->{phenotype_id},
+                observationVariableDbId => $_->{trait_id},
+                observationVariableName => $_->{trait_name},
+                observationTimestamp => $_->{timestamp},
+                season => $obs_unit->{year},
+                collector => $_->{operator},
+                value => $_->{value},
+            };
+        }
+        my @brapi_treatments;
+        my $treatments = $obs_unit->{treatments};
+        while (my ($factor, $modality) = each %$treatments){
+            push @brapi_treatments, {
+                factor => $factor,
+                modality => $modality,
+            };
+        }
+        my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
+        push @data_window, {
+            observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+            observationLevel => $_->{observationunit_type_name},
+            observationLevels => $obs_unit->{observationunit_type_name},
+            plotNumber => $obs_unit->{obsunit_plot_number},
+            plantNumber => $obs_unit->{obsunit_plant_number},
+            blockNumber => $obs_unit->{obsunit_block_number},
+            replicate => $obs_unit->{obsunit_rep_number},
+            observationUnitName => $obs_unit->{observationunit_uniquename},
+            germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
+            germplasmName => $obs_unit->{germplasm_uniquename},
+            studyDbId => qq|$obs_unit->{trial_id}|,
+            studyName => $obs_unit->{trial_name},
+            studyLocationDbId => $obs_unit->{trial_location_id},
+            studyLocation => $obs_unit->{trial_location_name},
+            programName => $obs_unit->{breeding_program_name},
+            X => $obs_unit->{obsunit_col_number},
+            Y => $obs_unit->{obsunit_row_number},
+            entryType => $entry_type,
+            entryNumber => '',
+            treatments => \@brapi_treatments,
+            observations => \@brapi_observations
+        };
+        $total_count = $obs_unit->{full_count};
+    }
+    my %result = (data=>\@data_window);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
 }
 
 sub search_table {
