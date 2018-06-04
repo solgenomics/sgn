@@ -873,6 +873,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
 
     #print STDERR Dumper $c->req->params();
@@ -1009,6 +1011,27 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $plot_info_file_header = '"PlotName","PlotID","PlotBlockNumber","PlotNumber","PlotRepNumber","PlotRowNumber","PlotColNumber","PlotTier","PlotIsAControl","PlotSourceSeedlotName","PlotSourceSeedlotTransactionOperator","PlotSourceSeedlotNumSeedPerPlot","TrialYear","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionNameAndPlotNumber","AccessionSynonyms","AccessionPedigree","AccessionGenus","AccessionSpecies","AccessionVariety","AccessionDonors","AccessionCountryOfOrigin","AccessionState","AccessionInstituteCode","AccessionInstituteName","AccessionBiologicalStatusOfAccessionCode","AccessionNotes","AccessionNumber","AccessionPUI","AccessionSeedSource","AccessionTypeOfGermplasmStorageCode","AccessionAcquisitionDate","AccessionOrganization","AccessionPopulationName","AccessionProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","CrossWishlistTimestamp","CrossWishlistCreatedByUsername"';
     my @plot_info_lines;
 
+    my %accession_id_hash;
+    while ( my ($key,$value) = each %$design_layout){
+        my $accession_id = $value->{accession_id};
+        $accession_id_hash{$accession_id} = $value;
+    }
+    my @accession_ids = keys %accession_id_hash;
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $stock_search = CXGN::Stock::Search->new({
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        phenome_schema=>$phenome_schema,
+        stock_id_list=>\@accession_ids,
+        stock_type_id=>$accession_cvterm_id,
+        stockprop_columns_view=>{'variety'=>1, 'stock_synonym'=>1, 'state'=>1, 'notes'=>1, 'organization'=>1, 'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1},
+	});
+    my ($result, $total_count) = $stock_search->search();
+    my %accession_info_hash;
+    foreach (@$result){
+        $accession_info_hash{$_->{stock_id}} = $_;
+    }
+
     my %plot_id_hash;
     while ( my ($key,$value) = each %$design_layout){
         my $plot_id = $value->{plot_id};
@@ -1030,24 +1053,25 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $seedlot_transaction_operator = $value->{seed_transaction_operator} || '';
             my $seedlot_num_seed_per_plot = $value->{num_seed_per_plot} || '';
             my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
-            my $synonyms = join(',',@{$accession_stock->synonyms()});
+            my $accession_info = $accession_info_hash{$accession_id};
+            my $synonyms = join(',',@{$accession_info->{synonyms}});
             my $pedigree = $accession_stock->get_pedigree_string("Parents");
             my $genus = $accession_stock->get_genus;
             my $species = $accession_stock->get_species;
-            my $variety = $accession_stock->variety;
+            my $variety = $accession_info->{variety};
             my $donors = encode_json($accession_stock->donors);
-            my $countryoforigin = $accession_stock->countryOfOriginCode;
-            my $state = $accession_stock->state;
-            my $institute_code = $accession_stock->state;
-            my $institute_name = $accession_stock->instituteName;
-            my $bio = $accession_stock->biologicalStatusOfAccessionCode;
-            my $notes = $accession_stock->notes;
-            my $accession_number = $accession_stock->accessionNumber;
-            my $pui = $accession_stock->germplasmPUI;
-            my $seedsource = $accession_stock->germplasmSeedSource;
-            my $storage_code = $accession_stock->typeOfGermplasmStorageCode;
-            my $acquisition_date = $accession_stock->acquisitionDate;
-            my $organization = $accession_stock->organization_name;
+            my $countryoforigin = $accession_info->{'country of origin'};
+            my $state = $accession_info->{'state'};
+            my $institute_code = $accession_info->{'institute code'};
+            my $institute_name = $accession_info->{'institute name'};
+            my $bio = $accession_info->{'biological status of accession code'};
+            my $notes = $accession_info->{notes};
+            my $accession_number = $accession_info->{'accession number'};
+            my $pui = $accession_info->{'PUI'};
+            my $seedsource = $accession_info->{'seed source'};
+            my $storage_code = $accession_info->{'type of germplasm storage code'};
+            my $acquisition_date = $accession_info->{'acquisition date'};
+            my $organization = $accession_info->{organization};
             my $population = $accession_stock->population_name || '';
             my $stock_descendant_hash = $accession_stock->get_descendant_hash();
             my $descendants = $stock_descendant_hash->{descendants};
@@ -1289,13 +1313,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             "data_value"=>$uploaded_file
         ]
     );
-
+    
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
         #print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
-
+    
             my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
             $md_row->insert();
             my $file_row = $metadata_schema->resultset("MdFiles")
@@ -1308,7 +1332,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     comment => $message_hash->{id}
                 });
             $file_row->insert();
-
+    
             $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
         } else {
             $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
@@ -1317,7 +1341,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         #print STDERR Dumper $resp;
         $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
     }
-
+    
     my $germplasm_info_resp = $ua->post(
         $server_endpoint,
         Content_Type => 'form-data',
@@ -1328,13 +1352,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             "data_value"=>$germplasm_info_uploaded_file
         ]
     );
-
+    
     if ($germplasm_info_resp->is_success) {
         my $message = $germplasm_info_resp->decoded_content;
         my $message_hash = decode_json $message;
         #print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
-
+    
             my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
             $md_row->insert();
             my $file_row = $metadata_schema->resultset("MdFiles")
@@ -1347,7 +1371,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     comment => $message_hash->{id}
                 });
             $file_row->insert();
-
+    
             $c->stash->{rest}->{success} .= 'The germplasm info file is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
         } else {
             $c->stash->{rest}->{error} .= 'The germplasm info file was not posted to ONA. Please try again.';

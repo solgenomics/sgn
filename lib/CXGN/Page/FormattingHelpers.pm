@@ -67,6 +67,7 @@ BEGIN {
       conditional_like_input_html          info_section_html
       tooltipped_text                      html_alternate_show
       multilevel_mode_selector_html        commify_number
+      simple_checkbox_html
       /;
 }
 our @ISA;
@@ -550,6 +551,48 @@ sub simple_selectbox_html {
         $retstring =
           qq|<label for="$params{id}">$params{label}</label> $retstring|;
     }
+    return $retstring;
+}
+
+=head2 simple_checkbox_html
+
+=cut
+
+sub simple_checkbox_html {
+    my %params = @_;
+    my $retstring = '<div class="panel panel-default"><div class="panel-body">';
+
+    $params{choices} && ref( $params{choices} ) eq 'ARRAY'
+      or confess "'choices' option must be an arrayref";
+
+    $params{multiple} = $params{multiple} ? 'multiple="1"' : '';
+
+    #print out the select box head
+    if ( ref $params{params} ) {
+        $params{params} = join ' ',
+          map { qq|$_="$params{params}{$_}"| } keys %{ $params{params} };
+    }
+    $params{params} ||= '';
+    $params{name}   ||= '';
+    my $data_related = $params{data_related} ? "data-related=".$params{data_related} : '';
+
+    my @selected = $params{selected} ? @{$params{selected}} : ();
+
+    foreach ( @{ $params{choices} } ) {
+        my ( $name, $text ) = ref $_ ? @$_ : ( $_, $_ );
+
+        $retstring .= qq!<input type="checkbox" $data_related $params{multiple} $params{params} name="$params{name}" value="$name"!;
+
+        foreach my $s (@selected) {
+            if (defined($s) && ($s eq $name)) {
+                $retstring .= ' selected="selected" ';
+                last();
+            }
+        }
+        $retstring .= qq!> $text<br/>!;
+    }
+    $retstring .= '</div></div>';
+
     return $retstring;
 }
 

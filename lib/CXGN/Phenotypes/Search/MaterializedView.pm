@@ -235,7 +235,10 @@ sub search {
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
-    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
+    my $where_clause = '';
+    if (scalar(@where_clause) > 0){
+        $where_clause = " WHERE " . (join (" AND " , @where_clause));
+    }
 
     my $offset_clause = '';
     my $limit_clause = '';

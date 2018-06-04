@@ -154,10 +154,16 @@ sub _get_folders {
                 	}
                 }
         		if ($passes_search){
+                    my $location_name = '';
+                    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find({nd_geolocation_id=>$studies{$study}->{'project location'}});
+                    if ($location){
+                        $location_name = $location->description;
+                    }
         			push @folder_studies, {
-        				studyDbId=>$studies{$study}->{'id'},
+        				studyDbId=>qq|$studies{$study}->{'id'}|,
         				studyName=>$studies{$study}->{'name'},
-        				locationDbId=>$studies{$study}->{'project location'}
+        				#locationDbId=>$studies{$study}->{'project location'},
+                        locationName=>$location_name
         			};
         		}
 			}
@@ -168,11 +174,11 @@ sub _get_folders {
         push @{$data}, {
     					trialDbId=>$self->{'id'},
     					trialName=>$self->{'name'},
-    					programDbId=>$self->{'program_id'},
+    					programDbId=>qq|$self->{'program_id'}|,
     					programName=>$self->{'program_name'},
     					startDate=>'',
     					endDate=>'',
-    					active=>'',
+    					active=>undef,
     					studies=>\@folder_studies,
     					additionalInfo=>\%additional_info
     				};

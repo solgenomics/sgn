@@ -432,6 +432,8 @@ sub run_pca {
     $c->stash->{r_temp_file}  = "pca-${pop_id}";
     $c->stash->{r_script}     = 'R/solGS/pca.r';
 
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{pca_temp_dir};
+    
     $c->controller("solGS::solGS")->run_r_script($c);
     
 }

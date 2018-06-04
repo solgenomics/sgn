@@ -38,7 +38,7 @@ sub observation_levels {
 
 	my $status = $self->status;
 	my @available = (
-		'plant','plot','all'
+		'plant','plot','tissue_sample','all'
 	);
 
 	my @data;
@@ -65,7 +65,7 @@ sub observation_variable_data_types {
 	my $status = $self->status;
 
 	my @available;
-	my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trait_format', 'trait_property')->cvterm_id;
+	my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trait_format', 'cvterm_property')->cvterm_id;
 	my $rs = $self->bcs_schema->resultset('Cv::Cvtermprop')->search({type_id=>$trait_format_cvterm_id}, {select=>['value'], distinct=>1});
 	while (my $r = $rs->next){
 		push @available, $r->value;
@@ -97,22 +97,23 @@ sub observation_variable_ontologies {
 	my @available;
 
 	#Using code pattern from SGN::Controller::AJAX::Onto->roots_GET
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=?;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cv USING(cv_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=?;";
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	foreach (@$name_spaces){
 		$sth->execute($_);
-		while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $dbxref_accession, $dbxref_version, $dbxref_description) = $sth->fetchrow_array()) {
+		while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $dbxref_accession, $dbxref_version, $dbxref_description, $cv_id, $cv_name, $cv_definition) = $sth->fetchrow_array()) {
 			my $info;
 			if($dbxref_description){
 				$info = decode_json($dbxref_description);
 			}
 			push @available, {
-				ontologyDbId=>$db_name,
-				ontologyName=>$cvterm_name,
-				authors=>$info->{authors},
-				version=>$dbxref_version,
-				copyright=>$info->{copyright},
-				licence=>$info->{licence}
+                ontologyDbId=>qq|$db_id|,
+                ontologyName=>$db_name." (".$cv_name.")",
+                description=>$cvterm_name,
+                authors=>$info->{authors} ? $info->{authors} : '',
+                version=>$dbxref_version,
+                copyright=>$info->{copyright} ? $info->{copyright} : '',
+                licence=>$info->{licence} ? $info->{licence} : ''
 			};
 		}
 	}
@@ -193,25 +194,26 @@ sub observation_variable_search {
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
 		push @data, {
-			observationVariableDbId => $cvterm_id,
+			observationVariableDbId => qq|$cvterm_id|,
 			name => $cvterm_name."|".$db_name.":".$accession,
-			ontologyDbId => $db_id,
+			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
 			trait => {
-				traitDbId => $cvterm_id,
+				traitDbId => qq|$cvterm_id|,
 				name => $cvterm_name,
 				description => $cvterm_definition,
+                class => ''
 			},
 			method => {},
 			scale => {
 				scaleDbId =>'',
 				name =>'',
 				datatype=>$trait->format,
-				decimalPlaces=>'',
+				decimalPlaces=>undef,
 				xref=>'',
 				validValues=> {
-					min=>$trait->minimum,
-					max=>$trait->maximum,
+					min=>$trait->minimum ? $trait->minimum : undef,
+					max=>$trait->maximum ? $trait->maximum : undef,
 					categories=>\@brapi_categories
 				}
 			},

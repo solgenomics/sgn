@@ -372,7 +372,7 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'genotyping_layout'});
     my $saved_design = $saved_layout->get_design();

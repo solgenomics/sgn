@@ -325,56 +325,57 @@ Side Effects: Refreshes materialized views
 =cut
 
 sub refresh_matviews {
+    my $self = shift;
+    my $dbhost = shift;
+    my $dbname = shift;
+    my $dbuser = shift;
+    my $dbpass = shift;
+    my $materialized_view = shift || 'fullview'; #Can be 'fullview' or 'stockprop'
+    my $refresh_type = shift || 'concurrent';
+    my $basepath = shift;
+    my $refresh_finished = 0;
+    my $async_refresh;
 
-  my $self = shift;
-  my $dbhost = shift;
-  my $dbname = shift;
-  my $dbuser = shift;
-  my $dbpass = shift;
-  my $materialized_view = shift || 'fullview'; #Can be 'fullview' or 'stockprop'
-  my $refresh_type = shift || 'concurrent';
-  my $refresh_finished = 0;
-  my $async_refresh;
+    my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
+    my $h = $self->dbh->prepare($q);
+    $h->execute(1);
 
-  my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
-  my $h = $self->dbh->prepare($q);
-  $h->execute(1);
+    my $refreshing = $h->fetchrow_array();
 
-  my $refreshing = $h->fetchrow_array();
-
-  if ($refreshing) {
-    return { error => $materialized_view.' update already in progress . . . ' };
-  }
-  else {
-    try {
-      my $dbh = $self->dbh();
-      if ($refresh_type eq 'concurrent') {
-        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
-      } else {
-        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
-        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view");
-      }
-
-      for (my $i = 1; $i < 10; $i++) {
-        sleep($i/5);
-        if ($async_refresh->alive) {
-          next;
-        } else {
-          $refresh_finished = 1;
-        }
-      }
-
-      if ($refresh_finished) {
-        return { message => $materialized_view.' update completed!' };
-      } else {
-        return { message => $materialized_view.' update initiated.' };
-      }
-    } catch {
-      print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
-      return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
+    if ($refreshing) {
+        return { error => $materialized_view.' update already in progress . . . ' };
     }
-  }
+    else {
+        try {
+            if ($refresh_type eq 'concurrent') {
+                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
+                $async_refresh = CXGN::Tools::Run->new();
+                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
+            } else {
+                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
+                $async_refresh = CXGN::Tools::Run->new();
+                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
+            }
+
+            for (my $i = 1; $i < 10; $i++) {
+                sleep($i/5);
+                if ($async_refresh->alive) {
+                    next;
+                } else {
+                    $refresh_finished = 1;
+                }
+            }
+
+            if ($refresh_finished) {
+                return { message => $materialized_view.' update completed!' };
+            } else {
+                return { message => $materialized_view.' update initiated.' };
+            }
+        } catch {
+            print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
+            return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
+        }
+    }
 }
 
 =head2 matviews_status

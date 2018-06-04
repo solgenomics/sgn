@@ -34,6 +34,7 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
     ['/search/genomic/clones','Genomic Clones'],
     ['/search/images','Images'],
     ['/search/expression', 'Expression'],
+    ['/search/traits', 'Traits'],
 
    ]
 &>
