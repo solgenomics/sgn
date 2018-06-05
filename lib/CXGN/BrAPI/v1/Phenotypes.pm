@@ -113,7 +113,7 @@ sub search {
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
         push @data_window, {
             observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
-            observationLevel => $_->{observationunit_type_name},
+            observationLevel => $obs_unit->{observationunit_type_name},
             observationLevels => $obs_unit->{observationunit_type_name},
             plotNumber => $obs_unit->{obsunit_plot_number},
             plantNumber => $obs_unit->{obsunit_plant_number},
