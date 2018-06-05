@@ -153,12 +153,14 @@ sub BUILD {
 
 sub get_image_ids {
     my $self = shift;
-    my $ids = $self->schema()->storage->dbh->selectcol_arrayref
-	( "SELECT image_id FROM metadata.md_image_cvterm WHERE cvterm_id=? AND obsolete = 'f' ",
-	  undef,
-	  $self->cvterm_id
-        );
-    return @$ids;
+    my @ids;
+    my $q = "SELECT image_id FROM metadata.md_image_cvterm WHERE cvterm_id=? AND obsolete = 'f' ";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->cvterm_id);
+    while (my ($image_id) = $h->fetchrow_array()){
+        push @ids, [$image_id, 'cvterm'];
+    }
+    return @ids;
 }
 
 
