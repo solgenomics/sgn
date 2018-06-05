@@ -80,9 +80,6 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
-DROP EXTENSION IF EXISTS tablefunc CASCADE;
-CREATE EXTENSION tablefunc;
-
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenotype_jsonb_table CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenotype_jsonb_table AS
 SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uniquename AS observationunit_uniquename, observationunit_cvterm.name AS observationunit_type_name, germplasm.uniquename AS germplasm_uniquename, germplasm.stock_id AS germplasm_stock_id, rep.value AS rep, block_number.value AS block, plot_number.value AS plot_number, row_number.value AS row_number, col_number.value AS col_number, plant_number.value AS plant_number, is_a_control.value AS is_a_control, project.project_id AS trial_id, project.name AS trial_name, project.description AS trial_description, plot_width.value AS plot_width, plot_length.value AS plot_length, field_size.value AS field_size, field_trial_is_planned_to_be_genotyped.value AS field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross.value AS field_trial_is_planned_to_cross, breeding_program.project_id AS breeding_program_id, breeding_program.name AS breeding_program_name, breeding_program.description AS breeding_program_description, year.value AS year, design.value AS design, location_id.value AS location_id, planting_date.value AS planting_date, harvest_date.value AS harvest_date, folder.project_id AS folder_id, folder.name AS folder_name, folder.description AS folder_description,
