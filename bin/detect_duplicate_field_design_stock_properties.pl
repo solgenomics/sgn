@@ -64,16 +64,16 @@ my $range_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'range', 'stock_
 my @type_ids_of_interest = ($plot_number_type_id, $block_type_id, $row_number_type_id, $col_number_type_id, $is_a_control_type_id, $plant_number_type_id, $subplot_number_type_id, $tissue_sample_number_type_id, $replicate_type_id, $range_type_id);
 
 my $stockprops = $schema->resultset("Stock::Stockprop")->search(
-    {type_id => {-in => \@type_ids_of_interest}},
+    {'me.type_id' => {-in => \@type_ids_of_interest}},
     {
-        'join' => 'type',
-        '+select' => ['type.name'],
-        '+as' => ['type']
+        'join' => ['type', 'stock'],
+        '+select' => ['type.name', 'stock.uniquename'],
+        '+as' => ['type', 'stock']
     }
 );
 my %results;
 while (my $r = $stockprops->next){
-    push @{$results{$r->stock_id}->{$r->get_column('type')}}, $r->value;
+    push @{$results{$r->get_column('stock')}->{$r->get_column('type')}}, $r->value;
 }
 
 while (my ($k, $v) = each %results){
