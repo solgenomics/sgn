@@ -216,7 +216,7 @@ sub get_phenotype_matrix {
                 $d->{location_id},
                 $d->{location_name},
                 $d->{accession_stock_id},
-                $d->{accession_uniquname},
+                $d->{accession_uniquename},
                 $synonym_string,
                 $d->{obsunit_type_name},
                 $d->{obsunit_stock_id},
