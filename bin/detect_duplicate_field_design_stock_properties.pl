@@ -66,21 +66,23 @@ my @type_ids_of_interest = ($plot_number_type_id, $block_type_id, $row_number_ty
 my $stockprops = $schema->resultset("Stock::Stockprop")->search(
     {'me.type_id' => {-in => \@type_ids_of_interest}},
     {
-        'join' => ['type', 'stock'],
-        '+select' => ['type.name', 'stock.uniquename'],
-        '+as' => ['type', 'stock']
+        'join' => ['type', {'stock' => {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'}}}}],
+        '+select' => ['type.name', 'stock.uniquename', 'project.name'],
+        '+as' => ['type', 'stock', 'project']
     }
 );
 my %results;
 while (my $r = $stockprops->next){
-    push @{$results{$r->get_column('stock')}->{$r->get_column('type')}}, $r->value;
+    push @{$results{$r->get_column('project')}->{$r->get_column('stock')}->{$r->get_column('type')}}, $r->value;
 }
 
-while (my ($k, $v) = each %results){
-    while (my ($t, $z) = each %$v){
-        if (scalar(@{$z}) > 1){
-            my $values = join ',', @$z;
-            print STDERR "More than one for stock $k for type $t with $values\n";
+while (my ($p, $x) = each %results){
+    while (my ($k, $v) = each %$x){
+        while (my ($t, $z) = each %$v){
+            if (scalar(@{$z}) > 1){
+                my $values = join ',', @$z;
+                print STDERR "More than one for project $p for stock $k for type $t with $values\n";
+            }
         }
     }
 }
