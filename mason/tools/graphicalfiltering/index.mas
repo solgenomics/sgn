@@ -5,6 +5,8 @@
 
 <%args>
 
+$ajaxRequestString => ""
+
 </%args>
 
 <& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
