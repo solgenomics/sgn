@@ -2,7 +2,7 @@
 
 =head1
 
-detect_duplicate_field_design_stock_properties.pl - backend script for detecting and solving issue of plots with multiple plot_numbers
+detect_duplicate_field_design_stock_properties.pl - backend script for detecting and solving issue of plots with multiple plot_numbers/block/replicate/etc
 
 =head1 SYNOPSIS
 
@@ -13,7 +13,7 @@ detect_duplicate_field_design_stock_properties.pl - backend script for detecting
  -D database name (required) e.g. "cxgn_cassava"
  -U database username (required)
  -P database userpass (required)
- -t only show duplicates
+ -t provide 1 to only show duplicates and not delete
 
 =head1 DESCRIPTION
 
