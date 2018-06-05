@@ -665,7 +665,7 @@ sub observation_units_granular {
 	my $inputs = shift;
 	my $study_id = $inputs->{study_id};
 	my $data_level = $inputs->{data_level} || 'plot';
-	my $search_type = $inputs->{search_type} || 'complete';
+	my $search_type = $inputs->{search_type} || 'fast';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
 	my $page_size = $self->page_size;

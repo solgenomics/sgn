@@ -13,7 +13,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch creates a materialized view for all stockprops
+This patch creates a materialized view for phenotypes in a table where rows are observation units and a column called observations has all observations in a jsonb object
 
 =head1 AUTHOR
 
