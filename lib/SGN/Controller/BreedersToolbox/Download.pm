@@ -529,7 +529,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		trial_list=>$trial_id_data->{transform},
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
-            include_row_and_column_numbers=>1,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
     		data_level=>$datalevel,
     	);

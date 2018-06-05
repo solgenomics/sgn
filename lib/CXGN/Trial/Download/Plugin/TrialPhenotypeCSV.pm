@@ -129,7 +129,6 @@ sub download {
     		plot_list=>$plot_list,
     		plant_list=>$plant_list,
     		include_timestamp=>$include_timestamp,
-            include_row_and_column_numbers=>$self->include_row_and_column_numbers,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
     		trait_contains=>$trait_contains,
     		phenotype_min_value=>$phenotype_min_value,

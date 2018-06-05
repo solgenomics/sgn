@@ -617,7 +617,7 @@ sub studies_table {
 		$total_count = scalar(@data)-1;
 		my @header_names = @{$data[0]};
 		#print STDERR Dumper \@header_names;
-		my @trait_names = @header_names[15 .. $#header_names];
+		my @trait_names = @header_names[30 .. $#header_names];
 		#print STDERR Dumper \@trait_names;
 		my @header_ids;
 		foreach my $t (@trait_names) {
@@ -638,7 +638,7 @@ sub studies_table {
 
 		%result = (
 			studyDbId => $study_id,
-			headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber'],
+			headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber'],
 			observationVariableDbIds => \@header_ids,
 			observationVariableNames => \@trait_names,
 			data=>\@data_window
@@ -696,19 +696,19 @@ sub observation_units_granular {
 	my @data_out;
 	foreach (@$data_window){
 		push @data_out, {
-			studyDbId => $_->[11],
-			observationDbId => $_->[19],
-			observationUnitDbId => $_->[14],
-			observationUnitName => $_->[6],
-			observationLevel => $_->[18],
-			observationVariableDbId => $_->[10],
-			observationVariableName => $_->[4],
-			observationTimestamp => $_->[15],
-			uploadedBy => '',
-			operator => '',
-			germplasmDbId => $_->[13],
-			germplasmName => $_->[2],
-			value => $_->[5],
+			studyDbId => $_->{trial_id},
+			observationDbId => $_->{phenotype_id},
+			observationUnitDbId => $_->{obsunit_stock_id},
+			observationUnitName => $_->{obsunit_uniquename},
+			observationLevel => $_->{obsunit_type_name},
+			observationVariableDbId => $_->{trait_id},
+			observationVariableName => $_->{trait_name},
+			observationTimestamp => $_->{timestamp},
+			uploadedBy => $_->{operator},
+			operator => $_->{operator},
+			germplasmDbId => $_->{accession_stock_id},
+			germplasmName => $_->{accession_uniquename},
+			value => $_->{phenotype_value},
 		};
 	}
 	my %result = (data=>\@data_out);

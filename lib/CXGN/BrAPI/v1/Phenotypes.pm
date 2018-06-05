@@ -76,7 +76,6 @@ sub search {
             year_list=>\@years_array,
             location_list=>\@location_ids_array,
             accession_list=>\@accession_ids_array,
-            include_row_and_column_numbers=>1,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
             limit=>$limit,
             offset=>$offset,
@@ -175,7 +174,6 @@ sub search_table {
         year_list=>\@years_array,
         location_list=>\@location_ids_array,
         accession_list=>\@accession_ids_array,
-        include_row_and_column_numbers=>1,
         exclude_phenotype_outlier=>$exclude_phenotype_outlier
     );
     my @data;
@@ -186,13 +184,10 @@ sub search_table {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search Table');
     }
 
-    my %result;
     my @data_files;
     my $total_count = scalar(@data)-1;
-    my @header_names = $data[0];
-    #print STDERR Dumper \@header_names;
-    my @trait_names = @header_names[15 .. $#header_names];
-    #print STDERR Dumper \@trait_names;
+    my @header_names = @{$data[0]};
+    my @trait_names = @header_names[30 .. $#header_names];
     my @header_ids;
     foreach my $t (@trait_names) {
         push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
@@ -210,8 +205,8 @@ sub search_table {
 
     #print STDERR Dumper \@data_window;
 
-    %result = (
-        headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber'],
+    my %result = (
+        headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber'],
         observationVariableDbIds => \@header_ids,
         observationVariableNames => \@trait_names,
         data=>\@data_window
@@ -256,7 +251,6 @@ sub search_table_csv_or_tsv {
         year_list=>\@years_array,
         location_list=>\@location_ids_array,
         accession_list=>\@accession_ids_array,
-        include_row_and_column_numbers=>1,
         exclude_phenotype_outlier=>$exclude_phenotype_outlier
     );
     my @data;

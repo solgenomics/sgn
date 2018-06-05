@@ -91,7 +91,7 @@ SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uni
         when (treatment.name) IS NULL then null
         else (treatment.name)
     end,
-    'No treatment'), treatment.description) AS treatments,
+    'No ManagementFactor'), treatment.description) AS treatments,
     jsonb_agg(jsonb_build_object('trait_id', phenotype.cvalue_id, 'trait_name', (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, 'value', phenotype.value, 'phenotype_id', phenotype.phenotype_id, 'outlier', outlier.value, 'create_date', phenotype.create_date, 'uniquename', phenotype.uniquename, 'phenotype_location_id', nd_geolocation.nd_geolocation_id, 'phenotype_location_name', nd_geolocation.description)) AS observations
     FROM phenotype
     JOIN nd_experiment_phenotype USING(phenotype_id)

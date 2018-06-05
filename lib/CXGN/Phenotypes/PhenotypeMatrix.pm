@@ -18,7 +18,6 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     plot_list=>$plot_list,
     plant_list=>$plant_list,
     include_timestamp=>$include_timestamp,
-    include_row_and_column_numbers=>0,
     exclude_phenotype_outlier=>0,
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
@@ -115,12 +114,6 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
-has 'include_row_and_column_numbers' => (
-    isa => 'Bool|Undef',
-    is => 'ro',
-    default => 0
-);
-
 has 'trait_contains' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw'
@@ -163,7 +156,6 @@ sub get_phenotype_matrix {
             plant_list=>$self->plant_list,
             subplot_list=>$self->subplot_list,
             include_timestamp=>$self->include_timestamp,
-            include_row_and_column_numbers=>$self->include_row_and_column_numbers,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
@@ -175,49 +167,76 @@ sub get_phenotype_matrix {
 
     my $data = $phenotypes_search->search();
     #print STDERR Dumper $data;
-    my %plot_data;
+    my %obsunit_data;
     my %traits;
     my $include_timestamp = $self->include_timestamp;
 
     print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
     print STDERR "Construct Pheno Matrix Start:".localtime."\n";
-    my @unique_plot_list = ();
-    my %seen_plots;
+    my @unique_obsunit_list = ();
+    my %seen_obsunits;
 
     foreach my $d (@$data) {
-        my ($year, $project_name, $stock_name, $location, $cvterm, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id) = @$d;
-
+        my $cvterm = $d->{trait_name};
         if ($cvterm){
-           if (!exists($seen_plots{$plot_id})) {
-               push @unique_plot_list, $plot_id;
-               $seen_plots{$plot_id} = 1;
-           }
+            my $obsunit_id = $d->{obsunit_stock_id};
+            if (!exists($seen_obsunits{$obsunit_id})) {
+                push @unique_obsunit_list, $obsunit_id;
+                $seen_obsunits{$obsunit_id} = 1;
+            }
 
-           #my $cvterm = $trait."|".$cvterm_accession;
-           if ($include_timestamp && $timestamp_value) {
-               $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
-           } else {
-               $plot_data{$plot_id}->{$cvterm} = $value;
-           }
-           my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-           if ($self->include_row_and_column_numbers){
-               $plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number,$row_number,$col_number];
-           } else {
-               $plot_data{$plot_id}->{metadata} = [$year,$project_id,$project_name,$design,$location_id,$location,$stock_id,$stock_name,$synonym_string,$stock_type_name,$plot_id,$plot_name,$rep,$block_number,$plot_number];
-           }
-           $traits{$cvterm}++;
+            my $timestamp_value = $d->{timestamp};
+            my $value = $d->{phenotype_value};
+            #my $cvterm = $trait."|".$cvterm_accession;
+            if ($include_timestamp && $timestamp_value) {
+                $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
+            } else {
+                $obsunit_data{$obsunit_id}->{$cvterm} = $value;
+            }
+
+            my $synonyms = $d->{synonyms};
+            my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
+            my $entry_type = $d->{is_a_control} ? 'check' : 'test';
+            $obsunit_data{$obsunit_id}->{metadata} = [
+                $d->{year},
+                $d->{breeding_program_id},
+                $d->{breeding_program_name},
+                $d->{breeding_program_description},
+                $d->{trial_id},
+                $d->{trial_name},
+                $d->{trial_description},
+                $d->{design},
+                $d->{plot_width},
+                $d->{plot_length},
+                $d->{field_size},
+                $d->{field_trial_is_planned_to_be_genotyped},
+                $d->{field_trial_is_planned_to_cross},
+                $d->{planting_date},
+                $d->{harvest_date},
+                $d->{location_id},
+                $d->{location_name},
+                $d->{accession_stock_id},
+                $d->{accession_uniquname},
+                $synonym_string,
+                $d->{obsunit_type_name},
+                $d->{obsunit_stock_id},
+                $d->{obsunit_uniquename},
+                $d->{rep},
+                $d->{block},
+                $d->{plot_number},
+                $d->{row_number},
+                $d->{col_number},
+                $entry_type,
+                $d->{plant_number}
+            ];
+            $traits{$cvterm}++;
         }
     }
     #print STDERR Dumper \%plot_data;
     #print STDERR Dumper \%traits;
 
     my @info = ();
-    my @line;
-    if ($self->include_row_and_column_numbers){
-       @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber' );
-    } else {
-       @line = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber' );
-    }
+    my @line = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber' );
 
     # generate header line
     #
@@ -227,13 +246,11 @@ sub get_phenotype_matrix {
     }
     push @info, \@line;
 
-    #print STDERR Dumper \@unique_plot_list;
-
-    foreach my $p (@unique_plot_list) {
-        my @line = @{$plot_data{$p}->{metadata}};
+    foreach my $p (@unique_obsunit_list) {
+        my @line = @{$obsunit_data{$p}->{metadata}};
 
         foreach my $trait (@sorted_traits) {
-            push @line, $plot_data{$p}->{$trait};
+            push @line, $obsunit_data{$p}->{$trait};
         }
         push @info, \@line;
     }

@@ -478,7 +478,6 @@ sub retrieve_phenotypes {
 		trait_list=>$self->traits(),
 		trial_list=>$self->trials(),
 		accession_list=>$self->accessions(),
-        include_row_and_column_numbers=>1,
         exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
