@@ -39,7 +39,7 @@ use SGN::Model::Cvterm;
 
 our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_t);
 
-getopts('H:D:U:P:t');
+getopts('H:D:U:P:t:');
 
 if (!$opt_H || !$opt_D || !$opt_U ||!$opt_P ) {
     die "Must provide options -H (hostname), -D (database name), -U (database user), -P (database password)\n";
@@ -68,22 +68,38 @@ my $stockprops = $schema->resultset("Stock::Stockprop")->search(
     {
         'join' => ['type', {'stock' => {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'}}}}],
         '+select' => ['type.name', 'stock.uniquename', 'project.name'],
-        '+as' => ['type', 'stock', 'project']
+        '+as' => ['type', 'stock', 'project'],
+        distinct => 1,
+        order_by => 'me.stockprop_id'
     }
 );
 my %results;
 while (my $r = $stockprops->next){
-    push @{$results{$r->get_column('project')}->{$r->get_column('stock')}->{$r->get_column('type')}}, $r->value;
+    push @{$results{$r->get_column('project')}->{$r->get_column('stock')}->{$r->get_column('type')}}, [$r->value, $r->stockprop_id];
 }
 
+my @all_but_last_values;
 while (my ($p, $x) = each %results){
     while (my ($k, $v) = each %$x){
         while (my ($t, $z) = each %$v){
-            if (scalar(@{$z}) > 1){
-                my $values = join ',', @$z;
+            if (scalar(@$z) > 1){
+                my @z = @$z;
+                my @values = map $_->[0], @z;
+                my $values = join ',', @values;
                 print STDERR "More than one for project $p for stock $k for type $t with $values\n";
+                my @old_values = @z[0..$#z-1];
+                my @old_Vals = map $_->[1], @old_values;
+                push @all_but_last_values, @old_Vals;
             }
         }
+    }
+}
+
+#print STDERR Dumper \@all_but_last_values;
+if (!$opt_t){
+    my $stockprops = $schema->resultset("Stock::Stockprop")->search({'me.stockprop_id' => {-in => \@all_but_last_values}});
+    while (my $r = $stockprops->next){
+        $r->delete();
     }
 }
 
