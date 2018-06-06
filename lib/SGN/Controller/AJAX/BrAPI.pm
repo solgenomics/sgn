@@ -1856,7 +1856,6 @@ sub phenotypes_search_POST {
         location_ids => $clean_inputs->{locationDbIds},
         years => $clean_inputs->{seasonDbIds},
         data_level => $clean_inputs->{observationLevel}->[0],
-        search_type => $clean_inputs->{search_type}->[0],
         exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
     });
     _standard_response_construction($c, $brapi_package_result);
