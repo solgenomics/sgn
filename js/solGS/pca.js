@@ -285,18 +285,18 @@ function plotPca(plotData){
     var pc12 = [];
     var pc1  = [];
     var pc2  = []; 
+    var trials = [];
 
     jQuery.each(scores, function(i, pc) {
-                   
-	pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[2]), 'pc2': parseFloat(pc[3]), 'trial':pc[1] }]);
+        pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[2]), 'pc2': parseFloat(pc[3]), 'trial':pc[1] }]);
 	pc1.push(parseFloat(pc[2]));
 	pc2.push(parseFloat(pc[3]));
-
+	trials.push(pc[1]);
     });
     //console.log(pc12);
     var height = 300;
     var width  = 500;
-    var pad    = {left:40, top:20, right:40, bottom:100}; 
+    var pad    = {left:40, top:20, right:200, bottom:100}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
    
@@ -490,7 +490,56 @@ function plotPca(plotData){
         .attr("x", pad.left)
         .attr("font-size", 14)
         .style("fill", "#954A09") 
-      
+    
+    var uniqTrials = jQuery.unique(trials); 
+    var legendValues = [];
+    var cnt = 0;
+
+    uniqTrials.forEach( function (tr) {
+	legendValues.push([cnt, tr]);
+	cnt++;
+    });
+			
+    console.log(legendValues);
+    var recLH = 20;
+    var recLW = 20;
+
+    var legend = pcaPlot.append("g")
+        .attr("class", "cell")
+        .attr("transform", "translate(" + (width + 60) + "," + (height * 0.25) + ")")
+        .attr("height", 100)
+        .attr("width", 100);
+
+    legend = legend.selectAll("rect")
+        .data(legendValues)  
+        .enter()
+        .append("rect")
+        .attr("x", function (d) { return 1;})
+        .attr("y", function (d) {return 1 + (d[0] * recLH) + (d[0] * 5); })   
+        .attr("width", recLH)
+        .attr("height", recLW)
+        .style("stroke", "black")
+        .attr("fill", function (d) { 
+            return  grpColor(d[1]); 
+        });
+ 
+    var legendTxt = pcaPlot.append("g")
+        .attr("transform", "translate(" + (width + 90) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
+        .attr("id", "legendtext");
+
+    legendTxt.selectAll("text")
+        .data(legendValues)  
+        .enter()
+        .append("text")              
+        .attr("fill", "#523CB5")
+        .style("fill", "#523CB5")
+        .attr("x", 1)
+        .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
+        .text(function (d) { 
+            return d[1]; 
+        })  
+        .attr("dominant-baseline", "middle")
+	.attr("text-anchor", "start");    
 }
 
 
