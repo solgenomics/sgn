@@ -76,6 +76,9 @@ sub patch {
     my $breeding_program_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
     my $treatment_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
     my $folder_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_folder', 'project_property')->cvterm_id();
+    my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $genotyping_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+    my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
     $self->dbh->do(<<EOSQL);
 --do your SQL here
@@ -89,13 +92,16 @@ SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uni
         else (treatment.name)
     end,
     'No ManagementFactor'), treatment.description) AS treatments,
-    jsonb_agg(jsonb_build_object('trait_id', phenotype.cvalue_id, 'trait_name', (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, 'value', phenotype.value, 'phenotype_id', phenotype.phenotype_id, 'outlier', outlier.value, 'create_date', phenotype.create_date, 'uniquename', phenotype.uniquename, 'phenotype_location_id', nd_geolocation.nd_geolocation_id, 'phenotype_location_name', nd_geolocation.description)) AS observations
-    FROM phenotype
-    JOIN nd_experiment_phenotype USING(phenotype_id)
+    COALESCE(
+        jsonb_agg(jsonb_build_object('trait_id', phenotype.cvalue_id, 'trait_name', (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, 'value', phenotype.value, 'phenotype_id', phenotype.phenotype_id, 'outlier', outlier.value, 'create_date', phenotype.create_date, 'uniquename', phenotype.uniquename, 'phenotype_location_id', nd_geolocation.nd_geolocation_id, 'phenotype_location_name', nd_geolocation.description))
+        FILTER (WHERE phenotype.value IS NOT NULL), '[]'
+    ) AS observations
+    FROM stock AS observationunit
+    JOIN nd_experiment_stock ON(observationunit.stock_id=nd_experiment_stock.stock_id)
     JOIN nd_experiment USING(nd_experiment_id)
     JOIN nd_geolocation USING(nd_geolocation_id)
-    JOIN nd_experiment_stock USING(nd_experiment_id)
-    JOIN stock AS observationunit USING(stock_id)
+    LEFT JOIN nd_experiment_phenotype USING(nd_experiment_id)
+    LEFT JOIN phenotype USING(phenotype_id)
     JOIN cvterm AS observationunit_cvterm ON(observationunit.type_id=observationunit_cvterm.cvterm_id)
     JOIN stock_relationship ON(observationunit.stock_id=stock_relationship.subject_id)
     JOIN stock AS germplasm ON(stock_relationship.object_id=germplasm.stock_id AND germplasm.type_id = $accession_type_id)
@@ -107,9 +113,9 @@ SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uni
     LEFT JOIN stockprop AS plant_number ON (observationunit.stock_id=plant_number.stock_id AND plant_number.type_id = $plant_number_type_id)
     LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id)
     LEFT JOIN phenotypeprop AS outlier ON (phenotype.phenotype_id=outlier.phenotype_id AND outlier.type_id = $phenotype_outlier_type_id)
-    JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
-    JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
-    JOIN db USING(db_id)
+    LEFT JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
+    LEFT JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+    LEFT JOIN db USING(db_id)
     JOIN nd_experiment_project USING(nd_experiment_id)
     JOIN project USING(project_id)
     JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$breeding_program_rel_type_id)
@@ -128,7 +134,7 @@ SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uni
     LEFT JOIN project AS treatment ON (treatment.project_id=treatment_rel.subject_project_id)
     LEFT JOIN project_relationship AS folder_rel ON (project.project_id=folder_rel.subject_project_id AND folder_rel.type_id = $folder_type_id)
     LEFT JOIN project AS folder ON (folder.project_id=folder_rel.object_project_id)
-    WHERE phenotype.value IS NOT NULL
+    WHERE nd_experiment.type_id IN ($field_layout_type_id, $genotyping_layout_type_id, $phenotyping_experiment_type_id)
     GROUP BY (observationunit.stock_id, observationunit.uniquename, observationunit_cvterm.name, germplasm.uniquename, germplasm.stock_id, rep.value, block_number.value, plot_number.value, row_number.value, col_number.value, plant_number.value, is_a_control.value, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location_id.value, planting_date.value, harvest_date.value, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, folder.project_id, folder.name, folder.description)
     ORDER by 14, 2;
 
