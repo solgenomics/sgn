@@ -288,12 +288,12 @@ function plotPca(plotData){
 
     jQuery.each(scores, function(i, pc) {
                    
-	pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[1]), 'pc2': parseFloat(pc[2]), 'grp':pc[11] }]);
-	pc1.push(parseFloat(pc[1]));
-	pc2.push(parseFloat(pc[2]));
- 
-    });
+	pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[2]), 'pc2': parseFloat(pc[3]), 'trial':pc[1] }]);
+	pc1.push(parseFloat(pc[2]));
+	pc2.push(parseFloat(pc[3]));
 
+    });
+    //console.log(pc12);
     var height = 300;
     var width  = 500;
     var pad    = {left:40, top:20, right:40, bottom:100}; 
@@ -419,7 +419,7 @@ function plotPca(plotData){
         .data(pc12)
         .enter()
         .append("circle")
-        .style("fill", function(d) {return grpColor(d[0].grp); })
+        .style("fill", function(d) {return grpColor(d[0].trial); })
         .attr("r", 3)
         .attr("cx", function(d) { 
             var xVal = d[0].pc1;            
@@ -452,7 +452,7 @@ function plotPca(plotData){
         .on("mouseout", function(d) { 
             d3.select(this)
                 .attr("r", 3)
-                .style("fill", function(d) {return grpColor(d[0].grp); })
+                .style("fill", function(d) {return grpColor(d[0].trial); })
             d3.selectAll("text#dLabel").remove();            
         });
 

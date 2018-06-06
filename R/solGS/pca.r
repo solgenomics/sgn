@@ -46,7 +46,7 @@ if (is.null(loadingsFile))
 }
 
 genoData <- c()
-genoMetadata <- c()
+genoMetaData <- c()
 
 filteredGenoFile <- c()
 
@@ -54,15 +54,18 @@ if (length(inputFiles) > 1 ) {
     allGenoFiles <- inputFiles
     genoData <- combineGenoData(allGenoFiles)
     
-    genoMetaData   <- genoData %>% select(trial) %>% data.frame
+    genoMetaData   <- genoData$trial
     genoData$trial <- NULL
  
 } else {
     genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
-    genoData <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
-    filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, value = TRUE)
+    genoData     <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
+    genoData     <- unique(genoData, by='V1')
+ 
+   filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, value = TRUE)
 
     if (!is.null(genoData)) { 
+
         genoData <- data.frame(genoData)
         genoData <- column_to_rownames(genoData, 'V1')
     
@@ -108,14 +111,13 @@ scores   <- data.frame(pca$x)
 scores   <- scores[, 1:pcsCnt]
 scores   <- round(scores, 3)
 
-## ### mock grouping
-## cnt <- nrow(scores) 
-## grp <- c(rep('grp1', 0.5*cnt), rep('grp2', 0.5*cnt))
-
-## if (cnt%%2 == 1) { grp <- c(grp, 'grp2')}
-## scores$trial <- grp
-## head(scores)
-## ####
+if (!is.null(genoMetaData)) {
+   scores$trial <- genoMetaData
+   scores       <- scores %>% select(trial, everything()) %>% data.frame
+} else {
+  scores$trial <- 1000
+  scores <- scores %>% select(trial, everything()) %>% data.frame
+}
 
 scores   <- scores[order(row.names(scores)), ]
 
@@ -129,7 +131,6 @@ colnames(variances) <- 'variances'
 loadings <- data.frame(pca$rotation)
 loadings <- loadings[, 1:pcsCnt]
 loadings <- round(loadings, 3)
-
 
 fwrite(scores,
        file      = scoresFile,
