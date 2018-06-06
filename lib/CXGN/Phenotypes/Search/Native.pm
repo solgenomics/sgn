@@ -452,12 +452,12 @@ sub search {
             timestamp => $timestamp_value,
             operator => $operator_value,
             full_count => $full_count,
-            rep => $rep_select,
-            block => $block_number_select,
-            plot_number => $plot_number_select,
-            is_a_control => $is_a_control_select,
-            row_number => $row_number_select,
-            col_number => $col_number_select,
+            rep => $rep,
+            block => $block_number,
+            plot_number => $plot_number,
+            is_a_control => $is_a_control,
+            row_number => $row_number,
+            col_number => $col_number,
             plant_number => $plant_number
         };
     }
