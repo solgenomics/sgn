@@ -138,7 +138,12 @@ SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uni
     GROUP BY (observationunit.stock_id, observationunit.uniquename, observationunit_cvterm.name, germplasm.uniquename, germplasm.stock_id, rep.value, block_number.value, plot_number.value, row_number.value, col_number.value, plant_number.value, is_a_control.value, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location_id.value, planting_date.value, harvest_date.value, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, folder.project_id, folder.name, folder.description)
     ORDER by 14, 2;
 
-CREATE UNIQUE INDEX materialized_phenotype_jsonb_table_observationunit_stock_idx ON public.materialized_phenotype_jsonb_table(observationunit_stock_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX materialized_phenotype_jsonb_table_obsunit_stock_idx ON public.materialized_phenotype_jsonb_table(observationunit_stock_id) WITH (fillfactor=100);
+CREATE INDEX materialized_phenotype_jsonb_table_obsunit_uniquename_idx ON public.materialized_phenotype_jsonb_table(observationunit_uniquename) WITH (fillfactor=100);
+CREATE INDEX materialized_phenotype_jsonb_table_germplasm_stock_idx ON public.materialized_phenotype_jsonb_table(germplasm_stock_id) WITH (fillfactor=100);
+CREATE INDEX materialized_phenotype_jsonb_table_germplasm_uniquename_idx ON public.materialized_phenotype_jsonb_table(germplasm_uniquename) WITH (fillfactor=100);
+CREATE INDEX materialized_phenotype_jsonb_table_trial_idx ON public.materialized_phenotype_jsonb_table(trial_id) WITH (fillfactor=100);
+CREATE INDEX materialized_phenotype_jsonb_table_trial_name_idx ON public.materialized_phenotype_jsonb_table(trial_name) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW public.materialized_phenotype_jsonb_table OWNER TO web_usr;
 
 CREATE OR REPLACE FUNCTION public.refresh_materialized_phenotype_jsonb_table() RETURNS VOID AS '

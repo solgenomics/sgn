@@ -206,22 +206,21 @@ sub search {
 
     my %trait_list_check;
     my $filter_trait_ids;
+    my @or_clause;
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
         foreach (@{$self->trait_list}){
             if ($_){
-                push @where_clause, "observations @> '[{\"trait_id\" : $_}]'";
+                push @or_clause, "observations @> '[{\"trait_id\" : $_}]'";
                 $trait_list_check{$_}++;
                 $filter_trait_ids = 1;
             }
         }
     }
-    my $trait_name_check;
     my $filter_trait_names;
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
             if ($_){
-                push @where_clause, "observations @> '[{\"trait_name\" : $_}]'";
-                $trait_name_check .= $_;
+                push @or_clause, "observations @> '[{\"trait_name\" : \"$_\"}]'";
                 $filter_trait_names = 1;
             }
         }
@@ -236,11 +235,15 @@ sub search {
     #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.' && @.value <= '.$self->phenotype_max_value.')\')'; 
     # }
     # 
-    if ($self->exclude_phenotype_outlier){
-        push @where_clause, "observations !@> '[{\"outlier\" : 1}]'";;
-    }
+    #if ($self->exclude_phenotype_outlier){
+    #    push @where_clause, "observations !@> '[{\"outlier\" : 1}]'";;
+    #}
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
+    my $or_clause = '';
+    if (scalar(@or_clause) > 0){
+        $or_clause = " AND ( " . (join (" OR " , @or_clause)) . " ) ";
+    }
 
     my $offset_clause = '';
     my $limit_clause = '';
@@ -251,7 +254,7 @@ sub search {
         $offset_clause = " OFFSET ".$self->offset;
     }
 
-    my  $q = $select_clause . $where_clause . $order_clause . $limit_clause . $offset_clause;
+    my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
 
     print STDERR "QUERY: $q\n\n";
 
@@ -276,16 +279,28 @@ sub search {
         my $observations = decode_json $observations;
         my $treatments = decode_json $treatments;
 
-        my @return_observations;;
+        my %ordered_observations;
         foreach (@$observations){
-            my $trait_name = $_->{trait_name};
+            $ordered_observations{$_->{phenotype_id}} = $_;
+        }
+
+        my @return_observations;;
+        foreach my $pheno_id (sort keys %ordered_observations){
+            my $o = $ordered_observations{$pheno_id};
+            my $trait_name = $o->{trait_name};
             if ($filter_trait_names){
-                if (index($trait_name_check, $trait_name) == -1) {
+                my $skip;
+                foreach (@{$self->trait_contains}){
+                    if (index($trait_name, $_) == -1) {
+                        $skip = 1;
+                    }
+                }
+                if ($skip){
                     next;
                 }
             }
             if ($filter_trait_ids){
-                if (!$trait_list_check{$_->{trait_id}}){
+                if (!$trait_list_check{$o->{trait_id}}){
                     next;
                 }
             }
@@ -293,7 +308,7 @@ sub search {
             if ($include_timestamp){
                 my $timestamp_value;
                 my $operator_value;
-                my $phenotype_uniquename = $_->{uniquename};
+                my $phenotype_uniquename = $o->{uniquename};
                 if ($phenotype_uniquename){
                     my ($p1, $p2) = split /date: /, $phenotype_uniquename;
                     if ($p2){
@@ -303,10 +318,10 @@ sub search {
                         }
                     }
                 }
-                $_->{timestamp} = $timestamp_value;
-                $_->{operator} = $operator_value;
+                $o->{timestamp} = $timestamp_value;
+                $o->{operator} = $operator_value;
             }
-            push @return_observations, $_;
+            push @return_observations, $o;
         }
 
         push @result, {

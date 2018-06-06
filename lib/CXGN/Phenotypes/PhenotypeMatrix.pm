@@ -173,6 +173,9 @@ sub get_phenotype_matrix {
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();
 
+        print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
+        print STDERR "Construct Pheno Matrix Start:".localtime."\n";
+
         my @line = @metadata_headers;
 
         my @sorted_traits = sort keys(%$unique_traits);
@@ -183,7 +186,10 @@ sub get_phenotype_matrix {
 
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
-            my @line = ($obs_unit->{year}, $obs_unit->{breeding_program_id}, $obs_unit->{breeding_program_name}, $obs_unit->{breeding_program_description}, $obs_unit->{trial_id}, $obs_unit->{trial_name}, $obs_unit->{trial_description}, $obs_unit->{design}, $obs_unit->{plot_width}, $obs_unit->{plot_length}, $obs_unit->{field_size}, $obs_unit->{field_trial_is_planned_to_be_genotyped}, $obs_unit->{field_trial_is_planned_to_cross}, $obs_unit->{planting_date}, $obs_unit->{harvest_date}, $obs_unit->{trial_location_id}, $obs_unit->{trial_location_name}, $obs_unit->{germplasm_stock_id}, $obs_unit->{germplasm_uniquename}, $obs_unit->{synonyms}, $obs_unit->{observationunit_type_name}, $obs_unit->{observationunit_stock_id}, $obs_unit->{observationunit_uniquename}, $obs_unit->{obsunit_rep_number}, $obs_unit->{obsunit_block_number}, $obs_unit->{obsunit_plot_number}, $obs_unit->{obsunit_row_number}, $obs_unit->{obsunit_col_number}, $entry_type, $obs_unit->{obsunit_plant_number});
+            my $synonyms = $obs_unit->{synonyms};
+            my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
+
+            my @line = ($obs_unit->{year}, $obs_unit->{breeding_program_id}, $obs_unit->{breeding_program_name}, $obs_unit->{breeding_program_description}, $obs_unit->{trial_id}, $obs_unit->{trial_name}, $obs_unit->{trial_description}, $obs_unit->{design}, $obs_unit->{plot_width}, $obs_unit->{plot_length}, $obs_unit->{field_size}, $obs_unit->{field_trial_is_planned_to_be_genotyped}, $obs_unit->{field_trial_is_planned_to_cross}, $obs_unit->{planting_date}, $obs_unit->{harvest_date}, $obs_unit->{trial_location_id}, $obs_unit->{trial_location_name}, $obs_unit->{germplasm_stock_id}, $obs_unit->{germplasm_uniquename}, $synonym_string, $obs_unit->{observationunit_type_name}, $obs_unit->{observationunit_stock_id}, $obs_unit->{observationunit_uniquename}, $obs_unit->{obsunit_rep}, $obs_unit->{obsunit_block}, $obs_unit->{obsunit_plot_number}, $obs_unit->{obsunit_row_number}, $obs_unit->{obsunit_col_number}, $entry_type, $obs_unit->{obsunit_plant_number});
 
             my $observations = $obs_unit->{observations};
             my %trait_observations;
