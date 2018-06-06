@@ -296,9 +296,9 @@ function plotPca(plotData){
     //console.log(pc12);
     var height = 300;
     var width  = 500;
-    var pad    = {left:40, top:20, right:200, bottom:100}; 
-    var totalH = height + pad.top + pad.bottom;
-    var totalW = width + pad.left + pad.right;
+    var pad    = {left:40, top:20, right:40, bottom:20}; 
+    var totalH = height + pad.top + pad.bottom + 200;
+    var totalW = width + pad.left + pad.right + 200;
    
     var svg = d3.select("#pca_canvas")
         .append("svg")
@@ -341,8 +341,8 @@ function plotPca(plotData){
         .tickSize(3)
         .orient("left");
    
-    var pc1AxisMid = 0.5 * (totalH); 
-    var pc2AxisMid = 0.5 * (totalW);
+    var pc1AxisMid = (0.5 * height) + pad.top; 
+    var pc2AxisMid = (0.5 * width) + pad.left;
   
     var yMidLineData = [
 	{"x": pc2AxisMid, "y": pad.top}, 
