@@ -83,15 +83,6 @@
                 </div>
             </div>
 </&>
-<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Download Type: </label>
-                <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="search_type" id="search_type" value="complete">Complete</label>
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="search_type" id="search_type" value="fast" checked>Fast (plots only)</label>
-                </div>
-            </div>
-</&>
 
         </form><br/>
 

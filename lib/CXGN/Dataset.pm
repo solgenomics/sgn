@@ -472,7 +472,7 @@ retrieves phenotypes as a listref of listrefs
 sub retrieve_phenotypes {
     my $self = shift;
 	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-		search_type=>'MaterializedView',
+		search_type=>'MaterializedViewTable',
 		bcs_schema=>$self->schema(),
 		data_level=>$self->data_level(),
 		trait_list=>$self->traits(),

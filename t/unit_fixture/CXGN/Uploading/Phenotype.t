@@ -3918,6 +3918,21 @@ my @data = $phenotypes_search->get_phenotype_matrix();
 #print STDERR Dumper \@data;
 is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 complete');
 
+my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	search_type=>'MaterializedViewTable',
+	bcs_schema=>$f->bcs_schema,
+	data_level=>'plot',
+	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	trial_list=>[137],
+	plot_list=>\@plot_ids,
+	include_timestamp=>0,
+	phenotype_min_value=>1,
+	phenotype_max_value=>100,
+);
+my @data = $phenotypes_search->get_phenotype_matrix();
+#print STDERR Dumper \@data;
+is_deeply(\@data, @phenosearch_test1_data, 'mat table pheno search test1 complete');
+
 my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
 my $refresh = 'SELECT refresh_materialized_views()';
 my $h = $f->dbh->prepare($refresh);

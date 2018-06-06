@@ -83,7 +83,7 @@ sub search {
             phenotype_max_value=>$phenotype_max_value
         }
     );
-    my $data = $phenotypes_search->search();
+    my ($data, $unique_traits) = $phenotypes_search->search();
     #print STDERR Dumper $data;
 
     my @data_window;
@@ -145,8 +145,7 @@ sub search {
 sub search_table {
     my $self = shift;
     my $inputs = shift;
-    my $data_level = $inputs->{data_level} || 'plot';
-    my $search_type = $inputs->{search_type} || 'fast';
+    my $data_level = $inputs->{data_level} || 'all';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
     my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
     my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
@@ -157,17 +156,10 @@ sub search_table {
     my $page = $self->page;
     my $status = $self->status;
 
-    my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
-    }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
-    }
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$self->bcs_schema,
         data_level=>$data_level,
-        search_type=>$factory_type,
+        search_type=>'MaterializedViewTable',
         trial_list=>\@study_ids_array,
         trait_list=>\@trait_ids_array,
         include_timestamp=>1,
@@ -222,8 +214,7 @@ sub search_table_csv_or_tsv {
     my $format = $inputs->{format} || 'json';
        my $file_path = $inputs->{file_path};
        my $file_uri = $inputs->{file_uri};
-    my $data_level = $inputs->{data_level} || 'plot';
-    my $search_type = $inputs->{search_type} || 'fast';
+    my $data_level = $inputs->{data_level} || 'all';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
     my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
     my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
@@ -234,17 +225,10 @@ sub search_table_csv_or_tsv {
     my $page = $self->page;
     my $status = $self->status;
 
-    my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
-    }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
-    }
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$self->bcs_schema,
         data_level=>$data_level,
-        search_type=>$factory_type,
+        search_type=>'MaterializedViewTable',
         trial_list=>\@study_ids_array,
         trait_list=>\@trait_ids_array,
         include_timestamp=>1,

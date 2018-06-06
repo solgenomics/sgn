@@ -488,87 +488,76 @@ sub observation_units {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
-    my $phenotype_data;
-    if ($data_level eq 'all') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all', ['plot_of','plant_of'], 'accession', 'subject');
-    } elsif ($data_level eq 'plot') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', ['plot_of'], 'accession', 'subject');
-    } elsif ($data_level eq 'plant') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', ['plant_of'], 'accession', 'subject');
-    }
-    #print STDERR Dumper $phenotype_data;
 
-    my %unique_observation_units;
-    my %obs_unit_hash;
-    foreach (@$phenotype_data){
-        $unique_observation_units{$_->[1]}++;
-        push @{$obs_unit_hash{$_->[1]}}, $_;
-    }
-    #print STDERR Dumper \%obs_unit_hash;
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
 
-    my %obs_hash;
-    my $total_count = scalar(keys %unique_observation_units);
-    my $count = 0;
-    my $window_count = 0;
-    my $offset = $page*$page_size;
-    foreach my $obs_unit_id (sort keys %unique_observation_units) {
-        if ($count >= $offset && $window_count < $page_size){
-            my $observations = $obs_unit_hash{$obs_unit_id};
-            foreach my $o (@$observations){
-                my $pheno_uniquename = $o->[5];
-                my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
-                my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
-
-                if(exists($obs_hash{$o->[0]})){
-                    my $observations = $obs_hash{$o->[0]}->{observations};
-                    push @$observations, {
-                        observationDbId => $o->[4],
-                        observationVariableDbId => $o->[2],
-                        observationVariableName => $o->[3],
-                        collector => $operator,
-                        observationTimeStamp => $timestamp,
-                        value => $o->[7]
-                    };
-                    $obs_hash{$o->[0]}->{observations} = $observations;
-                } else {
-                    my $prop_hash = $self->get_stockprop_hash($o->[0]);
-                    $obs_hash{$o->[0]} = {
-                        observationUnitDbId => $o->[0],
-                        observationUnitName => $o->[1],
-                        germplasmDbId => $o->[8],
-                        germplasmName => $o->[9],
-                        pedigree => $self->germplasm_pedigree_string($o->[8]),
-                        entryNumber => $prop_hash->{'entry number'} ? join ',', @{$prop_hash->{'entry number'}} : '',
-                        entryType => $prop_hash->{'is a control'} ? 'Check' : 'Test',
-                        plotNumber => $prop_hash->{'plot number'} ? join ',', @{$prop_hash->{'plot number'}} : '',
-                        plantNumber => '',
-                        blockNumber => $prop_hash->{'block'} ? join ',', @{$prop_hash->{'block'}} : '',,
-                        X => $prop_hash->{'row_number'} ? join ',', @{$prop_hash->{'row_number'}} : '',
-                        Y=> $prop_hash->{'col_number'} ? join ',', @{$prop_hash->{'col_number'}} : '',
-                        replicate=> $prop_hash->{'replicate'} ? join ',', @{$prop_hash->{'replicate'}} : '',
-                        observations => [{
-                            observationDbId => $o->[4],
-                            observationVariableDbId => $o->[2],
-                            observationVariableName => $o->[3],
-                            collector => $operator,
-                            observationTimeStamp => $timestamp,
-                            value => $o->[7]
-                        }],
-                    }
-                }
-            }
-            $window_count++;
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$data_level,
+            trial_list=>[$study_id],
+            trait_list=>\@trait_ids_array,
+            include_timestamp=>1,
+            limit=>$limit,
+            offset=>$offset
         }
-        $count++;
-    }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    #print STDERR Dumper $data;
 
-    my @data_out;
-    foreach (sort keys %obs_hash){
-        push @data_out, $obs_hash{$_};
+    my @data_window;
+    my $total_count = 0;
+    foreach my $obs_unit (@$data){
+        my @brapi_observations;
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            push @brapi_observations, {
+                observationDbId => $_->{phenotype_id},
+                observationVariableDbId => $_->{trait_id},
+                observationVariableName => $_->{trait_name},
+                observationTimestamp => $_->{timestamp},
+                season => $obs_unit->{year},
+                collector => $_->{operator},
+                value => $_->{value},
+            };
+        }
+        my @brapi_treatments;
+        my $treatments = $obs_unit->{treatments};
+        while (my ($factor, $modality) = each %$treatments){
+            push @brapi_treatments, {
+                factor => $factor,
+                modality => $modality,
+            };
+        }
+        my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
+        push @data_window, {
+            observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+            observationLevel => $obs_unit->{observationunit_type_name},
+            observationLevels => $obs_unit->{observationunit_type_name},
+            plotNumber => $obs_unit->{obsunit_plot_number},
+            plantNumber => $obs_unit->{obsunit_plant_number},
+            blockNumber => $obs_unit->{obsunit_block_number},
+            replicate => $obs_unit->{obsunit_rep_number},
+            observationUnitName => $obs_unit->{observationunit_uniquename},
+            germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
+            germplasmName => $obs_unit->{germplasm_uniquename},
+            studyDbId => qq|$obs_unit->{trial_id}|,
+            studyName => $obs_unit->{trial_name},
+            studyLocationDbId => $obs_unit->{trial_location_id},
+            studyLocation => $obs_unit->{trial_location_name},
+            programName => $obs_unit->{breeding_program_name},
+            X => $obs_unit->{obsunit_col_number},
+            Y => $obs_unit->{obsunit_row_number},
+            entryType => $entry_type,
+            entryNumber => '',
+            treatments => \@brapi_treatments,
+            observations => \@brapi_observations
+        };
+        $total_count = $obs_unit->{full_count};
     }
-
-    my %result = (data=>\@data_out);
+    my %result = (data=>\@data_window);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations result constructed');
@@ -578,8 +567,7 @@ sub studies_table {
 	my $self = shift;
 	my $inputs = shift;
 	my $study_id = $inputs->{study_id};
-	my $data_level = $inputs->{data_level} || 'plot';
-	my $search_type = $inputs->{search_type} || 'complete';
+	my $data_level = $inputs->{data_level} || 'all';
 	my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my $format = $inputs->{format} || 'json';
 	my $file_path = $inputs->{file_path};
@@ -591,15 +579,8 @@ sub studies_table {
 	my $page = $self->page;
 	my $status = $self->status;
 
-	my $factory_type;
-	if ($search_type eq 'complete'){
-		$factory_type = 'Native';
-	}
-	if ($search_type eq 'fast'){
-		$factory_type = 'MaterializedView';
-	}
 	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-		search_type=>$factory_type,
+		search_type=>'MaterializedViewTable',
 		bcs_schema=>$self->bcs_schema,
 		data_level=>$data_level,
 		trial_list=>\@trial_ids_array,
@@ -664,7 +645,7 @@ sub observation_units_granular {
 	my $self = shift;
 	my $inputs = shift;
 	my $study_id = $inputs->{study_id};
-	my $data_level = $inputs->{data_level} || 'plot';
+	my $data_level = $inputs->{data_level} || 'all';
 	my $search_type = $inputs->{search_type} || 'complete';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();

@@ -260,7 +260,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $trait = $c->req->param('trait');
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
-        search_type => "Native",
+        search_type => "MaterializedViewTable",
         data_level => $display,
         trait_list=> [$trait],
         trial_list => [$c->stash->{trial_id}]

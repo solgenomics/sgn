@@ -66,7 +66,6 @@ my $download = CXGN::Trial::Download->new({
     trait_contains => \@trait_contains_list,
     phenotype_min_value => $phenotype_min_value,
     phenotype_max_value => $phenotype_max_value,
-    search_type=>$search_type,
     has_header=>$has_header
 });
 my $error = $download->download();

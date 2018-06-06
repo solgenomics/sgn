@@ -7,7 +7,7 @@ CXGN::Phenotypes::Search::MetaData - an object to handle searching meta-data acr
 =head1 USAGE
 
 my $metadata_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'MetaData',    #can be either 'MaterializedView', or 'Native'
+    'MetaData',
     {
         bcs_schema=>$self->bcs_schema, 
         data_level=>$self->data_level,

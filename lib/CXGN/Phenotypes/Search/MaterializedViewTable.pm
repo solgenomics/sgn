@@ -7,7 +7,7 @@ CXGN::Phenotypes::Search::MaterializedViewTable - an object to handle searching 
 =head1 USAGE
 
 my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'MaterializedViewTable',    #can be either 'MaterializedView', or 'Native', or 'MaterializedViewTable'
+    'MaterializedViewTable',    #can be either 'MaterializedViewTable', 'MaterializedView', or 'Native', or 'MaterializedViewTable'
     {
         bcs_schema=>$schema,
         data_level=>$data_level,
@@ -21,7 +21,6 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         subplot_list=>$subplot_list,
         exclude_phenotype_outlier=>0,
         include_timestamp=>$include_timestamp,
-        include_row_and_column_numbers=>0,
         trait_contains=>$trait_contains,
         phenotype_min_value=>$phenotype_min_value,
         phenotype_max_value=>$phenotype_max_value,
@@ -113,12 +112,6 @@ has 'include_timestamp' => (
     default => 0
 );
 
-has 'include_row_and_column_numbers' => (
-    isa => 'Bool|Undef',
-    is => 'ro',
-    default => 0
-);
-
 has 'trait_contains' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw'
@@ -187,6 +180,12 @@ sub search {
         my $trial_sql = _sql_from_arrayref($self->trial_list);
         push @where_clause, "trial_id in ($trial_sql)";
     }
+    if ($self->accession_list && scalar(@{$self->accession_list})>0) {
+        my $arrayref = $self->accession_list;
+        my $sql = join ("','" , @$arrayref);
+        my $accession_sql = "'" . $sql . "'";
+        push @where_clause, "germplasm_stock_id in ($accession_sql)";
+    }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
         my $arrayref = $self->location_list;
         my $sql = join ("','" , @$arrayref);
@@ -205,14 +204,26 @@ sub search {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot')"; #plots AND plants AND subplots
     }
 
+    my %trait_list_check;
+    my $filter_trait_ids;
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
         foreach (@{$self->trait_list}){
-            push @where_clause, "observations @> '[{\"trait_id\" : $_}]'";
+            if ($_){
+                push @where_clause, "observations @> '[{\"trait_id\" : $_}]'";
+                $trait_list_check{$_}++;
+                $filter_trait_ids = 1;
+            }
         }
     }
+    my $trait_name_check;
+    my $filter_trait_names;
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
-            push @where_clause, "observations @> '[{\"trait_name\" : $_}]'";
+            if ($_){
+                push @where_clause, "observations @> '[{\"trait_name\" : $_}]'";
+                $trait_name_check .= $_;
+                $filter_trait_names = 1;
+            }
         }
     }
     #if ($self->phenotype_min_value && !$self->phenotype_max_value) {
@@ -255,6 +266,7 @@ sub search {
     my @result;
 
     my $calendar_funcs = CXGN::Calendar->new({});
+    my %unique_traits;
 
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
         my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
@@ -264,8 +276,21 @@ sub search {
         my $observations = decode_json $observations;
         my $treatments = decode_json $treatments;
 
-        if ($include_timestamp){
-            foreach (@$observations){
+        my @return_observations;;
+        foreach (@$observations){
+            my $trait_name = $_->{trait_name};
+            if ($filter_trait_names){
+                if (index($trait_name_check, $trait_name) == -1) {
+                    next;
+                }
+            }
+            if ($filter_trait_ids){
+                if (!$trait_list_check{$_->{trait_id}}){
+                    next;
+                }
+            }
+            $unique_traits{$trait_name}++;
+            if ($include_timestamp){
                 my $timestamp_value;
                 my $operator_value;
                 my $phenotype_uniquename = $_->{uniquename};
@@ -281,6 +306,7 @@ sub search {
                 $_->{timestamp} = $timestamp_value;
                 $_->{operator} = $operator_value;
             }
+            push @return_observations, $_;
         }
 
         push @result, {
@@ -318,14 +344,14 @@ sub search {
             folder_name => $folder_name,
             folder_description => $folder_description,
             treatments => $treatments,
-            observations => $observations,
+            observations => \@return_observations,
             full_count => $full_count,
         };
     }
     #print STDERR Dumper \@result;
 
     print STDERR "Search End:".localtime."\n";
-    return \@result;
+    return (\@result, \%unique_traits);
 }
 
 sub _sql_from_arrayref {
