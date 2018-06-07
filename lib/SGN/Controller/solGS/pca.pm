@@ -102,6 +102,7 @@ sub pca_result :Path('/pca/result/') Args() {
 	$ret->{pca_variances} = $pca_variances;
         $ret->{status} = 'success';  
 	$ret->{pop_id} = $c->stash->{pop_id} if $list_type eq 'trials';
+	$ret->{trials_names} = $c->stash->{trials_names};
     }
 
     $ret = to_json($ret);
@@ -242,7 +243,8 @@ sub _pca_list_genotype_data {
 	    my @genotype_files;
 	    
 	    my @trials_ids;
-	    
+
+	    my @trials_names = ();
 	    foreach (@trials_list) 
 	    {
 		my $trial_id = $c->model("solGS::solGS")
@@ -254,6 +256,8 @@ sub _pca_list_genotype_data {
 		$self->_pca_trial_genotype_data($c);
 		push @genotype_files, $c->stash->{genotype_file};
 		push @trials_ids, $trial_id;
+		push @trials_names, {$trial_id => $_};
+       
 	    }
 
 	    $c->stash->{genotype_files_list} = \@genotype_files;
@@ -261,6 +265,7 @@ sub _pca_list_genotype_data {
 	    $c->stash->{pops_ids_list} = \@trials_ids;
 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
 	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+	    $c->stash->{trials_names} = \@trials_names;
 	    
 	}
     }

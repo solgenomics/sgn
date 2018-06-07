@@ -175,6 +175,7 @@ function pcaResult () {
 	
 		var scores = response.pca_scores;
 		var variances = response.pca_variances;
+		var trialsNames = response.trials_names;
 		
 		if (response.pop_id) {
 		    var popId = response.pop_id;
@@ -184,7 +185,8 @@ function pcaResult () {
 				 'variances': variances, 
 				 'pop_id': popId, 
 				 'list_id': listId,
-				 'list_name': listName
+				 'list_name': listName,
+				 'trials_names': trialsNames
 			       };
 					
                 plotPca(plotData);
@@ -279,8 +281,9 @@ function getListId () {
 
 function plotPca(plotData){
 
-    var scores = plotData.scores;
-    var variances = plotData.variances;
+    var scores      = plotData.scores;
+    var variances   = plotData.variances;
+    var trialsNames = plotData.trials_names;
    
     var pc12 = [];
     var pc1  = [];
@@ -496,7 +499,8 @@ function plotPca(plotData){
     var cnt = 0;
 
     uniqTrials.forEach( function (tr) {
-	legendValues.push([cnt, tr]);
+	var trialName = trialsNames[tr];
+	legendValues.push([cnt, tr, trialName]);
 	cnt++;
     });
 			
@@ -520,7 +524,7 @@ function plotPca(plotData){
         .attr("height", recLW)
         .style("stroke", "black")
         .attr("fill", function (d) { 
-            return  grpColor(d[1]); 
+            return  grpColor(d[0]); 
         });
  
     var legendTxt = pcaPlot.append("g")
@@ -536,7 +540,7 @@ function plotPca(plotData){
         .attr("x", 1)
         .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
         .text(function (d) { 
-            return d[1]; 
+            return d[2]; 
         })  
         .attr("dominant-baseline", "middle")
 	.attr("text-anchor", "start");    
