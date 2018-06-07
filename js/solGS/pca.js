@@ -284,7 +284,9 @@ function plotPca(plotData){
     var scores      = plotData.scores;
     var variances   = plotData.variances;
     var trialsNames = plotData.trials_names;
-   
+    console.log(trialsNames);
+    //trialsNames = JSON.parse(trialsNames);
+    console.log(trialsNames);
     var pc12 = [];
     var pc1  = [];
     var pc2  = []; 
@@ -301,7 +303,7 @@ function plotPca(plotData){
     var width  = 500;
     var pad    = {left:40, top:20, right:40, bottom:20}; 
     var totalH = height + pad.top + pad.bottom + 200;
-    var totalW = width + pad.left + pad.right + 200;
+    var totalW = width + pad.left + pad.right + 400;
    
     var svg = d3.select("#pca_canvas")
         .append("svg")
@@ -499,7 +501,9 @@ function plotPca(plotData){
     var cnt = 0;
 
     uniqTrials.forEach( function (tr) {
+
 	var trialName = trialsNames[tr];
+	
 	legendValues.push([cnt, tr, trialName]);
 	cnt++;
     });
@@ -524,7 +528,7 @@ function plotPca(plotData){
         .attr("height", recLW)
         .style("stroke", "black")
         .attr("fill", function (d) { 
-            return  grpColor(d[0]); 
+            return  grpColor(d[1]); 
         });
  
     var legendTxt = pcaPlot.append("g")

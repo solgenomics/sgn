@@ -68,7 +68,9 @@ sub pca_result :Path('/pca/result/') Args() {
 	$c->stash->{list_id}       = $list_id;
 	$c->stash->{list_type}     = $list_type;
     }
-       
+ 
+    $self->create_pca_genotype_data($c);
+
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
 
@@ -81,7 +83,7 @@ sub pca_result :Path('/pca/result/') Args() {
     
     if( !-s $pca_scores_file)
     {
-	$self->create_pca_genotype_data($c);
+#	$self->create_pca_genotype_data($c);
 	
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{	  
@@ -91,10 +93,13 @@ sub pca_result :Path('/pca/result/') Args() {
 	{
 	    $self->run_pca($c);
 	    
-	    $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
-	    $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
+#	    $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
+#q	    $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
 	}	
     }
+    
+    $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
+    $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
        
     if ($pca_scores)
     {
@@ -244,7 +249,7 @@ sub _pca_list_genotype_data {
 	    
 	    my @trials_ids;
 
-	    my @trials_names = ();
+	    my %trials_names = ();
 	    foreach (@trials_list) 
 	    {
 		my $trial_id = $c->model("solGS::solGS")
@@ -256,7 +261,7 @@ sub _pca_list_genotype_data {
 		$self->_pca_trial_genotype_data($c);
 		push @genotype_files, $c->stash->{genotype_file};
 		push @trials_ids, $trial_id;
-		push @trials_names, {$trial_id => $_};
+		$trials_names{$trial_id} = $_;
        
 	    }
 
@@ -265,7 +270,7 @@ sub _pca_list_genotype_data {
 	    $c->stash->{pops_ids_list} = \@trials_ids;
 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
 	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	    $c->stash->{trials_names} = \@trials_names;
+	    $c->stash->{trials_names} = \%trials_names;
 	    
 	}
     }
