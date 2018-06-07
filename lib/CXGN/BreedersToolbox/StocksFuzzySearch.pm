@@ -105,7 +105,15 @@ sub get_matches {
             next;
         }
 
-        my @stock_matches = @{$fuzzy_string_search->get_matches(lc($stock_name), \@lowercased_names, $max_distance)};
+        my @search_stock_names;
+        foreach (@lowercased_names){
+            #if there is a difference in length greater than 10, it will not fuzzy search over that name
+            if (abs(length($_) - length($stock_name)) <= 10){
+                push @search_stock_names, $_;
+            }
+        }
+
+        my @stock_matches = @{$fuzzy_string_search->get_matches(lc($stock_name), \@search_stock_names, $max_distance)};
 
         if (scalar(@stock_matches) == 0) {
             push (@absent_stocks, $stock_name);
