@@ -68,13 +68,7 @@ sub pca_result :Path('/pca/result/') Args() {
 	$c->stash->{list_id}       = $list_id;
 	$c->stash->{list_type}     = $list_type;
     }
-   
-    $self->create_pca_genotype_data($c);
-    
-    my @genotype_files_list;
-    my $geno_file;
-  
-
+       
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
 
@@ -82,22 +76,26 @@ sub pca_result :Path('/pca/result/') Args() {
     my $pca_variance_file = $c->stash->{pca_variance_file};
  
     my $ret->{status} = 'PCA analysis failed.';
+    my $pca_scores;
+    my $pca_variances;
+    
     if( !-s $pca_scores_file)
     {
+	$self->create_pca_genotype_data($c);
+	
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
-	{
-	  
+	{	  
 	    $ret->{status} = 'There is no genotype data. Aborted PCA analysis.';                
 	}
 	else 
 	{
-	    $self->run_pca($c);	
-	}
+	    $self->run_pca($c);
+	    
+	    $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
+	    $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
+	}	
     }
-    
-    my $pca_scores = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
-    my $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
-   
+       
     if ($pca_scores)
     {
         $ret->{pca_scores} = $pca_scores;
@@ -426,13 +424,10 @@ sub run_pca {
     my $input_file = $c->stash->{pca_input_files};
 
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{pca_temp_dir};
-    
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "pca-${pop_id}";
     $c->stash->{r_script}     = 'R/solGS/pca.r';
-
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{pca_temp_dir};
     
     $c->controller("solGS::solGS")->run_r_script($c);
     
