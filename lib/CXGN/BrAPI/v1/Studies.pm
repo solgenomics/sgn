@@ -285,15 +285,17 @@ sub studies_detail {
             }
 
             my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
+            my $study_db_id = $t->get_trial_id();
+            my $folder_db_id = $folder->project_parent->project_id();
 			%result = (
-				studyDbId=>qq|$t->get_trial_id()|,
+				studyDbId=>qq|$study_db_id|,
 				studyName=>$t->get_name(),
-				trialDbId=>qq|$folder->project_parent->project_id()|,
+				trialDbId=>qq|$folder_db_id|,
 				trialName=>$folder->project_parent->name(),
 				studyType=>$project_type,
 				seasons=>\@years,
                 studyDescription=>$t->get_description(),
-				locationDbId=>$location_id,
+				locationDbId=>qq|$location_id|,
 				locationName=>$location_name,
 				programDbId=>$folder->breeding_program->project_id(),
 				programName=>$folder->breeding_program->name(),
