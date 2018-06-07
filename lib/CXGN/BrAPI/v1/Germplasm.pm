@@ -383,7 +383,7 @@ sub germplasm_markerprofiles {
     my $total_count = scalar(@marker_profiles);
     my %result = (
         germplasmDbId=>$stock_id,
-        markerProfiles=>\@marker_profiles
+        markerprofileDbIds=>\@marker_profiles
     );
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
