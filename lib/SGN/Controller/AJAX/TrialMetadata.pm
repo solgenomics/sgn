@@ -260,7 +260,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
     my $trait = $c->req->param('trait');
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
-        search_type => "Native",
+        search_type => "MaterializedViewTable",
         data_level => $display,
         trait_list=> [$trait],
         trial_list => [$c->stash->{trial_id}]
@@ -1623,13 +1623,6 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->req->param("selected");
 
-    # my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
-    # 	bcs_schema=>$schema,
-    # 	trial_id=>$trial_id,
-    #     trait_id=>$trait_id
-    # });
-    # my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
-
     my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
     #print STDERR Dumper(\@items);
     my @trait_ids = ($trait_id);
@@ -1638,19 +1631,29 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $design_type = $layout->get_design_type();
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        "MaterializedView",
+        "Native",
         {
             bcs_schema=> $schema,
             data_level=> 'plot',
             trait_list=> \@trait_ids,
             plot_list=>  \@items,
-            include_row_and_column_numbers=> 1
         }
     );
     my $data = $phenotypes_search->search();
     my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, $result, @phenoID);
     foreach my $d (@$data) {
-        my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $row_number, $col_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count) = @$d;
+        my $stock_id = $d->{accession_stock_id};
+        my $stock_name = $d->{accession_uniquename};
+        my $value = $d->{phenotype_value};
+        my $plot_id = $d->{obsunit_stock_id};
+        my $plot_name = $d->{obsunit_uniquename};
+        my $rep = $d->{rep};
+        my $block_number = $d->{block};
+        my $plot_number = $d->{plot_number};
+        my $row_number = $d->{row_number};
+        my $col_number = $d->{col_number};
+        my $design = $d->{design};
+        my $phenotype_id = $d->{phenotype_id};
         if (!$row_number && !$col_number){
 			if ($block_number && $design_type ne 'splitplot'){
 				$row_number = $block_number;

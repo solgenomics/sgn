@@ -68,12 +68,16 @@ sub list {
 	my @data;
 
 	foreach my $m (@maps) { 
-	    
+        my $map_type = $m->get_type();
+        if ($map_type eq 'genetic'){
+            $map_type = 'Genetic';
+        }
+        my $map_id = $m->get_id();
 	    	my %map_info = (
-		    mapDbId =>  $m->get_id(),
+		    mapDbId =>  "$map_id",
 			name => $m->get_short_name(),
-			species => $m -> get_organism(),
-			type => $m->get_type(),
+			species => $m->get_organism() ? $m->get_organism() : '',
+			type => $map_type,
 			unit => $m->get_units(),
 			markerCount => $m->get_marker_count(),
 			comments => $m->get_abstract(),

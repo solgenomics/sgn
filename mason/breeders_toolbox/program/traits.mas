@@ -7,7 +7,7 @@ $program_id
   
 
   <div id="pheno_summary_table_div">
-    <table id="phenotype_summary_data" class="display">
+    <table id="phenotype_summary_data_<% $program_id %>" class="display">
       <thead>
         <tr>
           <th>Trait</th>
@@ -34,7 +34,7 @@ $program_id
 
   jQuery(document).ready(function () {
   
-    jQuery('#phenotype_summary_data').DataTable( { 
+    jQuery('#phenotype_summary_data_<% $program_id %>').DataTable( { 
       'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
     });
   });

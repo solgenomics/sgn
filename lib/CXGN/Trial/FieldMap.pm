@@ -77,7 +77,6 @@ sub display_fieldmap {
 	my @plot_numbers_from_design = ();
     my @plot_numbers_not_used;
 	my $result;
-#	my @plot_image_ids;
 
     my @layout_info;
     while ( my ($k, $v) = (each %$design)) {
@@ -96,7 +95,7 @@ sub display_fieldmap {
 			schema => $schema,
 			stock_id => $plot_id,
 		});
-		my @plot_image_ids = $image_id->get_image_ids();
+		my @plot_image_ids = map $_->[0], $image_id->get_image_ids();
 
         push @plot_numbers_not_used, $plot_number;
 		push @plot_numbers_from_design, $plot_number_fromDesign;

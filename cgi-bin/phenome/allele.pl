@@ -251,7 +251,7 @@ sub display_page {
         my $stock_name = $stock->get_name();
         $stockHash{$stock_id} = $stock_name;
 
-        my @images = map SGN::Image->new( $self->get_dbh, $_, $c ), $stock->get_image_ids();
+        my @images = map SGN::Image->new( $self->get_dbh, $_->[0], $c ), $stock->get_image_ids();
         foreach my $image (@images) {
             my $image_id    = $image->get_image_id();
             my $img_src_tag = $image->get_img_src_tag("thumbnail");

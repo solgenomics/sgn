@@ -7,7 +7,7 @@ CXGN::Phenotypes::SearchFactory - an object factory to handle searching phenotyp
 =head1 USAGE
 
 my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'Native',    #can be either 'MaterializedView', or 'Native'
+    'MaterializedViewTable',    #can be either 'MaterializedViewTable', 'MaterializedView', or 'Native'
     {
         bcs_schema=>$schema,
         data_level=>$data_level,

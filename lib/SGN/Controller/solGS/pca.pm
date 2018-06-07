@@ -117,8 +117,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
 sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
     my ($self, $c, $id) = @_;
     
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
     my $pca_file = catfile($pca_dir,  "pca_scores_${id}");
   
     unless (!-e $pca_file || -s $pca_file <= 1) 
@@ -303,21 +302,13 @@ sub _pca_trial_genotype_data {
    
 }
 
-sub create_pca_dir {
-    my ($self, $c) = @_;
-     
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
-
-}
-
 
 sub pca_scores_file {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
 
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
@@ -336,8 +327,7 @@ sub pca_variance_file {
     
     my $pop_id = $c->stash->{pop_id};
 
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
@@ -356,8 +346,7 @@ sub pca_loadings_file {
     
     my $pop_id = $c->stash->{pop_id};
 
-    $self->create_pca_dir($c);
-    my $pca_dir = $c->stash->{pca_dir};
+    my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
@@ -385,7 +374,7 @@ sub pca_output_files {
 	);
      
     my $pop_id = $c->stash->{pop_id};
-    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tmp_dir = $c->stash->{pca_temp_dir};
     my $name = "pca_output_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $file_list);
@@ -408,6 +397,8 @@ sub run_pca {
     $c->stash->{r_temp_file}  = "pca-${pop_id}";
     $c->stash->{r_script}     = 'R/solGS/pca.r';
 
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{pca_temp_dir};
+    
     $c->controller("solGS::solGS")->run_r_script($c);
     
 }

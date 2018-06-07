@@ -146,8 +146,8 @@ sub search {
     my $order_by = $self->order_by || 'me.name';
 
     my %where_join = (
-        is_obsolete => 0,
-        is_relationshiptype => 0
+        'me.is_obsolete' => 0,
+        'me.is_relationshiptype' => 0
     );
 
     if ($is_variable) {
@@ -155,6 +155,8 @@ sub search {
         if ($variable_of_cvterm){
             my $variable_of_cvterm_id = $variable_of_cvterm->cvterm_id();
             $where_join{'cvterm_relationship_subjects.type_id'} = $variable_of_cvterm_id;
+        } else {
+            $where_join{'type.name'} = 'VARIABLE_OF';
         }
     }
 
@@ -162,11 +164,12 @@ sub search {
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
         \%and_conditions,
         {
-            join => ['cvterm_relationship_subjects', {'dbxref' => 'db'} ],
+            join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'} ],
             where => \%where_join,
             order_by => { '-asc' => $order_by },
             '+select' => ['db.name', 'dbxref.accession'],
-            '+as' => ['db_name', 'db_accession']
+            '+as' => ['db_name', 'db_accession'],
+            distinct => 1
         }
     );
 
