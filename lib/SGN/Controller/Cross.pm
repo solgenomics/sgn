@@ -440,7 +440,7 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
 
     }
     else {
-      $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+      $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
 }
@@ -463,7 +463,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $visible_to_role = $c->req->param('visible_to_role');
 
     if (! $c->user()) { # redirect
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 

@@ -29,6 +29,7 @@ use Data::Dumper;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -147,6 +148,8 @@ sub upload_phenotype_store_POST : Args(1) {
     }
 
     push @$success_status, "Metadata saved for archived file.";
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => $success_status, error => $error_status};
 }
