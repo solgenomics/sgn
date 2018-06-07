@@ -243,12 +243,12 @@ sub observation_variable_detail {
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
 		%result = (
-			observationVariableDbId => $trait->cvterm_id,
+			observationVariableDbId => qq|$trait->cvterm_id|,
 			name => $trait->display_name,
-			ontologyDbId => $trait->db_id,
+			ontologyDbId => qq|$trait->db_id|,
 			ontologyName => $trait->db,
 			trait => {
-				traitDbId => $trait->cvterm_id,
+				traitDbId => qq|$trait->cvterm_id|,
 				name => $trait->name,
 				description => $trait->definition,
 			},
