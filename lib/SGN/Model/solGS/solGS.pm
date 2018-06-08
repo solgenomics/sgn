@@ -1682,7 +1682,7 @@ sub phenotype_data {
  
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	bcs_schema=>$self->schema,
-	search_type=>'Native',
+	search_type=>'MaterializedViewTable',
 	trial_list=>[$project_id],
 	data_level=>'plot',
 	);

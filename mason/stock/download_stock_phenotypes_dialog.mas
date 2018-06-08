@@ -30,9 +30,9 @@ $stock_name => undef
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_stock_phenotypes_level_option">
+                        <option value="all">All</option>
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
-                        <option value="all">All</option>
                     </select>
                 </div>
             </div>
@@ -67,16 +67,6 @@ $stock_name => undef
                 </div>
             </div>
 </&>
-<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Download Type: </label>
-                <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="stock_search_type" value="complete">Complete</label>
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="stock_search_type" value="fast" checked>Fast (plots only)</label>
-                </div>
-            </div>
-</&>
-
         </form><br/>
 
         </div>
@@ -109,9 +99,8 @@ jQuery(document).ready(function() {
     var timestamp = jQuery("#download_stock_phenotypes_timestamp_option").val();
     var traits = jQuery("#download_stock_phenotypes_traits_select").val();
     var datalevel = jQuery("#download_stock_phenotypes_level_option").val();
-    var search_type = jQuery('input[name=stock_search_type]:checked').val();
     var exclude_phenotype_outlier = jQuery("#download_stock_phenotypes_exclude_outliers").val();
-    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&search_type="+search_type+"&include_row_and_column_numbers=1&exclude_phenotype_outlier="+exclude_phenotype_outlier);
+    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
   });
 
 });
