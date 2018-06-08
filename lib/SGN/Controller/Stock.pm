@@ -230,6 +230,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
     my $image_ids = $self->_stock_images($stock, $type);
+    my $related_image_ids = $self->_related_stock_images($stock, $type);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
@@ -263,6 +264,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
+            related_image_ids => $related_image_ids,
             allele_count   => $c->stash->{allele_count},
             ontology_count => $c->stash->{ontology_count},
 	    has_pedigree => $c->stash->{has_pedigree},
@@ -855,19 +857,29 @@ sub _stock_pubs {
     return $pubs;
 }
 
-# get all images. Includes those of subject stocks
 sub _stock_images {
     my ($self, $stock) = @_;
-    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ? OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )";
-    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
-        ( $query,
-          undef,
-          $stock->get_stock_id,
-          $stock->get_stock_id,
-        );
-    return $ids;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ?";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
 }
 
+sub _related_stock_images {
+    my ($self, $stock) = @_;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? ) OR stock_id IN (SELECT object_id FROM stock_relationship WHERE subject_id = ? )";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id, $stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
+}
 
 sub _stock_allele_ids {
     my ($self, $stock) = @_;

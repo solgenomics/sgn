@@ -73,7 +73,7 @@ if (@$accessions) {
     $stockHash{$stock_id} = $stock_name;
 
     my @image_ids =
-      $stock->get_image_ids();    #list of all associated image ids
+      map $_->[0], $stock->get_image_ids();    #list of all associated image ids
     foreach my $image_id (@image_ids) {
       $imageHash{$image_id} = SGN::Image->new( undef, $image_id, $c );
       push @{ $imageHoA{$stock_id} }, $image_id;

@@ -491,7 +491,7 @@ sub search {
             my $common_name = $a->get_column('common_name');
             my $genus       = $a->get_column('genus');
 
-            $result_hash{$uniquename} = {
+            $result_hash{$stock_id} = {
                 stock_id => $stock_id,
                 uniquename => $uniquename,
                 stock_name => $stock_name,
@@ -510,7 +510,7 @@ sub search {
                 donors=>$stock_object->donors,
             };
         } else {
-            $result_hash{$uniquename} = {
+            $result_hash{$stock_id} = {
                 stock_id => $stock_id,
                 uniquename => $uniquename
             };
@@ -526,10 +526,10 @@ sub search {
         my $stockprop_select_sql .= ', "' . join '","', @stockprop_view;
         $stockprop_select_sql .= '"';
 
-        my $stockprop_query = "SELECT uniquename $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
+        my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
-        while (my ($uniquename, @stockprop_select_return) = $h->fetchrow_array()) {
+        while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
             for my $s (0 .. scalar(@stockprop_view)-1){
                 my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
                 my @stockprop_vals_string;
@@ -537,7 +537,7 @@ sub search {
                     push @stockprop_vals_string, $_;
                 }
                 my $stockprop_vals_string = join ',', @stockprop_vals_string;
-                $result_hash{$uniquename}->{$stockprop_view[$s]} = $stockprop_vals_string;
+                $result_hash{$stock_id}->{$stockprop_view[$s]} = $stockprop_vals_string;
             }
         }
 
