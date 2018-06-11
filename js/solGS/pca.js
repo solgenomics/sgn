@@ -494,60 +494,70 @@ function plotPca(plotData){
 	.attr("y", pad.top + height + 75)
         .attr("x", pad.left)
         .attr("font-size", 14)
-        .style("fill", "#954A09") 
-    
-    var uniqTrials = jQuery.unique(trials); 
-    var legendValues = [];
-    var cnt = 0;
+        .style("fill", "#954A09")
 
-    uniqTrials.forEach( function (tr) {
 
-	var trialName = trialsNames[tr];
+    if (trialsNames) {
+	var trialsIds = jQuery.unique(trials);
+	trialsIds = jQuery.unique(trialsIds);
+
+	var legendValues = [];
+	var cnt = 0;
+
+	var allTrialsNames = [];
+
+	for (var tr in trialsNames) {
+	    allTrialsNames.push(trialsNames[tr]);
+	};
+
+	trialsIds.forEach( function (id) {
+	    var trialName = trialsNames[id];
+	    if (isNaN(id)) {trialName = allTrialsNames.join(' & ');}
+	    legendValues.push([cnt, id, trialName]);
+	    cnt++;
+	});
 	
-	legendValues.push([cnt, tr, trialName]);
-	cnt++;
-    });
-			
-    console.log(legendValues);
-    var recLH = 20;
-    var recLW = 20;
+	var recLH = 20;
+	var recLW = 20;
 
-    var legend = pcaPlot.append("g")
-        .attr("class", "cell")
-        .attr("transform", "translate(" + (width + 60) + "," + (height * 0.25) + ")")
-        .attr("height", 100)
-        .attr("width", 100);
+	var legend = pcaPlot.append("g")
+            .attr("class", "cell")
+            .attr("transform", "translate(" + (width + 60) + "," + (height * 0.25) + ")")
+            .attr("height", 100)
+            .attr("width", 100);
 
-    legend = legend.selectAll("rect")
-        .data(legendValues)  
-        .enter()
-        .append("rect")
-        .attr("x", function (d) { return 1;})
-        .attr("y", function (d) {return 1 + (d[0] * recLH) + (d[0] * 5); })   
-        .attr("width", recLH)
-        .attr("height", recLW)
-        .style("stroke", "black")
-        .attr("fill", function (d) { 
-            return  grpColor(d[1]); 
-        });
- 
-    var legendTxt = pcaPlot.append("g")
-        .attr("transform", "translate(" + (width + 90) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
-        .attr("id", "legendtext");
+	legend = legend.selectAll("rect")
+            .data(legendValues)  
+            .enter()
+            .append("rect")
+            .attr("x", function (d) { return 1;})
+            .attr("y", function (d) {return 1 + (d[0] * recLH) + (d[0] * 5); })   
+            .attr("width", recLH)
+            .attr("height", recLW)
+            .style("stroke", "black")
+            .attr("fill", function (d) { 
+		return  grpColor(d[1]); 
+            });
+	
+	var legendTxt = pcaPlot.append("g")
+            .attr("transform", "translate(" + (width + 90) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
+            .attr("id", "legendtext");
 
-    legendTxt.selectAll("text")
-        .data(legendValues)  
-        .enter()
-        .append("text")              
-        .attr("fill", "#523CB5")
-        .style("fill", "#523CB5")
-        .attr("x", 1)
-        .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
-        .text(function (d) { 
-            return d[2]; 
-        })  
-        .attr("dominant-baseline", "middle")
-	.attr("text-anchor", "start");    
+	legendTxt.selectAll("text")
+            .data(legendValues)  
+            .enter()
+            .append("text")              
+            .attr("fill", "#523CB5")
+            .style("fill", "#523CB5")
+            .attr("x", 1)
+            .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
+            .text(function (d) { 
+		return d[2]; 
+            })  
+            .attr("dominant-baseline", "middle")
+	    .attr("text-anchor", "start");
+    }
+    
 }
 
 

@@ -82,19 +82,14 @@ sub pca_result :Path('/pca/result/') Args() {
     my $pca_variances;
     
     if( !-s $pca_scores_file)
-    {
-#	$self->create_pca_genotype_data($c);
-	
+    {	
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{	  
 	    $ret->{status} = 'There is no genotype data. Aborted PCA analysis.';                
 	}
 	else 
 	{
-	    $self->run_pca($c);
-	    
-#	    $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
-#q	    $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
+	    $self->run_pca($c);	    
 	}	
     }
     
