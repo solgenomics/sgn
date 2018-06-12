@@ -92,13 +92,12 @@ sub _validate_with_plugin {
     if (!$male_parent_header || $male_parent_header ne 'male_parent') {
         push @error_messages, "Cell D1: male_parent is missing from the header";
     }
-    if (!$female_plot_plant_header || $female_plot_plant_header ne ('female_plot' || 'female_plant')) {
+    if (!$female_plot_plant_header || (($female_plot_plant_header ne 'female_plot') && ($female_plot_plant_header ne 'female_plant'))) {
         push @error_messages, "Cell E1: female_plot or female_plant is missing from the header";
     }
-    if (!$male_plot_plant_header || $male_plot_plant_header ne ('male_plot' || 'male_plant')) {
+    if (!$male_plot_plant_header || (($male_plot_plant_header ne 'male_plot') && ($male_plot_plant_header ne 'male_plant'))) {
         push @error_messages, "Cell F1: male_plot or male_plant is missing from the header";
     }
-
 
     my %valid_properties;
     my @properties = @{$cross_properties};
