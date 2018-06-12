@@ -23,14 +23,25 @@ sub pca_analysis :Path('/pca/analysis/') Args(0) {
 }
 
 
-sub check_result :Path('/pca/check/result/') Args(1) {
+sub check_result :Path('/pca/check/result/') Args() {
     my ($self, $c) = @_;
 
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
 
-    $c->stash->{pop_id} = $training_pop_id;
-    my $pop_id = $training_pop_id;
+    my $pop_id;
+    if ($c->req->referer =~ /solgs\/selection\//)
+    {
+	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
+	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+	$pop_id = $c->stash->{combo_pops_id};
+    } 
+    else 
+    {
+	$c->stash->{pop_id} = $training_pop_id;
+	$pop_id = $training_pop_id;
+    }
 
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
@@ -56,8 +67,19 @@ sub pca_result :Path('/pca/result/') Args() {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     
-    my $pop_id = $training_pop_id;
-    $c->stash->{pop_id} = $pop_id;
+    my $pop_id;
+    if ($c->req->referer =~ /solgs\/selection\//)
+    {
+	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
+	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+	$pop_id = $c->stash->{combo_pops_id};
+    } 
+    else 
+    {
+	$c->stash->{pop_id} = $training_pop_id;
+	$pop_id = $training_pop_id;
+    }
 
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -199,7 +221,8 @@ sub create_pca_genotype_data {
     }
     else 
     {
-	$self->_pca_trial_genotype_data($c);
+	#$self->_pca_trial_genotype_data($c);
+	$self->_process_trials_details($c);
     }
 
 }
@@ -223,32 +246,11 @@ sub _pca_list_genotype_data {
     }
     elsif ($referer =~ /solgs\/selection\//) 
     {
-	my @genotype_files;
-	my @pops_ids;
-	my %pops_names = ();
-
 	my $training_pop_id  = $c->stash->{training_pop_id};
 	my $selection_pop_id = $c->stash->{selection_pop_id};
-	
-	foreach my $p_id (($training_pop_id, $selection_pop_id)) 
-	{
-	    $c->controller('solGS::Files')->genotype_file_name($c, $p_id);
 
-	    push @genotype_files, $c->stash->{genotype_file};
-	    push @pops_ids, $p_id;
-
-	    my $pr_rs = $c->model('solGS::solGS')->project_details($p_id);
-	    
-	    $pops_names{$p_id} = $pr_rs->first->name;
-
-	}
-	
-	$c->stash->{genotype_files_list} = \@genotype_files;
-
-	$c->stash->{pops_ids_list} = \@pops_ids;
-	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	$c->stash->{trials_names} = \%pops_names;
+	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
+	$self->_process_trials_details($c);
     }	   
     else
     {
@@ -270,38 +272,56 @@ sub _pca_list_genotype_data {
 	elsif ( $list_type eq 'trials') 
 	{
 	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	    my @trials_list = @{$list->elements};
+	    my @trials_names = @{$list->elements};
 	
-	    my @genotype_files;
-	    
 	    my @trials_ids;
 
-	    my %trials_names = ();
-	    foreach (@trials_list) 
+	    foreach my $t_name (@trials_names) 
 	    {
 		my $trial_id = $c->model("solGS::solGS")
-		    ->project_details_by_name($_)
+		    ->project_details_by_name($t_name)
 		    ->first
 		    ->project_id;
-
-		$c->stash->{pop_id} = $trial_id; 
-		$self->_pca_trial_genotype_data($c);
-		push @genotype_files, $c->stash->{genotype_file};
+		
 		push @trials_ids, $trial_id;
-		$trials_names{$trial_id} = $_;
-       
 	    }
 
-	    $c->stash->{genotype_files_list} = \@genotype_files;
-
 	    $c->stash->{pops_ids_list} = \@trials_ids;
-	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	    $c->stash->{trials_names} = \%trials_names;
-	    
+	    $self->_process_trials_details($c);
 	}
     }
 
+}
+
+
+sub _process_trials_details {
+    my ($self, $c) = @_;
+
+    my $pops_ids = $c->stash->{pops_ids_list} || [$c->stash->{pop_id}];
+
+    my @genotype_files;
+    my %pops_names = ();
+
+    foreach my $p_id (@$pops_ids) 
+    {
+	$c->stash->{pop_id} = $p_id; 
+	$self->_pca_trial_genotype_data($c);
+	push @genotype_files, $c->stash->{genotype_file};
+
+	my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
+	$pops_names{$p_id} = $c->stash->{project_name};
+    }    
+
+    if (scalar(@$pops_ids) > 1 )
+    {
+	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+    }
+
+    $c->stash->{genotype_files_list} = \@genotype_files;
+    $c->stash->{trials_names} = \%pops_names;
+
+    
 }
 
 

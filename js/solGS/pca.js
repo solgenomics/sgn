@@ -159,7 +159,7 @@ function pcaResult () {
 	jQuery("#pca_message").html("Running PCA... please wait...");
 	jQuery("#run_pca").hide();
     }  
-  
+
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -284,9 +284,7 @@ function plotPca(plotData){
     var scores      = plotData.scores;
     var variances   = plotData.variances;
     var trialsNames = plotData.trials_names;
-    console.log(trialsNames);
-    //trialsNames = JSON.parse(trialsNames);
-    console.log(trialsNames);
+   
     var pc12 = [];
     var pc1  = [];
     var pc2  = []; 
@@ -298,7 +296,7 @@ function plotPca(plotData){
 	pc2.push(parseFloat(pc[3]));
 	trials.push(pc[1]);
     });
-    //console.log(pc12);
+   
     var height = 300;
     var width  = 500;
     var pad    = {left:40, top:20, right:40, bottom:20}; 
@@ -496,8 +494,8 @@ function plotPca(plotData){
         .attr("font-size", 14)
         .style("fill", "#954A09")
 
-
-    if (trialsNames) {
+  
+    if (trialsNames && Object.keys(trialsNames).length > 1) {
 	var trialsIds = jQuery.unique(trials);
 	trialsIds = jQuery.unique(trialsIds);
 

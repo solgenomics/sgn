@@ -796,11 +796,16 @@ solGS.getPopulationDetails = function () {
 
     var populationId   = jQuery("#population_id").val();
     var populationName = jQuery("#population_name").val();
+    
+    if (!populationId) {
+	populationId   = jQuery("#training_pop_id").val();
+	populationName = jQuery("#training_pop_name").val();
+    }
    
     var selectionPopId   = jQuery("#selection_pop_id").val();
     var selectionPopName = jQuery("#selection_pop_name").val();
 
-    if (populationId == 'undefined') {       
+    if (!populationId) {       
         populationId   = jQuery("#model_id").val();
         populationName = jQuery("#model_name").val();
     }
