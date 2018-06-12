@@ -5,7 +5,7 @@ $stock_id
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<table id="trial_summary_data" class="display">
+<table class="table table-hover table-bordered" id="trial_summary_data">
 <thead>
   <tr>
     <th>Trial name</th>
@@ -20,12 +20,13 @@ $stock_id
 
 <script>
 
-  jQuery(document).ready(function () {
-  
-    jQuery('#trial_summary_data').DataTable( { 
-      'ajax': '/stock/'+ <% $stock_id %> + '/datatables/trials',
+    jQuery(document).ready(function () {
+        jQuery('#stock_trials_section_onswitch').click(function(){
+            jQuery('#trial_summary_data').DataTable( {
+                'destroy': true,
+                'ajax': '/stock/'+ <% $stock_id %> + '/datatables/trials',
+            });
+        });
     });
-  });
-
 
 </script>

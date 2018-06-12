@@ -59,7 +59,12 @@ foreach my $name (@trial_names) {
 foreach my $trial_id (@trial_ids) { 
     print STDERR "Retrieving trial information for trial $trial_id...\n";
 
-    my $t = CXGN::Trial->new( { bcs_schema => $schema , trial_id => $trial_id } );
+    my $t = CXGN::Trial->new({
+        bcs_schema => $schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        trial_id => $trial_id
+    });
 
     my $answer = "";
     if (!$non_interactive) { 
@@ -93,7 +98,7 @@ sub delete_trial {
 
     print STDERR "Deleting trial ".$t->get_name()."\n";
     print STDERR "Delete metadata...\n";
-    $t->delete_metadata($metadata_schema, $phenome_schema);
+    $t->delete_metadata();
     print STDERR "Deleting phenotypes...\n";
     $t->delete_phenotype_data();
     print STDERR "Deleting layout...\n";

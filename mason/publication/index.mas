@@ -96,7 +96,7 @@ my $pub_title = $pub->get_title;
     form_div_name        => 'pub_details',
     js_object_name       => 'pubForm',
     page_url             => "$this_page",
-    alternate_new_button => '<a href ="/publication/0/new">[New]</a>'
+    alternate_new_button => '<a class="btn btn-sm btn-default" href ="/publication/0/new">New</a>'
     &>
 
 

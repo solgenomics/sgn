@@ -79,7 +79,7 @@ sub germplasm_attributes_list {
 			name => $attribute_hash{$_}->[3],
 			description => $attribute_hash{$_}->[4],
 			attributeCategoryDbId => "$attributeCategoryDbId",
-			attributeCategoryName => $attribute_hash{$_}->[1],
+			#attributeCategoryName => $attribute_hash{$_}->[1],
 			datatype => $prophash->{'datatype'} ? join ',', @{$prophash->{'datatype'}} : '',
 			values => $attribute_hash{$_}->[5]
 		};
@@ -112,8 +112,8 @@ sub germplasm_attributes_categories_list {
 	my @data;
 	while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc) = $h->fetchrow_array()) {
 		push @data, {
-			attributeCategoryDbId => $attributeCategoryDbId,
-			attributeCategoryName => $attributeCategoryName,
+			attributeCategoryDbId => "$attributeCategoryDbId",
+			name => $attributeCategoryName,
 		};
 	}
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
