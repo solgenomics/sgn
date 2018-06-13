@@ -62,16 +62,60 @@ $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
 
-# test uploading crosses
+# test uploading crosses with only accession info
 my $crossing_trial2_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial2'});
 my $crossing_trial2_id = $crossing_trial2_rs->project_id();
-my $file = $f->config->{basepath}."/t/data/cross/cross_upload.xls";
+my $file = $f->config->{basepath}."/t/data/cross/crosses_simple_upload.xls";
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
     'http://localhost:3010/ajax/cross/upload_crosses_file',
     Content_Type => 'form-data',
     Content => [
-        crosses_upload_file => [ $file, 'cross_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "xls_crosses_simple_file" => [ $file, 'crosses_simple_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "cross_upload_location" => "test_location",
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
+
+# test uploading crosses with plots
+my $crossing_trial2_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial2'});
+my $crossing_trial2_id = $crossing_trial2_rs->project_id();
+my $file = $f->config->{basepath}."/t/data/cross/crosses_plots_upload.xls";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_crosses_file',
+    Content_Type => 'form-data',
+    Content => [
+        "xls_crosses_plots_file" => [ $file, 'crosses_plots_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "cross_upload_location" => "test_location",
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
+
+# test uploading crosses with plants
+my $crossing_trial2_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial2'});
+my $crossing_trial2_id = $crossing_trial2_rs->project_id();
+my $file = $f->config->{basepath}."/t/data/cross/crosses_plants_upload.xls";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_crosses_file',
+    Content_Type => 'form-data',
+    Content => [
+        "xls_crosses_plants_file" => [ $file, 'crosses_plants_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
         "cross_upload_crossing_trial" => $crossing_trial2_id,
         "cross_upload_location" => "test_location",
         "sgn_session_id" => $sgn_session_id
