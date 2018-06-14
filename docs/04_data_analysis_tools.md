@@ -205,30 +205,22 @@ Clicking the link should take you to a page that looks like this, a which point 
 
 Principal component analysis helps estimate and visualize if there is sub-grouping of individuals within a dataset based on a number of variables. Currently, you can used marker data to run PCA on datasets.
 
-You can run PCA from multiple places on the website.
+You can run PCA from multiple places on the website. To do PCA on
 
-(1) To do PCA on individuals from a trial, go to the trial detail page and find the PCA tool under the 'Analysis tools' section.
+(1) individuals from a trial, go to the trial detail page and find the PCA tool under the 'Analysis tools' section.
 
-(2) To do PCA on individuals from a training population you used in GS modeling, do you modeling and find the PCA tool in the model output page.
+(2) individuals from a training population you used in GS modeling, do you modeling and find the PCA tool in the model output page.
 
-(3) To do PCA on individuals in a training population and selection population you applied the training model, do your modeling, apply the model on the selection population and find the PCA tool on the selection population prediction output page.
+(3) individuals in a training population and selection population you applied the training model, do your modeling, apply the model on the selection population and find the PCA tool on the selection population prediction output page.
 
-(4) To do PCA on individuals in a list of accession you created, for example using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of individuals and run PCA.
+(4) individuals in a list of accession you created, for example using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of individuals and run PCA.
 
-(5) To do PCA on individuals from multiple trials, create the list of trials using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of trials and run PCA.
+(5) individuals from multiple trials, create the list of trials using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of trials and run PCA.
 
-
-There are three ways to evaluate the population structure of a set of individuals with genotype data in the database.
-
-(1) If the entire set of the individuals are members of an experimental trial, then search for the trial, on the trial page, go to the ‘Principal Component Analysis’ section, click the ‘Run PCA’ button and wait for the output.
-
-(2) If the entire set of individuals are members of a training population you used to create a genomic selection model for a trait, on the model output page, go the ‘Principal Component Analysis’ section and click the ‘Run PCA’ button.
-
-(3) If the set of individuals are members of a custom list you created, then go to the ‘analyze’ menu, select the ‘Principal Component Analysis’, log in to the site, select your list and then click ‘Run PCA’ button.
+<img src='{{"assets/images/pca_iita_naccri_trials.png" | relative_url }}' width="522" />
 
 With all the options, you will get a interactive plot of the two PCs (shown below) that explain the largest variance. Point the cursor at any data point and you will see the individual name with its corresponding PCs scores. By clicking the ‘Download all PCs’, you can also download the 10 PCs scores in the text format.
 
-<img src='{{"assets/images/image155.png" | relative_url }}' width="522" />
 
 4.5 ANOVA
 --------------
