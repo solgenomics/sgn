@@ -124,7 +124,7 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-#print STDERR Dumper $message_hash;
+print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
 
@@ -139,7 +139,7 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
-    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, 'biparental', qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}]
+    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'biparental', qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}, qq{<a href = "/stock//view"></a>}, qq{<a href = "/stock//view"></a>}]
 ]}, 'crosses in a trial');
 
 
