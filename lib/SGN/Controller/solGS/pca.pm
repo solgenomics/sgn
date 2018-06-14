@@ -127,7 +127,7 @@ sub pca_result :Path('/pca/result/') Args() {
         $ret->{pca_scores} = $pca_scores;
 	$ret->{pca_variances} = $pca_variances;
         $ret->{status} = 'success';  
-	$ret->{pop_id} = $c->stash->{pop_id} if $list_type eq 'trials';
+	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	$ret->{trials_names} = $c->stash->{trials_names};
     }
 
