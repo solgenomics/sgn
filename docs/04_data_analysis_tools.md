@@ -200,8 +200,23 @@ Halfway down the page is a collapsible section called “Trial Jbrowse”. This 
 
 Clicking the link should take you to a page that looks like this, a which point you can browse the genotype data in the form of vcf tracks aligned to the latest build of the genome.![]({{"assets/images/image327.png" | relative_url }})
 
-4.4 Principal Component Analysis
+4.4 Principal Component Analysis (PCA)
 --------------------------------
+
+Principal component analysis helps estimate and visualize if there is sub-grouping of individuals within a dataset based on a number of variables. Currently, you can used marker data to run PCA on datasets.
+
+You can run PCA from multiple places on the website.
+
+(1) To do PCA on individuals from a trial, go to the trial detail page and find the PCA tool under the 'Analysis tools' section.
+
+(2) To do PCA on individuals from a training population you used in GS modeling, do you modeling and find the PCA tool in the model output page.
+
+(3) To do PCA on individuals in a training population and selection population you applied the training model, do your modeling, apply the model on the selection population and find the PCA tool on the selection population prediction output page.
+
+(4) To do PCA on individuals in a list of accession you created, for example using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of individuals and run PCA.
+
+(5) To do PCA on individuals from multiple trials, create the list of trials using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of trials and run PCA.
+
 
 There are three ways to evaluate the population structure of a set of individuals with genotype data in the database.
 
