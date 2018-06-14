@@ -209,13 +209,13 @@ You can run PCA from multiple places on the website. To do PCA on
 
 (1) individuals from a trial, go to the trial detail page and find the PCA tool under the 'Analysis tools' section.
 
-(2) individuals from a training population you used in GS modeling, do you modeling and find the PCA tool in the model output page.
+(2) individuals from a training population you used in a GS modeling, do your modeling and find the PCA tool in the model output page.
 
 (3) individuals in a training population and selection population you applied the training model, do your modeling, apply the model on the selection population and find the PCA tool on the selection population prediction output page.
 
-(4) individuals in a list of accession you created, for example using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of individuals and run PCA.
+(4) individuals in a list of accessions you created, for example using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of individuals and run PCA.
 
-(5) individuals from multiple trials, create the list of trials using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of trials and run PCA.
+(5) individuals from multiple trials, create a list of the trials using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of trials and run PCA.
 
 <img src='{{"assets/images/pca_iita_naccri_trials.png" | relative_url }}' width="522" />
 
@@ -234,6 +234,9 @@ You can do ANOVA from two places: trial detail and training population detail. I
 -- Select the trait of you want to perform ANOVA
 
 -- Click the 'Run ANOVA' and wait for the result
+
+<img src='{{"assets/images/anova-dm.png" | relative_url }}' width="522" />
+
 
 
 
