@@ -203,7 +203,7 @@ Clicking the link should take you to a page that looks like this, a which point 
 4.4 Principal Component Analysis (PCA)
 --------------------------------
 
-Principal component analysis helps estimate and visualize if there is sub-grouping of individuals within a dataset based on a number of variables. Currently, you can used marker data to run PCA on datasets.
+Principal component analysis helps estimate and visualize if there is sub-grouping of individuals within a dataset based on a number of variables. Currently, you can use marker data to run PCA on datasets.
 
 You can run PCA from multiple places on the website. To do PCA on
 
