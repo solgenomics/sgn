@@ -1024,9 +1024,16 @@ sub top_blups {
     my ($self, $c, $blups_file) = @_;
       
     my $blups = $self->convert_to_arrayref_of_arrays($c, $blups_file);
-   
-    my @top_blups = @$blups[0..9];
- 
+    my @top_blups;
+    if (scalar(@$blups) > 10) 
+    {
+	@top_blups = @$blups[0..9];
+    }
+    else 
+    {
+	@top_blups = @$blups;
+    }
+
     $c->stash->{top_blups} = \@top_blups;
 }
 
