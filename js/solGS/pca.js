@@ -183,21 +183,18 @@ function pcaResult () {
         url: '/pca/result',
         success: function(response) {
             if (response.status === 'success') {
-	
-		var scores = response.pca_scores;
-		var variances = response.pca_variances;
-		var trialsNames = response.trials_names;
 		
 		if (response.pop_id) {
 		    var popId = response.pop_id;
 		}
 		
-		var plotData = { 'scores': scores, 
-				 'variances': variances, 
+		var plotData = { 'scores': response.pca_scores, 
+				 'variances': response.pca_variances, 
 				 'pop_id': popId, 
 				 'list_id': listId,
 				 'list_name': listName,
-				 'trials_names': trialsNames
+				 'trials_names': response.trials_names,
+				 'output_link' : response.output_link
 			       };
 					
                 plotPca(plotData);
@@ -507,7 +504,21 @@ function plotPca(plotData){
         .attr("font-size", 14)
         .style("fill", "#954A09")
 
-  
+
+    var shareLink;
+    if (plotData.output_link)  {
+	    shareLink = plotData.output_link;
+    }
+
+    pcaPlot.append("a")
+	.attr("xlink:href", shareLink)
+	.append("text")
+	.text("[Share plot ]")
+	.attr("y", pad.top + height + 100)
+        .attr("x", pad.left)
+        .attr("font-size", 14)
+        .style("fill", "#954A09")
+    
     if (trialsNames && Object.keys(trialsNames).length > 1) {
 	var trialsIds = jQuery.unique(trials);
 	trialsIds = jQuery.unique(trialsIds);

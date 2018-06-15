@@ -152,7 +152,10 @@ sub pca_result :Path('/pca/result/') Args() {
     
     $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
     $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
-       
+
+    my $host = $c->req->base;   
+    my $output_link = $host . 'pca/analysis/' . $pop_id;
+
     if ($pca_scores)
     {
         $ret->{pca_scores} = $pca_scores;
@@ -160,6 +163,7 @@ sub pca_result :Path('/pca/result/') Args() {
         $ret->{status} = 'success';  
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	$ret->{trials_names} = $c->stash->{trials_names};
+	$ret->{output_link}  = $output_link;
     }
 
     $ret = to_json($ret);
