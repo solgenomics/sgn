@@ -152,14 +152,14 @@ Workflow.pending(Element,false);</pre>
   </&>
 </&>
 
-<h3>Vega-lite Graphs</h3>
+<h3>Vega(-lite) Graphs</h3>
 
 <p>
     Using <a href="https://vega.github.io/vega-lite/">vega-lite</a> is an easy annd quick way to make graphs in the db. Simply include vega-lite:
     <pre><%text><& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &></%text></pre>
     set up a div:
 <pre><%text>&lt;div id="vis"&gt;&lt;/div&gt;</%text></pre>
-    and then run vega-lite:
+    and then run vega-lite (you can also use a <a href="https://vega.github.io/vega/">vega</a> graph spec): 
 <pre><%text>&lt;script type="text/javascript"&gt;
     var yourVlSpec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
