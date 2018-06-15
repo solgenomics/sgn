@@ -1126,11 +1126,11 @@ sub predict_selection_pop_single_pop_model {
     
     if (!-s $prediction_pop_gebvs_file)
     {
-	$c->stash->{training_pop_id} = $training_pop_id;
-	$c->controller('solGS::Files')->phenotype_file_name($c);
+	$c->stash->{pop_id} = $training_pop_id;
+	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	my $pheno_file = $c->stash->{phenotype_file_name};
 
-	$c->controller('solGS::Files')->genotype_file_name($c);
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	my $geno_file = $c->stash->{genotype_file_name};
       
 	$c->stash->{pheno_file} = $pheno_file;

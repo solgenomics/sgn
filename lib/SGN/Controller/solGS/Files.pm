@@ -162,7 +162,7 @@ sub formatted_phenotype_file {
 sub phenotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
    
     if ($pop_id =~ /uploaded/) 
     {
@@ -185,7 +185,7 @@ sub phenotype_file_name {
 sub genotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
     
     if ($pop_id =~ /uploaded/) 
     {
