@@ -151,3 +151,58 @@ Workflow.skip(Element,false);
 Workflow.pending(Element,false);</pre>
   </&>
 </&>
+
+<h3>Vega-lite Graphs</h3>
+
+<p>
+    Using <a href="https://vega.github.io/vega-lite/">vega-lite</a> is an easy annd quick way to make graphs in the db. Simply include vega-lite:
+    <pre><%text><& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &></%text></pre>
+    set up a div:
+<pre><%text>&lt;div id="vis"&gt;&lt;/div&gt;</%text></pre>
+    and then run vega-lite:
+<pre><%text>&lt;script type="text/javascript"&gt;
+    var yourVlSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
+      "description": "A simple bar chart with embedded data.",
+      "data": {
+        "values": [
+          {"a": "A","b": 28}, {"a": "B","b": 55}, {"a": "C","b": 43},
+          {"a": "D","b": 91}, {"a": "E","b": 81}, {"a": "F","b": 53},
+          {"a": "G","b": 19}, {"a": "H","b": 87}, {"a": "I","b": 52}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "a", "type": "ordinal"},
+        "y": {"field": "b", "type": "quantitative"}
+      }
+    }
+    vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
+  &lt;/script&gt;</%text></pre>
+</p>
+to create:
+<& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &>
+<div>
+  <div id="vis"></div>
+</div>
+<script type="text/javascript">
+    var yourVlSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
+      "description": "A simple bar chart with embedded data.",
+      "data": {
+        "values": [
+          {"a": "A","b": 28}, {"a": "B","b": 55}, {"a": "C","b": 43},
+          {"a": "D","b": 91}, {"a": "E","b": 81}, {"a": "F","b": 53},
+          {"a": "G","b": 19}, {"a": "H","b": 87}, {"a": "I","b": 52}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "a", "type": "ordinal"},
+        "y": {"field": "b", "type": "quantitative"}
+      }
+    }
+    vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
+  </script>
+  
+<hr>
