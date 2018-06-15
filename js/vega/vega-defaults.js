@@ -1,3 +1,7 @@
+
+/**
+ * function - IIFE to create vega deafults object (may be modified)
+ */ 
 (function() {
     'use strict';
     window.VEGA_DEFAULTS = {
