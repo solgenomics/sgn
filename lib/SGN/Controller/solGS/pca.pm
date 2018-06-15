@@ -153,7 +153,14 @@ sub pca_result :Path('/pca/result/') Args() {
     $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
     $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
 
-    my $host = $c->req->base;   
+    my $host = $c->req->base;
+
+    if ( $host !~ /localhost/)
+    {
+	$host =~ s/:\d+//; 
+	$host =~ s/http\w?/https/;
+    }
+    
     my $output_link = $host . 'pca/analysis/' . $pop_id;
 
     if ($pca_scores)
