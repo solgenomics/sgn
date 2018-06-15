@@ -44,22 +44,30 @@ jQuery(document).ready( function() {
 
 
 function checkPcaResult () {
-    
+
+    var listId = jQuery('#list_id').val();
+  
     var popId = solGS.getPopulationDetails();
    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: {'training_pop_id' : popId.training_pop_id, 'selection_pop_id': popId.selection_pop_id},
+	data: {'list_id': listId, 'training_pop_id' : popId.training_pop_id, 'selection_pop_id': popId.selection_pop_id},
         url: '/pca/check/result/',
         success: function(response) {
             if (response.result) {
-		pcaResult();					
-            } else { 
+		
+		if (response.list_id) {		    
+		    setListId(response.list_id);
+		}
+		
+		pcaResult();
+	    } else { 
 		jQuery("#run_pca").show();	
             }
-	}
-    });
+	},
+	
+	});
     
 }
 
@@ -90,7 +98,10 @@ jQuery(document).ready( function() {
                     loadPcaGenotypesList(listId);
                 });
             }
-        }); 
+        });
+
+
+	checkPcaResult();
     }      
 });
 
@@ -261,7 +272,9 @@ function getPcaGenotypesListData(listId) {
 function setListId (listId) {
      
     var existingListId = jQuery("#list_id").doesExist();
-   
+    console.log(listId)
+    //listId = listId.replace('uploaded_', '');
+     console.log(listId)
     if (existingListId) {
 	jQuery("#list_id").remove();
     }

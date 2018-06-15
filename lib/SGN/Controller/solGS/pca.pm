@@ -15,8 +15,10 @@ use CXGN::List;
 BEGIN { extends 'Catalyst::Controller' }
 
 
-sub pca_analysis :Path('/pca/analysis/') Args(0) {
-    my ($self, $c) = @_;
+sub pca_analysis :Path('/pca/analysis/') Args() {
+    my ($self, $c, $id) = @_;
+
+    $c->stash->{pop_id} = $id;
     
     $c->stash->{template} = '/pca/analysis.mas';
 
@@ -28,8 +30,10 @@ sub check_result :Path('/pca/check/result/') Args() {
 
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
-
+    my $list_id          = $c->req->param('list_id');
+ 
     my $pop_id;
+    
     if ($c->req->referer =~ /solgs\/selection\//)
     {
 	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
@@ -37,11 +41,34 @@ sub check_result :Path('/pca/check/result/') Args() {
 	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
 	$pop_id = $c->stash->{combo_pops_id};
     } 
+    elsif ($list_id)
+    {
+	$c->stash->{pop_id} = $list_id;
+	$pop_id = $list_id;
+	
+	$list_id =~ s/uploaded_//;		   	
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+
+	my $list_type = $list->type();
+	$c->stash->{list_id}   = $list_id;
+	$c->stash->{list_type} = $list_type;
+
+	if ($list_type =~ /trials/)
+	{
+	    $self->get_trials_list_ids($c);
+	    my $trials_ids = $c->stash->{trials_ids};
+	    
+	    $c->stash->{pops_ids_list} = $trials_ids;
+	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+	    $pop_id = $c->stash->{combo_pops_id};
+	}	
+    }
     else 
     {
 	$c->stash->{pop_id} = $training_pop_id;
-	$pop_id = $training_pop_id;
-    }
+	$pop_id = $training_pop_id;	
+     }
 
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
@@ -50,8 +77,12 @@ sub check_result :Path('/pca/check/result/') Args() {
    
     if (-s $pca_scores_file && $pop_id =~ /\d+/) 
     {
-	$ret->{result} = 1;                
-    }    
+	$ret->{result} = 1;
+	$ret->{list_id} = $list_id;
+#	$ret->{data_set_type} = $data_set_type;
+    
+    }  
+    
 
     $ret = to_json($ret);
        
@@ -66,6 +97,10 @@ sub pca_result :Path('/pca/result/') Args() {
     
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
+
+    my $list_id     = $c->req->param('list_id');
+    my $list_type   = $c->req->param('list_type');
+    my $list_name   = $c->req->param('list_name');
     
     my $pop_id;
     if ($c->req->referer =~ /solgs\/selection\//)
@@ -83,10 +118,6 @@ sub pca_result :Path('/pca/result/') Args() {
 
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
-    
-    my $list_id     = $c->req->param('list_id');
-    my $list_type   = $c->req->param('list_type');
-    my $list_name   = $c->req->param('list_name');
 
     if ($list_id) 
     {
@@ -271,26 +302,47 @@ sub _pca_list_genotype_data {
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
-	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	    my @trials_names = @{$list->elements};
-	
-	    my @trials_ids;
+	    $self->get_trials_list_ids($c);
+	    my $trials_ids = $c->stash->{trials_ids};
 
-	    foreach my $t_name (@trials_names) 
-	    {
-		my $trial_id = $c->model("solGS::solGS")
-		    ->project_details_by_name($t_name)
-		    ->first
-		    ->project_id;
-		
-		push @trials_ids, $trial_id;
-	    }
-
-	    $c->stash->{pops_ids_list} = \@trials_ids;
+	    $c->stash->{pops_ids_list} = $trials_ids;
 	    $self->_process_trials_details($c);
 	}
     }
 
+}
+
+
+sub get_trials_list_ids {
+    my ($self, $c) = @_;
+
+    my $list_id = $c->stash->{list_id};
+    my $list_type = $c->stash->{list_type};
+
+    if ($list_type =~ /trials/)
+    {
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	my @trials_names = @{$list->elements};
+
+	my $list_type = $list->type();
+
+	print STDERR "\n list type: $list_type\n";
+	
+	my @trials_ids;
+
+	foreach my $t_name (@trials_names) 
+	{
+	    my $trial_id = $c->model("solGS::solGS")
+		->project_details_by_name($t_name)
+		->first
+		->project_id;
+		
+	    push @trials_ids, $trial_id;
+	}
+
+	 $c->stash->{trials_ids} = \@trials_ids;
+    }   
+    
 }
 
 

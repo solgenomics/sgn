@@ -14,7 +14,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
+$pop_id => undef
+
 </%args>
+
+<%perl>
+
+my $list_id = $pop_id if $pop_id =~ /uploaded/;
+$pop_id = undef if $list_id;
+
+</%perl>
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.pca"] &>
@@ -69,5 +78,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <div id="pca_canvas"></div>
 <div id="pca_plot"></div>
   <div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942">
-    
+    <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
+    <input type="hidden"  id="list_id" value="<% $list_id %>" />
   </div>
