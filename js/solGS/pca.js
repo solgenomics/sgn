@@ -48,11 +48,16 @@ function checkPcaResult () {
     var listId = jQuery('#list_id').val();
   
     var popId = solGS.getPopulationDetails();
-   
+    
+    var comboPopsId = jQuery('#combo_pops_id').val();
+    console.log('combo ' + comboPopsId)
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: {'list_id': listId, 'training_pop_id' : popId.training_pop_id, 'selection_pop_id': popId.selection_pop_id},
+	data: {'list_id': listId,
+	       'combo_pops_id' : comboPopsId,
+	       'training_pop_id' : popId.training_pop_id,
+	       'selection_pop_id': popId.selection_pop_id},
         url: '/pca/check/result/',
         success: function(response) {
             if (response.result) {
@@ -60,7 +65,8 @@ function checkPcaResult () {
 		if (response.list_id) {		    
 		    setListId(response.list_id);
 		}
-		
+		console.log('calling pcaResult combo id ' + response.combo_pops_id)
+		console.log('calling pcaResult result ' + response.result)
 		pcaResult();
 	    } else { 
 		jQuery("#run_pca").show();	
@@ -156,7 +162,7 @@ function pcaResult () {
     if (listId) {
 	popId['training_pop_id'] = 'uploaded_' + listId;
     }
-   
+  
     var listName;
     var listType;
     
@@ -176,6 +182,7 @@ function pcaResult () {
         dataType: 'json',
         data: {'training_pop_id': popId.training_pop_id,
 	       'selection_pop_id': popId.selection_pop_id,
+	       'combo_pops_id': popId.combo_pops_id,
 	       'list_id': listId, 
 	       'list_name': listName, 
 	       'list_type': listType,

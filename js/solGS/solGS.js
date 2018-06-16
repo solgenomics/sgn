@@ -794,33 +794,32 @@ solGS.getTraitDetails = function (traitId) {
 
 solGS.getPopulationDetails = function () {
 
-    var populationId   = jQuery("#population_id").val();
-    var populationName = jQuery("#population_name").val();
-    
-    if (!populationId) {
-	populationId   = jQuery("#training_pop_id").val();
-	populationName = jQuery("#training_pop_name").val();
+    var trainingPopId   = jQuery("#population_id").val();
+    var trainingPopName = jQuery("#population_name").val();
+
+    if (!trainingPopId) {
+	trainingPopId   = jQuery("#training_pop_id").val();
+	trainingPopName = jQuery("#training_pop_name").val();
     }
    
     var selectionPopId   = jQuery("#selection_pop_id").val();
     var selectionPopName = jQuery("#selection_pop_name").val();
 
-    if (!populationId) {       
-        populationId   = jQuery("#model_id").val();
-        populationName = jQuery("#model_name").val();
+    if (!trainingPopId) {       
+        trainingPopId  = jQuery("#model_id").val();
+        traininPopName = jQuery("#model_name").val();
     }
-
-    if (!populationId) {       
-        populationId = jQuery("#combo_pops_id").val();
-    }
-   
+     
+    var  comboPopsId = jQuery("#combo_pops_id").val();
+       
     return {
-	    'training_pop_id'   : populationId,
-            'population_name'   : populationName,
-	    'training_pop_name' : populationName,
-	    'selection_pop_id'  : selectionPopId,
-	    'selection_pop_name': selectionPopName,
-           };        
+	'training_pop_id'   : trainingPopId,
+        'population_name'   : trainingPopName,
+	'training_pop_name' : trainingPopName,
+	'selection_pop_id'  : selectionPopId,
+	'selection_pop_name': selectionPopName,
+	'combo_pops_id'     : comboPopsId,
+    };        
 }
 
 //executes two functions alternately

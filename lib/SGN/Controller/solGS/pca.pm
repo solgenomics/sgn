@@ -19,6 +19,14 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
     my ($self, $c, $id) = @_;
 
     $c->stash->{pop_id} = $id;
+
+    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $id); 
+    my $combo_pops_list = $c->stash->{combined_pops_list};
+
+    if ($combo_pops_list) 
+    {
+	$c->stash->{data_set_type} = 'combined_populations';	
+    }
     
     $c->stash->{template} = '/pca/analysis.mas';
 
@@ -31,16 +39,21 @@ sub check_result :Path('/pca/check/result/') Args() {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $list_id          = $c->req->param('list_id');
- 
+    my $combo_pops_id    = $c->req->param('combo_pops_id');
     my $pop_id;
-    
-    if ($c->req->referer =~ /solgs\/selection\//)
+
+    my $referer = $c->req->referer;
+  
+    if ($referer =~ /solgs\/selection\//)
     {
-	my @pops_ids = ($training_pop_id, $selection_pop_id);
-	$c->stash->{pops_ids_list} = \@pops_ids;
-	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	$pop_id = $c->stash->{combo_pops_id};
+	if ($training_pop_id && $selection_pop_id) 
+	{
+	    my @pops_ids = ($training_pop_id, $selection_pop_id);
+	    $c->stash->{pops_ids_list} = \@pops_ids;
+	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+	    $pop_id = $c->stash->{combo_pops_id};
+	}
     } 
     elsif ($list_id)
     {
@@ -65,23 +78,29 @@ sub check_result :Path('/pca/check/result/') Args() {
 	    $pop_id = $c->stash->{combo_pops_id};
 	}	
     }
+    elsif ($referer =~ /pca\/analysis\// && $combo_pops_id)
+    {
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	$c->stash->{pop_id} = $combo_pops_id;
+	$pop_id = $combo_pops_id;
+    }
     else 
     {
 	$c->stash->{pop_id} = $training_pop_id;
 	$pop_id = $training_pop_id;	
-     }
+    }
 
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
- 
     my $ret->{result} = undef;
    
     if (-s $pca_scores_file && $pop_id =~ /\d+/) 
     {
 	$ret->{result} = 1;
 	$ret->{list_id} = $list_id;
-#	$ret->{data_set_type} = $data_set_type;
-    
+	$ret->{combo_pops_id} = $combo_pops_id;
+#	$ret->{data_set_type} = $data_set_type;    
     }  
     
 
@@ -98,19 +117,35 @@ sub pca_result :Path('/pca/result/') Args() {
     
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
+    my $combo_pops_id    = $c->req->param('combo_pops_id');
 
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
     
     my $pop_id;
-    if ($c->req->referer =~ /solgs\/selection\//)
+    my $referer = $c->req->referer;
+
+    if ($referer =~ /solgs\/selection\//)
     {
 	my @pops_ids = ($training_pop_id, $selection_pop_id);
 	$c->stash->{pops_ids_list} = \@pops_ids;
 	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	$pop_id = $c->stash->{combo_pops_id};
+	$combo_pops_id =  $c->stash->{combo_pops_id};
+	$c->stash->{pop_id} =  $combo_pops_id;
+	$pop_id = $combo_pops_id;
+
+	my $ids = join(',', @pops_ids);
+	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
+        $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $entry);
+    }
+    elsif ($referer =~ /pca\/analysis\// && $combo_pops_id)
+    {
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	$c->stash->{pop_id} = $combo_pops_id;
+	$pop_id = $combo_pops_id;
+	$c->stash->{data_set_type} = 'combined_populations';
     } 
     else 
     {
@@ -277,7 +312,7 @@ sub _pca_list_genotype_data {
     my $list_id = $c->stash->{list_id};
     my $list_type = $c->stash->{list_type};
     my $pop_id = $c->stash->{pop_id};
-
+    my $data_set_type = $c->stash->{data_set_type};
     my $referer = $c->req->referer;
     my $geno_file;
     
@@ -294,6 +329,15 @@ sub _pca_list_genotype_data {
 
 	my @pops_ids = ($training_pop_id, $selection_pop_id);
 	$c->stash->{pops_ids_list} = \@pops_ids;
+
+	$self->_process_trials_details($c);
+    }
+    elsif ($referer =~ /pca\/analysis\// && $data_set_type =~ 'combined_populations')
+    {
+	my $combo_pops_id = $c->stash->{combo_pops_id};
+    	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	#$c->stash->{pop_id} = $combo_pops_id;
 
 	$self->_process_trials_details($c);
     }	   
