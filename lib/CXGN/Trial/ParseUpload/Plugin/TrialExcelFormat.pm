@@ -446,7 +446,9 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,9)) {
         $seedlot_name = $worksheet->get_cell($row, 9)->value();
     }
-    $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    if ($seedlot_name){
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    }
     if ($worksheet->get_cell($row,10)) {
         $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
     }
