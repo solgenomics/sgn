@@ -40,7 +40,7 @@ sub check_result :Path('/pca/check/result/') Args() {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $list_id          = $c->req->param('list_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $pop_id;
+    my $file_id;
 
     my $referer = $c->req->referer;
   
@@ -52,13 +52,13 @@ sub check_result :Path('/pca/check/result/') Args() {
 	    $c->stash->{pops_ids_list} = \@pops_ids;
 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
 	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	    $pop_id = $c->stash->{combo_pops_id};
+	    $file_id = $c->stash->{combo_pops_id};
 	}
     } 
     elsif ($list_id)
     {
 	$c->stash->{pop_id} = $list_id;
-	$pop_id = $list_id;
+	$file_id = $list_id;
 	
 	$list_id =~ s/uploaded_//;		   	
 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
@@ -75,27 +75,28 @@ sub check_result :Path('/pca/check/result/') Args() {
 	    $c->stash->{pops_ids_list} = $trials_ids;
 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
 	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	    $pop_id = $c->stash->{combo_pops_id};
+	    $file_id = $c->stash->{combo_pops_id};
 	}	
     }
     elsif ($referer =~ /pca\/analysis\// && $combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	$c->stash->{pop_id} = $combo_pops_id;
-	$pop_id = $combo_pops_id;
+	#$c->stash->{pop_id} = $combo_pops_id;
+	$file_id = $combo_pops_id;
     }
     else 
     {
 	$c->stash->{pop_id} = $training_pop_id;
-	$pop_id = $training_pop_id;	
+	$file_id = $training_pop_id;	
     }
 
+    $c->stash->{file_id} = $file_id;
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
     my $ret->{result} = undef;
    
-    if (-s $pca_scores_file && $pop_id =~ /\d+/) 
+    if (-s $pca_scores_file && $file_id =~ /\d+/) 
     {
 	$ret->{result} = 1;
 	$ret->{list_id} = $list_id;
@@ -124,6 +125,7 @@ sub pca_result :Path('/pca/result/') Args() {
     my $list_name   = $c->req->param('list_name');
     
     my $pop_id;
+    my $file_id;
     my $referer = $c->req->referer;
 
     if ($referer =~ /solgs\/selection\//)
@@ -133,6 +135,7 @@ sub pca_result :Path('/pca/result/') Args() {
 	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
 	$combo_pops_id =  $c->stash->{combo_pops_id};
 	$c->stash->{pop_id} =  $combo_pops_id;
+	$file_id = $combo_pops_id;
 	$pop_id = $combo_pops_id;
 
 	my $ids = join(',', @pops_ids);
@@ -144,13 +147,15 @@ sub pca_result :Path('/pca/result/') Args() {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	$c->stash->{pop_id} = $combo_pops_id;
+	$file_id = $combo_pops_id;
 	$pop_id = $combo_pops_id;
 	$c->stash->{data_set_type} = 'combined_populations';
     } 
     else 
     {
 	$c->stash->{pop_id} = $training_pop_id;
-	$pop_id = $training_pop_id;
+	$file_id = $training_pop_id;
+	$pop_id  = $training_pop_id;
     }
 
     $c->stash->{training_pop_id}  = $training_pop_id;
@@ -162,9 +167,11 @@ sub pca_result :Path('/pca/result/') Args() {
 	$c->stash->{list_id}       = $list_id;
 	$c->stash->{list_type}     = $list_type;
     }
- 
+   
     $self->create_pca_genotype_data($c);
-
+ 
+    $c->stash->{file_id} = $file_id;
+    
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
 
@@ -219,10 +226,10 @@ sub pca_result :Path('/pca/result/') Args() {
 
 
 sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
-    my ($self, $c, $id) = @_;
+    my ($self, $c, $file_id) = @_;
     
     my $pca_dir = $c->stash->{pca_cache_dir};
-    my $pca_file = catfile($pca_dir,  "pca_scores_${id}");
+    my $pca_file = catfile($pca_dir,  "pca_scores_${file_id}");
   
     unless (!-e $pca_file || -s $pca_file <= 1) 
     {
@@ -457,14 +464,13 @@ sub _pca_trial_genotype_data {
 sub pca_scores_file {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{pop_id};
-
+    my $file_id = $c->stash->{file_id};
     my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
-    my $cache_data = {key       => "pca_scores_${pop_id}",
-                      file      => "pca_scores_${pop_id}",,
+    my $cache_data = {key       => "pca_scores_${file_id}",
+                      file      => "pca_scores_${file_id}",,
                       stash_key => 'pca_scores_file'
     };
 
@@ -476,14 +482,13 @@ sub pca_scores_file {
 sub pca_variance_file {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{pop_id};
-
+    my $file_id = $c->stash->{file_id};
     my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
-    my $cache_data = {key       => "pca_variance_${pop_id}",
-                      file      => "pca_variance_${pop_id}",,
+    my $cache_data = {key       => "pca_variance_${file_id}",
+                      file      => "pca_variance_${file_id}",,
                       stash_key => 'pca_variance_file'
     };
 
@@ -495,14 +500,13 @@ sub pca_variance_file {
 sub pca_loadings_file {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{pop_id};
-
+    my $file_id = $c->stash->{file_id};
     my $pca_dir = $c->stash->{pca_cache_dir};
 
     $c->stash->{cache_dir} = $pca_dir;
 
-    my $cache_data = {key       => "pca_loadings_${pop_id}",
-                      file      => "pca_loadings_${pop_id}",,
+    my $cache_data = {key       => "pca_loadings_${file_id}",
+                      file      => "pca_loadings_${file_id}",,
                       stash_key => 'pca_loadings_file'
     };
 
@@ -513,6 +517,8 @@ sub pca_loadings_file {
 
 sub pca_output_files {
     my ($self, $c) = @_;
+
+    my $file_id = $c->stash->{file_id};
      
     $self->pca_scores_file($c);
     $self->pca_loadings_file($c);
@@ -526,9 +532,9 @@ sub pca_output_files {
 			  $c->stash->{combined_pca_data_file},
 	);
      
-    my $pop_id = $c->stash->{pop_id};
+    
     my $tmp_dir = $c->stash->{pca_temp_dir};
-    my $name = "pca_output_files_${pop_id}"; 
+    my $name = "pca_output_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $file_list);
     
@@ -540,9 +546,9 @@ sub pca_output_files {
 sub combined_pca_trials_data_file {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{combo_pops_id};
+    my $file_id = $c->stash->{file_id};
     my $tmp_dir = $c->stash->{pca_temp_dir};
-    my $name = "combined_pca_data_file_${pop_id}"; 
+    my $name = "combined_pca_data_file_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
     
     $c->stash->{combined_pca_data_file} = $tempfile;
@@ -553,9 +559,10 @@ sub combined_pca_trials_data_file {
 sub pca_input_files {
     my ($self, $c) = @_;
           
-    my $pop_id = $c->stash->{pop_id};
+    my $file_id = $c->stash->{file_id};
     my $tmp_dir = $c->stash->{pca_temp_dir};
-    my $name = "pca_input_files_${pop_id}"; 
+    
+    my $name     = "pca_input_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
 
     my $files;
@@ -579,8 +586,9 @@ sub pca_input_files {
 sub run_pca {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{pop_id};
-
+    my $pop_id  = $c->stash->{pop_id};
+    my $file_id = $c->stash->{file_id};
+    
     $self->pca_output_files($c);
     my $output_file = $c->stash->{pca_output_files};
 
@@ -588,9 +596,10 @@ sub run_pca {
     my $input_file = $c->stash->{pca_input_files};
 
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{pca_temp_dir};
+    
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
-    $c->stash->{r_temp_file}  = "pca-${pop_id}";
+    $c->stash->{r_temp_file}  = "pca-${file_id}";
     $c->stash->{r_script}     = 'R/solGS/pca.r';
     
     $c->controller("solGS::solGS")->run_r_script($c);
