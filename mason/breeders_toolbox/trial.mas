@@ -46,6 +46,11 @@ $has_col_and_row_numbers => undef
 $assayed_traits => undef
 $identifier_prefix => 'SGN'
 $main_production_site_url
+$plot_width => undef
+$plot_length => undef
+$field_size => undef
+$field_trial_is_planned_to_be_genotyped => undef
+$field_trial_is_planned_to_cross => undef
 </%args>
 
 
@@ -184,6 +189,69 @@ $main_production_site_url
             </div>
             <div class="col-sm-4">
                 <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                
+                <br/>
+                <table class="table table-bordered table-hover">
+                    <tr><td><b>Field Size</b></td>
+                        <td>
+                            <div id="trial_field_size">
+% if ($field_size) {
+%  print "$field_size ha";
+% } else {
+%  print "<span class='text-warning'>[No Field Size]</span>";
+% }
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr><td><b>Plot Width</b></td>
+                        <td>
+                            <div id="trial_plot_width">
+% if ($plot_width) {
+%  print "$plot_width m";
+% } else {
+%  print "<span class='text-warning'>[No Plot Width]</span>";
+% }
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr><td><b>Plot Length</b></td>
+                        <td>
+                            <div id="trial_plot_length">
+% if ($plot_length) {
+%  print "$plot_length m";
+% } else {
+%  print "<span class='text-warning'>[No Plot Length]</span>";
+% }
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr><td><b>Trial Will Be Genotyped</b></td>
+                        <td>
+                            <div id="trial_will_be_genotyped">
+% if ($field_trial_is_planned_to_be_genotyped) {
+%  print "$field_trial_is_planned_to_be_genotyped";
+% } else {
+%  print "No";
+% }
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr><td><b>Trial Will Be Used For Crosses</b></td>
+                        <td>
+                            <div id="trial_will_be_crossed">
+% if ($field_trial_is_planned_to_cross) {
+%  print "$field_trial_is_planned_to_cross";
+% } else {
+%  print "No";
+% }
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
 
