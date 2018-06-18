@@ -113,6 +113,7 @@
                                         <select class="form-control" id="genotyping_trial_well_input_option">
                                             <option value="xls">I am uploading a plate design I made in Excel</option>
                                             <option value="coordinate">I am uploading a Default Coordinate Android Application plate design</option>
+                                            <option value="coordinate_template">I am uploading a Custom Coordinate Android Application plate design</option>
                                             <option value="design">I need to design a completely new plate</option>
                                         </select>
                                     </div>
@@ -172,6 +173,38 @@
                                                             <label class="col-sm-6 control-label">Select Coordinate CSV File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="genotyping_trial_layout_upload_coordinate" id="genotyping_trial_layout_upload_coordinate" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="genotyping_trial_well_coordinate_template_upload_section" style="display:none">
+                                    <h3>You want to upload a Custom Android Application file.</h3>
+
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="genotyping_trial_layout_upload_coordinate_custom_spreadsheet_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select Coordinate CSV File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="genotyping_trial_layout_upload_coordinate_template" id="genotyping_trial_layout_upload_coordinate_template" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -392,7 +425,7 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>This is for uploading a Coordinate Android Application exported plate layout.</b>
+                    <b>This is for uploading a Default Coordinate Android Application exported plate layout.</b>
                     <br/>
                     <b>File must be a CSV file (.csv)</b>
                     <br />
@@ -449,6 +482,58 @@
     </div>
 </div>
 
+<div class="modal fade" id="genotyping_trial_layout_upload_coordinate_custom_info_format_dialog" name="genotyping_trial_layout_upload_coordinate_custom_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypingTrialCoordinateCustomInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialCoordinateCustomInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading a Custom Coordinate Android Application exported plate layout.</b>
+                    <br/>
+                    <b>File must be a CSV file (.csv)</b>
+                    <br />
+                    (Excel format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>Value</td>
+                                <td>Column</td>
+                                <td>Row</td>
+                                <td>Identification</td>
+                                <td>Person</td>
+                                <td>Date</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>Value (the unique identifier for the sample in the well. e.g. 18DNA00001_A01)</li>
+                        <li>Column (the column position of the sample e.g. 10)</li>
+                        <li>Row (the row position of the sample e.g. A)</li>
+                        <li>Identification (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name.)</li>
+                        <li>Person (the name of the person who plated the individual sample. can be any name.)</li>
+                        <li>Date (should be YYYY-MM-DD)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_coordinate_custom_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 jQuery(document).ready(function(){
 
@@ -460,25 +545,43 @@ jQuery(document).ready(function(){
         jQuery('#genotyping_trial_layout_upload_coordinate_info_format_dialog').modal('show');
     });
 
+    jQuery('#genotyping_trial_layout_upload_coordinate_custom_spreadsheet_info_format').click(function(){
+        jQuery('#genotyping_trial_layout_upload_coordinate_custom_info_format_dialog').modal('show');
+    });
+
     jQuery('#genotyping_trial_well_input_option').change(function(){
         if (jQuery(this).val() == 'xls'){
             jQuery("#genotyping_trial_well_upload_section").show();
             jQuery("#genotyping_trial_well_design_section").hide();
             jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
             jQuery('#genotyping_trial_layout_upload_coordinate').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate_template').val('');
         }
         if(jQuery(this).val() == 'coordinate'){
             jQuery('#genotyping_trial_well_coordinate_upload_section').show();
             jQuery("#genotyping_trial_well_design_section").hide();
             jQuery("#genotyping_trial_well_upload_section").hide();
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
             jQuery('#genotyping_trial_layout_upload').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate_template').val('');
+        }
+        if(jQuery(this).val() == 'coordinate_template'){
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').show();
+            jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
+            jQuery("#genotyping_trial_well_design_section").hide();
+            jQuery("#genotyping_trial_well_upload_section").hide();
+            jQuery('#genotyping_trial_layout_upload').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate').val('');
         }
         if (jQuery(this).val() == 'design' ){
             jQuery("#genotyping_trial_well_design_section").show();
             jQuery("#genotyping_trial_well_upload_section").hide();
             jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
             jQuery('#genotyping_trial_layout_upload_coordinate').val('');
             jQuery('#genotyping_trial_layout_upload').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate_template').val('');
         }
     });
 
