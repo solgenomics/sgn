@@ -6,6 +6,7 @@ use CXGN::List::Validate;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use Scalar::Util qw(looks_like_number);
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -215,6 +216,10 @@ sub _parse_with_plugin {
         }
 
         $col_number = sprintf( "%02d", $col_number );
+        my @letters = 'A' .. 'ZZ';
+        if (looks_like_number($row_number)){
+            $row_number = $letters[$row_number - 1];
+        }
 
         $design{$key}->{date} = $date;
         $design{$key}->{sample_id} = $sample_id;
