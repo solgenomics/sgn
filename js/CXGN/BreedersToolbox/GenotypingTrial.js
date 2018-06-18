@@ -76,7 +76,12 @@ jQuery(document).ready(function ($) {
         if (uploadFileXLS === ''){
             var uploadFileCoordinate = jQuery("#genotyping_trial_layout_upload_coordinate").val();
             if (uploadFileCoordinate === ''){
-                submit_genotype_trial_create(plate_data);
+                var uploadFileCoordinateCustom = jQuery("#genotyping_trial_layout_upload_coordinate_template").val();
+                if (uploadFileCoordinateCustom === ''){
+                    submit_genotype_trial_create(plate_data);
+                } else {
+                    submit_genotype_trial_upload(plate_data);
+                }
             } else {
                 submit_genotype_trial_upload(plate_data);
             }
