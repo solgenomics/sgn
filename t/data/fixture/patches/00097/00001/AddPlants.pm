@@ -43,11 +43,6 @@ extends 'CXGN::Metadata::Dbpatch';
 has '+description' => ( default => <<'' );
 This patch adds plants to test_trial.
 
-has '+prereq' => (
-    default => sub {
-        ['MyPrevPatch'],
-    },
-  );
 
 sub patch {
     my $self = shift;
@@ -61,11 +56,11 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
     my $coderef = sub {
-        my $trial_id = '137'
+        my $trial_id = '137';
         my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
         my $number_of_plants = 2;
 
-        $trial->create_plant_entries($number_of_plants);
+        $trial->create_plant_entities($number_of_plants);
 
     };
 
