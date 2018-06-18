@@ -47,8 +47,12 @@ sub get_breeding_programs_by_trial {
     my $trial_id = shift;
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
+    my $breeding_program_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
-    my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search( { 'subject_project_id' => $trial_id } );
+    my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search({
+        'subject_project_id' => $trial_id,
+        'type_id' => $breeding_program_rel_cvterm_id
+    });
 
     my $trial_row = $trial_rs -> first();
     my $rs;
