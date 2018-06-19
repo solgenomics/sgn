@@ -20,7 +20,6 @@ use Try::Tiny;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
-
 use CXGN::BrAPI;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -48,7 +47,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $c = shift;
 	my $version = shift;
 	my @status;
-	
+
 	my $page = $c->req->param("page") || 0;
 	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 	my $session_token = $c->req->param("access_token");
@@ -82,7 +81,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
 	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range');
 	$c->stash->{session_token} = $session_token;
-	
+
 	if (defined $c->request->data){
 		my %allParams = (%{$c->request->data}, %{$c->req->params});
 		$c->stash->{clean_inputs} = _clean_inputs(\%allParams);
@@ -1033,7 +1032,7 @@ sub germplasm_pedigree_GET {
  Usage: To retrieve progeny (direct descendant) information for a single germplasm
  Desc:
  Return JSON example:
- { 
+ {
     "metadata" : {
         "pagination": {},
         "status": [],
@@ -1045,10 +1044,10 @@ sub germplasm_pedigree_GET {
        "data" : [{
           "progenyGermplasmDbId": "403",
           "parentType": "FEMALE"
-       }, { 
+       }, {
           "progenyGermplasmDbId": "402",
           "parentType": "MALE"
-       }, { 
+       }, {
           "progenyGermplasmDbId": "405",
           "parentType": "SELF"
        }]
@@ -2021,6 +2020,7 @@ sub traits_list_GET {
         trait_ids => $clean_inputs->{traitDbIds},
         names => $clean_inputs->{names}
     });
+    print STDERR "Just finished handling the traits request\n";
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2437,11 +2437,11 @@ Desc:
 Return JSON example:
 {
     "metadata": {
-        "pagination" : { 
-            "pageSize":0, 
-            "currentPage":0, 
-            "totalCount":0, 
-            "totalPages":0 
+        "pagination" : {
+            "pageSize":0,
+            "currentPage":0,
+            "totalCount":0,
+            "totalPages":0
         },
         "status" : [],
         "datafiles": []
@@ -2507,6 +2507,158 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     $c->stash->{rest} = { success => 1 };
 
 
+}
+
+=head2 brapi/v1/observations
+
+ Usage: To store observations
+ Desc:
+ Request body example:
+ {
+  "observations": [
+    {
+      "collector": "string", //optional
+      "observationDbId": "string", // if populated then update existing otherwise add new
+      "observationTimeStamp": "2018-06-19T18:59:45.751Z", //optional
+      "observationUnitDbId": "string", //required
+      "observationVariableDbId": "string", //required
+      "value": "string" //required
+    }
+  ]
+}
+ Response JSON example:
+ {
+  "metadata": {
+    "datafiles": [],
+    "pagination": {
+      "currentPage": 0,
+      "pageSize": 1000,
+      "totalCount": 2,
+      "totalPages": 1
+    },
+    "status": []
+  },
+  "result": {
+    "data": [
+      {
+        "germplasmDbId": "8383",
+        "germplasmName": "Pahang",
+        "observationDbId": "12345",
+        "observationLevel": "plot",
+        "observationTimestamp": "2015-11-05T15:12:56+01:00",
+        "observationUnitDbId": "11",
+        "observationUnitName": "ZIPA_68_Ibadan_2014",
+        "observationVariableDbId": "CO_334:0100632",
+        "observationVariableName": "Yield",
+        "operator": "Jane Doe",
+        "studyDbId": "35",
+        "uploadedBy": "dbUserId",
+        "value": "5"
+      }
+    ]
+  }
+}
+ Args:
+ Side Effects:
+
+=cut
+
+sub observations : Chained('brapi') PathPart('observations') Args(0) : ActionClass('REST') { }
+
+sub observations_POST {
+	my $self = shift;
+	my $c = shift;
+    my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_store({
+        observations => $clean_inputs->{observations}
+    });
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observations_GET {
+	my $self = shift;
+	my $c = shift;
+}
+
+=head2 brapi/v1/observations-search
+
+ Usage: To retrieve observations
+ Desc:
+ Request body example:
+ {
+    "collector": ["string","string"], //optional
+    "observationDbId": ["string","string"], //optional
+    "observationUnitDbId": ["string","string"], //optional
+    "observationVariableDbId": ["string","string"] //optional
+}
+ Response JSON example:
+ {
+  "metadata": {
+    "datafiles": [],
+    "pagination": {
+      "currentPage": 0,
+      "pageSize": 1000,
+      "totalCount": 2,
+      "totalPages": 1
+    },
+    "status": []
+  },
+  "result": {
+    "data": [
+      {
+        "germplasmDbId": "8383",
+        "germplasmName": "Pahang",
+        "observationDbId": "12345",
+        "observationLevel": "plot",
+        "observationTimestamp": "2015-11-05T15:12:56+01:00",
+        "observationUnitDbId": "11",
+        "observationUnitName": "ZIPA_68_Ibadan_2014",
+        "observationVariableDbId": "CO_334:0100632",
+        "observationVariableName": "Yield",
+        "operator": "Jane Doe",
+        "studyDbId": "35",
+        "uploadedBy": "dbUserId",
+        "value": "5"
+      }
+    ]
+  }
+}
+ Args:
+ Side Effects:
+
+=cut
+
+sub observations_search  : Chained('brapi') PathPart('observations-search') Args(0) : ActionClass('REST') { }
+
+sub observations_search_POST {
+	my $self = shift;
+	my $c = shift;
+	observations_search_process($self, $c);
+}
+
+sub observations_search_GET {
+	my $self = shift;
+	my $c = shift;
+	observations_search_process($self, $c);
+}
+
+sub observations_search_process {
+	my $self = shift;
+	my $c = shift;
+	my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_search({
+        collectors => $clean_inputs->{collectors},
+        observationDbIds => $clean_inputs->{observationDbIds},
+        observationUnitDbIds => $clean_inputs->{observationUnitDbIds},
+        observationVariableDbIds => $clean_inputs->{observationVariableDbIds}
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
