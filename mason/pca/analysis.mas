@@ -51,7 +51,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
-    title       => "Select a dataset and analyze its population structure -- principal component analysis (PCA)",
+    title       => "Select a list of accessions or trials and analyze population structure -- principal component analysis (PCA)",
   &>
 
  
@@ -68,7 +68,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
     
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/solgs/breeder_search" style="color:#ffffff">Create a new dataset</a>  
+      <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list</a>  
     </div>
 
     <br>
