@@ -258,7 +258,7 @@ sub get_accessions {
     my $self = shift; 
     my $program_id = $self->get_program_id;
     my $dbh = $self->schema->storage()->dbh();
-   
+
     my $q = "SELECT distinct acc.stock_id, acc.uniquename FROM stock AS acc 
              JOIN  stock_relationship ON object_id = acc.stock_id 
              JOIN  stock AS plot ON plot.stock_id = stock_relationship.subject_id
@@ -267,9 +267,9 @@ sub get_accessions {
              JOIN project trial ON trial.project_id = nd_experiment_project.project_id
              JOIN project_relationship ON project_relationship.subject_project_id = trial.project_id  
              JOIN project program ON program.project_id = project_relationship.object_project_id
-             WHERE program.project_id = ?;";
+             WHERE program.project_id = ? AND acc.type_id = ?;";
     $q = $dbh->prepare($q);
-    $q->execute($program_id);
+    $q->execute($program_id, $self->get_accession_cvterm_id);
     
     my @accessions;
     while (my ( $acc_id, $acc_name ) = $q->fetchrow_array()) {
