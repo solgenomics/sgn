@@ -35,7 +35,7 @@ sub BUILD {
 	);
     $self->set_project_object($row);
     if (!$row) {
-	die "The breeding program  ".$self->get_project_id()." does not exist";
+	die "The breeding program  ".$self->get_program_id()." does not exist";
     }
 }
 

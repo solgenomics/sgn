@@ -66,18 +66,14 @@ var draw_histogram = stackedObservationPhenotypeHistogram.draw;
 
 jQuery(document).ready(function () {
 
-    jQuery('#program_traits_assayed_onswitch').click( function() {
-
       ///print the phenotype summary dataTable 
       ///
       jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( { 
         'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
       });
      /// 
-      trait_summary_hist_display_change();
+     trait_summary_hist_display_change("<% $program_id %>");
 
-});
-    
     ///clicking on the histogram glyph from the dataTable 
     /// scrolls down to the histogram div
     ///
@@ -96,9 +92,9 @@ jQuery(document).ready(function () {
 
 ///
 ///
-function trait_summary_hist_display_change() {
+function trait_summary_hist_display_change(program_id) {
     jQuery.ajax ( {
-        url : '/ajax/breeders/program/'+ <% $program_id %> + '/traits_assayed',
+        url : '/ajax/breeders/program/'+ program_id + '/traits_assayed',
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
         },
@@ -112,13 +108,13 @@ function trait_summary_hist_display_change() {
                 traits_assayed_html = traits_assayed_html +"</select>";
                 jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
                 jQuery("#traits_assayed_dropdown>select").change(function(){
-                 trait_summary_hist_change(this.value);
+                 trait_summary_hist_change(program_id, this.value);
                 });
 
                 jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
                 jQuery.ajax( {
-                    url : '/ajax/breeders/program/'+ <% $program_id %> +'/trait_phenotypes/?trait='+jQuery("#program_summary_hist_dropdown").val(),
+                    url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+jQuery("#program_summary_hist_dropdown").val(),
                     type: 'POST',
                     success: function(response){
                         jQuery("#working_modal").modal("hide");
@@ -150,12 +146,12 @@ function trait_summary_hist_display_change() {
     });
 }
 
-function trait_summary_hist_change(value) {
+function trait_summary_hist_change(program_id, value) {
     jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
 
     jQuery("#program_summary_hist_dropdown").val(value);
     jQuery.ajax( {
-        url : '/ajax/breeders/program/'+ <% $program_id %> +'/trait_phenotypes/?trait='+value+'',
+        url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+value+'',
         type: 'POST',
         beforeSend: function() {
             jQuery("#working_modal").modal("show");

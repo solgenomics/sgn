@@ -181,7 +181,7 @@ sub trait_phenotypes : Chained('ajax_breeding_program') PathPart('trait_phenotyp
     my $trait = $c->req->param('trait');
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
-        search_type => "Native",
+        search_type => "MaterializedViewTable",
         data_level => $display,
         trait_list=> [$trait],
         trial_list => \@trial_ids

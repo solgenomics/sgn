@@ -79,7 +79,7 @@ my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
 
  </&>
 
- <&| /page/info_section.mas, id=>"program_trials", title => "Trials" , collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+ <&| /page/info_section.mas, id=>"program_trials", title => "Trials" , collapsible=>1, collapsed=>0, hide_if_empty=>1 &>
     
     <& /breeders_toolbox/program/trials.mas, program_id => 54 &>
       
@@ -87,7 +87,7 @@ my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
 
 
 
- <&| /page/info_section.mas, id=>"program_traits_assayed", title => "Traits assayed" , collapsible=>1, collapsed=>1, hide_ixsf_empty=>1 &>
+ <&| /page/info_section.mas, id=>"program_traits_assayed", title => "Traits assayed" , collapsible=>1, collapsed=>0, hide_ixsf_empty=>1 &>
 
   <& /breeders_toolbox/program/traits.mas, program_id => 54  &>
 
