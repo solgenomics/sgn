@@ -1558,12 +1558,14 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $result = $trial->get_crosses_in_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>},
+        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_type,
         qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
-        qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type,
+        qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>},
         qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
-        qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>}];
+        qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>},
+        qq{<a href = "/stock/$female_plant_id/view">$female_plant_name</a>},
+        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},];
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -1626,7 +1628,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
     #print STDERR Dumper(\@items);
     my @trait_ids = ($trait_id);
-    
+
     my $layout = $c->stash->{trial_layout};
     my $design_type = $layout->get_design_type();
 
@@ -1820,11 +1822,11 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
 
   #print STDERR Dumper($stockref);
   print "$plot_name and $plot_id and $image_ids\n";
-  
+
   my $image_html     = "";
   my $m_image_html   = "";
   my $count;
-  my @more_is; 
+  my @more_is;
 
   if ($images && !$image_objects) {
     my @image_object_list = map { SGN::Image->new( $dbh , $_ ) }  @$images ;
@@ -1841,8 +1843,8 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
       my $image_img  = $image_ob->get_image_url("medium");
       my $small_image = $image_ob->get_image_url("thumbnail");
       my $image_page  = "/image/view/$image_id";
-      
-      my $colorbox = 
+
+      my $colorbox =
         qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
       my $fhtml =
         qq|<tr><td width=120>|
@@ -1877,7 +1879,7 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
   				    'abstract_optional_show', #< don't use the default button-like style
   				   );
   }
- 
+
   $c->stash->{rest} = { image_html => $image_html};
 }
 
