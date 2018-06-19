@@ -93,13 +93,13 @@ sub search {
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             push @brapi_observations, {
-                observationDbId => $_->{phenotype_id},
-                observationVariableDbId => $_->{trait_id},
+                observationDbId => qq|$_->{phenotype_id}|,
+                observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimestamp => $_->{timestamp},
+                observationTimeStamp => $_->{timestamp},
                 season => $obs_unit->{year},
                 collector => $_->{operator},
-                value => $_->{value},
+                value => qq|$_->{value}|,
             };
         }
         my @brapi_treatments;
@@ -124,7 +124,7 @@ sub search {
             germplasmName => $obs_unit->{germplasm_uniquename},
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            studyLocationDbId => $obs_unit->{trial_location_id},
+            studyLocationDbId => qq|$obs_unit->{trial_location_id}|,
             studyLocation => $obs_unit->{trial_location_name},
             programName => $obs_unit->{breeding_program_name},
             X => $obs_unit->{obsunit_col_number},
