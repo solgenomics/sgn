@@ -23,7 +23,7 @@ my $program_id   = $program->get_program_id;
     <& /breeders_toolbox/program/trials.mas, program_id => $program_id &>
 </&>
 
-<&| /page/info_section.mas, id=>"program_accessions", title=>"Accessions", collapsible=>1, collapsed=>0, hide_if_empty=>1 &>
+<&| /page/info_section.mas, id=>"program_accessions", title=>"Accessions", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
   <& /breeders_toolbox/program/program_accessions.mas, program_id => $program_id &>
 </&>
 

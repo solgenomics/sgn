@@ -247,7 +247,7 @@ sub get_years {
 
  Usage: $self->get_accessions
  Desc:
- Ret: list of BCS Stock object rows 
+ Ret: list of stock IDs
  Args:
  Side Effects:
  Example:
@@ -258,7 +258,7 @@ sub get_accessions {
     my $self = shift; 
     my $program_id = $self->get_program_id;
     my $dbh = $self->schema->storage()->dbh();
-    print STDERR "*********GETTING ACCESSIONS FRO PROGRAM $program_id\n\n";
+   
     my $q = "SELECT distinct acc.stock_id, acc.uniquename FROM stock AS acc 
              JOIN  stock_relationship ON object_id = acc.stock_id 
              JOIN  stock AS plot ON plot.stock_id = stock_relationship.subject_id
