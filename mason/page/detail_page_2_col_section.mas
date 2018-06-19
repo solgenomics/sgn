@@ -353,33 +353,33 @@ $referer => undef
                                         </div>
 
                                         <table class="table table-hover table-bordered">
-                                            <tr><td><b>Plot Width</b></td>
+                                            <tr><td><b>Plot Width (m)</b></td>
                                                 <td>
                                                     <div id="trial_description">
 % if ($plot_width) {
-%  print "$plot_width m";
+%  print "$plot_width";
 % } else {
 %  print "<span class='text-default'>[No Plot Width]</span>";
 % }
                                                     </div>
                                                 </td>
                                             </tr>
-                                            <tr><td><b>Plot Length</b></td>
+                                            <tr><td><b>Plot Length (m)</b></td>
                                                 <td>
                                                     <div id="trial_description">
 % if ($plot_length) {
-%  print "$plot_length m";
+%  print "$plot_length";
 % } else {
 %  print "<span class='text-default'>[No Plot Length]</span>";
 % }
                                                     </div>
                                                 </td>
                                             </tr>
-                                            <tr><td><b>Field Size</b></td>
+                                            <tr><td><b>Field Size (ha)</b></td>
                                                 <td>
                                                     <div id="trial_description">
 % if ($field_size) {
-%  print "$field_size ha";
+%  print "$field_size";
 % } else {
 %  print "<span class='text-default'>[No Field Size]</span>";
 % }

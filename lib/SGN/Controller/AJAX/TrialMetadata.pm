@@ -210,6 +210,7 @@ sub trial_details_POST  {
     }
 
     # set each new detail that is defined
+    #print STDERR Dumper $details;
     eval {
       if ($details->{name}) { $trial->set_name($details->{name}); }
       if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
@@ -225,6 +226,11 @@ sub trial_details_POST  {
         else { $trial->set_harvest_date($details->{harvest_date}); }
       }
       if ($details->{description}) { $trial->set_description($details->{description}); }
+      if ($details->{field_size}) { $trial->set_field_size($details->{field_size}); }
+      if ($details->{plot_width}) { $trial->set_plot_width($details->{plot_width}); }
+      if ($details->{plot_length}) { $trial->set_plot_length($details->{plot_length}); }
+      if ($details->{plan_to_genotype}) { $trial->set_field_trial_is_planned_to_be_genotyped($details->{plan_to_genotype}); }
+      if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
     };
 
     if ($@) {
