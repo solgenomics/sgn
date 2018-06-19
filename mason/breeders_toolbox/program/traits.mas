@@ -1,6 +1,7 @@
 
 <%args>
 $program_id
+$collapse_phenotypes_section => 1
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
@@ -66,14 +67,19 @@ var draw_histogram = stackedObservationPhenotypeHistogram.draw;
 
 jQuery(document).ready(function () {
 
-      ///print the phenotype summary dataTable 
-      ///
-      jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( { 
+%  if ($collapse_phenotypes_section){
+    jQuery('#program_traits_assayed_onswitch').click( function() {
+        jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( {
+            'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
+        });
+        trait_summary_hist_display_change("<% $program_id %>");
+    });
+%  } else {
+    jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( {
         'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
-      });
-     /// 
-     trait_summary_hist_display_change("<% $program_id %>");
-
+    });
+    trait_summary_hist_display_change("<% $program_id %>");
+%  }
     ///clicking on the histogram glyph from the dataTable 
     /// scrolls down to the histogram div
     ///
