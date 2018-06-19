@@ -4,70 +4,104 @@ $trait_cv_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
 <& /page/page_title.mas, title => "Trait Search" &>
 
-<div class="well well-sm">
 
-    <div class="panel panel-default">
-        <div class="panel-body">
-
-            <div class="container-fluid">
-                <form class="form-horizontal" role="form">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Subset Traits: </label>
-                        <div class="col-sm-9" >
-                            <div id="trait_search_list_select">
-                                [LOADING...]
-                            </div>
-                        </div>
+    <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+        <div id="trait_search_form" class="form-horizontal well">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Select Ontology Name(s): </label>
+                <div class="col-sm-9" >
+                    <div id="trait_search_ontology_select"></div>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Trait Name: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="trait_search_name" placeholder="Search any trait name or piece of name"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Definition: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="trait_search_definition" placeholder="Search any word or piece of definition"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Subset Traits: </label>
+                <div class="col-sm-9" >
+                    <div id="trait_search_list_select">
+                        [LOADING...]
                     </div>
-                </form>
+                </div>
+            </div>
+        </div>
+
+        <center>
+            <button class="btn btn-primary" id="submit_trait_search" />Search</button>
+        </center>
+    </&>
+
+    <&| /page/info_section.mas, title => 'Results', collapsible=>1, collapsed=>0 &>
+
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+
+                    <table id="trait_search_results" width="100%" class="table table-hover table-striped">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Trait ID</th>
+                        <th>Trait Name</th>
+                        <th>Definition</th>
+                    </tr>
+                    </thead>
+                    </table>
+
+                    <button type="button" class="selectAll-dt">Select All</button>
+                    <button type="button" class="deselectAll-dt">Deselect All</button>
+
+                </div>
             </div>
 
+            <div class="panel panel-default">
+                <div class="panel-body">
+
+                    <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
+                    <br>
+                    <p><em><span id="trait_result_count">0</span> trait(s) selected.</em></p>
+                    <div style="text-align:right" id="traits_to_list_menu"></div>
+                    <div id="trait_result_names" style="display: none;"></div>
+                    </&>
+
+                </div>
+            </div>
         </div>
-    </div>
+    </&>
 
-    <div class="panel panel-default">
-        <div class="panel-body">
+    <&| /page/info_section.mas, title => 'Help', collapsible=>1, collapsed=>0 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>Is the trait you are looking for not here?</h2>
 
-            <table id="trait_search_results" width="100%" class="table table-hover table-striped">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Trait ID</th>
-                <th>Trait Name</th>
-                <th>Definition</th>
-            </tr>
-            </thead>
-            </table>
-
-            <button type="button" class="selectAll-dt">Select All</button>
-            <button type="button" class="deselectAll-dt">Deselect All</button>
-
+                    <p>Please submit your new trait <a href="http://submit.rtbbase.org/">using the trait submission form</a>.</p>
+                    <p>To speed up addition of your trait into the database please contact us using the <a href="/contact/form">Contact Form</a>.</p>
+                </div>
+            </div>
         </div>
-    </div>
-
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
-
-    <div class="panel panel-default">
-        <div class="panel-body">
-
-            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
-            <br>
-            <p><em><span id="trait_result_count">0</span> trait(s) selected.</em></p>
-            <div style="text-align:right" id="traits_to_list_menu"></div>
-            <div id="trait_result_names" style="display: none;"></div>
-            </&>
-
-        </div>
-    </div>
+    </&>
 
 </div>
 
 <script>
 
 jQuery(document).ready(function () {
+
+    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id' });
 
     var lo = new CXGN.List();
     jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits'));
@@ -76,12 +110,33 @@ jQuery(document).ready(function () {
         _draw_trait_search_result_table();
     });
 
+    jQuery('#submit_trait_search').click(function(){
+        _draw_trait_search_result_table();
+    });
+
+    jQuery('#trait_search_form').keypress(function(e){
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+             jQuery('#submit_trait_search').click();
+        }
+    });
+
     var trait_table;
     _draw_trait_search_result_table();
 
     function _draw_trait_search_result_table (){
+        var selectedontologies = [];
+        jQuery(document).find('input[name="trait_search_ontology_select_id"]:checked').each(function (i, ob) {
+            selectedontologies.push(jQuery(ob).val());
+        });
+
         trait_table = jQuery('#trait_search_results').DataTable( {
             'destroy': true,
+            'searching' : false,
+            'ordering'  : false,
+            'processing': true,
+            'serverSide': true,
+            'lengthMenu': [10,20,50,100,1000,5000],
             'columnDefs': [ {
                 'orderable': false,
                 'className': 'select-checkbox',
@@ -94,6 +149,9 @@ jQuery(document).ready(function () {
                 'url': '/ajax/search/traits?trait_cv_name=<% $trait_cv_name %>',
                 'data': function(d) {
                     d.trait_search_list_id  = jQuery('#trait_search_list_select_list_select').val();
+                    d.trait_any_name  = jQuery('#trait_search_name').val();
+                    d.trait_definition  = jQuery('#trait_search_definition').val();
+                    d.ontology_db_id = selectedontologies;
                 }
             },
             "order": [[ 1, "asc" ]]

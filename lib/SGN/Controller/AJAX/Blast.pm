@@ -6,7 +6,6 @@ use Moose;
 use Bio::SeqIO;
 use Config::Any;
 use Data::Dumper;
-use Storable qw | nstore retrieve |;
 use Try::Tiny;
 use Tie::UrlEncoder; our %urlencode;
 use File::Temp qw | tempfile |;
@@ -82,7 +81,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 	}
 
     my $seq_count = 1;
-    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
+    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/cluster";
     mkdir $blast_tmp_output if ! -d $blast_tmp_output;
     if ($params->{sequence} =~ /\>/) {
     	$seq_count= $params->{sequence} =~ tr/\>/\>/;
@@ -94,9 +93,9 @@ sub run : Path('/tools/blast/run') Args(0) {
       DIR=> $blast_tmp_output,
     );
 
-    my $jobid = basename($seqfile);
+#    my $jobid = basename($seqfile);
 
-    print STDERR "JOB ID CREATED: $jobid\n";
+#    print STDERR "JOB ID CREATED: $jobid\n";
 
     my $schema = $c->dbic_schema("SGN::Schema");
 
@@ -255,54 +254,48 @@ sub run : Path('/tools/blast/run') Args(0) {
 
 
     my $job;
+    my $jobid;
     eval {
-      $job = CXGN::Tools::Run->run_cluster(
-        @command,
-        {
-          temp_base => $blast_tmp_output,
-          queue => $c->config->{'web_cluster_queue'},
-          working_dir => $blast_tmp_output,
-        
-          # temp_base => $c->config->{'cluster_shared_tempdir'},
-          # queue => $c->config->{'web_cluster_queue'},
-          # working_dir => $c->config->{'cluster_shared_tempdir'},
-
-  		    # don't block and wait if the cluster looks full
-  		    max_cluster_jobs => 1_000_000_000,
-  	    }
-  	  );
+	my $config = { 
+	    backend => $c->config->{backend},
+	    temp_base => $blast_tmp_output,
+	    queue => $c->config->{'web_cluster_queue'},
+	    do_cleanup => 0,
+	    # don't block and wait if the cluster looks full
+	    max_cluster_jobs => 1_000_000_000,
+	    
+	};
+	    
+	$job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);
+	$job->run_cluster(@command);
    
-      print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
+	
 
-      $job->do_not_cleanup(1);
-
-      nstore( $job, $seqfile.".job" ) or die 'could not serialize job object';
-
+   
     };
 
-
-
     if ($@) {
-      print STDERR "An error occurred! $@\n";
-      $c->stash->{rest} = { error => $@ };
+	print STDERR "An error occurred! $@\n";
+	$c->stash->{rest} = { error => $@ };
     }
     else {
-  		# write data in blast.log
-  		my $blast_log_path = $c->config->{blast_log};
-  		my $blast_log_fh;
-  		if (-e $blast_log_path) {
-  			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
-  		} else {
-  			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
-  			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
-  		}
-  		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
-
-
-  		print STDERR "Passing jobid code ".(basename($jobid))."\n";
-  		$c->stash->{rest} = { jobid =>  basename($jobid),
+	# write data in blast.log
+	my $blast_log_path = $c->config->{blast_log};
+	my $blast_log_fh;
+	if (-e $blast_log_path) {
+	    open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
+	} else {
+	    open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
+	    print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
+	}
+	print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
+	
+	
+	print STDERR "Passing jobid code ".$job->jobid()."\n";
+	$c->stash->{rest} = { jobid => $job->jobid(),
   	                      seq_count => $seq_count,
-  		};
+	};
     }
 }
 
@@ -314,11 +307,14 @@ sub check : Path('/tools/blast/check') Args(1) {
 
     # my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
 
-    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    my $cluster_tmp_dir = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
     #my $jobid =~ s/\.\.//g; # prevent hacks
-    my $job = retrieve($blast_tmp_output."/".$jobid.".job");
-    if ( $job->alive ){
+    my $job_file = File::Spec->catfile($cluster_tmp_dir, $jobid, "job");
+
+    my $job = CXGN::Tools::Run->new( { job_file => $job_file} );
+
+    if ( $job->alive()) {
       # my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
 
       sleep(1);
@@ -341,6 +337,8 @@ sub check : Path('/tools/blast/check') Args(1) {
       my $result_file = $self->jobid_to_file($c, $jobid.".out");
 
       my $job_out_file = $job->out_file();
+
+      print STDERR "Job out file = $job_out_file...\n";
       for( 1..10 ) {
   	    uncache($job_out_file);
   	    last if -f $job_out_file;
@@ -366,12 +364,13 @@ sub check : Path('/tools/blast/check') Args(1) {
       # my $t7 = [gettimeofday]; #-------------------------- TIME CHECK
 
       # system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
+      print STDERR "Copying result file to website tempdir...\n";
       copy($job_out_file, $result_file) or die "Can't copy result file '$job_out_file' to $result_file ($!)";
 
       # my $t8 = [gettimeofday]; #-------------------------- TIME CHECK
 
     	#clean up the job tempfiles
-    	$job->cleanup();
+      #	CXGN::Tools::Run->cleanup($jobid);
 
       # my $t9 = [gettimeofday]; #-------------------------- TIME CHECK
 
@@ -425,7 +424,7 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $db_id = $c->req->param('db_id');
 
     my $result_file = $self->jobid_to_file($c, $jobid.".out");
-    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
     # system("ls $blast_tmp_output 2>&1 >/dev/null");
     # system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
@@ -453,7 +452,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     my $db_id = $c->req->param('db_id');
 
     my $file = $self->jobid_to_file($c, $jobid.".out");
-    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
     my $schema = $c->dbic_schema("SGN::Schema");
     my $bdb = $schema->resultset("BlastDb")->find($db_id);
@@ -775,15 +774,6 @@ sub _check_coordinates {
 
 
 
-
-
-
-
-
-
-
-
-
 sub jobid_to_file {
     my $self = shift;
     my $c = shift;
@@ -845,5 +835,6 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
     }
     $c->stash->{rest} = {output_seq => "$output_seqs"};
 }
+
 
 1;

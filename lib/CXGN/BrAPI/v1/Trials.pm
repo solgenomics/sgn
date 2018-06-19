@@ -97,19 +97,19 @@ sub trial_details {
 			my $children = $folder->children();
 			foreach (@$children) {
 				push @folder_studies, {
-					studyDbId=>$_->folder_id,
+					studyDbId=>qq|$_->folder_id|,
 					studyName=>$_->name,
-					locationDbId=>$_->location_id
+					locationDbId=>qq|$_->location_id|
 				};
 			}
 			my %result = (
-				trialDbId=>$folder->folder_id,
+				trialDbId=>qq|$folder->folder_id|,
 				trialName=>$folder->name,
-				programDbId=>$folder->breeding_program->project_id(),
+				programDbId=>qq|$folder->breeding_program->project_id()|,
 				programName=>$folder->breeding_program->name(),
 				startDate=>'',
 				endDate=>'',
-				active=>'',
+				active=>undef,
 				studies=>\@folder_studies,
 				additionalInfo=>\%additional_info
 			);
@@ -154,10 +154,16 @@ sub _get_folders {
                 	}
                 }
         		if ($passes_search){
+                    my $location_name = '';
+                    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find({nd_geolocation_id=>$studies{$study}->{'project location'}});
+                    if ($location){
+                        $location_name = $location->description;
+                    }
         			push @folder_studies, {
-        				studyDbId=>$studies{$study}->{'id'},
+        				studyDbId=>qq|$studies{$study}->{'id'}|,
         				studyName=>$studies{$study}->{'name'},
-        				locationDbId=>$studies{$study}->{'project location'}
+        				#locationDbId=>$studies{$study}->{'project location'},
+                        locationName=>$location_name
         			};
         		}
 			}
@@ -166,13 +172,13 @@ sub _get_folders {
 
     unless (%location_id_list && scalar @folder_studies < 1) { #skip empty folders if call was issued with search paramaters
         push @{$data}, {
-    					trialDbId=>$self->{'id'},
+    					trialDbId=>qq|$self->{'id'}|,
     					trialName=>$self->{'name'},
-    					programDbId=>$self->{'program_id'},
+    					programDbId=>qq|$self->{'program_id'}|,
     					programName=>$self->{'program_name'},
     					startDate=>'',
     					endDate=>'',
-    					active=>'',
+    					active=>undef,
     					studies=>\@folder_studies,
     					additionalInfo=>\%additional_info
     				};

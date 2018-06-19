@@ -106,11 +106,20 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
     my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
     my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
+    my $upload_coordinate_custom = $c->req->upload('genotyping_trial_layout_upload_coordinate_template');
     if ($upload_xls && $upload_coordinate){
         $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
         return;
     }
-    if (!$upload_xls && !$upload_coordinate){
+    if ($upload_xls && $upload_coordinate_custom){
+        $c->stash->{rest} = {error => "Do not upload both XLS and Custom Coordinate file at the same time!" };
+        return;
+    }
+    if ($upload_coordinate && $upload_coordinate_custom){
+        $c->stash->{rest} = {error => "Do not upload both Coordinate file and Custom Coordinate file at the same time!" };
+        return;
+    }
+    if (!$upload_xls && !$upload_coordinate && !$upload_coordinate_custom){
         $c->stash->{rest} = {error => "You must upload a genotyping trial file!" };
         return;
     }
@@ -125,6 +134,10 @@ sub parse_genotype_trial_file_POST : Args(0) {
     if ($upload_coordinate){
         $upload = $upload_coordinate;
         $upload_type = 'GenotypeTrialCoordinate';
+    }
+    if ($upload_coordinate_custom){
+        $upload = $upload_coordinate_custom;
+        $upload_type = 'GenotypeTrialCoordinateTemplate';
     }
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -372,7 +385,7 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'genotyping_layout'});
     my $saved_design = $saved_layout->get_design();

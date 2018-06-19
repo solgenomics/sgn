@@ -11,7 +11,7 @@ $program_id
   <br/>
 
   <div id="pheno_summary_table_div">
-    <table id="phenotype_summary_data" class="display">
+    <table id="phenotype_summary_data_<% $program_id %>" class="display">
       <thead>
         <tr>
           <th>Trait</th>
@@ -70,13 +70,13 @@ jQuery(document).ready(function () {
 
       ///print the phenotype summary dataTable 
       ///
-      jQuery("#phenotype_summary_data").DataTable( { 
+      jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( { 
         'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
       });
      /// 
       trait_summary_hist_display_change();
 
-    });
+});
     
     ///clicking on the histogram glyph from the dataTable 
     /// scrolls down to the histogram div

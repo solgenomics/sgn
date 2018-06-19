@@ -68,14 +68,18 @@ sub list {
 	my @data;
 
 	foreach my $m (@maps) { 
-	    
+        my $map_type = $m->get_type();
+        if ($map_type eq 'genetic'){
+            $map_type = 'Genetic';
+        }
+        my $map_id = $m->get_id();
 	    	my %map_info = (
-		    mapDbId =>  $m->get_id(),
+		    mapDbId =>  "$map_id",
 			name => $m->get_short_name(),
-			species => $m -> get_organism(),
-			type => $m->get_type(),
-			unit => $m->get_units(),
-			markerCount => $m->get_marker_count(),
+			species => $m->get_organism() ? $m->get_organism() : '',
+			type => $map_type,
+			unit => $m->get_units() || 'cM',
+			markerCount => $m->get_marker_count() + 0,
 			comments => $m->get_abstract(),
 			linkageGroupCount => $m->get_chromosome_count(),
 		);
@@ -125,10 +129,10 @@ sub detail {
 	    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 
 	my %result = (
-		mapDbId =>  $map->get_id(),
+		mapDbId =>  qq|$map->get_id()|,
 		name => $map->get_short_name(),
-		type => "genotype",
-		unit => "bp",
+		type => "Genetic",
+		unit => "Mb",
 		linkageGroups => $data_window,
 	);
 	my @data_files;

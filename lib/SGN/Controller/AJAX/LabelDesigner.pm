@@ -483,7 +483,7 @@ sub get_plot_data {
         print STDERR "Count is $num_trials\n";
         $trial_id = $trial_rs->first->project_id();
         my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
-        print STDERR "Full Design is: ".Dumper($full_design);
+        #print STDERR "Full Design is: ".Dumper($full_design);
         # reduce design hash, removing plots that aren't in list
         my %full_design = %{$full_design};
 
