@@ -20,6 +20,7 @@ use Try::Tiny;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
+
 use CXGN::BrAPI;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -2020,7 +2021,6 @@ sub traits_list_GET {
         trait_ids => $clean_inputs->{traitDbIds},
         names => $clean_inputs->{names}
     });
-    print STDERR "Just finished handling the traits request\n";
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2660,6 +2660,5 @@ sub observations_search_process {
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
-
 
 1;
