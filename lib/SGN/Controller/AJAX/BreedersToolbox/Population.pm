@@ -26,6 +26,11 @@ sub create_population :Path('/ajax/population/new') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
+    if(!$c->user){
+        $c->stash->{rest} = { error => "You must be logged in to add a population" };
+        $c->detach;
+    }
+
     my $population_name = $c->req->param('population_name');
     my $accession_list_id = $c->req->param('accession_list_id');
     my $members;

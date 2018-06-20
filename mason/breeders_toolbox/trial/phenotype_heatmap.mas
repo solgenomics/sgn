@@ -69,15 +69,19 @@ $stockref => undef
     
 </style>
 
-<div class="form-group form-group-sm" id="traitdiv" >
-    <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
-    <div class="col-sm-12">
-        <div id="heatmap_traits_assayed_dropdown">
+<div class="well well-sm">
+    <div class="form-group form-group-sm" id="traitdiv" >
+        <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
+        <div class="col-sm-12">
+            <div id="heatmap_traits_assayed_dropdown">
+            </div>
         </div>
     </div>
 </div>
 
-<p></br><div class="d3legend" id="d3legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
+<div class="well well-sm">
+
+<div class="d3legend" id="d3legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
   <li><span class="d3block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
   <li><span class="d3block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
   <li><span class="d3checks"></span> Checks</li>
@@ -97,8 +101,26 @@ $stockref => undef
     </div>
 </div>
 <div id="chart"></div>
-<div class="col-sm-10" id="d_button" style="display:none";>
-  <!--<a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp; -->
+<!--<div class="col-sm-10" id="d_button" style="display:none";>
+  <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;
+</div> -->
+
+</div>
+
+<div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
+   <p>
+       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+       The field coordinates were deleted successfully...
+   </p>
+</div>
+
+<div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
+   <div id="trait_list_dc" name="trait_list">
+       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm field map deletion... <br />
+
+       </label>
+
+   </div>
 </div>
 
 <div class="modal  fade" id="suppress_plot_pheno_dialog" name="suppress_plot_pheno_dialog" tabindex="-1" role="dialog" aria-labelledby="SuppressPlotPhenoDialog">
@@ -216,11 +238,8 @@ $stockref => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_trait_form" name="delete_trait_form">
-
                     <p3> Trait deletion was successfully...</p3>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -301,11 +320,8 @@ $stockref => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_trait_form" name="delete_trait_form">
-
                     <p3> Plot accession was replaced successfully...</p3>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -517,14 +533,14 @@ jQuery(document).ready( function() {
                         .attr("y", 0 - 90 + gridSize2);
 
                       legend.exit().remove();
-                    
-                    // });  
+                     
                     } ; 
                   
                   heatmapChart(datasets);
                   if (false_coord){
-                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                      alert("Pseudo row and column numbers have been used in displaying the heat map. Plot's row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the true field layout.");
                   }
+    
                 }
                 else  {
                     jQuery("#working_modal").modal("hide");
@@ -835,13 +851,12 @@ jQuery(document).ready( function() {
                                                   
                       cards.exit().remove();
                     
-                    // });  
                     } ; 
                   
-                  heatmapChart(datasets);
-                  if (false_coord){
-                      alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
-                  }
+                    heatmapChart(datasets);
+                    if (false_coord){
+                        alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
+                    }
                 }
                 else  {
                     jQuery("#working_modal").modal("hide");

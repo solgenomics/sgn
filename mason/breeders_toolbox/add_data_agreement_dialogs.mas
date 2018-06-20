@@ -1,0 +1,85 @@
+<%args>
+$trial_id
+</%args>
+
+<div class="modal fade" id="add_data_agreement_dialog" name="add_data_agreement_dialog" tabindex="-1" role="dialog" aria-labelledby="addDataAgreementDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addDataAgreementDialog">Modify Data Agreement</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <textarea class="form-control" rows="10" id="data_agreement_text">
+                    </textarea>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="data_agreement_cancel_button">Close</button>
+                <button type="button" class="btn btn-primary" name="data_agreement_ok_button" id="data_agreement_ok_button">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#data_agreement_ok_button').click(function(){
+        add_data_agreement();
+    });
+
+    jQuery('#add_data_agreement').click( function() {
+        get_data_agreement(<% $trial_id %>, 'data_agreement_text');
+        jQuery('#add_data_agreement_dialog').modal('show');
+    });
+
+   function add_data_agreement() { 
+     var data_agreement_text = jQuery('#data_agreement_text').val();
+     jQuery.ajax( { 
+        url: '/breeders/trial/add/data_agreement',
+        data: { 'text': data_agreement_text, 'project_id': <% $trial_id %> },
+        success: function(response) { 
+          if (response.error) { alert(response.error); }
+          else 
+          if (response.message) { alert(response.message); }
+          else { 
+            alert("Successfully added a data agreement to this trial.");
+          }
+          get_data_agreement(<% $trial_id %>, 'data_agreement_div');
+        },
+        error: function(response) { 
+          alert("An error occurred storing the data agreement.");
+        }
+      });
+    }
+
+    function get_data_agreement(project_id, div) { 
+      jQuery.ajax( { 
+        async: true,
+        url: '/breeders/trial/data_agreement/get',
+        data: { 'project_id': project_id },
+        success: function(response) { 
+           if (response.text) { 
+             jQuery('#'+div).html(response.text);
+           }
+           else { 
+             jQuery('#'+div).html('By default, trial data is provided under the Toronto agreement, as explained in the <a href="/usage_policy">data usage policy</a>.');
+           }
+           if (response.message) { alert(response.message); }
+        },
+        error: function(response) { 
+           alert('An error occurred fetching the data agreement data.');
+        }
+      });
+    }
+
+
+});
+
+
+</script>

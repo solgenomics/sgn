@@ -72,29 +72,26 @@ sub get_metadata_matrix {
 
     print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
     print STDERR "Construct Meta-data Matrix Start:".localtime."\n";
-    my @unique_plot_list = ();
-    my %plot_data;
-    sub uniq {
-        my %seen;
-        grep !$seen{$_}++, @_;
-    }
+
+    my %project_data;
     foreach my $d (@$data) {
-        my ($year,$project_name,$location,$design,$breeding_program,$trial_desc,$trial_type,$plot_length,$plot_width,$plants_per_plot,$number_of_blocks,$number_of_replicates,$planting_date,$harvest_date) = @$d;
-        $plot_data{$project_name}->{metadata} = [$year,$project_name,$location,$design,$breeding_program,$trial_desc,$trial_type,$plot_length,$plot_width,$plants_per_plot,$number_of_blocks,$number_of_replicates,$planting_date,$harvest_date];
-        push @unique_plot_list, $project_name;
+        my ($project_id, $project_name, $project_description, $trial_type, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $location_name, $planting_date_value, $harvest_date_value, $plot_width, $plot_length, $plants_per_plot, $number_of_blocks, $number_of_replicates, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $folder_id, $folder_name, $folder_description, $treatments) = @$d;
+
+        my $treatments_string = '';
+        while (my($treatment_name, $treatment_description) = each %$treatments){
+            $treatments_string .= " ".$treatment_name.": ".$treatment_description;
+        }
+
+        $project_data{$project_name}->{metadata} = [$project_id, $project_name, $project_description, $trial_type, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $location_name, $planting_date_value, $harvest_date_value, $plot_width, $plot_length, $plants_per_plot, $number_of_blocks, $number_of_replicates, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $folder_id, $folder_name, $folder_description, $treatments_string];
     }
-    @unique_plot_list = uniq(@unique_plot_list);
 
     my @info = ();
-    my @line;
-    @line = ( 'studyYear', 'studyName', 'locationName', 'studyDesign', 'breedingProgram', 'trialDescription', 'trialType', 'plotLength', 'plotWidth', 'plantPerPlot', 'blockNumber', 'repNumber', 'plantingDate', 'harvestDate' );
-     
-    # generate header line
-    #
+    my @line = ( 'studyDbId', 'studyName', 'studyDescription', 'trialType', 'breedingProgramDbId', 'breedingProgramName', 'breedingProgramDescription', 'studyYear', 'studyDesign', 'locationDbId', 'locationName', 'plantingDate', 'harvestDate', 'plotWidth', 'plotLength', 'plantsPerPlot', 'numberBlocks', 'numberReps', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'folderDbId', 'folderName', 'folderDescription', 'managementFactors' );
+
     push @info, \@line;
 
-    foreach my $p (@unique_plot_list) {
-        my @line = @{$plot_data{$p}->{metadata}};
+    foreach my $p (sort keys %project_data) {
+        my @line = @{$project_data{$p}->{metadata}};
         push @info, \@line;
     }
     #print STDERR Dumper \@info;

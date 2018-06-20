@@ -47,6 +47,7 @@ sub get_matches {
     my @absent_stocks;
     my @found_stocks;
     my %results;
+    my $error = '';
     print STDERR "FuzzySearch 1".localtime()."\n";
 
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
@@ -56,7 +57,7 @@ sub get_matches {
     $h->execute();
     my %uniquename_hash;
     while (my ($uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
-        $uniquename_hash{$uniquename} = 1;
+        $uniquename_hash{$uniquename}++;
         if ($type_id){
             if ($type_id == $synonym_type_id){
                 push @{$synonym_uniquename_lookup{$synonym}}, $uniquename;
@@ -67,14 +68,21 @@ sub get_matches {
     my @stock_names = keys %uniquename_hash;
     my @synonym_names = keys %synonym_uniquename_lookup;
     push (@stock_names, @synonym_names);
-    my %stock_names_hash = map {$_ => 1} @stock_names;
+
+    my @lowercased_names;
+    my %lowercase_name_lookup;
+    foreach (@stock_names){
+        push @lowercased_names, lc($_);
+        $lowercase_name_lookup{lc($_)} = $_;
+    }
 
     print STDERR "FuzzySearch 2".localtime()."\n";
 
     foreach my $stock_name (@stock_list) {
 
         if (exists($uniquename_hash{$stock_name}) && $uniquename_hash{$stock_name} > 1){
-            die "More than one uniquename match for $stock_name of type $stock_type. This should not happen!\n";
+            $error .= "More than one uniquename match for $stock_name of type $stock_type. This should not happen!";
+            next;
         }
 
         if (exists($uniquename_hash{$stock_name})){
@@ -83,30 +91,29 @@ sub get_matches {
         }
 
         if (exists($synonym_uniquename_lookup{$stock_name})){
-            my %match_info = ( name => $stock_name, distance => 0 );
+            my %match_info;
             if (scalar(@{$synonym_uniquename_lookup{$stock_name}}) > 1){
                 my $synonym_lookup_uniquename = join ',', @{$synonym_uniquename_lookup{$stock_name}};
-                die "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!\n";
+                $error .= "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
+                next;
             } elsif (scalar(@{$synonym_uniquename_lookup{$stock_name}}) == 1){
-                $match_info{'unique_names'} = [$stock_name];
-                $match_info{'is_synonym'} = 1;
-                $match_info{'synonym_of'} = $synonym_uniquename_lookup{$stock_name}->[0];
+                $match_info{matched_string} = $stock_name." (SYNONYM OF ".$synonym_uniquename_lookup{$stock_name}->[0].")";
+                $match_info{is_synonym} = 1;
+                $match_info{uniquename} = $synonym_uniquename_lookup{$stock_name}->[0];
             }
-            push @fuzzy_stocks, {
-                name => $stock_name,
-                matches => [\%match_info]
-            };
+            push @found_stocks, \%match_info;
             next;
         }
 
         my @search_stock_names;
-        foreach (@stock_names){
+        foreach (@lowercased_names){
+            #if there is a difference in length greater than 10, it will not fuzzy search over that name
             if (abs(length($_) - length($stock_name)) <= 10){
                 push @search_stock_names, $_;
             }
         }
 
-        my @stock_matches = @{$fuzzy_string_search->get_matches($stock_name, \@search_stock_names, $max_distance)};
+        my @stock_matches = @{$fuzzy_string_search->get_matches(lc($stock_name), \@search_stock_names, $max_distance)};
 
         if (scalar(@stock_matches) == 0) {
             push (@absent_stocks, $stock_name);
@@ -115,18 +122,20 @@ sub get_matches {
             foreach (@stock_matches){
                 my %match_info;
                 my $matched_name = $_->{string};
-                $match_info{'name'} = $matched_name;
+                my $original_matched_name = $lowercase_name_lookup{$matched_name};
+                $match_info{'name'} = $original_matched_name;
                 $match_info{'distance'} = $_->{distance};
-                my $synonym_lookup_of_matched_string = $synonym_uniquename_lookup{$matched_name} || [];
+                my $synonym_lookup_of_matched_string = $synonym_uniquename_lookup{$original_matched_name} || [];
                 if (scalar(@$synonym_lookup_of_matched_string) > 1){
                     my $synonym_lookup_uniquename = join ',', @$synonym_lookup_of_matched_string;
-                    die "This synonym $matched_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!\n";
+                    $error .= "This synonym $matched_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
+                    next;
                 } elsif (scalar(@$synonym_lookup_of_matched_string) == 1){
-                    $match_info{'unique_names'} = [$matched_name];
+                    $match_info{'unique_names'} = [$original_matched_name];
                     $match_info{'is_synonym'} = 1;
                     $match_info{'synonym_of'} = $synonym_lookup_of_matched_string->[0];
                 } else {
-                    $match_info{'unique_names'} = [$matched_name];
+                    $match_info{'unique_names'} = [$original_matched_name];
                 }
                 push @matches, \%match_info;
             }
@@ -135,6 +144,11 @@ sub get_matches {
                 matches => \@matches
             };
         }
+    }
+
+    if ($error){
+        print STDERR "FUZZY ERRORS: $error\n";
+        $results{'error'} = $error;
     }
 
     $results{'found'} = \@found_stocks;

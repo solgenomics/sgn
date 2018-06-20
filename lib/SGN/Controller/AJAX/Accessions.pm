@@ -118,7 +118,7 @@ sub do_fuzzy_search {
     print STDERR "DoFuzzySearch 3".localtime()."\n";
     #print STDERR Dumper $fuzzy_accessions;
 
-    $c->stash->{rest} = {
+    my %return = (
         success => "1",
         absent => $absent_accessions,
         fuzzy => $fuzzy_accessions,
@@ -126,7 +126,13 @@ sub do_fuzzy_search {
         absent_organisms => $absent_organisms,
         fuzzy_organisms => $fuzzy_organisms,
         found_organisms => $found_organisms
-    };
+    );
+
+    if ($fuzzy_search_result->{'error'}){
+        $return{error} = $fuzzy_search_result->{'error'};
+    }
+
+    $c->stash->{rest} = \%return;
     return;
 }
 
@@ -152,10 +158,13 @@ sub do_exact_search {
     }
 
     my $rest = {
-	success => "1",
-	absent => \@absent_accessions,
-	found => \@found_accessions,
-	fuzzy => \@fuzzy_accessions
+        success => "1",
+        absent => \@absent_accessions,
+        found => \@found_accessions,
+        fuzzy => \@fuzzy_accessions,
+        absent_organisms => [],
+        fuzzy_organisms => [],
+        found_organisms => []
     };
     #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
@@ -252,7 +261,7 @@ sub verify_accessions_file_POST : Args(0) {
     $list->add_bulk(\@accession_names);
     $list->type('accessions');
 
-    $c->stash->{rest} = {
+    my %return = (
         success => "1",
         list_id => $new_list_id,
         full_data => \%full_accessions,
@@ -262,7 +271,13 @@ sub verify_accessions_file_POST : Args(0) {
         absent_organisms => $parsed_data->{absent_organisms},
         fuzzy_organisms => $parsed_data->{fuzzy_organisms},
         found_organisms => $parsed_data->{found_organisms}
-    };
+    );
+
+    if ($parsed_data->{error_string}){
+        $return{error_string} = $parsed_data->{error_string};
+    }
+
+    $c->stash->{rest} = \%return;
 }
 
 sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionClass('REST') { }
@@ -417,7 +432,7 @@ sub add_accession_list_POST : Args(0) {
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     #print STDERR Dumper \@added_fullinfo_stocks;
     $c->stash->{rest} = {

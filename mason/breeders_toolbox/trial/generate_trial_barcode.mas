@@ -70,14 +70,14 @@ $identifier => ''
                                        }
                                        else if (barcode_type == "1D") {
                                          jQuery("#2D_fieldbook_option").hide();
-                                       } 
+                                       }
                                    });
-                                   
+
                                    jQuery(document).on('change', '#select_print_format', function () {
                                        var format = jQuery("#select_print_format").val();
                                        if (format == "32A4") {
                                          var labels_row = 10;
-                                         var labels_cols = 4; 
+                                         var labels_cols = 4;
                                          var tops_margin = 12;
                                          var lefts_margin = 17;
                                          var bottoms_margin = 12;
@@ -85,7 +85,7 @@ $identifier => ''
                                        }
                                        if (format == "32_unique") {
                                          var labels_row = 10;
-                                         var labels_cols = 4; 
+                                         var labels_cols = 4;
                                          var tops_margin = 12;
                                          var lefts_margin = 17;
                                          var bottoms_margin = 12;
@@ -93,15 +93,15 @@ $identifier => ''
                                        }
                                        else if (format == "CASS") {
                                        var labels_row = 10;
-                                       var labels_cols = 2; 
+                                       var labels_cols = 2;
                                        var tops_margin = 10;
                                        var lefts_margin = 112;
                                        var bottoms_margin = 13;
-                                       var rights_margin = 20;                                       
+                                       var rights_margin = 20;
                                        }
                                        else if (format == "MUSA") {
                                        var labels_row = 10;
-                                       var labels_cols = 2; 
+                                       var labels_cols = 2;
                                        var tops_margin = 10;
                                        var lefts_margin = 112;
                                        var bottoms_margin = 13;
@@ -109,16 +109,16 @@ $identifier => ''
                                        }
                                        else if (format == "NCSU") {
                                        var labels_row = 10;
-                                       var labels_cols = 3; 
+                                       var labels_cols = 3;
                                        var tops_margin = 12;
                                        var lefts_margin = 10;
                                        var bottoms_margin = 12;
                                        var rights_margin = 10;
-                                       var text = 'year,location';                                       
+                                       var text = 'year,location';
                                        }
                                        else if (format == "20A4") {
                                        var labels_row = 10;
-                                       var labels_cols = 2; 
+                                       var labels_cols = 2;
                                        var tops_margin = 12;
                                        var lefts_margin = 10;
                                        var bottoms_margin = 12;
@@ -126,7 +126,7 @@ $identifier => ''
                                        }
                                        else if (format == "IITA-3") {
                                        var labels_row = 20;
-                                       var labels_cols = 3; 
+                                       var labels_cols = 3;
                                        var tops_margin = 13;
                                        var lefts_margin = 130;
                                        var bottoms_margin = 11;
@@ -134,7 +134,7 @@ $identifier => ''
                                        }
                                        else if (format == "IITA-2") {
                                        var labels_row = 20;
-                                       var labels_cols = 2; 
+                                       var labels_cols = 2;
                                        var tops_margin = 13;
                                        var lefts_margin = 130;
                                        var bottoms_margin = 11;
@@ -142,7 +142,7 @@ $identifier => ''
                                        }
                                        else if (format == "crossing") {
                                        var labels_row = 1;
-                                       var labels_cols = 1; 
+                                       var labels_cols = 1;
                                        var tops_margin = 5;
                                        var lefts_margin = 2;
                                        var bottoms_margin = 0;
@@ -167,7 +167,7 @@ $identifier => ''
                                    });
                                 });
                                </script>
-                               
+
                                <div class="form-group form-group-sm">
                                  <label class="col-sm-4 control-label">Printing Format (Optional): </label>
                                  <div class="col-sm-8">
@@ -250,6 +250,7 @@ $identifier => ''
                     <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode">Accessions Barcode</button>
+                    <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcode</button>
                 </p>
 
                       </center>

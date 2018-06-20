@@ -20,7 +20,7 @@ jQuery(document).ready(function($) {
 
     $("[name='create_crossingtrial_link']").click(function() {
         var lo = new CXGN.List();
-        get_select_box('years', 'add_project_year', {'auto_generate':1});
+        get_select_box('years', 'crosses_add_project_year', {'id':'crosses_add_project_year_select', 'name':'crosses_add_project_year_select', 'auto_generate':1});
         $("#create_crossingtrial_dialog").modal("show");
     });
 
@@ -43,13 +43,13 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        var year = $("#add_project_year").val();
+        var year = $("#crosses_add_project_year_select").val();
         if (!year) {
             alert ("Year is required");
             return;
         }
 
-        var project_description = $('textarea#add_project_description').val();
+        var project_description = $('textarea#crosses_add_project_description').val();
         if (!project_description) {
             alert ("Description is required");
             return;

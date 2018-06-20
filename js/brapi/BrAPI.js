@@ -1020,7 +1020,8 @@ class BrAPI_Behavior_Node extends Context_Node{
                 method: d_call.params.HTTPMethod || self.method, 
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
-                }
+                },
+                credentials: 'same-origin'
             };
             key = multicall ? key : 0;
             self.loadPage(pageRange[0],key,d_call,fetch_args,pageRange);

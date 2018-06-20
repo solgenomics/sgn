@@ -45,7 +45,6 @@ my $download = CXGN::Trial::Download->new({
     trait_contains => \@trait_contains_list,
     phenotype_min_value => $phenotype_min_value,
     phenotype_max_value => $phenotype_max_value,
-    search_type=>$search_type,
     has_header=>$has_header
 });
 my $error = $download->download();
@@ -92,35 +91,24 @@ sub download {
     my $year_list = $self->year_list;
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
-    my $search_type = $self->search_type();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
-    my $factory_type;
     my @data;
     if ($self->data_level() eq 'metadata'){
-        $factory_type = 'MetaData';
-        
         my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
     		bcs_schema=>$schema,
-    		search_type=>$factory_type,
+    		search_type=>'MetaData',
     		data_level=>$data_level,
     		trial_list=>$trial_list,    		
     	);
     	@data = $metadata_search->get_metadata_matrix();
     }
     else {
-        if ($search_type eq 'complete'){
-            $factory_type = 'Native';
-        }
-        if ($search_type eq 'fast'){
-            $factory_type = 'MaterializedView'; 
-        }
-    
     	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     		bcs_schema=>$schema,
-    		search_type=>$factory_type,
+    		search_type=>'MaterializedViewTable',
     		data_level=>$data_level,
     		trait_list=>$trait_list,
     		trial_list=>$trial_list,
@@ -130,7 +118,6 @@ sub download {
     		plot_list=>$plot_list,
     		plant_list=>$plant_list,
     		include_timestamp=>$include_timestamp,
-            include_row_and_column_numbers=>$self->include_row_and_column_numbers,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
     		trait_contains=>$trait_contains,
     		phenotype_min_value=>$phenotype_min_value,
