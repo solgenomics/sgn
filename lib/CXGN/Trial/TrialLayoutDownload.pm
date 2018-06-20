@@ -178,25 +178,25 @@ sub get_layout_output {
 
     my @possible_cols = ();
     if ($self->data_level eq 'plots') {
-        @possible_cols = ('plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plots() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plants') {
-        @possible_cols = ('plant_name','subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plants() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'subplots') {
-        @possible_cols = ('subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_subplots() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'field_trial_tissue_samples') {
-        @possible_cols = ('tissue_sample_name','plant_name','subplot_name','plot_name','accession_name','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_tissue_samples() : [];
             push @treatment_units_array, $treatment_units;
@@ -334,6 +334,14 @@ sub _construct_ouput_for_plants {
     my $fieldbook_trait_hash = shift;
 
     my $plant_names = $design_info->{'plant_names'};
+    my $plant_ids = $design_info->{'plant_ids'};
+    my $i = 0;
+    my %plant_id_hash;
+    foreach (@$plant_names){
+        $plant_id_hash{$_} = $plant_ids->[$i];
+        $i++;
+    }
+
     my $plant_num = 1;
     my $acc_synonyms = '';
     if (exists($selected_cols->{'synonyms'})){
@@ -352,6 +360,8 @@ sub _construct_ouput_for_plants {
             if ($selected_cols->{$c}){
                 if ($c eq 'plant_name'){
                     push @$line, $_;
+                } elsif ($c eq 'plant_id'){
+                    push @$line, $plant_id_hash{$_};
                 } elsif ($c eq 'plant_number'){
                     push @$line, $plant_num;
                 } elsif ($c eq 'location_name'){
@@ -396,6 +406,13 @@ sub _construct_ouput_for_subplots {
     my $selected_trait_names = shift;
     my $fieldbook_trait_hash = shift;
     my $subplot_names = $design_info->{'subplot_names'};
+    my $subplot_ids = $design_info->{'subplot_ids'};
+    my $i = 0;
+    my %subplot_id_hash;
+    foreach (@$subplot_names){
+        $subplot_id_hash{$_} = $subplot_ids->[$i];
+        $i++;
+    }
     my $subplot_num = 1;
     my $acc_synonyms = '';
     if (exists($selected_cols->{'synonyms'})){
@@ -414,6 +431,8 @@ sub _construct_ouput_for_subplots {
             if ($selected_cols->{$c}){
                 if ($c eq 'subplot_name'){
                     push @$line, $_;
+                } elsif ($c eq 'subplot_id'){
+                    push @$line, $subplot_id_hash{$_};
                 } elsif ($c eq 'subplot_number'){
                     push @$line, $subplot_num;
                 } elsif ($c eq 'location_name'){
@@ -459,6 +478,23 @@ sub _construct_ouput_for_plants_with_subplots {
     my $fieldbook_trait_hash = shift;
 
     my $subplot_plant_names = $design_info->{'subplots_plant_names'};
+    my $plant_names = $design_info->{'plant_names'};
+    my $plant_ids = $design_info->{'plant_ids'};
+    my $i = 0;
+    my %plant_id_hash;
+    foreach (@$plant_names){
+        $plant_id_hash{$_} = $plant_ids->[$i];
+        $i++;
+    }
+    my $subplot_names = $design_info->{'subplot_names'};
+    my $subplot_ids = $design_info->{'subplot_ids'};
+    my $j = 0;
+    my %subplot_id_hash;
+    foreach (@$subplot_names){
+        $subplot_id_hash{$_} = $subplot_ids->[$j];
+        $j++;
+    }
+
     my $subplot_num = 1;
     my $acc_synonyms = '';
     if (exists($selected_cols->{'synonyms'})){
@@ -480,8 +516,12 @@ sub _construct_ouput_for_plants_with_subplots {
                 if ($selected_cols->{$c}){
                     if ($c eq 'plant_name'){
                         push @$line, $p;
+                    } elsif ($c eq 'plant_id'){
+                        push @$line, $plant_id_hash{$p};
                     } elsif ($c eq 'subplot_name'){
                         push @$line, $s;
+                    } elsif ($c eq 'subplot_id'){
+                        push @$line, $subplot_id_hash{$s};
                     } elsif ($c eq 'subplot_number'){
                         push @$line, $subplot_num;
                     } elsif ($c eq 'plant_number'){
@@ -531,6 +571,31 @@ sub _construct_ouput_for_tissue_samples_with_subplots_and_plants {
 
     my $subplot_plant_names = $design_info->{'subplots_plant_names'};
     my $plant_tissue_names = $design_info->{'plants_tissue_sample_names'};
+    my $plant_names = $design_info->{'plant_names'};
+    my $plant_ids = $design_info->{'plant_ids'};
+    my $i = 0;
+    my %plant_id_hash;
+    foreach (@$plant_names){
+        $plant_id_hash{$_} = $plant_ids->[$i];
+        $i++;
+    }
+    my $subplot_names = $design_info->{'subplot_names'};
+    my $subplot_ids = $design_info->{'subplot_ids'};
+    my $j = 0;
+    my %subplot_id_hash;
+    foreach (@$subplot_names){
+        $subplot_id_hash{$_} = $subplot_ids->[$j];
+        $j++;
+    }
+    my $tissue_sample_names = $design_info->{'tissue_sample_names'};
+    my $tissue_sample_ids = $design_info->{'tissue_sample_ids'};
+    my $k = 0;
+    my %tissue_sample_id_hash;
+    foreach (@$tissue_sample_names){
+        $tissue_sample_id_hash{$_} = $tissue_sample_ids->[$k];
+        $k++;
+    }
+
     my $subplot_num = 1;
     my $acc_synonyms = '';
     if (exists($selected_cols->{'synonyms'})){
@@ -554,10 +619,16 @@ sub _construct_ouput_for_tissue_samples_with_subplots_and_plants {
                     if ($selected_cols->{$c}){
                         if ($c eq 'tissue_sample_name'){
                             push @$line, $t;
+                        } elsif ($c eq 'tissue_sample_id'){
+                            push @$line, $tissue_sample_id_hash{$t};
                         } elsif ($c eq 'plant_name'){
                             push @$line, $p;
+                        } elsif ($c eq 'plant_id'){
+                            push @$line, $plant_id_hash{$p};
                         } elsif ($c eq 'subplot_name'){
                             push @$line, $s;
+                        } elsif ($c eq 'subplot_id'){
+                            push @$line, $subplot_id_hash{$s};
                         } elsif ($c eq 'subplot_number'){
                             push @$line, $subplot_num;
                         } elsif ($c eq 'plant_number'){
@@ -607,6 +678,23 @@ sub _construct_ouput_for_tissue_samples_with_plants {
     my $fieldbook_trait_hash = shift;
 
     my $plant_tissue_names = $design_info->{'plants_tissue_sample_names'};
+    my $plant_names = $design_info->{'plant_names'};
+    my $plant_ids = $design_info->{'plant_ids'};
+    my $i = 0;
+    my %plant_id_hash;
+    foreach (@$plant_names){
+        $plant_id_hash{$_} = $plant_ids->[$i];
+        $i++;
+    }
+    my $tissue_sample_names = $design_info->{'tissue_sample_names'};
+    my $tissue_sample_ids = $design_info->{'tissue_sample_ids'};
+    my $k = 0;
+    my %tissue_sample_id_hash;
+    foreach (@$tissue_sample_names){
+        $tissue_sample_id_hash{$_} = $tissue_sample_ids->[$k];
+        $k++;
+    }
+
     my $acc_synonyms = '';
     if (exists($selected_cols->{'synonyms'})){
         my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
@@ -627,8 +715,12 @@ sub _construct_ouput_for_tissue_samples_with_plants {
                 if ($selected_cols->{$c}){
                     if ($c eq 'tissue_sample_name'){
                         push @$line, $t;
+                    } elsif ($c eq 'tissue_sample_id'){
+                        push @$line, $tissue_sample_id_hash{$t};
                     } elsif ($c eq 'plant_name'){
                         push @$line, $p;
+                    } elsif ($c eq 'plant_id'){
+                        push @$line, $plant_id_hash{$p};
                     } elsif ($c eq 'plant_number'){
                         push @$line, $plant_num;
                     } elsif ($c eq 'location_name'){

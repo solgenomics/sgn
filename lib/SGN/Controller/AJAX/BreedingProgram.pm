@@ -26,7 +26,7 @@ use Data::Dumper;
 use Try::Tiny;
 use Math::Round;
 use CXGN::BreedingProgram;
-
+use CXGN::Phenotypes::PhenotypeMatrix;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -96,7 +96,8 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
     }
     my $trial_ids = join ',', map { "?" } @trial_ids;
     my @phenotype_data;
-    
+    my @trait_list;
+
     if ( $trial_ids ) {
 	my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -124,9 +125,9 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
 	
 	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 	$h->execute( @trial_ids , $numeric_regex);
-    
+	
         while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
-
+	    push @trait_list, [$trait_id, $trait]; 
 	    my $cv = 0;
 	    if ($stddev && $average != 0) {
 		$cv = ($stddev /  $average) * 100;
@@ -144,8 +145,74 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
 	    push @phenotype_data, \@return_array;
 	}
     }
+    $c->stash->{trait_list} = \@trait_list;
     $c->stash->{rest} = { data => \@phenotype_data };
 }
 
 
+sub traits_assayed : Chained('ajax_breeding_program') PathPart('traits_assayed') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    my @traits_assayed  =  $program->get_traits_assayed;
+    $c->stash->{rest} = { traits_assayed => \@traits_assayed };
+}
+
+sub trait_phenotypes : Chained('ajax_breeding_program') PathPart('trait_phenotypes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    #get userinfo from db
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    #my $user = $c->user();
+    #if (! $c->user) {
+    #  $c->stash->{rest} = {
+    #    status => "not logged in"
+    #  };
+    #  return;
+    #}
+    my $display = $c->req->param('display') || 'plot' ;
+    my $trials = $program->get_trials;
+    my @trial_ids;
+    while (my $trial = $trials->next() ) {
+	my $trial_id = $trial->project_id;
+	push @trial_ids , $trial_id;
+    }
+    my $trait = $c->req->param('trait');
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+        bcs_schema=> $schema,
+        search_type => "MaterializedViewTable",
+        data_level => $display,
+        trait_list=> [$trait],
+        trial_list => \@trial_ids
+    );
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    $c->stash->{rest} = {
+      status => "success",
+      data => \@data
+   };
+}
+
+
+sub accessions : Chained('ajax_breeding_program') PathPart('accessions') Args(0) {
+    my ($self, $c) = @_;
+    my $program = $c->stash->{program};
+    my $accessions = $program->get_accessions;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @formatted_accessions;
+    
+    foreach my $id ( @$accessions ) {
+	my $acc =  my $row = $schema->resultset("Stock::Stock")->find(  
+	    { stock_id => $id , } 
+	    );
+	
+	my $name        = $acc->uniquename;
+	my $description = $acc->description;
+	push @formatted_accessions, [ '<a href="/stock/' .$id. '/view">'.$name.'</a>' ];
+    }
+    $c->stash->{rest} = { data => \@formatted_accessions };
+}
+
 1;
+
+
