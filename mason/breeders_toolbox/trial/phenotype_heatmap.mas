@@ -404,7 +404,7 @@ jQuery(document).ready( function() {
             },
             success: function(response) {
                var data = response.result.data; 
-               alert(data);
+               alert(data);console.log(data);
                var datasort = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous
 	              return obj1.plotNumber - obj2.plotNumber;
