@@ -78,7 +78,7 @@ sub check_result :Path('/pca/check/result/') Args() {
 	    $file_id = $c->stash->{combo_pops_id};
 	}	
     }
-    elsif ($referer =~ /pca\/analysis\// && $combo_pops_id)
+    elsif ($referer =~ /pca\/analysis\/|\/solgs\/model\/combined\/populations\//  && $combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
@@ -142,7 +142,7 @@ sub pca_result :Path('/pca/result/') Args() {
 	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
         $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $entry);
     }
-    elsif ($referer =~ /pca\/analysis\// && $combo_pops_id)
+    elsif ($referer =~ /pca\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
@@ -423,8 +423,16 @@ sub _process_trials_details {
 	$self->_pca_trial_genotype_data($c);
 	push @genotype_files, $c->stash->{genotype_file};
 
-	my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
-	$pops_names{$p_id} = $c->stash->{project_name};        
+	if ($p_id =~ /uploaded/) 
+	{
+	    $c->controller('solGS::solGS')->uploaded_population_summary($c, $p_id);
+	    $pops_names{$p_id} = $c->stash->{project_name};  
+	}
+	else
+	{
+	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
+	    $pops_names{$p_id} = $c->stash->{project_name};  
+	}      
     }    
 
     if (scalar(@$pops_ids) > 1 )
@@ -436,8 +444,7 @@ sub _process_trials_details {
 
     $c->stash->{genotype_files_list} = \@genotype_files;
     $c->stash->{trials_names} = \%pops_names;
-
-    
+  
 }
 
 
@@ -448,7 +455,7 @@ sub _pca_trial_genotype_data {
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
     my $geno_file = $c->stash->{genotype_file_name};
-   
+
     if (-s $geno_file)
     {  
 	$c->stash->{genotype_file} = $geno_file;
