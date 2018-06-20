@@ -1,0 +1,31 @@
+
+<%args>
+$program_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<table id="accession_summary_data" class="display">
+<thead>
+  <tr>
+    <th>Accession name</th>
+  </tr>
+</thead>
+
+</table>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#accession_summary_data').DataTable( { 
+      'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/accessions',
+    });
+  });
+
+
+</script>
