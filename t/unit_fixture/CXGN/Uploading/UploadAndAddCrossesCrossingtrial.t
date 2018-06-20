@@ -107,7 +107,7 @@ is_deeply($message_hash, {'success' => 1});
 
 
 #add plants for testing
-my $trial = CXGN::Trial->new({bcs_schema => $schema, 165});
+my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => 165});
 $trial->create_plant_entities(2);
 
 # test uploading crosses with plants
