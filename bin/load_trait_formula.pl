@@ -53,7 +53,7 @@ my $schema= Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() });
 
 my $formula_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
 	name => "formula",
-	cv   => "cvterm_property",
+	cv   => "trait_property",
 });
 
 my $type_id = $formula_cvterm->cvterm_id();

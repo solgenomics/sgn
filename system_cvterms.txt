@@ -219,6 +219,7 @@ trait_property	trait_details
 trait_property	trait_format
 trait_property	trait_maximum
 trait_property	trait_minimum
+trait_property	formula
 trial_type	genotyping_trial
 trial_type	phenotyping_trial
 cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076
