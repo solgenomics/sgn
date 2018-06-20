@@ -1175,6 +1175,50 @@ sub set_genotyping_plate_sample_type {
     $self->_set_projectprop('genotyping_plate_sample_type', $value);
 }
 
+=head2 accessors get_field_trial_is_planned_to_be_genotyped(), set_field_trial_is_planned_to_be_genotyped()
+
+ Usage: For field trials, this records whether the trial will be genotyped
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trial_is_planned_to_be_genotyped {
+    my $self = shift;
+    return $self->_get_projectprop('field_trial_is_planned_to_be_genotyped');
+}
+
+sub set_field_trial_is_planned_to_be_genotyped {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('field_trial_is_planned_to_be_genotyped', $value);
+}
+
+=head2 accessors get_field_trial_is_planned_to_cross(), set_field_trial_is_planned_to_cross()
+
+ Usage: For field trials, this records whether the trial will be involved in crosses
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trial_is_planned_to_cross {
+    my $self = shift;
+    return $self->_get_projectprop('field_trial_is_planned_to_cross');
+}
+
+sub set_field_trial_is_planned_to_cross {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('field_trial_is_planned_to_cross', $value);
+}
+
 =head2 accessors get_plot_width(), set_plot_width()
 
  Usage: For field trials, this records plot width in meters
