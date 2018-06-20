@@ -155,7 +155,7 @@ function <% $div_name %>_addProp() {
     beforeSend: function(){
         jQuery('#working_modal').modal('show');
     },
-    data: { 'cvterm_id' : <% $cvterm_id %>, 'prop' : prop, 'prop_type': prop_type, 'cv_name' : <% $cv_name %> },
+    data: { 'cvterm_id' : <% $cvterm_id %>, 'prop' : prop, 'prop_type': prop_type, 'cv_name' : "<% $cv_name %>" },
     success: function(response) {
         jQuery('#working_modal').modal('hide');
         if ("error" in response) { alert ('ERROR '+response.error); }

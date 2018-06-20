@@ -363,7 +363,7 @@ sub add_cvtermprop_POST {
     if ($cvterm && $prop && $prop_type) {
 
         try {
-            $cvterm->create_cvtermprops( { $prop_type => $prop, cv_name => $cv_name }, { autocreate => 1 } );
+            $cvterm->create_cvtermprops( { $prop_type => $prop }, { cv_name => $cv_name , autocreate => 1 } );
 	    
             my $dbh = $c->dbc->dbh();
 	    $c->stash->{rest} = { message => "cvterm_id $cvterm_id and type_id $prop_type have been associated with value $prop. " };
