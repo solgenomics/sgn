@@ -1,0 +1,29 @@
+
+<%doc>
+
+=head1 NAME
+
+/maps/genotype_protocol.mas - a mason component to display all genotype protocols on a page
+
+=head1 AUTHOR
+
+Nicolas Morales nm529@cornell.edu
+
+=cut
+
+</%doc>
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<& /page/page_title.mas, title=>"Genotyping Protocols" &>
+
+
+<&| /page/info_section.mas, title=>"Map Information", collapsible=>1, collapsed=>0 &>
+
+  <& /brapiclient/genome_maps/map_list_table.mas  &>
+
+</&>
+
