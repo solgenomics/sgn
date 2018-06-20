@@ -4,38 +4,44 @@ $folder_name => undef
 </%args>
 
 <div class="modal fade" id="edit_folder_category_dialog" name="edit_folder_category_dialog" tabindex="-1" role="dialog" aria-labelledby="editFolderCategoryDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="editFolderCategoryDialog">Edit Categories for <% $folder_name %></h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editFolderCategoryDialog">Edit Categories for <% $folder_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
 
-	       <form class="form-horizontal" role="form" method="post" id="edit_folder_category_dialog_form" name="edit_folder_category_dialog_form">
-	        <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder for Trials:</label>
-      	      <div class="col-sm-9" >
-                <input name="edit_folder_for_trials" id="edit_folder_for_trials" type="checkbox"/>
-              </div>
-	        </div>
-            <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder for Crosses:</label>
-      	      <div class="col-sm-9" >
-                <input name="edit_folder_for_crosses" id="edit_folder_for_crosses" type="checkbox"/>
-              </div>
-	        </div>
-	       </form><br/>
-         
+                    <form class="form-horizontal" role="form" method="post" id="edit_folder_category_dialog_form" name="edit_folder_category_dialog_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Folder for Trials:</label>
+                            <div class="col-sm-9" >
+                                <input name="edit_folder_for_trials" id="edit_folder_for_trials" type="checkbox"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Folder for Crosses:</label>
+                            <div class="col-sm-9" >
+                                <input name="edit_folder_for_crosses" id="edit_folder_for_crosses" type="checkbox"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Folder for Genotyping Trials:</label>
+                            <div class="col-sm-9" >
+                                <input name="edit_folder_for_genotyping_trials" id="edit_folder_for_genotyping_trials" type="checkbox"/>
+                            </div>
+                        </div>
+                    </form><br/>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="edit_folder_categories_cancel_button" id="edit_folder_categories_cancel_button" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="edit_folder_categories_save_button" id="edit_folder_categories_save_button" title="Save">Save</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="edit_folder_categories_cancel_button" id="edit_folder_categories_cancel_button" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="edit_folder_categories_save_button" id="edit_folder_categories_save_button" title="Save">Save</button>
-      </div>
     </div>
-  </div>
 </div>
 
 
@@ -56,11 +62,13 @@ jQuery(document).ready(function() {
 function save_folder_categories() {
     var folder_for_trials = jQuery('#edit_folder_for_trials').is(":checked");
     var folder_for_crosses = jQuery('#edit_folder_for_crosses').is(":checked");
+    var folder_for_genotyping_trials = jQuery('#edit_folder_for_genotyping_trials').is(":checked");
     jQuery.ajax( {
         url: '/ajax/folder/'+<% $folder_id %>+'/categories',
         data: { 
           'folder_for_trials' : folder_for_trials,
-          'folder_for_crosses' : folder_for_crosses
+          'folder_for_crosses' : folder_for_crosses,
+          'folder_for_genotyping_trials' : folder_for_genotyping_trials,
         },
         success: function(response) {
             if(confirm('Categories set for folder!')){

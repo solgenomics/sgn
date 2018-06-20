@@ -31,6 +31,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $breeding_program_id = $c->req->param("breeding_program_id");
     my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
     my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
+    my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
 
     if (! $self->check_privileges($c)) {
 	return;
@@ -48,7 +49,8 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
 	    name => $folder_name,
 	    breeding_program_id => $breeding_program_id,
         folder_for_trials => $folder_for_trials,
-        folder_for_crosses => $folder_for_crosses
+        folder_for_crosses => $folder_for_crosses,
+        folder_for_genotyping_trials => $folder_for_genotyping_trials
 	});
 
     $c->stash->{rest} = {
@@ -105,6 +107,7 @@ sub set_folder_categories : Chained('get_folder') PathPart('categories') Args(0)
     my $c = shift;
     my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
     my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
+    my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
 
     if (! $self->check_privileges($c)) {
         return;
@@ -117,6 +120,7 @@ sub set_folder_categories : Chained('get_folder') PathPart('categories') Args(0)
 
     $folder->set_folder_content_type('folder_for_trials', $folder_for_trials);
     $folder->set_folder_content_type('folder_for_crosses', $folder_for_crosses);
+    $folder->set_folder_content_type('folder_for_genotyping_trials', $folder_for_genotyping_trials);
 
     $c->stash->{rest} = { success => 1 };
 }

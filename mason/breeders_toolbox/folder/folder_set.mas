@@ -12,9 +12,10 @@ $breeding_program_name => undef
 % my $js_project_type;
 % my $folder_for_trials;
 % my $folder_for_crosses;
+% my $folder_for_genotyping_trials;
 % my $dialog_type;
 % if ($project_type eq 'Trial') { $js_project_type = 'trials'; $folder_for_trials = 1; $dialog_type = 'Trial(s)'}
-% if ($project_type eq 'Genotyping Trial') { $js_project_type = 'genotyping_trials'; $folder_for_trials = 1; $dialog_type = 'Genotyping Trial(s)'}
+% if ($project_type eq 'Genotyping Trial') { $js_project_type = 'genotyping_trials'; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Trial(s)'}
 % if ($project_type eq 'Cross') { $js_project_type = 'crosses'; $folder_for_crosses = 1; $dialog_type = 'Crossing Trial(s)' }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
@@ -143,13 +144,17 @@ function breeding_program_change_folders() {
   var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
   var folder_for_trials;
   var folder_for_crosses;
+  var folder_for_genotyping_trials;
 % if ($folder_for_trials){
   folder_for_trials = true;
 % }
 % if ($folder_for_crosses){
     folder_for_crosses = true;
 % }
-  get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial', 'breeding_program_id' : breeding_program_id, 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses });
+% if ($folder_for_genotyping_trials){
+    folder_for_genotyping_trials = true;
+% }
+  get_select_box('folders', 'trial_folder_select_div', { 'name' : 'html_select_folder_for_trial', 'id' : 'html_select_folder_for_trial', 'breeding_program_id' : breeding_program_id, 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials });
 }
 
 function breeding_program_change_trials() {
@@ -189,6 +194,8 @@ function set_trial_folder() {
                     refreshTrailJsTree(0);
 %  } elsif ($project_type eq 'Cross') {
                     refreshCrossJsTree(0);
+%  } elsif ($project_type eq 'Genotyping Trial') {
+                    refreshGenotypingTrialJsTree(0);
 %  }
         jQuery('#folder_set_success_dialog_message').modal("show");
     }
