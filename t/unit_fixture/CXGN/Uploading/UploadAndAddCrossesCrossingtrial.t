@@ -7,7 +7,7 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
-
+use CXGN::Trial;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
@@ -105,6 +105,10 @@ $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
+
+#add plants for testing
+my $trial = CXGN::Trial->new({bcs_schema => $schema, 165});
+$trial->create_plant_entities(2);
 
 # test uploading crosses with plants
 $crossing_trial2_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial2'});
