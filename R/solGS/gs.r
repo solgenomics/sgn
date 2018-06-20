@@ -142,7 +142,11 @@ if (datasetInfo == 'combined populations') {
     
     colnames(phenoTrait)[1] <- 'genotypes'
    
-  } else {
+} else if (grep('uploaded', phenoFile)) {
+
+    phenoTrait <- averageTrait(phenoData, trait)
+    
+} else {
 
     phenoTrait <- getAdjMeans(phenoData, trait)
 
