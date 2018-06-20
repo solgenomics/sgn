@@ -104,13 +104,6 @@ For more on the comparative map viewer, read the <a href="/help/cview">help page
 </p>
 </&>
 
-
-<&| /page/info_section.mas, collapsible=>1, collapsed=>0, title=>'Genotyping Protocols' &>
-<br/>
-<p>
-<b>All Protocols</b><br />
-</&>
-
 <!-- JavaScript function for help files. -->
 <script language='javascript' type=\"text/javascript\">
 <!--\n

@@ -19,14 +19,14 @@ sub _build_schema {
     shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
 }
 
-sub protocols_list :Path("/maps/protocols") Args(0) {
+sub protocols_list :Path("/breeders/genotyping_protocols") Args(0) {
     my $self = shift;
     my $c = shift;
-    $c->stash->{template} = '/maps/genotype_protocol_list.mas';
+    $c->stash->{template} = '/breeders_toolbox/maps/genotype_protocol_list.mas';
 }
 
 
-sub protocol_page :Path("/maps/protocols") Args(1) {
+sub protocol_page :Path("/breeders/genotyping_protocols") Args(1) {
     my $self = shift;
     my $c = shift;
     my $protocol_id = shift;
@@ -51,7 +51,7 @@ sub protocol_page :Path("/maps/protocols") Args(1) {
     $c->stash->{protocol_id} = $protocol_id;
     $c->stash->{name} = $protocol_name;
     #$c->stash->{marker_details} = \@markerdetails_window;
-    $c->stash->{template} = '/maps/genotype_protocol.mas';
+    $c->stash->{template} = '/breeders_toolbox/maps/genotype_protocol.mas';
 }
 
 1;

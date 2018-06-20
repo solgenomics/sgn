@@ -334,7 +334,10 @@ foreach (@$accessions) {
 
     #Store IGD number if the option is given.
     if ($opt_z) {
-        my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
+        my %igd_number = ('igd_number' => $igd_number);
+        my $json_obj = JSON::Any->new;
+        my $json_string = $json_obj->encode(\%igd_number);
+        my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $json_string });
     }
     undef $genotypeprop_json;
     undef $json_string;
