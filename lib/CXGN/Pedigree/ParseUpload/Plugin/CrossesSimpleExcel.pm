@@ -1,4 +1,4 @@
-package CXGN::Pedigree::ParseUpload::Plugin::CrossesExcelFormat;
+package CXGN::Pedigree::ParseUpload::Plugin::CrossesSimpleExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -54,49 +54,35 @@ sub _validate_with_plugin {
     }
 
     #get column headers
-    my $cross_name_header;
-    my $cross_type_header;
-    my $female_parent_header;
-    my $male_parent_header;
-    my $female_plot_plant_header;
-    my $male_plot_plant_header;
+    my $cross_name_head;
+    my $cross_type_head;
+    my $female_parent_head;
+    my $male_parent_head;
 
     if ($worksheet->get_cell(0,0)) {
-        $cross_name_header  = $worksheet->get_cell(0,0)->value();
+        $cross_name_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
-        $cross_type_header  = $worksheet->get_cell(0,1)->value();
+        $cross_type_head  = $worksheet->get_cell(0,1)->value();
     }
     if ($worksheet->get_cell(0,2)) {
-        $female_parent_header  = $worksheet->get_cell(0,2)->value();
+        $female_parent_head  = $worksheet->get_cell(0,2)->value();
     }
     if ($worksheet->get_cell(0,3)) {
-        $male_parent_header  = $worksheet->get_cell(0,3)->value();
-    }
-    if ($worksheet->get_cell(0,4)) {
-        $female_plot_plant_header  = $worksheet->get_cell(0,4)->value();
-    }
-    if ($worksheet->get_cell(0,5)) {
-        $male_plot_plant_header  = $worksheet->get_cell(0,5)->value();
+        $male_parent_head  = $worksheet->get_cell(0,3)->value();
     }
 
-    if (!$cross_name_header || $cross_name_header ne 'cross_name' ) {
+    if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
         push @error_messages, "Cell A1: cross_name is missing from the header";
     }
-    if (!$cross_type_header || $cross_type_header ne 'cross_type') {
+    if (!$cross_type_head || $cross_type_head ne 'cross_type') {
         push @error_messages, "Cell B1: cross_type is missing from the header";
     }
-    if (!$female_parent_header || $female_parent_header ne 'female_parent') {
+    if (!$female_parent_head || $female_parent_head ne 'female_parent') {
         push @error_messages, "Cell C1: female_parent is missing from the header";
     }
-    if (!$male_parent_header || $male_parent_header ne 'male_parent') {
+    if (!$male_parent_head || $male_parent_head ne 'male_parent') {
         push @error_messages, "Cell D1: male_parent is missing from the header";
-    }
-    if (!$female_plot_plant_header || (($female_plot_plant_header ne 'female_plot') && ($female_plot_plant_header ne 'female_plant'))) {
-        push @error_messages, "Cell E1: female_plot or female_plant is missing from the header";
-    }
-    if (!$male_plot_plant_header || (($male_plot_plant_header ne 'male_plot') && ($male_plot_plant_header ne 'male_plant'))) {
-        push @error_messages, "Cell F1: male_plot or male_plant is missing from the header";
     }
 
     my %valid_properties;
@@ -105,7 +91,7 @@ sub _validate_with_plugin {
         $valid_properties{$property} = 1;
     }
 
-    for my $column ( 6 .. $col_max ) {
+    for my $column ( 4 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         if (!$valid_properties{$header_string}){
@@ -115,7 +101,6 @@ sub _validate_with_plugin {
 
     my %seen_cross_names;
     my %seen_accession_names;
-    my %seen_plot_plant_names;
 
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
@@ -123,39 +108,25 @@ sub _validate_with_plugin {
         my $cross_type;
         my $female_parent;
         my $male_parent;
-        my $female_plot_plant_name;
-        my $male_plot_plant_name;
 
         if ($worksheet->get_cell($row,0)) {
             $cross_name = $worksheet->get_cell($row,0)->value();
         }
-
         if ($worksheet->get_cell($row,1)) {
             $cross_type = $worksheet->get_cell($row,1)->value();
         }
-
         if ($worksheet->get_cell($row,2)) {
             $female_parent =  $worksheet->get_cell($row,2)->value();
         }
-
         #skip blank lines or lines with no name, type and parent
         if (!$cross_name && !$cross_type && !$female_parent) {
             next;
         }
-
         if ($worksheet->get_cell($row,3)) {
             $male_parent =  $worksheet->get_cell($row,3)->value();
         }
 
-        if ($worksheet->get_cell($row,4)) {
-            $female_plot_plant_name =  $worksheet->get_cell($row,4)->value();
-        }
-
-        if ($worksheet->get_cell($row,5)) {
-            $male_plot_plant_name =  $worksheet->get_cell($row,5)->value();
-        }
-
-        for my $column ( 6 .. $col_max ) {
+        for my $column ( 4 .. $col_max ) {
             if ($worksheet->get_cell($row,$column)) {
                 my $info_value = $worksheet->get_cell($row,$column)->value();
                 my $info_type = $worksheet->get_cell(0,$column)->value();
@@ -208,13 +179,6 @@ sub _validate_with_plugin {
             $seen_accession_names{$male_parent}++;
         }
 
-        if ($female_plot_plant_name){
-            $seen_plot_plant_names{$female_plot_plant_name}++;
-        }
-
-        if ($male_plot_plant_name){
-            $seen_plot_plant_names{$male_plot_plant_name}++;
-        }
     }
 
     my @accessions = keys %seen_accession_names;
@@ -227,26 +191,6 @@ sub _validate_with_plugin {
     if (scalar(@parents_missing) > 0) {
         push @error_messages, "The following accessions or populations are not in the database as uniquenames or synonyms: ".join(',',@parents_missing);
         $errors{'missing_accessions'} = \@parents_missing;
-    }
-
-    if (($female_plot_plant_header eq 'female_plot') && ($male_plot_plant_header eq 'male_plot')) {
-        my @plots = keys %seen_plot_plant_names;
-        my $plot_validator = CXGN::List::Validate->new();
-        my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plots)->{'missing'}};
-
-        if (scalar(@plots_missing) > 0) {
-            push @error_messages, "The following plots are not in the database as uniquenames or synonyms: ".join(',',@plots_missing);
-            $errors{'missing_plots'} = \@plots_missing;
-        }
-    } elsif (($female_plot_plant_header eq 'female_plant') && ($male_plot_plant_header eq 'male_plant')) {
-        my @plants = keys %seen_plot_plant_names;
-        my $plant_validator = CXGN::List::Validate->new();
-        my @plants_missing = @{$plant_validator->validate($schema,'plants',\@plants)->{'missing'}};
-
-        if (scalar(@plants_missing) > 0) {
-            push @error_messages, "The following plants are not in the database as uniquenames or synonyms: ".join(',',@plants_missing);
-            $errors{'missing_plants'} = \@plants_missing;
-        }
     }
 
     my @crosses = keys %seen_cross_names;
@@ -290,10 +234,7 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my $female_plot_plant_header  = $worksheet->get_cell(0,4)->value();
-    my $male_plot_plant_header  = $worksheet->get_cell(0,5)->value();
-
-    for my $column ( 6 .. $col_max ) {
+    for my $column ( 4 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         $properties_columns{$column} = $header_string;
@@ -305,20 +246,14 @@ sub _parse_with_plugin {
         my $cross_type;
         my $female_parent;
         my $male_parent;
-        my $female_plot;
-        my $male_plot;
-        my $female_plant;
-        my $male_plant;
         my $cross_stock;
 
         if ($worksheet->get_cell($row,0)) {
             $cross_name = $worksheet->get_cell($row,0)->value();
         }
-
         if ($worksheet->get_cell($row,1)) {
             $cross_type = $worksheet->get_cell($row,1)->value();
         }
-
         if ($worksheet->get_cell($row,2)) {
             $female_parent =  $worksheet->get_cell($row,2)->value();
         }
@@ -327,27 +262,12 @@ sub _parse_with_plugin {
         if (!$cross_name && !$cross_type && !$female_parent) {
             next;
         }
+
         if ($worksheet->get_cell($row,3)) {
             $male_parent =  $worksheet->get_cell($row,3)->value();
         }
 
-        if ($worksheet->get_cell($row,4)) {
-            if ($female_plot_plant_header eq 'female_plot') {
-                $female_plot =  $worksheet->get_cell($row,4)->value();
-            } elsif ($female_plot_plant_header eq 'female_plant') {
-                $female_plant = $worksheet->get_cell($row,4)->value();
-            }
-        }
-
-        if ($worksheet->get_cell($row,5)) {
-            if ($male_plot_plant_header eq 'male_plot') {
-                $male_plot =  $worksheet->get_cell($row,5)->value();
-            } elsif ($male_plot_plant_header eq 'male_plant') {
-                $male_plant = $worksheet->get_cell($row,5)->value();
-            }
-        }
-
-        for my $column ( 6 .. $col_max ) {
+        for my $column ( 4 .. $col_max ) {
             if ($worksheet->get_cell($row,$column)) {
                 my $column_property = $properties_columns{$column};
                 $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
@@ -367,22 +287,6 @@ sub _parse_with_plugin {
             my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
             $pedigree->set_male_parent($male_parent_individual);
         }
-        if ($female_plot) {
-            my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $female_plot);
-            $pedigree->set_female_plot($female_plot_individual);
-        }
-        if ($male_plot) {
-            my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $male_plot);
-            $pedigree->set_male_plot($male_plot_individual);
-        }
-        if ($female_plant) {
-            my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $female_plant);
-            $pedigree->set_female_plant($female_plant_individual);
-        }
-        if ($male_plant) {
-            my $male_plant_individual = Bio::GeneticRelationships::Individual->new(name => $male_plant);
-            $pedigree->set_male_plant($male_plant_individual);
-        }
 
         push @pedigrees, $pedigree;
 
@@ -397,28 +301,46 @@ sub _parse_with_plugin {
 }
 
 
-#sub _get_accession {
-#    my $self = shift;
-#    my $accession_name = shift;
-#    my $chado_schema = $self->get_chado_schema();
-#    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-#    my $stock;
-#    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+sub _get_accession {
+    my $self = shift;
+    my $accession_name = shift;
+    my $chado_schema = $self->get_chado_schema();
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+    my $stock;
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 
-#    $stock_lookup->set_stock_name($accession_name);
-#    $stock = $stock_lookup->get_stock_exact();
+    $stock_lookup->set_stock_name($accession_name);
+    $stock = $stock_lookup->get_stock_exact();
 
-#    if (!$stock) {
-#        return;
-#    }
+    if (!$stock) {
+        return;
+    }
 
-#    if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-#        return;
-#    }
+    if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
+        return;
+    }
 
-#    return $stock;
+    return $stock;
 
-#}
+}
+
+
+sub _get_cross {
+    my $self = shift;
+    my $cross_name = shift;
+    my $chado_schema = $self->get_chado_schema();
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+    my $stock;
+
+    $stock_lookup->set_stock_name($cross_name);
+    $stock = $stock_lookup->get_stock_exact();
+
+    if (!$stock) {
+        return;
+    }
+
+    return $stock;
+}
 
 
 1;

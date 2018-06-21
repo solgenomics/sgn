@@ -56,42 +56,59 @@ __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
-   );
+);
 
 sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('REST') { }
 
 sub upload_cross_file_POST : Args(0) {
-  my ($self, $c) = @_;
-  #print STDERR Dumper $c->req->params();
-  my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-  my $dbh = $c->dbc->dbh;
-  my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
-  my $location = $c->req->param('cross_upload_location');
-  my $upload = $c->req->upload('crosses_upload_file');
-  my $prefix = $c->req->param('upload_prefix');
-  my $suffix = $c->req->param('upload_suffix');
-  my $parser;
-  my $parsed_data;
-  my $upload_original_name = $upload->filename();
-  my $upload_tempfile = $upload->tempname;
-  my $subdirectory = "cross_upload";
-  my $archived_filename_with_path;
-  my $md5;
-  my $validate_file;
-  my $parsed_file;
-  my $parse_errors;
-  my %parsed_data;
-  my %upload_metadata;
-  my $time = DateTime->now();
-  my $timestamp = $time->ymd()."_".$time->hms();
-  my $user_role;
-  my $user_id;
-  my $user_name;
-  my $owner_name;
-  my $upload_file_type = "crosses excel";#get from form when more options are added
-  my $session_id = $c->req->param("sgn_session_id");
+    my ($self, $c) = @_;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
+    my $location = $c->req->param('cross_upload_location');
+    my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
+    my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
+    my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
+    my $upload;
+    my $upload_type;
+    if ($crosses_plots_upload) {
+        $upload = $crosses_plots_upload;
+        $upload_type = 'CrossesExcelFormat';
+        }
+    if ($crosses_plants_upload) {
+            $upload = $crosses_plants_upload;
+            $upload_type = 'CrossesExcelFormat';
+            }
+
+    if ($crosses_simple_upload) {
+        $upload = $crosses_simple_upload;
+        $upload_type = 'CrossesSimpleExcel';
+    }
+
+    my $prefix = $c->req->param('upload_prefix');
+    my $suffix = $c->req->param('upload_suffix');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "cross_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $upload_file_type = "crosses excel";#get from form when more options are added
+    my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -114,30 +131,29 @@ sub upload_cross_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-  my $uploader = CXGN::UploadFile->new({
-    tempfile => $upload_tempfile,
-    subdirectory => $subdirectory,
-    archive_path => $c->config->{archive_path},
-    archive_filename => $upload_original_name,
-    timestamp => $timestamp,
-    user_id => $user_id,
-    user_role => $user_role
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
 
-  });
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
 
-  ## Store uploaded temporary file in arhive
-  $archived_filename_with_path = $uploader->archive();
-  $md5 = $uploader->get_md5($archived_filename_with_path);
-  if (!$archived_filename_with_path) {
-      $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-      return;
-  }
-  unlink $upload_tempfile;
-
-  $upload_metadata{'archived_file'} = $archived_filename_with_path;
-  $upload_metadata{'archived_file_type'}="cross upload file";
-  $upload_metadata{'user_id'}=$user_id;
-  $upload_metadata{'date'}="$timestamp";
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
 
     my $cross_properties_json = $c->config->{cross_properties};
     my @properties = split ',', $cross_properties_json;
@@ -145,7 +161,7 @@ sub upload_cross_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
-    $parser->load_plugin('CrossesExcelFormat');
+    $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
@@ -166,67 +182,66 @@ sub upload_cross_file_POST : Args(0) {
         $c->detach();
     }
 
-  my $cross_add = CXGN::Pedigree::AddCrosses
-    ->new({
-	   chado_schema => $chado_schema,
-	   phenome_schema => $phenome_schema,
-	   metadata_schema => $metadata_schema,
-	   dbh => $dbh,
-	   location => $location,
-     crossing_trial_id => $crossing_trial_id,
-	   crosses =>  $parsed_data->{crosses},
-	   owner_name => $user_name
+    my $cross_add = CXGN::Pedigree::AddCrosses->new({
+        chado_schema => $chado_schema,
+        phenome_schema => $phenome_schema,
+        metadata_schema => $metadata_schema,
+        dbh => $dbh,
+        location => $location,
+        crossing_trial_id => $crossing_trial_id,
+        crosses =>  $parsed_data->{crosses},
+        owner_name => $user_name
 	  });
 
-  #validate the crosses
-  if (!$cross_add->validate_crosses()){
-    $c->stash->{rest} = {error_string => "Error validating crosses",};
-    return;
-  }
-
-  #add the crosses
-  if (!$cross_add->add_crosses()){
-    $c->stash->{rest} = {error_string => "Error adding crosses",};
-    return;
-  }
-
-  #add the progeny
-  if ($parsed_data->{number_of_progeny}) {
-  my %progeny_hash = %{$parsed_data->{number_of_progeny}};
-  foreach my $cross_name_key (keys %progeny_hash){
-    my $progeny_number = $progeny_hash{$cross_name_key};
-    my $progeny_increment = 1;
-    my @progeny_names;
-
-    #create array of progeny names to add for this cross
-    while ($progeny_increment < $progeny_number + 1) {
-      $progeny_increment = sprintf "%03d", $progeny_increment;
-      my $stock_name = $cross_name_key.$prefix.$progeny_increment.$suffix;
-      push @progeny_names, $stock_name;
-      $progeny_increment++;
+    #validate the crosses
+    if (!$cross_add->validate_crosses()){
+        $c->stash->{rest} = {error_string => "Error validating crosses",};
+        return;
     }
 
-    #add array of progeny to the cross
-    my $progeny_add = CXGN::Pedigree::AddProgeny
-      ->new({
-	     chado_schema => $chado_schema,
-	     phenome_schema => $phenome_schema,
-	     dbh => $dbh,
-	     cross_name => $cross_name_key,
-	     progeny_names => \@progeny_names,
-	     owner_name => $owner_name,
-	    });
-    if (!$progeny_add->add_progeny()){
-      $c->stash->{rest} = {error_string => "Error adding progeny",};
-      #should delete crosses and other progeny if add progeny fails?
-      return;
+    #add the crosses
+    if (!$cross_add->add_crosses()){
+        $c->stash->{rest} = {error_string => "Error adding crosses",};
+        return;
     }
-  }
-}
+
+    #add the progeny
+    if ($parsed_data->{number_of_progeny}) {
+        my %progeny_hash = %{$parsed_data->{number_of_progeny}};
+
+        foreach my $cross_name_key (keys %progeny_hash) {
+            my $progeny_number = $progeny_hash{$cross_name_key};
+            my $progeny_increment = 1;
+            my @progeny_names;
+
+            #create array of progeny names to add for this cross
+            while ($progeny_increment < $progeny_number + 1) {
+                $progeny_increment = sprintf "%03d", $progeny_increment;
+                my $stock_name = $cross_name_key.$prefix.$progeny_increment.$suffix;
+                push @progeny_names, $stock_name;
+                $progeny_increment++;
+            }
+
+            #add array of progeny to the cross
+            my $progeny_add = CXGN::Pedigree::AddProgeny->new ({
+                chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progeny_names,
+                owner_name => $owner_name,
+            });
+            if (!$progeny_add->add_progeny()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                #should delete crosses and other progeny if add progeny fails?
+                return;
+            }
+        }
+    }
 
     while (my $info_type = shift (@properties)){
         if ($parsed_data->{$info_type}) {
-        print STDERR "Handling info type $info_type\n";
+            print STDERR "Handling info type $info_type\n";
             my %info_hash = %{$parsed_data->{$info_type}};
             foreach my $cross_name_key (keys %info_hash) {
                 my $value = $info_hash{$cross_name_key};
@@ -351,7 +366,7 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     };
 }
 
-sub get_cross_parents :Path('/ajax/cross/accession_plot_parents') Args(1) {
+sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
@@ -361,8 +376,10 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_parents') Args(1) {
     my $female_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plot_of', 'stock_relationship')->cvterm_id();
     my $male_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $male_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plot_of', 'stock_relationship')->cvterm_id();
+    my $female_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plant_of', 'stock_relationship')->cvterm_id();
+    my $male_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plant_of', 'stock_relationship')->cvterm_id();
 
-    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock_relationship1.value FROM stock
+    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock_relationship1.value FROM stock
         JOIN stock_relationship AS stock_relationship1 ON (stock.stock_id = stock_relationship1.object_id) and stock_relationship1.type_id = ?
         JOIN stock AS stock1 ON (stock_relationship1.subject_id = stock1.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship2 ON (stock.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
@@ -370,19 +387,27 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_parents') Args(1) {
         LEFT JOIN stock_relationship AS stock_relationship3 ON (stock.stock_id = stock_relationship3.object_id) and stock_relationship3.type_id = ?
         LEFT JOIN stock AS stock3 ON (stock_relationship3.subject_id = stock3.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship4 ON (stock.stock_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
-        LEFT JOIN stock AS stock4 ON (stock_relationship4.subject_id =stock4.stock_id) WHERE stock.stock_id = ?";
+        LEFT JOIN stock AS stock4 ON (stock_relationship4.subject_id =stock4.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship5 ON (stock.stock_id = stock_relationship5.object_id) AND stock_relationship5.type_id = ?
+        LEFT JOIN stock AS stock5 ON (stock_relationship5.subject_id =stock5.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship6 ON (stock.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
+        LEFT JOIN stock AS stock6 ON (stock_relationship6.subject_id =stock6.stock_id)
+
+         WHERE stock.stock_id = ?";
 
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($female_accession_cvterm, $female_plot_cvterm, $male_accession_cvterm, $male_plot_cvterm, $cross_id);
+    $h->execute($female_accession_cvterm, $female_plot_cvterm, $female_plant_cvterm, $male_accession_cvterm, $male_plot_cvterm, $male_plant_cvterm, $cross_id);
 
     my @cross_parents = ();
-    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $cross_type) = $h->fetchrow_array()){
+    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type) = $h->fetchrow_array()){
         push @cross_parents, [ $cross_type,
             qq{<a href="/stock/$female_accession_id/view">$female_accession_name</a>},
             qq{<a href="/stock/$male_accession_id/view">$male_accession_name</a>},
             qq{<a href="/stock/$female_plot_id/view">$female_plot_name</a>},
-            qq{<a href="/stock/$male_plot_id/view">$male_plot_name</a>}];
+            qq{<a href="/stock/$male_plot_id/view">$male_plot_name</a>},
+            qq{<a href="/stock/$female_plant_id/view">$female_plant_name</a>},
+            qq{<a href="/stock/$male_plant_id/view">$male_plant_name</a>}];
     }
 
     $c->stash->{rest} = {data => \@cross_parents}

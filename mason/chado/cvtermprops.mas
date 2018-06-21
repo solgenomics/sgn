@@ -26,12 +26,13 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 
 <%args>
-  $cvterm_id 
+  $cvterm_id
   $subset => []
   $props
   $editable => []
   $div_name => ''
   $edit_privs => 0
+  $cv_name  => 'cvterm_property'
 </%args>
 
 <%perl>
@@ -154,7 +155,7 @@ function <% $div_name %>_addProp() {
     beforeSend: function(){
         jQuery('#working_modal').modal('show');
     },
-    data: { 'cvterm_id' : <% $cvterm_id %>, 'prop' : prop, 'prop_type': prop_type },
+    data: { 'cvterm_id' : <% $cvterm_id %>, 'prop' : prop, 'prop_type': prop_type, 'cv_name' : "<% $cv_name %>" },
     success: function(response) {
         jQuery('#working_modal').modal('hide');
         if ("error" in response) { alert ('ERROR '+response.error); }

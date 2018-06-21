@@ -354,7 +354,8 @@ sub add_cvtermprop_POST {
         my $req = $c->req;
         my $cvterm_id = $c->req->param('cvterm_id');
         my $prop  = $c->req->param('prop');
-        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+        my $cv_name = $c->req->param('cv_name') || 'cvterm_property'; 
+	$prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
 
 	my $cvterm = $schema->resultset("Cv::Cvterm")->find( { cvterm_id => $cvterm_id } );
@@ -362,7 +363,7 @@ sub add_cvtermprop_POST {
     if ($cvterm && $prop && $prop_type) {
 
         try {
-            $cvterm->create_cvtermprops( { $prop_type => $prop }, { autocreate => 1 } );
+            $cvterm->create_cvtermprops( { $prop_type => $prop }, { cv_name => $cv_name , autocreate => 1 } );
 	    
             my $dbh = $c->dbc->dbh();
 	    $c->stash->{rest} = { message => "cvterm_id $cvterm_id and type_id $prop_type have been associated with value $prop. " };
