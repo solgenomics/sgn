@@ -389,7 +389,7 @@ sub structure_output_details {
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
  
 	    $solgs_controller->get_trait_details($c, $trait_id);	    
-	    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
+	    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 	 
 	    my $trait_abbr = $c->stash->{trait_abbr};
 	    my $trait_page;     
@@ -426,7 +426,7 @@ sub structure_output_details {
 		'trait_id'       => $trait_id, 
 		'trait_name'     => $c->stash->{trait_name}, 
 		'trait_page'     => $trait_page,
-		'gebv_file'      => $c->stash->{rrblup_gebvs_file},
+		'gebv_file'      => $c->stash->{rrblup_training_gebvs_file},
 		'pop_id'         => $pop_id,
 		'phenotype_file' => $c->stash->{trait_combined_pheno_file},
 		'genotype_file'  => $c->stash->{trait_combined_geno_file},
@@ -443,7 +443,7 @@ sub structure_output_details {
 	my $pop_name;
 
 	if ($pop_id =~ /uploaded/) {
-	    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};;	   
+	    my $tmp_dir = $c->stash->{solgs_lists_dir};;	   
 	    my $files   = $c->controller('solGS::List')->create_list_pop_tempfiles($tmp_dir, $pop_id);
 	    $pheno_file = $files->{pheno_file};
 	    $geno_file  = $files->{geno_file};
@@ -548,8 +548,8 @@ sub structure_output_details {
 	    }
 	    
 	    my $identifier = $training_pop_id . '_' . $prediction_pop_id;
-	    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-	    my $gebv_file = $c->stash->{prediction_pop_gebvs_file};
+	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+	    my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
 	   
 	    $output_details{'trait_id_' . $trait_id} = {
 		'training_pop_page'   => $training_pop_page,

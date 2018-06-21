@@ -230,7 +230,7 @@ sub _pca_list_genotype_data {
 	    $c->stash->{genotypes_list} = \@genotypes_list;	   
 	    my $geno_data = $c->model('solGS::solGS')->genotypes_list_genotype_data(\@genotypes_list);
 	    
-	    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+	    my $tmp_dir = $c->stash->{solgs_lists_dir};
 	    my $file = "genotype_data_uploaded_${list_id}";     
 	    $file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file);    
 	    

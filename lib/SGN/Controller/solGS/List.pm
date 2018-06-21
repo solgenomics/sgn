@@ -222,7 +222,7 @@ sub genotypes_list_genotype_data_file {
     my ($self, $c, $list_pop_id) = @_;
     
     my $geno_data = $c->stash->{genotypes_list_genotype_data};
-    my $dir = $c->stash->{solgs_prediction_upload_dir};
+    my $dir = $c->stash->{solgs_lists_dir};
         
     my $files = $self->create_list_pop_tempfiles($dir, $list_pop_id);
     my $geno_file = $files->{geno_file};
@@ -264,7 +264,7 @@ sub create_list_population_metadata_file {
     my ($self, $c, $list_pop_id) = @_;
     
     my $user_id = $c->user->id;
-    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+    my $tmp_dir = $c->stash->{solgs_lists_dir};
               
     my $file = catfile ($tmp_dir, "metadata_${user_id}_${list_pop_id}");
  
@@ -288,10 +288,10 @@ sub predict_list_selection_pop_single_pop_model {
     $c->stash->{uploaded_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+    my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
    
-    if (!-s $prediction_pop_gebvs_file)
+    if (!-s $rrblup_selection_gebvs_file)
     {
 	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	$c->stash->{phenotype_file} =$c->stash->{phenotype_file_name};
@@ -299,7 +299,7 @@ sub predict_list_selection_pop_single_pop_model {
 	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	$c->stash->{genotype_file} =$c->stash->{genotype_file_name};
 
-	$self->user_prediction_population_file($c, $selection_pop_id); 
+	$self->user_selection_population_file($c, $selection_pop_id); 
 
 	$c->stash->{pop_id} = $c->stash->{training_pop_id};
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -352,10 +352,10 @@ sub predict_list_selection_pop_combined_pops_model {
     $c->stash->{uploaded_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);        
-    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);        
+    my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
   
-    if (!-s $prediction_pop_gebvs_file)
+    if (!-s $rrblup_selection_gebvs_file)
     {    
 	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id); 
 	
@@ -364,7 +364,7 @@ sub predict_list_selection_pop_combined_pops_model {
 	my $pheno_file = $c->stash->{trait_combined_pheno_file};
 	my $geno_file  = $c->stash->{trait_combined_geno_file};
 	
-	$self->user_prediction_population_file($c, $selection_pop_id);
+	$self->user_selection_population_file($c, $selection_pop_id);
 	
 	$c->controller("solGS::solGS")->get_rrblup_output($c);
 	$c->stash->{status} = 'success';
@@ -417,12 +417,12 @@ sub predict_list_selection_gebvs {
 }
 
 
-sub user_prediction_population_file {
+sub user_selection_population_file {
     my ($self, $c, $pred_pop_id) = @_;
  
-    my $upload_dir = $c->stash->{solgs_prediction_upload_dir};
+    my $upload_dir = $c->stash->{solgs_lists_dir};
    
-    my ($fh, $tempfile) = tempfile("prediction_population_${pred_pop_id}-XXXXX", 
+    my ($fh, $tempfile) = tempfile("selection_population_${pred_pop_id}-XXXXX", 
                                    DIR => $upload_dir
         );
 
@@ -435,7 +435,7 @@ sub user_prediction_population_file {
     $fh->print($pred_pop_file);
     $fh->close; 
 
-    $c->stash->{prediction_population_file} = $tempfile;
+    $c->stash->{selection_population_file} = $tempfile;
   
 }
 
@@ -520,7 +520,7 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
     
     $self->genotypes_list_genotype_file($c, $model_id);
     
-    my $tmp_dir  = $c->stash->{solgs_prediction_upload_dir};
+    my $tmp_dir  = $c->stash->{solgs_lists_dir};
       
     my $files = $self->create_list_pop_tempfiles($tmp_dir, $model_id);
     my $pheno_file = $files->{pheno_file};
@@ -566,7 +566,7 @@ sub genotypes_list_genotype_file {
     my $genotypes = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
 
-    my $data_dir  = $c->stash->{solgs_prediction_upload_dir};
+    my $data_dir  = $c->stash->{solgs_lists_dir};
 
     my $args = {
 	'list_pop_id'    => $list_pop_id,
@@ -654,7 +654,7 @@ sub plots_list_phenotype_file {
     $c->controller('solGS::Files')->traits_list_file($c);    
     my $traits_file =  $c->stash->{traits_list_file};
   
-    my $data_dir = $c->stash->{solgs_prediction_upload_dir};
+    my $data_dir = $c->stash->{solgs_lists_dir};
 
     $c->stash->{r_temp_file} = 'plots-phenotype-data-query';
     $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);

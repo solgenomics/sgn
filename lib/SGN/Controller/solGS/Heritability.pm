@@ -53,7 +53,7 @@ sub get_regression_data_files {
     my $phenotype_file = "phenotype_trait_${trait_abbr}_${pop_id}";
     $phenotype_file    = $c->controller('solGS::Files')->grep_file($cache_dir, $phenotype_file);
        
-    my $gebv_file = "rrblup_gebvs_${trait_abbr}_${pop_id}";
+    my $gebv_file = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";
     $gebv_file    = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
    
     $c->stash->{regression_gebv_file} = $gebv_file;

@@ -52,7 +52,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     
     if( $pop_id =~ /uploaded/) 
     {
-        my $phenotype_dir = $c->stash->{solgs_prediction_upload_dir};
+        my $phenotype_dir = $c->stash->{solgs_lists_dir};
         my $userid        = $c->user->id;
         $phenotype_file   = "phenotype_data_${userid}_${pop_id}";
         $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);

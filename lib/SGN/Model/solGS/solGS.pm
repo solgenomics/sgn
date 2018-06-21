@@ -1266,7 +1266,7 @@ sub prediction_pops {
   {
      # my $user_id = $self->context->user->id;
       
-      my $dir = $self->context->stash->{solgs_prediction_upload_dir};      
+      my $dir = $self->context->stash->{solgs_lists_dir};      
       opendir my $dh, $dir or die "can't open $dir: $!\n";
     
       my ($geno_file) = grep { /genotype_data_${training_pop_id}/ && -f "$dir/$_" }  readdir($dh); 
