@@ -2569,11 +2569,14 @@ sub observations_POST {
 	my $self = shift;
 	my $c = shift;
     my $auth = _authenticate_user($c);
+    my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
-        observations => $clean_inputs->{observations}
+        observations => $clean_inputs->{observations},
+        user_id => $person_id,
+        user_type => $user_type
     });
 	_standard_response_construction($c, $brapi_package_result);
 }

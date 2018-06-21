@@ -8,6 +8,8 @@ use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use utf8;
+use JSON;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -53,16 +55,43 @@ has 'status' => (
 
 sub observations_store {
     my $self = shift;
+    my $search_params = shift;
     my @observations = $search_params->{observations} ? @{$search_params->{observations}} : ();
+
+    print STDERR "Observations are ". Dumper(@observations) . "\n";
 
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $user_id = $search_params->{user_id};
+    my $user_type = $search_params->{user_type};
 
-    # Create json file and archive it
+    # Get user id from access token
 
 
-    # - Archive file using CXGN::UploadFile and parse file using CXGN::Phenotypes::ParseUpload
+    # Use new CXGN::BrAPI::FileRequest module to create file from json and archive it
+
+    my $archived_file = CXGN::BrAPI::FileRequest->new({
+        user_id => $user_id,
+        user_role => $user_type,
+        format => 'Fieldbook',  # use fieldbook database.csv format for observations data
+        data => \@observations
+    });
+
+    my $file = $archived_file->get_path();
+
+    print STDERR "Archived File is in $file\n";
+
+    my $total_count = 1;
+    my @data;
+    my %result = (data => \@data);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
+
+
+= cut
+    # Parse file using CXGN::Phenotypes::ParseUpload
 
     $subdirectory = "brapi_phenotype_upload";
     $validate_type = "field book";
@@ -191,8 +220,10 @@ sub observations_store {
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
+=cut
 }
 
+= cut
 sub observations_search {
     my $self = shift;
     my $search_params = shift;
@@ -214,5 +245,6 @@ sub observations_search {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
 }
+=cut
 
 1;
