@@ -110,15 +110,15 @@ sub search {
                 modality => $modality,
             };
         }
-        my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
+        my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
         push @data_window, {
             observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
             observationLevel => $obs_unit->{observationunit_type_name},
             observationLevels => $obs_unit->{observationunit_type_name},
             plotNumber => $obs_unit->{obsunit_plot_number},
             plantNumber => $obs_unit->{obsunit_plant_number},
-            blockNumber => $obs_unit->{obsunit_block_number},
-            replicate => $obs_unit->{obsunit_rep_number},
+            blockNumber => $obs_unit->{obsunit_block},
+            replicate => $obs_unit->{obsunit_rep},
             observationUnitName => $obs_unit->{observationunit_uniquename},
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
