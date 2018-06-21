@@ -219,12 +219,12 @@ trait_property	trait_details
 trait_property	trait_format
 trait_property	trait_maximum
 trait_property	trait_minimum
-trait_property	formula
 trial_type	genotyping_trial
 trial_type	phenotyping_trial
 cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076
 cvterm_property	datatype	From BrAPI	03/27/2017	nm529	00076
 cvterm_property	code	From BrAPI	03/27/2017	nm529	00076
+cvterm_property	formula
 protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076
