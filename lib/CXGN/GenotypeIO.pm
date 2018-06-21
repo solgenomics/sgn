@@ -82,6 +82,11 @@ sub accessions {
     return $self->plugin()->accessions();
 }
 
+sub observation_unit_names { 
+    my $self = shift;
+    return $self->plugin()->observation_unit_names();
+}
+
 sub markers { 
     my $self = shift;
     #print STDERR "Markers now: ".Dumper($self->plugin()->markers())."\n";

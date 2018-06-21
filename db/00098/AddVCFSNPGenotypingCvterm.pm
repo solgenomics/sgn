@@ -63,6 +63,9 @@ sub patch {
     my $terms = {
         'genotype_property' => [
             'vcf_snp_genotyping',
+        ],
+        'protocol_property' => [
+            'vcf_map_details'
         ]
     };
 

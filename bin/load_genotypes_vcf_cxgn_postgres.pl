@@ -99,12 +99,7 @@ my $snp_genotypingprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, '
 my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
 my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 my $population_members_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
-
-my $vcf_map_details = $schema->resultset("Cv::Cvterm")->create_with({
-    name => 'vcf_map_details',
-    cv   => 'protocol_property',
-});
-my $vcf_map_details_id = $vcf_map_details->cvterm_id();
+my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
 
 #store a project
 my $project = $schema->resultset("Project::Project")->find_or_create({

@@ -48,7 +48,7 @@ sub init {
 		chomp($header);
 		#print STDERR "HEADER = $header\n";
 		my @fields = split /\t/, $header;
-		my @accessions = @fields[9..$#fields];
+		my @observation_unit_names = @fields[9..$#fields];
 
 		my @markers;
 		while (<$F>) { 
@@ -62,7 +62,7 @@ sub init {
 		}
 
 		$self->header(\@fields);
-		$self->accessions(\@accessions);
+		$self->observation_unit_names(\@observation_unit_names);
 		$self->markers(\@markers);
 		
     close($F);

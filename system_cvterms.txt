@@ -197,6 +197,8 @@ stock_relationship	rootstock_of					00079
 stock_relationship	scion_of					00079
 stock_relationship  female_plot_of    00086
 stock_relationship  male_plot_of    00086
+stock_relationship  female_plant_of    00094
+stock_relationship  male_plant_of    00094
 stock_type	accession				00052
 stock_type	backcross population				00052
 stock_type	cross				00052
@@ -226,6 +228,7 @@ protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
+protocol_property	vcf_map_details	Information about protocol, such as marker set	6/20/2018	nm529	00089
 composable_cvs	trait_ontology		05/01/2017		00073
 composable_cvs	composed_trait_ontology		05/01/2017		00073
 composable_cvs	object_ontology		05/01/2017		00073
