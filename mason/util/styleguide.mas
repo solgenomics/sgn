@@ -209,8 +209,7 @@ to create:
       }
     }
     vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
-  </script>
-
+</script>
 
 <h3>Use of Symbols</h3>
 
