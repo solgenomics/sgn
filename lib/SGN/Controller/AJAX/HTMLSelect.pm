@@ -900,7 +900,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 		$c->dbic_schema("CXGN::People::Schema"),
 		$user_id);
 
-	    print STDERR "Retrieved datasets: ".Dumper($datasets);
+#	    print STDERR "Retrieved datasets: ".Dumper($datasets);
 
 	    $html = simple_selectbox_html(
 		name => 'available_datasets',

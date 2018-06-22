@@ -34,6 +34,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
+use DBI;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -63,6 +64,16 @@ has 'limit' => (
 
 has 'offset' => (
     isa => 'Int',
+    is => 'rw',
+);
+
+has 'marker_name' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+has 'allele_dosage' => (
+    isa => 'Str',
     is => 'rw',
 );
 
@@ -151,6 +162,38 @@ sub get_genotype_info {
     return ($total_count, \@data);
 }
 
+sub get_selected_accessions {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $protocol_id = $self->protocol_id;
+    my $accession_list = $self->accession_list;
+    my $marker_name = $self->marker_name;
+    my $allele_dosage = $self->allele_dosage;
+    my @accessions = @{$accession_list};
+
+    my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+        JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+        JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+        where genotypeprop.value->>? = ?
+        AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ')';
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $marker_name, $allele_dosage, @accessions);
+
+
+    my @selected_accessions = ();
+    while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
+        push @selected_accessions, [$selected_id, $selected_uniquename, $allele_dosage]
+    }
+
+#    print STDERR DUmper (\@selected_accessions);
+
+    return \@selected_accessions;
+
+}
 
 
 1;
