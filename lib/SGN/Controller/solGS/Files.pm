@@ -162,7 +162,7 @@ sub formatted_phenotype_file {
 sub phenotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
    
     if ($pop_id =~ /uploaded/) 
     {
@@ -185,7 +185,7 @@ sub phenotype_file_name {
 sub genotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
     
     if ($pop_id =~ /uploaded/) 
     {
@@ -301,11 +301,13 @@ sub get_solgs_dirs {
     my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
     my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
 
+
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
-	 $anova_temp,
+	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
+	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
+	 $anova_temp,$anova_cache,
 	], 
 	0, 0755
 	);
@@ -314,10 +316,10 @@ sub get_solgs_dirs {
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_prediction_upload_dir => $solgs_upload,
-              correlation_cache_dir       => $corre_cache,
-	      correlation_temp_dir        => $corre_temp,
 	      pca_cache_dir               => $pca_cache,
 	      pca_temp_dir                => $pca_temp,
+              correlation_cache_dir       => $corre_cache,
+	      correlation_temp_dir        => $corre_temp,
 	      histogram_dir               => $histogram_dir,
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,

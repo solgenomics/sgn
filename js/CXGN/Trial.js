@@ -345,6 +345,18 @@ function trial_detail_page_setup_dialogs() {
         get_select_box('trial_types', 'edit_trial_type',  { 'default' : default_type });
         jQuery('#edit_trial_type option[value="'+default_type+'"]').attr('selected','selected');
 
+        var default_type = document.getElementById("edit_trial_plot_width").getAttribute("value");
+        jQuery('#edit_trial_plot_width option[value="'+default_type+'"]').attr('selected','selected');
+
+        var default_type = document.getElementById("edit_trial_plot_length").getAttribute("value");
+        jQuery('#edit_trial_plot_length option[value="'+default_type+'"]').attr('selected','selected');
+
+        var default_type = document.getElementById("edit_trial_plan_to_genotype").getAttribute("value");
+        jQuery('#edit_trial_plan_to_genotype option[value="'+default_type+'"]').attr('selected','selected');
+
+        var default_type = document.getElementById("edit_trial_plan_to_cross").getAttribute("value");
+        jQuery('#edit_trial_plan_to_cross option[value="'+default_type+'"]').attr('selected','selected');
+
         //create bootstrap daterangepickers for planting and harvest dates
         var planting_date_element = jQuery("#edit_trial_planting_date");
         set_daterangepicker_default (planting_date_element);

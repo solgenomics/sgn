@@ -94,7 +94,7 @@
                     <br>
                         <b>-cross_name</b> (must exist in the database)
                     <br>
-                        <b>-progeny_name</b> (must not already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                        <b>-progeny_name</b> (accession names must not already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
                     <br>
                 </div>
             </div>
