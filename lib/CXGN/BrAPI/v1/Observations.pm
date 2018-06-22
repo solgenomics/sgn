@@ -7,7 +7,7 @@ use CXGN::Stock::Search;
 use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
-use CXGN::BrAPI::JSONResponse;
+use CXGN::BrAPI::FileRequest;
 use utf8;
 use JSON;
 
@@ -56,26 +56,28 @@ has 'status' => (
 sub observations_store {
     my $self = shift;
     my $search_params = shift;
-    my @observations = $search_params->{observations} ? @{$search_params->{observations}} : ();
+    my $observations = $search_params->{observations} ? $search_params->{observations} : ();
 
-    print STDERR "Observations are ". Dumper(@observations) . "\n";
+    print STDERR "Observations type is  ". ref($observations) . "\n";
+    print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $user_id = $search_params->{user_id};
     my $user_type = $search_params->{user_type};
+    my $archive_path = $search_params->{archive_path};
 
-    # Get user id from access token
-
+    print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
 
     # Use new CXGN::BrAPI::FileRequest module to create file from json and archive it
 
     my $archived_file = CXGN::BrAPI::FileRequest->new({
         user_id => $user_id,
-        user_role => $user_type,
+        user_type => $user_type,
+        archive_path => $archive_path,
         format => 'Fieldbook',  # use fieldbook database.csv format for observations data
-        data => \@observations
+        data => $observations
     });
 
     my $file = $archived_file->get_path();
@@ -90,7 +92,7 @@ sub observations_store {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
 
 
-= cut
+=comment
     # Parse file using CXGN::Phenotypes::ParseUpload
 
     $subdirectory = "brapi_phenotype_upload";
@@ -223,7 +225,7 @@ sub observations_store {
 =cut
 }
 
-= cut
+=comment
 sub observations_search {
     my $self = shift;
     my $search_params = shift;

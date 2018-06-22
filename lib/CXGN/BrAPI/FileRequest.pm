@@ -14,24 +14,8 @@ this module is used to create and archive files for BrAPI requests that store da
 
 use Moose;
 use Data::Dumper;
-
-has 'bcs_schema' => (
-    isa => "Bio::Chado::Schema",
-    is => 'ro',
-    required => 1,
-);
-
-has 'metadata_schema' => (
-    isa => "CXGN::Metadata::Schema",
-    is => 'ro',
-    required => 1,
-);
-
-has 'phenome_schema' => (
-    isa => "CXGN::Phenome::Schema",
-    is => 'ro',
-    required => 1,
-);
+use File::Spec::Functions;
+use DateTime;
 
 has 'user_id' => (
     is => 'ro',
@@ -39,7 +23,7 @@ has 'user_id' => (
     required => 1,
 );
 
-has 'user_name' => (
+has 'user_type' => (
     is => 'ro',
     isa => 'Str',
     required => 1,
@@ -51,8 +35,14 @@ has 'format' => (
 	required => 1,
 );
 
+has 'archive_path' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1,
+);
+
 has 'data' => (
-	isa => 'ArrayRef[ArrayRef]',
+	isa => 'ArrayRef',
 	is => 'rw',
 	required => 1,
 );
@@ -65,7 +55,7 @@ sub BUILD {
 	}
 }
 
-sub get_file {
+sub get_path {
 	my $self = shift;
 	my $format = $self->format;
 	if ($format eq 'Fieldbook'){
@@ -77,10 +67,13 @@ sub fieldbook {
 	my $self = shift;
 	my $data = $self->data;
     my $user_id = $self->user_id;
+    my $user_type = $self->user_type;
+    my $archive_path = $self->archive_path;
 
-    my $subdirectory_name = "brapi_observations";
-    my $archive_path = $self->archive_path();
-    my $archive_filename =
+    #check that user type is adequate to archive file
+
+    my $subdirectory = "brapi_observations";
+    my $archive_filename = "test_file";
 
     if (!-d $archive_path) {
         mkdir $archive_path;
@@ -90,33 +83,47 @@ sub fieldbook {
         mkdir (catfile($archive_path, $user_id));
     }
 
-    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-        mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    if (! -d catfile($archive_path, $user_id,$subdirectory)) {
+        mkdir (catfile($archive_path, $user_id, $subdirectory));
     }
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $file_path =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
-    #
-	# my $file_path = $self->absolute_file_path;
 
-	my $num_col = scalar(@{$data->[0]});
+    print STDERR "File path is: $file_path\n";
+
+    my @data = @{$data};
+
+    # print STDERR "First plot is: ".Dumper($first_plot)."\n";
+    # print STDERR "First plot id is: ".$first_plot->{'observationUnitDbId'}."\n";
+
+	# my $num_col = scalar(keys %{$data[0]});
+    # print STDERR "Num cols: $num_col\n";
+
 	open(my $fh, ">", $file_path);
-		print STDERR $file_path."\n";
-		foreach my $cols (@$data){
-			my $step = 1;
-			for(my $i=0; $i<$num_col; $i++) {
-				if ($cols->[$i]) {
-					print $fh "\"$cols->[$i]\"";
-				} else {
-					print $fh "\"\"";
-				}
-				if ($step < $num_col) {
-					print $fh ",";
-				}
-				$step++;
-			}
-			print $fh "\n";
+    print $fh '"plot_id","trait","value","timestamp","person"'."\n";
+		foreach my $plot (@data){
+            print $fh "\"$plot->{'observationUnitDbId'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationVariableDbId'}\"," || "\"\",";
+            print $fh "\"$plot->{'value'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationTimeStamp'}\"," || "\"\",";
+            print $fh "\"$plot->{'collector'}\"" || "\"\"";
+            print $fh "\n";
+            #
+			# my $step = 1;
+			# for(my $i=0; $i<$num_col; $i++) {
+			# 	if ($cols->[$i]) {
+			# 		print $fh "\"$cols->[$i]\"";
+			# 	} else {
+			# 		print $fh "\"\"";
+			# 	}
+			# 	if ($step < $num_col) {
+			# 		print $fh ",";
+			# 	}
+			# 	$step++;
+			# }
+			# print $fh "\n";
 		}
 	close $fh;
 

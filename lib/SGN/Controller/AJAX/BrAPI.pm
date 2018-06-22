@@ -51,11 +51,11 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 
 	my $page = $c->req->param("page") || 0;
 	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
-	my $session_token = $c->req->param("access_token");
+	my $session_token = $c->req->headers->header("access_token");
+
 	if (defined $c->request->data){
 		$page = $c->request->data->{"page"} || $page || 0;
 		$page_size = $c->request->data->{"pageSize"} || $page_size || $DEFAULT_PAGE_SIZE;
-		$session_token = $c->request->data->{"access_token"} || $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -2565,18 +2565,20 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
 
 sub observations : Chained('brapi') PathPart('observations') Args(0) : ActionClass('REST') { }
 
-sub observations_POST {
+sub observations_PUT {
 	my $self = shift;
 	my $c = shift;
     my $auth = _authenticate_user($c);
     my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-	my $clean_inputs = $c->stash->{clean_inputs};
+    print STDERR "OBSERVATIONS_PUT: Person id is $person_id and type is $user_type\n";
+    my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
         observations => $clean_inputs->{observations},
         user_id => $person_id,
-        user_type => $user_type
+        user_type => $user_type,
+        archive_path => $c->config->{archive_path}
     });
 	_standard_response_construction($c, $brapi_package_result);
 }
