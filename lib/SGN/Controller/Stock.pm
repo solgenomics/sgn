@@ -21,6 +21,7 @@ use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -224,6 +225,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     ####################
     my $is_owner;
     my $owner_ids = $c->stash->{owner_ids} || [] ;
+    my $editor_info = $self->_stock_editor_info($stock);
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
@@ -254,6 +256,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             dbh       => $dbh,
             is_owner  => $is_owner,
             owners    => $owner_ids,
+            editor_info => $editor_info,
             props     => $props,
             dbxrefs   => $dbxrefs,
             pubs      => $pubs,
@@ -899,6 +902,18 @@ sub _stock_owner_ids {
          $stock->get_stock_id
         );
     return $ids;
+}
+
+sub _stock_editor_info {
+    my ($self,$stock) = @_;
+    my @owner_info;
+    my $q = "SELECT sp_person_id, md_metadata.create_date FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $h = $stock->get_schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($sp_person_id, $timestamp) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp];
+    }
+    return \@owner_info;
 }
 
 sub _stock_has_pedigree {

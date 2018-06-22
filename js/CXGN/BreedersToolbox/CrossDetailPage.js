@@ -100,7 +100,7 @@ jQuery(document).ready(function() {
 
     function display_parents(cross_id){
         var property_table = jQuery('#parent_information').DataTable({
-            'ajax': '/ajax/cross/accession_plot_parents/'+cross_id,
+            'ajax': '/ajax/cross/accession_plot_plant_parents/'+cross_id,
             'paging' : false,
             'searching' : false,
             'bInfo' : false,

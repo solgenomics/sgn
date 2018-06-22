@@ -267,13 +267,14 @@ sub create_list_population_metadata_file {
     my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
               
     my $file = catfile ($tmp_dir, "metadata_${user_id}_${list_pop_id}");
- 
+   
     $self->create_list_population_metadata($c);
     my $metadata = $c->stash->{user_list_population_metadata};
     
     write_file($file, $metadata);
  
     $c->stash->{user_list_population_metadata_file} = $file;
+ 
   
 }
 
@@ -598,7 +599,7 @@ sub genotypes_list_genotype_file {
 	do_cleanup       => 0,
     };
 
-    my $args_file = $c->controller('solGS::solGS')->create_tempfile($temp_dir, 'geno-data-query-report-args');
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
     $c->stash->{report_file} = $args_file;
 
     nstore $args, $args_file 
@@ -676,7 +677,7 @@ sub plots_list_phenotype_file {
     };
 
     
-    my $args_file = $c->controller('solGS::solGS')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
     $c->stash->{report_file} = $args_file;
   
     nstore $args, $args_file 

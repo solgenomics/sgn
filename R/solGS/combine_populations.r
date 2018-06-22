@@ -11,6 +11,7 @@ library(data.table)
 library(phenoAnalysis)
 library(dplyr)
 library(tibble)
+library(genoDataFilter)
 
 allArgs <- commandArgs()
 
@@ -136,70 +137,11 @@ combinedPhenoPops$Average<-round(apply(combinedPhenoPops,
                                   digits = 2
                                   )
 
-markersList      <- c()
-combinedGenoPops <- c()
-cnt              <- 0
+combinedGenoPops       <- combineGenoData(allGenoFiles)
+combinedGenoPops$trial <- NULL
+combinedGenoPops       <- combinedGenoPops[order(rownames(combinedGenoPops)), ]
 
-for (popGenoFile in allGenoFiles) {
 
-    uniqGenoNames <- c()
-    cnt <- cnt + 1
-
-    genoData <- fread(popGenoFile,
-                      na.strings = c("NA", " ", "--", "-"),
-                      )
-
-    genoData <- data.frame(genoData)
-    message('cnt of genotypes in dataset: ', length(rownames(genoData)))
-    genoData <- genoData[!duplicated(genoData[,'V1']), ]
-    message('cnt of unique genotypes in dataset: ', length(rownames(genoData)))		
-    rownames(genoData) <- genoData[, 1]
-    genoData[, 1] <- NULL
-    
-    popGenoFile <- basename(popGenoFile)     
-    popId       <- str_extract(popGenoFile, "\\d+")
-    popIds      <- c(popIds, popId)
-
-    #popMarkers <- colnames(genoData)
-    #message("No of markers from population ", popId, ": ", length(popMarkers))
-    
-   # message("sum of geno missing values: ", sum(is.na(genoData)))
-   # genoData <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
-   # genoData <- data.frame(genoData)
-   # message("sum of geno missing values: ", sum(is.na(genoData)))
-    ## if (sum(is.na(genoData)) > 0) {
-    ##     message("sum of geno missing values: ", sum(is.na(genoData)))
-    ##     genoData <- na.roughfix(genoData)
-    ##     message("total number of stocks for pop ", popId,": ", length(rownames(genoData)))
-    ## }
-
-    if (cnt == 1 ) {
-        print('no need to combine, yet')
-        message('cnt of genotypes first dataset: ', length(rownames(genoData)))
-        combinedGenoPops <- genoData
-        
-    } else {
-        print('combining genotype datasets...')
-        
-        uniqGenoNames <- unique(rownames(combinedGenoPops))
-      
-        message('cnt of genotypes in new dataset ', popId, ': ',  length(rownames(genoData)) )
-       
-        genoData <- genoData[!(rownames(genoData) %in% uniqGenoNames),]
-
-        message('cnt of unique genotypes from new dataset ', popId, ': ', length(rownames(genoData)))
-
-        if (!is.null(genoData)) {        
-            combinedGenoPops <- rbind(combinedGenoPops, genoData)
-        } else {
-            message('dataset ', popId, ' has no unique genotypes.')
-        }
-    }   
-    
-}
-
-combinedGenoPops <- combinedGenoPops[order(rownames(combinedGenoPops)), ]
-message("combined number of genotypes in combined dataset: ", length(rownames(combinedGenoPops)))
 
 message("writing data to files...")
 #if(length(combinedPhenoFile) != 0 )

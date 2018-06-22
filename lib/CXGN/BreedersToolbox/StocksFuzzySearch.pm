@@ -80,11 +80,6 @@ sub get_matches {
 
     foreach my $stock_name (@stock_list) {
 
-        if (exists($uniquename_hash{$stock_name}) && $uniquename_hash{$stock_name} > 1){
-            $error .= "More than one uniquename match for $stock_name of type $stock_type. This should not happen!";
-            next;
-        }
-
         if (exists($uniquename_hash{$stock_name})){
             push @found_stocks, {matched_string => $stock_name, unique_name => $stock_name};
             next;

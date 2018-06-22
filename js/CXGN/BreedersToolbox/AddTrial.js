@@ -1217,7 +1217,10 @@ jQuery(document).ready(function ($) {
         var field_size = $('#new_trial_field_size').val();
         var field_trial_is_planned_to_be_genotyped = $('#add_project_trial_will_be_genotyped').val();
         var field_trial_is_planned_to_cross = $('#add_project_trial_will_be_crossed').val();
-        var add_project_trial_source_select = $('#add_project_trial_source_select').val();
+        var selectedTrials = [];
+        jQuery('#add_project_trial_source_select :selected').each(function(i, selectedElement) {
+            selectedTrials.push(jQuery(selectedElement).val());
+        });
 
         jQuery.ajax({
            type: 'POST',
@@ -1261,7 +1264,7 @@ jQuery(document).ready(function ($) {
                 'plot_length': plot_length,
                 'field_trial_is_planned_to_be_genotyped': field_trial_is_planned_to_be_genotyped,
                 'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross,
-                'add_project_trial_source': add_project_trial_source_select,
+                'add_project_trial_source': selectedTrials,
             },
             success: function (response) {
                 if (response.error) {
