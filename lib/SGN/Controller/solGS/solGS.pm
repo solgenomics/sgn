@@ -1024,9 +1024,16 @@ sub top_blups {
     my ($self, $c, $blups_file) = @_;
       
     my $blups = $self->convert_to_arrayref_of_arrays($c, $blups_file);
-   
-    my @top_blups = @$blups[0..9];
- 
+    my @top_blups;
+    if (scalar(@$blups) > 10) 
+    {
+	@top_blups = @$blups[0..9];
+    }
+    else 
+    {
+	@top_blups = @$blups;
+    }
+
     $c->stash->{top_blups} = \@top_blups;
 }
 
@@ -1119,11 +1126,11 @@ sub predict_selection_pop_single_pop_model {
     
     if (!-s $rrblup_selection_gebvs_file)
     {
-	$c->stash->{training_pop_id} = $training_pop_id;
-	$c->controller('solGS::Files')->phenotype_file_name($c);
+	$c->stash->{pop_id} = $training_pop_id;
+	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	my $pheno_file = $c->stash->{phenotype_file_name};
 
-	$c->controller('solGS::Files')->genotype_file_name($c);
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	my $geno_file = $c->stash->{genotype_file_name};
       
 	$c->stash->{pheno_file} = $pheno_file;

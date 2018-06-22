@@ -165,11 +165,11 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 
     my $analysis_profile = $c->req->params;
     $c->stash->{analysis_profile} = $analysis_profile;
+
     $self->parse_arguments($c);
-
-    $self->run_analysis($c);  
+    $self->run_analysis($c);
     $self->structure_output_details($c); 
-
+ 
     my $output_details = $c->stash->{bg_job_output_details};
       
     $c->stash->{r_temp_file} = 'analysis-status';
@@ -444,12 +444,15 @@ sub structure_output_details {
 
 	if ($pop_id =~ /uploaded/) {
 	    my $tmp_dir = $c->stash->{solgs_lists_dir};;	   
+
 	    my $files   = $c->controller('solGS::List')->create_list_pop_tempfiles($tmp_dir, $pop_id);
 	    $pheno_file = $files->{pheno_file};
 	    $geno_file  = $files->{geno_file};
 
-	    $solgs_controller->uploaded_population_summary($c, $pop_id);
-	    $pop_name = $c->stash->{project_name};	    
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
+
+	    $solgs_controller->uploaded_population_summary($c, $pop_id);	    
+	    $pop_name = $c->stash->{project_name};
 	} 
 	else 
 	{	    
@@ -627,7 +630,7 @@ sub run_analysis {
     my ($self, $c) = @_;
 
     $c->stash->{background_job} = 1;
-
+    
     my $analysis_profile = $c->stash->{analysis_profile};
     my $analysis_page    = $analysis_profile->{analysis_page};
     my $base             = $c->req->base;
@@ -669,12 +672,12 @@ sub run_analysis {
 	}
 	elsif ($analysis_page =~ /solgs\/population\//)
 	{
-	    my $pop_id = $c->stash->{model_id};
+	    my $pop_id = $c->stash->{model_id};	  
 
 	    if ($pop_id =~ /uploaded/)		
 	    {
 		$c->controller('solGS::List')->plots_list_phenotype_file($c);
-		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);		
+		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	    }
 	    else

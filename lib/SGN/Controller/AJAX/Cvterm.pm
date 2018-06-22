@@ -354,7 +354,7 @@ sub add_cvtermprop_POST {
         my $req = $c->req;
         my $cvterm_id = $c->req->param('cvterm_id');
         my $prop  = $c->req->param('prop');
-        my $cv_name = $c->req->param('cv_name') || 'cvterm_property'; 
+        my $cv_name = $c->req->param('cv_name') || 'trait_property'; 
 	$prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
 
