@@ -1983,7 +1983,7 @@ sub get_traits_assayed {
     my $cvtermprop_join = '';
     my $cvtermprop_where = '';
     if ($trait_format){
-        my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'trait_format', 'cvterm_property')->cvterm_id();
+        my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'trait_format', 'trait_property')->cvterm_id();
         $cvtermprop_join = ' JOIN cvtermprop ON (cvtermprop.cvterm_id = cvterm.cvterm_id) ';
         $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
     }

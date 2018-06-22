@@ -32,7 +32,7 @@ Naama Menda <nm249@cornell.edu>
   $editable => []
   $div_name => ''
   $edit_privs => 0
-  $cv_name  => 'cvterm_property'
+  $cv_name  => 'trait_property'
 </%args>
 
 <%perl>
