@@ -112,7 +112,7 @@ sub search {
         my $trait_cv = $schema->resultset("Cv::Cv")->search( { name => $trait_cv_name } )->single;
         my $trait_cv_id = $trait_cv->cv_id;
 
-        $and_conditions{cv_id} = $trait_cv_id;
+        $and_conditions{'me.cv_id'} = $trait_cv_id;
     }
 
     if ($ontology_db_ids && scalar(@$ontology_db_ids) > 0){

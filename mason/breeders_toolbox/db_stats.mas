@@ -52,7 +52,7 @@ $breeding_programs
         </&>
 
         <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
-            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0]  &>
+            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0], collapse_phenotypes_section => 0  &>
         </&>
 
     </div>

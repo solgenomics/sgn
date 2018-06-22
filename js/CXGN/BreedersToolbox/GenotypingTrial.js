@@ -76,7 +76,12 @@ jQuery(document).ready(function ($) {
         if (uploadFileXLS === ''){
             var uploadFileCoordinate = jQuery("#genotyping_trial_layout_upload_coordinate").val();
             if (uploadFileCoordinate === ''){
-                submit_genotype_trial_create(plate_data);
+                var uploadFileCoordinateCustom = jQuery("#genotyping_trial_layout_upload_coordinate_template").val();
+                if (uploadFileCoordinateCustom === ''){
+                    submit_genotype_trial_create(plate_data);
+                } else {
+                    submit_genotype_trial_upload(plate_data);
+                }
             } else {
                 submit_genotype_trial_upload(plate_data);
             }
@@ -397,6 +402,25 @@ jQuery(document).ready(function ($) {
                 }
             });
         }
+    });
+    
+    jQuery('#generate_genotyping_trial_barcode_link').click(function () {
+        jQuery('#generate_genotyping_trial_barcode_button_dialog').modal("show");
+    });
+    
+    jQuery('#geno_trial_accession_barcode').click(function () {
+        $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
+        $('#generate_genotrial_barcode_dialog').modal("show");
+    });
+    
+    jQuery('#trial_tissue_sample_barcode').click(function () {
+        $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
+        $('#generate_genotrial_barcode_dialog').modal("show");
+    });
+    
+    jQuery('#trial_plateID_barcode').click(function () {
+        $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
+        $('#genotrial_barcode_dialog').modal("show");
     });
 
 });

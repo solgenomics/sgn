@@ -16,7 +16,7 @@ $breeding_programs
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_trial_form" name="create_new_trial_form">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_new_multiloc_trial_form" name="create_new_multiloc_trial_form">
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Trial Name: </label>
                             <div class="col-sm-9">

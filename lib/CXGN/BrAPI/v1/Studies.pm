@@ -73,7 +73,7 @@ sub seasons {
 	foreach (@$data_window){
 		my ($year, $season) = split '\|', $_->[0];
 		push @data, {
-			seasonDbId=>$_->[1],
+			seasonDbId=>qq|$_->[1]|,
 			season=>$season ? $season : '',
 			year=>$year ? $year : ''
 		};
@@ -190,7 +190,7 @@ sub studies_germplasm {
 	foreach (@$data_window){
 		my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$_->{stock_id}});
 		push @germplasm_data, {
-			germplasmDbId=>$_->{stock_id},
+			germplasmDbId=>qq|$_->{stock_id}|,
 			germplasmName=>$_->{accession_name},
 			entryNumber=>$stock_object->entryNumber,
 			accessionNumber=>$stock_object->accessionNumber,
@@ -285,15 +285,17 @@ sub studies_detail {
             }
 
             my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
+            my $study_db_id = $t->get_trial_id();
+            my $folder_db_id = $folder->project_parent->project_id();
 			%result = (
-				studyDbId=>$t->get_trial_id(),
+				studyDbId=>qq|$study_db_id|,
 				studyName=>$t->get_name(),
-				trialDbId=>$folder->project_parent->project_id(),
+				trialDbId=>qq|$folder_db_id|,
 				trialName=>$folder->project_parent->name(),
 				studyType=>$project_type,
 				seasons=>\@years,
                 studyDescription=>$t->get_description(),
-				locationDbId=>$location_id,
+				locationDbId=>qq|$location_id|,
 				locationName=>$location_name,
 				programDbId=>$folder->breeding_program->project_id(),
 				programName=>$folder->breeding_program->name(),
@@ -303,7 +305,7 @@ sub studies_detail {
 				active=>'',
                 license=>$data_agreement,
 				location=> {
-					locationDbId => $location->[0],
+					locationDbId => qq|$location->[0]|,
 					locationType=>$location->[8],
 					name=> $location->[1],
 					abbreviation=>$location->[9],
@@ -524,13 +526,13 @@ sub observation_units {
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             push @brapi_observations, {
-                observationDbId => $_->{phenotype_id},
-                observationVariableDbId => $_->{trait_id},
+                observationDbId => qq|$_->{phenotype_id}|,
+                observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
                 observationTimestamp => $_->{timestamp},
                 season => $obs_unit->{year},
                 collector => $_->{operator},
-                value => $_->{value},
+                value => qq|$_->{value}|,
             };
         }
         my @brapi_treatments;
@@ -555,7 +557,7 @@ sub observation_units {
             germplasmName => $obs_unit->{germplasm_uniquename},
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            studyLocationDbId => $obs_unit->{trial_location_id},
+            studyLocationDbId => qq|$obs_unit->{trial_location_id}|,
             studyLocation => $obs_unit->{trial_location_name},
             programName => $obs_unit->{breeding_program_name},
             X => $obs_unit->{obsunit_col_number},

@@ -77,7 +77,7 @@ sub markerprofiles_search {
 	my @data;
 	foreach (@$genotypes){
 		push @data, {
-			markerprofileDbId => $_->{markerProfileDbId},
+			markerprofileDbId => qq|$_->{markerProfileDbId}|,
 			germplasmDbId => qq|$_->{germplasmDbId}|,
 			uniqueDisplayName => $_->{genotypeUniquename},
 			extractDbId => $_->{genotypeUniquename},
@@ -221,7 +221,7 @@ sub markerprofiles_allelematrix {
 			$markers = $json->decode($markers_json);
 			my $genotypeprop_id = $profile->genotypeprop_id();
 			foreach my $m (sort keys %unique_markers) {
-				push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
+				push @scores, [qq|$m|, qq|$genotypeprop_id|, $self->convert_dosage_to_genotype($markers->{$m})];
 			}
 		}
 	}

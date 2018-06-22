@@ -71,7 +71,7 @@ sub _validate_with_plugin {
     for my $i (5..$col_max){
         my $stockprops_head;
         if ($worksheet->get_cell(0,$i)) {
-            $stockprops_head  = $worksheet->get_cell(0,5)->value();
+            $stockprops_head  = $worksheet->get_cell(0,$i)->value();
         }
         if ($stockprops_head && !exists($allowed_stockprops_head{$stockprops_head})){
             push @error_messages, "$stockprops_head is not a valid property to have in the header! Please check the spreadsheet format help.";
