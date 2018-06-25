@@ -110,18 +110,23 @@ my $new_locus_link = !$person_id ? qq|<a href="/user/login">[log-in to associate
 my $owners = $stockref->{editor_info};
 my $owner_ids = $stockref->{owners};
 my $owners_html = '';
+my %unique_owners;
 foreach my $o_id (@$owner_ids) {
+    $unique_owners{$o_id}++;
+}
+my @owner_ids = keys %unique_owners;
+foreach my $o_id (@owner_ids){
   my $person = CXGN::People::Person->new($dbh, $o_id);
   my $first_name = $person->get_first_name;
   my $last_name = $person->get_last_name;
   $owners_html .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
 }
-my $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th></tr></thead><tbody>";
+my $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th><th>Modification Note</th></tr></thead><tbody>";
 foreach my $o_id (@$owners) {
   my $person = CXGN::People::Person->new($dbh, $o_id->[0]);
   my $first_name = $person->get_first_name;
   my $last_name = $person->get_last_name;
-  $editor_link_table .= qq|<tr><td><a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a></td><td>$o_id->[1]</td></tr>|;
+  $editor_link_table .= qq|<tr><td><a href="/solpeople/personal-info.pl?sp_person_id=$o_id->[0]">$first_name $last_name</a></td><td>$o_id->[1]</td><td>$o_id->[2]</td></tr>|;
 }
 $editor_link_table .= "</tbody></table>";
 $editor_link_table = "<br/>".$owners_html."<br/><br/>".$editor_link_table;
