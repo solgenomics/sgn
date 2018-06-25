@@ -194,11 +194,13 @@ my $start_time = time();
                         <thead>
                             <tr>
                                 <th>Cross Name</th>
-                                <th>Female Parent</th>
-                                <th>Male Parent</th>
                                 <th>Cross Type</th>
+                                <th>Female Parent</th>
+                                <th>Male Parent</th>                                
                                 <th>Female Plot</th>
                                 <th>Male Plot</th>
+                                <th>Female Plant</th>
+                                <th>Male Plant</th>
                             </tr>
                         </thead>
                     </table>

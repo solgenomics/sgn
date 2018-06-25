@@ -59,6 +59,12 @@ has 'stock_id' => (
     is => 'rw',
 );
 
+has 'is_saving' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
 # Returns the stock_owners as [sp_person_id, sp_person_id2, ..]
 has 'owners' => (
     isa => 'Maybe[ArrayRef[Int]]',
@@ -161,10 +167,10 @@ sub BUILD {
     my $stock;
     if ($self->stock_id){
         $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-    }
-    if (defined $stock) {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
+    }
+    if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
         $self->name($stock->name);
         $self->uniquename($stock->uniquename);

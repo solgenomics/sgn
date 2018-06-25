@@ -198,6 +198,8 @@ stock_relationship	rootstock_of					00079
 stock_relationship	scion_of					00079
 stock_relationship  female_plot_of    00086
 stock_relationship  male_plot_of    00086
+stock_relationship  female_plant_of    00094
+stock_relationship  male_plant_of    00094
 stock_type	accession				00052
 stock_type	backcross population				00052
 stock_type	cross				00052
@@ -223,6 +225,7 @@ trial_type	phenotyping_trial
 cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076
 cvterm_property	datatype	From BrAPI	03/27/2017	nm529	00076
 cvterm_property	code	From BrAPI	03/27/2017	nm529	00076
+cvterm_property	formula
 protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076
