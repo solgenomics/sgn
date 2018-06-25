@@ -71,7 +71,10 @@ function save_folder_categories() {
           'folder_for_genotyping_trials' : folder_for_genotyping_trials,
         },
         success: function(response) {
-            if(confirm('Categories set for folder!')){
+            if (response.error){
+                alert(response.error);
+            }
+            else if(confirm('Categories set for folder!')){
                 location.reload();
             }
         },

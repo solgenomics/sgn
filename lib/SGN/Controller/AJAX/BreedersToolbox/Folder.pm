@@ -105,9 +105,9 @@ sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent')
 sub set_folder_categories : Chained('get_folder') PathPart('categories') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
-    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
-    my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
+    my $folder_for_trials = $c->req->param("folder_for_trials") eq 'true' ? 1 : 0;
+    my $folder_for_crosses = $c->req->param("folder_for_crosses") eq 'true' ? 1 : 0;
+    my $folder_for_genotyping_trials = $c->req->param("folder_for_genotyping_trials") eq 'true' ? 1 : 0;
 
     if (! $self->check_privileges($c)) {
         return;

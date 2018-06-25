@@ -35,8 +35,8 @@ $has_child_folders => undef
 
 <& /page/page_title.mas, title=>"Folder detail for ".$folder_name &>
 
-<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name() &>
-<& /breeders_toolbox/folder/folder_move.mas, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name() &>
+<& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name(), folder_for_trials => $folder_for_trials, folder_for_crosses => $folder_for_crosses, folder_for_genotyping_trials => $folder_for_genotyping_trials &>
+<& /breeders_toolbox/folder/folder_move.mas, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name()   &>
 <& /breeders_toolbox/folder/edit_folder_name.mas, trial_id=>$folder_id, trial_name=>$folder_name, trial_type=>"Folder" &>
 <& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name &>
 

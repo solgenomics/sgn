@@ -215,6 +215,69 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
+    my $get_field_trials = $c->req->param("get_field_trials");
+    my $get_crossing_trials = $c->req->param("get_crossing_trials");
+    my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
+
+    my $projects;
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
+    } else {
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my $multiple = $c->req->param("multiple") || 0;
+    my $live_search = $c->req->param("live_search") || 0;
+
+    my @projects;
+    foreach my $project (@$projects) {
+        my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+        if ($get_field_trials){
+            if ($field_trials && scalar(@$field_trials)>0){
+                my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
+                push @projects, @trials;
+            }
+        }
+        if ($get_crossing_trials){
+            if ($cross_trials && scalar(@$cross_trials)>0){
+                my @trials = sort { $a->[1] cmp $b->[1] } @$cross_trials;
+                push @projects, @trials;
+            }
+        }
+        if ($get_genotyping_trials){
+            if ($genotyping_trials && scalar(@$genotyping_trials)>0){
+                my @trials = sort { $a->[1] cmp $b->[1] } @$genotyping_trials;
+                push @projects, @trials;
+            }
+        }
+    }
+
+    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+
+    my $html = simple_selectbox_html(
+      multiple => $multiple,
+      live_search => $live_search,
+      name => $name,
+      id => $id,
+      size => $size,
+      choices => \@projects,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $self = shift;
     my $c = shift;
