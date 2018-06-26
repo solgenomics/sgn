@@ -40,7 +40,3 @@ $trial
 </div>
 
 </&>
-
-<script>
-console.log('params in hidap section are <% $main_production_site_url %> and <% $program %> and <% $folder %> and <% $trial %>');
-</script>
