@@ -428,7 +428,7 @@ jQuery(document).ready( function() {
                 var plot_ids = [];
                 var trait_names = [];
                 var trait_ids = [];
-                var design;
+                var design = trialStudyDesign;
                 var plot_mums = [];
                 var observ_object = [];
 
@@ -514,7 +514,7 @@ jQuery(document).ready( function() {
                 // }
                 
                 console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(rows); console.log(cols);
-                
+                alert(design);
                 var psudo_rows = [];
                 var map_option = 0;
                 for (i=0; i<plot_names.length; i++){ 
@@ -586,7 +586,7 @@ jQuery(document).ready( function() {
                         unique_cols.push(itm);
                     }
                 });
-                
+                console.log(psudo_rows); console.log(psudo_cols);
                 var plot_popUp;
                 var result = [];
                 for (var i=0; i<plot_names.length; i++){ 
@@ -767,7 +767,8 @@ jQuery(document).ready( function() {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#container_heatmap").css("display", "none");
                     jQuery("#trait_heatmap").css("display", "none");
-                    jQuery("#trial_no_rowColMSG").css("display", "inline-block");
+                    jQuery("#trial_no_rowColMSG").css("display", "none");
+                    //jQuery("#trial_no_rowColMSG").css("display", "inline-block");
                 }
             },
              error: function(reponse) {
