@@ -92,9 +92,20 @@ has 'accession_list' => (
     is => 'rw',
 );
 
+has 'trial_design_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'trait_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
+);
+
+has 'trial_has_tissue_samples' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
 );
 
 has 'sort_by' => (
@@ -147,6 +158,10 @@ sub search {
             $trial_name_string .= $_;
         }
     }
+    my %trial_design_list;
+    if ($self->trial_design_list){
+        %trial_design_list = map { $_ => 1} @{$self->trial_design_list};
+    }
     my $trial_name_is_exact = $self->trial_name_is_exact;
     my $accession_list = $self->accession_list;
     my $trait_list = $self->trait_list;
@@ -163,6 +178,7 @@ sub search {
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
     my $harvest_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_harvest_date', 'project_property')->cvterm_id();
     my $planting_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_planting_date', 'project_property')->cvterm_id();
+    my $project_has_tissue_sample_entries = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id();
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $project_type_cv_id = $schema->resultset("Cv::Cv")->find( { name => "project_type" } )->cv_id();
@@ -220,8 +236,13 @@ sub search {
         $locations{ $row->nd_geolocation_id() } = $row->description();
     }
 
+    my %project_where;
+    if ($self->trial_has_tissue_samples){
+        $project_where{'projectprops.type_id'} = $project_has_tissue_sample_entries;
+    }
+
     my $trial_rs = $schema->resultset("Project::Project")->search(
-        {},
+        \%project_where,
         {
             join      => 'projectprops',
             '+select' => [ 'projectprops.type_id', 'projectprops.value' ],
@@ -273,6 +294,8 @@ sub search {
         $trials{$trial_name}->{folder} = $folders{$trial_id};
     }
 
+    #print STDERR Dumper \%trials;
+
     foreach my $t ( sort( keys(%trials) ) ) {
 		no warnings 'uninitialized';
 
@@ -312,6 +335,10 @@ sub search {
                 next
                     unless ( index($trial_name_string, $t) != -1 );
             }
+        }
+        if (scalar(keys %trial_design_list)>0){
+            next
+                unless ( exists( $trial_design_list{$trials{$t}->{design}} ) );
         }
 
         if ($trials{$t}->{design} eq 'treatment'){

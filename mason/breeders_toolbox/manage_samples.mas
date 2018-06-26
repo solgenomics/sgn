@@ -1,0 +1,20 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<& /page/page_title.mas, title=>"Manage Tissue Samples" &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Field Trial Tissue Samples</h4>", info_section_subtitle => 'View and create tissue samples for field trials. Tissue samples come from a plant in a plot.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="manage_tissue_samples_create_field_trial_samples">Create tissue samples for field trial</button>', icon_class => "glyphicon glyphicon-leaf", info_section_id => "manage_tissue_samples_field_trials" &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Genotyping Trial Tissue Samples</h4>", info_section_subtitle => 'View and create tissue samples for genotyping trials. Genotyping trials represent tissue samples in a 96 or 384 well plate layout.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="manage_tissue_samples_create_genotyping_trial">Create or upload a genotyping trial</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "manage_tissue_samples_genotyping_trials" &>
+
+<script>
+
+jQuery(document).ready(function(){
+
+});
+
+</script>
+
