@@ -89,7 +89,6 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
             $folder_string,
             $_->{year},
             $_->{location_name},
-            $_->{trial_type},
           ];
     }
     #print STDERR Dumper \@result;

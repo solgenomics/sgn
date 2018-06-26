@@ -18,7 +18,6 @@
                         <th>Folder</th>
                         <th>Year</th>
                         <th>Location</th>
-                        <th>Trial type</th>
                     </tr>
                 </thead>
             </table>
