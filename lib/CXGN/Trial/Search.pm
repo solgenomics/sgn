@@ -108,6 +108,12 @@ has 'trial_has_tissue_samples' => (
     default => 0
 );
 
+has 'field_trials_only' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
 has 'sort_by' => (
     isa => 'Str|Undef',
     is => 'rw'
@@ -339,6 +345,11 @@ sub search {
         if (scalar(keys %trial_design_list)>0){
             next
                 unless ( exists( $trial_design_list{$trials{$t}->{design}} ) );
+        }
+
+        if ($self->field_trials_only){
+            next
+                unless ( $trials{$t}->{design} ne 'genotyping_plate' && $trials{$t}->{trial_type} ne 'crossing_trial' );
         }
 
         if ($trials{$t}->{design} eq 'treatment'){

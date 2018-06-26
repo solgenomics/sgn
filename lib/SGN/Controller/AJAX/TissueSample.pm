@@ -17,6 +17,7 @@ use Data::Dumper;
 use JSON;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -39,6 +40,8 @@ sub tissue_sample_field_trials_GET : Args(0) {
     });
     my $data = $trial_search->search();
     my @result;
+    my %selected_columns = ('tissue_sample_name'=>1, 'tissue_sample_id'=>1, 'plant_name'=>1, 'plot_name'=>1, 'block_number'=>1, 'plant_number'=>1, 'plot_number'=>1, 'rep_number'=>1, 'row_number'=>1, 'col_number'=>1, 'accession_name'=>1, 'is_a_control'=>1);
+    my $selected_columns_json = encode_json \%selected_columns;
     foreach (@$data){
         my $folder_string = '';
         if ($_->{folder_name}){
@@ -55,7 +58,8 @@ sub tissue_sample_field_trials_GET : Args(0) {
             $_->{trial_type},
             $_->{design},
             $_->{project_planting_date},
-            $_->{project_harvest_date}
+            $_->{project_harvest_date},
+            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=field_trial_tissue_samples&selected_columns=$selected_columns_json'>Download Layout</a>"
           ];
     }
     #print STDERR Dumper \@result;
@@ -89,6 +93,7 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
             $folder_string,
             $_->{year},
             $_->{location_name},
+            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
           ];
     }
     #print STDERR Dumper \@result;

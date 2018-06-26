@@ -22,6 +22,7 @@
                         <th>Design</th>
                         <th>Planting Date</th>
                         <th>Harvest Date</th>
+                        <th>Download</th>
                     </tr>
                 </thead>
             </table>

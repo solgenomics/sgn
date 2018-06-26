@@ -5,7 +5,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::Search;
-
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -26,22 +26,29 @@ sub search : Path('/ajax/search/trials') Args(0) {
     }
 
     print STDERR "location: " . $nd_geolocation . "\n";
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,
         location_list=>\@location_names,
+        field_trials_only=>1
     });
     my $data = $trial_search->search();
     my @result;
+    my %selected_columns = ('plot_name'=>1, 'plot_id'=>1, 'block_number'=>1, 'plot_number'=>1, 'rep_number'=>1, 'row_number'=>1, 'col_number'=>1, 'accession_name'=>1, 'is_a_control'=>1);
+    my $selected_columns_json = encode_json \%selected_columns;
     foreach (@$data){
         my $folder_string = '';
         if ($_->{folder_name}){
             $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
         }
-        push @result,
-          [
+        my @res;
+        if ($checkbox_select_name){
+            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{trial_id}'>";
+        }
+        push @res, (
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
             $_->{description},
             "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
@@ -51,8 +58,10 @@ sub search : Path('/ajax/search/trials') Args(0) {
             $_->{trial_type},
             $_->{design},
             $_->{project_planting_date},
-            $_->{project_harvest_date}
-          ];
+            $_->{project_harvest_date},
+            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plots&selected_columns=$selected_columns_json'>Download Plot Layout</a>"
+        );
+        push @result, \@res;
     }
     #print STDERR Dumper \@result;
 

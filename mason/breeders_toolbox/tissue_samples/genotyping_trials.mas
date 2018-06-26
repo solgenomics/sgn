@@ -18,6 +18,7 @@
                         <th>Folder</th>
                         <th>Year</th>
                         <th>Location</th>
+                        <th>Download</th>
                     </tr>
                 </thead>
             </table>
