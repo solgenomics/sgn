@@ -114,7 +114,7 @@ sub delete {
 
     my $stock      = $self->get_object();
     my $stock_name = $stock->uniquename();
-    my $stock_id = $stock->get_stock_id();
+    my $stock_id = $stock->stock_id();
     my %json_hash= $self->get_json_hash();
     my $refering_page="/stock/$stock_id/view";
 

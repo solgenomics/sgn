@@ -62,6 +62,7 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{folder_name} = $folder_project->name();
     $c->stash->{folder_for_trials} = $folder->folder_for_trials();
     $c->stash->{folder_for_crosses} = $folder->folder_for_crosses();
+    $c->stash->{folder_for_genotyping_trials} = $folder->folder_for_genotyping_trials();
     $c->stash->{folder_description} = $folder_project->description();
     $c->stash->{has_child_folders} = $has_child_folders;
     if (!$folder->breeding_program) {

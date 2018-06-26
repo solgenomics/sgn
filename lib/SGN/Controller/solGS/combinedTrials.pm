@@ -652,7 +652,7 @@ sub catalogue_combined_pops {
 
 
 sub get_combined_pops_list {
-    my ($self, $c, $combined_pops_id) = @_;
+    my ($self, $c, $id) = @_;
 
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
@@ -661,13 +661,17 @@ sub get_combined_pops_list {
     
     foreach my $entry (@combos)
     {
-        if ($entry =~ m/$combined_pops_id/)
+        if ($entry =~ m/$id/)
         {
 	    chomp($entry);
             my ($combo_pops_id, $pops)  = split(/\t/, $entry);
-	    my @pops_list = split(',', $pops);
-	    $c->stash->{combined_pops_list} = \@pops_list;
-            $c->stash->{trait_combo_pops} = \@pops_list;
+
+	    if ($id == $combo_pops_id)
+	    {
+		my @pops_list = split(',', $pops);
+		$c->stash->{combined_pops_list} = \@pops_list;
+		$c->stash->{trait_combo_pops} = \@pops_list;
+	    }
         }   
     }     
 
