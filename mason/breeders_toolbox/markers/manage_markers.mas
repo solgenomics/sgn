@@ -23,8 +23,16 @@
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Description:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="marker_set_desc" placeholder="Enter description">
                                         <div class="input-group-btn">
-                                            <button class="btn btn-info" id="save_marker_set" name="save_marker_set"> Add marker set </button>
+                                            <button class="btn btn-info" id="save_marker_set" name="save_marker_set"> Add new marker set </button>
                                         </div>
                                 </div>
                             </div>
