@@ -434,10 +434,10 @@ jQuery(document).ready( function() {
 
                 jQuery.each(newData, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
-                        if (key == 'X'){
+                        if (key == 'Y'){
                             rows.push(value);
                         }
-                        if (key == 'Y'){
+                        if (key == 'X'){
                             cols.push(value);
                         }
                         if (key == 'blockNumber'){
@@ -814,10 +814,10 @@ jQuery(document).ready( function() {
                 var plant_names = [];
                 jQuery.each(data, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
-                        if (key == 'X'){
+                        if (key == 'Y'){
                             rows.push(value);
                         }
-                        if (key == 'Y'){
+                        if (key == 'X'){
                             cols.push(value);
                         }
                         if (key == 'blockNumber'){
