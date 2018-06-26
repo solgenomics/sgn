@@ -1,31 +1,20 @@
 <%args>
-$trial_id
+$main_production_site_url
+$program
+$folder
+$trial
 </%args>
 
 
 <&| /page/info_section.mas, id => "hidap_trial", title=>"HIDAP Trial Analysis", collapsible=>1, collapsed => 0 &>
 
 <div class="row">
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Map&fbaInput=<% $trial_id %>" target="_blank">
+  <div class="col-sm-6">
+    <a href='https://apps.cipotato.org/hidap_sbase/?server=<% $main_production_site_url %>&program=<% $program %>&trial=<% $folder %>&study=<% $trial %>&item=graph' target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
-            Phenotype Plot Map
-          </div>
-          <div class="col-sm-3">
-            <span class="glyphicon glyphicon-th"></span>
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Correlation&fbaInput=<% $trial_id %>" target="_blank">
-      <div class="well">
-        <div class="row">
-          <div class="col-sm-9">
-            Phenotype Correlation
+            Exploratory Analysis
           </div>
           <div class="col-sm-3">
             <span class="glyphicon glyphicon-stats"></span>
@@ -34,12 +23,12 @@ $trial_id
       </div>
     </a>
   </div>
-  <div class="col-sm-4">
-    <a href="http://hidap.sgn.cornell.edu/hd/?tabAnalysis=Report&fbaInput=<% $trial_id %>" target="_blank">
+  <div class="col-sm-6">
+  <a href='https://apps.cipotato.org/hidap_sbase/?server=<% $main_production_site_url %>&program=<% $program %>&trial=<% $folder %>&study=<% $trial %>&item=report' target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
-            Analysis Report
+            Trial Report
           </div>
           <div class="col-sm-3">
             <span class="glyphicon glyphicon-book"></span>
@@ -51,3 +40,7 @@ $trial_id
 </div>
 
 </&>
+
+<script>
+console.log('params in hidap section are <% $main_production_site_url %> and <% $program %> and <% $folder %> and <% $trial %>');
+</script>
