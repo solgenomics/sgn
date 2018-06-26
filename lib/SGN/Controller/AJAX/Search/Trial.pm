@@ -44,7 +44,7 @@ sub search : Path('/ajax/search/trials') Args(0) {
           [
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
             $_->{description},
-            $_->{breeding_program_name},
+            "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
             $folder_string,
             $_->{year},
             $_->{location_name},
