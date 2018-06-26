@@ -58,13 +58,16 @@ sub observations_store {
     my $search_params = shift;
     my $observations = $search_params->{observations} ? $search_params->{observations} : ();
 
-    print STDERR "Observations type is  ". ref($observations) . "\n";
     print STDERR "Observations are ". Dumper($observations) . "\n";
 
+    my $schema = $self->bcs_schema;
+    my $metadata_schema = $self->metadata_schema;
+    my $phenome_schema = $self->phenome_schema;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $user_id = $search_params->{user_id};
+    my $username = $search_params->{username};
     my $user_type = $search_params->{user_type};
     my $archive_path = $search_params->{archive_path};
 
@@ -73,6 +76,7 @@ sub observations_store {
     # Use new CXGN::BrAPI::FileRequest module to create file from json and archive it
 
     my $archived_file = CXGN::BrAPI::FileRequest->new({
+        schema=>$schema,
         user_id => $user_id,
         user_type => $user_type,
         archive_path => $archive_path,
@@ -84,31 +88,21 @@ sub observations_store {
 
     print STDERR "Archived File is in $file\n";
 
-    my $total_count = 1;
-    my @data;
-    my %result = (data => \@data);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
-
-
-=comment
     # Parse file using CXGN::Phenotypes::ParseUpload
-
-    $subdirectory = "brapi_phenotype_upload";
-    $validate_type = "field book";
-    $metadata_file_type = "brapi phenotype file";
-    $timestamp_included = 1;
+    my @error_status = [];
+    my @success_status = [];
+    my $validate_type = "field book";
+    my $metadata_file_type = "brapi phenotype file";
+    my $timestamp_included = 1;
     # $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
-    $data_level = $c->req->param('upload_fieldbook_phenotype_data_level') || 'plots';
+    my $data_level = 'plots';
 
-    my $user_type = $user->get_object->get_user_type();
     if ($user_type ne 'submitter' && $user_type ne 'curator') {
         push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
         return (\@success_status, \@error_status);
     }
 
-    my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
+    my $overwrite_values = 0;
     if ($overwrite_values) {
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
@@ -117,39 +111,37 @@ sub observations_store {
         }
     }
 
-    # my $upload_original_name = $upload->filename();
+    # my $file = $upload->filename();
     # my $upload_tempfile = $upload->tempname;
-    my %phenotype_metadata;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
+    #
+    # my $uploader = CXGN::UploadFile->new({
+    #     tempfile => $upload_tempfile,
+    #     subdirectory => $subdirectory,
+    #     archive_path => $c->config->{archive_path},
+    #     archive_filename => $file,
+    #     timestamp => $timestamp,
+    #     user_id => $user_id,
+    #     user_role => $user_type
+    # });
+    #
+    # my $file = $uploader->archive();
+    # my $md5 = $uploader->get_md5($file);
+    # if (!$file) {
+    #     push @error_status, "Could not save file $file in archive.";
+    #     return (\@success_status, \@error_status);
+    # } else {
+    #     push @success_status, "File $file saved in archive.";
+    # }
+    # unlink $upload_tempfile;
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        return (\@success_status, \@error_status);
-    } else {
-        push @success_status, "File $upload_original_name saved in archive.";
-    }
-    unlink $upload_tempfile;
-
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validate_file = $parser->validate($validate_type, $file, $timestamp_included, $data_level, $schema);
     if (!$validate_file) {
-        push @error_status, "Archived file not valid: $upload_original_name.";
+        push @error_status, "Archived file not valid: $file.";
         return (\@success_status, \@error_status);
     }
     if ($validate_file == 1){
-        push @success_status, "File valid: $upload_original_name.";
+        push @success_status, "File valid: $file.";
     } else {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
@@ -158,71 +150,83 @@ sub observations_store {
     }
 
     ## Set metadata
-    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    my %phenotype_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    $phenotype_metadata{'archived_file'} = $file;
     $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
-    my $operator = $user->get_object()->get_username();
-    $phenotype_metadata{'operator'} = $operator;
+    $phenotype_metadata{'operator'} = $username;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $parsed_file = $parser->parse($validate_type, $file, $timestamp_included, $data_level, $schema);
     if (!$parsed_file) {
-        push @error_status, "Error parsing file $upload_original_name.";
+        print STDERR "Error parsing file $file.";
+        push @error_status, "Error parsing file $file.";
         return (\@success_status, \@error_status);
     }
     if ($parsed_file->{'error'}) {
+        print STDERR $parsed_file->{'error'};
         push @error_status, $parsed_file->{'error'};
     }
     my %parsed_data;
     my @plots;
     my @traits;
-    if (scalar(@error_status) == 0) {
+    # print STDERR "Length error status is ".scalar(@error_status);
+    # print STDERR "\nError status is ".Dumper(@error_status);
+
+        print STDERR "Defining plots and traits from parsed data";
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'plots'}};
             @traits = @{$parsed_file->{'traits'}};
             push @success_status, "File data successfully parsed.";
         }
-    }
-
 
     # - Store phenotypes using CXGN::Phenotypes::StorePhenotypes
+
+    print STDERR "Stock List: @plots\n Trait List: @traits\n Values Hash: ".Dumper(%parsed_data)."\n";
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
-        stock_list=>$plots,
-        trait_list=>$traits,
-        values_hash=>$parsed_data,
+        stock_list=>\@plots,
+        trait_list=>\@traits,
+        values_hash=>\%parsed_data,
         has_timestamps=>$timestamp_included,
-        overwrite_values=>$overwrite,
-        metadata_hash=>$phenotype_metadata,
-        image_zipfile_path=>$image_zip
+        overwrite_values=>0,
+        metadata_hash=>\%phenotype_metadata
     );
+
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 
     if ($verified_error) {
+        print STDERR "Error: $verified_error\n";
     }
     if ($verified_warning) {
+        print STDERR "Warning: $verified_warning\n";
     }
 
-    my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
+    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
     if ($stored_phenotype_error) {
+        print STDERR "Error: $stored_phenotype_error\n";
     }
     if ($stored_phenotype_success) {
+        print STDERR "Success: $stored_phenotype_success\n";
     }
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    # my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    # my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
+    my $total_count = 1;
     my @data;
     my %result = (data => \@data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
-=cut
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
+
 }
 
 =comment

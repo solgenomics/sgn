@@ -2568,15 +2568,19 @@ sub observations : Chained('brapi') PathPart('observations') Args(0) : ActionCla
 sub observations_PUT {
 	my $self = shift;
 	my $c = shift;
+    my $dbh = $c->dbc->dbh;
     my $auth = _authenticate_user($c);
-    my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-    print STDERR "OBSERVATIONS_PUT: Person id is $person_id and type is $user_type\n";
+    my ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($dbh)->query_from_cookie($c->stash->{session_token});
+    my $p = CXGN::People::Person->new($dbh, $user_id);
+    my $username = $p->get_username;
+    print STDERR "OBSERVATIONS_PUT: User is $username and type is $user_type\n";
     my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
         observations => $clean_inputs->{observations},
-        user_id => $person_id,
+        user_id => $user_id,
+        username => $username,
         user_type => $user_type,
         archive_path => $c->config->{archive_path}
     });

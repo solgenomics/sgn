@@ -17,6 +17,12 @@ use Data::Dumper;
 use File::Spec::Functions;
 use DateTime;
 
+has 'schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
 has 'user_id' => (
     is => 'ro',
     isa => 'Int',
@@ -72,7 +78,7 @@ sub fieldbook {
 
     #check that user type is adequate to archive file
 
-    my $subdirectory = "brapi_observations";
+    my $subdirectory = "brapi_observations_upload";
     my $archive_filename = "test_file";
 
     if (!-d $archive_path) {
@@ -104,8 +110,11 @@ sub fieldbook {
 	open(my $fh, ">", $file_path);
     print $fh '"plot_id","trait","value","timestamp","person"'."\n";
 		foreach my $plot (@data){
-            print $fh "\"$plot->{'observationUnitDbId'}\"," || "\"\",";
-            print $fh "\"$plot->{'observationVariableDbId'}\"," || "\"\",";
+
+            my $uniquename = $self->schema->resultset('Stock::Stock')->find({'stock_id' => $plot->{'observationUnitDbId'}})->uniquename();
+
+            print $fh "\"$uniquename\"," || "\"\",";
+            print $fh "\"|$plot->{'observationVariableDbId'}\"," || "\"\",";
             print $fh "\"$plot->{'value'}\"," || "\"\",";
             print $fh "\"$plot->{'observationTimeStamp'}\"," || "\"\",";
             print $fh "\"$plot->{'collector'}\"" || "\"\"";
