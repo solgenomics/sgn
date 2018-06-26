@@ -385,6 +385,7 @@ my $image_ids =  $stockref->{image_ids} || [] ;
 var trial_id = <% $trial_id %>;
 var value = 'plot';
 var selected;
+var trialStudyDesign;
 var phenotypes_id = [];
 var ctrlFuncDataset;
 var newData;
@@ -512,13 +513,13 @@ jQuery(document).ready( function() {
                 //     });
                 // }
                 
-                console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(trait_names);
+                console.log(pheno_values); console.log(pheno_ids); console.log(trait_ids); console.log(rows); console.log(cols);
                 
                 var psudo_rows = [];
                 var map_option = 0;
                 for (i=0; i<plot_names.length; i++){ 
-                    if (rows[i] != '') {}
-                    else if (rows[i] == '') {
+                    if (rows[i] != null) {}
+                    else if (rows[i] == null) {
                         map_option = 1;
             			if (blocks[i] && design != 'splitplot'){
             				var r = blocks[i];
@@ -846,6 +847,7 @@ jQuery(document).ready( function() {
                                 }
                                 if (key_add == 'designType'){
                                     design = value_add;
+                                    trialStudyDesign = value_add;
                                 }
                                 if (key_add == 'plotImageDbIds'){
                                     plotImageDbIds.push(value_add);
