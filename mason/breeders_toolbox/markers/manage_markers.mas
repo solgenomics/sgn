@@ -108,8 +108,24 @@
     <table id="marker_sets" width="100%" class="table table-hover table-striped">
         <thead>
             <tr>
-                <th>Marker Sets</th>
+                <th>Marker Set Name</th>
+                <th>Number of Markers</th>
+                <th>Description</th>
             </tr>
         </thead>
     </table>
 </&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#marker_sets').DataTable({
+        'ajax':'/marker_sets/available',
+    });
+
+
+});
+
+</script>
