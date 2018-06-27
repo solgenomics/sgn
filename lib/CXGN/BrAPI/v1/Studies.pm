@@ -419,7 +419,6 @@ sub studies_layout {
 	my $count = 0;
     my $window_count = 0;
 	my $offset = $page*$page_size;
-    my %additional_info;
 	foreach my $plot_number (sort keys %$design) {
 		if ($count >= $offset && $window_count < $page_size){
 			$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
@@ -428,6 +427,7 @@ sub studies_layout {
 			} else {
 				$type = 'Test';
 			}
+            my %additional_info;
 			if ($design->{$plot_number}->{plant_names}){
 				$additional_info{plantNames} = $design->{$plot_number}->{plant_names};
 			}
@@ -437,9 +437,13 @@ sub studies_layout {
             my $image_id = CXGN::Stock->new({
     			schema => $self->bcs_schema,
     			stock_id => $design->{$plot_number}->{plot_id},
-    		});
+    		}); 
     		my @plot_image_ids = $image_id->get_image_ids();
-            $additional_info{plotImageDbIds} = \@plot_image_ids;
+            my @ids;
+            foreach my $arrayimage (@plot_image_ids){
+                push @ids, @$arrayimage->[0];
+            }
+            $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
             $additional_info{designType} = $design_type;
              
