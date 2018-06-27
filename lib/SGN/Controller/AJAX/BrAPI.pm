@@ -56,6 +56,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	if (defined $c->request->data){
 		$page = $c->request->data->{"page"} || $page || 0;
 		$page_size = $c->request->data->{"pageSize"} || $page_size || $DEFAULT_PAGE_SIZE;
+        $session_token = $c->request->data->{"access_token"} || $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");

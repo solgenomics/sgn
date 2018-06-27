@@ -99,7 +99,7 @@ sub fieldbook {
 
     my @data = @{$data};
 
-	open(my $fh, ">", $file_path);
+	open(my $fh, ">", $file_path) or die "Couldn't open file $file_path: $!";
     print $fh '"plot_name","plot_id","trait_id","trait","value","timestamp","person"'."\n";
 		foreach my $plot (@data){
             print $fh "\"$plot->{'observationUnitName'}\"," || "\"\",";
