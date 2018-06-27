@@ -436,10 +436,10 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
   
     my ($pop_id, $action) = @{$c->req->captures};
    
-    my $uploaded_reference = $c->req->param('uploaded_reference');
-    $c->stash->{uploaded_reference} = $uploaded_reference;
+    my $list_reference = $c->req->param('list_reference');
+    $c->stash->{list_reference} = $list_reference;
 
-    if ($uploaded_reference) 
+    if ($list_reference) 
     {
         $pop_id = $c->req->param('model_id');
 
@@ -449,10 +449,10 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
 
     if ($pop_id )
     {   
-        if($pop_id =~ /uploaded/) 
+        if($pop_id =~ /list/) 
         {
-            $c->stash->{uploaded_reference} = 1;
-            $uploaded_reference = 1;
+            $c->stash->{list_reference} = 1;
+            $list_reference = 1;
         }
 
         $c->stash->{pop_id} = $pop_id; 
@@ -477,7 +477,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
  
     my $pheno_data_file = $c->stash->{phenotype_file};
     
-    if ($uploaded_reference) 
+    if ($list_reference) 
     {
 	my $ret->{status} = 'failed';
 	if ( !-s $pheno_data_file )
@@ -493,7 +493,7 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
 } 
 
 
-sub uploaded_population_summary {
+sub list_population_summary {
     my ($self, $c, $list_pop_id) = @_;
     
     my $tmp_dir = $c->stash->{solgs_lists_dir};
@@ -611,12 +611,12 @@ sub project_description {
     my ($self, $c, $pr_id) = @_;
 
     $c->stash->{pop_id} = $pr_id;
-    $c->stash->{uploaded_reference} = 1 if ($pr_id =~ /uploaded/);
+    $c->stash->{list_reference} = 1 if ($pr_id =~ /list/);
 
     my $protocol = $c->config->{default_genotyping_protocol};
     $protocol = 'N/A' if !$protocol;
 
-    if(!$c->stash->{uploaded_reference}) {
+    if(!$c->stash->{list_reference}) {
         my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
 
         while (my $row = $pr_rs->next)
@@ -634,7 +634,7 @@ sub project_description {
     else 
     {
         $c->stash->{model_id} = $pr_id;
-        $self->uploaded_population_summary($c, $pr_id);
+        $self->list_population_summary($c, $pr_id);
     }
     
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
@@ -685,9 +685,9 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_set_type} = 'single population';
     
-    if ($training_pop_id =~ /uploaded/) 
+    if ($training_pop_id =~ /list/) 
     {
-        $self->uploaded_population_summary($c, $training_pop_id);
+        $self->list_population_summary($c, $training_pop_id);
 	$c->stash->{training_pop_id} = $c->stash->{project_id};
 	$c->stash->{training_pop_name} = $c->stash->{project_name};
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
@@ -704,9 +704,9 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
         $c->stash->{training_pop_owner} = $c->stash->{project_owners};            
     }
 
-    if ($selection_pop_id =~ /uploaded/) 
+    if ($selection_pop_id =~ /list/) 
     {
-        $self->uploaded_population_summary($c, $selection_pop_id);
+        $self->list_population_summary($c, $selection_pop_id);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
@@ -1236,7 +1236,7 @@ sub list_predicted_selection_pops {
     
     foreach (@files) 
     {        
-        unless ($_ =~ /uploaded/) {
+        unless ($_ =~ /list/) {
             my ($model_id2, $pred_pop_id, $trait_id) = $_ =~ m/\d+/g;
             
             push @pred_pops, $pred_pop_id;  
@@ -1281,9 +1281,9 @@ sub prediction_pop_analyzed_traits {
    
     no warnings 'uninitialized';
   
-    my $prediction_is_uploaded = $c->stash->{uploaded_prediction};
+    my $prediction_is_list = $c->stash->{list_prediction};
   
-    #$prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded;
+    #$prediction_pop_id = "list_${prediction_pop_id}" if $prediction_is_list;
  
     if ($training_pop_id !~ /$prediction_pop_id/) 
     {
@@ -1361,7 +1361,7 @@ sub download_prediction_urls {
 	$model_tr_id = (split '/', $page)[2];
     }
 
-    if ($page =~ /(\/uploaded\/prediction\/)/ && $page !~ /(\solgs\/traits\/all)/)
+    if ($page =~ /(\/list\/prediction\/)/ && $page !~ /(\solgs\/traits\/all)/)
     { 
 	($model_tr_id) = $page =~ /(\d+)$/;
 	$model_tr_id =~ s/s+//g;	
@@ -1406,7 +1406,7 @@ sub download_prediction_urls {
     {        
         $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a> |;
 
-	$c->stash->{download_prediction} = undef if $c->stash->{uploaded_prediction};
+	$c->stash->{download_prediction} = undef if $c->stash->{list_prediction};
     }
   
 }
@@ -1866,7 +1866,7 @@ sub check_population_has_genotype {
     my $has_genotype;
    
     my $geno_file;
-    if ($pop_id =~ /upload/) 
+    if ($pop_id =~ /list/) 
     {	  	
 	my $dir       = $c->stash->{solgs_lists_dir};
 	my $user_id   = $c->user->id;
@@ -1924,7 +1924,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 
 	    my $training_pop_geno_file;
 	
-	    if ($training_pop_id =~ /upload/) 
+	    if ($training_pop_id =~ /list/) 
 	    {	  	
 		my $dir = $c->stash->{solgs_lists_dir};
 		my $user_id = $c->user->id;
@@ -2645,7 +2645,7 @@ sub compare_genotyping_platforms {
           
             map { s/genotype_data_|\.txt//g } $pop_id_1, $pop_id_2;
            
-            my $list_type_pop = $c->stash->{uploaded_prediction};
+            my $list_type_pop = $c->stash->{list_prediction};
           
             unless ($list_type_pop) 
             {
@@ -3479,7 +3479,7 @@ sub phenotype_file {
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
     
-    if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {	
+    if ($c->stash->{list_reference} || $pop_id =~ /list/) {	
 	if (!$c->user) {
 	    
 	    my $page = "/" . $c->req->path;
@@ -3506,7 +3506,7 @@ sub phenotype_file {
 	    'traits_list_file' => $traits_file,
 	};
 	   
-	if (!$c->stash->{uploaded_reference}) 
+	if (!$c->stash->{list_reference}) 
 	{
 	    $self->submit_cluster_phenotype_query($c, $args);
 	}	    
@@ -3616,7 +3616,7 @@ sub genotype_file  {
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
   
-    if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) 
+    if ($c->stash->{list_reference} || $pop_id =~ /list/) 
     {
   	if (!$c->user)
 	{
@@ -3638,7 +3638,7 @@ sub genotype_file  {
     {  
 	my $model_id = $c->stash->{model_id};
 	
-	my $dir = ($model_id =~ /uploaded/) 
+	my $dir = ($model_id =~ /list/) 
 	    ? $c->stash->{solgs_lists_dir} 
 	    : $c->stash->{solgs_cache_dir};
 
@@ -3834,7 +3834,7 @@ sub run_rrblup_trait {
         
         if ($prediction_id)
         { 
-            #$prediction_id = "prediction_id} if $c->stash->{uploaded_prediction};
+            #$prediction_id = "prediction_id} if $c->stash->{list_prediction};
             my $identifier =  $pop_id . '_' . $prediction_id;
 
             $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);

@@ -68,7 +68,7 @@ sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection'
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     
-    $c->stash->{uploaded_prediction} = 1;
+    $c->stash->{list_prediction} = 1;
    
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
    
@@ -101,7 +101,7 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     $c->stash->{model_id}            = $training_pop_id; 
     $c->stash->{pop_id}              = $training_pop_id; 
     $c->stash->{selection_pop_id}    = $selection_pop_id;  
-    $c->stash->{uploaded_prediction} = $args->{population_type};
+    $c->stash->{list_prediction} = $args->{population_type};
     $c->stash->{trait_id}            = $trait_id;
 
     if ($args->{data_set_type} =~ /combined populations/) 
@@ -286,7 +286,7 @@ sub predict_list_selection_pop_single_pop_model {
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
     
-    $c->stash->{uploaded_prediction} = 1;
+    $c->stash->{list_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
@@ -350,7 +350,7 @@ sub predict_list_selection_pop_combined_pops_model {
    
     $c->stash->{prediction_pop_id} = $c->stash->{selection_pop_id};
     $c->stash->{pop_id} = $training_pop_id;
-    $c->stash->{uploaded_prediction} = 1;
+    $c->stash->{list_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);        
@@ -421,10 +421,10 @@ sub predict_list_selection_gebvs {
 sub user_selection_population_file {
     my ($self, $c, $pred_pop_id) = @_;
  
-    my $upload_dir = $c->stash->{solgs_lists_dir};
+    my $list_dir = $c->stash->{solgs_lists_dir};
    
     my ($fh, $tempfile) = tempfile("selection_population_${pred_pop_id}-XXXXX", 
-                                   DIR => $upload_dir
+                                   DIR => $list_dir
         );
 
     

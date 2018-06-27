@@ -60,7 +60,7 @@ sub check_result :Path('/pca/check/result/') Args() {
 	$c->stash->{pop_id} = $list_id;
 	$file_id = $list_id;
 	
-	$list_id =~ s/uploaded_//;		   	
+	$list_id =~ s/list_//;		   	
 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 
 	my $list_type = $list->type();
@@ -359,7 +359,7 @@ sub _pca_list_genotype_data {
 	    my $geno_data = $c->model('solGS::solGS')->genotypes_list_genotype_data(\@genotypes_list);
 	    
 	    my $tmp_dir = $c->stash->{solgs_lists_dir};
-	    my $file = "genotype_data_uploaded_${list_id}";     
+	    my $file = "genotype_data_list_${list_id}";     
 	    $file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file);    
 	    
 	    write_file($file, $geno_data);
@@ -423,9 +423,9 @@ sub _process_trials_details {
 	$self->_pca_trial_genotype_data($c);
 	push @genotype_files, $c->stash->{genotype_file};
 
-	if ($p_id =~ /uploaded/) 
+	if ($p_id =~ /list/) 
 	{
-	    $c->controller('solGS::solGS')->uploaded_population_summary($c, $p_id);
+	    $c->controller('solGS::solGS')->list_population_summary($c, $p_id);
 	    $pops_names{$p_id} = $c->stash->{project_name};  
 	}
 	else

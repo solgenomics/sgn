@@ -49,7 +49,7 @@ sub _check_cached_output {
     { 
 	my $pop_id = $args->{training_pop_id}[0];
 	
-	if ($pop_id !~ /uploaded/)
+	if ($pop_id !~ /list/)
 	{
 	    $self->_check_single_trial_training_data($c, $pop_id);
 	}

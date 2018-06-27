@@ -255,7 +255,7 @@ solGS.waitPage = function (page, args) {
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    retrievePopsData(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
-	    if (page.match(/solgs\/population\/uploaded_/)) {
+	    if (page.match(/solgs\/population\/list_/)) {
 		var listId = args.list_id;
 		loadPlotListTypeTrainingPop(listId);  
 	    } else {

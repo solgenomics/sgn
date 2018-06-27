@@ -39,7 +39,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     </div>
     <br>
     <br>  
-    <div class="sub_infosectioncontent" id="uploaded_reference_populations" style="display:none"></div>
+    <div class="sub_infosectioncontent" id="list_reference_populations" style="display:none"></div>
     <br>
 
   </div>

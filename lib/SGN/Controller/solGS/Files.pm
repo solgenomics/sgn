@@ -164,7 +164,7 @@ sub phenotype_file_name {
    
     $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
    
-    if ($pop_id =~ /uploaded/) 
+    if ($pop_id =~ /list/) 
     {
 	my $tmp_dir = $c->stash->{solgs_lists_dir};
 	my $file = catfile($tmp_dir, 'phenotype_data_' . $pop_id . '.txt');
@@ -187,7 +187,7 @@ sub genotype_file_name {
    
     $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
     
-    if ($pop_id =~ /uploaded/) 
+    if ($pop_id =~ /list/) 
     {
 	my $tmp_dir = $c->stash->{solgs_lists_dir};
 	my $file = catfile($tmp_dir, 'genotype_data_' . $pop_id . '.txt');

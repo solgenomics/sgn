@@ -50,7 +50,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
    
     my $phenotype_file;
     
-    if( $pop_id =~ /uploaded/) 
+    if( $pop_id =~ /list/) 
     {
         my $phenotype_dir = $c->stash->{solgs_lists_dir};
         my $userid        = $c->user->id;
