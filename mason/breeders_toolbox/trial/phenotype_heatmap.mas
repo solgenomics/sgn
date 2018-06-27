@@ -4,8 +4,6 @@ $trial_id
 $stockref => undef
 </%args>
 
-
-
  <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 <style>
