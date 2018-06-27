@@ -18,11 +18,10 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     protocol_name=>'SNP2018',
     organism_genus=>$organism_genus,
     organism_species=>$organism_species,
-    population_name=>'SNP2018_accessions',
     create_missing_observation_units_as_accessions=>0,
     igd_numbers_included=>0
 );
-my ($verified_warning, $verified_error) = $store_genotypes->verify();
+my $verified_errors = $store_genotypes->validate();
 my ($stored_genotype_error, $stored_genotype_success) = $store_genotypes->store();
 
 =head1 DESCRIPTION
@@ -42,6 +41,8 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 use CXGN::UploadFile;
+use SGN::Model::Cvterm;
+use CXGN::GenotypeIO;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -109,12 +110,6 @@ has 'organism_species' => (
     required => 1,
 );
 
-has 'population_name' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1,
-);
-
 has 'create_missing_observation_units_as_accessions' => (
     isa => 'Bool',
     is => 'rw',
@@ -127,6 +122,75 @@ has 'igd_numbers_included' => (
     default => 0,
 );
 
+sub validate {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh;
+    my $opt_p = $self->project_name;
+    my $opt_y = $self->project_year;
+    my $map_protocol_name = $self->protocol_name;
+    my $location = $self->project_location_name;
+    my $organism_genus = $self->organism_genus;
+    my $organism_species = $self->organism_species;
+    my $file = $self->vcf_input_file;
+    my @error_messages;
+
+    print STDERR "Reading genotype information for protocolprop storage...\n";
+    my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
+
+    my $header = $gtio->header;
+    if ($header->[0] ne 'CHROM'){
+        push @error_messages, 'Column 1 header must be "CHROM".';
+    }
+    if ($header->[1] ne 'POS'){
+        push @error_messages, 'Column 2 header must be "POS".';
+    }
+    if ($header->[2] ne 'ID'){
+        push @error_messages, 'Column 3 header must be "ID".';
+    }
+    if ($header->[3] ne 'REF'){
+        push @error_messages, 'Column 4 header must be "REF".';
+    }
+    if ($header->[4] ne 'ALT'){
+        push @error_messages, 'Column 5 header must be "ALT".';
+    }
+    if ($header->[5] ne 'QUAL'){
+        push @error_messages, 'Column 6 header must be "QUAL".';
+    }
+    if ($header->[6] ne 'FILTER'){
+        push @error_messages, 'Column 7 header must be "FILTER".';
+    }
+    if ($header->[7] ne 'INFO'){
+        push @error_messages, 'Column 8 header must be "INFO".';
+    }
+    if ($header->[8] ne 'FORMAT'){
+        push @error_messages, 'Column 9 header must be "FORMAT".';
+    }
+
+    my $observation_unit_names = $gtio->observation_unit_names();
+    my $number_observation_units = scalar(@$observation_unit_names);
+    print STDERR "Number observation units: $number_observation_units...\n";
+
+    my $stock_type = $self->observation_unit_type_name;
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
+    my $stock_rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => {-in => $observation_unit_names},
+        type_id => $stock_type_id
+    });
+    my %found_stock_names;
+    while(my $r = $stock_rs->next){
+        $found_stock_names{$r->uniquename}++;
+    }
+    my @missing_stocks;
+    foreach (@$observation_unit_names){
+        if (!$found_stock_names{$_}){
+            push @error_messages, "$_ is not a valid $stock_type.";
+            push @missing_stocks, $_;
+        }
+    }
+    return { error_messages => \@error_messages, missing_stocks => \@missing_stocks };
+}
+
 sub store {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -137,19 +201,16 @@ sub store {
     my $location = $self->project_location_name;
     my $organism_genus = $self->organism_genus;
     my $organism_species = $self->organism_species;
-    my $population_name = $self->population_name;
     my $file = $self->vcf_input_file;
     my $opt_z = $self->igd_numbers_included;
     my $opt_a = $self->create_missing_observation_units_as_accessions;
     $dbh->do('SET search_path TO public,sgn');
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'training population', 'stock_type')->cvterm_id();
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
     my $snp_genotypingprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-    my $population_members_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
 
     #store a project
@@ -161,7 +222,7 @@ sub store {
     $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
 
     #store Map name using protocol
-    my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_new({
+    my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create({
         name => $map_protocol_name,
         type_id => $geno_cvterm_id
     });
@@ -179,14 +240,6 @@ sub store {
         species => $organism_species,
     });
     my $organism_id = $organism->organism_id();
-
-    my $population_stock = $schema->resultset("Stock::Stock")->find_or_create({
-        organism_id => $organism_id,
-        name       => $population_name,
-        uniquename => $population_name,
-        type_id => $population_cvterm_id,
-    });
-    my $population_stock_id = $population_stock->stock_id();
 
     if( !$protocol_row->in_storage ) {
         $protocol_row->insert;
@@ -319,12 +372,6 @@ sub store {
         }
         my $stock_name = $stock->name();
         my $stock_id = $stock->stock_id();
-
-        $stock->create_related('stock_relationship_objects', {
-            type_id => $population_members_id,
-            subject_id => $stock_id,
-            object_id => $population_stock_id,
-        });
 
         print STDERR "Stock name = " . $stock_name . "\n";
         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({

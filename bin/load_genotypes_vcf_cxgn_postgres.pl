@@ -110,7 +110,7 @@ my $project_id = $project->project_id();
 $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
 
 #store Map name using protocol
-my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_new({
+my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create({
     name => $map_protocol_name,
     type_id => $geno_cvterm_id
 });
