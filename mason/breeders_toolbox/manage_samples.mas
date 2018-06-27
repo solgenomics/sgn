@@ -11,7 +11,7 @@
         <& /page/page_title.mas, title=>"Not sure how to plan tissue sampling?" &>
 
         <center>
-        <button class="btn btn-primary btn-block" id="tissue_sample_guided_help">Let us help!<br/>Click this button to begin our guided help.</button>
+        <button class="btn btn-primary btn-block" name="tissue_sample_guided_help">Let us help!<br/>Click this button to begin our guided help.</button>
         </center>
     </div>
 </div>
@@ -27,10 +27,6 @@
 <script>
 
 jQuery(document).ready(function(){
-    jQuery('#tissue_sample_guided_help').click(function(){
-        jQuery('#tissue_sample_help_dialog').modal('show');
-    });
-
     jQuery('button[name="export_genotyping_trial_link"]').click(function(){
         alert('Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually.');
     });

@@ -199,6 +199,10 @@ var selected;
 
 jQuery(document).ready(function(){
 
+    jQuery('button[name="tissue_sample_guided_help"]').click(function(){
+        jQuery('#tissue_sample_help_dialog').modal('show');
+    });
+
     var tissue_sample_help_trial_table = jQuery('#tissue_sample_help_field_search_results').DataTable( {
         'ajax': {
             'url':'/ajax/search/trials',
