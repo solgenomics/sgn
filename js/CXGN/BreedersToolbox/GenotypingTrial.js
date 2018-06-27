@@ -423,4 +423,8 @@ jQuery(document).ready(function ($) {
         $('#genotrial_barcode_dialog').modal("show");
     });
 
+    jQuery('button[name="manage_tissue_samples_create_field_trial_samples"]').click(function(){
+        jQuery('#field_trial_tissue_sample_dialog').modal("show");
+    });
+
 });

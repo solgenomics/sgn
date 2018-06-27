@@ -225,6 +225,15 @@ $referer => undef
 % if ($info_section_id eq 'stock_comments_section'){
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % }
+
+
+% if ($info_section_id eq 'manage_tissue_samples_field_trials'){
+                                <& /breeders_toolbox/tissue_samples/field_trials_with_tissue_samples.mas &>
+% }
+% if ($info_section_id eq 'manage_tissue_samples_genotyping_trials'){
+                                <& /breeders_toolbox/tissue_samples/genotyping_trials.mas &>
+% }
+
 % if ($info_section_id eq 'trial_details'){
                                 <div class="row">
                                     <div class="col-sm-8">
