@@ -47,7 +47,9 @@ $is_owner
 
 <div class="panel panel-default">
     <div class="panel-body panel-body-sm">
-        <b>Stock editors: </b> <% $editor_link %>
+        <b>Stock editors: </b>
+        <br/>
+        <% $editor_link %>
     </div>
 </div>
 
