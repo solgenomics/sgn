@@ -65,78 +65,77 @@
                         <&| /util/workflow.mas:step, title=> "Plant Entries" &>
                             <& /page/page_title.mas, title=>"Plant entries in your field trial" &>
 
-                                <div id="create_tissue_samples_plant_entries_exist_section" style="display:none">
-                                    <h4>Plant entries exist for this trial. Go to next step.</h4>
-                                    <center>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                                    </center>
-                                </div>
-                                <div id="create_tissue_samples_plant_entries_dont_exist_section" style="display:none">
-                                    <h4>Please create plant entries for this trial.</h4>
-                                    <form class="form-horizontal">
-                                        <div class="form-group">
-                                            <label class="col-sm-3 control-label">Number of plants per plot: </label>
-                                            <div class="col-sm-9" >
-                                                <input name="create_tissue_samples_plants_per_plot_num" id="create_tissue_samples_plants_per_plot_num" class="form-control" type="number" autofocus/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
-                                            <div class="col-sm-9" >
-                                                <input name="create_tissue_samples_plants_per_plot_inherit_treatments" id="create_tissue_samples_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
-                                            </div>
-                                        </div>
-                                    </form><br/>
-                                    <center>
-                                        <button type="button" class="btn btn-primary" id="create_tissue_samples_plants_per_plot_submit">Submit</button>
-                                    </center>
-                                </div>
-
-                            </&>
-                        <&| /util/workflow.mas:step, title=> "Create Tissue Sample Entries" &>
-                            <& /page/page_title.mas, title=>"Create tissue sample entries for this trial" &>
-
-                                <form class="form-horizontal" >
+                            <div id="create_tissue_samples_plant_entries_exist_section" style="display:none">
+                                <h4>Plant entries exist for this trial. Go to next step.</h4>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </div>
+                            <div id="create_tissue_samples_plant_entries_dont_exist_section" style="display:none">
+                                <h4>Please create plant entries for this trial.</h4>
+                                <form class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label"><span title="You can use the same tissue name, e.g. root and root, more than once below. The tissue name will still be unique because of a tissue index e.g. 1 and 2 added to the end." </span><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Number of tissue samples per plant: </span></label>
+                                        <label class="col-sm-3 control-label">Number of plants per plot: </label>
                                         <div class="col-sm-9" >
-                                            <input name="create_tissue_samples_per_plant_num" id="create_tissue_samples_per_plant_num" class="form-control" type="text" autofocus/>
+                                            <input name="create_tissue_samples_plants_per_plot_num" id="create_tissue_samples_plants_per_plot_num" class="form-control" type="number" autofocus/>
                                         </div>
                                     </div>
-
-                                    <div id="create_tissue_samples_names_div">
-                                    </div>
-
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
                                         <div class="col-sm-9" >
-                                            <input name="create_tissue_samples_per_plant_inherit_treatments" id="create_tissue_samples_per_plant_inherit_treatments" type="checkbox" checked disabled/>
+                                            <input name="create_tissue_samples_plants_per_plot_inherit_treatments" id="create_tissue_samples_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                                         </div>
                                     </div>
                                 </form><br/>
                                 <center>
-                                <button type="button" class="btn btn-primary" name="create_tissue_samples_plants_per_plant_submit" id="create_tissue_samples_plants_per_plant_submit">Submit</button>
+                                    <button type="button" class="btn btn-primary" id="create_tissue_samples_plants_per_plot_submit">Submit</button>
                                 </center>
-                            </&>
-                            <&| /util/workflow.mas:complete, title=> "Complete" &>
-                                <& /page/page_title.mas, title=>"Complete! Your field trial's tissue samples were saved." &>
+                            </div>
 
-                                <p>
-                                    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                    Tissue samples saved successfully
-                                </p>
-
-                                <ul>
-                                    <li>You may want to go to the trial detail page for the trial now that it has plants.</li>
-                                    <li>You can print barcodes for the new tissue samples.</li>
-                                    <li>You can use these tissue samples as source material for a genotyping trial (96 or 384 well plate)</li>
-                                </ul>
-                                <br/>
-                            </&>
                         </&>
+                        <&| /util/workflow.mas:step, title=> "Create Tissue Sample Entries" &>
+                            <& /page/page_title.mas, title=>"Create tissue sample entries for this trial" &>
 
-                    </div>
-                </form>
+                            <form class="form-horizontal" >
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"><span title="You can use the same tissue name, e.g. root and root, more than once below. The tissue name will still be unique because of a tissue index e.g. 1 and 2 added to the end." </span><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Number of tissue samples per plant: </span></label>
+                                    <div class="col-sm-9" >
+                                        <input name="create_tissue_samples_per_plant_num" id="create_tissue_samples_per_plant_num" class="form-control" type="text" autofocus/>
+                                    </div>
+                                </div>
+
+                                <div id="create_tissue_samples_names_div">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                    <div class="col-sm-9" >
+                                        <input name="create_tissue_samples_per_plant_inherit_treatments" id="create_tissue_samples_per_plant_inherit_treatments" type="checkbox" checked disabled/>
+                                    </div>
+                                </div>
+                            </form><br/>
+                            <center>
+                            <button type="button" class="btn btn-primary" name="create_tissue_samples_plants_per_plant_submit" id="create_tissue_samples_plants_per_plant_submit">Submit</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Complete! Your field trial's tissue samples were saved." &>
+
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                Tissue samples saved successfully
+                            </p>
+
+                            <ul>
+                                <li>You may want to go to the trial detail page for the trial now that it has plants.</li>
+                                <li>You can print barcodes for the new tissue samples.</li>
+                                <li>You can use these tissue samples as source material for a genotyping trial (96 or 384 well plate)</li>
+                            </ul>
+                            <br/>
+                        </&>
+                    </&>
+
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
