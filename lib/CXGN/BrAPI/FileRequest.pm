@@ -79,7 +79,7 @@ sub fieldbook {
     #check that user type is adequate to archive file
 
     my $subdirectory = "brapi_observations_upload";
-    my $archive_filename = "test_file";
+    my $archive_filename = "observations.csv";
 
     if (!-d $archive_path) {
         mkdir $archive_path;
@@ -97,42 +97,20 @@ sub fieldbook {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $file_path =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
 
-    print STDERR "File path is: $file_path\n";
-
     my @data = @{$data};
 
-    # print STDERR "First plot is: ".Dumper($first_plot)."\n";
-    # print STDERR "First plot id is: ".$first_plot->{'observationUnitDbId'}."\n";
-
-	# my $num_col = scalar(keys %{$data[0]});
-    # print STDERR "Num cols: $num_col\n";
-
 	open(my $fh, ">", $file_path);
-    print $fh '"plot_id","trait","value","timestamp","person"'."\n";
+    print $fh '"plot_name","plot_id","trait_id","trait","value","timestamp","person"'."\n";
 		foreach my $plot (@data){
-
-            my $uniquename = $self->schema->resultset('Stock::Stock')->find({'stock_id' => $plot->{'observationUnitDbId'}})->uniquename();
-
-            print $fh "\"$uniquename\"," || "\"\",";
-            print $fh "\"|$plot->{'observationVariableDbId'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationUnitName'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationUnitDbId'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationVariableId'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationVariableName'}\"," || "\"\",";
             print $fh "\"$plot->{'value'}\"," || "\"\",";
             print $fh "\"$plot->{'observationTimeStamp'}\"," || "\"\",";
             print $fh "\"$plot->{'collector'}\"" || "\"\"";
             print $fh "\n";
-            #
-			# my $step = 1;
-			# for(my $i=0; $i<$num_col; $i++) {
-			# 	if ($cols->[$i]) {
-			# 		print $fh "\"$cols->[$i]\"";
-			# 	} else {
-			# 		print $fh "\"\"";
-			# 	}
-			# 	if ($step < $num_col) {
-			# 		print $fh ",";
-			# 	}
-			# 	$step++;
-			# }
-			# print $fh "\n";
+
 		}
 	close $fh;
 

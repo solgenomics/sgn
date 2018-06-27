@@ -73,8 +73,6 @@ sub observations_store {
 
     print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
 
-    # Use new CXGN::BrAPI::FileRequest module to create file from json and archive it
-
     my $archived_file = CXGN::BrAPI::FileRequest->new({
         schema=>$schema,
         user_id => $user_id,
@@ -94,7 +92,6 @@ sub observations_store {
     my $validate_type = "field book";
     my $metadata_file_type = "brapi phenotype file";
     my $timestamp_included = 1;
-    # $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
     my $data_level = 'plots';
 
     if ($user_type ne 'submitter' && $user_type ne 'curator') {
@@ -104,35 +101,11 @@ sub observations_store {
 
     my $overwrite_values = 0;
     if ($overwrite_values) {
-        #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
             return (\@success_status, \@error_status);
         }
     }
-
-    # my $file = $upload->filename();
-    # my $upload_tempfile = $upload->tempname;
-    #
-    # my $uploader = CXGN::UploadFile->new({
-    #     tempfile => $upload_tempfile,
-    #     subdirectory => $subdirectory,
-    #     archive_path => $c->config->{archive_path},
-    #     archive_filename => $file,
-    #     timestamp => $timestamp,
-    #     user_id => $user_id,
-    #     user_role => $user_type
-    # });
-    #
-    # my $file = $uploader->archive();
-    # my $md5 = $uploader->get_md5($file);
-    # if (!$file) {
-    #     push @error_status, "Could not save file $file in archive.";
-    #     return (\@success_status, \@error_status);
-    # } else {
-    #     push @success_status, "File $file saved in archive.";
-    # }
-    # unlink $upload_tempfile;
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $validate_file = $parser->validate($validate_type, $file, $timestamp_included, $data_level, $schema);
@@ -171,8 +144,6 @@ sub observations_store {
     my %parsed_data;
     my @plots;
     my @traits;
-    # print STDERR "Length error status is ".scalar(@error_status);
-    # print STDERR "\nError status is ".Dumper(@error_status);
 
         print STDERR "Defining plots and traits from parsed data";
         if ($parsed_file && !$parsed_file->{'error'}) {
@@ -182,9 +153,7 @@ sub observations_store {
             push @success_status, "File data successfully parsed.";
         }
 
-    # - Store phenotypes using CXGN::Phenotypes::StorePhenotypes
-
-    print STDERR "Stock List: @plots\n Trait List: @traits\n Values Hash: ".Dumper(%parsed_data)."\n";
+    #print STDERR "Stock List: @plots\n Trait List: @traits\n Values Hash: ".Dumper(%parsed_data)."\n";
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         bcs_schema=>$schema,
@@ -217,6 +186,7 @@ sub observations_store {
         print STDERR "Success: $stored_phenotype_success\n";
     }
 
+    # will need to initiate refresh matviews in controller instead
     # my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
     # my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
