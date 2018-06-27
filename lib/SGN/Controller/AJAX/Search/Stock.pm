@@ -63,7 +63,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         match_type=>$params->{any_name_matchtype},
         match_name=>$params->{any_name},
         organism_id=>$params->{organism},
-        stock_type_id=>$params->{stock_type},
+        stock_type_name=>$params->{stock_type},
         owner_first_name=>$owner_first_name,
         owner_last_name=>$owner_last_name,
         trait_cvterm_name_list=>$params->{trait} ? [$params->{trait}] : undef,
