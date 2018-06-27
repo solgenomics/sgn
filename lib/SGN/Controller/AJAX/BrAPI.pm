@@ -2576,14 +2576,10 @@ sub observations_PUT {
     my $p = CXGN::People::Person->new($dbh, $user_id);
     my $username = $p->get_username;
 
-    # Retrieve observationUnit and observationVariable names for archiving
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $observations = _include_names($self, $c, $clean_inputs->{observations});
-
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
-        observations => $observations,
+        observations => $clean_inputs->{observations},
         user_id => $user_id,
         username => $username,
         user_type => $user_type,
@@ -2595,58 +2591,6 @@ sub observations_PUT {
 sub observations_GET {
 	my $self = shift;
 	my $c = shift;
-}
-
-sub _include_names {
-    my $self = shift;
-    my $c = shift;
-    my $observations = shift;
-    my @observations = @{$observations};
-    my @trait_list = [];
-    my %traits = ();
-    my %plots = ();
-
-    foreach my $ob (@observations){
-        my $trait = $ob->{'observationVariableDbId'};
-        $traits{$trait} =  "|" . $trait;
-        my $plot_id = $ob->{'observationUnitDbId'};
-        $plots{$plot_id} = $plot_id;
-    }
-
-    foreach my $plot_id (sort keys %plots) {
-        my $uniquename = $self->bcs_schema->resultset('Stock::Stock')->find({'stock_id' => $plot_id})->uniquename();
-        $plots{$plot_id} = $uniquename;
-    }
-
-    my $t = CXGN::List::Transform->new();
-
-    my @for_transform = sort values %traits;
-    my $trait_t = $t->can_transform("traits", "trait_ids");
-    my $trait_ids = $t->transform($self->bcs_schema, $trait_t, \@for_transform);
-
-
-    my $ids = $trait_ids->{transform};
-    my @trait_ids = @{$ids};
-
-    my @trait_names = sort keys %traits;
-    for (my $i=0; $i <= scalar @trait_names; $i++) {
-        my $cvterm = CXGN::Chado::Cvterm->new( $c->dbc->dbh, $trait_ids[$i] );
-        my $synonym = $cvterm->get_uppercase_synonym() || "";
-        $traits{$trait_names[$i]} = {
-            name => $synonym . " |" . $trait_names[$i],
-            id => $trait_ids[$i]
-        };
-    }
-
-    foreach my $ob (@observations){
-        my $trait = $ob->{'observationVariableDbId'};
-        $ob->{'observationVariableName'} = $traits{$trait}{name};
-        $ob->{'observationVariableId'} = $traits{$trait}{id};
-        my $plot_id = $ob->{'observationUnitDbId'};
-        $ob->{'observationUnitName'} = $plots{$plot_id};
-    }
-
-    return \@observations;
 }
 
 =head2 brapi/v1/observations-search

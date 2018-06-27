@@ -64,12 +64,12 @@ sub BUILD {
 sub get_path {
 	my $self = shift;
 	my $format = $self->format;
-	if ($format eq 'Fieldbook'){
-		return $self->fieldbook;
+	if ($format eq 'observations'){
+		return $self->observations;
 	}
 }
 
-sub fieldbook {
+sub observations {
 	my $self = shift;
 	my $data = $self->data;
     my $user_id = $self->user_id;
@@ -98,19 +98,40 @@ sub fieldbook {
     my $file_path =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
 
     my @data = @{$data};
+    my @errors = [];
+
+    # Check validity of submitted data
+    my @observations = uniq map { $_->{'observationDbId'} } @data;
+    my @units = uniq map { $_->{'observationUnitDbId'} } @data;
+    my @variables = uniq map { $_->{'observationVariableDbId'} } @data;
+    my @timestamps = uniq map { $_->{'observationTimeStamp'} } @data;
+
+    my $validator = CXGN::List::Validate->new();
+    if (scalar @observations) {
+        my @observations_missing = = @{$validator->validate($schema,'phenotypes',\@observations)->{'missing'}};
+    }
+    my @units_missing = @{$validator->validate($schema,'plots_or_subplots_or_plants',\@units)->{'missing'}};
+    my @variables_missing = @{$validator->validate($schema,'traits',\@variables)->{'missing'}};
+    foreach my $timestamp (@timestamps) {
+        if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+            $parse_result{'error'} = "Timestamp $timestamp is not of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+            print STDERR "Invalid Timestamp: $timestamp\n";
+            return \%parse_result;
+        }
+    }
+
+    return \@errors;
 
 	open(my $fh, ">", $file_path) or die "Couldn't open file $file_path: $!";
-    print $fh '"plot_name","plot_id","trait_id","trait","value","timestamp","person"'."\n";
+    print $fh '"observationDbId","observationUnitDbId","observationVariableDbId","value","observationTimeStamp","collector"'."\n";
 		foreach my $plot (@data){
-            print $fh "\"$plot->{'observationUnitName'}\"," || "\"\",";
-            print $fh "\"$plot->{'observationUnitDbId'}\"," || "\"\",";
-            print $fh "\"$plot->{'observationVariableId'}\"," || "\"\",";
-            print $fh "\"$plot->{'observationVariableName'}\"," || "\"\",";
-            print $fh "\"$plot->{'value'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationDbId'}\"," || "\"\",";
+            print $fh "\"$plot->{'observationUnitDbId'}\",";
+            print $fh "\"$plot->{'observationVariableId'}\",";
+            print $fh "\"$plot->{'value'}\",";
             print $fh "\"$plot->{'observationTimeStamp'}\"," || "\"\",";
             print $fh "\"$plot->{'collector'}\"" || "\"\"";
             print $fh "\n";
-
 		}
 	close $fh;
 

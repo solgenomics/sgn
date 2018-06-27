@@ -73,54 +73,79 @@ sub observations_store {
 
     print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
 
-    my $archived_file = CXGN::BrAPI::FileRequest->new({
-        schema=>$schema,
-        user_id => $user_id,
-        user_type => $user_type,
-        archive_path => $archive_path,
-        format => 'Fieldbook',  # use fieldbook database.csv format for observations data
-        data => $observations
-    });
-
-    my $file = $archived_file->get_path();
-
-    print STDERR "Archived File is in $file\n";
-
-    # Parse file using CXGN::Phenotypes::ParseUpload
-    my @error_status = [];
-    my @success_status = [];
-    my $validate_type = "field book";
-    my $metadata_file_type = "brapi phenotype file";
-    my $timestamp_included = 1;
-    my $data_level = 'plots';
-
-    if ($user_type ne 'submitter' && $user_type ne 'curator') {
+    if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
         return (\@success_status, \@error_status);
     }
 
-    my $overwrite_values = 0;
-    if ($overwrite_values) {
-        if ($user_type ne 'curator') {
-            push @error_status, 'Must be a curator to overwrite values! Please contact us!';
+    #validate request structure and parse data
+    my @success_status = [];
+    my @error_status = [];
+    my $timestamp_included = 1;
+    my $data_level = 'stocks';
+
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validate_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema);
+    if (!$validate_request) {
+        print STDERR "Error parsing request structure.";
+        push @error_status, "Error parsing request structure.";
+        return (\@success_status, \@error_status);
+    }
+    if ($validate_request == 1){
+        push @success_status, "Request structure is valid.";
+    } else {
+        if ($validate_request->{'error'}) {
+            print STDERR $validate_request->{'error'};
+            push @error_status, $validate_request->{'error'};
+        }
+        return (\@success_status, \@error_status);
+    }
+
+    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema);
+    #
+    if (!$parsed_request) {
+        print STDERR "Error parsing request data.";
+        push @error_status, "Error parsing request data.";
+        return (\@success_status, \@error_status);
+    }
+    if ($parsed_request == 1){
+        push @success_status, "Request data is valid.";
+    } else {
+        if ($parsed_request->{'error'}) {
+            print STDERR $parsed_request->{'error'};
+            push @error_status, $parsed_request->{'error'};
             return (\@success_status, \@error_status);
         }
     }
 
-    my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my $validate_file = $parser->validate($validate_type, $file, $timestamp_included, $data_level, $schema);
-    if (!$validate_file) {
-        push @error_status, "Archived file not valid: $file.";
-        return (\@success_status, \@error_status);
+    my %parsed_data;
+    my @units;
+    my @variables;
+
+    print STDERR "Defining stocks (observationUnits) and traits (observationVariables) from parsed request";
+    if ($parsed_request && !$parsed_request->{'error'}) {
+        %parsed_data = %{$parsed_request->{'data'}};
+        @units = @{$parsed_request->{'units'}};
+        @variables = @{$parsed_request->{'variables'}};
+        push @success_status, "Request data is valid.";
     }
-    if ($validate_file == 1){
-        push @success_status, "File valid: $file.";
-    } else {
-        if ($validate_file->{'error'}) {
-            push @error_status, $validate_file->{'error'};
-        }
-        return (\@success_status, \@error_status);
-    }
+
+    #archive in file
+
+    my $archived_request = CXGN::BrAPI::FileRequest->new({
+        schema=>$schema,
+        user_id => $user_id,
+        user_type => $user_type,
+        archive_path => $archive_path,
+        format => 'observations',
+        data => $observations
+    });
+
+    my $file = $archived_request->get_path();
+
+    print STDERR "Archived Request is in $file\n";
+
+    ## Store observations and return details for response
 
     ## Set metadata
     my %phenotype_metadata;
@@ -128,54 +153,30 @@ sub observations_store {
     my $timestamp = $time->ymd()."_".$time->hms();
     $phenotype_metadata{'archived_file'} = $file;
     $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
-    $phenotype_metadata{'operator'} = $username;
+    # $phenotype_metadata{'operator'} = $username;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $file, $timestamp_included, $data_level, $schema);
-    if (!$parsed_file) {
-        print STDERR "Error parsing file $file.";
-        push @error_status, "Error parsing file $file.";
-        return (\@success_status, \@error_status);
-    }
-    if ($parsed_file->{'error'}) {
-        print STDERR $parsed_file->{'error'};
-        push @error_status, $parsed_file->{'error'};
-    }
-    my %parsed_data;
-    my @plots;
-    my @traits;
-
-        print STDERR "Defining plots and traits from parsed data";
-        if ($parsed_file && !$parsed_file->{'error'}) {
-            %parsed_data = %{$parsed_file->{'data'}};
-            @plots = @{$parsed_file->{'plots'}};
-            @traits = @{$parsed_file->{'traits'}};
-            push @success_status, "File data successfully parsed.";
-        }
-
-    #print STDERR "Stock List: @plots\n Trait List: @traits\n Values Hash: ".Dumper(%parsed_data)."\n";
-
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    my $store_observations = CXGN::Phenotypes::StoreObservations->new(
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
-        stock_list=>\@plots,
-        trait_list=>\@traits,
-        values_hash=>\%parsed_data,
-        has_timestamps=>$timestamp_included,
-        overwrite_values=>0,
+        unit_list=>\@units,
+        variable_list=>\@variables,
+        data=>\%parsed_data,
+        # has_timestamps=>$timestamp_included,
+        # overwrite_values=>0,
         metadata_hash=>\%phenotype_metadata
     );
 
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-
-    if ($verified_error) {
-        print STDERR "Error: $verified_error\n";
-    }
-    if ($verified_warning) {
-        print STDERR "Warning: $verified_warning\n";
-    }
+    # my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    #
+    # if ($verified_error) {
+    #     print STDERR "Error: $verified_error\n";
+    # }
+    # if ($verified_warning) {
+    #     print STDERR "Warning: $verified_warning\n";
+    # }
 
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
