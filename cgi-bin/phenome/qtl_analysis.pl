@@ -40,6 +40,7 @@ use File::Copy;
 use File::Spec;
 use File::Path qw / mkpath /;
 use File::Basename;
+use File::Spec::Functions qw / catfile catdir/;
 use File::stat;
 use File::Slurp qw / read_file /;
 use Cache::File;
@@ -999,7 +1000,8 @@ sub infile_list
     my $gen_dataset_file = $population->genotype_file($c);
     my $phe_dataset_file = $population->phenotype_file($c);
     my $crosstype_file   = $self->crosstype_file();
-  
+    my $stat_file = $self->stat_files();
+
     my $input_file_list_temp =
       File::Temp->new(
                        TEMPLATE => "infile_list_${ac}_$pop_id-XXXXXX",
@@ -1031,7 +1033,7 @@ sub infile_list
     my $file_in_list = join( "\t",
                              $file_cv_in,       $file_popid,
                              $gen_dataset_file, $phe_dataset_file,
-                             $prod_permu_file, $crosstype_file);
+                             $prod_permu_file, $crosstype_file, $stat_file);
 
     open my $fi_fh, ">", $file_in or die "can't open $file_in: $!\n";
     $fi_fh->print ($file_in_list);
@@ -1129,11 +1131,15 @@ sub cache_temp_path {
     my $solqtl_dir         = catdir($tmp_dir, 'solqtl');
     my $solqtl_cache       = catdir($tmp_dir, 'solqtl', 'cache'); 
     my $solqtl_tempfiles   = catdir($tmp_dir, 'solqtl', 'tempfiles');  
-    my $solqtl_temp_images = catdir($tmp_dir, 'solqtl', 'temp_images');
-
-    mkpath ([$solqtl_cache, $solqtl_tempfiles, $solqtl_temp_images], 0, 0755);
    
-    return $solqtl_cache, $solqtl_tempfiles, $solqtl_temp_images;
+    my $temp_dir  = $c->config->{tempfiles_subdir};
+    my $tempimages   = catdir($tempdir, "temp_images" );
+
+    mkpath ([$solqtl_cache, $solqtl_tempfiles, $tempimages], 0, 0755);
+
+   
+
+    return $solqtl_cache, $solqtl_tempfiles, $tempimages;
 
 }
 
@@ -1204,15 +1210,14 @@ sub run_r {
     my $prod_permu_file = $self->permu_file();
     my $input_file      = $self->infile_list();
     my ($output_file, $qtl_summary, $peak_markers) = $self->outfile_list();
-    my $stat_file = $self->stat_files();
-
+   
     my $pop_id = $self->get_object_id();
     my $trait_id = $self->get_trait_id();
     
     $c->stash->{analysis_tempfiles_dir} = $solqtl_temp;
-    $c->stash->{r_temp_file} = 'solqtl-${pop_id}-${trait_id}';
-    $c->stash->{input_file}  = $input_file;
-    $c->stash->{output_file} = $output_file;
+    $c->stash->{r_temp_file} = "solqtl-${pop_id}-${trait_id}";
+    $c->stash->{input_files}  = $input_file;
+    $c->stash->{output_files} = $output_file;
     $c->stash->{r_script}    = 'R/solGS/qtl_analysis.r';
     
     $c->controller('solGS::solGS')->run_r_script($c);

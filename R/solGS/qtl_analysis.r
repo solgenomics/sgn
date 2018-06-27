@@ -16,9 +16,10 @@ allargs <- commandArgs()
 
 infile   <- grep("infile_list", allargs, value=TRUE)
 outfile  <- grep("outfile_list", allargs, value=TRUE)
-statfile <- grep("stat", allargs, value=TRUE)
-             
 
+infile   <- scan(infile, what="character")
+statfile <- grep("stat", infile, value=TRUE)
+             
 ##### stat files
 statfiles <- scan(statfile, what="character")
 
@@ -118,8 +119,6 @@ permuproblevel <- scan(permuproblevelfile, what="numeric", dec = ".", sep="\n")
 permuproblevel <- as.numeric(permuproblevel)
 
 #########
-infile <- scan(file=infile, what="character")
-
 cvtermfile <- grep("cvterm", infile, value=TRUE)
 
 popidfile <- grep("popid", infile, value=TRUE)                 
