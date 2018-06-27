@@ -728,6 +728,54 @@ sub plots_list_phenotype_file {
 }
 
 
+sub list_population_summary {
+    my ($self, $c, $list_pop_id) = @_;
+    
+    my $tmp_dir = $c->stash->{solgs_lists_dir};
+   
+    if (!$c->user)
+    {
+	my $page = "/" . $c->req->path;
+	$c->res->redirect("/solgs/list/login/message?page=$page");
+	$c->detach;
+    }
+    else
+    {
+	my $user_name = $c->user->id;
+    
+	#my $model_id = $c->stash->{model_id};
+	#my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+ 
+	my $protocol = $c->config->{default_genotyping_protocol};
+	$protocol = 'N/A' if !$protocol;
+
+	if ($list_pop_id) 
+	{
+	    my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${list_pop_id}");
+       
+	    my @metadata_tr = read_file($metadata_file_tr) if $list_pop_id;
+       
+	    my ($key, $list_name, $desc);
+     
+	    ($desc)        = grep {/description/} @metadata_tr;       
+	    ($key, $desc)  = split(/\t/, $desc);
+      
+	    ($list_name)       = grep {/list_name/} @metadata_tr;      
+	    ($key, $list_name) = split(/\t/, $list_name); 
+	   
+	    $c->stash(project_id          => $list_pop_id,
+		      project_name        => $list_name,
+		      prediction_pop_name => $list_name,
+		      project_desc        => $desc,
+		      owner               => $user_name,
+		      protocol            => $protocol,
+		);  
+	}
+    }
+}
+
+
+
 sub begin : Private {
     my ($self, $c) = @_;
 

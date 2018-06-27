@@ -493,53 +493,6 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
 } 
 
 
-sub list_population_summary {
-    my ($self, $c, $list_pop_id) = @_;
-    
-    my $tmp_dir = $c->stash->{solgs_lists_dir};
-   
-    if (!$c->user)
-    {
-	my $page = "/" . $c->req->path;
-	$c->res->redirect("/solgs/list/login/message?page=$page");
-	$c->detach;
-    }
-    else
-    {
-	my $user_name = $c->user->id;
-    
-	#my $model_id = $c->stash->{model_id};
-	#my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
- 
-	my $protocol = $c->config->{default_genotyping_protocol};
-	$protocol = 'N/A' if !$protocol;
-
-	if ($list_pop_id) 
-	{
-	    my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${list_pop_id}");
-       
-	    my @metadata_tr = read_file($metadata_file_tr) if $list_pop_id;
-       
-	    my ($key, $list_name, $desc);
-     
-	    ($desc)        = grep {/description/} @metadata_tr;       
-	    ($key, $desc)  = split(/\t/, $desc);
-      
-	    ($list_name)       = grep {/list_name/} @metadata_tr;      
-	    ($key, $list_name) = split(/\t/, $list_name); 
-	   
-	    $c->stash(project_id          => $list_pop_id,
-		      project_name        => $list_name,
-		      prediction_pop_name => $list_name,
-		      project_desc        => $desc,
-		      owner               => $user_name,
-		      protocol            => $protocol,
-		);  
-	}
-    }
-}
-
-
 sub get_project_details {
     my ($self, $c, $pr_id) = @_;
   
@@ -634,7 +587,7 @@ sub project_description {
     else 
     {
         $c->stash->{model_id} = $pr_id;
-        $self->list_population_summary($c, $pr_id);
+        $c->controller('solGS::List')->list_population_summary($c, $pr_id);
     }
     
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
@@ -687,7 +640,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     
     if ($training_pop_id =~ /list/) 
     {
-        $self->list_population_summary($c, $training_pop_id);
+	$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
 	$c->stash->{training_pop_id} = $c->stash->{project_id};
 	$c->stash->{training_pop_name} = $c->stash->{project_name};
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
@@ -706,7 +659,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
 
     if ($selection_pop_id =~ /list/) 
     {
-        $self->list_population_summary($c, $selection_pop_id);
+	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
