@@ -13,6 +13,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
+use JSON;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -161,7 +162,7 @@ sub studies_search {
 			programName => $_->{breeding_program_name},
 			startDate => $_->{project_harvest_date},
 			endDate => $_->{project_planting_date},
-			active=>'',
+			active=>JSON::true,
 			additionalInfo=>\%additional_info
 		);
 		push @data_out, \%data_obj;
@@ -287,6 +288,7 @@ sub studies_detail {
             my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
             my $study_db_id = $t->get_trial_id();
             my $folder_db_id = $folder->project_parent->project_id();
+            my $breeding_program_id = $folder->breeding_program->project_id();
 			%result = (
 				studyDbId=>qq|$study_db_id|,
 				studyName=>$t->get_name(),
@@ -297,12 +299,12 @@ sub studies_detail {
                 studyDescription=>$t->get_description(),
 				locationDbId=>qq|$location_id|,
 				locationName=>$location_name,
-				programDbId=>$folder->breeding_program->project_id(),
+				programDbId=>qq|$breeding_program_id|,
 				programName=>$folder->breeding_program->name(),
 				startDate => $planting_date,
 				endDate => $harvest_date,
 				additionalInfo=>\%additional_info,
-				active=>'',
+				active=>JSON::true,
                 license=>$data_agreement,
 				location=> {
 					locationDbId => qq|$location->[0]|,
@@ -352,6 +354,7 @@ sub studies_observation_variables {
 	my $study_check = $self->bcs_schema->resultset('Project::Project')->find({project_id=>$study_id});
 	if ($study_check) {
 		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+        $result{studyName} = $t->get_name;
 		my $traits_assayed = $t->get_traits_assayed();
 		my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($traits_assayed, $page_size, $page);
 
@@ -359,30 +362,33 @@ sub studies_observation_variables {
 			my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$_->[0]});
 			my $categories = $trait->categories;
 			my @brapi_categories = split '/', $categories;
+            my $trait_id = $trait->cvterm_id;
+            my $trait_db_id = $trait->db_id;
 			push @data, {
-				observationVariableDbId => $trait->cvterm_id,
+				observationVariableDbId => qq|$trait_id|,
 				name => $trait->display_name,
-				ontologyDbId => $trait->db_id,
+				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
                 language => 'EN',
                 synonyms => [],
                 crop => $crop,
 				trait => {
-					traitDbId => $trait->cvterm_id,
+					traitDbId => qq|$trait_id|,
 					name => $trait->name,
 					description => $trait->definition,
-                    xref => $trait->term
+                    xref => $trait->term,
+                    class => ''
 				},
 				method => {},
 				scale => {
 					scaleDbId =>'',
 					name =>'',
 					datatype=>$trait->format,
-					decimalPlaces=>'',
+					decimalPlaces=>undef,
 					xref=>'',
 					validValues=> {
-						min=>$trait->minimum,
-						max=>$trait->maximum,
+						min=>$trait->minimum + 0,
+						max=>$trait->maximum + 0,
 						categories=>\@brapi_categories
 					}
 				},
@@ -620,7 +626,6 @@ sub studies_table {
 		#print STDERR Dumper \@data_window;
 
 		%result = (
-			studyDbId => $study_id,
 			headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber'],
 			observationVariableDbIds => \@header_ids,
 			observationVariableNames => \@trait_names,

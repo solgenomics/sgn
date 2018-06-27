@@ -136,7 +136,7 @@ sub germplasm_search {
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'},
+            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} + 0,
             countryOfOriginCode=>$_->{'country of origin'},
             typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},
@@ -203,7 +203,7 @@ sub germplasm_detail {
         commonCropName=>$result->[0]->{common_name},
         instituteCode=>$result->[0]->{'institute code'},
         instituteName=>$result->[0]->{'institute name'},
-        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'},
+        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
         countryOfOriginCode=>$result->[0]->{'country of origin'},
         typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
         genus=>$result->[0]->{genus},
@@ -266,7 +266,7 @@ sub germplasm_pedigree {
         }
 
         %result = (
-            germplasmDbId=>$stock_id,
+            germplasmDbId=>qq|$stock_id|,
             defaultDisplayName=>$uniquename,
             pedigree=>$pedigree_string,
             crossingPlan=>$cross_type,
@@ -382,7 +382,7 @@ sub germplasm_markerprofiles {
     }
     my $total_count = scalar(@marker_profiles);
     my %result = (
-        germplasmDbId=>$stock_id,
+        germplasmDbId=>qq|$stock_id|,
         markerprofileDbIds=>\@marker_profiles
     );
     my @data_files;
