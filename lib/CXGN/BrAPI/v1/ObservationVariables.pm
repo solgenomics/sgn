@@ -242,26 +242,29 @@ sub observation_variable_detail {
 	if ($trait->display_name){
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
+        my $trait_id = $trait->cvterm_id;
+        my $trait_db_id = $trait->db_id;
 		%result = (
-			observationVariableDbId => qq|$trait->cvterm_id|,
+			observationVariableDbId => qq|$trait_id|,
 			name => $trait->display_name,
-			ontologyDbId => qq|$trait->db_id|,
+			ontologyDbId => qq|$trait_db_id|,
 			ontologyName => $trait->db,
 			trait => {
-				traitDbId => qq|$trait->cvterm_id|,
+				traitDbId => qq|$trait_id|,
 				name => $trait->name,
 				description => $trait->definition,
+                class => ''
 			},
 			method => {},
 			scale => {
 				scaleDbId =>'',
 				name =>'',
 				datatype=>$trait->format,
-				decimalPlaces=>'',
+				decimalPlaces=>undef,
 				xref=>'',
 				validValues=> {
-					min=>$trait->minimum,
-					max=>$trait->maximum,
+					min=>$trait->minimum + 0,
+					max=>$trait->maximum + 0,
 					categories=>\@brapi_categories
 				}
 			},
