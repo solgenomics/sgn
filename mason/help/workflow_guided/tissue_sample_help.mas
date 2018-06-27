@@ -166,6 +166,7 @@
                             <& /page/page_title.mas, title=>"Complete! You have all the entities you need to conduct your sampling." &>
                             <ul>
                                 <li>All of the entities that you want to sample are saved in the database and available to use!</li>
+                                <li>You can print barcodes for the entities you intend to sample on. These barcodes can be attached to your collection vials/containers to assist during sampling.</li>
                             </ul>
                             <center>
                                 <button class="btn btn-primary" onclick="final_download_layout_button_click()">Download Field Trial Layout!</button>
@@ -174,6 +175,7 @@
 
                             <ul>
                                 <li>After you have finished sampling, you can use these entities as source material for a genotyping trial (96 or 384 well plate). Click the button below to create a genotyping trial now, if you will create a 96 or 384 well plate.</li>
+                                <li>The Android Coordinate application can help you create 96 or 384 well plates. Alternatively you can create your plate layout in Excel and upload it.</li>
                             </ul>
                             <center>
                                 <button class="btn btn-primary" name="create_genotyping_trial_link">Create Genotyping Trial Now!</button>
@@ -444,7 +446,7 @@ jQuery(document).ready(function(){
 
 function final_download_layout_button_click(){
     if (selected_level == 'accession'){
-        alert('You selected that to sample on the accession level, meaning that you wil not sample from a field trial. In this case there is no field layout to download!');
+        alert('You selected to sample on the accession level, meaning that you wil not sample from a field trial. In this case there is no field layout to download!');
     }
     if (selected_level == 'plot'){
         var selected_columns = {'plot_name':1,'plot_id':1,'block_number':1,'plot_number':1,'rep_number':1,'row_number':1,'col_number':1,'accession_name':1,'is_a_control':1};
