@@ -8,13 +8,15 @@ jQuery(document).ready(function (){
     $('#selected_marker_set').html(lo.listSelect('selected_marker_set', ['markers']));
 
     $("#save_marker_set").click(function(){
-        var markerSetName = $('#new_marker_set').val();
-        if (!markerSetName) {
+        var name = $('#new_marker_set').val();
+        if (!name) {
             alert("Marker set name is required");
             return;
         }
 
-        var list_id = lo.newList(markerSetName);
+        var desc = $('#marker_set_desc').val();
+
+        var list_id = lo.newList(name, desc);
         lo.setListType(list_id, 'markers')
         alert("Added new marker set");
         return list_id

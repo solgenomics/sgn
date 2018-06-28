@@ -175,7 +175,7 @@ CXGN.List.prototype = {
         return html;
     },
 
-    newList: function(name) {
+    newList: function(name, desc) {
         var oldListId = this.existsList(name);
         var newListId = 0;
 
@@ -188,7 +188,7 @@ CXGN.List.prototype = {
             jQuery.ajax( {
                 url: '/list/new',
                 async: false,
-                data: { 'name': name },
+                data: { 'name': name, 'desc': desc },
                 success: function(response) {
                     if (response.error) {
                         alert(response.error);
@@ -986,7 +986,7 @@ CXGN.List.prototype = {
                 break;
             case "trials":
             case "breeding_programs":
-                new_type = 'projects_2_project_ids'; 
+                new_type = 'projects_2_project_ids';
                 break;
             case "accessions":
                 new_type = 'accessions_2_accession_ids';
@@ -1061,7 +1061,7 @@ function pasteList(div_name) {
 function refreshListSelect(div_name, types) {
     var lo = new CXGN.List();
     var types = types.split(",");
-    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh')); 
+    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh'));
     //console.log("List options refreshed!");
 }
 
