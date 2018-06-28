@@ -26,6 +26,10 @@ jQuery(document).ready(function ($) {
     get_select_box("breeding_programs", "breeding_program_select_div", {});
     get_select_box("years", "year_select_div", {});
 
+    get_select_box("locations", "upload_genotype_location_select_div", {'id': 'upload_genotype_location_select', 'name': 'upload_genotype_location_select'});
+    get_select_box("breeding_programs", "upload_genotype_breeding_program_select_div", {'id': 'upload_genotype_breeding_program_select', 'name': 'upload_genotype_breeding_program_select'});
+    get_select_box("years", "upload_genotype_year_select_div", {'id': 'upload_genotype_year_select', 'name': 'upload_genotype_year_select'});
+
     jQuery(function() {
         jQuery( "#genotyping_trials_accordion" ).accordion({
             header: "> div > h3",
@@ -425,6 +429,10 @@ jQuery(document).ready(function ($) {
 
     jQuery('button[name="manage_tissue_samples_create_field_trial_samples"]').click(function(){
         jQuery('#field_trial_tissue_sample_dialog').modal("show");
+    });
+
+    jQuery('button[name="upload_genotyping_data_link"]').click(function(){
+        jQuery('#upload_genotypes_dialog').modal('show');
     });
 
 });

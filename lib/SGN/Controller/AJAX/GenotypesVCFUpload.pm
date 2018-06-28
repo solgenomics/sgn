@@ -99,6 +99,7 @@ sub upload_genotype_verify_POST : Args(0) {
         project_year=>$c->req->param('upload_genotype_vcf_project_year'),
         project_location_name=>$c->req->param('upload_genotype_vcf_location'),
         project_name=>$c->req->param('upload_genotype_vcf_project_name'),
+        project_description=>$c->req->param('upload_genotype_vcf_project_description'),
         protocol_name=>$c->req->param('upload_genotype_vcf_protocol_name'),
         organism_genus=>$organism_genus,
         organism_species=>$organism_species,
