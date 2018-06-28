@@ -105,6 +105,7 @@ sub search {
         my @brapi_treatments;
         my $treatments = $obs_unit->{treatments};
         while (my ($factor, $modality) = each %$treatments){
+            my $modality = $modality ? $modality : '';
             push @brapi_treatments, {
                 factor => $factor,
                 modality => $modality,
