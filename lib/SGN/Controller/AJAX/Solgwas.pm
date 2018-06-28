@@ -34,7 +34,7 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
     my @trait_info;
-    foreach my $t (@$traits) { 
+    foreach my $t (@$traits) {
 	my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
 	push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
 #	push @trait_info, [$tobj->name()];
@@ -48,25 +48,25 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     #print STDERR Dumper($trials_ref);
     #print STDERR Dumper($trials[2]);
 #    print STDERR Dumper(@pheno_vals);
-#    print STDERR Dumper($pheno_vals[5]); 
+#    print STDERR Dumper($pheno_vals[5]);
     my @co_pheno;
 #    for my $i (0..19) {
 #	if (index($pheno_vals[0][$i], "CO_") != -1) {
 #            print STDERR Dumper($pheno_vals[0][$i]);
 #	    push @co_pheno, $pheno_vals[0][$i];
-            	    
+
  #       }
 #
 
-  #  }    
+  #  }
 
-   # print STDERR Dumper(@co_pheno);    
-    
+   # print STDERR Dumper(@co_pheno);
+
     #print STDERR Dumper($phenotypes);
 #    $self->get_shared_phenotypes($c, @pheno_vals);
     $c->stash->{rest} = {
         options => \@trait_info,
-    };    
+    };
 }
 
 
@@ -100,7 +100,7 @@ sub get_shared_phenotypes {
 #    $c->stash->{rest} = {
 #        options => $results_ref->{results},
 #        list_trial_count=> scalar(@trials),
-#        common_trait_count => scalar(@{$results_ref->{results}}),	
+#        common_trait_count => scalar(@{$results_ref->{results}}),
 #    };
 }
 
@@ -110,6 +110,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
     print STDERR $dataset_id;
+    print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
     #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
@@ -118,7 +119,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $temppath = $c->config->{basepath}."/".$tempfile;
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds->retrieve_phenotypes();
-#    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");    
+#    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
 #    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
 #    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
     #    $ds2 -> file_name => $temppath2;
@@ -128,18 +129,26 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     if (defined($row)) {
 	$protocol_id = $row->nd_protocol_id();
     }
-    
+
     $ds -> retrieve_genotypes($protocol_id);
 #    $ds-> @$trials_ref = retrieve_genotypes();
-
-    
+    my $newtrait = $trait_id;
+    $newtrait =~ s/\s/\_/g;
+    print STDERR $newtrait . "\n";
+    my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
+    my $figure2file = "." . $tempfile . "_" . $newtrait . "_figure2.png";
+    my $figure3file = "." . $tempfile . "_" . $newtrait . "_figure3.png";
+    my $figure4file = "." . $tempfile . "_" . $newtrait . "_figure4.png";
     my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
     my $geno_filepath = "." . $tempfile . "_genotype.txt";
     $trait_id =~ tr/ /./;
-    my $cmd = "Rscript /home/vagrant/cxgn/sgn/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id;
+#    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
+#    system($clean_cmd);
+    print STDERR $figure1file;
+    my $cmd = "Rscript /home/vagrant/cxgn/sgn/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file;
     system($cmd);
 
-    
+
 #    my $traits = $ds->retrieve_traits();
 #    my $phenotypes = $ds->retrieve_phenotypes();
 #    my $trials_ref = $ds->retrieve_trials();
@@ -150,9 +159,19 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 #	trial_list => \
 
-
-    
+    my $figure1file_response = $figure1file;
+    my $figure2file_response = $figure2file;
+    my $figure3file_response = $figure3file;
+    my $figure4file_response = $figure4file;
+    $figure1file_response =~ s/\.\/static//;
+    $figure2file_response =~ s/\.\/static//;
+    $figure3file_response =~ s/\.\/static//;
+    $figure4file_response =~ s/\.\/static//;
     $c->stash->{rest} = {
+        figure1 => $figure1file_response,
+        figure2 => $figure2file_response,
+        figure3 => $figure3file_response,
+        figure4 => $figure4file_response,
         dummy_response => $dataset_id,
         dummy_response2 => $trait_id,
     };

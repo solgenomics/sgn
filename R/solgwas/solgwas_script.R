@@ -7,25 +7,40 @@ setwd("/home/vagrant/cxgn/sgn/")
 ########################################
 args = commandArgs(trailingOnly = TRUE)
 
+# temporarily hard-coding the PC and Kinship flags
+include_kinship = 0
+include_pc = 0
+
+
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
 colnames(pheno)
 
 geno <- read.table(args[2], sep="\t", row.names = NULL, header = TRUE)
 study_trait <- args[3]
-#study_trait
+study_trait
+figure1_file_name <- args[4]
+figure2_file_name <- args[5]
+figure3_file_name <- args[6]
+figure4_file_name <- args[7]
+print("temp file name:")
+figure1_file_name
+
+pheno[1:5,1:21]
 # Note: still need to test how well this pmatch deals with other trickier cases
 pheno_vector <- pheno[,pmatch(study_trait, names(pheno))]
+pheno_vector[1:5]
 # Make a new phenotype table, including only the phenotype selected:
 pheno_mod <- pheno[,1:17]
 pheno_mod <- cbind(pheno_mod, pheno_vector)
 pheno_vector[1:10]
 pheno_mod[1:5,1:18]
-pheno[1:5,18:20]
+pheno[1:5,1:21]
+
 
 ### Note this is currently set for column 18, because the above code makes a new table including
 ### only the data for the trait selected....
-setwd("/home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/")
-png("SolGWAS_Figure1.png")
+setwd("/home/vagrant/cxgn/sgn/")
+png(figure1_file_name)
 study_trait_read <- gsub(".", " ", study_trait, fixed=TRUE)
 hist(pheno_mod[,18], col="black",xlab=study_trait_read,ylab="Frequency",
      border="white",breaks=10,main="Phenotype Histogram (Unfiltered)")
@@ -54,7 +69,7 @@ geno_trim[1:5,1:5]
 # genotype data is coded as 0,1,2 - convert this to -1,0,1
 geno_trim <- geno_trim - 1
 
-##### Get marker data from marker names in geno file: 
+##### Get marker data from marker names in geno file:
 coordinate_matrix <- matrix(nrow = length(colnames(geno_trim)), ncol = 3)
 for (marker in 1:length(colnames(geno_trim))) {
   current_string = strsplit(colnames(geno_trim)[marker], split='_', fixed=TRUE)
@@ -89,14 +104,14 @@ svdgeno <- svd(geno.scale)
 PCA <- geno.scale%*%svdgeno$v #Principal components
 PCA[1:5,1:5]
 ## Screeplot to visualize the proportion of variance explained by PCA
-png("SolGWAS_Figure2.png")
-plot(round((svdgeno$d)^2/sum((svdgeno$d)^2),d=7)[1:10],type="o",main="Screeplot",xlab="PCAs",ylab="% variance")
-dev.off()
+#
+#plot(round((svdgeno$d)^2/sum((svdgeno$d)^2),d=7)[1:10],type="o",main="Screeplot",xlab="PCAs",ylab="% variance")
+#
 ##Proportion of variance explained by PCA1 and PCA2
 PCA1 <- 100*round((svdgeno$d[1])^2/sum((svdgeno$d)^2),d=3); PCA1
 PCA2 <- 100*round((svdgeno$d[2])^2/sum((svdgeno$d)^2),d=3); PCA2
 ### Plotting Principal components.
-png("SolGWAS_Figure3.png")
+png(figure2_file_name)
 plot(PCA[,1],PCA[,2],xlab=paste("PC1: ",PCA1,"%",sep=""),ylab=paste("PC2: ",PCA2,"%",sep=""),pch=20,cex=0.7)
 dev.off()
 
@@ -160,25 +175,35 @@ K.mat[1:5,1:5]
 
 ##### Run the rrblup GWAS #####
 # Set plotting to false, do our own plotting
-gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=NULL, plot=F, n.PC=0, min.MAF=0.05)
-gwasresults2<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=NULL, plot=F, n.PC=6, min.MAF=0.05)
-gwasresults3<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=K.mat, plot=F, n.PC=0, min.MAF=0.05)
-gwasresults4<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=K.mat, plot=F, n.PC = 6, min.MAF=0.05)
+# Choose which GWAS analysis to run based on the K-matrix flag and the PC flag:
+if (include_kinship == 0) {
+   if (include_pc == 0) {
+      gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=NULL, plot=F, n.PC=0, min.MAF=0.05)
+   } else {
+     gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=NULL, plot=F, n.PC=6, min.MAF=0.05)
+   }
+} else {
+  if (include_pc == 0) {
+     gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=K.mat, plot=F, n.PC=0, min.MAF=0.05)
+  } else {
+    gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=K.mat, plot=F, n.PC = 6, min.MAF=0.05)
+  }
 
+}
 
 ##### Manhanttan and QQ plots #####
 # Structure of results:
 # Fourth column contains the -log10(p-values)
 str(gwasresults)
-alpha_bonferroni=-log10(0.05/length(gwasresults$PHENO)) 
+alpha_bonferroni=-log10(0.05/length(gwasresults$PHENO))
 
 length(gwasresults$PHENO)
 alpha_bonferroni
 chromosome_color_vector <- c("forestgreen","darkblue")
 
-png("SolGWAS_Figure5.png")
+png(figure3_file_name)
 plot(gwasresults$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
-     main="Naïve model (K=NULL,n.PC=0)",xaxt="n",xlab="Position",ylim=c(0,14))
+     main="Manhattan Plot",xaxt="n",xlab="Position",ylim=c(0,14))
 #axis(1,at=c(1:length(unique(gwasresults$chr))),labels=unique(gwasresults$chr))
 axis(1,at=c(0,100,200,300,400,500))
 abline(a=NULL,b=NULL,h=alpha_bonferroni,col="red",lwd=2)
@@ -192,99 +217,98 @@ N <- length(gwasresults$PHENO)
 expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) )
 observed.logvalues <- sort( gwasresults$PHENO)
 
-png("SolGWAS_Figure6.png")
-plot(expected.logvalues , observed.logvalues, main="Naïve model(K=NULL,n.PC=0)",
+png(figure4_file_name)
+plot(expected.logvalues , observed.logvalues, main="QQ Plot",
      xlab="expected -log p-values ",
      ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
 abline(0,1,lwd=3,col="black")
 dev.off()
 
 
-alpha_bonferroni2=-log10(0.05/length(gwasresults2$PHENO)) 
-length(gwasresults2$PHENO)
-alpha_bonferroni2
+#alpha_bonferroni2=-log10(0.05/length(gwasresults2$PHENO))
+#length(gwasresults2$PHENO)
+#alpha_bonferroni2
 
-png("SolGWAS_Figure7.png")
-plot(gwasresults2$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
-     main="Q model (K=NULL,n.PC=6)",xaxt="n",xlab="Position",ylim=c(0,14))
-axis(1,at=c(0,100,200,300,400,500))
-abline(a=NULL,b=NULL,h=alpha_bonferroni2,col="red",lwd=2)
-legend(1,13.5, c("Bonferroni") ,
-       lty=1, col=c('red'), bty='n', cex=1,lwd=2)
-dev.off()
-
-
-N <- length(gwasresults2$PHENO)
-expected.logvalues2 <- sort( -log10( c(1:N) * (1/N) ) )
-observed.logvalues2 <- sort( gwasresults2$PHENO)
-
-png("SolGWAS_Figure8.png")
-plot(expected.logvalues2 , observed.logvalues2, main="Q model (K=NULL,n.PC=6)",
-     xlab="expected -log p-values ",
-     ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
-abline(0,1,lwd=3,col="black")
-dev.off()
+#png("SolGWAS_Figure7.png")
+#plot(gwasresults2$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
+#     main="Q model (K=NULL,n.PC=6)",xaxt="n",xlab="Position",ylim=c(0,14))
+#axis(1,at=c(0,100,200,300,400,500))
+#abline(a=NULL,b=NULL,h=alpha_bonferroni2,col="red",lwd=2)
+#legend(1,13.5, c("Bonferroni") ,
+#       lty=1, col=c('red'), bty='n', cex=1,lwd=2)
+#dev.off()
 
 
-alpha_bonferroni3=-log10(0.05/length(gwasresults3$PHENO)) 
-length(gwasresults3$PHENO)
-alpha_bonferroni3
+#N <- length(gwasresults2$PHENO)
+#expected.logvalues2 <- sort( -log10( c(1:N) * (1/N) ) )
+#observed.logvalues2 <- sort( gwasresults2$PHENO)
 
-png("SolGWAS_Figure9.png")
-plot(gwasresults3$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
-     main="K model (K=K.mat,n.PC=0)",xaxt="n",xlab="Position",ylim=c(0,14))
+#png("SolGWAS_Figure8.png")
+#plot(expected.logvalues2 , observed.logvalues2, main="Q model (K=NULL,n.PC=6)",
+#     xlab="expected -log p-values ",
+#     ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
+#abline(0,1,lwd=3,col="black")
+#dev.off()
+
+
+#alpha_bonferroni3=-log10(0.05/length(gwasresults3$PHENO))
+#length(gwasresults3$PHENO)
+#alpha_bonferroni3
+
+#png("SolGWAS_Figure9.png")
+#plot(gwasresults3$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
+#     main="K model (K=K.mat,n.PC=0)",xaxt="n",xlab="Position",ylim=c(0,14))
 #axis(1,at=c(1:length(unique(gwasresults3$chr))),labels=unique(gwasresults3$chr))
-axis(1,at=c(0,100,200,300,400,500))
-abline(a=NULL,b=NULL,h=alpha_bonferroni3,col="red",lwd=2)
+#axis(1,at=c(0,100,200,300,400,500))
+#abline(a=NULL,b=NULL,h=alpha_bonferroni3,col="red",lwd=2)
 #abline(a=NULL,b=NULL,h=alpha_FDR_Yield,col="red",lwd=2,lty=2)
-legend(1,13.5, c("Bonferroni") ,
-       lty=1, col=c('red'), bty='n', cex=1,lwd=2)
-dev.off()
+#legend(1,13.5, c("Bonferroni") ,
+#       lty=1, col=c('red'), bty='n', cex=1,lwd=2)
+#dev.off()
 
 
-N <- length(gwasresults3$PHENO)
-expected.logvalues3 <- sort( -log10( c(1:N) * (1/N) ) )
-observed.logvalues3 <- sort( gwasresults3$PHENO)
+#N <- length(gwasresults3$PHENO)
+#expected.logvalues3 <- sort( -log10( c(1:N) * (1/N) ) )
+#observed.logvalues3 <- sort( gwasresults3$PHENO)
 
-png("SolGWAS_Figure10.png")
-plot(expected.logvalues3, observed.logvalues3, main="K model (K=K.mat,n.PC=0)",
-     xlab="expected -log p-values ",
-     ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
-abline(0,1,lwd=3,col="black")
-dev.off()
+#png("SolGWAS_Figure10.png")
+#plot(expected.logvalues3, observed.logvalues3, main="K model (K=K.mat,n.PC=0)",
+#     xlab="expected -log p-values ",
+#     ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
+#abline(0,1,lwd=3,col="black")
+#dev.off()
 
-alpha_bonferroni4=-log10(0.05/length(gwasresults4$PHENO)) 
-length(gwasresults4$PHENO)
-alpha_bonferroni4
+#alpha_bonferroni4=-log10(0.05/length(gwasresults4$PHENO))
+#length(gwasresults4$PHENO)
+#alpha_bonferroni4
 
-png("SolGWAS_Figure11.png")
-plot(gwasresults4$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
-     main="Q+K model (K=K.mat,n.PC=6)",xaxt="n",xlab="Position",ylim=c(0,14))
+#png("SolGWAS_Figure11.png")
+#plot(gwasresults4$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
+#     main="Q+K model (K=K.mat,n.PC=6)",xaxt="n",xlab="Position",ylim=c(0,14))
 #axis(1,at=c(1:length(unique(gwasresults4$chr))),labels=unique(gwasresults4$chr))
-axis(1,at=c(0,100,200,300,400,500))
-abline(a=NULL,b=NULL,h=alpha_bonferroni,col="red",lwd=2)
+#axis(1,at=c(0,100,200,300,400,500))
+#abline(a=NULL,b=NULL,h=alpha_bonferroni,col="red",lwd=2)
 #abline(a=NULL,b=NULL,h=alpha_FDR_Yield,col="red",lwd=2,lty=2)
-legend(1,13.5, c("Bonferroni") ,
-       lty=1, col=c('red'), bty='n', cex=1,lwd=2)
-dev.off()
+#legend(1,13.5, c("Bonferroni") ,
+#       lty=1, col=c('red'), bty='n', cex=1,lwd=2)
+#dev.off()
 
 
-N <- length(gwasresults4$PHENO)
-expected.logvalues4 <- sort( -log10( c(1:N) * (1/N) ) )
-observed.logvalues4 <- sort( gwasresults4$PHENO)
+#N <- length(gwasresults4$PHENO)
+#expected.logvalues4 <- sort( -log10( c(1:N) * (1/N) ) )
+#observed.logvalues4 <- sort( gwasresults4$PHENO)
 
-png("SolGWAS_Figure12.png")
-plot(expected.logvalues4, observed.logvalues4, main="Q+K model (K=K.mat,n.PC=6)",
-     xlab="expected -log p-values ",
-     ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
-abline(0,1,lwd=3,col="black")
-dev.off()
+#png("SolGWAS_Figure12.png")
+#plot(expected.logvalues4, observed.logvalues4, main="Q+K model (K=K.mat,n.PC=6)",
+#     xlab="expected -log p-values ",
+#     ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
+#abline(0,1,lwd=3,col="black")
+#dev.off()
 
 
 ##### Identify the markes that are above the bonferroni cutoff #####
 
 which(gwasresults$PHENO>alpha_bonferroni)
-which(gwasresults2$PHENO>alpha_bonferroni)
-which(gwasresults3$PHENO>alpha_bonferroni)
-which(gwasresults4$PHENO>alpha_bonferroni)
-
+#which(gwasresults2$PHENO>alpha_bonferroni)
+#which(gwasresults3$PHENO>alpha_bonferroni)
+#which(gwasresults4$PHENO>alpha_bonferroni)

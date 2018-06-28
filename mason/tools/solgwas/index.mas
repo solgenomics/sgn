@@ -26,7 +26,7 @@
   <div class="form-group form-inline">
     <label for="dataset_select">Available Datasets: </label>
     <div id="dataset_select"></div>
-  
+
 
 <br>
 
@@ -71,7 +71,7 @@
 
 <&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
-  
+
 
   <center>
     <div id="sgn_blast_graph" style="display:none">
@@ -106,7 +106,7 @@ jQuery(document).ready(function() {
   else {
     alert('You must be logged in to use SolGWAS');
     }
-  jQuery('#dataset_select').change(function() {  
+  jQuery('#dataset_select').change(function() {
     var dataset_id = jQuery('#available_datasets').val();
 //    alert("Dataset ID: "+dataset_id);
     $.ajax({
@@ -124,7 +124,7 @@ jQuery(document).ready(function() {
 	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
 	  }
 	  $('#pheno_select').attr("disabled",false).html(option_html);
-	  
+
 
 	}
 
@@ -148,27 +148,22 @@ jQuery(document).ready(function() {
           jQuery("#working_modal").modal("show");
 	},
         success: function(response) {
-	  jQuery("#working_modal").modal("hide");
+	        jQuery("#working_modal").modal("hide");
           if (response.error) {
             $('#dataset_select').val('ERROR');
           }
           else {
-            var temp_response = response.dummy_response;
-	    var temp_response2 = response.dummy_response2;
+            var fig1_response = response.figure1;
+            var fig2_response = response.figure2;
+            var fig3_response = response.figure3;
+            var fig4_response = response.figure4;
 	    //alert("Response ID: "+temp_response);
-    	    //alert("Response ID: "+temp_response2);
-
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure1" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure1.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure2" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure3.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure3" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure5.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure4" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure6.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure5" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure7.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure6" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure8.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure7" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure9.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure8" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure10.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure9" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure11.png" />');
-	    $('#Solgwas_output').append('<img id="SolGWAS_Figure10" src="/documents/tempfiles/solgwas_files/SolGWAS_Figure12.png" />');
-	  }
+    	    //alert("Response ID: "+fig1_response);
+	          $('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
+	          $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
+	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
+	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
+	          }
 
 
         },
@@ -176,7 +171,7 @@ jQuery(document).ready(function() {
           alert("An error occurred, the service may temporarily be unavailable");
         }
       });
-    }  
+    }
   });
 
 
