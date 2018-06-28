@@ -128,7 +128,6 @@ sub detail {
 	}
 	    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 
-    my $map_id = $map->get_id();
 	my %result = (
 		mapDbId =>  qq|$map_id|,
 		name => $map->get_short_name(),
