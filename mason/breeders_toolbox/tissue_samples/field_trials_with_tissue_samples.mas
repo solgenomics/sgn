@@ -1,0 +1,44 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<h4>Field Trials With Tissue Samples</h4>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table id="tissue_sample_trial_search_results" class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th>Trial name</th>
+                        <th>Description</th>
+                        <th>Breeding program</th>
+                        <th>Folder</th>
+                        <th>Year</th>
+                        <th>Location</th>
+                        <th>Trial type</th>
+                        <th>Design</th>
+                        <th>Planting Date</th>
+                        <th>Harvest Date</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+   var trial_table = jQuery('#tissue_sample_trial_search_results').DataTable( {
+       'ajax': '/ajax/tissue_samples/field_trials',
+       "scrollX": true
+   });
+
+});
+
+</script>

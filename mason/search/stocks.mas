@@ -35,7 +35,6 @@ for (my $i=0; $i<= scalar(@$stock_types); $i++) {
 my $stock_type_select = simple_selectbox_html(
   choices   => $stock_types,
   id        => "stock_type_select",
-  selected  => $accession_cvterm_id,
 );
 
 my $organism_select = simple_selectbox_html(
@@ -300,6 +299,8 @@ my $breeding_programs_select = simple_selectbox_html(
 
 <script>
 
+var stock_table;
+
 jQuery(document).ready(function () {
 
      jQuery("#person").autocomplete({
@@ -370,41 +371,10 @@ jQuery(document).ready(function () {
             jQuery('#stock_search_results_div').html(table_header_html);
         }
         stock_table.destroy();
-        _load_stock_search_results();
+        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
     });
 
-    var stock_table;
-    _load_stock_search_results();
-
-    function _load_stock_search_results(){
-        stock_table = jQuery('#stock_search_results').DataTable( {
-            'destroy' : true,
-            'searching' : false,
-            'ordering'  : false,
-            'processing': true,
-            'serverSide': true,
-            'lengthMenu': [10,20,50,100,1000,5000],
-            'ajax': { 'url':  '/ajax/search/stocks',
-                'data': function(d) {
-                  d.any_name  = jQuery('#any_name').val();
-                  d.any_name_matchtype = jQuery('#any_name_matchtype').val();
-                  d.stock_type   = jQuery('#stock_type_select').val();
-                  d.organism     = jQuery('#organism_select').val();
-                  d.person       = jQuery('#person').val();
-                  d.trait        = jQuery('#trait').val();
-                  d.minimum_trait_value        = jQuery('#minimum_trait_value').val();
-                  d.maximum_trait_value        = jQuery('#maximum_trait_value').val();
-                  d.project      = jQuery('#project').val();
-                  d.location     = jQuery('#location').val();
-                  d.year         = jQuery('#year').val();
-                  d.breeding_program = jQuery('#breeding_program').val();
-                  d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
-                  d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
-                  d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
-                }
-            }
-        });
-    }
+    _load_stock_search_results('accession', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
       var name_links = stock_table.column(0).data();
@@ -422,7 +392,8 @@ jQuery(document).ready(function () {
     });
 
    jQuery('#submit_stock_search').click( function() {
-        stock_table.search("stock_search_results").draw();
+        //stock_table.search("stock_search_results").draw();
+        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
    });
 
    jQuery('#stock_search_form').keypress( function( e ) {
@@ -491,5 +462,36 @@ jQuery(document).ready(function () {
 
 
 });
+
+function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
+    console.log(stock_type);
+    stock_table = jQuery('#stock_search_results').DataTable({
+        'destroy' : true,
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url':  '/ajax/search/stocks',
+            'data': function(d) {
+              d.any_name  = jQuery('#any_name').val();
+              d.any_name_matchtype = jQuery('#any_name_matchtype').val();
+              d.stock_type   = stock_type;
+              d.organism     = jQuery('#organism_select').val();
+              d.person       = jQuery('#person').val();
+              d.trait        = jQuery('#trait').val();
+              d.minimum_trait_value        = jQuery('#minimum_trait_value').val();
+              d.maximum_trait_value        = jQuery('#maximum_trait_value').val();
+              d.project      = jQuery('#project').val();
+              d.location     = jQuery('#location').val();
+              d.year         = jQuery('#year').val();
+              d.breeding_program = jQuery('#breeding_program').val();
+              d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
+              d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
+              d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
+            }
+        }
+    });
+}
 
 </script>

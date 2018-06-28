@@ -180,6 +180,7 @@ $locations
                                             <option value=Augmented>Augmented</option>
                                             <option value=MAD>Modified Augmented Design</option>
                                             <option value=westcott>Westcott Design</option>
+                                            <option value=Lattice>Lattice</option>
                                             <!--  <option value=MADIII>MADIII</option>   -->
                                             <!--  <option value=MADIV>MADIV</option> -->
                                             <!--  <option value=MADV>MADV</option> -->
