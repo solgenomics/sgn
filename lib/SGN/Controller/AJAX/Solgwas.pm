@@ -109,6 +109,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
+    my $pc_check = $c->req->param('pc_check');
+    my $kinship_check = $c->req->param('kinship_check');
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
@@ -127,7 +129,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $protocol_id;
     my $row = $schema->resultset("NaturalDiversity::NdProtocol")->find( { name => $protocol_name});# just use find?
     if (defined($row)) {
-	$protocol_id = $row->nd_protocol_id();
+	      $protocol_id = $row->nd_protocol_id();
     }
 
     $ds -> retrieve_genotypes($protocol_id);
@@ -145,7 +147,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
 #    system($clean_cmd);
     print STDERR $figure1file;
-    my $cmd = "Rscript /home/vagrant/cxgn/sgn/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file;
+    my $cmd = "Rscript /home/vagrant/cxgn/sgn/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
     system($cmd);
 
 

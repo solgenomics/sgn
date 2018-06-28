@@ -45,8 +45,15 @@
   <div class="form-group form-inline">
     <label class="blast_select_label" for="pheno_select">Phenotypes &nbsp; </label>
   <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-
-
+  <br>
+  <br>
+  <div class="form-group form-inline">
+    <input type="checkbox" id="princomp" />
+    <label>Include principal components as covariates in model &nbsp; </label>
+    <br>
+    <input type="checkbox" id="kinshipmat" />
+    <label>Include kinship matrix in model &nbsp; </label>
+  </div>
 
 
 <br>
@@ -139,14 +146,24 @@ jQuery(document).ready(function() {
     if ($('#pheno_select').val() != ""){
       var dataset_id = $('#available_datasets').val();
       var trait_id = $('#pheno_select').val();
+      var pc_check = 0;
+      var kinship_check = 0;
+      if ($('#princomp').is(':checked')) {
+        var pc_check = 1;
+      }
+      if ($('#kinshipmat').is(':checked')) {
+        var kinship_check = 1;
+      }
+      //alert(pc_check);
+      //alert(kinship_check);
       //alert("Dataset ID: "+dataset_id);
       //alert("Pheno ID: "+trait_id);
       $.ajax({
         url: '/ajax/solgwas/generate_results',
-        data: {'dataset_id': dataset_id, 'trait_id': trait_id},
-	beforeSend: function() {
+        data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
+	      beforeSend: function() {
           jQuery("#working_modal").modal("show");
-	},
+	      },
         success: function(response) {
 	        jQuery("#working_modal").modal("hide");
           if (response.error) {

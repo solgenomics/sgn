@@ -7,11 +7,6 @@ setwd("/home/vagrant/cxgn/sgn/")
 ########################################
 args = commandArgs(trailingOnly = TRUE)
 
-# temporarily hard-coding the PC and Kinship flags
-include_kinship = 0
-include_pc = 0
-
-
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
 colnames(pheno)
 
@@ -22,8 +17,17 @@ figure1_file_name <- args[4]
 figure2_file_name <- args[5]
 figure3_file_name <- args[6]
 figure4_file_name <- args[7]
+pc_check <- args[8]
+kinship_check <- args[9]
 print("temp file name:")
 figure1_file_name
+
+# temporarily hard-coding the PC and Kinship flags
+print("pc_check:")
+pc_check
+print("kinship_check:")
+kinship_check
+
 
 pheno[1:5,1:21]
 # Note: still need to test how well this pmatch deals with other trickier cases
@@ -39,7 +43,6 @@ pheno[1:5,1:21]
 
 ### Note this is currently set for column 18, because the above code makes a new table including
 ### only the data for the trait selected....
-setwd("/home/vagrant/cxgn/sgn/")
 png(figure1_file_name)
 study_trait_read <- gsub(".", " ", study_trait, fixed=TRUE)
 hist(pheno_mod[,18], col="black",xlab=study_trait_read,ylab="Frequency",
@@ -176,17 +179,21 @@ K.mat[1:5,1:5]
 ##### Run the rrblup GWAS #####
 # Set plotting to false, do our own plotting
 # Choose which GWAS analysis to run based on the K-matrix flag and the PC flag:
-if (include_kinship == 0) {
-   if (include_pc == 0) {
+if (kinship_check == 0) {
+   if (pc_check == 0) {
       gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=NULL, plot=F, n.PC=0, min.MAF=0.05)
+      print("Run model with no kinship, no pcs")
    } else {
-     gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=NULL, plot=F, n.PC=6, min.MAF=0.05)
+      gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=NULL, plot=F, n.PC=6, min.MAF=0.05)
+      print("Run model with no kinship, yes pcs")
    }
 } else {
-  if (include_pc == 0) {
+  if (pc_check == 0) {
      gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=K.mat, plot=F, n.PC=0, min.MAF=0.05)
+     print("Run model with yes kinship, no pcs")
   } else {
     gwasresults<-GWAS(pheno.gwas, geno.gwas2, fixed=NULL, K=K.mat, plot=F, n.PC = 6, min.MAF=0.05)
+    print("Run model with yes kinship, yes pcs")
   }
 
 }
