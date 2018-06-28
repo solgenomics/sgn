@@ -390,7 +390,8 @@ qq { Download population: <span><a href="/qtl/download/phenotype/$population_id"
            );
         ( $image_pheno, $title_pheno, $image_map_pheno ) = $self->
           population_distribution();
-        $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
+
+      $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
         $plot_html .= $image_pheno . $image_map_pheno;
         $plot_html .= qq | </td><td> |;
         $plot_html .= $title_pheno . qq | <br/> |;
@@ -564,9 +565,12 @@ sub population_distribution
     my $basepath     = $c->get_conf("basepath");
     my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
+    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
+    $self->cache_temp_path();
+
     my $cache = CXGN::Tools::WebImageCache->new();
     $cache->set_basedir($basepath);
-    $cache->set_temp_dir( $tempfile_dir . "/temp_images" );
+    $cache->set_temp_dir( $tempfile_dir . '/temp_images');
     $cache->set_expiration_time(259200);
     $cache->set_key( "popluation_distribution" . $pop_id . $term_id );
     $cache->set_map_name("popmap$pop_id$term_id");
@@ -694,11 +698,10 @@ sub qtl_plot
     my $basepath       = $c->get_conf("basepath");
     my $tempfile_dir   = $c->get_conf("tempfiles_subdir");
 
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
+    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) = $self->cache_temp_path();
     my $cache_tempimages = Cache::File->new( cache_root => $tempimages_path );
     $cache_tempimages->purge();
-
+   
     my ( @marker,  @chr,  @pos,   @lod, @chr_qtl, @peak_markers );   
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title, $l_m, $p_m, $r_m );
@@ -829,9 +832,10 @@ sub qtl_plot
             }
 
             my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
-            $cache_qtl_plot->set_basedir($basepath);
-            $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
-            $cache_qtl_plot->set_expiration_time(259200);
+	   $cache_qtl_plot->set_basedir($basepath);
+           $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
+#	    $cache_qtl_plot->set_temp_dir( $tempimages_path);  
+          $cache_qtl_plot->set_expiration_time(259200);
             
            
            if ($self->qtl_stat_option() eq 'user params')
@@ -910,7 +914,8 @@ sub qtl_plot
             my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot_t->set_basedir($basepath);
             $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
-            $cache_qtl_plot_t->set_expiration_time(259200);
+           # $cache_qtl_plot_t->set_temp_dir( $tempimages_path);
+	    $cache_qtl_plot_t->set_expiration_time(259200);
            
            if ($self->qtl_stat_option() eq 'user params')
            {
@@ -1080,14 +1085,14 @@ sub outfile_list
 
     my $qtl_temp = File::Temp->new(
                                  TEMPLATE => "qtl_summary_${ac}_$pop_id-XXXXXX",
-                                 DIR      => $prod_temp_path,
+                                 DIR      => $prod_cache_path,
                                  UNLINK   => 0
     );
     my $qtl_summary = $qtl_temp->filename;
 
     my $marker_temp = File::Temp->new(
                             TEMPLATE => "peak_markers_${ac}_$pop_id-XXXXXX",
-                            DIR      => $prod_temp_path,
+                            DIR      => $prod_cache_path,
                             UNLINK   => 0
     );
 
@@ -1131,15 +1136,15 @@ sub cache_temp_path {
     my $solqtl_dir         = catdir($tmp_dir, 'solqtl');
     my $solqtl_cache       = catdir($tmp_dir, 'solqtl', 'cache'); 
     my $solqtl_tempfiles   = catdir($tmp_dir, 'solqtl', 'tempfiles');  
-   
+    
+    my $basepath = $c->config->{basepath};
     my $temp_dir  = $c->config->{tempfiles_subdir};
-    my $tempimages   = catdir($tempdir, "temp_images" );
+    
+    my $tempimages   = catdir($basepath, $temp_dir, "temp_images" );
 
     mkpath ([$solqtl_cache, $solqtl_tempfiles, $tempimages], 0, 0755);
-
-   
-
     return $solqtl_cache, $solqtl_tempfiles, $tempimages;
+  
 
 }
 
@@ -1188,8 +1193,6 @@ sub crosstype_file {
     $cross_temp->print( $rqtl_cross_type );
     return $cross_temp->filename;
 }
-
-
 
 =head2 run_r
 
@@ -1364,7 +1367,7 @@ sub qtl_images_exist
     my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
     $cache_qtl_plot->set_basedir($basepath);
     $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
-    
+
     if ($self->qtl_stat_option eq 'default') 
     {    
         my ( $image, $image_t, $image_url, $image_html, $image_t_url,
