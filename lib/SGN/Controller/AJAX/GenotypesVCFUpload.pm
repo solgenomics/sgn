@@ -37,7 +37,7 @@ __PACKAGE__->config(
    );
 
 
-sub upload_genotype_verify :  Path('/ajax/genotype/upload_verify') : ActionClass('REST') { }
+sub upload_genotype_verify :  Path('/ajax/genotype/upload') : ActionClass('REST') { }
 sub upload_genotype_verify_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");

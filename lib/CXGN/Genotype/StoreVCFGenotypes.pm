@@ -15,6 +15,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_year=>'2018',
     project_location_name=>$location_name,
     project_name=>'VCF2018',
+    project_description=>'description',
     protocol_name=>'SNP2018',
     organism_genus=>$organism_genus,
     organism_species=>$organism_species,
@@ -86,6 +87,12 @@ has 'project_name' => (
     required => 1,
 );
 
+has 'project_description' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'project_location_name' => (
     isa => 'Str',
     is => 'rw',
@@ -127,6 +134,7 @@ sub validate {
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
     my $opt_p = $self->project_name;
+    my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
     my $location = $self->project_location_name;
@@ -196,6 +204,7 @@ sub store {
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
     my $opt_p = $self->project_name;
+    my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
     my $location = $self->project_location_name;
@@ -216,7 +225,7 @@ sub store {
     #store a project
     my $project = $schema->resultset("Project::Project")->find_or_create({
         name => $opt_p,
-        description => $opt_p,
+        description => $project_description,
     });
     my $project_id = $project->project_id();
     $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
@@ -342,13 +351,20 @@ sub store {
 
     print STDERR "Genotypeprop observation units hash created\n";
 
+    my $stock_type = $self->observation_unit_type_name;
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
+
     foreach (@$observation_unit_names) {
 
         my ($observation_unit_name, $igd_number) = split(/:/, $_);
 
         #print STDERR "Looking for observation unit $observation_unit_name\n";
         my $stock;
-        my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'me.uniquename' => $observation_unit_name, organism_id => $organism_id });
+        my $stock_rs = $schema->resultset("Stock::Stock")->search({
+            uniquename => $observation_unit_name,
+            organism_id => $organism_id,
+            type_id => $stock_type_id
+        });
 
         if ($stock_rs->count() == 1) {
             $stock = $stock_rs->first();

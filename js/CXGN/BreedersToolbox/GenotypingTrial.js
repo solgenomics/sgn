@@ -435,4 +435,43 @@ jQuery(document).ready(function ($) {
         jQuery('#upload_genotypes_dialog').modal('show');
     });
 
+    var genotyping_data_project = new Object();
+    jQuery('#upload_genotype_submit').click(function () {
+        genotyping_data_project = new Object();
+        genotyping_data_project.breeding_program = jQuery('#upload_genotype_breeding_program_select').val();
+        genotyping_data_project.year = jQuery('#upload_genotype_year_select').val();
+        genotyping_data_project.location = jQuery('#upload_genotype_location_select').val();
+        genotyping_data_project.description = jQuery('#upload_genotype_vcf_project_description').val();
+        genotyping_data_project.project_name = jQuery('#upload_genotype_vcf_project_name').val();
+        genotyping_data_project.protocol_name = jQuery('#upload_genotype_vcf_protocol_name').val();
+        var uploadVCFfile = jQuery("#upload_genotype_vcf_file_input").val();
+        submit_genotype_data_upload(genotyping_data_project)
+    });
+
+    function submit_genotype_data_upload(genotyping_data_project) {
+        console.log('uploading genotype data file');
+        genotyping_data_project = genotyping_data_project;
+        jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
+        jQuery("#upload_genotypes_form").submit();
+    }
+
+    jQuery('#upload_genotypes_form').iframePostForm({
+        json: true,
+        post: function () {
+        },
+        complete: function (response) {
+            console.log(response);
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+            }
+        }
+    });
+
 });
