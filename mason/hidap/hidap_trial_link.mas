@@ -10,7 +10,7 @@ $trial
 
 <div class="row">
   <div class="col-sm-6">
-    <a href='https://apps.cipotato.org/hidap_sbase/?server=<% $main_production_site_url %>&program=<% $program %>&trial=<% $folder %>&study=<% $trial %>&item=graph' target="_blank">
+    <a href='https://research.cip.cgiar.org/gtdms/hidap/hidap_sbaseurl/shinyurl.php/?server=<% $main_production_site_url %>&program=<% $program %>&trial=<% $folder %>&study=<% $trial %>&item=graph' target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
@@ -24,7 +24,7 @@ $trial
     </a>
   </div>
   <div class="col-sm-6">
-  <a href='https://apps.cipotato.org/hidap_sbase/?server=<% $main_production_site_url %>&program=<% $program %>&trial=<% $folder %>&study=<% $trial %>&item=report' target="_blank">
+  <a href='https://research.cip.cgiar.org/gtdms/hidap/hidap_sbaseurl/shinyurl.php/?server=<% $main_production_site_url %>&program=<% $program %>&trial=<% $folder %>&study=<% $trial %>&item=report' target="_blank">
       <div class="well">
         <div class="row">
           <div class="col-sm-9">
