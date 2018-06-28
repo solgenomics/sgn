@@ -41,7 +41,7 @@ function listSelectionIndexPopulations ()  {
     jQuery("#select_a_population_div").empty().append(popsList).show();
      
     var dbSelPopsList;
-    if( modelData.id.match(/uploaded/) == null) {
+    if( modelData.id.match(/list/) == null) {
         dbSelPopsList = addSelectionPopulations();
     }
 
@@ -49,7 +49,7 @@ function listSelectionIndexPopulations ()  {
             jQuery("#select_a_population_div ul").append(dbSelPopsList); 
     }
       
-    var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
+    var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
     if( userUploadedSelExists == true) {
         var userSelPops = listUploadedSelPopulations();
         if (userSelPops) {
@@ -402,7 +402,7 @@ function legendParams () {
 
 function listUploadedSelPopulations ()  {
    
-    var selPopsDivUploaded   = document.getElementById("uploaded_selection_populations");
+    var selPopsDivUploaded   = document.getElementById("list_selection_populations");
     var selPopsTableUploaded = selPopsDivUploaded.getElementsByTagName("table");
     var selPopsRowsUploaded  = selPopsTableUploaded[0].rows;
     var predictedPopUploaded = [];
