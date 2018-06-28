@@ -656,7 +656,7 @@ sub get_stock_owners {
     
     no warnings 'uninitialized';
 
-    unless ($stock_id =~ /uploaded/) 
+    unless ($stock_id =~ /list/) 
     { 
         my $q = "SELECT sp_person_id, first_name, last_name 
                         FROM phenome.stock_owner 
@@ -1262,11 +1262,11 @@ sub prediction_pops {
       @tr_pop_markers = split(/\t/, $markers);
       shift(@tr_pop_markers);      
   }
-  elsif( $training_pop_id =~ /uploaded/) 
+  elsif( $training_pop_id =~ /list/) 
   {
      # my $user_id = $self->context->user->id;
       
-      my $dir = $self->context->stash->{solgs_prediction_upload_dir};      
+      my $dir = $self->context->stash->{solgs_lists_dir};      
       opendir my $dh, $dir or die "can't open $dir: $!\n";
     
       my ($geno_file) = grep { /genotype_data_${training_pop_id}/ && -f "$dir/$_" }  readdir($dh); 
