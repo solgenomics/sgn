@@ -30,6 +30,10 @@ jQuery(document).ready(function ($) {
     get_select_box("breeding_programs", "upload_genotype_breeding_program_select_div", {'id': 'upload_genotype_breeding_program_select', 'name': 'upload_genotype_breeding_program_select'});
     get_select_box("years", "upload_genotype_year_select_div", {'id': 'upload_genotype_year_select', 'name': 'upload_genotype_year_select'});
 
+    jQuery("#upload_genotypes_species_name_input").autocomplete({
+        source: '/organism/autocomplete'
+    });
+
     jQuery(function() {
         jQuery( "#genotyping_trials_accordion" ).accordion({
             header: "> div > h3",
@@ -438,6 +442,7 @@ jQuery(document).ready(function ($) {
     var genotyping_data_project = new Object();
     jQuery('#upload_genotype_submit').click(function () {
         genotyping_data_project = new Object();
+        genotyping_data_project.genotyping_facility = jQuery('#upload_genotype_vcf_facility_select').val();
         genotyping_data_project.breeding_program = jQuery('#upload_genotype_breeding_program_select').val();
         genotyping_data_project.year = jQuery('#upload_genotype_year_select').val();
         genotyping_data_project.location = jQuery('#upload_genotype_location_select').val();

@@ -13,7 +13,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     vcf_input_file=>$vcf_input_file,
     observation_unit_type_name=>'tissue_sample',
     project_year=>'2018',
-    project_location_name=>$location_name,
+    project_location_id=>$location_id,
     project_name=>'VCF2018',
     project_description=>'description',
     protocol_name=>'SNP2018',
@@ -75,6 +75,18 @@ has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sam
     required => 1,
 );
 
+has 'breeding_program_id' => (
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
+);
+
+has 'genotyping_facility' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'project_year' => (
     isa => 'Str',
     is => 'rw',
@@ -93,8 +105,8 @@ has 'project_description' => (
     required => 1,
 );
 
-has 'project_location_name' => (
-    isa => 'Str',
+has 'project_location_id' => (
+    isa => 'Int',
     is => 'rw',
     required => 1,
 );
@@ -131,13 +143,15 @@ has 'igd_numbers_included' => (
 
 sub validate {
     my $self = shift;
+    print STDERR "Genotype VCF validate\n";
+
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
     my $opt_p = $self->project_name;
     my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
-    my $location = $self->project_location_name;
+    my $location_id = $self->project_location_id;
     my $organism_genus = $self->organism_genus;
     my $organism_species = $self->organism_species;
     my $file = $self->vcf_input_file;
@@ -201,13 +215,16 @@ sub validate {
 
 sub store {
     my $self = shift;
+    print STDERR "Genotype VCF store\n";
+
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
+    my $genotype_facility = $self->genotyping_facility;
     my $opt_p = $self->project_name;
     my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
-    my $location = $self->project_location_name;
+    my $location_id = $self->project_location_id;
     my $organism_genus = $self->organism_genus;
     my $organism_species = $self->organism_species;
     my $file = $self->vcf_input_file;
@@ -221,6 +238,8 @@ sub store {
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property');
+    my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
 
     #store a project
     my $project = $schema->resultset("Project::Project")->find_or_create({
@@ -228,7 +247,8 @@ sub store {
         description => $project_description,
     });
     my $project_id = $project->project_id();
-    $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
+    $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
+    $project->create_projectprops( { $genotyping_facility_cvterm->name() => $genotype_facility } );
 
     #store Map name using protocol
     my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create({
@@ -236,12 +256,6 @@ sub store {
         type_id => $geno_cvterm_id
     });
     my $protocol_id = $protocol_row->nd_protocol_id();
-
-    #store location info
-    my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")->find_or_create({
-        description =>$location,
-    });
-    my $nd_geolocation_id = $geolocation->nd_geolocation_id();
 
     #store organism info
     my $organism = $schema->resultset("Organism::Organism")->find_or_create({
@@ -265,29 +279,31 @@ sub store {
 
         while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 
-            #print STDERR Dumper $marker_info;
-            my $marker_name;
-            my $marker_info_p2 = $marker_info->[2];
-            my $marker_info_p8 = $marker_info->[8];
-            if ($marker_info_p2 eq '.') {
-                $marker_name = $marker_info->[0]."_".$marker_info->[1];
-            } else {
-                $marker_name = $marker_info_p2;
-            }
+            if ($marker_info){
+                my $marker_name;
+                my $marker_info_p2 = $marker_info->[2];
+                my $marker_info_p8 = $marker_info->[8];
+                if ($marker_info_p2 eq '.') {
+                    $marker_name = $marker_info->[0]."_".$marker_info->[1];
+                } else {
+                    $marker_name = $marker_info_p2;
+                }
 
-            #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
-            my %marker = (
-                chrom => $marker_info->[0],
-                pos => $marker_info->[1],
-                ref => $marker_info->[3],
-                alt => $marker_info->[4],
-                qual => $marker_info->[5],
-                filter => $marker_info->[6],
-                info => $marker_info->[7],
-                format => $marker_info_p8,
-            );
-            $protocolprop_json{$marker_name} = \%marker;
+                #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
+                my %marker = (
+                    chrom => $marker_info->[0],
+                    pos => $marker_info->[1],
+                    ref => $marker_info->[3],
+                    alt => $marker_info->[4],
+                    qual => $marker_info->[5],
+                    filter => $marker_info->[6],
+                    info => $marker_info->[7],
+                    format => $marker_info_p8,
+                );
+                $protocolprop_json{$marker_name} = \%marker;
+            }
         }
+        print STDERR Dumper \%protocolprop_json;
         print STDERR "Protocol hash created...\n";
 
         #Save the protocolprop. This json string contains the details for the maarkers used in the map.
@@ -326,28 +342,31 @@ sub store {
 
     while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 
-        #print STDERR Dumper $marker_info;
-        my $marker_name;
-        my $marker_info_p2 = $marker_info->[2];
-        my $marker_info_p8 = $marker_info->[8];
-        if ($marker_info_p2 eq '.') {
-            $marker_name = $marker_info->[0]."_".$marker_info->[1];
-        } else {
-            $marker_name = $marker_info_p2;
-        }
+        if ($marker_info){
+            print STDERR Dumper $marker_info;
+            my $marker_name;
+            my $marker_info_p2 = $marker_info->[2];
+            my $marker_info_p8 = $marker_info->[8];
+            if ($marker_info_p2 eq '.') {
+                $marker_name = $marker_info->[0]."_".$marker_info->[1];
+            } else {
+                $marker_name = $marker_info_p2;
+            }
 
-        my @format =  split /:/,  $marker_info_p8;
-        #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-        for (my $i = 0; $i < $number_observation_units; $i++ ) {
-            my @fvalues = split /:/, $values->[$i];
-            my %value;
-            #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-            #    $value{@format[$fv]} = @fvalues[$fv];
-            #}
-            @value{@format} = @fvalues;
-            $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$marker_name} = \%value;
+            my @format =  split /:/,  $marker_info_p8;
+            #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
+            for (my $i = 0; $i < $number_observation_units; $i++ ) {
+                my @fvalues = split /:/, $values->[$i];
+                my %value;
+                #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
+                #    $value{@format[$fv]} = @fvalues[$fv];
+                #}
+                @value{@format} = @fvalues;
+                $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$marker_name} = \%value;
+            }
         }
     }
+    print STDERR Dumper \%genotypeprop_observation_units;
 
     print STDERR "Genotypeprop observation units hash created\n";
 
@@ -391,7 +410,7 @@ sub store {
 
         print STDERR "Stock name = " . $stock_name . "\n";
         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
-            nd_geolocation_id => $nd_geolocation_id,
+            nd_geolocation_id => $location_id,
             type_id => $geno_cvterm_id,
         });
         my $nd_experiment_id = $experiment->nd_experiment_id();

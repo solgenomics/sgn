@@ -26,48 +26,61 @@ has 'header' => (isa => 'ArrayRef',
 		 is => 'rw',
     );
 
-has 'accessions' => (isa => 'ArrayRef',
-		     is => 'rw',
-    );
+has 'header_information_lines' => (
+    isa => 'ArrayRef',
+    is => 'rw',
+);
+
+has 'observation_unit_names' => (
+    isa => 'ArrayRef',
+    is => 'rw',
+);
 
 sub init { 
     my $self = shift;
     my $args = shift;
 
     $self->file($args->{file});
-	
-	my $F;
-	open($F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
-	
-		#my $first_line = <$F>;
-		#if ($first_line =~ /^\s*#/) {
-		#	chomp($first_line);
-		#}
 
-		my $header = <$F>;
-		chomp($header);
-		#print STDERR "HEADER = $header\n";
-		my @fields = split /\t/, $header;
-		my @observation_unit_names = @fields[9..$#fields];
+    my $F;
+    open($F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
 
-		my @markers;
-		while (<$F>) { 
-		chomp;
-			my @values = split /\t/;
-			if ($values[2] eq '.') {
-				push @markers, $values[0]."_".$values[1];
-			} else {
-				push @markers, $values[2];
-			}
-		}
+        my @header_info;
+        my @fields;
+        my @observation_unit_names;
 
-		$self->header(\@fields);
-		$self->observation_unit_names(\@observation_unit_names);
-		$self->markers(\@markers);
-		
+        my @markers;
+        while (<$F>) {
+            chomp;
+            #print STDERR Dumper $_;
+
+            if ($_ =~ m/^##/){
+                push @header_info, $_;
+                next;
+            }
+            if ($_ =~ m/^#/){
+                my $header = $_;
+                @fields = split /\t/, $header;
+                @observation_unit_names = @fields[9..$#fields];
+                next;
+            }
+
+            my @values = split /\t/;
+            if ($values[2] eq '.') {
+                push @markers, $values[0]."_".$values[1];
+            } else {
+                push @markers, $values[2];
+            }
+        }
+
     close($F);
-	
-	my $fh = IO::File->new($args->{file});
+
+    $self->header(\@fields);
+    $self->observation_unit_names(\@observation_unit_names);
+    $self->markers(\@markers);
+    $self->header_information_lines(\@header_info);
+
+    my $fh = IO::File->new($args->{file});
     my $ignore_first_line = <$fh>;
     $self->current(1);
     $self->fh($fh);
@@ -76,19 +89,27 @@ sub init {
 sub next {
     my $self = shift;
 
-	#print STDERR "VCF NEXT CALLED\n";
-	my $line;
-	my $fh = $self->fh();
-	if ( defined($line = <$fh>) ) { 
-		
-		chomp($line);
-		my @fields = split /\t/, $line;
-	
-		my @marker_info = @fields[ 0..8 ];
-		my @values = @fields[ 9..$#fields ];
+    #print STDERR "VCF NEXT CALLED\n";
+    my $line;
+    my $fh = $self->fh();
+    if ( defined($line = <$fh>) ) {
+        chomp($line);
+        print STDERR Dumper $line;
+        if ($line =~ m/^##/){
+            print STDERR "H\n";
+            return (undef, undef);
+        }
+        if ($line =~ m/^#/){
+            print STDERR "C\n";
+            return (undef, undef);
+        }
+        my @fields = split /\t/, $line;
 
-		#$self->current( $self->current()+1 );
-		return (\@marker_info, \@values);
+        my @marker_info = @fields[ 0..8 ];
+        my @values = @fields[ 9..$#fields ];
+        print STDERR Dumper \@marker_info;
+        #$self->current( $self->current()+1 );
+        return (\@marker_info, \@values);
     }
     return undef;
 }

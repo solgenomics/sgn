@@ -34,12 +34,20 @@
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Facility: </label>
                                     <div class="col-sm-7">
-                                        <select class="form-control" id="upload_genotype_vcf_facility_select">
+                                        <select class="form-control" id="upload_genotype_vcf_facility_select" name="upload_genotype_vcf_facility_select">
                                             <option value="none">None</option>
                                             <option value="igd">Cornell IGD</option>
                                             <option value="intertek">Intertek</option>
                                             <option value="dart">Dart</option>
                                             <option value="bgi">BGI</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sample Unit: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
+                                            <option value="tissue_sample">Tissue Sample</option>
                                         </select>
                                     </div>
                                 </div>
@@ -71,6 +79,12 @@
                                     <label class="col-sm-5 control-label">Year: </label>
                                     <div class="col-sm-7">
                                         <span id="upload_genotype_year_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Species:</label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -172,7 +186,7 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>CHROM</td>
+                                <td>#CHROM</td>
                                 <td>POS</td>
                                 <td>ID</td>
                                 <td>REF</td>
@@ -188,7 +202,7 @@
 
                     <b>Required fields:</b>
                     <ul>
-                    <li>CHROM (chromosome: An identifier from the reference genome pointing to a contig in the assembly file (cf. the ##assembly line in the header). All entries for a specific CHROM should form a contiguous block within the VCF file. The colon symbol (:) must be absent from all chromosome names to avoid parsing errors when dealing with breakends. (String, no white-space permitted, Required))</li>
+                    <li>#CHROM (chromosome: An identifier from the reference genome pointing to a contig in the assembly file (cf. the ##assembly line in the header). All entries for a specific CHROM should form a contiguous block within the VCF file. The colon symbol (:) must be absent from all chromosome names to avoid parsing errors when dealing with breakends. (String, no white-space permitted, Required))</li>
                     <li>POS (position: The reference position, with the 1st base having position 1. Positions are sorted numerically, in increasing order, within each reference sequence CHROM. It is permitted to have multiple records with the same POS. Telomeres are indicated by using positions 0 or N+1, where N is the length of the corresponding chromosome or contig. (Integer, Required) )</li>
                     <li>ID ( identifier: Semi-colon separated list of unique identifiers where available. If this is a dbSNP variant it is encouraged to use the rs number(s). No identifier should be present in more than one data record. If there is no identifier available, then the missing value should be used. (String, no white-space or semi-colons permitted) )</li>
                     <li>REF (reference base(s): Each base must be one of A,C,G,T,N (case insensitive). Multiple bases are permitted. The value in the POS field refers to the position of the first base in the String. For simple insertions and deletions in which either the REF or one of the ALT alleles would otherwise be null/empty, the REF and ALT Strings must include the base before the event (which must be reflected in the POS field), unless the event occurs at position 1 on the contig in which case it must include the base after the event; this padding base is not required (although it is permitted) for e.g. complex substitutions or other events where all alleles have at least one base represented in their Strings. If any of the ALT alleles is a symbolic allele then the padding base is required and POS denotes the coordinate of the base preceding the polymorphism. Tools processing VCF files are not required to preserve case in the allele Strings. (String, Required) )</li>
@@ -248,6 +262,22 @@
         </div>
     </div>
 </div>
+
+<style>
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 100px;
+}
+</style>
 
 <script>
 jQuery(document).ready(function(){

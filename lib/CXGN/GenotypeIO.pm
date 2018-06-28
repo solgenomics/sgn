@@ -68,13 +68,7 @@ sub next {
 
 sub next_vcf_row {
 	my $self = shift;
-	my ($marker_info, $values) = $self->plugin()->next();
-	
-	if (!$marker_info) {
-		return;
-	}
-	return ($marker_info, $values);
-	
+	return $self->plugin()->next();
 }
 
 sub accessions { 
@@ -91,6 +85,12 @@ sub markers {
     my $self = shift;
     #print STDERR "Markers now: ".Dumper($self->plugin()->markers())."\n";
     return $self->plugin()->markers();
+}
+
+sub header { 
+    my $self = shift;
+    #print STDERR "Markers now: ".Dumper($self->plugin()->markers())."\n";
+    return $self->plugin()->header();
 }
 
 sub close { 
