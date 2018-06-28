@@ -2,7 +2,7 @@
 
 /**
 selection population upload from lists
-and files. Run prediction model on uploaded selection population 
+and files. Run prediction model on list selection population 
 and display output.
 
 Isaak Y Tecle 
@@ -166,9 +166,9 @@ if (typeof(listId) == 'number') {
     
     var dataSetType = trainingDataSetType();
    
-    var popType = 'uploaded_prediction';
+    var popType = 'list_prediction';
    
-    var selectionPopId = 'uploaded_' + listId;
+    var selectionPopId = 'list_' + listId;
     
     var args = {
 	'list_name'        : listName,
@@ -278,12 +278,12 @@ function predictGenotypesListSelectionPop (args) {
     var traitId  = args.trait_id;
     var selPopId = args.selection_pop_id;
 
-    var url = '/solgs/model/' + modelId + '/uploaded/prediction/' + selPopId; 
+    var url = '/solgs/model/' + modelId + '/list/prediction/' + selPopId; 
     
     jQuery.ajax({
 	dataType: 'json',
 	type    : 'POST',
- 	data    : {'trait_id': traitId, 'list_source': 'from_db', 'uploaded_prediction': 1},
+ 	data    : {'trait_id': traitId, 'list_source': 'from_db', 'list_prediction': 1},
 	url     : url,
 	success : function (res) {
 	    if (res.status == 'success') {
@@ -367,15 +367,15 @@ function displayPredictedListTypeSelectionPops(args, output) {
     var url =   '/solgs/model/'+ trainingPopId + '/prediction/'+ selectionPopId;
     var listIdArg   = '\'' + listId +'\'';
     var listSource  = '\'from_db\'';
-    var popIdName   = {'id' : 'uploaded_' + listId, 'name' : listName, 'pop_type': 'list_selection'};
+    var popIdName   = {'id' : 'list_' + listId, 'name' : listName, 'pop_type': 'list_selection'};
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
  
-    var predictedListTypeSelectionPops = jQuery("#uploaded_selection_pops_table").doesExist();
+    var predictedListTypeSelectionPops = jQuery("#list_selection_pops_table").doesExist();
                        
     if ( predictedListTypeSelectionPops == false) {  
                                   
-	var predictedListTypeSelectionTable ='<table id="uploaded_selection_pops_table" style="width:100%;text-align:left"><thead><tr>'
+	var predictedListTypeSelectionTable ='<table id="list_selection_pops_table" style="width:100%;text-align:left"><thead><tr>'
             + '<th>List-based selection population</th>'
             + '<th>View GEBVs</th>'
             + '</tr></thead><tbody>'
@@ -387,13 +387,13 @@ function displayPredictedListTypeSelectionPops(args, output) {
             + output
             + '</td></tr></tbody></table>';
 	
-	jQuery("#uploaded_selection_populations").append(predictedListTypeSelectionTable).show();
+	jQuery("#list_selection_populations").append(predictedListTypeSelectionTable).show();
 
     } else {
         var listIdArg = '\'' + listId +'\'';
         var listSource = '\'from_db\'';
 			
-        var popIdName   = {id : 'uploaded_' + listId, name: listName, pop_type: 'list_selection'};
+        var popIdName   = {id : 'list_' + listId, name: listName, pop_type: 'list_selection'};
         popIdName       = JSON.stringify(popIdName);
         var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
         
@@ -408,11 +408,11 @@ function displayPredictedListTypeSelectionPops(args, output) {
         var samePop = jQuery(trId).doesExist();
         
         if (samePop == false) {
-            jQuery("#uploaded_selection_pops_table tr:last").after(addRow);
+            jQuery("#list_selection_pops_table tr:last").after(addRow);
 
         } else {
 	    jQuery(trId).remove();
-	    jQuery("#uploaded_selection_pops_table").append(addRow).show();
+	    jQuery("#list_selection_pops_table").append(addRow).show();
 	}                          
         
     }
@@ -433,7 +433,7 @@ function loadPredictionOutput (url, listId, listSource) {
         url: url,
         dataType: 'json',
         data: {
-            'uploaded_prediction': 1, 
+            'list_prediction': 1, 
             'trait_id': traitId, 
             'model_id': modelId, 
             'prediction_id': listId,

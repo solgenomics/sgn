@@ -907,11 +907,11 @@ sub _stock_owner_ids {
 sub _stock_editor_info {
     my ($self,$stock) = @_;
     my @owner_info;
-    my $q = "SELECT sp_person_id, md_metadata.create_date FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
     my $h = $stock->get_schema->storage->dbh()->prepare($q);
     $h->execute($stock->get_stock_id);
-    while (my ($sp_person_id, $timestamp) = $h->fetchrow_array){
-        push @owner_info, [$sp_person_id, $timestamp];
+    while (my ($sp_person_id, $timestamp, $modification_note) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp, $modification_note];
     }
     return \@owner_info;
 }

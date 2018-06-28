@@ -73,8 +73,8 @@ sub list {
             $map_type = 'Genetic';
         }
         my $map_id = $m->get_id();
-	    	my %map_info = (
-		    mapDbId =>  "$map_id",
+        my %map_info = (
+		    mapDbId =>  qq|$map_id|,
 			name => $m->get_short_name(),
 			species => $m->get_organism() ? $m->get_organism() : '',
 			type => $map_type,
@@ -128,12 +128,14 @@ sub detail {
 	}
 	    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 
+    my $map_id = $map->get_id();
 	my %result = (
-		mapDbId =>  qq|$map->get_id()|,
+		mapDbId =>  qq|$map_id|,
 		name => $map->get_short_name(),
 		type => "Genetic",
 		unit => "Mb",
 		linkageGroups => $data_window,
+		data => $data_window,
 	);
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Maps detail result constructed');

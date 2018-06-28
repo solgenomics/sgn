@@ -144,7 +144,8 @@ sub display_fieldmap {
 		
     }
 	@layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
-	
+	my @plot_numbers;
+    my @stocks_hm;
 	my $false_coord;
 	if (scalar(@col_numbers) < 1){
         @col_numbers = ();
@@ -163,6 +164,8 @@ sub display_fieldmap {
 	}
 	my $plot_popUp;
 	foreach my $hash (@layout_info){
+        push @plot_numbers, $hash->{'plot_number'};
+        push @stocks_hm, $hash->{'accession_name'};
 		if (scalar(@{$hash->{"plant_names"}}) < 1) {
 			$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
 		}
@@ -191,11 +194,8 @@ sub display_fieldmap {
 				else{
 					$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}})."\nPlot_name: ".$my_hash->{'plot_name'};
 				}
-
 				$plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
-				#$plot_id[$my_hash->{'plot_number'}] = $my_hash->{'plot_id'};
 				$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
-				#$plot_number[$my_hash->{'plot_number'}] = $my_hash->{'plot_number'};
 				$acc_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'accession_name'};
 				$blk_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'block_number'};
 				$rep_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'rep_number'};
@@ -253,6 +253,8 @@ sub display_fieldmap {
 		plot_name => \@plot_name,
 		plot_id => \@plot_id,
 		plot_number => \@plot_number,
+        plot_numbers => \@plot_numbers,
+        stocks => \@stocks_hm,
 		max_rep => $max_rep,
 		max_block => $max_block,
 		sudo_plot_no => \@plotcnt,
