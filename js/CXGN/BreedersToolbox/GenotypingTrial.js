@@ -478,6 +478,8 @@ jQuery(document).ready(function ($) {
                 return;
             }
             if (response.success) {
+                Workflow.complete('#upload_genotype_submit');
+                Workflow.focus("#upload_genotypes_workflow", -1); //Go to success page
             }
         }
     });

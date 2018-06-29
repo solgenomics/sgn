@@ -19,6 +19,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     protocol_name=>'SNP2018',
     organism_genus=>$organism_genus,
     organism_species=>$organism_species,
+    user_id => 41,
     create_missing_observation_units_as_accessions=>0,
     igd_numbers_included=>0
 );
@@ -132,6 +133,12 @@ has 'organism_species' => (
 
 has 'reference_genome_name' => (
     isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'user_id' => (
+    isa => 'Int',
     is => 'rw',
     required => 1,
 );
@@ -424,6 +431,8 @@ sub store {
     my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?);";
     my $h = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
 
+    my %nd_experiment_ids;
+
     foreach (@$observation_unit_names) {
 
         my ($observation_unit_name, $igd_number) = split(/:/, $_);
@@ -512,8 +521,28 @@ sub store {
 
         #link the genotype to the nd_experiment
         my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
+        $nd_experiment_ids{$nd_experiment_id}++;
     }
 
+    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($file);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")->create({
+        basename => basename($file),
+        dirname => dirname($file),
+        filetype => 'genotype_vcf',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    foreach my $nd_experiment_id (keys %nd_experiment_ids) {
+        my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $nd_experiment_id,
+            file_id => $file_row->file_id(),
+        });
+    }
 }
 
 1;
