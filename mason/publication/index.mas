@@ -124,7 +124,7 @@ my $pub_title = $pub->get_title;
 % if ($pub_id) {
 
 <&| /page/info_section.mas, title=>"External resources", 
-  collapsible=>1, collapsed=>1 
+  collapsible=>1, collapsed=>0 
   &>
   <% $dbxrefs_html %>
   
