@@ -113,6 +113,12 @@ sub upload_genotype_verify_POST : Args(0) {
     my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
     my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
     my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
+    my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
+    my $add_accessions;
+    if ($add_new_accessions){
+        $add_accessions = 1;
+        $obs_type = 'accession';
+    }
     my $include_igd_numbers;
     if ($contains_igd){
         $include_igd_numbers = 1;
@@ -133,12 +139,18 @@ sub upload_genotype_verify_POST : Args(0) {
         protocol_name=>$protocol_name,
         organism_genus=>$organism_genus,
         organism_species=>$organism_species,
-        create_missing_observation_units_as_accessions=>0,
+        create_missing_observation_units_as_accessions=>$add_accessions,
         igd_numbers_included=>$include_igd_numbers,
         reference_genome_name=>$reference_genome_name
     });
     my $verified_errors = $store_genotypes->validate();
+    if (scalar(@{$verified_errors->{error_messages}}) > 0){
+        print STDERR Dumper $verified_errors->{error_messages};
+        $c->stash->{rest} = { error => 'There exist errors in your file.', missing_stocks => $verified_errors->{missing_stocks} };
+        $c->detach();
+    }
     my ($stored_genotype_error, $stored_genotype_success) = $store_genotypes->store();
+    $c->stash->{rest} = { success => 1 };
 }
 
 1;

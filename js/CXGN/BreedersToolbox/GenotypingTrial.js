@@ -439,23 +439,11 @@ jQuery(document).ready(function ($) {
         jQuery('#upload_genotypes_dialog').modal('show');
     });
 
-    var genotyping_data_project = new Object();
     jQuery('#upload_genotype_submit').click(function () {
-        genotyping_data_project = new Object();
-        genotyping_data_project.genotyping_facility = jQuery('#upload_genotype_vcf_facility_select').val();
-        genotyping_data_project.breeding_program = jQuery('#upload_genotype_breeding_program_select').val();
-        genotyping_data_project.year = jQuery('#upload_genotype_year_select').val();
-        genotyping_data_project.location = jQuery('#upload_genotype_location_select').val();
-        genotyping_data_project.description = jQuery('#upload_genotype_vcf_project_description').val();
-        genotyping_data_project.project_name = jQuery('#upload_genotype_vcf_project_name').val();
-        genotyping_data_project.protocol_name = jQuery('#upload_genotype_vcf_protocol_name').val();
-        var uploadVCFfile = jQuery("#upload_genotype_vcf_file_input").val();
-        submit_genotype_data_upload(genotyping_data_project)
+        submit_genotype_data_upload()
     });
 
-    function submit_genotype_data_upload(genotyping_data_project) {
-        console.log('uploading genotype data file');
-        genotyping_data_project = genotyping_data_project;
+    function submit_genotype_data_upload() {
         jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
         jQuery("#upload_genotypes_form").submit();
     }
@@ -464,14 +452,29 @@ jQuery(document).ready(function ($) {
         json: true,
         post: function () {
         },
+        beforeSend: function(){
+            jQuery('#working_modal').modal('show');
+        },
         complete: function (response) {
             console.log(response);
+            jQuery('#working_modal').modal('hide');
             if (response.error) {
                 alert(response.error);
-                return;
-            }
-            if (response.error_string) {
-                alert(response.error_string);
+                if (response.missing_stocks && response.missing_stocks.length > 0){
+                    jQuery('#upload_genotypes_missing_stocks_div').show();
+                    var missing_stocks_html = "<div class='well well-sm'><h3>Add the missing stocks to a list as accessions</h3><div id='upload_genotypes_missing_stock_vals' style='display:none'></div><div id='upload_genotypes_add_missing_stocks'></div></div><br/>";
+                    jQuery("#upload_genotypes_add_missing_stocks_html").html(missing_stocks_html);
+
+                    var missing_stocks_vals = '';
+                    for(var i=0; i<response.missing_stocks.length; i++) {
+                        missing_stocks_vals = missing_stocks_vals + response.missing_stocks[i] + '\n';
+                    }
+                    jQuery("#upload_genotypes_missing_stock_vals").html(missing_stocks_vals);
+                    addToListMenu('upload_genotypes_add_missing_stocks', 'upload_genotypes_missing_stock_vals', {
+                        selectText: true,
+                        listType: 'accessions'
+                    });
+                }
                 return;
             }
             if (response.success) {

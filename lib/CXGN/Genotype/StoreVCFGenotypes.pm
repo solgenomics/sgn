@@ -162,14 +162,15 @@ sub validate {
     my $organism_genus = $self->organism_genus;
     my $organism_species = $self->organism_species;
     my $file = $self->vcf_input_file;
+    my $opt_z = $self->igd_numbers_included;
     my @error_messages;
 
     print STDERR "Reading genotype information for protocolprop storage...\n";
     my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
 
     my $header = $gtio->header;
-    if ($header->[0] ne 'CHROM'){
-        push @error_messages, 'Column 1 header must be "CHROM".';
+    if ($header->[0] ne '#CHROM'){
+        push @error_messages, 'Column 1 header must be "#CHROM".';
     }
     if ($header->[1] ne 'POS'){
         push @error_messages, 'Column 2 header must be "POS".';
@@ -200,24 +201,58 @@ sub validate {
     my $number_observation_units = scalar(@$observation_unit_names);
     print STDERR "Number observation units: $number_observation_units...\n";
 
+    if ($opt_z){
+        my @observation_units_names_trim;
+        foreach (@$observation_unit_names){
+            my ($observation_unit_name, $igd_number) = split(/:/, $_);
+            push @observation_units_names_trim, $observation_unit_name;
+        }
+        $observation_unit_names = \@observation_units_names_trim;
+    }
+
+    #store organism info
+    my $organism = $schema->resultset("Organism::Organism")->find_or_create({
+        genus   => $organism_genus,
+        species => $organism_species,
+    });
+    my $organism_id = $organism->organism_id();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
     my $stock_type = $self->observation_unit_type_name;
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
     my $stock_rs = $schema->resultset("Stock::Stock")->search({
         uniquename => {-in => $observation_unit_names},
-        type_id => $stock_type_id
+        type_id => $stock_type_id,
+        organism_id => $organism_id
     });
     my %found_stock_names;
     while(my $r = $stock_rs->next){
         $found_stock_names{$r->uniquename}++;
     }
-    my @missing_stocks;
+    my %missing_stocks;
     foreach (@$observation_unit_names){
         if (!$found_stock_names{$_}){
-            push @error_messages, "$_ is not a valid $stock_type.";
-            push @missing_stocks, $_;
+            $missing_stocks{$_}++;
         }
     }
-    return { error_messages => \@error_messages, missing_stocks => \@missing_stocks };
+    my @missing_stocks = keys %missing_stocks;
+    my @missing_stocks_return;
+    foreach (@missing_stocks){
+        if (!$self->create_missing_observation_units_as_accessions){
+            push @error_messages, "$_ is not a valid $stock_type.";
+            push @missing_stocks_return, $_;
+        } else {
+            my $stock = $schema->resultset("Stock::Stock")->create({
+                organism_id => $organism_id,
+                name       => $_,
+                uniquename => $_,
+                type_id     => $accession_cvterm_id,
+            });
+        }
+    }
+    
+    return { error_messages => \@error_messages, missing_stocks => \@missing_stocks_return };
 }
 
 sub store {
@@ -409,7 +444,7 @@ sub store {
 
             #store the observation_unit_name in the stock table as an accession if $opt_a
             if (!$opt_a) {
-                print STDERR "WARNING! Observation unit name $observation_unit_name not found.\n";
+                print STDERR "WARNING! Observation unit name $observation_unit_name not found for stock type $stock_type.\n";
                 print STDERR "Use option -a to add automatically.\n";
                 next();
             } else {
