@@ -34,9 +34,53 @@
 
 <hr>
 
-<h3>Page Sections</h3>
+<h3>Info Sections</h3>
+<p>Info sections can be used to create collapsable and/or delineated sections on a page. To use, see the example code below</p>
+<pre><%text>
+&lt;&| /page/info_section.mas, id=&gt;'Example_Info_Section', 
+    title =&gt; 'Example Info Section', subtitle =&gt; 'This is a subtitle', 
+    collapsible=&gt;1, collapsed=&gt;0 &&gt;
+    
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+  
+&lt;/&&gt;
+</%text></pre>
+<p>The code above creates the info section below.</p>
+<&| /page/info_section.mas, id=>'Example_Info_Section', 
+    title => 'Example Info Section', subtitle => 'This is a subtitle', 
+    collapsible=>1, collapsed=>0 &>
+    
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+  
+</&>
 
-<p></p>
+<hr>
+
+<h3>List Select Menus // list modification</h3>
+
+<hr>
+
+<h3>HTML Selects (get_select_box)</h3>
+<div id="htmlselectexample"></div>
+<script type="text/javascript">
+    get_select_box("trials", "htmlselectexample")
+</script>
+<pre>
+&lt;div id="htmlselectexample"&gt;&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    get_select_box("trials", "htmlselectexample")
+&lt;/script&gt;
+</pre>
+
+<hr>
+
+<h3>jqui autocomplete</h3>
+<input type="text" id="popname" value="">
+<script type="text/javascript">
+  jQuery('#popname').autocomplete({
+    source: '/ajax/stock/population_autocomplete',
+  });
+</script>
 
 <hr>
 
@@ -158,6 +202,8 @@ Workflow.pending(Element,false);</pre>
   </&>
 </&>
 
+<hr>
+
 <h3>Vega(-lite) Graphs</h3>
 
 <p>
@@ -210,6 +256,8 @@ to create:
     }
     vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
 </script>
+
+<hr>
 
 <h3>Use of Symbols</h3>
 
