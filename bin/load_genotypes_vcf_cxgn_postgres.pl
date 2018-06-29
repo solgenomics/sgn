@@ -20,6 +20,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -n genotype facility name (required) e.g. "igd"
  -g population name (required) e.g. "NaCRRI training population"
  -b observation unit name (required) e.g. "tissue_sample"
+ -e breeding program name (required) e.g. "IITA"
  -s include igd numbers in sample names
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
@@ -63,16 +64,16 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use DateTime;
 use CXGN::UploadFile;
 
-our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_o, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s);
+our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_o, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e);
 
-getopts('H:U:i:r:u:tD:p:y:g:axsm:l:o:q:zf:d:b:n:s');
+getopts('H:U:i:r:u:tD:p:y:g:axsm:l:o:q:zf:d:b:n:se:');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $file = $opt_i;
 
 if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_g || !$opt_p || !$opt_y || !$opt_m || !$opt_l || !$opt_o || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -g (populations name for associating accessions in your SNP file), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -o (organism genus), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit name), -n (genotype facility name)\n");
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -g (populations name for associating accessions in your SNP file), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -o (organism genus), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit name), -n (genotype facility name), -e (breeding program name)\n");
 }
 
 print "Password for $opt_H / $opt_D: \n";
@@ -114,6 +115,22 @@ if (!$archived_filename_with_path) {
     die "Could not archive file!\n";
 } else {
     print STDERR "File saved in archive.\n";
+}
+
+my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => $opt_l});
+my $location_id;
+if ($location_rs->count != 1){
+    print STDERR "Location not valid in database\n";
+} else {
+    $location_id = $location_rs->first->nd_geolocation_id;
+}
+
+my $bp_rs = $schema->resultset('Project::Project')->search({name => $opt_e});
+my $breeding_program_id;
+if ($bp_rs->count != 1){
+    print STDERR "Location not valid in database\n";
+} else {
+    $breeding_program_id = $bp_rs->first->project_id;
 }
 
 my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
