@@ -44,6 +44,7 @@ use Data::Dumper;
 use CXGN::UploadFile;
 use SGN::Model::Cvterm;
 use CXGN::GenotypeIO;
+use JSON;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -124,6 +125,12 @@ has 'organism_genus' => (
 );
 
 has 'organism_species' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'reference_genome_name' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
@@ -224,6 +231,7 @@ sub store {
     my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
+    my $reference_genome_name = $self->reference_genome_name;
     my $location_id = $self->project_location_id;
     my $organism_genus = $self->organism_genus;
     my $organism_species = $self->organism_species;
@@ -238,24 +246,28 @@ sub store {
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $reference_genome_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'reference_genome_name', 'protocol_property')->cvterm_id();
+    my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property');
     my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
 
     #store a project
-    my $project = $schema->resultset("Project::Project")->find_or_create({
-        name => $opt_p,
-        description => $project_description,
+    my $project_id;
+    my $project_check = $schema->resultset("Project::Project")->find({
+        name => $opt_p
     });
-    my $project_id = $project->project_id();
-    $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
-    $project->create_projectprops( { $genotyping_facility_cvterm->name() => $genotype_facility } );
-
-    #store Map name using protocol
-    my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create({
-        name => $map_protocol_name,
-        type_id => $geno_cvterm_id
-    });
-    my $protocol_id = $protocol_row->nd_protocol_id();
+    if ($project_check){
+        $project_id = $project_check->project_id;
+    } else {
+        my $project = $schema->resultset("Project::Project")->create({
+            name => $opt_p,
+            description => $project_description,
+        });
+        $project_id = $project->project_id();
+        $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
+        $project->create_projectprops( { $genotyping_facility_cvterm->name() => $genotype_facility } );
+        $project->create_projectprops( { $design_cvterm->name() => 'genotype_data_project' } );
+    }
 
     #store organism info
     my $organism = $schema->resultset("Organism::Organism")->find_or_create({
@@ -264,10 +276,13 @@ sub store {
     });
     my $organism_id = $organism->organism_id();
 
-    if( !$protocol_row->in_storage ) {
-        $protocol_row->insert;
-        $protocol_id = $protocol_row->nd_protocol_id();
-
+    my $protocol_id;
+    my $protocol_row_check = $schema->resultset("NaturalDiversity::NdProtocol")->find({
+        name => $map_protocol_name
+    });
+    if ($protocol_row_check){
+        $protocol_id = $protocol_row_check->nd_protocol_id;
+    } else {
         print STDERR "Reading genotype information for protocolprop storage...\n";
         my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
 
@@ -276,6 +291,10 @@ sub store {
         my $observation_unit_names = $gtio->observation_unit_names();
         my $number_observation_units = scalar(@$observation_unit_names);
         print STDERR "Number observation units: $number_observation_units...\n";
+
+        my $header_info_lines = $gtio->header_information_lines();
+        $protocolprop_json{'header_information_lines'} = $header_info_lines;
+        $protocolprop_json{'reference_genome_name'} = $reference_genome_name;
 
         while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 
@@ -300,35 +319,30 @@ sub store {
                     info => $marker_info->[7],
                     format => $marker_info_p8,
                 );
-                $protocolprop_json{$marker_name} = \%marker;
+                $protocolprop_json{'markers'}->{$marker_name} = \%marker;
             }
         }
         print STDERR Dumper \%protocolprop_json;
         print STDERR "Protocol hash created...\n";
 
-        #Save the protocolprop. This json string contains the details for the maarkers used in the map.
-        my $json_obj = JSON::Any->new;
-        my $json_string = $json_obj->encode(\%protocolprop_json);
-        my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, rows=>1});
-        my $last_protocolprop = $last_protocolprop_rs->first();
-        my $new_protocolprop_id;
-        if ($last_protocolprop) {
-            $new_protocolprop_id = $last_protocolprop->nd_protocolprop_id() + 1;
-        } else {
-            $new_protocolprop_id = 1;
-        }
-        my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
-        $dbh->do($new_protocolprop_sql) or die "DBI::errstr";
+        my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
+            name => $map_protocol_name,
+            type_id => $geno_cvterm_id
+        });
+        $protocol_id = $protocol_row->nd_protocol_id();
 
-        #my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
+        #Save the protocolprop. This json string contains the details for the maarkers used in the map.
+        my $json_string = encode_json \%protocolprop_json;
+        my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, value) VALUES (?, ?, ?);";
+        my $h = $schema->storage->dbh()->prepare($new_protocolprop_sql);
+        $h->execute($protocol_id, $vcf_map_details_id, $json_string);
+
         undef %protocolprop_json;
         undef $json_string;
-        #undef $add_protocolprop;
         undef $new_protocolprop_sql;
 
         print STDERR "Protocolprop stored...\n";
     }
-    $protocol_id = $protocol_row->nd_protocol_id();
 
     print STDERR "Reading genotype information for genotyeprop...\n";
     my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
@@ -343,7 +357,6 @@ sub store {
     while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 
         if ($marker_info){
-            print STDERR Dumper $marker_info;
             my $marker_name;
             my $marker_info_p2 = $marker_info->[2];
             my $marker_info_p8 = $marker_info->[8];
@@ -372,6 +385,9 @@ sub store {
 
     my $stock_type = $self->observation_unit_type_name;
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
+
+    my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?);";
+    my $h = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
 
     foreach (@$observation_unit_names) {
 
@@ -441,23 +457,11 @@ sub store {
         });
         my $genotype_id = $genotype->genotype_id();
 
-        my $json_obj = JSON::Any->new;
         my $genotypeprop_json = $genotypeprop_observation_units{$_};
-        #print STDERR Dumper \%genotypeprop_observation_units;
-        my $json_string = $json_obj->encode($genotypeprop_json);
+        my $json_string = encode_json $genotypeprop_json;
 
         #Store json for genotype. Has all markers and scores for this stock.
-        my $last_genotypeprop_rs = $schema->resultset("Genetic::Genotypeprop")->search({}, {order_by=> { -desc => 'genotypeprop_id' }, rows=>1});
-        my $last_genotypeprop = $last_genotypeprop_rs->first();
-        my $new_genotypeprop_id;
-        if ($last_genotypeprop) {
-            $new_genotypeprop_id = $last_genotypeprop->genotypeprop_id() + 1;
-        } else {
-            $new_genotypeprop_id = 1;
-        }
-        my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES ('$new_genotypeprop_id', '$genotype_id', '$snp_genotypingprop_cvterm_id', '$json_string');";
-        $dbh->do($new_genotypeprop_sql) or die "DBI::errstr";
-        #my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $snp_genotypingprop_cvterm_id, value => $json_string });
+        $h->execute($genotype_id, $snp_genotypingprop_cvterm_id, $json_string);
 
         #Store IGD number if the option is given.
         if ($opt_z) {

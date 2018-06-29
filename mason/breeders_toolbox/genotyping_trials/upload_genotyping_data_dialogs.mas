@@ -18,9 +18,9 @@
                         <&| /util/workflow.mas, id=> "upload_genotypes_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
                                 <& /page/page_title.mas, title=>"This workflow will guide you through uploading genotypes into the database" &>
-                                <p>Genotypes should be the resulting data for genotyping trials that were submitted to a genotyping facility.</p>
-                                <p>The data returned from the genotyping facility should match the sample identifiers representing the individual wells in a genotyping trial.</p>
-                                <p>Curently we support the VCF v4.2 format for upload.</p>
+                                <p>Select a genotyping project on the next screen. This project can represent a series of genotyping trials sent to a genotyping facilty.</p>
+                                <p>Ideally the sample names in your VCF file will match sample names in genotyping trials in the database; however, the sample names in your file can also match accession names in the database.</p>
+                                <p>Curently we support the VCF format for upload.</p>
 
                                 <br/><br/>
                                 <center>
@@ -28,8 +28,15 @@
                                 </center>
                             </&>
 
-                            <&| /util/workflow.mas:step, title=> "Basic Genotyping Results Info" &>
-                                <& /page/page_title.mas, title=>"Provide info about your plate" &>
+                            <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
+                                <& /page/page_title.mas, title=>"Provide info about the genotyping project" &>
+
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>Should match Vendor Project if you have one</small></label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="upload_genotype_vcf_project_name" name="upload_genotype_vcf_project_name" type="text" placeholder="e.g. NextGenCassava"/>
+                                    </div>
+                                </div>
 
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Genotyping Facility: </label>
@@ -48,19 +55,8 @@
                                     <div class="col-sm-7">
                                         <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
                                             <option value="tissue_sample">Tissue Sample</option>
+                                            <option value="accession">Accession</option>
                                         </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>Should match Vendor Project if you have one</small></label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotype_vcf_project_name" name="upload_genotype_vcf_project_name" type="text" placeholder="e.g. NextGenCassava"/>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Protocol Name:</label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotype_vcf_protocol_name" name="upload_genotype_vcf_protocol_name" type="text" placeholder=" e.g. GBS ApeKI Cassava genome v6 Jan2015"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -91,6 +87,33 @@
                                     <label class="col-sm-5 control-label">Description: </label>
                                     <div class="col-sm-7">
                                         <textarea class="form-control" id="upload_genotype_vcf_project_description" name="upload_genotype_vcf_project_description" maxlength="250"></textarea>
+                                    </div>
+                                </div>
+
+                                <br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
+                                <& /page/page_title.mas, title=>"Provide info about the protocol used" &>
+
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Protocol Name:</label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="upload_genotype_vcf_protocol_name" name="upload_genotype_vcf_protocol_name" type="text" placeholder=" e.g. GBS ApeKI Cassava genome v6 Jan2015"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Protocol Reference Genome:</label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="upload_genotype_vcf_reference_genome_name" name="upload_genotype_vcf_reference_genome_name" type="text" placeholder="Mesculenta_511_v7.0"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sample Names Include IGD Numbers: </label>
+                                    <div class="col-sm-7">
+                                        <input type="checkbox" id="upload_genotype_vcf_include_igd_numbers" name="upload_genotype_vcf_include_igd_numbers" >
                                     </div>
                                 </div>
 

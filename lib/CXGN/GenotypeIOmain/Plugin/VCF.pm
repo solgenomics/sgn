@@ -94,24 +94,25 @@ sub next {
     my $fh = $self->fh();
     if ( defined($line = <$fh>) ) {
         chomp($line);
-        print STDERR Dumper $line;
+        #print STDERR Dumper $line;
         if ($line =~ m/^##/){
-            print STDERR "H\n";
+            #print STDERR "H\n";
             return (undef, undef);
         }
         if ($line =~ m/^#/){
-            print STDERR "C\n";
+            #print STDERR "C\n";
             return (undef, undef);
         }
         my @fields = split /\t/, $line;
 
         my @marker_info = @fields[ 0..8 ];
         my @values = @fields[ 9..$#fields ];
-        print STDERR Dumper \@marker_info;
+        #print STDERR Dumper \@marker_info;
         #$self->current( $self->current()+1 );
         return (\@marker_info, \@values);
     }
-    return undef;
+    print STDERR "END\n";
+    return;
 }
 
 

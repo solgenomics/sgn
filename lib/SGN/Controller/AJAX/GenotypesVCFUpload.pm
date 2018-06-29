@@ -112,6 +112,11 @@ sub upload_genotype_verify_POST : Args(0) {
     my $description = $c->req->param('upload_genotype_vcf_project_description');
     my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
     my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
+    my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
+    my $include_igd_numbers;
+    if ($contains_igd){
+        $include_igd_numbers = 1;
+    }
 
     my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
         bcs_schema=>$schema,
@@ -129,7 +134,8 @@ sub upload_genotype_verify_POST : Args(0) {
         organism_genus=>$organism_genus,
         organism_species=>$organism_species,
         create_missing_observation_units_as_accessions=>0,
-        igd_numbers_included=>$contains_igd
+        igd_numbers_included=>$include_igd_numbers,
+        reference_genome_name=>$reference_genome_name
     });
     my $verified_errors = $store_genotypes->validate();
     my ($stored_genotype_error, $stored_genotype_success) = $store_genotypes->store();

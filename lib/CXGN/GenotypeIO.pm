@@ -81,6 +81,11 @@ sub observation_unit_names {
     return $self->plugin()->observation_unit_names();
 }
 
+sub header_information_lines { 
+    my $self = shift;
+    return $self->plugin()->header_information_lines();
+}
+
 sub markers { 
     my $self = shift;
     #print STDERR "Markers now: ".Dumper($self->plugin()->markers())."\n";
