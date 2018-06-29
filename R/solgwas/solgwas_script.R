@@ -115,7 +115,7 @@ PCA1 <- 100*round((svdgeno$d[1])^2/sum((svdgeno$d)^2),d=3); PCA1
 PCA2 <- 100*round((svdgeno$d[2])^2/sum((svdgeno$d)^2),d=3); PCA2
 ### Plotting Principal components.
 png(figure2_file_name)
-plot(PCA[,1],PCA[,2],xlab=paste("PC1: ",PCA1,"%",sep=""),ylab=paste("PC2: ",PCA2,"%",sep=""),pch=20,cex=0.7)
+plot(PCA[,1],PCA[,2],xlab=paste("PC1: ",PCA1,"%",sep=""),ylab=paste("PC2: ",PCA2,"%",sep=""),pch=20,cex=0.7,main="PCA Plot")
 dev.off()
 
 
@@ -205,6 +205,7 @@ str(gwasresults)
 alpha_bonferroni=-log10(0.05/length(gwasresults$PHENO))
 
 length(gwasresults$PHENO)
+head(gwasresults)
 alpha_bonferroni
 chromosome_color_vector <- c("forestgreen","darkblue")
 
@@ -226,8 +227,8 @@ observed.logvalues <- sort( gwasresults$PHENO)
 
 png(figure4_file_name)
 plot(expected.logvalues , observed.logvalues, main="QQ Plot",
-     xlab="expected -log p-values ",
-     ylab="observed -log p-values",col.main="blue",col="coral1",pch=20)
+     xlab="Expected -log p-values ",
+     ylab="Observed -log p-values",col.main="blue",col="coral1",pch=20)
 abline(0,1,lwd=3,col="black")
 dev.off()
 
