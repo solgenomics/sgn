@@ -21,7 +21,7 @@ $data_set_type => undef
 
 <%perl>
 
-my $list_id = $pop_id if $pop_id =~ /uploaded/;
+my $list_id = $pop_id if $pop_id =~ /list/;
 
 my $combo_pops_id;
 
@@ -74,8 +74,8 @@ $pop_id = undef if $list_id || $combo_pops_id;
     <br>
     <br>
    
-    <!-- The container for the uploaded list pca populations -->
-    <div class="sub_infosectioncontent" id="uploaded_pca_populations" style="display:none"></div>
+    <!-- The container for the list list pca populations -->
+    <div class="sub_infosectioncontent" id="list_pca_populations" style="display:none"></div>
     <br>
 
 </div>

@@ -223,7 +223,7 @@ function add_plants_to_trial() {
       },
       error: function(response) {
         disable_working_modal();
-        alert("An error occurred updating the trial name");
+        alert("An error occurred saving plant entries");
       },
     });
 

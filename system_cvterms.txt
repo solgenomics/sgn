@@ -131,6 +131,7 @@ project_type	Health Status				00082
 project_type	Storage				00082
 project_type	genotyping_trial		00087
 project_type	phenotyping_trial	00087
+project_type    crossing_block_trial    00098
 stock_property	block				00052
 stock_property	col_number				00052
 stock_property	igd_synonym				00052

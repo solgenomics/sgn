@@ -53,7 +53,7 @@ if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("rrblup_gebvs", trait, sep = "_")
+kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
 blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 if (is.null(blupFile)) {
@@ -142,7 +142,7 @@ if (datasetInfo == 'combined populations') {
     
     colnames(phenoTrait)[1] <- 'genotypes'
    
-} else if (length(grep('uploaded', phenoFile)) != 0) {
+} else if (length(grep('list', phenoFile)) != 0) {
 
     phenoTrait <- averageTrait(phenoData, trait)
     
@@ -172,7 +172,7 @@ if (is.null(filteredGenoData)) {
 
 genoData <- genoData[order(row.names(genoData)), ]
 
-predictionTempFile <- grep("prediction_population", inputFiles, ignore.case = TRUE, value = TRUE)
+predictionTempFile <- grep("selection_population", inputFiles, ignore.case = TRUE, value = TRUE)
 
 predictionFile       <- c()
 filteredPredGenoFile <- c()
@@ -190,7 +190,7 @@ if (length(predictionTempFile) !=0 ) {
   message('prediction filtered genotype file: ', predictionFile)
 }
 
-predictionPopGEBVsFile <- grep("prediction_pop_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
+predictionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
 
 message("filtered pred geno file: ", filteredPredGenoFile)
 message("prediction gebv file: ",  predictionPopGEBVsFile)

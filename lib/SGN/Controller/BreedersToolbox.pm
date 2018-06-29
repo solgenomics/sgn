@@ -127,6 +127,19 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_roles.mas';
 }
 
+sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+    $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
+}
+
 
 sub manage_locations : Path("/breeders/locations") Args(0) {
     my $self = shift;
