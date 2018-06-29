@@ -64,6 +64,15 @@ eval {
         $h = $dbh->prepare($refresh);
         $status = $h->execute();
 
+        if ($opt_c) {
+          $refresh = 'SELECT refresh_materialized_phenotype_jsonb_table_concurrently()';
+        } else {
+          $refresh = 'SELECT refresh_materialized_phenotype_jsonb_table()';
+        }
+
+        $h = $dbh->prepare($refresh);
+        $status = $h->execute();
+
         $q = "UPDATE public.matviews SET currently_refreshing=?";
         $state = 'FALSE';
         $h = $dbh->prepare($q);

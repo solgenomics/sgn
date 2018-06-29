@@ -215,6 +215,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
     }
     else {
+        $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         #file must not contain duplicate plot names
         if ($seen_plot_names{$plot_name}) {
             push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
@@ -229,6 +230,7 @@ sub _validate_with_plugin {
       push @error_messages, "Cell B$row_name: accession name missing";
     } else {
       #accession name must exist in the database
+      $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_accession_names{$accession_name}++;
     }
 
@@ -277,6 +279,7 @@ sub _validate_with_plugin {
     }
 
     if ($seedlot_name){
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_seedlot_names{$seedlot_name}++;
         push @pairs, [$seedlot_name, $accession_name];
     }
@@ -373,6 +376,30 @@ sub _parse_with_plugin {
       }
   }
 
+  my %seen_accession_names;
+  for my $row ( 1 .. $row_max ) {
+      my $accession_name;
+      if ($worksheet->get_cell($row,1)) {
+          $accession_name = $worksheet->get_cell($row,1)->value();
+          $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+          $seen_accession_names{$accession_name}++;
+      }
+  }
+  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+  my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
+  my @accessions = keys %seen_accession_names;
+  my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+      'me.is_obsolete' => { '!=' => 't' },
+      'stockprops.value' => { -in => \@accessions},
+      'me.type_id' => $accession_cvterm_id,
+      'stockprops.type_id' => $synonym_cvterm_id
+  },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+  my %acc_synonyms_lookup;
+  while (my $r=$acc_synonym_rs->next){
+      $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+  }
+
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
     my $accession_name;
@@ -390,9 +417,11 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
     }
+    $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,1)) {
       $accession_name = $worksheet->get_cell($row,1)->value();
     }
+    $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
     }
@@ -417,6 +446,7 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,9)) {
         $seedlot_name = $worksheet->get_cell($row, 9)->value();
     }
+    $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,10)) {
         $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
     }
@@ -437,6 +467,14 @@ sub _parse_with_plugin {
             }
         }
         $treatment_col++;
+    }
+
+    if ($acc_synonyms_lookup{$accession_name}){
+        my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+        if (scalar(@accession_names)>1){
+            print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+        }
+        $accession_name = $accession_names[0];
     }
 
     my $key = $row;

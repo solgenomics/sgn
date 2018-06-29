@@ -30,10 +30,10 @@ sub generate_genotype_trial_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("plate_data");
-    print STDERR Dumper $plate_info;
+    #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters" };
+        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 
@@ -104,9 +104,28 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('genotyping_trial_layout_upload');
+    my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
+    my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
+    if ($upload_xls && $upload_coordinate){
+        $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
+        return;
+    }
+    if (!$upload_xls && !$upload_coordinate){
+        $c->stash->{rest} = {error => "You must upload a genotyping trial file!" };
+        return;
+    }
     my $parser;
     my $parsed_data;
+    my $upload;
+    my $upload_type;
+    if ($upload_xls){
+        $upload = $upload_xls;
+        $upload_type = 'GenotypeTrialXLS';
+    }
+    if ($upload_coordinate){
+        $upload = $upload_coordinate;
+        $upload_type = 'GenotypeTrialCoordinate';
+    }
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
     my $subdirectory = "genotyping_trial_upload";
@@ -178,7 +197,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('GenotypeTrialXLS');
+    $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
@@ -268,7 +287,7 @@ sub store_genotype_trial_POST : Args(0) {
     #print STDERR Dumper $plate_info;
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters" };
+        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 
@@ -283,6 +302,25 @@ sub store_genotype_trial_POST : Args(0) {
         $c->stash->{rest} = { error => "Unknown breeding program" };
         $c->detach();
     }
+
+    my $field_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id;
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
+    my %source_stock_names;
+    foreach (values %{$plate_info->{design}}){
+        $source_stock_names{$_->{stock_name}}++;
+    }
+    my @source_stock_names = keys %source_stock_names;
+
+    #If plots or plants or tissue samples are provided as the source, we can get the field trial and use it to save the link between genotyping trial and field trial directly.
+    my %field_trial_ids;
+    my $plant_rs = $schema->resultset('Stock::Stock')->search({'me.uniquename' => {-in => \@source_stock_names}, 'me.type_id' => {-in => [$plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id]}, 'nd_experiment_stocks.type_id'=>$field_nd_experiment_type_id, 'nd_experiment.type_id'=>$field_nd_experiment_type_id}, {'join' => {'nd_experiment_stocks' => {'nd_experiment' => 'nd_experiment_projects'}}, '+select'=>['nd_experiment_projects.project_id'], '+as'=>['trial_id']});
+    while(my $r=$plant_rs->next){
+        $field_trial_ids{$r->get_column('trial_id')}++;
+    }
+    my @field_trial_ids = keys %field_trial_ids;
+    #print STDERR Dumper \@field_trial_ids;
 
     print STDERR "Creating the genotyping trial...\n";
 
@@ -308,6 +346,7 @@ sub store_genotype_trial_POST : Args(0) {
             genotyping_facility => $plate_info->{genotyping_facility},
             genotyping_plate_format => $plate_info->{plate_format},
             genotyping_plate_sample_type => $plate_info->{sample_type},
+            genotyping_trial_from_field_trial => \@field_trial_ids,
         });
 
         $message = $ct->save_trial();
@@ -333,7 +372,7 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'genotyping_layout'});
     my $saved_design = $saved_layout->get_design();

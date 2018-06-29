@@ -112,11 +112,12 @@ sub remove_ontology {
 sub create_anova_phenodata_file {
     my ($self, $c)  = @_;
         
-    $self->anova_pheno_file($c);
-    my $pheno_file =  $c->stash->{phenotype_file};
-
+    $c->stash->{pop_id} = $c->stash->{trial_id};
+    $c->controller('solGS::solGS')->phenotype_file($c);
+      
     $self->copy_pheno_file_to_anova_dir($c);
-    
+    my $pheno_file =  $c->stash->{phenotype_file};
+      
     if (!-s $pheno_file) {
 	$c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
     } else {
@@ -187,10 +188,10 @@ sub get_traits_abbrs {
     my $traits_ids = $c->stash->{traits_ids};
   
     $c->stash->{pop_id} = $trial_id;   
-    $c->controller("solGS::solGS")->all_traits_file($c);
+    $c->controller('solGS::Files')->all_traits_file($c);
     my $traits_file = $c->stash->{all_traits_file};
     my @traits = read_file($traits_file);
-   
+
     my @traits_abbrs;
 
     foreach my $id (@$traits_ids) {
@@ -223,12 +224,13 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
 	{
 	    $c->stash->{$k} = $tr->{$k};	   
 	}
+
+	my $anova_result = $self->check_anova_output($c);
 	
-	unless ($self->check_anova_output($c)) 
+	unless ($anova_result) 
 	{
 	    $self->run_anova($c);
-	    $self->check_anova_output($c);
-		
+	    $anova_result = $self->check_anova_output($c);		
 	}
     }    
 }
@@ -241,24 +243,31 @@ sub check_anova_output {
     my $html_file = $c->stash->{anova_table_html_file};
    
     if (-s $html_file) {
-
+	
 	my $html_table = read_file($html_file);
-
+	
 	$self->prep_download_files($c);
 	my $anova_table_file = $c->stash->{download_anova};
 	my $model_file       = $c->stash->{download_model};
 	my $means_file       = $c->stash->{download_means};
 	my $diagnostics_file = $c->stash->{download_diagnostics};
        
-	$c->stash->{rest}{anova_html_table}         = $html_table;
-	$c->stash->{rest}{anova_table_file}         = $anova_table_file;
-	$c->stash->{rest}{anova_model_file}         = $model_file;
-	$c->stash->{rest}{adj_means_file}           = $means_file;
-	$c->stash->{rest}{anova_diagnostics_file}   = $diagnostics_file;
+	$c->stash->{rest}{anova_html_table}         =  $html_table;
+	$c->stash->{rest}{anova_table_file}         =  $anova_table_file;
+	$c->stash->{rest}{anova_model_file}         =  $model_file;
+	$c->stash->{rest}{adj_means_file}           =  $means_file;
+	$c->stash->{rest}{anova_diagnostics_file}   =  $diagnostics_file;
 
 	return 1;
 
     } else {
+	 
+	$self->anova_error_file($c);
+	my $error_file = $c->stash->{anova_error_file};
+
+	my $error = read_file($error_file);
+	$c->stash->{rest}{Error} = $error;
+	
 	return 0;
     }
     
@@ -285,6 +294,9 @@ sub prep_download_files {
 
   $self->anova_diagnostics_file($c);    
   my $diagnostics_file = $c->stash->{anova_diagnostics_file};
+
+  $self->anova_error_file($c);    
+  my $error_file = $c->stash->{anova_error_file};
   
   copy($anova_txt_file, $base_tmp_dir)  
       or die "could not copy $anova_txt_file to $base_tmp_dir";
@@ -298,6 +310,9 @@ sub prep_download_files {
   copy($diagnostics_file, $base_tmp_dir)  
       or die "could not copy $diagnostics_file to $base_tmp_dir";
 
+  copy($error_file, $base_tmp_dir)  
+      or die "could not copy $error_file to $base_tmp_dir";
+
   $anova_txt_file = fileparse($anova_txt_file);
   $anova_txt_file = catfile($tmp_dir, $anova_txt_file);
 
@@ -309,11 +324,15 @@ sub prep_download_files {
 
   $diagnostics_file = fileparse($diagnostics_file);
   $diagnostics_file = catfile($tmp_dir, $diagnostics_file);
+
+  $error_file = fileparse($error_file);
+  $error_file = catfile($tmp_dir, $error_file);
   
   $c->stash->{download_anova}       = $anova_txt_file;
   $c->stash->{download_model}       = $model_file;
   $c->stash->{download_means}       = $means_file;
   $c->stash->{download_diagnostics} = $diagnostics_file;
+  $c->stash->{download_error}       = $error_file;
 
 }
 
@@ -331,7 +350,7 @@ sub run_anova {
     my $output_file = $c->stash->{anova_output_files};
 
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{anova_temp_dir};
-
+   
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "anova-${trial_id}-${trait_id}";
@@ -347,13 +366,16 @@ sub copy_pheno_file_to_anova_dir {
 
     my $trial_id = $c->stash->{trial_id};
 
-    $c->controller('solGS::solGS')->phenotype_file_name($c, $trial_id);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
     my $anova_cache = $c->stash->{anova_cache_dir};
 
     copy($pheno_file, $anova_cache) or 
 	die "could not copy $pheno_file to $anova_cache";
+
+    my $file = basename($pheno_file);
+    $c->stash->{phenotype_file} = catfile($anova_cache, $file);
     
 }
 
@@ -377,7 +399,7 @@ sub anova_input_files {
      
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name = "anova_input_files_${trial_id}_${trait_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $file_list);
     
     $c->stash->{anova_input_files} = $tempfile;
@@ -388,9 +410,7 @@ sub anova_input_files {
 sub anova_pheno_file {
     my ($self, $c) = @_;
     
-    $c->stash->{pop_id} = $c->stash->{trial_id};
-
-    $c->controller('solGS::solGS')->phenotype_file($c);
+    $self->create_anova_phenodata_file($c);
    
 }
 
@@ -400,10 +420,10 @@ sub anova_traits_file {
 
     my $trial_id = $c->stash->{trial_id};   
     my $traits   = $c->stash->{trait_abbr};
-
+   
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name    = "anova_traits_file_${trial_id}"; 
-    my $traits_file =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $traits_file =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($traits_file, $traits);
 
     $c->stash->{anova_traits_file} = $traits_file;
@@ -421,6 +441,7 @@ sub anova_output_files {
     $self->anova_model_file($c);
     $self->adj_means_file($c);
     $self->anova_diagnostics_file($c);
+    $self->anova_error_file($c);
 
     my @files = $c->stash->{anova_table_file};
 
@@ -430,11 +451,12 @@ sub anova_output_files {
 			  $c->stash->{anova_table_txt_file},
 			  $c->stash->{adj_means_file},
 			  $c->stash->{anova_diagnostics_file},
+			  $c->stash->{anova_error_file},
 	);
      
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name = "anova_output_files_${trial_id}_${trait_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $file_list);
     
     $c->stash->{anova_output_files} = $tempfile;
@@ -455,7 +477,7 @@ sub anova_table_file {
                       stash_key => "anova_table_html_file"
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
     $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
 
@@ -464,7 +486,7 @@ sub anova_table_file {
 		   stash_key => "anova_table_txt_file"
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -482,7 +504,7 @@ sub anova_diagnostics_file {
                       stash_key => "anova_diagnostics_file"
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -500,7 +522,24 @@ sub anova_model_file {
                       stash_key => "anova_model_file"
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+sub anova_error_file {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trait_id = $c->stash->{trait_id};
+    
+    $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};;
+
+    my $cache_data = {key       => "anova_error_${trial_id}_${trait_id}",
+                      file      => "anova_error_${trial_id}_${trait_id}.txt",
+                      stash_key => "anova_error_file"
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -518,7 +557,7 @@ sub adj_means_file {
                       stash_key => "adj_means_file"
     };
 
-    $c->controller("solGS::solGS")->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
@@ -534,7 +573,7 @@ sub schema {
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

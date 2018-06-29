@@ -7,6 +7,7 @@
 
 options(echo = FALSE)
 
+library(methods)
 library(rrBLUP)
 library(plyr)
 library(stringr)
@@ -52,13 +53,13 @@ if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("kinship", trait, sep = "_")
+kinshipTrait <- paste("rrblup_gebvs", trait, sep = "_")
 blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
-markerTrait <- paste("marker", trait, sep = "_")
+markerTrait <- paste("marker_effects", trait, sep = "_")
 markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
@@ -151,7 +152,7 @@ if (datasetInfo == 'combined populations') {
 if (is.null(filteredGenoData)) {
  
   #genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData, maf=0)
+  genoData <- filterGenoData(genoData, maf=0.01)
   genoData <- roundAlleleDosage(genoData)
 
   genoData <- as.data.frame(genoData)
@@ -208,7 +209,7 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
   predictionData <- unique(predictionData, by='V1')
   
-  predictionData <- filterGenoData(predictionData, maf=0)
+  predictionData <- filterGenoData(predictionData, maf=0.01)
   predictionData <- roundAlleleDosage(predictionData)
   
   predictionData  <- as.data.frame(predictionData)
@@ -529,6 +530,7 @@ if(!is.null(validationAll)) {
            )
 }
 
+
 if (!is.null(ordered.markerEffects)) {
     fwrite(ordered.markerEffects,
            file  = markerFile,
@@ -536,7 +538,8 @@ if (!is.null(ordered.markerEffects)) {
            sep   = "\t",
            quote = FALSE,
            )
-  }
+}
+
 
 if (!is.null(ordered.trGEBV)) {
     fwrite(ordered.trGEBV,
@@ -546,6 +549,7 @@ if (!is.null(ordered.trGEBV)) {
            quote = FALSE,
            )
 }
+
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
@@ -565,6 +569,7 @@ if (length(combinedGebvsFile) != 0 ) {
     }
 }
 
+
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
     fwrite(traitPhenoData,
            file  = traitPhenoFile,
@@ -573,6 +578,7 @@ if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
            quote = FALSE,
            )
 }
+
 
 if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
   fwrite(filteredGenoData,
@@ -620,6 +626,7 @@ if (file.info(relationshipMatrixFile)$size == 0) {
          quote = FALSE,
          )
 }
+
 
 if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
   fwrite(formattedPhenoData,

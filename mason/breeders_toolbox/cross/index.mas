@@ -45,7 +45,7 @@ $user_id => undef
 
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">

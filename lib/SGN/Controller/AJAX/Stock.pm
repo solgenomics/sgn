@@ -29,7 +29,7 @@ use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_a
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
 use Scalar::Util 'reftype';
-use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::Stock::RelatedStocks;
 use CXGN::BreederSearch;
 
@@ -80,12 +80,16 @@ sub add_stockprop_POST {
 
         my $message = '';
         if ($prop_type eq 'stock_synonym') {
-            my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+            my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
             my $max_distance = 0.2;
-            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance);
+            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance, 'accession');
             #print STDERR Dumper $fuzzy_search_result;
             my $found_accessions = $fuzzy_search_result->{'found'};
             my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+            if ($fuzzy_search_result->{'error'}){
+                $c->stash->{rest} = { error => "ERROR: ".$fuzzy_search_result->{'error'} };
+                $c->detach();
+            }
             if (scalar(@$found_accessions) > 0){
                 $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
                 $c->detach();
@@ -106,7 +110,7 @@ sub add_stockprop_POST {
 
             my $dbh = $c->dbc->dbh();
             my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
             $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
         } catch {
@@ -961,6 +965,43 @@ sub cross_autocomplete_GET :Args(0) {
     }
 
     #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 population_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub population_autocomplete : Local : ActionClass('REST') { }
+
+sub population_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
+
+    my @response_list;
+    my $q = "select distinct(uniquename) from stock where uniquename ilike ? and type_id=? ORDER BY stock.uniquename";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%', $population_cvterm_id);
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    #print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
+
     $c->stash->{rest} = \@response_list;
 }
 

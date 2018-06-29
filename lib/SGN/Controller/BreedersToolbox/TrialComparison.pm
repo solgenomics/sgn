@@ -13,10 +13,9 @@ sub trial_comparison_input :Path('/tools/trial/comparison/list') Args(0) {
     my $c = shift;
 
     if (! $c->user) {
-	$c->res->redirect(uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-    $c->assets->include('/static/css/tools/trial_comparison.css');
     $c->stash->{template} = '/tools/trial_comparison/index.mas';
 
 }

@@ -30,6 +30,7 @@ use CXGN::Trial::TrialLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::MetaDataMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Login;
 use CXGN::Stock::StockLookup;
@@ -40,7 +41,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/usr/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -196,13 +197,13 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $user = $c->user();
     if (!$user && !$sgn_session_id) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     } elsif (!$user && $sgn_session_id) {
         my $login = CXGN::Login->new($schema->storage->dbh);
         my $logged_in = $login->query_from_cookie($sgn_session_id);
         if (!$logged_in){
-            $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
             return;
         }
     }
@@ -212,7 +213,6 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
-    my $include_row_and_column_numbers = $c->req->param("include_row_and_column_numbers") && $c->req->param("include_row_and_column_numbers") ne 'null' ? $c->req->param("include_row_and_column_numbers") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -224,7 +224,6 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
-    my $search_type = $c->req->param("search_type") || 'fast';
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
@@ -333,9 +332,14 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     if ($format eq "csv") {
         $plugin = "TrialPhenotypeCSV";
     }
-
+    
+    my $temp_file_name;
     my $dir = $c->tempfiles_subdir('download');
-    my $temp_file_name = "phenotype" . "XXXX";
+    if ($data_level eq 'metadata'){
+        $temp_file_name = "metadata" . "XXXX";
+    }else{
+        $temp_file_name = "phenotype" . "XXXX";
+    }    
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
@@ -356,12 +360,10 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
-        include_row_and_column_numbers => $include_row_and_column_numbers,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
-        search_type=>$search_type,
         has_header=>$has_header
     });
 
@@ -431,14 +433,23 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $c = shift;
 
     my $accession_list_id = $c->req->param("accession_list_list_select");
-    my $trial_list_id     = $c->req->param("trial_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
+    my $trial_list_id     = $c->req->param("trial_list_list_select");
+    my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
+    if (!$trial_list_id && !$accession_list_id && !$trait_list_id){
+        $trial_list_id     = $c->req->param("trial_metadata_list_list_select");
+        $dl_token = $c->req->param("metadata_download_token") || "no_token";
+    }
     my $format            = $c->req->param("format");
+    if (!$format){ 
+        $format            = $c->req->param("metadata_format");
+    }
     my $datalevel         = $c->req->param("phenotype_datalevel");
+    if (!$datalevel){
+        $datalevel         = $c->req->param("metadata_datalevel");
+    }
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
-    my $search_type        = $c->req->param("search_type") || 'complete';
-    my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     print STDERR "Token is: $dl_token\n";
 
@@ -486,26 +497,30 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $result;
     my $output = "";
 
-    my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
+    my @data;
+    if ($datalevel eq 'metadata'){
+        my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
+    		bcs_schema=>$schema,
+    		search_type=>'MetaData',
+    		data_level=>$datalevel,
+    		trial_list=>$trial_id_data->{transform},,    		
+    	);
+    	@data = $metadata_search->get_metadata_matrix();
     }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
+    else {
+    	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+    		bcs_schema=>$schema,
+    		search_type=>'MaterializedViewTable',
+    		trait_list=>$trait_id_data->{transform},
+    		trial_list=>$trial_id_data->{transform},
+    		accession_list=>$accession_id_data->{transform},
+    		include_timestamp=>$timestamp_included,
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+    		data_level=>$datalevel,
+    	);
+    	@data = $phenotypes_search->get_phenotype_matrix();
     }
-	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-		bcs_schema=>$schema,
-		search_type=>$factory_type,
-		trait_list=>$trait_id_data->{transform},
-		trial_list=>$trial_id_data->{transform},
-		accession_list=>$accession_id_data->{transform},
-		include_timestamp=>$timestamp_included,
-        include_row_and_column_numbers=>1,
-        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-		data_level=>$datalevel,
-	);
-	my @data = $phenotypes_search->get_phenotype_matrix();
-
+    
     if ($format eq "html") { #dump html in browser
         $output = "";
         my @header = @{$data[0]};
@@ -531,7 +546,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     } else {
         # if xls or csv, create tempfile name and place to save it
-        my $what = "phenotype_download";
+        
+        my $what;
+        if ($datalevel eq 'metadata'){$what = "metadata_download";}
+        else{$what = "phenotype_download"; }
         my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
         my $dir = $c->tempfiles_subdir('download');
         my $temp_file_name = $time_stamp . "$what" . "XXXX";

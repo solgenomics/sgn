@@ -1,6 +1,6 @@
 <& /util/import_javascript.mas, classes => [ "calendar.moment_min", "calendar.fullcalendar_min", "jquery.dataTables", "calendar.fullcalendar_gcal_min", "calendar.bootstrap_datepicker_min" ] &>
 
-<link rel="stylesheet" href="/css/datepicker.css" />
+<& /util/import_css.mas, paths => ['/css/datepicker.css'] &>
 
 <style>
 .fc-center h2 {
@@ -254,7 +254,7 @@
 
 jQuery(document).ready(function() {
 
-    jQuery("button[name='personal_calendar_link']").click(function(){
+    jQuery(document).on('click', "button[name='personal_calendar_link']", function() {
         jQuery("#calendar_modal").modal("show");
     });
 
@@ -285,7 +285,7 @@ jQuery(document).ready(function() {
         //},
         agendaWeek_view: {
             url: '/ajax/calendar/populate/personal/agendaWeek',
-            error: function() {window.location.replace('/solpeople/login.pl');},
+            error: function() {window.location.replace('/user/login');},
             className: 'bg-info',
             textColor: '#000',
             borderColor: '#FFF',

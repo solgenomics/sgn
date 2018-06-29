@@ -7,72 +7,18 @@ $trial_id
 
 </div>
 
-
-<div id="add_data_agreement_dialog">
-  <textarea cols="40" rows="10" id="data_agreement_text">
-    </textarea>
-</div>
-
 <script>
 
 jQuery(document).ready(function () {
 
-  get_data_agreement(<% $trial_id %>, 'data_agreement_div');
-
-  jQuery('#add_data_agreement_dialog').dialog( { 
-     height: 400,
-     width: 500,
-     title: 'Add Data Agreement',
-     autoOpen: false,
-     buttons: { 
-       'OK':    {  id: 'data_agreement_ok_button',
-                   click: function() { 
-                     add_data_agreement();
-                     jQuery('#add_data_agreement_dialog').dialog("close");
-                 },
-                 text: "OK"
-              },
-       'Cancel': { id: 'data_agreement_cancel_button',
-                   click:  function() { 
-                     jQuery('#add_data_agreement_dialog').dialog("close"); 
-                   },
-                   text: "Cancel"
-                 }
-                
-     }
-  });
-
-  jQuery('#add_data_agreement').click( function() { 
-      get_data_agreement(<% $trial_id %>, 'data_agreement_text');
-     jQuery('#add_data_agreement_dialog').dialog("open");
-  });
-
-   function add_data_agreement() { 
-     var data_agreement_text = jQuery('#data_agreement_text').val();
-     jQuery.ajax( { 
-        url: '/breeders/trial/add/data_agreement',
-        data: { 'text': data_agreement_text, 'project_id': <% $trial_id %> },
-        success: function(response) { 
-          if (response.error) { alert(response.error); }
-          else 
-          if (response.message) { alert(response.message); }
-          else { 
-            alert("Successfully added a data agreement to this trial.");
-          }
-          get_data_agreement(<% $trial_id %>, 'data_agreement_div');
-        },
-        error: function(response) { 
-          alert("An error occurred storing the data agreement.");
-        }
-      });
-    }
+    get_data_agreement(<% $trial_id %>, 'data_agreement_div');
 
     function get_data_agreement(project_id, div) { 
       jQuery.ajax( { 
         async: true,
         url: '/breeders/trial/data_agreement/get',
         data: { 'project_id': project_id },
-        success: function(response) { 
+        success: function(response) {
            if (response.text) { 
              jQuery('#'+div).html(response.text);
            }
@@ -86,7 +32,6 @@ jQuery(document).ready(function () {
         }
       });
     }
-
 
 });
 

@@ -25,10 +25,10 @@
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trials_phenotypes_level_option">
+                        <option value="all">All</option>
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
                         <option value="subplot">Subplots</option>
-                        <option value="all">All</option>
                     </select>
                 </div>
             </div>
@@ -109,15 +109,6 @@
                 </div>
             </div>
 </&>
-<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Download Type: </label>
-                <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="trials_search_type" id="trials_search_type" value="fast" >Fast (plots only)</label>
-                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="trials_search_type" id="trials_search_type" value="complete" checked>Complete</label>
-                </div>
-            </div>
-</&>
 
             </form><br/>
 
@@ -159,7 +150,6 @@ jQuery(document).ready(function() {
         var trait_contains_array = trait_contains.split(",");
         var phenotype_min_value = jQuery("#download_trials_phenotype_phenotype_min").val();
         var phenotype_max_value = jQuery("#download_trials_phenotype_phenotype_max").val();
-        var search_type = jQuery('input[name=trials_search_type]:checked').val();
         var exclude_phenotype_outlier = jQuery("#download_trials_phenotype_exclude_outliers").val();
         var traits = [];
         
@@ -180,7 +170,7 @@ jQuery(document).ready(function() {
         }
 
         if (selected.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&search_type="+search_type+"&include_row_and_column_numbers=1&exclude_phenotype_outlier="+exclude_phenotype_outlier);
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
         }
         else { alert("No leaf nodes selected for download."); }
     });

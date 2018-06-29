@@ -154,13 +154,13 @@ function formatGenCorInputData (popId, type, indexFile) {
         dataType: 'json',
         data: {'model_id': modelDetail.population_id, 'corr_population_id': popId, 'type' : type, 'index_file': indexFile},
         url: '/correlation/genetic/data/',
-        success: function(response) {
-           
-            if(response.status == 'success') {
+        success: function(response) {           
+            if (response.result) {
+
                 gebvsFile = response.gebvs_file;
-                   
+              
                 var divPlace;
-                if(indexFile) {
+                if (indexFile) {
                     divPlace = '#si_correlation_canvas';
                 }
 
@@ -171,7 +171,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'gebvs_file': gebvsFile,
                     'div_place' : divPlace,
                 };
-              
+          
                 runGenCorrelationAnalysis(args);
 
             } else {

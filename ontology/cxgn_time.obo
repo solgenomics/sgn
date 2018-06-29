@@ -515,7 +515,7 @@ is_a: TIME:0000000
 id: TIME:0000077
 name: at flowering
 synonym: "FLW" EXACT []
-def: "flowering (shooting is here equivalent to flowering) stage"
+def: "flowering (shooting is here equivalent to flowering) stage where the whole inflorescence comes from the neck of the pseudostem at the switch from vegetative to reproductive development"
 is_a: TIME:0000076
 
 [Term]

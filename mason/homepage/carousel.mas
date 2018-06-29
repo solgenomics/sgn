@@ -155,21 +155,20 @@
 
 
       <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/solcuc2017.png) center center; background-size:cover;" class="slider-size">
+          <div style="background:url(/documents/img/homepage_carousel/Sol2018.jpg) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-              <a href="http://solcuc2017.org/" target="_blank" style="color: #00426c">
+              <a href="https://www.solanaceae2018.com/" target="_blank" style="color: #00426c">
                 <!-- <h3>Solcuc2017</h3> -->
-                <h3>XIV Solanaceae and 3rd Cucurbitaceae Joint Conference</h3>
-                <p>September 3-6, 2017 - Valencia, Spain</p>
+                <h3>The 15th Solanaceae Conference</h3>
+                <p>September 30th - October 4th 2018, Chiang Mai, Thailand</p>
               </a>
             </div>
 
             <div class="carousel-sgn-links" style="background-color: #efefef">
               <ul class="sgn_sm_list">
-                <a href="http://solcuc2017.org/index.php?go=pre_inscripcion" target="_blank"><li style="color: #00426c">Registration</li></a>
-                <a href="http://solcuc2017.org/index.php?go=informacion" target="_blank"><li style="color: #00426c">General Information</li></a>
-                <a href="#" target="_blank"><li style="color: #00426c">Preliminary Program</li></a>
-                <a href="#" target="_blank"><li style="color: #00426c">Abstract Submission</li></a>
+                <a href="https://www.solanaceae2018.com/register" target="_blank"><li style="color: #00426c">Registration</li></a>
+                <a href="https://www.solanaceae2018.com/program" target="_blank"><li style="color: #00426c">Preliminary Program</li></a>
+                <a href="https://www.solanaceae2018.com/venue" target="_blank"><li style="color: #00426c">Venue</li></a>
               </ul>
             </div>
 

@@ -2,10 +2,15 @@
 <%args>
 </%args>
 
-<& /page/page_title.mas, title=>"NSF tomato project: Exploitation of genetic and epigenetic variation in the regulation of tomato fruit quality traits" &>
+<& /page/page_title.mas, title=>"Varitome project: Exploitation of genetic and epigenetic variation in the regulation of tomato fruit quality traits" &>
+
+<&| /page/info_section.mas, title => ''  &>
+<img src="/img/varitome/varitome_tomatoes.jpg" align="center"/>
+
+</&>
+<&| /page/info_section.mas, title => 'Major goals' &>
 
 
-<h4>Major goals of the project:</h4>
 <div>
 Future crop improvement relies on harnessing the broader genetic diversity present in the ancestors of our crops. Recently, our team has gained detailed knowledge of the transition from wild species to the earliest tomato landraces. Cultivated tomato (Solanum lycopersicum var lycopersicum) evolved from semi-domesticated and wild populations of S. lycopersicum var cerasiforme, which in turn evolved from a subpopulation of the red-fruited wild species, S. pimpinellifolium. This knowledge allows us to select and exploit underutilized germplasm for the identification of genes controlling fruit quality and beneficial alleles that may have been left behind during crop domestication. With this information, we seek to gain fundamental insights into the molecular and biochemical pathways that impact the traits. This would lead to an advanced understanding into the regulation of basic plant processes of economic importance. To efficiently identify genes and pathways that control complex fruit quality traits in tomato, we propose the following specific aims:
 </div>
@@ -16,27 +21,74 @@ Future crop improvement relies on harnessing the broader genetic diversity prese
 <li>Functional analysis of developmental and biochemical pathways that control fruit quality. </li>
 <li>Database development and integration at Sol Genomics Network (SGN). </li>
 </ol>
+</&>
 
-<h4>The team:</h4>
-<ul>
-<li>Esther van der Knaap, PI, at the University of Georgia, Athens GA, USA. <a href="http://vanderknaaplab.uga.edu/index.html">http://vanderknaaplab.uga.edu/index.html</a></li>
-<li>Ana Caicedo, coPI, at University of Massachusetts, Amherst MA, USA. <a href="http://www.bio.umass.edu/biology/caicedo/">http://www.bio.umass.edu/biology/caicedo/</a></li>
-<li>Denise Tieman, coPI, at the University of Florida, Gainesville FL, USA. <a href="http://hos.ufl.edu/kleeweb/index.html">http://hos.ufl.edu/kleeweb/index.html</a></li>
-<li>Ying Wang, coPI, at the University of Mississippi, Starkville MS, USA. <a href="http://rnabio.myfreesites.net/">http://rnabio.myfreesites.net/</a></li>
-<li>Lukas Mueller, coPI, at the Boyce Thompson Institute, Ithaca NY, USA. <a href="https://www.sgn.cornell.edu/">https://www.sgn.cornell.edu/</a></li>
-<li>Joaquin Canizares, collaborator, at the Universitat Politecnica de Valencia, Spain.</li>
-<li>Sofia Visa, collaborator, at the College of Wooster, Wooster OH, USA.</li>
-<li>Roger Chetelat, collaborator, at the University of California-Davis, Davis CA, USA. <a href="http://tgrc.ucdavis.edu/">http://tgrc.ucdavis.edu/</a></li>
-<li>Zhangjun Fei, consultant, at the Boyce Thompson Institute, Ithaca NY, USA. <a href="http://bioinfo.bti.cornell.edu/">http://bioinfo.bti.cornell.edu/</a></li>
-</ul>
+<&| /page/info_section.mas, title => 'The team' &>
 
-<h4>The products: </h4>
-<ul>
-<li>List of accessions and passport data</li>
-<li>SRA reads (link to NCBI)</li>
-</ul>
 
-<h4>Funding</h4>
+<img src="/img/varitome/varitome_people.png"  border="0" usemap="#peoplemap" /> 
+
+
+<map name="peoplemap">
+<area shape="rect" coords="17,248,295,278" href="http://vanderknaaplab.uga.edu/index.html" />
+<area shape="rect" coords="43,491,295,518" href="http://hos.ufl.edu/kleeweb/index.html" />
+<area shape="rect" coords="99,736,297,757" href="https://solgenomics.net" />
+<area shape="rect" coords="793,371,1088,397" href="http://www.bio.umass.edu/biology/caicedo" />
+<area shape="rect" coords="793,615,1008,634" href="http://rnabio.myfreesites.net/" />
+<area shape="rect" coords="795,1097,994,1117" href="http://bioinfo.bti.cornell.edu" />
+<area shape="poly" coords="375,110,503,111,567,225,501,332,375,332,312,220,374,112,375,112"  nohref="nohref" />
+<area shape="poly" coords="586,229,713,230,775,340,715,449,586,450,521,340,582,230"  nohref="nohref" />
+<area shape="poly" coords="377,352,507,350,569,459,503,573,379,573,313,461,375,351"  nohref="nohref" />
+<area shape="poly" coords="588,471,718,470,778,583,717,689,587,691,523,581,585,469"  nohref="nohref" />
+<area shape="poly" coords="375,592,504,591,566,700,504,812,379,813,314,701"  nohref="nohref" />
+<area shape="poly" coords="584,712,712,712,773,822,712,933,588,934,522,821"  nohref="nohref" />
+<area shape="poly" coords="376,831,505,832,568,944,504,1054,378,1053,314,941"  nohref="nohref" />
+<area shape="poly" coords="585,955,712,955,776,1068,715,1175,585,1174,523,1064"  nohref="nohref" />
+</map>
+
+</&>
+
+<&| /page/info_section.mas, title => 'The products' &>
+
+
+<&| /page/info_section.mas, title => "SNPs" , collapsible=>1 &>
+
+<%perl>
+my $jbrowse_path = $c->config->{jbrowse_path} ;
+my $data_source = "varitome";
+my $jbrowse_url = $jbrowse_path . "/$data_source&tracks=DNA,gene_models,all_variants" ;
+my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
+   
+</%perl>
+
+% if ( $jbrowse_path ) {
+
+  <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe">
+  <p>Your browser does not support iframes.</p> </iframe>
+
+% }
+
+</&>
+
+  <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+    
+    <& /breeders_toolbox/program/trials.mas, program_id => 54 &>
+      
+</&>
+
+<&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+
+  <& /breeders_toolbox/program/traits.mas, program_id => 54  &>
+
+</&>
+
+
+</&>
+
+<&| /page/info_section.mas, title => 'Funding' &>
+
 Funding is provided by the NSF (<a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1564366">IOS 1564366</a>).<br />
 <br />
 <img src="/static/img/nsf_logo2.png" />
+
+</&>

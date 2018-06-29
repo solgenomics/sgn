@@ -149,7 +149,10 @@ has 'populations' => (
     isa => 'Maybe[ArrayRef[ArrayRef]]',
     is => 'rw'
 );
-
+has 'sp_person_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
 
 sub BUILD {
     my $self = shift;
@@ -290,6 +293,8 @@ sub store {
             $self->_update_population_relationship();
         }
     }
+    $self->associate_owner($self->sp_person_id, $self->sp_person_id);
+
     return $self->stock_id();
 }
 
@@ -494,12 +499,14 @@ sub set_species {
 
 sub get_image_ids {
     my $self = shift;
-    my $ids = $self->schema()->storage->dbh->selectcol_arrayref
-	( "SELECT image_id FROM phenome.stock_image WHERE stock_id=? ",
-	  undef,
-	  $self->stock_id
-        );
-    return @$ids;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ?";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return @ids;
 }
 
 =head2 associate_allele
@@ -560,14 +567,14 @@ sub associate_owner {
     my $metadata_id = $self->_new_metadata_id($sp_person_id);
     #check if the owner is already linked
     my $ids =  $self->schema()->storage()->dbh()->selectcol_arrayref
-        ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND owner_id = ?",
+        ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND sp_person_id = ?",
           undef,
           $self->stock_id,
           $owner_id
         );
     if ($ids) { warn "Owner $owner_id is already linked with stock " . $self->stock_id ; }
 #store the owner_id - stock_id link
-    my $q = "INSERT INTO phenome.stock_owner (stock_id, owner_id, metadata_id) VALUES (?,?,?) RETURNING stock_owner_id";
+    my $q = "INSERT INTO phenome.stock_owner (stock_id, sp_person_id, metadata_id) VALUES (?,?,?) RETURNING stock_owner_id";
     my $sth  = $self->schema()->storage()->dbh()->prepare($q);
     $sth->execute($self->stock_id, $owner_id, $metadata_id);
     my ($id) =  $sth->fetchrow_array;

@@ -12,7 +12,7 @@ $stock_type => undef
     <& /breeders_toolbox/add_seedlot_dialogs.mas, cross_uniquename=>$stock_uniquename &>
 % }
 
-<&| /page/info_section.mas, id=>'related_seedlots_to_accessions', title => 'Seedlots of this '.ucfirst($stock_type), collapsible=>1, collapsed=>1, subtitle=>"[<a id='add_seedlot_button' >Create New Seedlot</a>]" &>
+<&| /page/info_section.mas, id=>'related_seedlots_to_accessions', title => 'Seedlots of this '.ucfirst($stock_type), collapsible=>1, collapsed=>1, subtitle=>"<button class='btn btn-sm btn-primary' style='margin:3px' name='add_seedlot_button' >Create New Seedlot</button>" &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">

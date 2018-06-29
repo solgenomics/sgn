@@ -30,7 +30,23 @@ __PACKAGE__->config(
         my $value = $c->req->param("value");
         my %longest_hash;
         print STDERR "Data type is $data_type and id is $value\n";
-       my ($trial_num, $trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       my ($trial_num, $trial_id, $plot_design, $plant_design) = get_plot_data($c, $schema, $data_type, $value);
+
+       #if plant ids exist, use plant design
+       my %plot_design = %{$plot_design};
+       my @plot_ids = keys %plot_design;
+       my $plant_ids = $plot_design{$plot_ids[0]}->{'plant_ids'};
+       my @plant_ids = @{$plant_ids};
+       my $design;
+
+       if (scalar(@plant_ids) > 0) {
+           $design = $plant_design;
+       } else {
+           $design = $plot_design;
+       }
+
+
+       print STDERR "Num plants 3: " . scalar(keys %{$design});
        print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
@@ -54,18 +70,53 @@ __PACKAGE__->config(
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
        $longest_hash{'year'} = $year;
 
+       my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
+       my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
+       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+           my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+           my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+           my $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
+           my $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+                   project_id => $trial_id
+               })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+                   'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+               })->first->value();
+
+           $longest_hash{'genotyping_project_name'} = $genotyping_project_name;
+           $longest_hash{'genotyping_facility'} = $genotyping_facility;
+       }
 
        #get all fields in this trials design
        my $random_plot = $design{(keys %design)[rand keys %design]};
+       my %reps;
        my @keys = keys %{$random_plot};
        foreach my $field (@keys) {
+
+           # if rep_number, find unique options and return them
+           if ($field eq 'rep_number') {
+               print STDERR "Searching for unique rep numbers.\n";
+            #    foreach my $key (keys %design) {
+               $reps{$_->{'rep_number'}}++ foreach values %design;
+               print STDERR "Reps: ".Dumper(%reps);
+           }
+
+
            print STDERR " Searching for longest $field\n";
            #for each field order values by descending length, then save the first one
-           foreach my $key ( sort { length($design{$b}{$field}) <=> length($design{$a}{$field}) or  $a <=> $b } keys %design) {
+           foreach my $key ( sort { length($design{$b}{$field}) <=> length($design{$a}{$field}) or versioncmp($a, $b) } keys %design) {
                 print STDERR "Longest $field is: ".$design{$key}{$field}."\n";
                 my $longest = $design{$key}{$field};
                 unless (ref($longest) || length($longest) < 1) { # skip if not scalar or undefined
-                    $longest_hash{$field} = $design{$key}{$field};
+                    $longest_hash{$field} = $longest;
+                } elsif (ref($longest) eq 'ARRAY') { # if array (ex. plants), sort array by length and take longest
+                    print STDERR "Processing array " . Dumper($longest) . "\n";
+                    # my @array = @{$longest};
+                    my @sorted = sort { length $a <=> length $b } @{$longest};
+                    if (length($sorted[0]) > 0) {
+                        $longest_hash{$field} = $sorted[0];
+                    }
+                } elsif (ref($longest) eq 'HASH') {
+                    print STDERR "Not handling hashes yet\n";
                 }
                 last;
             }
@@ -81,7 +132,10 @@ __PACKAGE__->config(
         }
 
         #print STDERR "Dumped data is: ".Dumper(%longest_hash);
-        $c->stash->{rest} = \%longest_hash;
+        $c->stash->{rest} = {
+            fields => \%longest_hash,
+            reps => \%reps,
+        };
    }
 
    sub label_designer_download : Path('/tools/label_designer/download') : ActionClass('REST') { }
@@ -107,7 +161,21 @@ __PACKAGE__->config(
        my $json = new JSON;
        my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
 
-       my ($trial_num, $trial_id, $design) = get_plot_data($c, $schema, $data_type, $value);
+       my ($trial_num, $trial_id, $plot_design, $plant_design) = get_plot_data($c, $schema, $data_type, $value);
+
+       #if plant ids or names are used in design params, use plant design
+
+       my $design = $plot_design;
+       my $label_params = $design_params->{'label_elements'};
+       foreach my $element (@$label_params) {
+           my %element = %{$element};
+           my $filled_value = $element{'value'};
+           print STDERR "Filled value is $filled_value\n";
+           if ($filled_value eq '{plant_id}' || $filled_value eq '{plant_name}') {
+               $design = $plant_design;
+           }
+       }
+
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
            return;
@@ -124,10 +192,24 @@ __PACKAGE__->config(
            return;
        }
 
+       my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
+       my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
+
+       my ($genotyping_facility, $genotyping_project_name);
+       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+           my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+           my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+           $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
+           $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+                   project_id => $trial_id
+               })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+                   'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+               })->first->value();
+       }
+
        my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
 
-       my $label_params = $design_params->{'label_elements'};
        # if needed retrieve pedigrees in bulk
        my $pedigree_strings;
        foreach my $element (@$label_params) {
@@ -165,97 +247,102 @@ __PACKAGE__->config(
                 my %design_info = %{$design{$key}};
                 $design_info{'trial_name'} = $trial_name;
                 $design_info{'year'} = $year;
+                $design_info{'genotyping_facility'} = $genotyping_facility;
+                $design_info{'genotyping_project_name'} = $genotyping_project_name;
                 $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
                 #print STDERR "Design info: " . Dumper(%design_info);
 
-                for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
-                    #print STDERR "Working on label num $i\n";
-                    my $label_x = $design_params->{'left_margin'} + ($design_params->{'label_width'} + $design_params->{'horizontal_gap'}) * ($col_num-1);
-                    my $label_y = $design_params->{'page_height'} - $design_params->{'top_margin'} - ($design_params->{'label_height'} + $design_params->{'vertical_gap'}) * ($row_num-1);
+                if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
 
-                   foreach my $element (@$label_params) {
-                       #print STDERR "Element Dumper\n" . Dumper($element);
-                       my %element = %{$element};
-                       my $elementx = $label_x + ( $element{'x'} / $conversion_factor );
-                       my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
+                    for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
+                        #print STDERR "Working on label num $i\n";
+                        my $label_x = $design_params->{'left_margin'} + ($design_params->{'label_width'} + $design_params->{'horizontal_gap'}) * ($col_num-1);
+                        my $label_y = $design_params->{'page_height'} - $design_params->{'top_margin'} - ($design_params->{'label_height'} + $design_params->{'vertical_gap'}) * ($row_num-1);
 
-                       my $filled_value = $element{'value'};
-                       $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
-                       #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
-                       #print STDERR "Writing to the PDF . . .\n";
-                       if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
+                       foreach my $element (@$label_params) {
+                           #print STDERR "Element Dumper\n" . Dumper($element);
+                           my %element = %{$element};
+                           my $elementx = $label_x + ( $element{'x'} / $conversion_factor );
+                           my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
 
-                            if ( $element{'type'} eq "Code128" ) {
+                           my $filled_value = $element{'value'};
+                           $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
+                           #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
+                           #print STDERR "Writing to the PDF . . .\n";
+                           if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
-                               my $barcode_object = Barcode::Code128->new();
+                                if ( $element{'type'} eq "Code128" ) {
 
-                               my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-                               open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
-                               binmode(PNG);
+                                   my $barcode_object = Barcode::Code128->new();
 
-                               $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
-                               $barcode_object->barcode($filled_value);
-                               my $barcode = $barcode_object->gd_image();
-                               print PNG $barcode->png();
-                               close(PNG);
+                                   my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
+                                   open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
+                                   binmode(PNG);
 
-                                my $image = $pdf->image_png($png_location);
+                                   $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
+                                   $barcode_object->barcode($filled_value);
+                                   my $barcode = $barcode_object->gd_image();
+                                   print PNG $barcode->png();
+                                   close(PNG);
+
+                                    my $image = $pdf->image_png($png_location);
+                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
+                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                    my $elementx = $elementx - ($width/2);
+                                    #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
+                                    $gfx->image($image, $elementx, $elementy, $width, $height);
+
+
+                              } else { #QRCode
+
+                                  my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+                                  my $barcode_generator = CXGN::QRcode->new(
+                                      text => $filled_value,
+                                      size => $element{'size'},
+                                      margin => 0,
+                                      version => 0,
+                                      level => 'M'
+                                  );
+                                  my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
+
+                                   my $image = $pdf->image_jpeg($jpeg_location);
+                                   my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                   my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
+                                   my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
+                                   my $elementx = $elementx - ($width/2);
+                                   $gfx->image($image, $elementx, $elementy, $width, $height);
+
+                              }
+                           }
+                           else { #Text
+
+                                my $font = $pdf->corefont($element{'font'}); # Add a built-in font to the PDF
+                                # Add text to the page
+                                my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
+                                $text->font($font, $adjusted_size);
                                 my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                                my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                                my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
-                                my $elementx = $elementx - ($width/2);
-                                #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
-                                $gfx->image($image, $elementx, $elementy, $width, $height);
-
-
-                          } else { #QRCode
-
-                              my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
-                              my $barcode_generator = CXGN::QRcode->new(
-                                  text => $filled_value,
-                                  size => $element{'size'},
-                                  margin => 0,
-                                  version => 0,
-                                  level => 'M'
-                              );
-                              my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
-
-                               my $image = $pdf->image_jpeg($jpeg_location);
-                               my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                               my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
-                               my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
-                               my $elementx = $elementx - ($width/2);
-                               $gfx->image($image, $elementx, $elementy, $width, $height);
-
-                          }
+                                my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
+                                $text->translate($elementx, $elementy);
+                                $text->text_center($filled_value);
+                           }
                        }
-                       else { #Text
 
-                            my $font = $pdf->corefont($element{'font'}); # Add a built-in font to the PDF
-                            # Add text to the page
-                            my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
-                            $text->font($font, $adjusted_size);
-                            my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
-                            my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
-                            $text->translate($elementx, $elementy);
-                            $text->text_center($filled_value);
-                       }
-                   }
+                        if ($col_num < $design_params->{'number_of_columns'}) { #next column
+                            $col_num++;
+                        } else { #new row, reset col num
+                            $col_num = 1;
+                            $row_num++;
+                        }
 
-                    if ($col_num < $design_params->{'number_of_columns'}) { #next column
-                        $col_num++;
-                    } else { #new row, reset col num
-                        $col_num = 1;
-                        $row_num++;
-                    }
-
-                    if ($row_num > $design_params->{'number_of_rows'}) { #create new page and reset row and col num
-                        $pdf->finishobjects($page, $gfx, $text); #flush the page to save memory on big PDFs
-                        $page = $pdf->page();
-                        $text = $page->text();
-                        $gfx = $page->gfx();
-                        $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
-                        $row_num = 1;
+                        if ($row_num > $design_params->{'number_of_rows'}) { #create new page and reset row and col num
+                            $pdf->finishobjects($page, $gfx, $text); #flush the page to save memory on big PDFs
+                            $page = $pdf->page();
+                            $text = $page->text();
+                            $gfx = $page->gfx();
+                            $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
+                            $row_num = 1;
+                        }
                     }
                 }
              $key_number++;
@@ -305,6 +392,23 @@ __PACKAGE__->config(
 
    }
 
+   sub process_field {
+       my $field = shift;
+       my $key_number = shift;
+       my $design_info = shift;
+       my %design_info = %{$design_info};
+       #print STDERR "Field is $field\n";
+       if ($field =~ m/Number:/) {
+           our ($placeholder, $start_num, $increment) = split ':', $field;
+           my $length = length($start_num);
+           #print STDERR "Increment is $increment\nKey Number is $key_number\n";
+           my $custom_num =  $start_num + ($increment * $key_number);
+           return sprintf("%0${length}d", $custom_num);
+       } else {
+           return $design_info{$field};
+       }
+   }
+
 sub process_field {
     my $field = shift;
     my $key_number = shift;
@@ -352,10 +456,14 @@ sub get_plot_data {
     my $data_type = shift;
     my $value = shift;
     my $num_trials = 1;
-    my ($trial_id, $design);
-    print STDERR "Data type is $data_type and value is $value\n";
-    if ($data_type =~ m/Plot List/) {
-        # get items from list, get trial id from plot id. Or, get plot dta one by one
+    my ($trial_id, $plot_design, $plant_design);
+
+    # print STDERR "Data type is $data_type and value is $value\n";
+
+    if ($data_type =~ m/Plant List/) {
+    }
+    elsif ($data_type =~ m/Plot List/) {
+        # get items from list, get trial id from plot id. Or, get plot data one by one
         my $plot_data = SGN::Controller::AJAX::List->retrieve_list($c, $value);
         my @plot_list = map { $_->[1] } @$plot_data;
         my $t = CXGN::List::Transform->new();
@@ -375,7 +483,7 @@ sub get_plot_data {
         print STDERR "Count is $num_trials\n";
         $trial_id = $trial_rs->first->project_id();
         my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
-        print STDERR "Full Design is: ".Dumper($full_design);
+        #print STDERR "Full Design is: ".Dumper($full_design);
         # reduce design hash, removing plots that aren't in list
         my %full_design = %{$full_design};
 
@@ -383,17 +491,51 @@ sub get_plot_data {
             foreach my $key (keys %full_design) {
                 if ($full_design{$key}->{'plot_id'} eq $plot_ids[$i]) {
                     print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
-                    $design->{$key} = $full_design{$key};
-                    $design->{$key}->{'list_order'} = $i;
+                    $plot_design->{$key} = $full_design{$key};
+                    $plot_design->{$key}->{'list_order'} = $i;
                 }
             }
         }
 
-    } elsif ($data_type =~ m/Trial/) {
-        $trial_id = $value;
-        $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
     }
-    return ($num_trials, $trial_id, $design);
+    elsif ($data_type =~ m/Genotyping Trial/) {
+        $trial_id = $value;
+        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+    }
+    elsif ($data_type =~ m/Field Trials/) {
+        $trial_id = $value;
+        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+        my %plot_design = %{$plot_design};
+        my @plot_ids = keys %plot_design;
+        my $plant_ids = $plot_design{$plot_ids[0]}->{'plant_ids'};
+        my @plant_ids = @{$plant_ids};
+        #check if there are plant ids
+        my %plant_design;
+        if (scalar(@plant_ids) > 0) {
+            foreach my $plot_id (keys %plot_design) {
+                #print STDERR "Working on key $plot_id and value: " . Dumper($design{$plot_id});
+                my $plant_ids = $plot_design{$plot_id}->{'plant_ids'};
+                my @plant_ids = @{$plant_ids};
+                my $plant_names = $plot_design{$plot_id}->{'plant_names'};
+                my @plant_names = @{$plant_names};
+                for (my $i=0; $i < scalar(@plant_ids); $i++) {
+                    my $plant_id = $plant_ids[$i];
+                    my $plant_name = $plant_names[$i];
+                    #print STDERR "plant id is $plant_id and name is $plant_name\n";
+                    foreach my $property (keys %{$plot_design{$plot_id}}) { $plant_design{$plant_id}->{$property} = $plot_design{$plot_id}->{$property}; }
+                    $plant_design{$plant_id}->{'plant_id'} = $plant_id;
+                    $plant_design{$plant_id}->{'plant_name'} = $plant_name;
+                    #print STDERR "Added key " . $plant_id . " and value: " . Dumper($plant_design{$plant_id});
+                }
+            }
+            $plant_design = \%plant_design;
+        }
+    }
+    # elsif ($data_type =~ m/Field Trial Plots/) {
+    #     $trial_id = $value;
+    #     $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+    # }
+    return ($num_trials, $trial_id, $plot_design, $plant_design);
 }
 
 

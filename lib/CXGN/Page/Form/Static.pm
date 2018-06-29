@@ -577,7 +577,7 @@ sub as_table {
 
 sub as_table_string {
     my $self = shift;
-    my $string = qq { <br/><div class="panel panel-info"><table class="table table-hover"> };
+    my $string = qq { <br/><div class="panel panel-default"><table class="table table-hover"> };
     foreach my $f ($self->get_fields()) { 
 	if (ref($f)!~/hidden/i) { 
 	    $string .=  "<tr><td>".($f->get_display_name || '')."</td><td><b>".($f->render || '')."</b></td></tr>\n";

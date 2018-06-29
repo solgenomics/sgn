@@ -41,7 +41,7 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id">$project_name</a> |;
   &>
 
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas, 
    title => "Genomic selection model for $trait_name ($trait_abbr) in $project_name"

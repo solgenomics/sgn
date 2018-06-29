@@ -42,428 +42,223 @@ $sgn_session_id => undef
 $user_name => undef
 $design_name => undef
 $phenotypes_fully_uploaded => undef
+$has_col_and_row_numbers => undef
 $assayed_traits => undef
 $identifier_prefix => 'SGN'
 $main_production_site_url
 </%args>
 
-<style>
-
-@media (min-width: 1200px) {
-    .affix {
-        top:100px;
-        right:0;
-        position:fixed;
-    }
-}
-
-</style>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
-<%perl>
-  use Data::Dumper;
-my $start_time = time();
-
-#print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
-
-</%perl>
 
 <br/>
 
-
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, subtitle => '[<a id="edit_trial_details">Edit Trial Details</a>]'&>
+<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, subtitle => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>'&>
 
 
-<div class="panel panel-default">
-<table class="table table-hover" >
+    <div class="panel panel-default">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-sm-8">
 
-<tr>
-<td><b>Trial Name</b></td>
-<td>
-<div id="trial_name">
+                <table class="table table-hover table-bordered" >
+
+                    <tr>
+                        <td><b>Trial Name</b></td>
+                        <td>
+                            <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
 % } else {
-%   print "[No Trial Name]";
+%   print "<span class='text-danger'>[No Trial Name]</span>";
 % }
-</div>
-</td>
-</tr>
+                            </div>
+                        </td>
+                    </tr>
 
-<tr>
-<td><b>Breeding Program </b></td>
-<td>
-<span id="breeding_program">
+                    <tr>
+                        <td><b>Breeding Program </b></td>
+                        <td>
+                            <span id="breeding_program">
 % if ($breeding_program_name) {
 %  print "$breeding_program_name";
 % }
 % else {
-%  print "No Breeding Program";
+%  print "<span class='text-danger'>[No Breeding Program]</span>";
 % }
-</span>
-</td>
-</tr>
+                            </span>
+                        </td>
+                    </tr>
 
-<tr>
-<td><b>Trial Location</b></td>
-<td>
-<div id="trial_location">
+                    <tr>
+                        <td><b>Trial Location</b></td>
+                        <td>
+                            <div id="trial_location">
 % if ($location_name) {
 %  print "$location_name";
 % } else {
-%  print "[No Location]";
+%  print "<span class='text-danger'>[No Location]</span>";
 % }
-</div>
-</td>
-</tr>
+                            </div>
+                        </td>
+                    </tr>
 
-<tr>
-<td><b>Year</b></td>
-<td>
-<div id="trial_year">
+                    <tr>
+                        <td><b>Year</b></td>
+                        <td>
+                            <div id="trial_year">
 % if ($year) {
 %  print "$year";
 % } else {
-%  print "[No Year]";
+%  print "<span class='text-danger'>[No Year]</span>";
 % }
-</div>
-</td>
-</tr>
+                            </div>
+                        </td>
+                    </tr>
 
-<tr>
-<td><b>Trial Type</b></td>
-<td>
-<div id="trial_type">
+                    <tr>
+                        <td><b>Trial Type</b></td>
+                        <td>
+                            <div id="trial_type">
 % if ($trial_type) {
 %  print "$trial_type";
 % } else {
-% print "[Type not set]";
+% print "<span class='text-danger'>[Type not set]</span>";
 % }
-</div>
-</td>
-</tr>
+                            </div>
+                        </td>
+                    </tr>
 
-<tr>
-<td><b>Planting Date</b></td>
-<td>
-<div id="planting_date">
+                    <tr>
+                        <td><b>Planting Date</b></td>
+                        <td>
+                            <div id="planting_date">
 % if ($planting_date) {
   <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
 % } else {
-%  print "[No Planting Date]";
+%  print "<span class='text-danger'>[No Planting Date]</span>";
 % }
-</div>
-</td>
-</tr>
+                            </div>
+                        </td>
+                    </tr>
 
-<tr>
-<td><b>Harvest Date</b></td>
-<td>
-<div id="harvest_date">
+                    <tr>
+                        <td><b>Harvest Date</b></td>
+                        <td>
+                            <div id="harvest_date">
 % if ($harvest_date) {
   <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
 % } else {
-%  print "[No Harvest Date]";
+%  print "<span class='text-danger'>[No Harvest Date]</span>";
 % }
-</div>
-</td>
-</tr>
+                            </div>
+                        </td>
+                    </tr>
 
-<tr><td><b>Description</b></td>
-<td>
-<div id="trial_description">
+                    <tr><td><b>Description</b></td>
+                        <td>
+                            <div id="trial_description">
 % if ($trial_description) {
 %  print "$trial_description";
 % } else {
-%  print "[No Description]";
+%  print "<span class='text-danger'>[No Description]</span>";
 % }
-</div>
-</td>
-</tr>
-</table>
-</div>
+                            </div>
+                        </td>
+                    </tr>
 
-% my $folder_collapsed = 1;
-% if ($folder_id) {
-% $folder_collapsed = 0;
-% }
+                    <tr>
+                        <td><b>Folder</b></td>
+                        <td>
+                            <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+                            <br/><br/>
+                            <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                        </td>
+                    </tr>
 
-<div class="well well-sm">
+                </table>
 
-<&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
-  subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
+            </div>
+            <div class="col-sm-4">
+                <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+            </div>
+        </div>
 
-  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
-  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
-
-  <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
-
-</&>
-
-</div><!--closes well-->
-
-</&>
-
-<&| /page/info_section.mas, title=>"Trial barcode",  collapsible => 1, subtitle => '[<a id="generate_trial_barcode_link">Generate Barcode</a>]|[<a id="direct_phenotyping_link">Direct Phenotyping</a>]'&>
-    <div class="well">
-     <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &></center><br />
-     </div>
-     <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name" &>
+    </div>
+    </div><!-- closes info section -->
 
 </&>
 
+<& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+<& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 <& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, trial_type_id => $trial_type_id, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
-% if ($hidap_enabled) {
+<&| /page/info_section.mas, title=>"Navigator",  collapsible => 1 &>
+    <div class="row">
+        <div class="col-sm-6">
+            <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => "Generate barcode labels for plots or plants or accessions in this trial.", button_id => "generate_trial_barcode_link" &>
+        </div>
+        <div class="col-sm-6">
+            <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", button_id => "direct_phenotyping_link" &>
+        </div>
+    </div>
 
- <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
-
-% }
-
-
-<&| /page/info_section.mas, id => "pheno_heatmap", title=>"Trial Heatmap", collapsible=>1, collapsed => 1, subtitle=>'[<a id="heatmap_upload_trial_coords_link">Upload trial coordinates</a>] [<a id="edit_field_map_link">Edit Field Map</a>] [<button type="button" class="btn btn-link" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>]' &>
-
-    <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
-
-</&>
-
-
-
-<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<%doc><&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>] [<a id="old_edit_field_map_link">Edit Field Map</a>] [<button type="button" class="btn btn-link" data-toggle="modal" data-target="#old_fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>]' &>-->
-</%doc>
-<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1  &>
-
-  <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
- 
-</&>
-
-<& /breeders_toolbox/trial/trial_coords_upload_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
-
-<!--<style>
-  div.left {
-    float: left;
-    clear: both;
-  }
-.ui-autocomplete {
-  max-height: 100px;
-  overflow-y: auto;
-  /* prevent horizontal scrollbar */
-  overflow-x: hidden;
-}
-
-</style> -->
-
-
-
-<& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries &>
-
-<&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"[<a id='trial_download_layout_button'>Download Layout</a>]"  &>
-
-<div class="well well-sm">
-
-<& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
-
-<&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
-
-<& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
-
-</&>
-
-<& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
-<&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_upload_seedlot_button' >Upload Seedlots Planted In Trial</a>]" &>
-
-<& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
-
-</&>
-
-
-<&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
-
-<& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
-
-</&>
-
-<& /breeders_toolbox/trial/upload_plot_gps_dialogs.mas, trial_id => $trial_id &>
-<&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_upload_plot_gps_button' >Upload GPS Coordinates</a>]" &>
-
-<& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
-
-</&>
-
-% if ($has_subplot_entries) {
-
-<&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
-
-<& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
-
-</&>
-
-% }
-
-<&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
-
-<div id="plant_entries_section">
-
-% if (!$has_plant_entries) {
-   <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
-   <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries</button>
-   <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
-
+% my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
+% my $layout_buttons = '';
+% if ($has_col_and_row_numbers){
+%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % } else {
-
-<& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
-
+%    $layout_buttons = '<h3><span class="glyphicon glyphicon-remove-sign text-danger"></span>&nbsp;&nbsp;&nbsp;This experiment does not have spatial layout info!</h3><button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % }
 
-</div><!--closes plant_entries_section -->
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
 
-</&>
-
-
-<&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
-
-<div id="tissue_sample_entries_section">
-
-% if (!$has_tissue_sample_entries) {
-   <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
-   <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
-
-% } else {
-
-<& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
-
-% }
-
-</div><!--closes tissue_sample_entries_section -->
-
-</&>
-
-<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
-<&| /page/info_section.mas, id => "trial_treatments", title=>"Field Management Factors",  is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_detail_page_add_treatment'>Add Management Factor</a>]" &>
-
-<& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id &>
-
-</&>
-
-</div><!-- closes well -->
-
-</&>
-
-<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
-
-<&| /page/info_section.mas,
-   title       => 'Weather at Trial Location',
-   collapsible => 1,
-&>
-
-	<& /breeders_toolbox/trial/weather.mas, location => $location_name &>
-
-</&>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries &>
 
 % my $download_pheno_subtitle;
 % if (scalar(@$assayed_traits) > 0){
-%   $download_pheno_subtitle = "[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]"
+%   $download_pheno_subtitle = "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>"
 % }
 % else {
 %   $download_pheno_subtitle = "Trial has no phenotype for download";
 % }
 
-<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=> $download_pheno_subtitle &>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Stored Phenotypes</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => $download_pheno_subtitle, icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url &>
 
-% if ($has_expression_atlas) {
-    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name, main_production_site_url=>$main_production_site_url &>
-% }
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Compute New Phenotypes</h4>", info_section_subtitle => 'Compute derived traits or compute plot phenotypes from plant phenotypes.', icon_class => "glyphicon glyphicon-floppy-save", info_section_id => "compute_derived_traits" &>
 
-<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Phenotypic data collection using Excel or Android Fieldbook. Also upload any additional files for this trial.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files", trial_phenotype_files => $trial_phenotype_files &>
 
-</&>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Analysis Tools</h4>", info_section_subtitle => 'Run anova, population structure PCA, or correlation. Also access Hidap if enabled on this site.', icon_class => "glyphicon glyphicon-signal", info_section_id => "trial_analysis_tools", hidap_enabled => $hidap_enabled &>
 
-<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Trait Phenotypes', collapsible=>1, collapsed=>1, &>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Weather Data</h4>", info_section_subtitle => 'View rainfall, temperature, light intensity and other weather data for this location.', icon_class => "glyphicon glyphicon-cloud", info_section_id => "trial_weather_data", location_name => $location_name &>
 
-	<& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>JBrowse Genome Alignments For this Experiment</h4>", info_section_subtitle => 'View JBrowse alignments for accessions in this trial.', icon_class => "glyphicon glyphicon-align-left", info_section_id => "trial_jbrowse_data" &>
 
-</&>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Experiment Linkage</h4>", info_section_subtitle => 'View other experiments, crosses, and genotyping plates linked to this experiment.', icon_class => "glyphicon glyphicon-link", info_section_id => "trial_linkage_section" &>
 
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Delete Experiment Data</h4>", info_section_subtitle => 'Delete phenotypes, field layout, and/or the entire experiment from the database.', icon_class => "glyphicon glyphicon-trash", info_section_id => "trial_deletion_section" &>
 
+% my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
+% if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
 
-<&| /page/info_section.mas,
-   title       => 'Trial JBrowse',
-   collapsible => 1,
-&>
-
-	<& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
+    <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
 
 </&>
 
-<&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
-
-<div class="well well-sm">
-
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-                <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
-                </&>
-                <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">Create Field Book</a>]' &>
-                </&>
-                <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
-                </&>
-            </&><!-- closes create new phenotyping file section -->
-        </div>
-    </div>
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-                <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
-                </&>
-                <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
-                </&>
-                <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
-                </&>
-            </&><!-- closes upload new phenotype file section -->
-        </div>
-    </div>
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="trial_set_phenotypes_fully_link">Phenotypes Fully Uploaded?</a>]' &>
-
-                <table class="table table-bordered files_datatables" alt="">
-                    <thead>
-                        <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
-                    </thead>
-                    <tbody>
-% foreach my $f (@$trial_phenotype_files) {
-    <tr>
-      <td><% $f->[4] %></td>
-      <td><% $f->[1] %></td>
-      <td><a href="/solpeople/profile/<% $f->[2] %>"><% $f->[3] %></a></td>
-      <td><% $f->[6] %></td>
-      <td><a href="/breeders/phenotyping/view/<% $f->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->[0] %>">Download</a></td>
-    </tr>
-% }
-                    </tbody>
-                </table>
-
-            </&><!-- closes uploaded file section -->
-        </div>
-    </div>
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="trial_upload_additional_files_link">Upload Additional Files</a>]' &>
-
-            <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id &>
-
-            </&><!-- closes uploaded additional file section -->
-        </div>
-    </div>
-
-</div><!-- closes well -->
-
-</&><!-- closes entire phenotyping file section -->
+<& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name" &>
+<& /breeders_toolbox/trial/download_fieldmap_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/trial_coords_upload_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries &>
+<& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/upload_plot_gps_dialogs.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
@@ -472,45 +267,18 @@ my $start_time = time();
 <& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
-
 <& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $trial_id &>
 
-% my $data_agreement_link = "Add/edit data agreement";
-% if ($user_can_modify) { $data_agreement_link = '[<a id="add_data_agreement">Add/edit data agreement</a>]'; }
-<&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> $data_agreement_link  &>
+<& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 
-<& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
-
-</&>
-
-<&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
-  <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
-
-</&>
-
-% #print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
-
-<!-- Phenotypic correlation analysis -->
-<& /solgs/population/correlation.mas,
-   trial_id => $trial_id
-&>
-
-<& /anova.mas,
-   trial_id => $trial_id
-&>
-
-  <!-- Population structure analysis -- PCA -->
-<& /solgs/model/pca.mas,
-   trial_id => $trial_id
- &>
-
-% #print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
 </div>
 
-<div data-spy="affix" data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
+<&| /page/info_section.mas, title=>"Trial Status", is_subsection => 0, collapsible=>1, collapsed=>1  &>
+
+<div data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
     <div class="panel panel-info">
         <div class="panel-heading">Completion</div>
         <div class="panel-body">
@@ -598,6 +366,8 @@ my $start_time = time();
     </div>
 </div>
 
+</&>
+
 <script defer="defer">
 
 jQuery(document).ready(function () {
@@ -675,6 +445,10 @@ jQuery(document).ready(function () {
             }
 
         });
+    });
+
+    jQuery('#custom_barcode').click(function () {
+        location.href = '/tools/label_designer';
     });
 
     jQuery('#direct_phenotyping_link').click(function () {

@@ -1,0 +1,46 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+
+<div id="field_trial_to_field_trial_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
+        jQuery.ajax ({
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Source Field Trial(s) For This Field Trial</th></tr></thead><tbody>';
+                var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) Sourced From This Field Trial</th></tr></thead><tbody>';
+                for (var i=0; i<response.source_field_trials.length; i++){
+                    html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.source_field_trials[i][0]+'">'+response.source_field_trials[i][1]+'</a></td></tr>';
+                }
+                for (var i=0; i<response.field_trials_sourced.length; i++){
+                    html2 = html2 + '<tr><td><a href="/breeders/trial/'+response.field_trials_sourced[i][0]+'">'+response.field_trials_sourced[i][1]+'</a></td></tr>';
+                }
+                html1 = html1 + '</tbody></table>';
+                html2 = html2 + '</tbody></table>';
+                jQuery('#field_trial_to_field_trial_html').html(html1+html2);
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving field trial to field trial linkage.");
+            }
+        });
+    });
+
+});
+
+</script>
