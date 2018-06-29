@@ -108,6 +108,16 @@ sub add_stockprop_POST {
         try {
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
 
+            my $stock = CXGN::Stock->new({
+                schema=>$schema,
+                stock_id=>$stock_id,
+                is_saving=>1,
+                sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                user_name => $c->user()->get_object()->get_username(),
+                modification_note => "Added property: $prop_type = $prop"
+            });
+            my $added_stock_id = $stock->store();
+
             my $dbh = $c->dbc->dbh();
             my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
