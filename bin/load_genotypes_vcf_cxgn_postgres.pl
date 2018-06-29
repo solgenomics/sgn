@@ -10,12 +10,17 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
   ARGUMENTS
  -H host name (required) e.g. "localhost"
  -D database name (required) e.g. "cxgn_cassava"
+ -U database username (required)
  -i path to infile (required)
  -r archive path (required)
  -u username in database (required)
  -p project name (required) e.g. "SNP genotyping 2012 Cornell Biotech".  Will be found or created in Project table.
  -y project year (required) e.g. "2012".  Will be saved as a Projectprop.
+ -d project description (required) e.g. "Diversity study"
+ -n genotype facility name (required) e.g. "igd"
  -g population name (required) e.g. "NaCRRI training population"
+ -b observation unit name (required) e.g. "tissue_sample"
+ -s include igd numbers in sample names
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
  -o organism genus name (required) e.g. "Manihot".  Along with organism species name, this will be found or created in Organism table.
@@ -58,48 +63,30 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use DateTime;
 use CXGN::UploadFile;
 
-our ($opt_H, $opt_D, $opt_r, $opt_i, $opt_t, $opt_p, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_o, $opt_q, $opt_z, $opt_u);
+our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_o, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s);
 
-getopts('H:i:r:u:tD:p:y:g:axsm:l:o:q:z');
+getopts('H:U:i:r:u:tD:p:y:g:axsm:l:o:q:zf:d:b:n:s');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $file = $opt_i;
-my $project_name = $opt_p;
-my $project_year = $opt_y;
-my $population_name = $opt_g;
-my $map_protocol_name = $opt_m;
-my $location = $opt_l;
-my $organism_genus = $opt_o;
-my $organism_species = $opt_q;
 
-
-print STDERR "Input file: $file\n";
-print STDERR "DB host: $dbhost\n";
-print STDERR "DB name: $dbname\n";
-print STDERR "Population name: $population_name\n";
-print STDERR "Project year: $opt_y\n";
-print STDERR "Add missing accessions: $opt_a\n";
-print STDERR "Delete old duplicate phenotypes: $opt_x\n";
-print STDERR "Rollback: $opt_t\n";
-
-if (!$opt_H || !$opt_D || !$opt_i || !$opt_g || !$opt_p || !$opt_y || !$opt_m || !$opt_l || !$opt_o || !$opt_q || !$opt_r || !$opt_u) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file) , -r (archive path), -g (populations name for associating accessions in your SNP file), -p (project name), -y (project year), -l (location of project), -m (map protocol name), -o (organism genus), -q (organism species) -u (database username)\n");
+if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_g || !$opt_p || !$opt_y || !$opt_m || !$opt_l || !$opt_o || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d) {
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -g (populations name for associating accessions in your SNP file), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -o (organism genus), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit name), -n (genotype facility name)\n");
 }
 
-#print "Password for $opt_H / $opt_D: \n";
-#my $pw = <>;
-#chomp($pw);
-my $pw='postgres';
+print "Password for $opt_H / $opt_D: \n";
+my $pw = <>;
+chomp($pw);
 
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
 
-my $schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
-my $dbh = DBI->connect($dsn, "postgres", $pw);
+my $schema = Bio::Chado::Schema->connect($dsn, $opt_U, $pw);
+my $dbh = DBI->connect($dsn, $opt_U, $pw);
 $dbh->do('SET search_path TO public,sgn');
-my $metadata_schema = CXGN::Metadata::Schema->connect($dsn, "postgres", $pw);
-my $phenome_schema = CXGN::Phenome::Schema->connect($dsn, "postgres", $pw);
+my $metadata_schema = CXGN::Metadata::Schema->connect($dsn, $opt_U, $pw);
+my $phenome_schema = CXGN::Phenome::Schema->connect($dsn, $opt_U, $pw);
 
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
@@ -115,7 +102,7 @@ if (!$sp_person_id){
 my $uploader = CXGN::UploadFile->new({
    tempfile => $file,
    subdirectory => "genotype_vcf_upload",
-   archive_path => $opt_a,
+   archive_path => $opt_r,
    archive_filename => basename($file),
    timestamp => $timestamp,
    user_id => $sp_person_id,
@@ -134,19 +121,19 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
     vcf_input_file=>$archived_filename_with_path,
-    observation_unit_type_name=>$obs_type,
-    genotyping_facility=>$genotyping_facility,
+    observation_unit_type_name=>$opt_b,
+    genotyping_facility=>$opt_n,
     breeding_program_id=>$breeding_program_id,
-    project_year=>$year,
+    project_year=>$opt_y,
     project_location_id=>$location_id,
-    project_name=>$project_name,
-    project_description=>$description,
-    protocol_name=>$protocol_name,
-    organism_genus=>$organism_genus,
-    organism_species=>$organism_species,
-    create_missing_observation_units_as_accessions=>$add_accessions,
-    igd_numbers_included=>$include_igd_numbers,
-    reference_genome_name=>$reference_genome_name
+    project_name=>$opt_p,
+    project_description=>$opt_d,
+    protocol_name=>$opt_m,
+    organism_genus=>$opt_o,
+    organism_species=>$opt_q,
+    create_missing_observation_units_as_accessions=>$opt_a,
+    igd_numbers_included=>$opt_s,
+    reference_genome_name=>$opt_f
 });
 my $verified_errors = $store_genotypes->validate();
 if (scalar(@{$verified_errors->{error_messages}}) > 0){

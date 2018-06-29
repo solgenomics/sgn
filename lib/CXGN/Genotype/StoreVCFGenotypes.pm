@@ -472,25 +472,11 @@ sub store {
         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
             nd_geolocation_id => $location_id,
             type_id => $geno_cvterm_id,
+            nd_experiment_projects => [ {project_id => $project_id} ],
+            nd_experiment_stocks => [ {stock_id => $stock_id, type_id => $geno_cvterm_id} ],
+            nd_experiment_protocols => [ {nd_protocol_id => $protocol_id} ]
         });
         my $nd_experiment_id = $experiment->nd_experiment_id();
-
-        #print STDERR "Linking to protocol...\n";
-        my $nd_experiment_protocol = $schema->resultset('NaturalDiversity::NdExperimentProtocol')->create({
-            nd_experiment_id => $nd_experiment_id,
-            nd_protocol_id => $protocol_id,
-        });
-
-        #link to the project
-        $experiment->create_related('nd_experiment_projects', {
-            project_id => $project_id
-        });
-
-        #link the experiment to the stock
-        $experiment->create_related('nd_experiment_stocks' , {
-            stock_id => $stock_id,
-            type_id  =>  $geno_cvterm_id,
-        });
 
         print STDERR "Storing new genotype for stock " . $stock_name . " \n";
         my $genotype = $schema->resultset("Genetic::Genotype")->create({
