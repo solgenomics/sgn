@@ -84,6 +84,7 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
     my $self = shift;
     my $c = shift;
     my $program = $c->stash->{program};
+    my $program_id = $program->get_program_id;
     my $schema = $c->stash->{schema};
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();
@@ -141,7 +142,7 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
 	    my @return_array;
 	    
 	    
-	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($program_id, $trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
 	    push @phenotype_data, \@return_array;
 	}
     }
