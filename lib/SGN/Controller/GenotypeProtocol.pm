@@ -6,7 +6,7 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Trial::Folder;
-use CXGN::GenotypeProtocol;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -31,25 +31,12 @@ sub protocol_page :Path("/breeders/genotyping_protocols") Args(1) {
     my $c = shift;
     my $protocol_id = shift;
 
-    #print STDERR Dumper $protocol_id;
-
-    my $protocol_name = $self->schema()->resultset('NaturalDiversity::NdProtocol')->find({ nd_protocol_id=>$protocol_id })->name();
-
-    #my $protocol = CXGN::GenotypeProtocol->new({ schema => $self->schema, nd_protocol_id => $protocol_id });
-    #print STDERR Dumper $protocol->marker_details();
-    
-    #my $marker_details = $protocol->marker_details();
-    #my $markers = $protocol->markers();
-    #@$markers = splice @$markers, $page_size;
-    #my @markerdetails_window;
-    #foreach (@$markers) {
-    #    my @marker_info = ($_, $marker_details->{$_} );
-    #    push @markerdetails_window, \@marker_info;
-    #}
-    #print STDERR Dumper \@markerdetails_window;
-    
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $self->schema,
+        nd_protocol_id => $protocol_id
+    });
     $c->stash->{protocol_id} = $protocol_id;
-    $c->stash->{name} = $protocol_name;
+    $c->stash->{name} = $protocol->protocol_name;
     #$c->stash->{marker_details} = \@markerdetails_window;
     $c->stash->{template} = '/breeders_toolbox/maps/genotype_protocol.mas';
 }
