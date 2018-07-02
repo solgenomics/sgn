@@ -108,6 +108,16 @@ sub add_stockprop_POST {
         try {
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
 
+            my $stock = CXGN::Stock->new({
+                schema=>$schema,
+                stock_id=>$stock_id,
+                is_saving=>1,
+                sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                user_name => $c->user()->get_object()->get_username(),
+                modification_note => "Added property: $prop_type = $prop"
+            });
+            my $added_stock_id = $stock->store();
+
             my $dbh = $c->dbc->dbh();
             my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
@@ -850,12 +860,18 @@ sub stock_autocomplete_GET :Args(0) {
     my ($self, $c) = @_;
 
     my $term = $c->req->param('term');
+    my $stock_type_id = $c->req->param('stock_type_id');
 
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
+    my $stock_type_where = '';
+    if ($stock_type_id){
+        $stock_type_where = " AND type_id = $stock_type_id ";
+    }
+
     my @response_list;
-    my $q = "select distinct(uniquename) from stock where uniquename ilike ? ORDER BY stock.uniquename LIMIT 100";
+    my $q = "select distinct(uniquename) from stock where uniquename ilike ? $stock_type_where ORDER BY stock.uniquename LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
     while (my ($stock_name) = $sth->fetchrow_array) {

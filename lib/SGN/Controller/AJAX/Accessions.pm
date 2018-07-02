@@ -339,6 +339,7 @@ sub add_accession_list_POST : Args(0) {
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
@@ -396,7 +397,9 @@ sub add_accession_list_POST : Args(0) {
                     introgression_chromosome=>$_->{introgression_chromosome},
                     introgression_start_position_bp=>$_->{introgression_start_position_bp},
                     introgression_end_position_bp=>$_->{introgression_end_position_bp},
-                    sp_person_id => $user_id
+                    sp_person_id => $user_id,
+                    user_name => $user_name,
+                    modification_note => 'Bulk load of accession information'
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
