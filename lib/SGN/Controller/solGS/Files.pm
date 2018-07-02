@@ -300,6 +300,8 @@ sub get_solgs_dirs {
     my $corre_temp      = catdir($tmp_dir, 'correlation', 'tempfiles');
     my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
     my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
+    my $kcluster_cache  = catdir($tmp_dir, 'kcluster', 'cache');
+    my $kcluster_temp   = catdir($tmp_dir, 'kcluster', 'tempfiles');
 
 
     mkpath (
@@ -307,7 +309,7 @@ sub get_solgs_dirs {
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists, 
 	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
 	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
-	 $anova_temp,$anova_cache,
+	 $anova_temp,$anova_cache,  $kcluster_temp,$kcluster_cache,
 	], 
 	0, 0755
 	);
@@ -324,6 +326,8 @@ sub get_solgs_dirs {
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,
 	      anova_temp_dir              => $anova_temp,
+	      kcluster_cache_dir          => $kcluster_cache,
+	      kcluster_temp_dir           => $kcluster_temp,
         );
 
 }
