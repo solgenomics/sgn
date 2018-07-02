@@ -29,64 +29,85 @@
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
-                                <& /page/page_title.mas, title=>"Provide info about the genotyping project" &>
+                                <& /page/page_title.mas, title=>"Select the genotyping project or create a new one" &>
 
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>Should match Vendor Project if you have one</small></label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotype_vcf_project_name" name="upload_genotype_vcf_project_name" type="text" placeholder="e.g. NextGenCassava"/>
-                                    </div>
-                                </div>
+                                <table id="upload_genotyping_data_project_search_results" width="100%" class="table table-hover table-striped">
+                                <thead>
+                                  <tr>
+                                    <th>Select</th>
+                                    <th>Genotyping Project Name</th>
+                                    <th>Description</th>
+                                    <th>Breeding program</th>
+                                    <th>Year</th>
+                                    <th>Location</th>
+                                </tr>
+                                </thead>
+                                </table>
 
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Facility: </label>
-                                    <div class="col-sm-7">
-                                        <select class="form-control" id="upload_genotype_vcf_facility_select" name="upload_genotype_vcf_facility_select">
-                                            <option value="none">None</option>
-                                            <option value="igd">Cornell IGD</option>
-                                            <option value="intertek">Intertek</option>
-                                            <option value="dart">Dart</option>
-                                            <option value="bgi">BGI</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Sample Unit: </label>
-                                    <div class="col-sm-7">
-                                        <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
-                                            <option value="tissue_sample">Tissue Sample</option>
-                                            <option value="accession">Accession</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Breeding Program: </label>
-                                    <div class="col-sm-7">
-                                        <span id="upload_genotype_breeding_program_select_div"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Location: </label>
-                                    <div class="col-sm-7">
-                                        <span id="upload_genotype_location_select_div"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Year: </label>
-                                    <div class="col-sm-7">
-                                        <span id="upload_genotype_year_select_div"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Species:</label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Description: </label>
-                                    <div class="col-sm-7">
-                                        <textarea class="form-control" id="upload_genotype_vcf_project_description" name="upload_genotype_vcf_project_description" maxlength="250"></textarea>
+                                <center>
+                                <button class="btn btn-primary" id="upload_genotyping_data_project_missing_button">My project is not here. Create a new one.</button>
+                                </center>
+                                <br/>
+
+                                <div id="upload_genotyping_data_project_details" style="display:none">
+                                    <div class="well">
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>Should match Vendor Project if you have one</small></label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_genotype_vcf_project_name" name="upload_genotype_vcf_project_name" type="text" placeholder="e.g. NextGenCassava"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Genotyping Facility: </label>
+                                            <div class="col-sm-7">
+                                                <select class="form-control" id="upload_genotype_vcf_facility_select" name="upload_genotype_vcf_facility_select">
+                                                    <option value="none">None</option>
+                                                    <option value="igd">Cornell IGD</option>
+                                                    <option value="intertek">Intertek</option>
+                                                    <option value="dart">Dart</option>
+                                                    <option value="bgi">BGI</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Sample Unit: </label>
+                                            <div class="col-sm-7">
+                                                <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
+                                                    <option value="tissue_sample">Tissue Sample</option>
+                                                    <option value="accession">Accession</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Breeding Program: </label>
+                                            <div class="col-sm-7">
+                                                <span id="upload_genotype_breeding_program_select_div"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Location: </label>
+                                            <div class="col-sm-7">
+                                                <span id="upload_genotype_location_select_div"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Year: </label>
+                                            <div class="col-sm-7">
+                                                <span id="upload_genotype_year_select_div"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Species:</label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Description: </label>
+                                            <div class="col-sm-7">
+                                                <textarea class="form-control" id="upload_genotype_vcf_project_description" name="upload_genotype_vcf_project_description" maxlength="250"></textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -305,16 +326,21 @@
 
 .ui-autocomplete { z-index:2147483647; }
 
-/* IE 6 doesn't support max-height
-* we use height instead, but this forces the menu to always be this tall
-*/
-* html .ui-autocomplete {
-  height: 100px;
-}
 </style>
 
 <script>
 jQuery(document).ready(function(){
+
+    var upload_genotyping_data_trial_table = jQuery('#upload_genotyping_data_project_search_results').DataTable( {
+        'ajax': {
+            'url':'/ajax/genotyping_data/projects?select_checkbox_name=upload_genotyping_data_project_select',
+        },
+    });
+
+    jQuery('#upload_genotyping_data_project_missing_button').click(function(){
+        jQuery('#upload_genotyping_data_project_details').show();
+        return false;
+    });
 
     jQuery('#upload_genotype_vcf_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_vcf_spreadsheet_info_format_dialog').modal('show');

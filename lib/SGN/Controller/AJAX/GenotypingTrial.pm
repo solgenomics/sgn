@@ -444,4 +444,37 @@ sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentia
     }
 }
 
+sub get_genotyping_data_projects : Path('/ajax/genotyping_data/projects') : ActionClass('REST') { }
+
+sub get_genotyping_data_projects_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
+
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema=>$bcs_schema,
+        trial_design_list=>['genotype_data_project']
+    });
+    my $data = $trial_search->search();
+    my @result;
+    foreach (@$data){
+        my @res;
+        if ($checkbox_select_name){
+            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{trial_id}'>";
+        }
+        push @res, (
+            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            $_->{description},
+            "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
+            $_->{year},
+            $_->{location_name},
+        );
+        push @result, \@res;
+    }
+    #print STDERR Dumper \@result;
+
+    $c->stash->{rest} = { data => \@result };
+}
+
 1;

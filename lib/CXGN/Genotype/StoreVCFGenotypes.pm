@@ -46,6 +46,7 @@ use CXGN::UploadFile;
 use SGN::Model::Cvterm;
 use CXGN::GenotypeIO;
 use JSON;
+use CXGN::Trial;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -286,6 +287,7 @@ sub store {
     my $file = $self->vcf_input_file;
     my $opt_z = $self->igd_numbers_included;
     my $opt_a = $self->create_missing_observation_units_as_accessions;
+    my $stock_type = $self->observation_unit_type_name;
     $dbh->do('SET search_path TO public,sgn');
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -310,12 +312,19 @@ sub store {
     } else {
         my $project = $schema->resultset("Project::Project")->create({
             name => $opt_p,
-            description => $project_description,
+            description => $project_description." : Species = $organism_species. Sample Unit = $stock_type.",
         });
         $project_id = $project->project_id();
         $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
         $project->create_projectprops( { $genotyping_facility_cvterm->name() => $genotype_facility } );
         $project->create_projectprops( { $design_cvterm->name() => 'genotype_data_project' } );
+
+        my $t = CXGN::Trial->new({
+            bcs_schema => $schema,
+            trial_id => $project_id
+        });
+        $t->set_breeding_program($self->breeding_program_id);
+        $t->set_location($location_id);
     }
 
     #store organism info
@@ -444,7 +453,6 @@ sub store {
 
     print STDERR "Genotypeprop observation units hash created\n";
 
-    my $stock_type = $self->observation_unit_type_name;
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
 
     my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?);";
