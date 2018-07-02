@@ -56,8 +56,24 @@
 
 <hr>
 
-<h3>List Select Menus // list modification</h3>
-
+<h3>List Select Menus</h3>
+Creates a select box for selecting lists. The source:
+<pre>
+  &lt;& /util/import_javascript.mas, classes => ['CXGN.List'] &&gt;
+  &lt;div id="select_div_id"&gt;&lt;/div&gt;
+  &lt;script type="text/javascript"&gt;
+    var list_obj = new CXGN.List();
+    var listhtml = list_obj.listSelect('select_div_id', ['accessions'], "Select an Accession List");
+    jQuery('#select_div_id').html(listhtml);
+  &lt;/script&gt;
+</pre>
+Creates:
+<div id="select_div_id"></div>
+<script type="text/javascript">
+  var lo = new CXGN.List();
+  var listhtml = lo.listSelect('select_div_id', ['accessions'], "Select an Accession List");
+  jQuery('#select_div_id').html(listhtml);
+</script>
 <hr>
 
 <h3>HTML Selects (get_select_box)</h3>
@@ -66,6 +82,7 @@
     get_select_box("trials", "htmlselectexample")
 </script>
 <pre>
+&lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
 &lt;div id="htmlselectexample"&gt;&lt;/div&gt;
 &lt;script type="text/javascript"&gt;
     get_select_box("trials", "htmlselectexample")
