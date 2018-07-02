@@ -58,4 +58,14 @@ jQuery(document).ready(function (){
         return markerSetName;
 
     });
+
+    var markersets_table = jQuery('#marker_sets').DataTable({
+        'ajax':{'url': '/marker_sets/available'},
+        'columns': [
+            {title: "Marker Set Name"},
+            {title: "Number of Markers"},
+            {title: "Description"},
+        ]
+    })
+
 });
