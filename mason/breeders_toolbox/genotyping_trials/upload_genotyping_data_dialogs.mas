@@ -32,16 +32,16 @@
                                 <& /page/page_title.mas, title=>"Select the genotyping project or create a new one" &>
 
                                 <table id="upload_genotyping_data_project_search_results" width="100%" class="table table-hover table-striped">
-                                <thead>
-                                  <tr>
-                                    <th>Select</th>
-                                    <th>Genotyping Project Name</th>
-                                    <th>Description</th>
-                                    <th>Breeding program</th>
-                                    <th>Year</th>
-                                    <th>Location</th>
-                                </tr>
-                                </thead>
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Genotyping Project Name</th>
+                                            <th>Description</th>
+                                            <th>Breeding program</th>
+                                            <th>Year</th>
+                                            <th>Location</th>
+                                        </tr>
+                                    </thead>
                                 </table>
 
                                 <center>
@@ -101,49 +101,78 @@
                             <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
                                 <& /page/page_title.mas, title=>"Provide info about the protocol used" &>
 
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Protocol Name:</label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotype_vcf_protocol_name" name="upload_genotype_vcf_protocol_name" type="text" placeholder=" e.g. GBS ApeKI Cassava genome v6 Jan2015"/>
+                                <table id="upload_genotyping_data_protocol_search_results" width="100%" class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Protocol Name</th>
+                                            <th>Description</th>
+                                            <th>Number of Markers</th>
+                                            <th>Reference Genome</th>
+                                            <th>Species</th>
+                                            <th>Sample Unit</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+
+                                <center>
+                                <button class="btn btn-primary" id="upload_genotyping_data_protocol_missing_button">My protocol is not here. Create a new one.</button>
+                                </center>
+                                <br/>
+
+                                <!-- If protocol is selected above, the protocol_id is passed to controller, negating need to create new protocol -->
+                                <input id="upload_genotype_protocol_id" name="upload_genotype_protocol_id" type="hidden" />
+
+                                <div id="upload_genotype_data_protocol_details" style="display:none">
+                                    <div class="well">
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Genotyping Protocol Name:</label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_genotype_vcf_protocol_name" name="upload_genotype_vcf_protocol_name" type="text" placeholder=" e.g. GBS ApeKI Cassava genome v6 Jan2015"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Genotyping Protocol Reference Genome:</label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_genotype_vcf_reference_genome_name" name="upload_genotype_vcf_reference_genome_name" type="text" placeholder="Mesculenta_511_v7.0"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Species:</label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Sample Unit: </label>
+                                            <div class="col-sm-7">
+                                                <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
+                                                    <option value="tissue_sample">Tissue Sample: The sample names are tissue_sample names in genotyping trials in the database</option>
+                                                    <option value="accession">Accession: The sample names are of accession names</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Protocol Reference Genome:</label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotype_vcf_reference_genome_name" name="upload_genotype_vcf_reference_genome_name" type="text" placeholder="Mesculenta_511_v7.0"/>
+
+                                <div class="well">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Location: </label>
+                                        <div class="col-sm-7">
+                                            <span id="upload_genotype_location_select_div"></span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Species:</label>
-                                    <div class="col-sm-7">
-                                        <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Sample Unit: </label>
-                                    <div class="col-sm-7">
-                                        <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
-                                            <option value="tissue_sample">Tissue Sample: The sample names are tissue_sample names in genotyping trials in the database</option>
-                                            <option value="accession">Accession: The sample names are of accession names</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Location: </label>
-                                    <div class="col-sm-7">
-                                        <span id="upload_genotype_location_select_div"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Sample Names Include IGD Numbers (e.g. sample_name:IGD1001:09): </label>
-                                    <div class="col-sm-7">
-                                        <input type="checkbox" id="upload_genotype_vcf_include_igd_numbers" name="upload_genotype_vcf_include_igd_numbers" >
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Sample Names Include IGD Numbers (e.g. sample_name:IGD1001:09): </label>
+                                        <div class="col-sm-7">
+                                            <input type="checkbox" id="upload_genotype_vcf_include_igd_numbers" name="upload_genotype_vcf_include_igd_numbers" >
+                                        </div>
                                     </div>
                                 </div>
 
                                 <br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" id="upload_genotyping_data_protocol_check_button">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Genotype Info" &>
@@ -340,6 +369,12 @@ jQuery(document).ready(function(){
         },
     });
 
+    var upload_genotyping_data_protocol_table = jQuery('#upload_genotyping_data_protocol_search_results').DataTable( {
+        'ajax': {
+            'url':'/ajax/genotyping_data/protocols?select_checkbox_name=upload_genotyping_data_protocol_select',
+        },
+    });
+
     jQuery('#upload_genotyping_data_project_missing_button').click(function(){
         jQuery('#upload_genotyping_data_project_details').show();
         return false;
@@ -367,9 +402,45 @@ jQuery(document).ready(function(){
                 } else if (jQuery('#upload_genotype_vcf_project_description').val() == ''){
                     alert('Please give a description.');
                 } else {
-                    jQuery('#upload_genotype_project_id').val('');
+                    jQuery('#upload_genotype_project_id').val(undefined);
                     Workflow.complete('#upload_genotyping_data_project_check_button');
                     Workflow.focus('#upload_genotypes_workflow', 2);
+                }
+            }
+        }
+        return false;
+    });
+
+    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
+        jQuery('#upload_genotype_data_protocol_details').show();
+        return false;
+    });
+
+    jQuery('#upload_genotyping_data_protocol_check_button').click(function(){
+        selected = [];
+        jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1){
+            alert('Only select one genotyping protocol!');
+        } else {
+            if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() == ''){
+                alert('Select a genotyping protocol or create a new one!');
+            } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_protocol_name').val() != ''){
+                alert('If you selected a protocol, do not try to make a new one at the same time!');
+            } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_protocol_name').val() == ''){
+                jQuery('#upload_genotype_protocol_id').val(selected[0]);
+                Workflow.complete('#upload_genotyping_data_protocol_check_button');
+                Workflow.focus('#upload_genotypes_workflow', 3);
+            } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() != '') {
+                if (jQuery('#upload_genotype_vcf_reference_genome_name').val() == ''){
+                    alert('Please give a reference genome name.');
+                } else if (jQuery('#upload_genotypes_species_name_input').val() == ''){
+                    alert('Please give a species name.');
+                } else {
+                    jQuery('#upload_genotype_protocol_id').val(undefined);
+                    Workflow.complete('#upload_genotyping_data_protocol_check_button');
+                    Workflow.focus('#upload_genotypes_workflow', 3);
                 }
             }
         }

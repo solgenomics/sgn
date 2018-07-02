@@ -6,7 +6,7 @@ CXGN::Genotype::StoreVCFGenotypes - an object to handle storing genotypes in gen
 
 =head1 USAGE
 
-For a brand new genotyping project and protocol:
+For genotyping data from a brand new genotyping project and protocol:
 my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
@@ -20,6 +20,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_name=>'VCF2018',
     project_description=>'description',
     protocol_name=>'SNP2018',
+    reference_genome_name=>'Mesculenta_511_v7',
     organism_genus=>$organism_genus,
     organism_species=>$organism_species,
     user_id => 41,
@@ -31,7 +32,7 @@ my $return = $store_genotypes->store();
 
 ---------------------------------------------------------------
 
-For storing new protocol in a previously created genotyping project, use project_id:
+For storing genotyping data from a new protocol in a previously created genotyping project, use project_id:
 my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
@@ -41,6 +42,53 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_location_id=>$location_id,
     project_id=>123,
     protocol_name=>'SNP2018',
+    reference_genome_name=>'Mesculenta_511_v7',
+    organism_genus=>$organism_genus,
+    organism_species=>$organism_species,
+    user_id => 41,
+    create_missing_observation_units_as_accessions=>0,
+    igd_numbers_included=>0
+);
+my $verified_errors = $store_genotypes->validate();
+my $return = $store_genotypes->store();
+
+---------------------------------------------------------------
+
+For storing genotyping data from a previously saved protocol in a new project, use protocol_id:
+my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
+    bcs_schema=>$schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    vcf_input_file=>$vcf_input_file,
+    observation_unit_type_name=>'tissue_sample',
+    breeding_program_id=>101,
+    genotyping_facility=>'IGD',
+    project_year=>'2018',
+    project_location_id=>$location_id,
+    project_name=>'VCF2018',
+    project_description=>'description',
+    protocol_id => 23,
+    organism_genus=>$organism_genus,
+    organism_species=>$organism_species,
+    user_id => 41,
+    create_missing_observation_units_as_accessions=>0,
+    igd_numbers_included=>0
+);
+my $verified_errors = $store_genotypes->validate();
+my $return = $store_genotypes->store();
+
+---------------------------------------------------------------
+
+For storing genotying data from a previously saved protocol in a previously saved project, use project_id and protocol_id:
+my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
+    bcs_schema=>$schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    vcf_input_file=>$vcf_input_file,
+    observation_unit_type_name=>'tissue_sample',
+    project_location_id=>$location_id,
+    project_id=>123,
+    protocol_id=>23,
     organism_genus=>$organism_genus,
     organism_species=>$organism_species,
     user_id => 41,
@@ -138,10 +186,19 @@ has 'project_location_id' => (
     required => 1,
 );
 
-has 'protocol_name' => (
-    isa => 'Str',
+has 'protocol_id' => (
+    isa => 'Int|Undef',
     is => 'rw',
-    required => 1,
+);
+
+has 'protocol_name' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
+has 'reference_genome_name' => (
+    isa => 'Str|Undef',
+    is => 'rw',
 );
 
 has 'organism_genus' => (
@@ -151,12 +208,6 @@ has 'organism_genus' => (
 );
 
 has 'organism_species' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1,
-);
-
-has 'reference_genome_name' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
@@ -377,7 +428,7 @@ sub store {
 
     my $protocol_id;
     my $protocol_row_check = $schema->resultset("NaturalDiversity::NdProtocol")->find({
-        name => $map_protocol_name
+        nd_protocol_id => $self->protocol_id
     });
     if ($protocol_row_check){
         $protocol_id = $protocol_row_check->nd_protocol_id;
@@ -394,6 +445,8 @@ sub store {
         my $header_info_lines = $gtio->header_information_lines();
         $protocolprop_json{'header_information_lines'} = $header_info_lines;
         $protocolprop_json{'reference_genome_name'} = $reference_genome_name;
+        $protocolprop_json{'species_name'} = $organism_species;
+        $protocolprop_json{'sample_observation_unit_type_name'} = $stock_type;
 
         while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 

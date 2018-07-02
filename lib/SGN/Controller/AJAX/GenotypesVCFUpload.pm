@@ -106,20 +106,9 @@ sub upload_genotype_verify_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
-    my $organism_genus_q = "SELECT genus FROM organism WHERE species = ?";
-    my @found_genus;
-    my $h = $schema->storage->dbh()->prepare($organism_genus_q);
-    $h->execute($organism_species);
-    while (my ($genus) = $h->fetchrow_array()){
-        push @found_genus, $genus;
-    }
-    if (scalar(@found_genus) != 1){
-        $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
-        $c->detach();
-    }
-    my $organism_genus = $found_genus[0];
 
-    my $project_id = $c->req->param('upload_genotype_project_id');
+    my $project_id = $c->req->param('upload_genotype_project_id') || undef;
+    my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');
     my $location_id = $c->req->param('upload_genotype_location_select');
     my $year = $c->req->param('upload_genotype_year_select');
@@ -141,6 +130,28 @@ sub upload_genotype_verify_POST : Args(0) {
         $include_igd_numbers = 1;
     }
 
+    if ($protocol_id){
+        my $protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
+        });
+        $organism_species = $protocol->species_name;
+        $obs_type = $protocol->sample_observation_unit_type_name;
+    }
+
+    my $organism_genus_q = "SELECT genus FROM organism WHERE species = ?";
+    my @found_genus;
+    my $h = $schema->storage->dbh()->prepare($organism_genus_q);
+    $h->execute($organism_species);
+    while (my ($genus) = $h->fetchrow_array()){
+        push @found_genus, $genus;
+    }
+    if (scalar(@found_genus) != 1){
+        $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
+        $c->detach();
+    }
+    my $organism_genus = $found_genus[0];
+
     my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
@@ -148,6 +159,7 @@ sub upload_genotype_verify_POST : Args(0) {
         vcf_input_file=>$archived_filename_with_path,
         observation_unit_type_name=>$obs_type,
         project_id=>$project_id,
+        protocol_id=>$protocol_id,
         genotyping_facility=>$genotyping_facility, #projectprop
         breeding_program_id=>$breeding_program_id, #project_rel
         project_year=>$year, #projectprop

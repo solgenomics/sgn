@@ -9,6 +9,7 @@ use Try::Tiny;
 use List::MoreUtils qw /any /;
 use CXGN::People::Person;
 use CXGN::Login;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -469,6 +470,43 @@ sub get_genotyping_data_projects_GET : Args(0) {
             "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
             $_->{year},
             $_->{location_name},
+        );
+        push @result, \@res;
+    }
+    #print STDERR Dumper \@result;
+
+    $c->stash->{rest} = { data => \@result };
+}
+
+sub get_genotyping_data_protocols : Path('/ajax/genotyping_data/protocols') : ActionClass('REST') { }
+
+sub get_genotyping_data_protocols_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
+
+    my $data = CXGN::Genotype::Protocol::list($bcs_schema);
+    my @result;
+    foreach (@$data){
+        my @res;
+        if ($checkbox_select_name){
+            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{protocol_id}'>";
+        }
+        my $num_markers = scalar keys %{$_->{markers}};
+        my @trimmed;
+        foreach (@{$_->{header_information_lines}}){
+            $_ =~ tr/<>//d;
+            push @trimmed, $_;
+        }
+        my $description = join '<br/>', @trimmed;
+        push @res, (
+            $_->{protocol_name},
+            $description,
+            $num_markers,
+            $_->{reference_genome_name},
+            $_->{species_name},
+            $_->{sample_observation_unit_type_name}
         );
         push @result, \@res;
     }
