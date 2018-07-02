@@ -5,6 +5,9 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
 
 =head1 SYNOPSIS
     perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "BTI" -n "IGD" -b "accession" -m "test_protocol_01_new" -o "Manihot" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
+    
+    To use an existing project (not create a new project name entry), use -h project_id
+    To use an existing protocol (not create a new nd_protocol name entry), use -j protocol_id
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
@@ -27,6 +30,9 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -o organism genus name (required) e.g. "Manihot".  Along with organism species name, this will be found or created in Organism table.
  -q organism species name (required) e.g. "Manihot esculenta".
  -f reference genome name (required) e.g. "Mesculenta_511_v7"
+
+ -h project_id (Will associate genotype data to an existing project_id)
+ -j protocol_id (Will associate genotype data to an existing nd_protocol_id)
 
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
@@ -66,9 +72,9 @@ use DateTime;
 use CXGN::UploadFile;
 use File::Basename qw | basename dirname|;
 
-our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_o, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d);
+our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_o, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
 
-getopts('H:U:i:r:u:tD:p:y:g:axsm:l:o:q:zf:d:b:n:se:');
+getopts('H:U:i:r:u:tD:p:y:g:axsm:l:o:q:zf:d:b:n:se:h:j:');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
@@ -158,7 +164,9 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
     accession_population_name=>$opt_g,
     igd_numbers_included=>$opt_s,
     reference_genome_name=>$opt_f,
-    user_id=>$sp_person_id
+    user_id=>$sp_person_id,
+    project_id=>$opt_h,
+    protocol_id=>$opt_j
 });
 my $verified_errors = $store_genotypes->validate();
 if (scalar(@{$verified_errors->{error_messages}}) > 0){
