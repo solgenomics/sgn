@@ -13,6 +13,54 @@ Will do the following:
 6) Creates a year and design projectprop. Also a project_type projectprop if provided. For genotyping trials also creates others like, genotyping_facility and plate_format projectprops
 7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (tissue_samples, or plots and plants and subplots) and stockprops (rep, block, well, etc)
 
+Will do the following:
+
+=over 5
+
+=item 1
+
+Create a new project entry in Project table based on trial and description supplied to object. If there is a project with the name already saved, it will return an error and do nothing.
+
+=item 2
+
+Create a single new experiment entry in nd_experiment. If trial_class is set to "genotyping", the nd_experiment_type will be set to "genotyping_layout". For trial type "averaged_trial", it will be set to "averaged_trial". Otherwise, this will be the default type "field_layout", designating a phenotyping experiment.
+
+=item 3
+
+Will associate the location to the project through the nd_experiment as well as through a projectprop. Location lookup happens based on location name that is provided. Assumes locations already stored in database.
+
+=item 4
+
+Will associate the trial to its breeding program. Lookup is by breeding program name that is provided and assumes bp already exists in database. Will return an error if breeding program name not found.
+
+=item 5
+
+Creates a single nd_experiment_project entry, linking project to nd_experiment.
+
+=item 6
+
+Creates a year and design projectprop. Also a project_type projectprop if provided.
+
+=item 7
+
+Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (plots and plants) and stockprops (rep, block, etc)
+
+=back
+
+=head2 Note
+
+=over 5
+
+=item trial_type 
+
+this property can take values such as PYT, AYT, etc.
+
+=item trial_class 
+    is a higher level type, can be either "phenotyping", "genotyping", or "accession_average".
+
+=back
+
+
 =head1 USAGE
 
     FOR FIELD PHENOTYPING TRIALS:
@@ -44,22 +92,22 @@ Will do the following:
         print STDERR "ERROR SAVING TRIAL!\n";
     };
 
-    FOR GENOTYPING TRIALS:
-    my $ct = CXGN::Trial::TrialCreate->new( {
-        chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-        dbh => $c->dbc->dbh(),
-        user_name => $c->user()->get_object()->get_username(), #not implemented
-        operator => $c->user()->get_object()->get_username(),
-        trial_year => $year,
-        trial_location => $location->name(),
-        program => $breeding_program->name(),
-        trial_description => $description,
-        design_type => 'genotyping_plate',
-        design => $design_hash,
-        trial_name => $trial_name,
-        is_genotyping => 1,
-        genotyping_user_id => $user_id,
-        genotyping_project_name => $project_name,
+
+FOR GENOTYPING TRIALS:
+ my $ct = CXGN::Trial::TrialCreate->new( {
+	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	dbh => $c->dbc->dbh(),
+	user_name => $c->user()->get_object()->get_username(), #not implemented
+	trial_year => $year,
+	trial_location => $location->name(),
+	program => $breeding_program->name(),
+	trial_description => $description,
+	design_type => 'genotyping_plate',
+	design => $design_hash,
+	trial_name => $trial_name,
+	trial_type => "genotyping",
+	genotyping_user_id => $user_id,
+	genotyping_project_name => $project_name
         genotyping_facility_submit => $plate_info->{genotyping_facility_submit},
         genotyping_facility => $plate_info->{genotyping_facility},
         genotyping_plate_format => $plate_info->{plate_format},
@@ -167,6 +215,7 @@ has 'crossing_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predica
 
 #Trial linkage when saving either a field trial or genotyping trial
 has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_genotyping_trial_from_field_trial', required => 0);
+has 'trial_class' => (isa => 'Str', is => 'rw', default => 'phenotyping' );
 
 #Properties for genotyping trials
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
@@ -273,10 +322,14 @@ sub save_trial {
 	});
 
 	my $nd_experiment_type_id;
-	if (!$self->get_is_genotyping) {
+	if ($self->get_trial_class() eq "phenotyping") {
 		$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-	} else {
+	} 
+	elsif ($self->get_trial_class() eq "genotyping") { 
 		$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+	}
+	elsif ($self->get_trial_class() eq "analysis") { 
+                $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'analysis', 'experiment_type')->cvterm_id();
 	}
 
 	my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
@@ -285,7 +338,7 @@ sub save_trial {
 		type_id => $nd_experiment_type_id,
 	});
 
-	if ($self->get_is_genotyping()){
+	if ($self->get_trial_class() eq "genotyping"){
 		#print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
 		$nd_experiment->create_nd_experimentprops({
 			$genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
@@ -369,7 +422,7 @@ sub save_trial {
         nd_experiment_id => $nd_experiment->nd_experiment_id(),
 		design_type => $design_type,
 		design => \%design,
-		is_genotyping => $self->get_is_genotyping,
+		trial_class => $self->get_trial_class(),
 		new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
 		new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
 		operator => $self->get_operator
