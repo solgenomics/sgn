@@ -5,9 +5,9 @@ jQuery(document).ready(function (){
 
     get_select_box('genotyping_protocol','selected_protocol');
 
-    $('#selected_marker_set').html(lo.listSelect('selected_marker_set', ['markers']));
+    jQuery('#selected_marker_set').html(lo.listSelect('selected_marker_set', ['markers']));
 
-    $("#save_marker_set").click(function(){
+    jQuery("#save_marker_set").click(function(){
         var name = $('#new_marker_set').val();
         if (!name) {
             alert("Marker set name is required");
@@ -22,7 +22,7 @@ jQuery(document).ready(function (){
         return list_id
     });
 
-    $("#add_marker").click(function(){
+    jQuery("#add_marker").click(function(){
         var markerSetName = $('#selected_marker_set').val();
         if (!markerSetName) {
             alert("Marker set name is required");
@@ -59,6 +59,10 @@ jQuery(document).ready(function (){
 
     });
 
+    show_table();
+});
+
+function show_table() {
     var markersets_table = jQuery('#marker_sets').DataTable({
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
@@ -66,6 +70,5 @@ jQuery(document).ready(function (){
             {title: "Number of Markers"},
             {title: "Description"},
         ]
-    })
-
-});
+    });
+}
