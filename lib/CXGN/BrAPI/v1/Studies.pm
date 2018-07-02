@@ -203,7 +203,7 @@ sub studies_germplasm {
 	}
 
 	my %result = (
-		studyDbId=>$study_id,
+		studyDbId=>qq|$study_id|,
 		studyName=>$tl->get_name,
 		data =>\@germplasm_data
 	);
