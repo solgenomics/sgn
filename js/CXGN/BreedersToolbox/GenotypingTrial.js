@@ -444,6 +444,7 @@ jQuery(document).ready(function ($) {
     });
 
     function submit_genotype_data_upload() {
+        jQuery('#working_modal').modal('show');
         jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
         jQuery("#upload_genotypes_form").submit();
     }
@@ -451,9 +452,6 @@ jQuery(document).ready(function ($) {
     jQuery('#upload_genotypes_form').iframePostForm({
         json: true,
         post: function () {
-        },
-        beforeSend: function(){
-            jQuery('#working_modal').modal('show');
         },
         complete: function (response) {
             console.log(response);
