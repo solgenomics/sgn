@@ -49,6 +49,9 @@
                                 </center>
                                 <br/>
 
+                                <!-- If genotyping project is selected above, the project_id is passed to controller, negating need to create new project -->
+                                <input id="upload_genotype_project_id" name="upload_genotype_project_id" type="hidden" />
+
                                 <div id="upload_genotyping_data_project_details" style="display:none">
                                     <div class="well">
                                         <div class="form-group">
@@ -70,36 +73,15 @@
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Sample Unit: </label>
-                                            <div class="col-sm-7">
-                                                <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
-                                                    <option value="tissue_sample">Tissue Sample</option>
-                                                    <option value="accession">Accession</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
                                             <label class="col-sm-5 control-label">Breeding Program: </label>
                                             <div class="col-sm-7">
                                                 <span id="upload_genotype_breeding_program_select_div"></span>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Location: </label>
-                                            <div class="col-sm-7">
-                                                <span id="upload_genotype_location_select_div"></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
                                             <label class="col-sm-5 control-label">Year: </label>
                                             <div class="col-sm-7">
                                                 <span id="upload_genotype_year_select_div"></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-5 control-label">Species:</label>
-                                            <div class="col-sm-7">
-                                                <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -113,7 +95,7 @@
 
                                 <br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" id="upload_genotyping_data_project_check_button">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Genotyping Protocol" &>
@@ -132,7 +114,28 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Sample Names Include IGD Numbers: </label>
+                                    <label class="col-sm-5 control-label">Species:</label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="upload_genotypes_species_name_input" name="upload_genotypes_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sample Unit: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
+                                            <option value="tissue_sample">Tissue Sample: The sample names are tissue_sample names in genotyping trials in the database</option>
+                                            <option value="accession">Accession: The sample names are of accession names</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Location: </label>
+                                    <div class="col-sm-7">
+                                        <span id="upload_genotype_location_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sample Names Include IGD Numbers (e.g. sample_name:IGD1001:09): </label>
                                     <div class="col-sm-7">
                                         <input type="checkbox" id="upload_genotype_vcf_include_igd_numbers" name="upload_genotype_vcf_include_igd_numbers" >
                                     </div>
@@ -339,6 +342,37 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotyping_data_project_missing_button').click(function(){
         jQuery('#upload_genotyping_data_project_details').show();
+        return false;
+    });
+
+    jQuery('#upload_genotyping_data_project_check_button').click(function(){
+        selected = [];
+        jQuery('input[name="upload_genotyping_data_project_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1){
+            alert('Only select one genotyping project!');
+        } else {
+            if (selected.length == 0 && jQuery('#upload_genotype_vcf_project_name').val() == ''){
+                alert('Select a genotyping project or create a new one!');
+            } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_project_name').val() != ''){
+                alert('If you selected a project, do not try to make a new one at the same time!');
+            } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_project_name').val() == ''){
+                jQuery('#upload_genotype_project_id').val(selected[0]);
+                Workflow.complete('#upload_genotyping_data_project_check_button');
+                Workflow.focus('#upload_genotypes_workflow', 2);
+            } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_project_name').val() != '') {
+                if (jQuery('#upload_genotype_year_select').val() == ''){
+                    alert('Please give a year');
+                } else if (jQuery('#upload_genotype_vcf_project_description').val() == ''){
+                    alert('Please give a description.');
+                } else {
+                    jQuery('#upload_genotype_project_id').val('');
+                    Workflow.complete('#upload_genotyping_data_project_check_button');
+                    Workflow.focus('#upload_genotypes_workflow', 2);
+                }
+            }
+        }
         return false;
     });
 

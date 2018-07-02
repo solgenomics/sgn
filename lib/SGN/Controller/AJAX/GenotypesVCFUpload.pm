@@ -119,6 +119,7 @@ sub upload_genotype_verify_POST : Args(0) {
     }
     my $organism_genus = $found_genus[0];
 
+    my $project_id = $c->req->param('upload_genotype_project_id');
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');
     my $location_id = $c->req->param('upload_genotype_location_select');
     my $year = $c->req->param('upload_genotype_year_select');
@@ -146,12 +147,13 @@ sub upload_genotype_verify_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         vcf_input_file=>$archived_filename_with_path,
         observation_unit_type_name=>$obs_type,
-        genotyping_facility=>$genotyping_facility,
-        breeding_program_id=>$breeding_program_id,
-        project_year=>$year,
-        project_location_id=>$location_id,
-        project_name=>$project_name,
-        project_description=>$description,
+        project_id=>$project_id,
+        genotyping_facility=>$genotyping_facility, #projectprop
+        breeding_program_id=>$breeding_program_id, #project_rel
+        project_year=>$year, #projectprop
+        project_location_id=>$location_id, #ndexperiment and projectprop
+        project_name=>$project_name, #project_attr
+        project_description=>$description, #project_attr
         protocol_name=>$protocol_name,
         organism_genus=>$organism_genus,
         organism_species=>$organism_species,

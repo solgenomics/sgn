@@ -6,12 +6,15 @@ CXGN::Genotype::StoreVCFGenotypes - an object to handle storing genotypes in gen
 
 =head1 USAGE
 
+For a brand new genotyping project and protocol:
 my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
     vcf_input_file=>$vcf_input_file,
     observation_unit_type_name=>'tissue_sample',
+    breeding_program_id=>101,
+    genotyping_facility=>'IGD',
     project_year=>'2018',
     project_location_id=>$location_id,
     project_name=>'VCF2018',
@@ -24,7 +27,28 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     igd_numbers_included=>0
 );
 my $verified_errors = $store_genotypes->validate();
-my ($stored_genotype_error, $stored_genotype_success) = $store_genotypes->store();
+my $return = $store_genotypes->store();
+
+---------------------------------------------------------------
+
+For storing new protocol in a previously created genotyping project, use project_id:
+my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
+    bcs_schema=>$schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    vcf_input_file=>$vcf_input_file,
+    observation_unit_type_name=>'tissue_sample',
+    project_location_id=>$location_id,
+    project_id=>123,
+    protocol_name=>'SNP2018',
+    organism_genus=>$organism_genus,
+    organism_species=>$organism_species,
+    user_id => 41,
+    create_missing_observation_units_as_accessions=>0,
+    igd_numbers_included=>0
+);
+my $verified_errors = $store_genotypes->validate();
+my $return = $store_genotypes->store();
 
 =head1 DESCRIPTION
 
@@ -79,33 +103,33 @@ has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sam
 );
 
 has 'breeding_program_id' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw',
-    required => 1,
 );
 
 has 'genotyping_facility' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1,
+);
+
+has 'project_id' => (
+    isa => 'Int|Undef',
+    is => 'rw',
 );
 
 has 'project_year' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1,
 );
 
 has 'project_name' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1,
 );
 
 has 'project_description' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1,
 );
 
 has 'project_location_id' => (
@@ -161,6 +185,11 @@ has 'igd_numbers_included' => (
     is => 'rw',
     default => 0,
 );
+
+sub BUILD {
+    my $self = shift;
+    
+}
 
 sub validate {
     my $self = shift;
@@ -305,7 +334,7 @@ sub store {
     #store a project
     my $project_id;
     my $project_check = $schema->resultset("Project::Project")->find({
-        name => $opt_p
+        project_id => $self->project_id
     });
     if ($project_check){
         $project_id = $project_check->project_id;
