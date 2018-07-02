@@ -22,6 +22,7 @@ use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::Chado::Publication;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -846,18 +847,16 @@ sub _stock_cvterms {
 sub _stock_pubs {
     my ($self, $stock) = @_;
     my $bcs_stock = $stock->get_object_row;
-    my $pubs ;
+    my @pubs ;
     if ($bcs_stock) {
         my $stock_pubs = $bcs_stock->search_related("stock_pubs");
         while (my $spub = $stock_pubs->next ) {
-            my $pub = $spub->pub;
-            my $pub_dbxrefs = $pub->pub_dbxrefs;
-            while (my $pub_dbxref = $pub_dbxrefs->next ) {
-                $pubs->{$pub_dbxref->dbxref->db->name . ":" .  $pub_dbxref->dbxref->accession } = $pub ;
-            }
-        }
+            my $pub_id = $spub->pub_id;
+	    my $cxgn_pub = CXGN::Chado::Publication->new( $self->schema->storage->dbh(), $pub_id);
+	    push @pubs, $cxgn_pub;
+	}
     }
-    return $pubs;
+    return \@pubs;
 }
 
 sub _stock_images {
