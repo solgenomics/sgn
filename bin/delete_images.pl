@@ -44,6 +44,8 @@ if ($opt_t) {
     print STDERR "Note: -t. Test mode. Will rollback after operations are done.\n";
 }
 
+my $deleted_image_count = 0;
+
 eval { 
     
     foreach my $id (@image_ids) { 
@@ -54,6 +56,8 @@ eval {
 	$image->hard_delete($opt_t);
 	print STDERR "Done.\n";
     }
+
+    $deleted_image_count++;
 };
 
 if ($opt_t) { 
@@ -71,3 +75,4 @@ else {
     $dbh->commit();
 }
 
+print STDERR "Deleted $deleted_image_count images. Done.\n";
