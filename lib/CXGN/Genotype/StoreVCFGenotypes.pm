@@ -289,13 +289,12 @@ sub store {
     $dbh->do('SET search_path TO public,sgn');
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'training population', 'stock_type')->cvterm_id();
+    my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
     my $snp_genotypingprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
-    my $reference_genome_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'reference_genome_name', 'protocol_property')->cvterm_id();
     my $population_members_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
     my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property');
@@ -384,7 +383,7 @@ sub store {
                 $protocolprop_json{'markers'}->{$marker_name} = \%marker;
             }
         }
-        print STDERR Dumper \%protocolprop_json;
+        #print STDERR Dumper \%protocolprop_json;
         print STDERR "Protocol hash created...\n";
 
         my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
@@ -441,7 +440,7 @@ sub store {
             }
         }
     }
-    print STDERR Dumper \%genotypeprop_observation_units;
+    #print STDERR Dumper \%genotypeprop_observation_units;
 
     print STDERR "Genotypeprop observation units hash created\n";
 
@@ -557,6 +556,7 @@ sub store {
             file_id => $file_row->file_id(),
         });
     }
+    return 1;
 }
 
 1;

@@ -164,7 +164,7 @@ my $verified_errors = $store_genotypes->validate();
 if (scalar(@{$verified_errors->{error_messages}}) > 0){
     print STDERR Dumper $verified_errors->{error_messages};
 } else {
-    my ($stored_genotype_error, $stored_genotype_success) = $store_genotypes->store();
+    my $return = $store_genotypes->store();
 }
 
 print STDERR "Complete!\n";

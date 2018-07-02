@@ -27,6 +27,8 @@ use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::UploadFile;
 use CXGN::Genotype::StoreVCFGenotypes;
+use CXGN::Login;
+use CXGN::People::Person;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -46,27 +48,41 @@ sub upload_genotype_verify_POST : Args(0) {
     my @error_status;
     my @success_status;
 
-    print STDERR Dumper $c->req->params();
-
-    my $user = $c->user();
-    if (!$user) {
-        $c->stash->{rest} = { error => 'Must be logged in to upload VCF genotypes!' };
-        $c->detach();
+    #print STDERR Dumper $c->req->params();
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_role;
+    my $user_name;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
     }
 
-    my $user_type = $user->get_object->get_user_type();
-    if ($user_type ne 'submitter' && $user_type ne 'curator') {
+    if ($user_role ne 'submitter' && $user_role ne 'curator') {
         $c->stash->{rest} = { error => 'Must have correct permissions to upload VCF genotypes! Please contact us.' };
         $c->detach();
     }
-
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
     my $upload = $c->req->upload('upload_genotype_vcf_file_input');
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
     my $subdirectory = "genotype_vcf_upload";
-    my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
@@ -77,7 +93,7 @@ sub upload_genotype_verify_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_type
+        user_role => $user_role
     });
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -105,7 +121,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');
     my $location_id = $c->req->param('upload_genotype_location_select');
-    my $year = $c->req->param('upload_genotype_location_select');
+    my $year = $c->req->param('upload_genotype_year_select');
     my $breeding_program_id = $c->req->param('upload_genotype_breeding_program_select');
     my $obs_type = $c->req->param('upload_genotype_vcf_observation_type');
     my $genotyping_facility = $c->req->param('upload_genotype_vcf_facility_select');
@@ -141,7 +157,8 @@ sub upload_genotype_verify_POST : Args(0) {
         organism_species=>$organism_species,
         create_missing_observation_units_as_accessions=>$add_accessions,
         igd_numbers_included=>$include_igd_numbers,
-        reference_genome_name=>$reference_genome_name
+        reference_genome_name=>$reference_genome_name,
+        user_id=>$user_id
     });
     my $verified_errors = $store_genotypes->validate();
     if (scalar(@{$verified_errors->{error_messages}}) > 0){
@@ -149,7 +166,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->stash->{rest} = { error => 'There exist errors in your file.', missing_stocks => $verified_errors->{missing_stocks} };
         $c->detach();
     }
-    my ($stored_genotype_error, $stored_genotype_success) = $store_genotypes->store();
+    my $return = $store_genotypes->store();
     $c->stash->{rest} = { success => 1 };
 }
 
