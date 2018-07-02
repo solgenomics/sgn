@@ -137,6 +137,12 @@ has 'reference_genome_name' => (
     required => 1,
 );
 
+has 'accession_population_name' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
 has 'user_id' => (
     isa => 'Int',
     is => 'rw',
@@ -283,12 +289,14 @@ sub store {
     $dbh->do('SET search_path TO public,sgn');
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'training population', 'stock_type')->cvterm_id();
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
     my $snp_genotypingprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     my $reference_genome_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'reference_genome_name', 'protocol_property')->cvterm_id();
+    my $population_members_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
     my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property');
     my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
@@ -317,6 +325,18 @@ sub store {
         species => $organism_species,
     });
     my $organism_id = $organism->organism_id();
+
+    my $population_stock;
+    my $population_stock_id;
+    if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+        $population_stock = $schema->resultset("Stock::Stock")->find_or_create({
+            organism_id => $organism_id,
+            name       => $self->accession_population_name,
+            uniquename => $self->accession_population_name,
+            type_id => $population_cvterm_id,
+        });
+        $population_stock_id = $population_stock->stock_id();
+    }
 
     my $protocol_id;
     my $protocol_row_check = $schema->resultset("NaturalDiversity::NdProtocol")->find({
@@ -467,6 +487,14 @@ sub store {
         }
         my $stock_name = $stock->name();
         my $stock_id = $stock->stock_id();
+
+        if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+            my $pop_rs = $stock->find_or_create_related('stock_relationship_subjects', {
+                type_id => $population_members_id,
+                subject_id => $stock_id,
+                object_id => $population_stock_id,
+            });
+        }
 
         print STDERR "Stock name = " . $stock_name . "\n";
         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
