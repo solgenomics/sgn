@@ -66,9 +66,9 @@ function show_table() {
     var markersets_table = jQuery('#marker_sets').DataTable({
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
-            {title: "Marker Set Name"},
-            {title: "Number of Markers"},
-            {title: "Description"},
+            {title: "Marker Set Name", "data": "markerset_name"},
+            {title: "Number of Markers", "data": "number_of_markers"},
+            {title: "Description", "data": "description"},
         ]
     });
 }
