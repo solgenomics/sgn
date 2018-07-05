@@ -203,7 +203,7 @@ sub studies_germplasm {
 	}
 
 	my %result = (
-		studyDbId=>$study_id,
+		studyDbId=>qq|$study_id|,
 		studyName=>$tl->get_name,
 		data =>\@germplasm_data
 	);
@@ -447,7 +447,7 @@ sub studies_layout {
     		my @plot_image_ids = $image_id->get_image_ids();
             my @ids;
             foreach my $arrayimage (@plot_image_ids){
-                push @ids, @$arrayimage->[0];
+                push @ids, $arrayimage->[0];
             }
             $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};

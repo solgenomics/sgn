@@ -294,6 +294,7 @@ is_deeply(\@all_project_types, [
           'Seedling Nursery',
           'Uniform Yield Trial',
           'Variety Release Trial',
+          'crossing_block_trial',
           'crossing_trial',
           'genetic_gain_trial',
           'genotyping_trial',

@@ -349,7 +349,7 @@ sub search {
 
         if ($self->field_trials_only){
             next
-                unless ( $trials{$t}->{design} ne 'genotyping_plate' && $trials{$t}->{trial_type} ne 'crossing_trial' );
+                unless ( $trials{$t}->{design} ne 'genotype_data_project' && $trials{$t}->{design} ne 'genotyping_plate' && $trials{$t}->{trial_type} ne 'crossing_trial' );
         }
 
         if ($trials{$t}->{design} eq 'treatment'){
