@@ -296,11 +296,19 @@ to create:
     <th>Usages and contexts</th>
   </tr>
   <tr>
+    <td><span class="glyphicon glyphicon-dashboard"></span></td>
+    <td>
+      <ul>
+        <li>Trial Details Top Section[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
     <td><span class="glyphicon glyphicon-align-left"></span></td>
     <td>
       <ul>
         <li>JBrowse[Trial Detail]</li>
-        <li>Pedigree[Trial Detail]</li>
+        <li>JBrowse[Stock Detail]</li>
       </ul>
     </td>
   </tr>
@@ -308,7 +316,8 @@ to create:
     <td><span class="glyphicon glyphicon-book"></span></td>
     <td>
       <ul>
-        <li>Literature[Stock Detail]</li>
+        <li>Literature Annotation[Stock Detail]</li>
+        <li>Upload Phenotype Data[Homepage Help]</li>
       </ul>
     </td>
   </tr>
@@ -316,7 +325,21 @@ to create:
     <td><span class="glyphicon glyphicon-briefcase"></span></td>
     <td>
       <ul>
-        <li>Breeding Program[Stock Detail]</li>
+        <li>Breeding Program Symbol[Manage Trials]</li>
+        <li>Breeding Program Symbol[Manage Crosses]</li>
+        <li>Breeding Program Symbol[Manage Genotyping Trials]</li>
+        <li>Breeding Program Symbol[Folder Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-folder-open"></span></td>
+    <td>
+      <ul>
+        <li>Folder Symbol[Manage Trials]</li>
+        <li>Folder Symbol[Manage Crosses]</li>
+        <li>Folder Symbol[Manage Genotyping Trials]</li>
+        <li>Folder Symbol[Folder Detail]</li>
       </ul>
     </td>
   </tr>
@@ -329,10 +352,18 @@ to create:
     </td>
   </tr>
   <tr>
+    <td><span class="glyphicon glyphicon-transfer"></span></td>
+    <td>
+      <ul>
+        <li>Data Transfer[Manage ODK]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
     <td><span class="glyphicon glyphicon-cloud"></span></td>
     <td>
       <ul>
-        <li>Weather[Trial Detail]</li>
+        <li>Weather Data[Trial Detail]</li>
       </ul>
     </td>
   </tr>
@@ -365,7 +396,10 @@ to create:
     <td><span class="glyphicon glyphicon-leaf"></span></td>
     <td>
       <ul>
-        <li>Trial Usage[Stock Detail]</li>
+        <li>Experiment Usage[Stock Detail]</li>
+        <li>Trial Symbol[Manage Trials]</li>
+        <li>Trial Symbol[Folder Detail]</li>
+        <li>Field Trial Section[Manage Tissue Samples]</li>
       </ul>
     </td>
   </tr>
@@ -373,7 +407,7 @@ to create:
     <td><span class="glyphicon glyphicon-link"></span></td>
     <td>
       <ul>
-        <li>Trial Linkage[Trial Detail]</li>
+        <li>Experiment Linkage[Trial Detail]</li>
       </ul>
     </td>
   </tr>
@@ -381,15 +415,33 @@ to create:
     <td><span class="glyphicon glyphicon-list-alt"></span></td>
     <td>
       <ul>
-        <li>Trial Design[Trial Detail]</li>
+        <li>Experiment Design[Trial Detail]</li>
+        <li>Catalog Seed Inventory[Homepage Help]</li>
       </ul>
     </td>
   </tr>
   <tr>
-    <td><span class="glyphicon glyphicon-paperclip"></span></td>
+    <td><span class="glyphicon glyphicon-flash"></span></td>
     <td>
       <ul>
-        <li>Other Data Collected/Associated[Trial Detail]</li>
+        <li>Design New Trial[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-cloud-upload"></span></td>
+    <td>
+      <ul>
+        <li>Upload Data Files[Trial Detail]</li>
+        <li>Upload Trial[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-floppy-save"></span></td>
+    <td>
+      <ul>
+        <li>Compute New Phenotypes[Trial Detail]</li>
       </ul>
     </td>
   </tr>
@@ -398,6 +450,7 @@ to create:
     <td>
       <ul>
         <li>Record Phenotypes[Trial Detail]</li>
+        <li>Comments[Stock Detail]</li>
       </ul>
     </td>
   </tr>
@@ -414,6 +467,49 @@ to create:
     <td>
       <ul>
         <li>Pedigree[Stock Detail]</li>
+        <li>Upload Crosses[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-flag"></span></td>
+    <td>
+      <ul>
+        <li>Plan Tissue Sampling[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-tags"></span></td>
+    <td>
+      <ul>
+        <li>Print Barcode Labels[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-map-marker"></span></td>
+    <td>
+      <ul>
+        <li>Genotype Marker Data[Stock Detail]</li>
+        <li>Upload VCF Genotype Data[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-retweet"></span></td>
+    <td>
+      <ul>
+        <li>Related Stocks[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-grain"></span></td>
+    <td>
+      <ul>
+        <li>Crosses Symbol[Manage Crosses]</li>
+        <li>Crosses Symbol[Folder Detail]</li>
       </ul>
     </td>
   </tr>
@@ -429,7 +525,19 @@ to create:
     <td><span class="glyphicon glyphicon-th"></span></td>
     <td>
       <ul>
-        <li>Field Layout[Trial Detail]</li>
+        <li>Field Layout and Heatmap[Trial Detail]</li>
+        <li>Add Genotyping Trial (96 or 384 well plate)[Homepage Help]</li>
+        <li>Genotyping Trial Symbol(96 or 384 well plate)[Manage Genotyping Trials]</li>
+        <li>Genotyping Trial Symbol(96 or 384 well plate)[Folder Detail]</li>
+        <li>Genotyping Trials Section[Manage Tissue Samples]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-blackboard"></span></td>
+    <td>
+      <ul>
+        <li>Analyze Phenotypes[Homepage Help]</li>
       </ul>
     </td>
   </tr>
