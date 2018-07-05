@@ -24,11 +24,11 @@ jQuery(document).ready(function ($) {
     // defined in CXGN.BreedersToolbox.HTMLSelect
     get_select_box("locations", "location_select_div", {});
     get_select_box("breeding_programs", "breeding_program_select_div", {});
-    get_select_box("years", "year_select_div", {});
+    get_select_box("years", "year_select_div", {'auto_generate': 1});
 
     get_select_box("locations", "upload_genotype_location_select_div", {'id': 'upload_genotype_location_select', 'name': 'upload_genotype_location_select'});
     get_select_box("breeding_programs", "upload_genotype_breeding_program_select_div", {'id': 'upload_genotype_breeding_program_select', 'name': 'upload_genotype_breeding_program_select'});
-    get_select_box("years", "upload_genotype_year_select_div", {'id': 'upload_genotype_year_select', 'name': 'upload_genotype_year_select'});
+    get_select_box("years", "upload_genotype_year_select_div", {'auto_generate': 1, 'id': 'upload_genotype_year_select', 'name': 'upload_genotype_year_select'});
 
     jQuery("#upload_genotypes_species_name_input").autocomplete({
         source: '/organism/autocomplete'
