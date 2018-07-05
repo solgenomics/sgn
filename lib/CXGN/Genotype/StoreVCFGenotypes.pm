@@ -462,6 +462,7 @@ sub store {
 
                 #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
                 my %marker = (
+                    name => $marker_name,
                     chrom => $marker_info->[0],
                     pos => $marker_info->[1],
                     ref => $marker_info->[3],
@@ -472,6 +473,8 @@ sub store {
                     format => $marker_info_p8,
                 );
                 $protocolprop_json{'markers'}->{$marker_name} = \%marker;
+                push @{$protocolprop_json{'marker_names'}}, $marker_name;
+                push @{$protocolprop_json{'markers_array'}}, \%marker;
             }
         }
         #print STDERR Dumper \%protocolprop_json;

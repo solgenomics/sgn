@@ -44,6 +44,11 @@ has 'markers' => (
     is => 'rw',
 );
 
+has 'marker_names' => (
+    isa => 'ArrayRef',
+    is => 'rw'
+);
+
 has 'header_information_lines' => (
     isa => 'ArrayRef',
     is => 'rw'
@@ -86,6 +91,7 @@ sub BUILD {
     my $protocol = $protocol_rs->first;
     my $map_details = decode_json $protocol->get_column('value');
     $self->markers($map_details->{markers});
+    $self->marker_names($map_details->{marker_names});
     $self->protocol_name($protocol->name);
     $self->header_information_lines($map_details->{header_information_lines});
     $self->reference_genome_name($map_details->{reference_genome_name});
@@ -113,6 +119,7 @@ sub list {
         my $name = $r->name;
         my $map_details = decode_json $r->get_column('value');
         my $marker_set = $map_details->{markers};
+        my $marker_names = $map_details->{marker_names};
         my $header_information_lines = $map_details->{header_information_lines};
         my $reference_genome_name = $map_details->{reference_genome_name};
         my $species_name = $map_details->{species_name};
@@ -121,6 +128,7 @@ sub list {
             protocol_id => $r->nd_protocol_id,
             protocol_name => $name,
             markers => $marker_set,
+            marker_names => $marker_names,
             header_information_lines => $header_information_lines,
             reference_genome_name => $reference_genome_name,
             species_name => $species_name,
