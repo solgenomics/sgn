@@ -162,11 +162,11 @@ sub formatted_phenotype_file {
 sub phenotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
    
-    if ($pop_id =~ /uploaded/) 
+    if ($pop_id =~ /list/) 
     {
-	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+	my $tmp_dir = $c->stash->{solgs_lists_dir};
 	my $file = catfile($tmp_dir, 'phenotype_data_' . $pop_id . '.txt');
 	$c->stash->{phenotype_file_name} = $file;
     }
@@ -185,11 +185,11 @@ sub phenotype_file_name {
 sub genotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
     
-    if ($pop_id =~ /uploaded/) 
+    if ($pop_id =~ /list/) 
     {
-	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+	my $tmp_dir = $c->stash->{solgs_lists_dir};
 	my $file = catfile($tmp_dir, 'genotype_data_' . $pop_id . '.txt');
 	$c->stash->{genotype_file_name} = $file;
     }
@@ -205,7 +205,7 @@ sub genotype_file_name {
 }
 
 
-sub rrblup_gebvs_file {
+sub rrblup_training_gebvs_file {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id};
@@ -219,18 +219,18 @@ sub rrblup_gebvs_file {
     if ($data_set_type =~ /combined populations/)
     {
         my $combo_identifier = $c->stash->{combo_pops_id};
-        $cache_data = {key       => 'rrblup_gebvs_combined_pops_'.  $combo_identifier . "_" . $trait,
-                       file      => 'rrblup_gebvs_'. $trait . '_'  . $combo_identifier. '_combined_pops',
-                       stash_key => 'rrblup_gebvs_file'
+        $cache_data = {key       => 'rrblup_training_gebvs_combined_pops_'.  $combo_identifier . "_" . $trait,
+                       file      => 'rrblup_training_gebvs_'. $trait . '_'  . $combo_identifier. '_combined_pops',
+                       stash_key => 'rrblup_training_gebvs_file'
 
         };
     }
     else 
     {
     
-        $cache_data = {key       => 'rrblup_gebvs_' . $pop_id . '_'.  $trait,
-                       file      => 'rrblup_gebvs_' . $trait . '_' . $pop_id,
-                       stash_key => 'rrblup_gebvs_file'
+        $cache_data = {key       => 'rrblup_training_gebvs_' . $pop_id . '_'.  $trait,
+                       file      => 'rrblup_training_gebvs_' . $trait . '_' . $pop_id,
+                       stash_key => 'rrblup_training_gebvs_file'
         };
     }
 
@@ -275,7 +275,7 @@ sub relationship_matrix_file {
 sub blups_file {
     my ($self, $c) = @_;
     
-    my $blups_file = $c->stash->{rrblup_gebvs_file};
+    my $blups_file = $c->stash->{rrblup_training_gebvs_file};
     $c->controller('solGS::solGS')->top_blups($c, $blups_file);
 }
 
@@ -291,7 +291,7 @@ sub get_solgs_dirs {
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
-    my $solgs_upload    = catdir($tmp_dir, 'solgs', 'tempfiles', 'prediction_upload');
+    my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
     my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
     my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
@@ -301,11 +301,13 @@ sub get_solgs_dirs {
     my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
     my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
 
+
     mkpath (
 	[
-	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_upload, 
-	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
-	 $anova_temp,
+	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists, 
+	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
+	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
+	 $anova_temp,$anova_cache,
 	], 
 	0, 0755
 	);
@@ -313,11 +315,11 @@ sub get_solgs_dirs {
     $c->stash(solgs_dir                   => $solgs_dir, 
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_prediction_upload_dir => $solgs_upload,
-              correlation_cache_dir       => $corre_cache,
-	      correlation_temp_dir        => $corre_temp,
+              solgs_lists_dir             => $solgs_lists,
 	      pca_cache_dir               => $pca_cache,
 	      pca_temp_dir                => $pca_temp,
+              correlation_cache_dir       => $corre_cache,
+	      correlation_temp_dir        => $corre_temp,
 	      histogram_dir               => $histogram_dir,
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,
@@ -502,12 +504,12 @@ sub traits_list_file {
 }
 
 
-sub prediction_pop_gebvs_file {    
+sub rrblup_selection_gebvs_file {    
     my ($self, $c, $identifier, $trait_id) = @_;
 
-    my $cache_data = {key       => 'prediction_pop_gebvs_' . $identifier . '_' . $trait_id, 
-                      file      => 'prediction_pop_gebvs_' . $identifier . '_' . $trait_id,
-                      stash_key => 'prediction_pop_gebvs_file'
+    my $cache_data = {key       => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id, 
+                      file      => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id,
+                      stash_key => 'rrblup_selection_gebvs_file'
     };
 
     $self->cache_file($c, $cache_data);
@@ -557,12 +559,12 @@ sub first_stock_genotype_file {
 }
 
 
-sub prediction_population_file {
+sub selection_population_file {
     my ($self, $c, $pred_pop_id) = @_;
     
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
-    my $file = "prediction_population_${pred_pop_id}";
+    my $file = "selection_population_file_${pred_pop_id}";
     my $tempfile = $self->create_tempfile($tmp_dir, $file);
 
     $c->stash->{prediction_pop_id} = $pred_pop_id;
@@ -579,7 +581,7 @@ sub prediction_population_file {
 
     write_file($tempfile, $geno_files); 
 
-    $c->stash->{prediction_population_file} = $tempfile;
+    $c->stash->{selection_population_file} = $tempfile;
   
 }
 

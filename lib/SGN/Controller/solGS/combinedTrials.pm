@@ -143,8 +143,8 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
     $self->combine_trait_data($c); 
     $self->build_model_combined_trials_trait($c);
     
-    $c->controller('solGS::Files')->rrblup_gebvs_file($c);    
-    my $gebv_file = $c->stash->{rrblup_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);    
+    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
    
     if ( -s $gebv_file ) 
     {
@@ -289,7 +289,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->controller('solGS::solGS')->trait_phenotype_stat($c);    
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller('solGS::solGS')->model_accuracy($c);
-    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->blups_file($c);
     $c->controller('solGS::solGS')->download_urls($c);
     $c->controller('solGS::Files')->marker_effects_file($c);
@@ -313,9 +313,9 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
         
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   
   
-    if ($selection_pop_id =~ /uploaded/) 
+    if ($selection_pop_id =~ /list/) 
     {
-	$c->controller('solGS::solGS')->uploaded_population_summary($c, $selection_pop_id);
+	$c->controller('solGS::solGS')->list_population_summary($c, $selection_pop_id);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
@@ -341,8 +341,8 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     $c->stash->{protocol} = $protocol;
     
     my $identifier    = $model_id . '_' . $selection_pop_id;
-    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-    my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+    my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
     my @stock_rows = read_file($gebvs_file);
     $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
@@ -652,7 +652,7 @@ sub catalogue_combined_pops {
 
 
 sub get_combined_pops_list {
-    my ($self, $c, $combined_pops_id) = @_;
+    my ($self, $c, $id) = @_;
 
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
@@ -661,13 +661,17 @@ sub get_combined_pops_list {
     
     foreach my $entry (@combos)
     {
-        if ($entry =~ m/$combined_pops_id/)
+        if ($entry =~ m/$id/)
         {
 	    chomp($entry);
             my ($combo_pops_id, $pops)  = split(/\t/, $entry);
-	    my @pops_list = split(',', $pops);
-	    $c->stash->{combined_pops_list} = \@pops_list;
-            $c->stash->{trait_combo_pops} = \@pops_list;
+
+	    if ($id == $combo_pops_id)
+	    {
+		my @pops_list = split(',', $pops);
+		$c->stash->{combined_pops_list} = \@pops_list;
+		$c->stash->{trait_combo_pops} = \@pops_list;
+	    }
         }   
     }     
 
@@ -773,8 +777,8 @@ sub build_model_combined_trials_trait {
   
     $c->stash->{data_set_type} = 'combined populations';
   
-    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
-    my $gebv_file = $c->stash->{rrblup_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
     unless  ( -s $gebv_file ) 
     {   
@@ -800,15 +804,15 @@ sub predict_selection_pop_combined_pops_model {
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
-    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
         
-    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
      
-    if (!-s $prediction_pop_gebvs_file)
+    if (!-s $rrblup_selection_gebvs_file)
     {    
 	$self->cache_combined_pops_data($c);
  
-	$c->controller('solGS::Files')->prediction_population_file($c, $prediction_pop_id);
+	$c->controller('solGS::Files')->selection_population_file($c, $prediction_pop_id);
   
 	$c->controller('solGS::solGS')->get_rrblup_output($c); 
     }
