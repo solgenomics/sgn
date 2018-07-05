@@ -96,20 +96,20 @@
 
 <hr>
 
-<h3>HTML Muliple Selects (get_select_box)</h3>
+<h3>HTML Muliple Selects (get_select_box has many options e.g. search for trials in breeding_program_select)</h3>
 <p>Source:</p>
 <pre>
 &lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
 &lt;div id="htmlselectmultipleexample"&gt;&lt;/div&gt;
 &lt;script type="text/javascript"&gt;
-    get_select_box("trials", "htmlselectmultipleexample")
+    get_select_box("trials", "htmlselectmultipleexample", {'multiple':1, 'size':10, 'breeding_program_name':'test'})
 &lt;/script&gt;
 </pre>
 
 <p>Creates:</p>
 <div id="htmlselectmultipleexample"></div>
 <script type="text/javascript">
-    get_select_box("trials", "htmlselectmultipleexample", {'multiple':1, 'size':10})
+    get_select_box("trials", "htmlselectmultipleexample", {'multiple':1, 'size':10, 'breeding_program_name':'test'})
 </script>
 
 <hr>
