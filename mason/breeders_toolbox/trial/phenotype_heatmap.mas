@@ -1280,14 +1280,31 @@ jQuery(document).ready( function() {
             success: function(response){
                 var data = response.result.data;
                 console.log(data);
-                if (response.traits_assayed[0][0]) {
+                var varName = [];
+                var varID = [];
+                jQuery.each(data, function(key_obj, value_obj) {
+                    jQuery.each(value_obj, function(key, value) {
+                        if (key == 'name'){
+                            varName.push(value);
+                        }
+                        if (key == 'observationVariableDbId'){
+                            varID.push(value);
+                        }
+                    });    
+                });
+                console.log(varName); console.log(varID);
+                //if (response.traits_assayed[0][0]) {
+                if (varName != '' && varID != '' ) {
                     var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
                     traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
-                    for (i=0; i<response.traits_assayed[0].length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                    for (i=0; i<varID.length; i++) {
+                        traits_assayed_html = traits_assayed_html + "<option value="+ varID[i] + " >" + varName[i] + "</option>";
                     }
+                    //for (i=0; i<response.traits_assayed[0].length; i++) {
+                    //    traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                    //}
                     traits_assayed_html = traits_assayed_html +"</optgroup>";
                     traits_assayed_html = traits_assayed_html +"</select>";
                     jQuery("#trait_heatmap").css("display", "none");                   
