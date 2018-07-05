@@ -35,7 +35,7 @@
 <hr>
 
 <h3>Info Sections</h3>
-<p>Info sections can be used to create collapsable and/or delineated sections on a page. To use, see the example code below</p>
+<p>Source:</p>
 <pre><%text>
 &lt;&| /page/info_section.mas, id=&gt;'Example_Info_Section', 
     title =&gt; 'Example Info Section', subtitle =&gt; 'This is a subtitle', 
@@ -45,7 +45,8 @@
   
 &lt;/&&gt;
 </%text></pre>
-<p>The code above creates the info section below.</p>
+
+<p>Creates:</p>
 <&| /page/info_section.mas, id=>'Example_Info_Section', 
     title => 'Example Info Section', subtitle => 'This is a subtitle', 
     collapsible=>1, collapsed=>0 &>
@@ -57,7 +58,7 @@
 <hr>
 
 <h3>List Select Menus</h3>
-Creates a select box for selecting lists. The source:
+<p>Source:</p>
 <pre>
   &lt;& /util/import_javascript.mas, classes => ['CXGN.List'] &&gt;
   &lt;div id="select_div_id"&gt;&lt;/div&gt;
@@ -67,7 +68,8 @@ Creates a select box for selecting lists. The source:
     jQuery('#select_div_id').html(listhtml);
   &lt;/script&gt;
 </pre>
-Creates:
+
+<p>Creates:</p>
 <div id="select_div_id"></div>
 <script type="text/javascript">
   var lo = new CXGN.List();
@@ -77,10 +79,7 @@ Creates:
 <hr>
 
 <h3>HTML Selects (get_select_box)</h3>
-<div id="htmlselectexample"></div>
-<script type="text/javascript">
-    get_select_box("trials", "htmlselectexample")
-</script>
+<p>Source:</p>
 <pre>
 &lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
 &lt;div id="htmlselectexample"&gt;&lt;/div&gt;
@@ -89,10 +88,74 @@ Creates:
 &lt;/script&gt;
 </pre>
 
+<p>Creates:</p>
+<div id="htmlselectexample"></div>
+<script type="text/javascript">
+    get_select_box("trials", "htmlselectexample")
+</script>
+
 <hr>
 
-<h3>jqui autocomplete</h3>
-<input type="text" id="popname" value="">
+<h3>HTML Muliple Selects (get_select_box)</h3>
+<p>Source:</p>
+<pre>
+&lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
+&lt;div id="htmlselectmultipleexample"&gt;&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    get_select_box("trials", "htmlselectmultipleexample")
+&lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div id="htmlselectmultipleexample"></div>
+<script type="text/javascript">
+    get_select_box("trials", "htmlselectmultipleexample", {'multiple':1, 'size':10})
+</script>
+
+<hr>
+
+<h3>Add to List Menu</h3>
+<p>Source:</p>
+<pre>
+&lt;div id="styleguide_add_to_list_menu"&gt;&lt;/div&gt;
+&lt;div id="styleguide_add_to_list_items" style="display:none"&gt;item1
+    item2
+    item3
+&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    addToListMenu("styleguide_add_to_list_menu", "styleguide_add_to_list_items", {
+        listType:'accessions'
+    });
+&lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div id="styleguide_add_to_list_menu"></div>
+<div id="styleguide_add_to_list_items" style="display:none">item1
+    item2
+    item3
+</div>
+<script type="text/javascript">
+    addToListMenu("styleguide_add_to_list_menu", "styleguide_add_to_list_items", {
+        listType:'accessions'
+    });
+</script>
+
+<hr>
+
+<h3>jQueryUI autocomplete</h3>
+<p>Source:</p>
+<pre>
+&lt;input type="text" class="form-control" id="popname" value="" placeholder="Populations autocomplete..."&gt;
+&lt;script type="text/javascript"&gt;
+    jQuery('#popname').autocomplete({
+        source: '/ajax/stock/population_autocomplete',
+    });
+&lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<input type="text" class="form-control" id="popname" value="" placeholder="Populations autocomplete...">
 <script type="text/javascript">
   jQuery('#popname').autocomplete({
     source: '/ajax/stock/population_autocomplete',
