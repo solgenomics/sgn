@@ -96,7 +96,7 @@
 
 <hr>
 
-<h3>HTML Muliple Selects (get_select_box has many options e.g. search for trials in breeding_program_select)</h3>
+<h3>HTML Muliple Selects (get_select_box has many options e.g. search for trials in breeding_program_name)</h3>
 <p>Source:</p>
 <pre>
 &lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
@@ -335,6 +335,74 @@ to create:
       }
     }
     vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
+</script>
+
+<hr>
+
+<h3>Field Trials Search Datatable</h3>
+<p>Source:</p>
+<pre>
+    &lt;div class="well"&gt;
+    &lt;table id="trial_search_results" width="100%" class="table table-hover table-striped"&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th&gt;Trial name&lt;/th&gt;
+        &lt;th&gt;Description&lt;/th&gt;
+        &lt;th&gt;Breeding program&lt;/th&gt;
+        &lt;th&gt;Folder&lt;/th&gt;
+        &lt;th&gt;Year&lt;/th&gt;
+        &lt;th&gt;Location&lt;/th&gt;
+        &lt;th&gt;Trial type&lt;/th&gt;
+        &lt;th&gt;Design&lt;/th&gt;
+        &lt;th&gt;Planting Date&lt;/th&gt;
+        &lt;th&gt;Harvest Date&lt;/th&gt;
+        &lt;th&gt;Download&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;/table&gt;
+    &lt;/div&gt;
+    &lt;script type="text/javascript"&gt;
+    var trial_table = jQuery('#trial_search_results').DataTable( {
+        'ajax': {
+            'url':'/ajax/search/trials',
+            'data': function(d) {
+                d.select_checkbox_name = 'create_tissue_sample_select_trial';
+            }
+        }
+    });
+    &lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div class="well">
+<table id="styleguide_trial_search_results" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Select</th>
+    <th>Trial name</th>
+    <th>Description</th>
+    <th>Breeding program</th>
+    <th>Folder</th>
+    <th>Year</th>
+    <th>Location</th>
+    <th>Trial type</th>
+    <th>Design</th>
+    <th>Planting Date</th>
+    <th>Harvest Date</th>
+    <th>Download</th>
+</tr>
+</thead>
+</table>
+</div>
+<script type="text/javascript">
+var styleguide_trial_table = jQuery('#styleguide_trial_search_results').DataTable( {
+    'ajax': {
+        'url':'/ajax/search/trials',
+        'data': function(d) {
+            d.select_checkbox_name = 'styleguide_select_trial';
+        }
+    }
+});
 </script>
 
 <hr>
