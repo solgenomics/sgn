@@ -93,7 +93,7 @@ sub kcluster_check_result :Path('/kcluster/check/result/') Args() {
 
     $c->stash->{file_id} = $file_id;
     $self->kcluster_scores_file($c);
-    my $kcluser_result_file = $c->stash->{kcluster_result_file};
+    my $kcluster_result_file = $c->stash->{kcluster_result_file};
     my $ret->{result} = undef;
    
     if (-s $kcluster_result_file && $file_id =~ /\d+/) 
@@ -190,7 +190,7 @@ sub kcluster_result :Path('/kcluster/result/') Args() {
 	}	
     }
     
-    $kcluster    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $kcluster_result_file);
+    $kcluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $kcluster_result_file);
    
     my $host = $c->req->base;
 

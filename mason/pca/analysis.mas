@@ -62,7 +62,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
     </div> 
     <div class="list_upload" id="pca_genotypes_list">      
     </div>
-    <div class="list_upload" id="pca_genotypes_list_upload">
+    <div class="list_upload go_btn">
       <input type="button" value="Go" />
     </div>
     
