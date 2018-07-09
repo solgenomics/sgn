@@ -26,6 +26,7 @@ use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::UploadFile;
+use CXGN::Genotype::ParseUpload;
 use CXGN::Genotype::StoreVCFGenotypes;
 use CXGN::Login;
 use CXGN::People::Person;
@@ -79,6 +80,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->detach();
     }
 
+    #archive uploaded file
     my $upload = $c->req->upload('upload_genotype_vcf_file_input');
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -105,10 +107,9 @@ sub upload_genotype_verify_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    my $organism_species = $c->req->param('upload_genotypes_species_name_input');
-
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
+    my $organism_species = $c->req->param('upload_genotypes_species_name_input');
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');
     my $location_id = $c->req->param('upload_genotype_location_select');
     my $year = $c->req->param('upload_genotype_year_select');
@@ -130,6 +131,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $include_igd_numbers = 1;
     }
 
+    #if protocol_id provided, a new one will not be created
     if ($protocol_id){
         my $protocol = CXGN::Genotype::Protocol->new({
             bcs_schema => $schema,
@@ -139,25 +141,65 @@ sub upload_genotype_verify_POST : Args(0) {
         $obs_type = $protocol->sample_observation_unit_type_name;
     }
 
-    my $organism_genus_q = "SELECT genus FROM organism WHERE species = ?";
+    my $organism_genus_q = "SELECT organism_id, genus FROM organism WHERE species = ?";
     my @found_genus;
     my $h = $schema->storage->dbh()->prepare($organism_genus_q);
     $h->execute($organism_species);
-    while (my ($genus) = $h->fetchrow_array()){
-        push @found_genus, $genus;
+    while (my ($organism_id, $genus) = $h->fetchrow_array()){
+        push @found_genus, [$organism_id, $genus];
     }
-    if (scalar(@found_genus) != 1){
+    if (scalar(@found_genus) == 0){
         $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
         $c->detach();
     }
-    my $organism_genus = $found_genus[0];
+    if (scalar(@found_genus) > 1){
+        $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
+        $c->detach();
+    }
+    my $organism_id = $found_genus[0]->[0];
+    my $organism_genus = $found_genus[0]->[1];
+
+    my $parser = CXGN::Genotype::ParseUpload->new({
+        chado_schema => $schema,
+        filename => $archived_filename_with_path,
+        observation_unit_type_name => $obs_type,
+        organism_id => $organism_id,
+        create_missing_observation_units_as_accessions => $add_accessions,
+        igd_numbers_included => $include_igd_numbers
+    });
+    $parser->load_plugin('VCF');
+    my $parsed_data = $parser->parse();
+    my $parse_errors;
+    if (!$parsed_data) {
+        my $return_error = '';
+        if (!$parser->has_parse_errors() ){
+            $return_error = "Could not get parsing errors";
+            $c->stash->{rest} = {error_string => $return_error,};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error=$return_error.$error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
+        $c->detach();
+    }
+    #print STDERR Dumper $parsed_data;
+    my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+    my $genotype_info = $parsed_data->{genotypes_info};
+    my $protocol_info = $parsed_data->{protocol_info};
+    $protocol_info->{'reference_genome_name'} = $reference_genome_name;
+    $protocol_info->{'species_name'} = $organism_species;
 
     my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        vcf_input_file=>$archived_filename_with_path,
+        protocol_info=>$protocol_info,
+        genotype_info=>$genotype_info,
         observation_unit_type_name=>$obs_type,
+        observation_unit_uniquenames=>$observation_unit_uniquenames,
         project_id=>$project_id,
         protocol_id=>$protocol_id,
         genotyping_facility=>$genotyping_facility, #projectprop
@@ -167,12 +209,12 @@ sub upload_genotype_verify_POST : Args(0) {
         project_name=>$project_name, #project_attr
         project_description=>$description, #project_attr
         protocol_name=>$protocol_name,
-        organism_genus=>$organism_genus,
-        organism_species=>$organism_species,
-        create_missing_observation_units_as_accessions=>$add_accessions,
+        organism_id=>$organism_id,
         igd_numbers_included=>$include_igd_numbers,
         reference_genome_name=>$reference_genome_name,
-        user_id=>$user_id
+        user_id=>$user_id,
+        archived_filename=>$archived_filename_with_path,
+        archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
     });
     my $verified_errors = $store_genotypes->validate();
     if (scalar(@{$verified_errors->{error_messages}}) > 0){
@@ -181,7 +223,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->detach();
     }
     my $return = $store_genotypes->store();
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = $return;
 }
 
 1;

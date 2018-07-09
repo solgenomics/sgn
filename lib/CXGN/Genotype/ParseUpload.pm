@@ -20,6 +20,30 @@ has 'filename' => (
     required => 1,
 );
 
+has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample
+    isa => 'Str',
+    is => 'ro',
+    required => 1,
+);
+
+has 'organism_id' => (
+    isa => 'Int',
+    is => 'ro',
+    required => 1,
+);
+
+has 'create_missing_observation_units_as_accessions' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0,
+);
+
+has 'igd_numbers_included' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0,
+);
+
 has 'parse_errors' => (
     is => 'ro',
     isa => 'HashRef',

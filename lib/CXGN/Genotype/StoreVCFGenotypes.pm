@@ -6,12 +6,122 @@ CXGN::Genotype::StoreVCFGenotypes - an object to handle storing genotypes in gen
 
 =head1 USAGE
 
-For genotyping data from a brand new genotyping project and protocol:
+Genotyping project is a top level project for saving results from related genotyping runs under.
+Protocol is for saving all the marker info, top header lines, and reference_genome_name for the uploaded file. Many files can be uploaded under the same protocol if the data contained in the separate files is actually the same protocol. If data is separated into many files, but belongs to the same identical protocol, make sure that marker info is identical across different files, however the files can have different sample names.
+For sample names that contain IGD numbers e.g. ABC:9292:9:c19238, make sure to use the igd_numbers_included flag.
+
+protocol_info shold be a hashref with the following:
+notice that the info in the markers and markers_array keys are identical, just in two different representations.
+
+{
+    'reference_genome_name' => 'Mesculenta_511_v7',
+    'species_name' => 'Manihot esculenta',
+    'header_information_lines' => [
+        '##fileformat=VCFv4.0',
+        '##Tassel=<ID=GenotypeTable,Version=5,Description="Reference allele is not known. The major allele was used as reference allele">',
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">'
+    ],
+    'sample_observation_unit_type_name' => 'tissue_sample',
+    'marker_names' => ['marker1', 'marker2'],
+    'markers' => {
+        'marker1' => {
+            'name' => 'marker1',
+            'chrom' => '2',
+            'pos' => '20032',
+            'alt' => 'G',
+            'ref' => 'C',
+            'qual' => '99',
+            'filter' => 'PASS',
+            'info' => 'AR2=0.29;DR2=0.342;AF=0.375',
+            'format' => 'GT:AD:DP:GQ:DS:PL'
+        },
+        'marker2' => {
+            'name' => 'marker2',
+            'chrom' => '2',
+            'pos' => '20033',
+            'alt' => 'G',
+            'ref' => 'C',
+            'qual' => '99',
+            'filter' => 'PASS',
+            'info' => 'AR2=0.29;DR2=0.342;AF=0.375',
+            'format' => 'GT:AD:DP:GQ:DS:PL'
+        }
+    },
+    'markers_array' => [
+        {
+            'name' => 'marker1',
+            'chrom' => '2',
+            'pos' => '20032',
+            'alt' => 'G',
+            'ref' => 'C',
+            'qual' => '99',
+            'filter' => 'PASS',
+            'info' => 'AR2=0.29;DR2=0.342;AF=0.375',
+            'format' => 'GT:AD:DP:GQ:DS:PL'
+        },
+        {
+            'name' => 'marker2',
+            'chrom' => '2',
+            'pos' => '20033',
+            'alt' => 'G',
+            'ref' => 'C',
+            'qual' => '99',
+            'filter' => 'PASS',
+            'info' => 'AR2=0.29;DR2=0.342;AF=0.375',
+            'format' => 'GT:AD:DP:GQ:DS:PL'
+        }
+    ]
+}
+
+genotype_info shold be a hashref with the following (though the inner object keys are whatever is in the VCF format):
+notice that the top level keys are all the sample names, and the next keys are marker names
+{
+    'samplename1' => {
+        'marker1' => {
+            'GT' => '0/0',
+            'AD' => '9,0',
+            'DP' => '9',
+            'GQ' => '99',
+            'DS'=> '0',
+            'PL' => '0,27,255'
+        },
+        'marker2' => {
+            'GT' => '0/0',
+            'AD' => '9,0',
+            'DP' => '9',
+            'GQ' => '99',
+            'DS'=> '0',
+            'PL' => '0,27,255'
+        }
+    },
+    'samplename2' => {
+        'marker1' => {
+            'GT' => '0/0',
+            'AD' => '9,0',
+            'DP' => '9',
+            'GQ' => '99',
+            'DS'=> '0',
+            'PL' => '0,27,255'
+        },
+        'marker2' => {
+            'GT' => '0/0',
+            'AD' => '9,0',
+            'DP' => '9',
+            'GQ' => '99',
+            'DS'=> '0',
+            'PL' => '0,27,255'
+        }
+    }
+}
+
+For storing genotyping data from a brand new genotyping project and protocol:
 my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    vcf_input_file=>$vcf_input_file,
+    protocol_info => \%protocol_info,
+    genotype_info => \%genotype_info,
+    observation_unit_uniquenames => \@sample_uniquenames,
     observation_unit_type_name=>'tissue_sample',
     breeding_program_id=>101,
     genotyping_facility=>'IGD',
@@ -21,11 +131,11 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_description=>'description',
     protocol_name=>'SNP2018',
     reference_genome_name=>'Mesculenta_511_v7',
-    organism_genus=>$organism_genus,
-    organism_species=>$organism_species,
+    organism_id=>$organism_id,
     user_id => 41,
-    create_missing_observation_units_as_accessions=>0,
-    igd_numbers_included=>0
+    igd_numbers_included=>0,
+    archived_filename => $archived_file,
+    archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
 my $return = $store_genotypes->store();
@@ -37,17 +147,19 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    vcf_input_file=>$vcf_input_file,
+    protocol_info => \%protocol_info,
+    genotype_info => \%genotype_info,
+    observation_unit_uniquenames => \@sample_uniquenames,
     observation_unit_type_name=>'tissue_sample',
     project_location_id=>$location_id,
     project_id=>123,
     protocol_name=>'SNP2018',
     reference_genome_name=>'Mesculenta_511_v7',
-    organism_genus=>$organism_genus,
-    organism_species=>$organism_species,
+    organism_id=>$organism_id,
     user_id => 41,
-    create_missing_observation_units_as_accessions=>0,
-    igd_numbers_included=>0
+    igd_numbers_included=>0,
+    archived_filename => $archived_file,
+    archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
 my $return = $store_genotypes->store();
@@ -59,7 +171,9 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    vcf_input_file=>$vcf_input_file,
+    protocol_info => \%protocol_info,
+    genotype_info => \%genotype_info,
+    observation_unit_uniquenames => \@sample_uniquenames,
     observation_unit_type_name=>'tissue_sample',
     breeding_program_id=>101,
     genotyping_facility=>'IGD',
@@ -68,11 +182,11 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_name=>'VCF2018',
     project_description=>'description',
     protocol_id => 23,
-    organism_genus=>$organism_genus,
-    organism_species=>$organism_species,
+    organism_id=>$organism_id,
     user_id => 41,
-    create_missing_observation_units_as_accessions=>0,
-    igd_numbers_included=>0
+    igd_numbers_included=>0,
+    archived_filename => $archived_file,
+    archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
 my $return = $store_genotypes->store();
@@ -84,16 +198,18 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    vcf_input_file=>$vcf_input_file,
+    protocol_info => \%protocol_info,
+    genotype_info => \%genotype_info,
+    observation_unit_uniquenames => \@sample_uniquenames,
     observation_unit_type_name=>'tissue_sample',
     project_location_id=>$location_id,
     project_id=>123,
     protocol_id=>23,
-    organism_genus=>$organism_genus,
-    organism_species=>$organism_species,
+    organism_id=>$organism_id,
     user_id => 41,
-    create_missing_observation_units_as_accessions=>0,
-    igd_numbers_included=>0
+    igd_numbers_included=>0,
+    archived_filename => $archived_file,
+    archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
 my $return = $store_genotypes->store();
@@ -138,10 +254,22 @@ has 'phenome_schema' => (
     required => 1,
 );
 
-has 'vcf_input_file' => (
-    isa => 'Str',
+has 'protocol_info' => (
+    isa => 'HashRef',
     is => 'rw',
-    required => 1,
+    required => 1
+);
+
+has 'genotype_info' => (
+    isa => 'HashRef',
+    is => 'rw',
+    required => 1
+);
+
+has 'observation_unit_uniquenames' => (
+    isa => 'ArrayRef',
+    is => 'rw',
+    required => 1
 );
 
 has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample
@@ -201,14 +329,8 @@ has 'reference_genome_name' => (
     is => 'rw',
 );
 
-has 'organism_genus' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1,
-);
-
-has 'organism_species' => (
-    isa => 'Str',
+has 'organism_id' => (
+    isa => 'Int',
     is => 'rw',
     required => 1,
 );
@@ -225,10 +347,16 @@ has 'user_id' => (
     required => 1,
 );
 
-has 'create_missing_observation_units_as_accessions' => (
-    isa => 'Bool',
+has 'archived_filename' => (
+    isa => 'Str',
     is => 'rw',
-    default => 0,
+    required => 1,
+);
+
+has 'archived_file_type' => ( #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
 );
 
 has 'igd_numbers_included' => (
@@ -239,84 +367,40 @@ has 'igd_numbers_included' => (
 
 sub BUILD {
     my $self = shift;
-    
 }
 
 sub validate {
     my $self = shift;
-    print STDERR "Genotype VCF validate\n";
-
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
-    my $opt_p = $self->project_name;
-    my $project_description = $self->project_description;
-    my $opt_y = $self->project_year;
-    my $map_protocol_name = $self->protocol_name;
-    my $location_id = $self->project_location_id;
-    my $organism_genus = $self->organism_genus;
-    my $organism_species = $self->organism_species;
-    my $file = $self->vcf_input_file;
-    my $opt_z = $self->igd_numbers_included;
+    my $organism_id = $self->organism_id;
+    my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
+    my $protocol_info = $self->protocol_info;
+    my $genotype_info = $self->genotype_info;
     my @error_messages;
 
-    print STDERR "Reading genotype information for protocolprop storage...\n";
-    my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
-
-    my $header = $gtio->header;
-    if ($header->[0] ne '#CHROM'){
-        push @error_messages, 'Column 1 header must be "#CHROM".';
-    }
-    if ($header->[1] ne 'POS'){
-        push @error_messages, 'Column 2 header must be "POS".';
-    }
-    if ($header->[2] ne 'ID'){
-        push @error_messages, 'Column 3 header must be "ID".';
-    }
-    if ($header->[3] ne 'REF'){
-        push @error_messages, 'Column 4 header must be "REF".';
-    }
-    if ($header->[4] ne 'ALT'){
-        push @error_messages, 'Column 5 header must be "ALT".';
-    }
-    if ($header->[5] ne 'QUAL'){
-        push @error_messages, 'Column 6 header must be "QUAL".';
-    }
-    if ($header->[6] ne 'FILTER'){
-        push @error_messages, 'Column 7 header must be "FILTER".';
-    }
-    if ($header->[7] ne 'INFO'){
-        push @error_messages, 'Column 8 header must be "INFO".';
-    }
-    if ($header->[8] ne 'FORMAT'){
-        push @error_messages, 'Column 9 header must be "FORMAT".';
+    #to disntiguish genotyprop between old dosage only format and more info vcf format
+    if ($self->archived_file_type ne 'genotype_vcf' && $self->archived_file_type ne 'genotype_dosage'){
+        push @error_messages, 'Archived filetype must be either genotype_vcf or genotype_dosage';
+        return {error_messages => \@error_messages};
     }
 
-    my $observation_unit_names = $gtio->observation_unit_names();
-    my $number_observation_units = scalar(@$observation_unit_names);
-    print STDERR "Number observation units: $number_observation_units...\n";
-
-    if ($opt_z){
-        my @observation_units_names_trim;
-        foreach (@$observation_unit_names){
-            my ($observation_unit_name, $igd_number) = split(/:/, $_);
-            push @observation_units_names_trim, $observation_unit_name;
-        }
-        $observation_unit_names = \@observation_units_names_trim;
+    #check if sample names are in the database.
+    if (scalar(@$observation_unit_uniquenames) == 0){
+        push @error_messages, "No observtaion_unit_names in file";
     }
 
-    #store organism info
-    my $organism = $schema->resultset("Organism::Organism")->find_or_create({
-        genus   => $organism_genus,
-        species => $organism_species,
-    });
-    my $organism_id = $organism->organism_id();
-
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    #remove extra numbers, such as igd after : symbol
+    my @observation_unit_uniquenames_stripped;
+    foreach (@$observation_unit_uniquenames) {
+        my ($observation_unit_name, $igd_number) = split(/:/, $_);
+        push @observation_unit_uniquenames_stripped, $observation_unit_name;
+    }
 
     my $stock_type = $self->observation_unit_type_name;
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
     my $stock_rs = $schema->resultset("Stock::Stock")->search({
-        uniquename => {-in => $observation_unit_names},
+        uniquename => {-in => \@observation_unit_uniquenames_stripped},
         type_id => $stock_type_id,
         organism_id => $organism_id
     });
@@ -325,27 +409,70 @@ sub validate {
         $found_stock_names{$r->uniquename}++;
     }
     my %missing_stocks;
-    foreach (@$observation_unit_names){
+    foreach (@$observation_unit_uniquenames){
         if (!$found_stock_names{$_}){
             $missing_stocks{$_}++;
         }
     }
     my @missing_stocks = keys %missing_stocks;
     my @missing_stocks_return;
-    foreach (@missing_stocks){
-        if (!$self->create_missing_observation_units_as_accessions){
-            push @error_messages, "$_ is not a valid $stock_type.";
-            push @missing_stocks_return, $_;
-        } else {
-            my $stock = $schema->resultset("Stock::Stock")->create({
-                organism_id => $organism_id,
-                name       => $_,
-                uniquename => $_,
-                type_id     => $accession_cvterm_id,
-            });
+
+    if (scalar(@missing_stocks_return)>0){
+        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks_return);
+    }
+
+    #check if protocol_info is correct
+    while (my ($marker_name, $marker_info) = each %{$protocol_info->{markers}}){
+        if (!$marker_name || !$marker_info){
+            push @error_messages, "No genotype info provided";
+        }
+        foreach (keys %$marker_info){
+            if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format'){
+                push @error_messages, "protocol_info key not recognized: $_";
+            }
+        }
+        if(!exists($marker_info->{'name'})){
+            push @error_messages, "protocol_info missing name key";
+        }
+        if(!exists($marker_info->{'chrom'})){
+            push @error_messages, "protocol_info missing chrom key";
+        }
+        if(!exists($marker_info->{'pos'})){
+            push @error_messages, "protocol_info missing pos key";
+        }
+        if(!exists($marker_info->{'ref'})){
+            push @error_messages, "protocol_info missing ref key";
+        }
+        if(!exists($marker_info->{'alt'})){
+            push @error_messages, "protocol_info missing alt key";
+        }
+        if(!exists($marker_info->{'qual'})){
+            push @error_messages, "protocol_info missing qual key";
+        }
+        if(!exists($marker_info->{'filter'})){
+            push @error_messages, "protocol_info missing filter key";
+        }
+        if(!exists($marker_info->{'info'})){
+            push @error_messages, "protocol_info missing info key";
+        }
+        if(!exists($marker_info->{'format'})){
+            push @error_messages, "protocol_info missing format key";
         }
     }
-    
+    if (scalar(@{$protocol_info->{marker_names}}) == 0){
+        push @error_messages, "No marker info in file";
+    }
+    if (scalar(@{$protocol_info->{marker_names}}) != scalar(@{$protocol_info->{markers_array}})){
+        push @error_messages, "In protocol_info the markers_array is not equal in length to marker_names!";
+    }
+
+    #check if genotype_info is correct
+    while (my ($observation_unit_name, $marker_result) = each %$genotype_info){
+        if (!$observation_unit_name || !$marker_result){
+            push @error_messages, "No geno info in genotype_info";
+        }
+    }
+
     return { error_messages => \@error_messages, missing_stocks => \@missing_stocks_return };
 }
 
@@ -362,18 +489,15 @@ sub store {
     my $map_protocol_name = $self->protocol_name;
     my $reference_genome_name = $self->reference_genome_name;
     my $location_id = $self->project_location_id;
-    my $organism_genus = $self->organism_genus;
-    my $organism_species = $self->organism_species;
-    my $file = $self->vcf_input_file;
-    my $opt_z = $self->igd_numbers_included;
-    my $opt_a = $self->create_missing_observation_units_as_accessions;
+    my $igd_numbers_included = $self->igd_numbers_included;
     my $stock_type = $self->observation_unit_type_name;
+    my $organism_id = $self->organism_id;
+    my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
     $dbh->do('SET search_path TO public,sgn');
 
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
-    my $snp_genotypingprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
@@ -381,8 +505,17 @@ sub store {
     my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property');
     my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
 
-    #store a project
+    #for differentiating between genotypeprop info stored in the 'old' format of only storing dosage in json, and genotypeprop data stored in the expanded json form
+    my $snp_genotypingprop_cvterm_id;
+    if ($self->archived_file_type eq 'genotype_vcf'){
+        $snp_genotypingprop_cvterm_id = $snp_vcf_cvterm_id;
+    } elsif ($self->archived_file_type eq 'genotype_dosage'){
+        $snp_genotypingprop_cvterm_id = $snp_genotype_id;
+    }
+
+    #when project_id is provided, a new project is not created
     my $project_id;
     my $project_check = $schema->resultset("Project::Project")->find({
         project_id => $self->project_id
@@ -390,9 +523,9 @@ sub store {
     if ($project_check){
         $project_id = $project_check->project_id;
     } else {
-        my $project = $schema->resultset("Project::Project")->create({
+        my $project = $schema->resultset("Project::Project")->find_or_create({
             name => $opt_p,
-            description => $project_description." : Species = $organism_species. Sample Unit = $stock_type.",
+            description => $project_description,
         });
         $project_id = $project->project_id();
         $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
@@ -407,13 +540,7 @@ sub store {
         $t->set_location($location_id);
     }
 
-    #store organism info
-    my $organism = $schema->resultset("Organism::Organism")->find_or_create({
-        genus   => $organism_genus,
-        species => $organism_species,
-    });
-    my $organism_id = $organism->organism_id();
-
+    #if population name given and samples are actually accession names
     my $population_stock;
     my $population_stock_id;
     if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
@@ -426,6 +553,7 @@ sub store {
         $population_stock_id = $population_stock->stock_id();
     }
 
+    #When protocol_id provided, a new protocol is not created
     my $protocol_id;
     my $protocol_row_check = $schema->resultset("NaturalDiversity::NdProtocol")->find({
         nd_protocol_id => $self->protocol_id
@@ -433,163 +561,61 @@ sub store {
     if ($protocol_row_check){
         $protocol_id = $protocol_row_check->nd_protocol_id;
     } else {
-        print STDERR "Reading genotype information for protocolprop storage...\n";
-        my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
-
-        my %protocolprop_json;
-
-        my $observation_unit_names = $gtio->observation_unit_names();
-        my $number_observation_units = scalar(@$observation_unit_names);
-        print STDERR "Number observation units: $number_observation_units...\n";
-
-        my $header_info_lines = $gtio->header_information_lines();
-        $protocolprop_json{'header_information_lines'} = $header_info_lines;
-        $protocolprop_json{'reference_genome_name'} = $reference_genome_name;
-        $protocolprop_json{'species_name'} = $organism_species;
-        $protocolprop_json{'sample_observation_unit_type_name'} = $stock_type;
-
-        while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
-
-            if ($marker_info){
-                my $marker_name;
-                my $marker_info_p2 = $marker_info->[2];
-                my $marker_info_p8 = $marker_info->[8];
-                if ($marker_info_p2 eq '.') {
-                    $marker_name = $marker_info->[0]."_".$marker_info->[1];
-                } else {
-                    $marker_name = $marker_info_p2;
-                }
-
-                #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
-                my %marker = (
-                    name => $marker_name,
-                    chrom => $marker_info->[0],
-                    pos => $marker_info->[1],
-                    ref => $marker_info->[3],
-                    alt => $marker_info->[4],
-                    qual => $marker_info->[5],
-                    filter => $marker_info->[6],
-                    info => $marker_info->[7],
-                    format => $marker_info_p8,
-                );
-                $protocolprop_json{'markers'}->{$marker_name} = \%marker;
-                push @{$protocolprop_json{'marker_names'}}, $marker_name;
-                push @{$protocolprop_json{'markers_array'}}, \%marker;
-            }
-        }
-        #print STDERR Dumper \%protocolprop_json;
-        print STDERR "Protocol hash created...\n";
-
-        my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
+        my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create({
             name => $map_protocol_name,
             type_id => $geno_cvterm_id
         });
         $protocol_id = $protocol_row->nd_protocol_id();
 
         #Save the protocolprop. This json string contains the details for the maarkers used in the map.
-        my $json_string = encode_json \%protocolprop_json;
+        my $json_string = encode_json $self->protocol_info;
         my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, value) VALUES (?, ?, ?);";
-        my $h = $schema->storage->dbh()->prepare($new_protocolprop_sql);
-        $h->execute($protocol_id, $vcf_map_details_id, $json_string);
-
-        undef %protocolprop_json;
-        undef $json_string;
-        undef $new_protocolprop_sql;
+        my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
+        $h_protocolprop->execute($protocol_id, $vcf_map_details_id, $json_string);
 
         print STDERR "Protocolprop stored...\n";
     }
 
-    print STDERR "Reading genotype information for genotyeprop...\n";
-    my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
-
-    my $observation_unit_names = $gtio->observation_unit_names();
-
-    my %genotypeprop_observation_units;
-
-    my $number_observation_units = scalar(@$observation_unit_names);
-    print STDERR "Number observation units: $number_observation_units...\n";
-
-    while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
-
-        if ($marker_info){
-            my $marker_name;
-            my $marker_info_p2 = $marker_info->[2];
-            my $marker_info_p8 = $marker_info->[8];
-            if ($marker_info_p2 eq '.') {
-                $marker_name = $marker_info->[0]."_".$marker_info->[1];
-            } else {
-                $marker_name = $marker_info_p2;
-            }
-
-            my @format =  split /:/,  $marker_info_p8;
-            #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-            for (my $i = 0; $i < $number_observation_units; $i++ ) {
-                my @fvalues = split /:/, $values->[$i];
-                my %value;
-                #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-                #    $value{@format[$fv]} = @fvalues[$fv];
-                #}
-                @value{@format} = @fvalues;
-                $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$marker_name} = \%value;
-            }
-        }
-    }
-    #print STDERR Dumper \%genotypeprop_observation_units;
-
-    print STDERR "Genotypeprop observation units hash created\n";
-
-    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-
+    #preparing insertion of new genotypes and genotype props
+    my $genotypeprop_observation_units = $self->genotype_info;
     my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?);";
-    my $h = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
-
+    my $h_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
     my %nd_experiment_ids;
+    my $stock_relationship_schema = $schema->resultset("Stock::StockRelationship");
+    my $nd_experiment_schema = $schema->resultset('NaturalDiversity::NdExperiment');
+    my $genotype_schema = $schema->resultset("Genetic::Genotype");
+    my $genotypeprop_schema = $schema->resultset("Genetic::Genotypeprop");
 
-    foreach (@$observation_unit_names) {
-
+    #remove extra numbers, such as igd after : symbol
+    my @observation_unit_uniquenames_stripped;
+    foreach (@$observation_unit_uniquenames) {
         my ($observation_unit_name, $igd_number) = split(/:/, $_);
+        push @observation_unit_uniquenames_stripped, $observation_unit_name;
+    }
 
-        #print STDERR "Looking for observation unit $observation_unit_name\n";
-        my $stock;
-        my $stock_rs = $schema->resultset("Stock::Stock")->search({
-            uniquename => $observation_unit_name,
-            organism_id => $organism_id,
-            type_id => $stock_type_id
-        });
+    my $stock_rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => {-in => \@observation_unit_uniquenames_stripped},
+        organism_id => $organism_id,
+        type_id => $stock_type_id
+    });
+    my %stock_lookup;
+    while (my $r=$stock_rs->next){
+        $stock_lookup{$r->uniquename} = $r->stock_id;
+    }
 
-        if ($stock_rs->count() == 1) {
-            $stock = $stock_rs->first();
-        }
-
-        if ($stock_rs->count ==0)  {
-
-            #store the observation_unit_name in the stock table as an accession if $opt_a
-            if (!$opt_a) {
-                print STDERR "WARNING! Observation unit name $observation_unit_name not found for stock type $stock_type.\n";
-                print STDERR "Use option -a to add automatically.\n";
-                next();
-            } else {
-                $stock = $schema->resultset("Stock::Stock")->create({
-                    organism_id => $organism_id,
-                    name       => $observation_unit_name,
-                    uniquename => $observation_unit_name,
-                    type_id     => $accession_cvterm_id,
-                });
-            }
-        }
-        my $stock_name = $stock->name();
-        my $stock_id = $stock->stock_id();
+    foreach (@$observation_unit_uniquenames) {
+        my ($observation_unit_name, $igd_number) = split(/:/, $_);
+        my $stock_id = $stock_lookup{$observation_unit_name};
 
         if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
-            my $pop_rs = $stock->find_or_create_related('stock_relationship_subjects', {
+            my $pop_rs = $stock_relationship_schema->find_or_create({
                 type_id => $population_members_id,
                 subject_id => $stock_id,
                 object_id => $population_stock_id,
             });
         }
 
-        print STDERR "Stock name = " . $stock_name . "\n";
-        my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+        my $experiment = $nd_experiment_schema->create({
             nd_geolocation_id => $location_id,
             type_id => $geno_cvterm_id,
             nd_experiment_projects => [ {project_id => $project_id} ],
@@ -598,38 +624,36 @@ sub store {
         });
         my $nd_experiment_id = $experiment->nd_experiment_id();
 
-        print STDERR "Storing new genotype for stock " . $stock_name . " \n";
-        my $genotype = $schema->resultset("Genetic::Genotype")->create({
-                name        => $stock_name . "|" . $nd_experiment_id,
-                uniquename  => $stock_name . "|" . $nd_experiment_id,
-                description => "SNP genotypes for stock " . "(name = " . $stock_name . ", id = " . $stock_id . ")",
-                type_id     => $snp_genotype_id,
+        print STDERR "Storing new genotype for stock " . $observation_unit_name . " \n";
+        my $genotype = $genotype_schema->create({
+            name        => $observation_unit_name . "|" . $nd_experiment_id,
+            uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
+            description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
+            type_id     => $snp_genotype_id,
         });
         my $genotype_id = $genotype->genotype_id();
 
-        my $genotypeprop_json = $genotypeprop_observation_units{$_};
+        my $genotypeprop_json = $genotypeprop_observation_units->{$_};
         my $json_string = encode_json $genotypeprop_json;
 
         #Store json for genotype. Has all markers and scores for this stock.
-        $h->execute($genotype_id, $snp_genotypingprop_cvterm_id, $json_string);
+        $h_genotypeprop->execute($genotype_id, $snp_genotypingprop_cvterm_id, $json_string);
 
         #Store IGD number if the option is given.
-        if ($opt_z) {
+        if ($igd_numbers_included) {
             my %igd_number = ('igd_number' => $igd_number);
             my $json_obj = JSON::Any->new;
             my $json_string = $json_obj->encode(\%igd_number);
-            my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $json_string });
+            my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $json_string });
         }
-        undef $genotypeprop_json;
-        undef $json_string;
-        undef $new_genotypeprop_sql;
-        #undef $add_genotypeprop;
 
         #link the genotype to the nd_experiment
         my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
         $nd_experiment_ids{$nd_experiment_id}++;
     }
 
+    #create relationship between nd_experiment and originating archived file
+    my $file = $self->archived_filename;
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id});
     $md_row->insert();
     my $upload_file = CXGN::UploadFile->new();
@@ -638,18 +662,24 @@ sub store {
     my $file_row = $self->metadata_schema->resultset("MdFiles")->create({
         basename => basename($file),
         dirname => dirname($file),
-        filetype => 'genotype_vcf',
+        filetype => $self->archived_file_type,
         md5checksum => $md5checksum,
         metadata_id => $md_row->metadata_id(),
     });
-
     foreach my $nd_experiment_id (keys %nd_experiment_ids) {
         my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $nd_experiment_id,
             file_id => $file_row->file_id(),
         });
     }
-    return 1;
+
+    my %response = (
+        success => 1,
+        nd_protocol_id => $protocol_id,
+        project_id => $project_id
+    );
+
+    return \%response;
 }
 
 1;
