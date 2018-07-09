@@ -124,11 +124,11 @@ function loadPcaGenotypesList(listId) {
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
                
-        var pcaGenotypes = jQuery("#uploaded_pca_populations_table").doesExist();
+        var pcaGenotypes = jQuery("#list_pca_populations_table").doesExist();
                        
         if (pcaGenotypes == false) {                              
             pcaGenotypes = getPcaPopsList(listId);                    
-            jQuery("#uploaded_pca_populations").append(pcaGenotypes).show();                           
+            jQuery("#list_pca_populations").append(pcaGenotypes).show();                           
         }
         else {
             var addRow = '<tr><td>'
@@ -145,7 +145,7 @@ function loadPcaGenotypesList(listId) {
             var addedRow = jQuery(tdId).doesExist();
 
             if (addedRow == false) {
-                jQuery("#uploaded_pca_populations_table tr:last").after(addRow);
+                jQuery("#list_pca_populations_table tr:last").after(addRow);
             }                          
         }       
 	jQuery.unblockUI();                                
@@ -160,7 +160,7 @@ function pcaResult () {
     var listId = getListId();
  
     if (listId) {
-	popId['training_pop_id'] = 'uploaded_' + listId;
+	popId['training_pop_id'] = 'list_' + listId;
     }
   
     var listName;
@@ -228,7 +228,7 @@ function getPcaPopsList (listId) {
     var listName       = genoList.name;
     var listType       = genoList.listType;
    
-    var pcaPopsList ='<table id="uploaded_pca_populations_table" style="width:100%; text-align:left"><tr>'
+    var pcaPopsList ='<table id="list_pca_populations_table" style="width:100%; text-align:left"><tr>'
                                 + '<th>Population</th>'
                                 + '<th>List type</th>'
                                 + '<th>Run PCA</th>'
@@ -277,7 +277,7 @@ function setListId (listId) {
      
     var existingListId = jQuery("#list_id").doesExist();
     console.log(listId)
-    //listId = listId.replace('uploaded_', '');
+    //listId = listId.replace('list_', '');
      console.log(listId)
     if (existingListId) {
 	jQuery("#list_id").remove();

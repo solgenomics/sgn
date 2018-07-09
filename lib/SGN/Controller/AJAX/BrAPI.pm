@@ -488,35 +488,43 @@ POST Response:
 sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
 
 sub germplasm_list_GET {
-	my $self = shift;
-	my $c = shift;
-	germplasm_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_search({
+        germplasmName => $clean_inputs->{germplasmName},
+        accessionNumber => $clean_inputs->{accessionNumber},
+        germplasmGenus => $clean_inputs->{germplasmGenus},
+        germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
+        germplasmSpecies => $clean_inputs->{germplasmSpecies},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        germplasmPUI => $clean_inputs->{germplasmPUI},
+        matchMethod => $clean_inputs->{matchMethod},
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub germplasm_list_POST {
-	my $self = shift;
-	my $c = shift;
-	germplasm_search_process($self, $c);
-}
-
-sub germplasm_search_process {
-	my $self = shift;
-	my $c = shift;
-	my $auth = _authenticate_user($c);
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-	my $brapi_package_result = $brapi_module->germplasm_search({
-		germplasmName => $clean_inputs->{germplasmName},
-		accessionNumber => $clean_inputs->{accessionNumber},
-		germplasmGenus => $clean_inputs->{germplasmGenus},
-		germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
-		germplasmSpecies => $clean_inputs->{germplasmSpecies},
-		germplasmDbId => $clean_inputs->{germplasmDbId},
-		germplasmPUI => $clean_inputs->{germplasmPUI},
-		matchMethod => $clean_inputs->{matchMethod},
-	});
-	_standard_response_construction($c, $brapi_package_result);
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_search({
+        germplasmName => $clean_inputs->{germplasmNames},
+        accessionNumber => $clean_inputs->{accessionNumbers},
+        germplasmGenus => $clean_inputs->{germplasmGenus},
+        germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
+        germplasmSpecies => $clean_inputs->{germplasmSpecies},
+        germplasmDbId => $clean_inputs->{germplasmDbIds},
+        germplasmPUI => $clean_inputs->{germplasmPUIs},
+        matchMethod => $clean_inputs->{matchMethod},
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 

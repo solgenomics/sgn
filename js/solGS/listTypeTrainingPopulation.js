@@ -144,7 +144,7 @@ function createTrainingReqArgs (listId) {
     var list      = genoList.list;
     var popId     = getModelId(listId);
  
-    var popType = 'uploaded_reference';
+    var popType = 'list_reference';
 
     var args = {
 	'list_name'       : listName,
@@ -226,7 +226,7 @@ function getUserUploadedRefPop (listId) {
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
 
-    var uploadedSelPop ='<table id="uploaded_reference_pops_table" style="width:100%; text-align:left"><tr>'
+    var listSelPop ='<table id="list_reference_pops_table" style="width:100%; text-align:left"><tr>'
                                 + '<th>List-based training population</th>'
                                 + '<th>Models</th>'
                                 +'</tr>'
@@ -242,7 +242,7 @@ function getUserUploadedRefPop (listId) {
                                 + '[ Build model ]'+ '</a>'
                                 + '</td></tr></table>';
 
-    return uploadedSelPop;
+    return listSelPop;
 }
 
 
@@ -260,7 +260,7 @@ function loadPopulationPage (url, listId, listSource) {
                 url: url,
                 dataType: 'json',
                 data: {
-                       'uploaded_reference': 1, 
+                       'list_reference': 1, 
                        'model_id': modelId, 
                        'list_source': listSource,
                        'list_name'  : listName,
@@ -286,7 +286,7 @@ function loadPopulationPage (url, listId, listSource) {
 
 function getModelId (listId) {
   
-    var modelId = 'uploaded_' + listId; 
+    var modelId = 'list_' + listId; 
     return modelId;
 
 }

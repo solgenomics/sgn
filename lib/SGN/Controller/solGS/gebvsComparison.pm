@@ -101,7 +101,7 @@ sub get_training_pop_gebv_file {
     if ($pop_id && $trait_id) 
     {
 	my $dir  = $c->stash->{solgs_cache_dir};
-	my $file = "rrblup_gebvs_${trait_abbr}_${pop_id}";
+	my $file = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";
        
 	$gebv_file = $c->controller('solGS::Files')->grep_file($dir, $file);
 
@@ -125,7 +125,7 @@ sub get_selection_pop_gebv_file {
     {
 	my $dir  = $c->stash->{solgs_cache_dir};
 	my $identifier = $training_pop_id . "_" . $selection_pop_id;
-	my $file = "prediction_pop_gebvs_${identifier}_${trait_id}";
+	my $file = "rrblup_selection_gebvs_${identifier}_${trait_id}";
 	$gebv_file = $c->controller('solGS::Files')->grep_file($dir, $file);
     }
 
