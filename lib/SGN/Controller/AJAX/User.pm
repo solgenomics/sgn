@@ -349,6 +349,11 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     my $confirm_password = $c->req->param("confirm_password");
     my $new_password = $c->req->param("new_password");
 
+    if (length($new_password) < 7) {
+        $c->stash->{rest} = { error => "Password is too short. Password must be 7 or more characters" };
+        $c->detach();
+    }
+
     if ($confirm_password ne $new_password){
         $c->stash->{rest} = { error => "Please enter the same password in the confirm password field!" };
         $c->detach();
