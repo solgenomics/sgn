@@ -321,17 +321,24 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
 	$c->stash->{rest} = { message => "The provided email ($email) is associated with multiple accounts. An email is sent for each account. Please notify the database team using the contact form to consolidate the accounts." };
     }
 
-    my $reset_link = "";
+    my @reset_links;
+    my @reset_tokens;
     foreach my $pid (@person_ids) { 
-	my $email_reset_token = $self->tempname();
-	$reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
-	my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
-	$person->update_confirm_code($email_reset_token);
-	print STDERR "Sending reset link $reset_link\n";
-	$self->send_reset_email_message($c, $pid, $email, $reset_link);
+        my $email_reset_token = $self->tempname();
+        my $reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
+        my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
+        $person->update_confirm_code($email_reset_token);
+        print STDERR "Sending reset link $reset_link\n";
+        $self->send_reset_email_message($c, $pid, $email, $reset_link);
+        push @reset_links, $reset_link;
+        push @reset_tokens, $email_reset_token;
     }
 
-    $c->stash->{rest} = { message => "Reset link sent. Please check your email and click on the link." };
+    $c->stash->{rest} = {
+        message => "Reset link sent. Please check your email and click on the link.",
+        reset_links => \@reset_links,
+        reset_tokens => \@reset_tokens
+    };
 }
 
 sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(0) {
@@ -339,22 +346,27 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     my $c = shift;
     
     my $token = $c->req->param("token");
-    my $new_password = $c->req->param("");
+    my $confirm_password = $c->req->param("confirm_password");
+    my $new_password = $c->req->param("new_password");
 
-    eval { 
-	my $sp_person_id = CXGN::People::Login->get_login_by_token($c->dbc->dbh, $token);
-	
-	my $login = CXGN::People::Login->new($c->dbc->dbh(), $sp_person_id);
-	$login->update_password($new_password);
-	$login->update_confirm_code("");
+    if ($confirm_password ne $new_password){
+        $c->stash->{rest} = { error => "Please enter the same password in the confirm password field!" };
+        $c->detach();
+    }
+
+    eval {
+        my $sp_person_id = CXGN::People::Login->get_login_by_token($c->dbc->dbh, $token);
+
+        my $login = CXGN::People::Login->new($c->dbc->dbh(), $sp_person_id);
+        $login->update_password($new_password);
+        $login->update_confirm_code("");
     };
     if ($@) { 
-	$c->stash->{rest} = { error => $@ };
+        $c->stash->{rest} = { error => $@ };
     }
     else {
-	$c->stash->{rest} = { message => "The password was successfully updated." };
+        $c->stash->{rest} = { message => "The password was successfully updated." };
     }
-
 }
 
 
