@@ -1226,6 +1226,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $plant_number = 1;
             my $plant_index = 0;
             foreach (@$plant_names){
+                $num_males = 0;
                 my $plant_id = $plant_ids->[$plant_index];
                 if ($previous_file_lookup{$plant_id}){
                     $num_males = $previous_file_lookup{$plant_id}->[17];
