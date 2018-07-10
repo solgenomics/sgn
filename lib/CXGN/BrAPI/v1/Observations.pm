@@ -70,6 +70,8 @@ sub observations_store {
     my $username = $search_params->{username};
     my $user_type = $search_params->{user_type};
     my $archive_path = $search_params->{archive_path};
+    my @error_status = [];
+    my @success_status = [];
 
     print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
 
@@ -79,8 +81,6 @@ sub observations_store {
     }
 
     #validate request structure and parse data
-    my @success_status = [];
-    my @error_status = [];
     my $timestamp_included = 1;
     my $data_level = 'stocks';
 
@@ -152,7 +152,7 @@ sub observations_store {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     $phenotype_metadata{'archived_file'} = $file;
-    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
+    $phenotype_metadata{'archived_file_type'} = 'brapi observations';
     # $phenotype_metadata{'operator'} = $username;
     $phenotype_metadata{'date'} = $timestamp;
 
@@ -178,7 +178,7 @@ sub observations_store {
     #     print STDERR "Warning: $verified_warning\n";
     # }
 
-    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+    my ($stored_phenotype_error, $stored_phenotype_success) = $store_observations->store();
 
     if ($stored_phenotype_error) {
         print STDERR "Error: $stored_phenotype_error\n";

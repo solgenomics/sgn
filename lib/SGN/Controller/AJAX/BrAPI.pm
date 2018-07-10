@@ -2583,8 +2583,9 @@ sub observations_PUT {
     my ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($dbh)->query_from_cookie($c->stash->{session_token});
     my $p = CXGN::People::Person->new($dbh, $user_id);
     my $username = $p->get_username;
-
+    my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
+
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
         observations => $clean_inputs->{observations},

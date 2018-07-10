@@ -15,6 +15,7 @@ this module is used to create and archive files for BrAPI requests that store da
 use Moose;
 use Data::Dumper;
 use File::Spec::Functions;
+use List::MoreUtils qw(uniq);
 use DateTime;
 
 has 'schema' => (
@@ -71,6 +72,7 @@ sub get_path {
 
 sub observations {
 	my $self = shift;
+    my $schema = $self->schema;
 	my $data = $self->data;
     my $user_id = $self->user_id;
     my $user_type = $self->user_type;
@@ -98,17 +100,17 @@ sub observations {
     my $file_path =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
 
     my @data = @{$data};
-    my @errors = [];
+    my %parse_result = ();
 
     # Check validity of submitted data
-    my @observations = uniq map { $_->{'observationDbId'} } @data;
-    my @units = uniq map { $_->{'observationUnitDbId'} } @data;
-    my @variables = uniq map { $_->{'observationVariableDbId'} } @data;
-    my @timestamps = uniq map { $_->{'observationTimeStamp'} } @data;
+    my @observations = uniq map { $_->{observationDbId} } @data;
+    my @units = uniq map { $_->{observationUnitDbId} } @data;
+    my @variables = uniq map { $_->{observationVariableDbId} } @data;
+    my @timestamps = uniq map { $_->{observationTimeStamp} } @data;
 
     my $validator = CXGN::List::Validate->new();
     if (scalar @observations) {
-        my @observations_missing = = @{$validator->validate($schema,'phenotypes',\@observations)->{'missing'}};
+        my @observations_missing = @{$validator->validate($schema,'phenotypes',\@observations)->{'missing'}};
     }
     my @units_missing = @{$validator->validate($schema,'plots_or_subplots_or_plants',\@units)->{'missing'}};
     my @variables_missing = @{$validator->validate($schema,'traits',\@variables)->{'missing'}};
@@ -119,8 +121,6 @@ sub observations {
             return \%parse_result;
         }
     }
-
-    return \@errors;
 
 	open(my $fh, ">", $file_path) or die "Couldn't open file $file_path: $!";
     print $fh '"observationDbId","observationUnitDbId","observationVariableDbId","value","observationTimeStamp","collector"'."\n";
