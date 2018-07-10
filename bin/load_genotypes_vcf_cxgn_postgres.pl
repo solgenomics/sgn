@@ -4,7 +4,7 @@
 load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, based on the load_cassava_snps.pl script by Naama.
 
 =head1 SYNOPSIS
-    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "BTI" -n "IGD" -b "accession" -m "test_protocol_01_new" -o "Manihot" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
+    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "BTI" -n "IGD" -b "accession" -m "test_protocol_01_new" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
     
     To use an existing project (not create a new project name entry), use -h project_id
     To use an existing protocol (not create a new nd_protocol name entry), use -j protocol_id
@@ -22,12 +22,11 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -d project description (required) e.g. "Diversity study"
  -n genotype facility name (required) e.g. "igd"
  -g population name (required) e.g. "NaCRRI training population"
- -b observation unit name (required) e.g. "tissue_sample" or "accession"
+ -b observation unit type name (required) e.g. "tissue_sample" or "accession"
  -e breeding program name (required) e.g. "IITA"
  -s include igd numbers in sample names
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
- -o organism genus name (required) e.g. "Manihot".  Along with organism species name, this will be found or created in Organism table.
  -q organism species name (required) e.g. "Manihot esculenta".
  -f reference genome name (required) e.g. "Mesculenta_511_v7"
 
@@ -43,6 +42,8 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
 
 =head1 DESCRIPTION
 This script loads genotype data into the Chado genotype table it encodes the genotype + marker name in a json format in the genotyope.uniquename field for easy parsing by a Perl program. The genotypes are linked to the relevant stock using nd_experiment_genotype. Each column in the spreadsheet, which represents a single accession (stock) is stored as a single genotype entry and linked to the stock via nd_experiment_genotype. Stock names are stored in the stock table if cannot be found, and linked to a population stock with the name supplied in opt_g. Map details (chromosome, position, ref, alt, qual, filter, info, and format) are stored in json format in the protocolprop table.
+
+This script mimics exactly the "online process" in SGN::Controller::AJAX::GenotypesVCFUpload->upload_genotype_verify
 
 =head1 AUTHOR
  Nicolas Morales (nm529@cornell.edu) May 2016
@@ -71,17 +72,29 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use DateTime;
 use CXGN::UploadFile;
 use File::Basename qw | basename dirname|;
+use CXGN::Genotype::Protocol;
+use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_o, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
+our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
 
-getopts('H:U:i:r:u:tD:p:y:g:axsm:l:o:q:zf:d:b:n:se:h:j:');
+getopts('H:U:i:r:u:tD:p:y:g:axsm:l:q:zf:d:b:n:se:h:j:');
 
-my $dbhost = $opt_H;
-my $dbname = $opt_D;
+if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
+}
+
 my $file = $opt_i;
-
-if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_l || !$opt_o || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -o (organism genus), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit name), -n (genotype facility name), -e (breeding program name)\n");
+my $protocol_id = $opt_j;
+my $organism_species = $opt_q;
+my $reference_genome_name = $opt_f;
+my $obs_type = $opt_b;
+my $add_accessions = 0;
+if ($opt_a){
+    $add_accessions = 1;
+}
+my $include_igd_numbers = 0;
+if ($opt_z){
+    $include_igd_numbers = 1;
 }
 
 print "Password for $opt_H / $opt_D: \n";
@@ -145,34 +158,88 @@ if ($bp_rs->count != 1){
     $breeding_program_id = $bp_rs->first->project_id;
 }
 
+#if protocol_id provided, a new one will not be created
+if ($protocol_id){
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $schema,
+        nd_protocol_id => $protocol_id
+    });
+    $organism_species = $protocol->species_name;
+    $obs_type = $protocol->sample_observation_unit_type_name;
+}
+
+my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
+my @found_organisms;
+my $h = $schema->storage->dbh()->prepare($organism_q);
+$h->execute($organism_species);
+while (my ($organism_id) = $h->fetchrow_array()){
+    push @found_organisms, $organism_id;
+}
+if (scalar(@found_organisms) == 0){
+    print STDERR "The organism species you provided is not in the database! Please contact us.\n";
+    die;
+}
+if (scalar(@found_organisms) > 1){
+    print STDERR "The organism species you provided is not unique in the database! Please contact us.\n";
+    die;
+}
+my $organism_id = $found_organisms[0];
+
+my $parser = CXGN::Genotype::ParseUpload->new({
+    chado_schema => $schema,
+    filename => $archived_filename_with_path,
+    observation_unit_type_name => $obs_type,
+    organism_id => $organism_id,
+    create_missing_observation_units_as_accessions => $add_accessions,
+    igd_numbers_included => $include_igd_numbers
+});
+$parser->load_plugin('VCF');
+my $parsed_data = $parser->parse();
+if (!$parsed_data) {
+    if (!$parser->has_parse_errors() ){
+        print STDERR "Could not get parsing errors\n";
+    } else {
+        my $parse_errors = $parser->get_parse_errors();
+        print STDERR Dumper $parse_errors;
+    }
+    die;
+}
+#print STDERR Dumper $parsed_data;
+my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+my $genotype_info = $parsed_data->{genotypes_info};
+my $protocol_info = $parsed_data->{protocol_info};
+$protocol_info->{'reference_genome_name'} = $reference_genome_name;
+$protocol_info->{'species_name'} = $organism_species;
+
 my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    vcf_input_file=>$archived_filename_with_path,
-    observation_unit_type_name=>$opt_b,
-    genotyping_facility=>$opt_n,
-    breeding_program_id=>$breeding_program_id,
-    project_year=>$opt_y,
-    project_location_id=>$location_id,
-    project_name=>$opt_p,
-    project_description=>$opt_d,
-    protocol_name=>$opt_m,
-    organism_genus=>$opt_o,
-    organism_species=>$opt_q,
-    create_missing_observation_units_as_accessions=>$opt_a,
-    accession_population_name=>$opt_g,
-    igd_numbers_included=>$opt_s,
-    reference_genome_name=>$opt_f,
-    user_id=>$sp_person_id,
+    protocol_info=>$protocol_info,
+    genotype_info=>$genotype_info,
+    observation_unit_type_name=>$obs_type,
+    observation_unit_uniquenames=>$observation_unit_uniquenames,
     project_id=>$opt_h,
-    protocol_id=>$opt_j
+    protocol_id=>$opt_j,
+    genotyping_facility=>$opt_n, #projectprop
+    breeding_program_id=>$breeding_program_id, #project_rel
+    project_year=>$opt_y, #projectprop
+    project_location_id=>$location_id, #ndexperiment and projectprop
+    project_name=>$opt_p, #project_attr
+    project_description=>$opt_d, #project_attr
+    protocol_name=>$opt_m,
+    organism_id=>$organism_id,
+    igd_numbers_included=>$include_igd_numbers,
+    user_id=>$sp_person_id,
+    archived_filename=>$archived_filename_with_path,
+    archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
 });
 my $verified_errors = $store_genotypes->validate();
 if (scalar(@{$verified_errors->{error_messages}}) > 0){
-    print STDERR Dumper $verified_errors->{error_messages};
-} else {
-    my $return = $store_genotypes->store();
+    print STDERR Dumper $verified_errors;
+    print STDERR Dumper "There exist errors in your file. Not storing!\n";
+    die;
 }
+my $return = $store_genotypes->store();
 
 print STDERR "Complete!\n";

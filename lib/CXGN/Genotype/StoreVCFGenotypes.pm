@@ -130,7 +130,6 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_name=>'VCF2018',
     project_description=>'description',
     protocol_name=>'SNP2018',
-    reference_genome_name=>'Mesculenta_511_v7',
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
@@ -154,7 +153,6 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_location_id=>$location_id,
     project_id=>123,
     protocol_name=>'SNP2018',
-    reference_genome_name=>'Mesculenta_511_v7',
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
@@ -324,11 +322,6 @@ has 'protocol_name' => (
     is => 'rw',
 );
 
-has 'reference_genome_name' => (
-    isa => 'Str|Undef',
-    is => 'rw',
-);
-
 has 'organism_id' => (
     isa => 'Int',
     is => 'rw',
@@ -377,6 +370,7 @@ sub validate {
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
     my $protocol_info = $self->protocol_info;
     my $genotype_info = $self->genotype_info;
+    my $include_igd_numbers = $self->igd_numbers_included;
     my @error_messages;
 
     #to disntiguish genotyprop between old dosage only format and more info vcf format
@@ -392,9 +386,13 @@ sub validate {
 
     #remove extra numbers, such as igd after : symbol
     my @observation_unit_uniquenames_stripped;
-    foreach (@$observation_unit_uniquenames) {
-        my ($observation_unit_name, $igd_number) = split(/:/, $_);
-        push @observation_unit_uniquenames_stripped, $observation_unit_name;
+    if ($include_igd_numbers){
+        foreach (@$observation_unit_uniquenames) {
+            my ($observation_unit_name, $igd_number) = split(/:/, $_);
+            push @observation_unit_uniquenames_stripped, $observation_unit_name;
+        }
+    } else {
+        @observation_unit_uniquenames_stripped = @$observation_unit_uniquenames;
     }
 
     my $stock_type = $self->observation_unit_type_name;
@@ -487,7 +485,6 @@ sub store {
     my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
-    my $reference_genome_name = $self->reference_genome_name;
     my $location_id = $self->project_location_id;
     my $igd_numbers_included = $self->igd_numbers_included;
     my $stock_type = $self->observation_unit_type_name;
@@ -588,9 +585,13 @@ sub store {
 
     #remove extra numbers, such as igd after : symbol
     my @observation_unit_uniquenames_stripped;
-    foreach (@$observation_unit_uniquenames) {
-        my ($observation_unit_name, $igd_number) = split(/:/, $_);
-        push @observation_unit_uniquenames_stripped, $observation_unit_name;
+    if ($igd_numbers_included){
+        foreach (@$observation_unit_uniquenames) {
+            my ($observation_unit_name, $igd_number) = split(/:/, $_);
+            push @observation_unit_uniquenames_stripped, $observation_unit_name;
+        }
+    } else {
+        @observation_unit_uniquenames_stripped = @$observation_unit_uniquenames;
     }
 
     my $stock_rs = $schema->resultset("Stock::Stock")->search({
@@ -604,7 +605,13 @@ sub store {
     }
 
     foreach (@$observation_unit_uniquenames) {
-        my ($observation_unit_name, $igd_number) = split(/:/, $_);
+        my $observation_unit_name;
+        my $igd_number;
+        if ($igd_numbers_included){
+            ($observation_unit_name, $igd_number) = split(/:/, $_);
+        } else {
+            $observation_unit_name = $_;
+        }
         my $stock_id = $stock_lookup{$observation_unit_name};
 
         if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){

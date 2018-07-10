@@ -30,6 +30,7 @@ use CXGN::Genotype::ParseUpload;
 use CXGN::Genotype::StoreVCFGenotypes;
 use CXGN::Login;
 use CXGN::People::Person;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -141,23 +142,22 @@ sub upload_genotype_verify_POST : Args(0) {
         $obs_type = $protocol->sample_observation_unit_type_name;
     }
 
-    my $organism_genus_q = "SELECT organism_id, genus FROM organism WHERE species = ?";
-    my @found_genus;
-    my $h = $schema->storage->dbh()->prepare($organism_genus_q);
+    my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
+    my @found_organisms;
+    my $h = $schema->storage->dbh()->prepare($organism_q);
     $h->execute($organism_species);
-    while (my ($organism_id, $genus) = $h->fetchrow_array()){
-        push @found_genus, [$organism_id, $genus];
+    while (my ($organism_id) = $h->fetchrow_array()){
+        push @found_organisms, $organism_id;
     }
-    if (scalar(@found_genus) == 0){
+    if (scalar(@found_organisms) == 0){
         $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
         $c->detach();
     }
-    if (scalar(@found_genus) > 1){
+    if (scalar(@found_organisms) > 1){
         $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
         $c->detach();
     }
-    my $organism_id = $found_genus[0]->[0];
-    my $organism_genus = $found_genus[0]->[1];
+    my $organism_id = $found_organisms[0];
 
     my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
@@ -211,7 +211,6 @@ sub upload_genotype_verify_POST : Args(0) {
         protocol_name=>$protocol_name,
         organism_id=>$organism_id,
         igd_numbers_included=>$include_igd_numbers,
-        reference_genome_name=>$reference_genome_name,
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
         archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
