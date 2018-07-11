@@ -4,6 +4,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::Observations;
 use Moose;
 use File::Slurp;
 use List::MoreUtils qw(uniq);
+use Data::Dumper;
 
 sub name {
     return "brapi observations";
@@ -64,10 +65,12 @@ sub parse {
 
     # Check validity of submitted data
     my @data = @{$observations};
+    my %data = ();
     my %seen = ();
     my ( @observations, @units, @variables, @values, @timestamps) = [];
     foreach my $obs (@data){
         my $unique_combo = "observationUnitDbId: ".$obs->{'observationUnitDbId'}.", observationVariableDbId:".$obs->{'observationVariableDbId'}.", observationTimeStamp:".$obs->{'observationTimeStamp'};
+        print STDERR "Unique combo is $unique_combo\n";
         if ($seen{$unique_combo}) {
             $parse_result{'error'} = "Invalid request. The combination of $unique_combo appears more than once";
             #print STDERR "Invalid request: The combination of $unique_combo appears more than once\n";
@@ -79,7 +82,7 @@ sub parse {
         push @timestamps, $obs->{'observationTimeStamp'} if defined $obs->{'observationTimeStamp'};
         push @values, $obs->{'value'};
         #$data{$obs->{'observationUnitDbId'}}->{$obs->{'observationVariableDbId'}} = [$obs->{'value'}, $obs->{'observationTimeStamp'}];
-        my $unique_combo = $obs->{'observationUnitDbId'}.$obs->{'observationVariableDbId'}.$obs->{'observationTimeStamp'};
+        $unique_combo = $obs->{'observationUnitDbId'}.$obs->{'observationVariableDbId'}.$obs->{'observationTimeStamp'};
         $seen{$unique_combo} = 1;
 
         # track data for store
@@ -89,6 +92,7 @@ sub parse {
         $data{$UnitDbId}->{$VariableDbId}->{value} = $obs->{'value'};
         $data{$UnitDbId}->{$VariableDbId}->{collector} = $obs->{'collector'} ? $obs->{'collector'} : '';
     }
+    print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;
     @units = uniq @units;
     @variables = uniq @variables;
@@ -98,22 +102,36 @@ sub parse {
     my $validator = CXGN::List::Validate->new();
 
     if (scalar @observations) {
-        my @observations_missing = = @{$validator->validate($schema,'phenotypes',\@observations)->{'missing'}};
-        if (scalar @observations_missing) {
-            $parse_result{'error'} = "The following observations do not exist in the database: @observations_missing";
+        # my $t = CXGN::List::Transform->new();
+        # print STDERR "Observation names are: @observations\n";
+        # my $observation_transform = $t->transform($schema, 'stock_ids_2_stocks', \@observations);
+        # my @observation_names = @{$observation_transform->{'transform'}};
+        # print STDERR "Observation names are: @observation_names\n";
+        my $validated_observations = $validator->validate($schema,'phenotypes', \@observations);
+        if ($validated_observations->{'missing'}) {
+            my @observations_missing = @{$validated_observations->{'missing'}};
+            $parse_result{'error'} = "The following observations do not exist in the database: ".@observations_missing;
             #print STDERR "Invalid observations: @observations_missing\n";
             return \%parse_result;
         }
     }
 
-    my @units_missing = @{$validator->validate($schema,'plots_or_subplots_or_plants',\@units)->{'missing'}};
+    my $t = CXGN::List::Transform->new();
+    print STDERR "Units are: @units\n";
+    my $units_transform = $t->transform($schema, 'stock_ids_2_stocks', \@units);
+    my @unit_names = @{$units_transform->{'transform'}};
+    print STDERR "Unit names are: @unit_names\n";
+
+    my $validated_units = $validator->validate($schema,'plots_or_subplots_or_plants',\@unit_names);
+    my @units_missing = @{$validated_units->{'missing'}};
     if (scalar @units_missing) {
         $parse_result{'error'} = "The following observationUnitDbIds do not exist in the database: @units_missing";
         #print STDERR "Invalid observationUnitDbIds: @units_missing\n";
         return \%parse_result;
     }
 
-    my @variables_missing = @{$validator->validate($schema,'traits',\@variables)->{'missing'}};
+    my $validated_variables = $validator->validate($schema,'traits',\@variables);
+    my @variables_missing = @{$validated_variables ->{'missing'}};
     if (scalar @variables_missing) {
         $parse_result{'error'} = "The following observationVariableDbIds do not exist in the database: @variables_missing";
         #print STDERR "Invalid observationVariableDbIds: @variables_missing\n";
@@ -144,7 +162,7 @@ sub parse {
     # $data{$plot_name}->{$trait_name}->{$timestamp}->{value} = $value;
     # $data{$plot_name}->{$trait_name}->{$timestamp}->{collector} = $collect;
 
-    return 1;
+    return \%parse_result;
 }
 
 1;
