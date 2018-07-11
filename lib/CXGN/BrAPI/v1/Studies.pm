@@ -203,7 +203,7 @@ sub studies_germplasm {
 	}
 
 	my %result = (
-		studyDbId=>$study_id,
+		studyDbId=>qq|$study_id|,
 		studyName=>$tl->get_name,
 		data =>\@germplasm_data
 	);
@@ -447,7 +447,7 @@ sub studies_layout {
     		my @plot_image_ids = $image_id->get_image_ids();
             my @ids;
             foreach my $arrayimage (@plot_image_ids){
-                push @ids, @$arrayimage->[0];
+                push @ids, $arrayimage->[0];
             }
             $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
@@ -620,7 +620,7 @@ sub studies_table {
 		$total_count = scalar(@data)-1;
 		my @header_names = @{$data[0]};
 		#print STDERR Dumper \@header_names;
-		my @trait_names = @header_names[30 .. $#header_names];
+		my @trait_names = @header_names[39 .. $#header_names];
 		#print STDERR Dumper \@trait_names;
 		my @header_ids;
 		foreach my $t (@trait_names) {
@@ -640,7 +640,7 @@ sub studies_table {
 		#print STDERR Dumper \@data_window;
 
 		%result = (
-			headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber'],
+			headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber', 'plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames'],
 			observationVariableDbIds => \@header_ids,
 			observationVariableNames => \@trait_names,
 			data=>\@data_window

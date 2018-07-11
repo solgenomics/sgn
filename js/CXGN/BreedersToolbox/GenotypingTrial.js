@@ -24,7 +24,15 @@ jQuery(document).ready(function ($) {
     // defined in CXGN.BreedersToolbox.HTMLSelect
     get_select_box("locations", "location_select_div", {});
     get_select_box("breeding_programs", "breeding_program_select_div", {});
-    get_select_box("years", "year_select_div", {});
+    get_select_box("years", "year_select_div", {'auto_generate': 1});
+
+    get_select_box("locations", "upload_genotype_location_select_div", {'id': 'upload_genotype_location_select', 'name': 'upload_genotype_location_select'});
+    get_select_box("breeding_programs", "upload_genotype_breeding_program_select_div", {'id': 'upload_genotype_breeding_program_select', 'name': 'upload_genotype_breeding_program_select'});
+    get_select_box("years", "upload_genotype_year_select_div", {'auto_generate': 1, 'id': 'upload_genotype_year_select', 'name': 'upload_genotype_year_select'});
+
+    jQuery("#upload_genotypes_species_name_input").autocomplete({
+        source: '/organism/autocomplete'
+    });
 
     jQuery(function() {
         jQuery( "#genotyping_trials_accordion" ).accordion({
@@ -425,6 +433,58 @@ jQuery(document).ready(function ($) {
 
     jQuery('button[name="manage_tissue_samples_create_field_trial_samples"]').click(function(){
         jQuery('#field_trial_tissue_sample_dialog').modal("show");
+    });
+
+    jQuery('button[name="upload_genotyping_data_link"]').click(function(){
+        jQuery('#upload_genotypes_dialog').modal('show');
+    });
+
+    jQuery('#upload_genotype_submit').click(function () {
+        submit_genotype_data_upload()
+    });
+
+    function submit_genotype_data_upload() {
+        jQuery('#working_modal').modal('show');
+        jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
+        jQuery("#upload_genotypes_form").submit();
+    }
+
+    jQuery('#upload_genotypes_form').iframePostForm({
+        json: true,
+        post: function () {
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal('hide');
+            if (response.error) {
+                alert(response.error);
+                if (response.missing_stocks && response.missing_stocks.length > 0){
+                    jQuery('#upload_genotypes_missing_stocks_div').show();
+                    var missing_stocks_html = "<div class='well well-sm'><h3>Add the missing stocks to a list as accessions</h3><div id='upload_genotypes_missing_stock_vals' style='display:none'></div><div id='upload_genotypes_add_missing_stocks'></div></div><br/>";
+                    jQuery("#upload_genotypes_add_missing_stocks_html").html(missing_stocks_html);
+
+                    var missing_stocks_vals = '';
+                    for(var i=0; i<response.missing_stocks.length; i++) {
+                        missing_stocks_vals = missing_stocks_vals + response.missing_stocks[i] + '\n';
+                    }
+                    jQuery("#upload_genotypes_missing_stock_vals").html(missing_stocks_vals);
+                    addToListMenu('upload_genotypes_add_missing_stocks', 'upload_genotypes_missing_stock_vals', {
+                        selectText: true,
+                        listType: 'accessions'
+                    });
+                }
+                return;
+            }
+            if (response.warning) {
+                jQuery('#upload_genotypes_warnings_html').html(response.warning);
+                jQuery('#upload_genotypes_warnings_div').show();
+                return;
+            }
+            if (response.success) {
+                Workflow.complete('#upload_genotype_submit');
+                Workflow.focus("#upload_genotypes_workflow", -1); //Go to success page
+            }
+        }
     });
 
 });
