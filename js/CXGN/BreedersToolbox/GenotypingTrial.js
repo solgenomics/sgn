@@ -475,6 +475,11 @@ jQuery(document).ready(function ($) {
                 }
                 return;
             }
+            if (response.warning) {
+                jQuery('#upload_genotypes_warnings_html').html(response.warning);
+                jQuery('#upload_genotypes_warnings_div').show();
+                return;
+            }
             if (response.success) {
                 Workflow.complete('#upload_genotype_submit');
                 Workflow.focus("#upload_genotypes_workflow", -1); //Go to success page

@@ -131,6 +131,11 @@ sub upload_genotype_verify_POST : Args(0) {
     if ($contains_igd){
         $include_igd_numbers = 1;
     }
+    my $accept_warnings_input = $c->req->param('upload_genotype_accept_warnings');
+    my $accept_warnings;
+    if ($accept_warnings_input){
+        $accept_warnings = 1;
+    }
 
     #if protocol_id provided, a new one will not be created
     if ($protocol_id){
@@ -218,8 +223,17 @@ sub upload_genotype_verify_POST : Args(0) {
     my $verified_errors = $store_genotypes->validate();
     if (scalar(@{$verified_errors->{error_messages}}) > 0){
         print STDERR Dumper $verified_errors->{error_messages};
-        $c->stash->{rest} = { error => 'There exist errors in your file.', missing_stocks => $verified_errors->{missing_stocks} };
+        my $error_string = join ', ', @{$verified_errors->{error_messages}};
+        $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
         $c->detach();
+    }
+    if (scalar(@{$verified_errors->{warning_messages}}) > 0){
+        print STDERR Dumper $verified_errors->{warning_messages};
+        my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+        if (!$accept_warnings){
+            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+            $c->detach();
+        }
     }
     my $return = $store_genotypes->store();
     $c->stash->{rest} = $return;

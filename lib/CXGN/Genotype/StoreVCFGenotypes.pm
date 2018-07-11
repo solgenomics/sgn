@@ -372,6 +372,7 @@ sub validate {
     my $genotype_info = $self->genotype_info;
     my $include_igd_numbers = $self->igd_numbers_included;
     my @error_messages;
+    my @warning_messages;
 
     #to disntiguish genotyprop between old dosage only format and more info vcf format
     if ($self->archived_file_type ne 'genotype_vcf' && $self->archived_file_type ne 'genotype_dosage'){
@@ -471,7 +472,34 @@ sub validate {
         }
     }
 
-    return { error_messages => \@error_messages, missing_stocks => \@missing_stocks_return };
+    my $previous_genotypes_exist;
+    my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search({
+        'me.uniquename' => {-in => \@observation_unit_uniquenames_stripped},
+        'me.type_id' => $stock_type_id,
+        'me.organism_id' => $organism_id,
+        'nd_experiment.type_id' => $geno_cvterm_id,
+        'genotype.type_id' => $snp_genotype_id
+    }, {
+        join => {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_genotypes' => 'genotype'}, {'nd_experiment_protocols' => 'nd_protocol'}, {'nd_experiment_projects' => 'project'} ] } },
+        '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name'],
+        '+as' => ['protocol_id', 'protocol_name', 'project_id', 'project_name']
+    });
+    while(my $r = $previous_genotypes_rs->next){
+        my $uniquename = $r->uniquename;
+        my $protocol_name = $r->get_column('protocol_name');
+        my $project_name = $r->get_column('project_name');
+        push @warning_messages, "$uniquename in your file has already has genotype stored using the protocol $protocol_name in the project $project_name.";
+        $previous_genotypes_exist = 1;
+    }
+
+    return {
+        error_messages => \@error_messages,
+        warning_messages => \@warning_messages,
+        missing_stocks => \@missing_stocks_return,
+        previous_genotypes_exist => $previous_genotypes_exist
+    };
 }
 
 sub store {
