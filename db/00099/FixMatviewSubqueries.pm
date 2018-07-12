@@ -104,7 +104,7 @@ CREATE MATERIALIZED VIEW public.materialized_genoview AS
      LEFT JOIN nd_experiment_genotype ON nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id
   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
   GROUP BY 1,2,3
-  WITH DATA;
+WITH DATA;
 
 CREATE UNIQUE INDEX unq_geno_idx ON public.materialized_genoview(accession_id,genotype_id) WITH (fillfactor=100);
 CREATE INDEX accession_id_geno_idx ON public.materialized_genoview(accession_id) WITH (fillfactor=100);
@@ -115,13 +115,13 @@ ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;
 
 UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXseedlots","accessionsXtrait_components","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXseedlots","breeding_programsXtrait_components","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXseedlots","genotyping_protocolsXtrait_components","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXseedlots","locationsXtrait_components","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXseedlots","plantsXtrait_components","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXseedlots","plotsXtrait_components","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","seedlotsXtrait_components","seedlotsXtraits","seedlotsXtrial_designs","seedlotsXtrial_types","seedlotsXtrials","seedlotsXyears","trait_componentsXtraits","trait_componentsXtrial_designs","trait_componentsXtrial_types","trait_componentsXtrials","trait_componentsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}' WHERE mv_name = 'materialized_phenoview';
 
-
+DROP MATERIALIZED VIEW IF EXISTS public.seedlots CASCADE;
 CREATE MATERIALIZED VIEW public.seedlots AS
-SELECT stock.stock_id AS seedlot_id,
-stock.uniquename AS seedlot_name
-FROM stock
-WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'seedlot' AND cv.name = 'stock_type') AND is_obsolete = 'f'
-GROUP BY 1,2
+    SELECT stock.stock_id AS seedlot_id,
+    stock.uniquename AS seedlot_name
+    FROM stock
+    WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'seedlot' AND cv.name = 'stock_type') AND is_obsolete = 'f'
+    GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX seedlots_idx ON public.seedlots(seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlots OWNER TO web_usr;
@@ -135,7 +135,7 @@ CREATE MATERIALIZED VIEW public.accessions AS
   FROM stock
   WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'accession' AND cv.name = 'stock_type') AND is_obsolete = 'f'
   GROUP BY stock.stock_id, stock.uniquename
-  WITH DATA;
+WITH DATA;
 CREATE UNIQUE INDEX accessions_idx ON public.accessions(accession_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessions OWNER TO web_usr;
 
@@ -286,8 +286,7 @@ WITH DATA;
 CREATE UNIQUE INDEX years_idx ON public.years(year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW years OWNER TO web_usr;
 
--- add seedlots binary views and ADD BACK remaining BINARY VIEWS that were dropped during cascade
-
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXseedlots AS
 SELECT public.materialized_phenoview.accession_id,
     public.stock.stock_id AS seedlot_id
@@ -299,6 +298,7 @@ WITH DATA;
 CREATE UNIQUE INDEX accessionsXseedlots_idx ON public.accessionsXseedlots(accession_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXseedlots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXseedlots AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.nd_experiment_stock.stock_id AS seedlot_id
@@ -311,6 +311,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXseedlots_idx ON public.breeding_programsXseedlots(breeding_program_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXseedlots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXseedlots AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
 public.stock.stock_id AS seedlot_id
@@ -322,6 +323,7 @@ WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXseedlots_idx ON public.genotyping_protocolsXseedlots(genotyping_protocol_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXseedlots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXseedlots AS
 SELECT public.nd_experiment.nd_geolocation_id AS location_id,
 public.nd_experiment_stock.stock_id AS seedlot_id
@@ -333,6 +335,7 @@ WITH DATA;
 CREATE UNIQUE INDEX locationsXseedlots_idx ON public.locationsXseedlots(location_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXseedlots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXseedlots AS
 SELECT public.stock.stock_id AS plant_id,
     public.materialized_phenoview.seedlot_id
@@ -343,6 +346,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plantsXseedlots_idx ON public.plantsXseedlots(plant_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXseedlots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plotsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXseedlots AS
 SELECT public.stock.stock_id AS plot_id,
     public.materialized_phenoview.seedlot_id
@@ -353,6 +357,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plotsXseedlots_idx ON public.plotsXseedlots(plot_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXseedlots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.seedlotsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.seedlotsXtrait_components AS
 SELECT public.materialized_phenoview.seedlot_id,
 trait_component.cvterm_id AS trait_component_id
@@ -365,6 +370,7 @@ WITH DATA;
 CREATE UNIQUE INDEX seedlotsXtrait_components_idx ON public.seedlotsXtrait_components(seedlot_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrait_components OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.seedlotsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.seedlotsXtraits AS
 SELECT public.materialized_phenoview.seedlot_id,
     public.materialized_phenoview.trait_id
@@ -374,6 +380,7 @@ WITH DATA;
 CREATE UNIQUE INDEX seedlotsXtraits_idx ON public.seedlotsXtraits(seedlot_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtraits OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.seedlotsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.seedlotsXtrials AS
 SELECT public.materialized_phenoview.seedlot_id,
     public.materialized_phenoview.trial_id
@@ -383,6 +390,7 @@ WITH DATA;
 CREATE UNIQUE INDEX seedlotsXtrials_idx ON public.seedlotsXtrials(seedlot_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.seedlotsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.seedlotsXtrial_designs AS
 SELECT public.materialized_phenoview.seedlot_id,
     trialdesign.value AS trial_design_id
@@ -393,6 +401,7 @@ WITH DATA;
 CREATE UNIQUE INDEX seedlotsXtrial_designs_idx ON public.seedlotsXtrial_designs(seedlot_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.seedlotsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.seedlotsXtrial_types AS
 SELECT public.materialized_phenoview.seedlot_id,
     trialterm.cvterm_id AS trial_type_id
@@ -404,6 +413,7 @@ WITH DATA;
 CREATE UNIQUE INDEX seedlotsXtrial_types_idx ON public.seedlotsXtrial_types(seedlot_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.seedlotsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.seedlotsXyears AS
 SELECT public.materialized_phenoview.seedlot_id,
     public.materialized_phenoview.year_id
@@ -413,7 +423,7 @@ WITH DATA;
 CREATE UNIQUE INDEX seedlotsXyears_idx ON public.seedlotsXyears(seedlot_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXyears OWNER TO web_usr;
 
-
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtraits AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.trait_id
@@ -423,6 +433,7 @@ WITH DATA;
 CREATE UNIQUE INDEX accessionsXtraits_idx ON public.accessionsXtraits(accession_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtraits OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXtraits AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.trait_id
@@ -432,6 +443,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtraits_idx ON public.breeding_programsXtraits(breeding_program_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtraits OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtraits AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.trait_id
@@ -442,6 +454,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
 CREATE UNIQUE INDEX genotyping_protocolsXtraits_idx ON public.genotyping_protocolsXtraits(genotyping_protocol_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtraits OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXtraits AS
 SELECT public.materialized_phenoview.location_id,
     public.materialized_phenoview.trait_id
@@ -451,6 +464,7 @@ WITH DATA;
 CREATE UNIQUE INDEX locationsXtraits_idx ON public.locationsXtraits(location_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtraits OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXtraits AS
 SELECT public.stock.stock_id AS plant_id,
     public.materialized_phenoview.trait_id
@@ -461,6 +475,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plantsXtraits_idx ON public.plantsXtraits(plant_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtraits OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plotsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXtraits AS
 SELECT public.stock.stock_id AS plot_id,
     public.materialized_phenoview.trait_id
@@ -471,6 +486,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plotsXtraits_idx ON public.plotsXtraits(plot_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtraits OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.traitsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXtrials AS
 SELECT public.materialized_phenoview.trait_id,
     public.materialized_phenoview.trial_id
@@ -480,6 +496,7 @@ WITH DATA;
 CREATE UNIQUE INDEX traitsXtrials_idx ON public.traitsXtrials(trait_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW traitsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.traitsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXtrial_designs AS
 SELECT public.materialized_phenoview.trait_id,
     trialdesign.value AS trial_design_id
@@ -490,6 +507,7 @@ WITH DATA;
 CREATE UNIQUE INDEX traitsXtrial_designs_idx ON public.traitsXtrial_designs(trait_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW traitsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.traitsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXtrial_types AS
 SELECT public.materialized_phenoview.trait_id,
     trialterm.cvterm_id AS trial_type_id
@@ -501,6 +519,7 @@ WITH DATA;
 CREATE UNIQUE INDEX traitsXtrial_types_idx ON public.traitsXtrial_types(trait_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW traitsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.traitsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXyears AS
 SELECT public.materialized_phenoview.trait_id,
     public.materialized_phenoview.year_id
@@ -512,6 +531,7 @@ ALTER MATERIALIZED VIEW traitsXyears OWNER TO web_usr;
 
 
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrait_components AS
 SELECT public.materialized_phenoview.accession_id,
     trait_component.cvterm_id AS trait_component_id
@@ -525,6 +545,7 @@ CREATE UNIQUE INDEX accessionsXtrait_components_idx ON public.accessionsXtrait_c
 ALTER MATERIALIZED VIEW accessionsXtrait_components OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtrait_components', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXtrait_components AS
 SELECT public.materialized_phenoview.breeding_program_id,
 trait_component.cvterm_id AS trait_component_id
@@ -538,6 +559,7 @@ CREATE UNIQUE INDEX breeding_programsXtrait_components_idx ON public.breeding_pr
 ALTER MATERIALIZED VIEW breeding_programsXtrait_components OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtrait_components', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrait_components AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
 trait_component.cvterm_id AS trait_component_id
@@ -552,6 +574,7 @@ CREATE UNIQUE INDEX genotyping_protocolsXtrait_components_idx ON public.genotypi
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrait_components OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtrait_components', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXtrait_components AS
 SELECT public.materialized_phenoview.location_id,
 trait_component.cvterm_id AS trait_component_id
@@ -565,6 +588,7 @@ CREATE UNIQUE INDEX locationsXtrait_components_idx ON public.locationsXtrait_com
 ALTER MATERIALIZED VIEW locationsXtrait_components OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtrait_components', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXtrait_components AS
 SELECT public.stock.stock_id AS plant_id,
 trait_component.cvterm_id AS trait_component_id
@@ -579,6 +603,7 @@ CREATE UNIQUE INDEX plantsXtrait_components_idx ON public.plantsXtrait_component
 ALTER MATERIALIZED VIEW plantsXtrait_components OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtrait_components', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.plotsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXtrait_components AS
 SELECT public.stock.stock_id AS plot_id,
 trait_component.cvterm_id AS trait_component_id
@@ -593,6 +618,7 @@ CREATE UNIQUE INDEX plotsXtrait_components_idx ON public.plotsXtrait_components(
 ALTER MATERIALIZED VIEW plotsXtrait_components OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrait_components', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.trait_componentsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.trait_componentsXtraits AS
 SELECT traits.trait_id,
 trait_component.cvterm_id AS trait_component_id
@@ -605,6 +631,7 @@ CREATE UNIQUE INDEX trait_componentsXtraits_idx ON public.trait_componentsXtrait
 ALTER MATERIALIZED VIEW trait_componentsXtraits OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtraits', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.trait_componentsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.trait_componentsXtrials AS
 SELECT trait_component.cvterm_id AS trait_component_id,
     public.materialized_phenoview.trial_id
@@ -618,6 +645,7 @@ CREATE UNIQUE INDEX trait_componentsXtrials_idx ON public.trait_componentsXtrial
 ALTER MATERIALIZED VIEW trait_componentsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrials', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.trait_componentsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.trait_componentsXtrial_designs AS
 SELECT trait_component.cvterm_id AS trait_component_id,
     trialdesign.value AS trial_design_id
@@ -632,6 +660,7 @@ CREATE UNIQUE INDEX trait_componentsXtrial_designs_idx ON public.trait_component
 ALTER MATERIALIZED VIEW trait_componentsXtrial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.trait_componentsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.trait_componentsXtrial_types AS
 SELECT trait_component.cvterm_id AS trait_component_id,
     trialterm.cvterm_id AS trial_type_id
@@ -647,6 +676,7 @@ CREATE UNIQUE INDEX trait_componentsXtrial_types_idx ON public.trait_componentsX
 ALTER MATERIALIZED VIEW trait_componentsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.trait_componentsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.trait_componentsXyears AS
 SELECT trait_component.cvterm_id AS trait_component_id,
     public.materialized_phenoview.year_id
@@ -674,6 +704,7 @@ CREATE MATERIALIZED VIEW public.accessions AS
 CREATE UNIQUE INDEX accessions_idx ON public.accessions(accession_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessions OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXbreeding_programs CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXbreeding_programs AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.breeding_program_id
@@ -683,6 +714,7 @@ SELECT public.materialized_phenoview.accession_id,
 CREATE UNIQUE INDEX accessionsXbreeding_programs_idx ON public.accessionsXbreeding_programs(accession_id, breeding_program_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXbreeding_programs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXgenotyping_protocols CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXgenotyping_protocols AS
 SELECT public.materialized_genoview.accession_id,
     public.materialized_genoview.genotyping_protocol_id
@@ -692,6 +724,7 @@ SELECT public.materialized_genoview.accession_id,
 CREATE UNIQUE INDEX accessionsXgenotyping_protocols_idx ON public.accessionsXgenotyping_protocols(accession_id, genotyping_protocol_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXgenotyping_protocols OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXlocations CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXlocations AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.location_id
@@ -701,6 +734,7 @@ SELECT public.materialized_phenoview.accession_id,
 CREATE UNIQUE INDEX accessionsXlocations_idx ON public.accessionsXlocations(accession_id, location_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXlocations OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXplants CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXplants AS
 SELECT public.materialized_phenoview.accession_id,
     public.stock.stock_id AS plant_id
@@ -711,6 +745,7 @@ SELECT public.materialized_phenoview.accession_id,
 CREATE UNIQUE INDEX accessionsXplants_idx ON public.accessionsXplants(accession_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXplants OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXplots CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXplots AS
 SELECT public.materialized_phenoview.accession_id,
     public.stock.stock_id AS plot_id
@@ -721,6 +756,7 @@ WITH DATA;
 CREATE UNIQUE INDEX accessionsXplots_idx ON public.accessionsXplots(accession_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXplots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrial_designs AS
 SELECT public.materialized_phenoview.accession_id,
     trialdesign.value AS trial_design_id
@@ -731,6 +767,7 @@ WITH DATA;
 CREATE UNIQUE INDEX accessionsXtrial_designs_idx ON public.accessionsXtrial_designs(accession_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrial_types AS
 SELECT public.materialized_phenoview.accession_id,
     trialterm.cvterm_id AS trial_type_id
@@ -742,6 +779,7 @@ WITH DATA;
 CREATE UNIQUE INDEX accessionsXtrial_types_idx ON public.accessionsXtrial_types(accession_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrials AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.trial_id
@@ -751,6 +789,7 @@ WITH DATA;
 CREATE UNIQUE INDEX accessionsXtrials_idx ON public.accessionsXtrials(accession_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXyears AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.year_id
@@ -761,6 +800,7 @@ CREATE UNIQUE INDEX accessionsXyears_idx ON public.accessionsXyears(accession_id
 ALTER MATERIALIZED VIEW accessionsXyears OWNER TO web_usr;
 
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXgenotyping_protocols CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXgenotyping_protocols AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_genoview.genotyping_protocol_id
@@ -771,6 +811,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXgenotyping_protocols_idx ON public.breeding_programsXgenotyping_protocols(breeding_program_id, genotyping_protocol_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXgenotyping_protocols OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXlocations CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXlocations AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.location_id
@@ -780,6 +821,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXlocations_idx ON public.breeding_programsXlocations(breeding_program_id, location_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXlocations OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXplants CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXplants AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.stock.stock_id AS plant_id
@@ -790,6 +832,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
 CREATE UNIQUE INDEX breeding_programsXplants_idx ON public.breeding_programsXplants(breeding_program_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXplants OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXplots CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXplots AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.stock.stock_id AS plot_id
@@ -800,6 +843,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXplots_idx ON public.breeding_programsXplots(breeding_program_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXplots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXtrial_designs AS
 SELECT public.materialized_phenoview.breeding_program_id,
     trialdesign.value AS trial_design_id
@@ -810,6 +854,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtrial_designs_idx ON public.breeding_programsXtrial_designs(breeding_program_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXtrial_types AS
 SELECT public.materialized_phenoview.breeding_program_id,
     trialterm.cvterm_id AS trial_type_id
@@ -821,6 +866,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtrial_types_idx ON public.breeding_programsXtrial_types(breeding_program_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXtrials AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.trial_id
@@ -830,6 +876,7 @@ WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtrials_idx ON public.breeding_programsXtrials(breeding_program_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXyears AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.year_id
@@ -840,6 +887,7 @@ CREATE UNIQUE INDEX breeding_programsXyears_idx ON public.breeding_programsXyear
 ALTER MATERIALIZED VIEW breeding_programsXyears OWNER TO web_usr;
 
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXlocations CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXlocations AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.location_id
@@ -850,6 +898,7 @@ WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXlocations_idx ON public.genotyping_protocolsXlocations(genotyping_protocol_id, location_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXlocations OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXplants CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXplants AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     public.stock.stock_id AS plant_id
@@ -861,6 +910,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
 CREATE UNIQUE INDEX genotyping_protocolsXplants_idx ON public.genotyping_protocolsXplants(genotyping_protocol_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXplants OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXplots CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXplots AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     public.stock.stock_id AS plot_id
@@ -872,6 +922,7 @@ WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXplots_idx ON public.genotyping_protocolsXplots(genotyping_protocol_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXplots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrial_designs AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     trialdesign.value AS trial_design_id
@@ -883,6 +934,7 @@ WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtrial_designs_idx ON public.genotyping_protocolsXtrial_designs(genotyping_protocol_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrial_types AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     trialterm.cvterm_id AS trial_type_id
@@ -895,6 +947,7 @@ WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtrial_types_idx ON public.genotyping_protocolsXtrial_types(genotyping_protocol_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrials AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.trial_id
@@ -905,6 +958,7 @@ WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtrials_idx ON public.genotyping_protocolsXtrials(genotyping_protocol_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXyears AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.year_id
@@ -917,6 +971,7 @@ ALTER MATERIALIZED VIEW genotyping_protocolsXyears OWNER TO web_usr;
 
 
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXplants CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXplants AS
 SELECT public.materialized_phenoview.location_id,
     public.stock.stock_id AS plant_id
@@ -927,6 +982,7 @@ SELECT public.materialized_phenoview.location_id,
 CREATE UNIQUE INDEX locationsXplants_idx ON public.locationsXplants(location_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXplants OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXplots CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXplots AS
 SELECT public.materialized_phenoview.location_id,
     public.stock.stock_id AS plot_id
@@ -937,6 +993,7 @@ WITH DATA;
 CREATE UNIQUE INDEX locationsXplots_idx ON public.locationsXplots(location_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXplots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXtrial_designs AS
 SELECT public.materialized_phenoview.location_id,
     trialdesign.value AS trial_design_id
@@ -947,6 +1004,7 @@ WITH DATA;
 CREATE UNIQUE INDEX locationsXtrial_designs_idx ON public.locationsXtrial_designs(location_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXtrial_types AS
 SELECT public.materialized_phenoview.location_id,
     trialterm.cvterm_id AS trial_type_id
@@ -958,6 +1016,7 @@ WITH DATA;
 CREATE UNIQUE INDEX locationsXtrial_types_idx ON public.locationsXtrial_types(location_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXtrials AS
 SELECT public.materialized_phenoview.location_id,
     public.materialized_phenoview.trial_id
@@ -967,6 +1026,7 @@ WITH DATA;
 CREATE UNIQUE INDEX locationsXtrials_idx ON public.locationsXtrials(location_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.locationsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXyears AS
 SELECT public.materialized_phenoview.location_id,
     public.materialized_phenoview.year_id
@@ -989,6 +1049,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plants_idx ON public.plants(plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plants OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXplots CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXplots AS
 SELECT plant.stock_id AS plant_id,
     plot.stock_id AS plot_id
@@ -1002,6 +1063,7 @@ CREATE UNIQUE INDEX plantsXplots_idx ON public.plantsXplots(plant_id, plot_id) W
 ALTER MATERIALIZED VIEW plantsXplots OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXplots', FALSE, CURRENT_TIMESTAMP);
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXtrials AS
 SELECT public.stock.stock_id AS plant_id,
     public.materialized_phenoview.trial_id
@@ -1012,6 +1074,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plantsXtrials_idx ON public.plantsXtrials(plant_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXtrial_designs AS
 SELECT public.stock.stock_id AS plant_id,
     trialdesign.value AS trial_design_id
@@ -1023,6 +1086,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plantsXtrial_designs_idx ON public.plantsXtrial_designs(plant_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXtrial_types AS
 SELECT public.stock.stock_id AS plant_id,
     trialterm.cvterm_id AS trial_type_id
@@ -1035,6 +1099,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plantsXtrial_types_idx ON public.plantsXtrial_types(plant_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plantsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXyears AS
 SELECT public.stock.stock_id AS plant_id,
     public.materialized_phenoview.year_id
@@ -1058,6 +1123,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plots_idx ON public.plots(plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plots OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plotsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXtrials AS
 SELECT public.stock.stock_id AS plot_id,
     public.materialized_phenoview.trial_id
@@ -1068,6 +1134,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plotsXtrials_idx ON public.plotsXtrials(plot_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plotsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXtrial_designs AS
 SELECT public.stock.stock_id AS plot_id,
     trialdesign.value AS trial_design_id
@@ -1079,6 +1146,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plotsXtrial_designs_idx ON public.plotsXtrial_designs(plot_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtrial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plotsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXtrial_types AS
 SELECT public.stock.stock_id AS plot_id,
     trialterm.cvterm_id AS trial_type_id
@@ -1091,6 +1159,7 @@ WITH DATA;
 CREATE UNIQUE INDEX plotsXtrial_types_idx ON public.plotsXtrial_types(plot_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.plotsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXyears AS
 SELECT public.stock.stock_id AS plot_id,
     public.materialized_phenoview.year_id
@@ -1116,6 +1185,7 @@ WITH DATA;
 CREATE UNIQUE INDEX trial_designs_idx ON public.trial_designs(trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designs OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.trial_designsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.trial_designsXtrial_types AS
 SELECT trialdesign.value AS trial_design_id,
     trialterm.cvterm_id AS trial_type_id
@@ -1128,6 +1198,7 @@ WITH DATA;
 CREATE UNIQUE INDEX trial_designsXtrial_types_idx ON public.trial_designsXtrial_types(trial_design_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designsXtrial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.trial_designsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.trial_designsXtrials AS
 SELECT trialdesign.value AS trial_design_id,
     public.materialized_phenoview.trial_id
@@ -1138,6 +1209,7 @@ WITH DATA;
 CREATE UNIQUE INDEX trial_designsXtrials_idx ON public.trial_designsXtrials(trial_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designsXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.trial_designsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.trial_designsXyears AS
 SELECT trialdesign.value AS trial_design_id,
     public.materialized_phenoview.year_id
@@ -1162,6 +1234,7 @@ WITH DATA;
 CREATE UNIQUE INDEX trial_types_idx ON public.trial_types(trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_types OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.trial_typesXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.trial_typesXtrials AS
 SELECT trialterm.cvterm_id AS trial_type_id,
     public.materialized_phenoview.trial_id
@@ -1173,6 +1246,7 @@ WITH DATA;
 CREATE UNIQUE INDEX trial_typesXtrials_idx ON public.trial_typesXtrials(trial_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_typesXtrials OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.trial_typesXyears CASCADE;
 CREATE MATERIALIZED VIEW public.trial_typesXyears AS
 SELECT trialterm.cvterm_id AS trial_type_id,
     public.materialized_phenoview.year_id
@@ -1186,6 +1260,7 @@ ALTER MATERIALIZED VIEW trial_typesXyears OWNER TO web_usr;
 
 
 
+DROP MATERIALIZED VIEW IF EXISTS public.trialsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.trialsXyears AS
 SELECT public.materialized_phenoview.trial_id,
     public.materialized_phenoview.year_id
