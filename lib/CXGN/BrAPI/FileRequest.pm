@@ -127,7 +127,7 @@ sub observations {
 		foreach my $plot (@data){
             print $fh "\"$plot->{'observationDbId'}\"," || "\"\",";
             print $fh "\"$plot->{'observationUnitDbId'}\",";
-            print $fh "\"$plot->{'observationVariableId'}\",";
+            print $fh "\"$plot->{'observationVariableDbId'}\",";
             print $fh "\"$plot->{'value'}\",";
             print $fh "\"$plot->{'observationTimeStamp'}\"," || "\"\",";
             print $fh "\"$plot->{'collector'}\"" || "\"\"";

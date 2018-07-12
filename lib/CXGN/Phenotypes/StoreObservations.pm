@@ -66,22 +66,22 @@ has 'user_id' => (isa => "Int",
     required => 1
 );
 
-has 'stock_list' => (isa => "ArrayRef",
+has 'unit_list' => (isa => "ArrayRef",
     is => 'rw',
     required => 1
 );
 
-has 'stock_id_list' => (isa => "ArrayRef[Int]|Undef",
+has 'unit_id_list' => (isa => "ArrayRef[Int]|Undef",
     is => 'rw',
     required => 0,
 );
 
-has 'trait_list' => (isa => "ArrayRef",
+has 'variable_list' => (isa => "ArrayRef",
     is => 'rw',
     required => 1
 );
 
-has 'values_hash' => (isa => "HashRef",
+has 'data' => (isa => "HashRef",
     is => 'rw',
     required => 1
 );
@@ -125,7 +125,7 @@ sub create_hash_lookups {
 
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
-    my @trait_list = @{$self->trait_list};
+    my @variable_list = @{$self->variable_list};
     my @cvterm_ids;
 
     foreach my $trait_name (@variable_list) {
@@ -207,6 +207,7 @@ sub store {
         }
     );
     while (my $s = $rs->next()) {
+        print STDERR "Associate stock id ".$s->get_column('stock_id')." with location id ".$s->get_column('nd_geolocation_id')." and project_id ".$s->get_column('project_id')."\n";
         $linked_data{$s->get_column('stock_id')} = [$s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
     }
 
@@ -217,8 +218,8 @@ sub store {
         foreach my $unit_id (@unit_list) {
 
             my $stock_id = $unit_id;
-            my $location_id = $data{$unit_id}[0];
-            my $project_id = $data{$unit_id}[1];
+            my $location_id = $linked_data{$unit_id}[0];
+            my $project_id = $linked_data{$unit_id}[1];
 
             foreach my $trait_name (@variable_list) {
 
@@ -228,19 +229,21 @@ sub store {
                 #print STDERR Dumper $value_array;
                 my $trait_value = $data{$unit_id}->{$trait_name}->{value};
                 my $timestamp = $data{$unit_id}->{$trait_name}->{timestamp};
+                my $operator =  $data{$unit_id}->{$trait_name}->{collector};
                 if (!$timestamp) {
                     $timestamp = 'NA'.$upload_date;
                 }
 
                 if (defined($trait_value) && length($trait_value)) {
 
+                    # change this to work depending on whether observationDbIds are supplied and valid
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
-                    if ($overwrite_values) {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            push @overwritten_values, $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
-                        }
-                        $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                    }
+                    # if ($overwrite_values) {
+                    #     if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                    #         push @overwritten_values, $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
+                    #     }
+                    #     $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
+                    # }
 
                     my $plot_trait_uniquename = "Stock: " .
                         $stock_id . ", trait: " .
