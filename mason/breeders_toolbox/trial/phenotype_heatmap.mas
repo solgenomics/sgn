@@ -1272,29 +1272,41 @@ jQuery(document).ready( function() {
         jQuery("#trait_heatmap").css("display", "none");
         field_map_view();
         jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+            url: '/brapi/v1/studies/'+ <% $trial_id %> +'/observationvariables',
+            //url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
             beforeSend: function() {
               jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                if (response.traits_assayed[0][0]) {
+                var data = response.result.data;
+                var varName = [];
+                var varID = [];
+                jQuery.each(data, function(key_obj, value_obj) {
+                    jQuery.each(value_obj, function(key, value) {
+                        if (key == 'name'){
+                            varName.push(value);
+                        }
+                        if (key == 'observationVariableDbId'){
+                            varID.push(value);
+                        }
+                    });
+                });
+
+                if (varName != '' && varID != '' ) {
                     var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
                     traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
-                    for (i=0; i<response.traits_assayed[0].length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                    for (i=0; i<varID.length; i++) {
+                        traits_assayed_html = traits_assayed_html + "<option value="+ varID[i] + " >" + varName[i] + "</option>";
                     }
                     traits_assayed_html = traits_assayed_html +"</optgroup>";
                     traits_assayed_html = traits_assayed_html +"</select>";
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
                     jQuery("#traitdiv").css("display", "inline-block");
-                    //field_map_view();
-                    //jQuery("#working_modal").modal("hide");
                 } 
                 else {
-                    //field_map_view();
                     var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
                     traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
@@ -1303,8 +1315,7 @@ jQuery(document).ready( function() {
                     traits_assayed_html = traits_assayed_html +"</select>";
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traitdiv").css("display", "inline-block");
-                    //jQuery("#working_modal").modal("hide");                 
+                    jQuery("#traitdiv").css("display", "inline-block");               
                 }
             },
             error: function(response){

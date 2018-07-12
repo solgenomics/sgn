@@ -60,7 +60,7 @@ $image_ids => undef
 $related_image_ids => undef
 $dbh => undef
 $trait_ontology_db_name => undef
-$pubs => {}
+$pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
 </%args>
@@ -195,14 +195,12 @@ $referer => undef
                                 </&>
 % }
 % if ($info_section_id eq 'stock_literature_annotation_section'){
-                                <&| /page/info_section.mas, title=>"Literature annotation (".scalar( keys %$pubs ).")" , id=>"publications" , collapsible=>1, collapsed=>1 &>
+                                <&| /page/info_section.mas, title=>"Literature annotation (".scalar( @$pubs ).")" , id=>"publications" , collapsible=>1, collapsed=>1 &>
 
-% my $pub_count = 0;
-% foreach my $full_accession ( keys %$pubs  ) {
-%   my $pub = CXGN::Chado::Publication->new($dbh, $pubs->{$full_accession}->pub_id );
-%   my ($pub_db_name, $accession) = split ':' , $full_accession;
-                                    <& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$pub_db_name, accession=>$accession &>
-                                    <br >
+
+% foreach my $publication ( @$pubs  ) {
+  <& /chado/publication.mas, pub=>$publication &>
+    <br >
 % }
 
                                 </&>

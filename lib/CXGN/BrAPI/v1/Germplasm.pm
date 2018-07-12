@@ -258,8 +258,9 @@ sub germplasm_pedigree {
         my @siblings;
         foreach (@$progenies){
             if ($_->[5] ne $uniquename){
+                my $germplasm_id = $_->[4];
                 push @siblings, {
-                    germplasmDbId => $_->[4],
+                    germplasmDbId => qq|$germplasm_id|,
                     defaultDisplayName => $_->[5]
                 };
             }

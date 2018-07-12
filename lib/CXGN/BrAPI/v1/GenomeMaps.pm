@@ -121,14 +121,14 @@ sub detail {
        	my @data = ();
 
 	foreach my $chr ($map->get_chromosomes()) { 
-	    push @data, { linkageGroupId => $chr->get_name(),
-			  numberMarkers => scalar($chr->get_markers()),
+	    push @data, {
+            linkageGroupName => $chr->get_name(),
+			  markerCount => scalar($chr->get_markers()),
 			  maxPosition => $chr->get_length()
 	    };
 	}
 	    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 
-    my $map_id = $map->get_id();
 	my %result = (
 		mapDbId =>  qq|$map_id|,
 		name => $map->get_short_name(),
@@ -176,8 +176,8 @@ sub positions {
 			push @data, { 
 			    markerDbId => $m->get_name(),
 			    markerName => $m->get_name(),
-			    position => $m->get_offset(),
-			    linkageGroup => $chr->get_name(),
+			    location => $m->get_offset(),
+			    linkageGroupName => $chr->get_name(),
 			};
 		    }
 		}
@@ -185,8 +185,8 @@ sub positions {
 		    push @data, {
 			    markerDbId => $m->get_name(),
 			    markerName => $m->get_name(),
-			    position => $m->get_offset(),
-			    linkageGroup => $chr->get_name()
+			    location => $m->get_offset(),
+			    linkageGroupName => $chr->get_name()
 		    }
 		}
 	    }
@@ -198,8 +198,8 @@ sub positions {
 		name => $map->get_short_name(),
 		type => "genotype",
 		unit => "bp",
-	        comments => $map->get_abstract(),
-		linkageGroups => $data_window,
+        comments => $map->get_abstract(),
+		data => $data_window,
 	);
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Maps detail result constructed');

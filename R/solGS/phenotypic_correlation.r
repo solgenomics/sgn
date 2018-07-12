@@ -39,11 +39,13 @@ formattedPhenoData <- c()
 phenoData          <- c()
 
 if ( length(refererQtl) != 0 ) {
-    
-  phenoData <- as.data.frame(fread(phenoDataFile,
+   phenoDataFile      <- grep("\\/phenodata", inputFiles, value=TRUE)    
+
+   phenoData <- read.table(phenoDataFile,
+				header=TRUE,
                                    sep=",",
                                    na.strings=c("NA", "-", " ", ".", "..")
-                                   ))
+                                   )
 } else {
 
   phenoData <- as.data.frame(fread(phenoDataFile,

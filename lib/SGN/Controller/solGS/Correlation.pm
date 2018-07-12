@@ -59,8 +59,11 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     }
     elsif ($referer =~ /qtl/)
     {    
-        $self->create_correlation_phenodata_file($c);
-        $phenotype_file =  $c->stash->{phenotype_file};
+       # $self->create_correlation_phenodata_file($c);
+
+	my $phenotype_dir = $c->stash->{solqtl_cache_dir};
+        $phenotype_file   = 'phenodata_' . $pop_id;
+        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
     }
     else
     {
@@ -189,10 +192,10 @@ sub create_correlation_phenodata_file {
         my $pop_id = $c->stash->{pop_id};
        
         my $pheno_exp = "phenodata_${pop_id}";
-        my $dir       = catdir($c->config->{solqtl}, 'cache');
+        my $dir       = $c->stash->{solqtl_cache_dir};
        
-        my $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
-
+        $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
+	
         unless ($phenotype_file) 
 	{           
             my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
@@ -207,10 +210,10 @@ sub create_correlation_phenodata_file {
     }
 
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
-      
+   
     copy($phenotype_file, $corre_cache_dir) 
 	or die "could not copy $phenotype_file to $corre_cache_dir";
-
+   
     my $file = basename($phenotype_file);
     $c->stash->{phenotype_file} = catfile($corre_cache_dir, $file);
         
@@ -229,7 +232,7 @@ sub pheno_correlation_output_files {
     my ($self, $c) = @_;
      
     my $pop_id = $c->stash->{pop_id};
-    
+   
     $self->create_correlation_dir($c);
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
     
@@ -282,13 +285,13 @@ sub genetic_correlation_output_files {
 
 sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/output') Args(0) {
     my ($self, $c) = @_;
-
+   
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
-
+   
     $self->pheno_correlation_output_files($c);
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};
-         
+   
     my $ret->{status} = 'failed';
   
     if (!-s $corre_json_file)
@@ -448,10 +451,10 @@ sub temp_pheno_corre_input_file {
     
     $self->create_correlation_phenodata_file($c);
     my $pheno_file = $c->stash->{phenotype_file};
-    
+   
     $c->controller("solGS::Files")->formatted_phenotype_file($c);
     my $formatted_pheno_file = $c->stash->{formatted_phenotype_file};
-    
+   
     my $files = join ("\t",
 		      $pheno_file,
 		      $formatted_pheno_file,
@@ -462,7 +465,6 @@ sub temp_pheno_corre_input_file {
     my $name = "pheno_corre_input_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $files);
-    
     $c->stash->{temp_pheno_corre_input_file} = $tempfile;
 
 }
