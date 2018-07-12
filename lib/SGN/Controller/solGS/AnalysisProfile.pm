@@ -445,13 +445,13 @@ sub structure_output_details {
 	if ($pop_id =~ /list/) {
 	    my $tmp_dir = $c->stash->{solgs_lists_dir};;	   
 
-	    my $files   = $c->controller('solGS::List')->create_list_pop_tempfiles($tmp_dir, $pop_id);
+	    my $files   = $c->controller('solGS::List')->create_list_pop_data_tempfiles($tmp_dir, $pop_id);
 	    $pheno_file = $files->{pheno_file};
 	    $geno_file  = $files->{geno_file};
 
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 
-	    $solgs_controller->list_population_summary($c, $pop_id);	    
+	    $c->controller('solGS::List')->list_population_summary($c, $pop_id);	    
 	    $pop_name = $c->stash->{project_name};
 	} 
 	else 
@@ -524,7 +524,7 @@ sub structure_output_details {
 		$training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 		if ($training_pop_id =~ /list/)
 		{
-		   $c->controller('solGS::solGS')->list_population_summary($c, $training_pop_id);
+		   $c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
 		   $training_pop_name   = $c->stash->{project_name};   
 		}
 		else
@@ -541,7 +541,7 @@ sub structure_output_details {
 	    { 
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);
 	        	
-		$c->controller('solGS::solGS')->list_population_summary($c, $prediction_pop_id);
+		$c->controller('solGS::List')->list_population_summary($c, $prediction_pop_id);
 		$prediction_pop_name = $c->stash->{prediction_pop_name}; 
 	    }
 	    else 
@@ -673,11 +673,15 @@ sub run_analysis {
 	elsif ($analysis_page =~ /solgs\/population\//)
 	{
 	    my $pop_id = $c->stash->{model_id};	  
-
+	  
 	    if ($pop_id =~ /list/)		
 	    {
+		my $list_id = $pop_id;
+		$list_id =~ s/list_//;
+		$c->stash->{list_id} = $list_id;
+        
 		$c->controller('solGS::List')->plots_list_phenotype_file($c);
-		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
+		$c->controller('solGS::List')->genotypes_list_genotype_file($c);
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	    }
 	    else
@@ -715,7 +719,10 @@ sub run_analysis {
     
 		if ($selection_pop_id =~ /list/)
 		{
-		    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $selection_pop_id);		      
+		    my $list_id = $selection_pop_id;
+		    $list_id =~ s/list_//;
+		    $c->stash->{list_id} = $list_id;
+		    $c->controller('solGS::List')->genotypes_list_genotype_file($c);		      
 		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
 
 		    $c->stash->{dependency} = $c->stash->{geno_data_query_job_id};
@@ -739,7 +746,10 @@ sub run_analysis {
 		
 		if ($selection_pop_id =~ /list/)
 		{
-		    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $selection_pop_id);
+		     my $list_id = $selection_pop_id;
+		    $list_id =~ s/list_//;
+		    $c->stash->{list_id} = $list_id;
+		    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
 		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
 
 		    $c->stash->{dependency} = $c->stash->{geno_data_query_job_id};
@@ -761,7 +771,10 @@ sub run_analysis {
 		
 		if ($selection_pop_id =~ /list/) 
 		{
-		    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $selection_pop_id);		    
+		     my $list_id = $selection_pop_id;
+		    $list_id =~ s/list_//g;
+		    $c->stash->{list_id} = $list_id;
+		    $c->controller('solGS::List')->genotypes_list_genotype_file($c);		    
 		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
 		    
 		    $c->stash->{dependency} = $c->stash->{geno_data_query_job_id};

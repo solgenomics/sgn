@@ -72,7 +72,6 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	
 	$list_id =~ s/list_//;		   	
 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-
 	my $list_type = $list->type();
 	$c->stash->{list_id}   = $list_id;
 	$c->stash->{list_type} = $list_type;
@@ -204,7 +203,6 @@ sub kcluster_result :Path('/cluster/result/') Args() {
     }
 
     $c->stash->{rest}{status} = 'Cluster analysis failed.';
-    my $kcluster_result;
    
     if( !-s $cluster_result_file)
     {	
@@ -219,7 +217,7 @@ sub kcluster_result :Path('/cluster/result/') Args() {
 	}	
     }
     
-    $cluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $kcluster_result_file);
+    my $cluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $cluster_result_file);
    
     my $host = $c->req->base;
 
@@ -275,8 +273,6 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
     $c->res->body($ret);
 
 }
-
-
 
 
 sub create_cluster_genotype_data {    
@@ -336,18 +332,7 @@ sub _cluster_list_genotype_data {
     {
 	if ($list_type eq 'accessions') 
 	{
-	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	    my @genotypes_list = @{$list->elements};
-
-	    $c->stash->{genotypes_list} = \@genotypes_list;	   
-	    my $geno_data = $c->model('solGS::solGS')->genotypes_list_genotype_data(\@genotypes_list);
-	    
-	    my $tmp_dir = $c->stash->{solgs_lists_dir};
-	    my $file = "genotype_data_list_${list_id}";     
-	    $file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file);    
-	    
-	    write_file($file, $geno_data);
-	    $c->stash->{genotype_file} = $file; 	    
+	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);		    
 	} 
 	elsif ( $list_type eq 'trials') 
 	{

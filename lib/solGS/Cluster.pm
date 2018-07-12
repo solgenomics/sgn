@@ -125,15 +125,13 @@ sub genotypes_list_genotype_data {
     my $genotypes     = $args->{genotypes_list};
     my $genotypes_ids = $args->{genotypes_ids};
     my $data_dir      = $args->{list_data_dir};
+    my $geno_file     = $args->{genotype_file};
    
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
 					      });
 
     my $geno_data = $model->genotypes_list_genotype_data($genotypes);
-    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $list_pop_id);
-
-    my $geno_file = $files->{geno_file};
     write_file($geno_file, $geno_data);
 
 }
@@ -149,15 +147,13 @@ sub plots_list_phenotype_data {
     my $plots_ids   = $args->{plots_ids};
     my $traits_file = $args->{traits_file};
     my $data_dir    = $args->{list_data_dir};
+    my $pheno_file  = $args->{phenotype_file};
    
     my $model = SGN::Model::solGS::solGS->new({schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
     my $pheno_data = $model->plots_list_phenotype_data($plots_names);
   
     $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
-    
-    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $model_id);
-    my $pheno_file = $files->{pheno_file};
-    
+        
     write_file($pheno_file, $pheno_data);
       
 }

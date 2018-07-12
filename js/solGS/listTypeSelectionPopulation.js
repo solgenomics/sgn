@@ -134,7 +134,6 @@ function getListTypeSelectionPopDetail(listId) {
 	}
 	
 	return {'name'          : listName,
-		'list'          : listElements,
 		'type'          : listType,
 		'elementsNames' : listElementsNames,
                };
@@ -172,7 +171,6 @@ if (typeof(listId) == 'number') {
     
     var args = {
 	'list_name'        : listName,
-	'list'             : list,
 	'list_id'          : listId,
 	'analysis_type'    : 'selection prediction',
 	'data_set_type'    : dataSetType,
@@ -201,7 +199,7 @@ function getGenotypesList(listId) {
     var listType;// = list.getListType(listId);
 
     return {'name'      : listName,
-            'list'      : genotypesList.elements,
+            'list_id'   : listId,
             'list_type' : listType,
             };
 }

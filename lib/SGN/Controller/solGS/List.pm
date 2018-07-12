@@ -109,15 +109,12 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
 	 $c->stash->{combo_pops_id}  = $training_pop_id;
     }
    
-    $self->get_selection_genotypes_list($c);
+    $self->separate_genotypes_list_content($c);
     my $genotypes_list = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
-   
-    my $data = $c->model('solGS::solGS')->genotypes_list_genotype_data($genotypes_list);
-    $c->stash->{genotypes_list_genotype_data} = $data;
- 
-    $self->genotypes_list_genotype_data_file($c, $selection_pop_id);   
-    my $genotype_file = $c->stash->{genotypes_list_genotype_data_file};
+
+    $self->genotypes_list_genotype_file($c);
+    my $genotype_file = $c->stash->{genotypes_list_genotype_file};
 
     $self->create_list_population_metadata_file($c, $selection_pop_id);
  
@@ -195,15 +192,31 @@ sub get_selection_genotypes_list_from_file {
 }
 
 
-sub get_selection_genotypes_list {
+sub get_genotypes_list {
     my ($self, $c) = @_;
 
-    my $list = $c->stash->{list};
+    my $list_id = $c->stash->{list_id};
+    
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my @genotypes_list = @{$list->elements};
+
+    $c->stash->{genotypes_list} = \@genotypes_list;
+    
+}
+
+
+sub separate_genotypes_list_content {
+    my ($self, $c) = @_;
+
+    my $list_id = $c->stash->{list_id};
+    
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_content = $list->retrieve_elements_with_ids($list_id);
     
     my @stocks_names = ();  
     my @stocks_ids   = ();
 
-    foreach my $stock (@$list)
+    foreach my $stock (@$list_content)
     {
 	push @stocks_ids, $stock->[0];;
         push @stocks_names, $stock->[1];
@@ -214,30 +227,33 @@ sub get_selection_genotypes_list {
     
     $c->stash->{genotypes_list} = \@stocks_names;
     $c->stash->{genotypes_ids}  = \@stocks_ids;
-    
 }
 
 
-sub genotypes_list_genotype_data_file {
-    my ($self, $c, $list_pop_id) = @_;
+# sub genotypes_list_genotype_data_file {
+#     my ($self, $c, $list_pop_id) = @_;
+
     
-    my $geno_data = $c->stash->{genotypes_list_genotype_data};
-    my $dir = $c->stash->{solgs_lists_dir};
+    
+#     my $geno_data = $c->stash->{genotypes_list_genotype_data};
+#     my $dir = $c->stash->{solgs_lists_dir};
         
-    my $files = $self->create_list_pop_tempfiles($dir, $list_pop_id);
-    my $geno_file = $files->{geno_file};
-    write_file($geno_file, $geno_data);
+#     my $files = $self->create_list_pop_data_tempfiles($dir, $list_pop_id);
+#     my $geno_file = $files->{geno_file};
+#     write_file($geno_file, $geno_data);
 
-    $c->stash->{genotypes_list_genotype_data_file} = $geno_file;
+#     $c->stash->{genotypes_list_genotype_data_file} = $geno_file;
   
-}
+# }
 
 
-sub create_list_pop_tempfiles {
-    my ($self, $dir, $list_pop_id) = @_;
+sub create_list_pop_data_tempfiles {
+    my ($self, $dir, $list_id) = @_;
 
-    my $pheno_name = "phenotype_data_${list_pop_id}.txt";
-    my $geno_name  = "genotype_data_${list_pop_id}.txt";  
+    $list_id = 'list_' . $list_id if $list_id !~ /list/;
+    
+    my $pheno_name = "phenotype_data_${list_id}.txt";
+    my $geno_name  = "genotype_data_${list_id}.txt";  
     my $pheno_file = catfile($dir, $pheno_name);
     my $geno_file  = catfile($dir, $geno_name);
       
@@ -431,7 +447,7 @@ sub user_selection_population_file {
     $c->controller('solGS::Files')->genotype_file_name($c, $pred_pop_id);
     my $pred_pop_file = $c->stash->{genotype_file_name};
 
-    $c->stash->{genotypes_list_genotype_data_file} = $pred_pop_file;
+    $c->stash->{genotypes_list_genotype_file} = $pred_pop_file;
    
     $fh->print($pred_pop_file);
     $fh->close; 
@@ -444,16 +460,12 @@ sub user_selection_population_file {
 sub get_list_elements_names {
     my ($self, $c) = @_;
 
-    my $list = $c->stash->{list};
- 
-    my @names = ();  
+    my $list_id = $c->stash->{list_id};
    
-    foreach my $id_names (@$list)
-    {
-        push @names, $id_names->[1];
-    }
-
-    $c->stash->{list_elements_names} = \@names;
+    my $list = CXGN::List->new({dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $names = $list->{elements};
+    
+    $c->stash->{list_elements_names} = $names;
 
 }
 
@@ -461,15 +473,20 @@ sub get_list_elements_names {
 sub get_list_elements_ids {
     my ($self, $c) = @_;
 
-    my $list = $c->stash->{list};
+    my $list_id = $c->stash->{list_id};
  
-    my @ids = ();  
-   
-    foreach my $id_names (@$list)
-    {
-        push @ids, $id_names->[0];
-    }
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_content = $list->retrieve_elements_with_ids($list_id);
+     
+    my @ids   = ();
 
+    foreach my $element (@$list_content)
+    {
+	push @ids, $element->[0];;
+    }
+    
+    @ids = uniq(@ids);
+    
     $c->stash->{list_elements_ids} = \@ids;
 
 }
@@ -512,20 +529,19 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
     $args = $json->decode($args);
   
     $c->stash->{list_name}       = $args->{list_name};
-    $c->stash->{list}            = $args->{list};
+    $c->stash->{list_id}         = $args->{list_id};
     $c->stash->{model_id}        = $args->{training_pop_id};
     $c->stash->{population_type} = $args->{population_type};
 
     my $model_id = $c->stash->{model_id};
-    $self->plots_list_phenotype_file($c);
     
-    $self->genotypes_list_genotype_file($c, $model_id);
+    $self->plots_list_phenotype_file($c);  
+    $self->genotypes_list_genotype_file($c);
     
-    my $tmp_dir  = $c->stash->{solgs_lists_dir};
-      
-    my $files = $self->create_list_pop_tempfiles($tmp_dir, $model_id);
-    my $pheno_file = $files->{pheno_file};
-    my $geno_file  = $files->{geno_file};
+    #my $tmp_dir  = $c->stash->{solgs_lists_dir};      
+    #my $files = $self->create_list_pop_data_tempfiles($tmp_dir, $model_id);
+    my $pheno_file = $c->stash->{plots_list_phenotype_file};
+    my $geno_file  = $c->stash->{genotypes_list_genotype_file};
 
     $self->create_list_population_metadata_file($c, $model_id);
  
@@ -545,35 +561,50 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
 
 
 sub genotypes_list_genotype_file {
-    my ($self, $c, $list_pop_id) = @_;
+    my ($self, $c) = @_;   
 
-    my $list     = $c->stash->{list}; 
-   
-    if (!$c->stash->{selection_pop_id}) 
+    
+    my $list_id = $c->stash->{list_id};# if !$list_id;
+    print STDERR "\n geno list id: $list_id\n";
+    $list_id =~ s/list_//g;
+     print STDERR "\n geno list id: $list_id\n";
+    my $genotypes;
+    my $genotypes_ids;
+
+    my $list = CXGN::List->new({dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_type = $list->type();
+    
+    if ($list_type =~ /plots/) 
     {
-	$self->get_list_elements_names($c); 
-	$c->stash->{plots_names} = $c->stash->{list_elements_names};
+	my $plots_list = $list->{elements};
 
-	$self->get_list_elements_ids($c);
-	$c->stash->{plots_ids} = $c->stash->{list_elements_ids};
+	$c->stash->{plots_names} = $plots_list;
+	$self->map_genotypes_plots($c);
+	$genotypes = $c->stash->{genotypes_list};
 
-	$self->map_genotypes_plots($c);	
+	
     }
     else
     {
-	$self->get_selection_genotypes_list($c);
+#	$self->get_genotypes_list($c);
+	$self->separate_genotypes_list_content($c);
+	$genotypes = $c->stash->{genotypes_list};
+	$genotypes_ids = $c->stash->{genotypes_ids};
     }
     
-    my $genotypes = $c->stash->{genotypes_list};
-    my $genotypes_ids = $c->stash->{genotypes_ids};
-
     my $data_dir  = $c->stash->{solgs_lists_dir};
 
+    my $temp_data_files = $self->create_list_pop_data_tempfiles($data_dir, $list_id);
+    my $geno_file = $temp_data_files->{geno_file};
+    $c->stash->{genotypes_list_genotype_file} = $geno_file;
+    
     my $args = {
-	'list_pop_id'    => $list_pop_id,
+	'list_pop_id'    => $list_id,
 	'genotypes_list' => $genotypes,	 
 	'genotypes_ids'  => $genotypes_ids,
 	'list_data_dir'  => $data_dir,
+	'genotype_file'  => $geno_file,
+	   
     };
 
     $c->stash->{r_temp_file} = 'genotypes-list-genotype-data-query';
@@ -642,16 +673,22 @@ sub genotypes_list_genotype_file {
 sub plots_list_phenotype_file {
     my ($self, $c) = @_;
 
-    my $model_id = $c->stash->{model_id};
-    my $list     = $c->stash->{list}; 
+    #my $model_id = $c->stash->{model_id};
+    #my $list     = $c->stash->{list}; 
 
+    #my $list_id = $model_id;
+    my $list_id = $c->stash->{list_id}; # if !$list_id;
+    print STDERR "\n pheno list id: $list_id\n";
+    $list_id =~ s/list_//g;
+    print STDERR "\n pheno list id: $list_id\n";
+    
     $self->get_list_elements_names($c);
     my $plots_names = $c->stash->{list_elements_names};
 
     $self->get_list_elements_ids($c);
     my $plots_ids = $c->stash->{list_elements_ids};
 
-    $c->stash->{pop_id} = $model_id;
+    $c->stash->{pop_id} = 'list_' . $list_id;
     $c->controller('solGS::Files')->traits_list_file($c);    
     my $traits_file =  $c->stash->{traits_list_file};
   
@@ -666,14 +703,19 @@ sub plots_list_phenotype_file {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
+    my $temp_data_files = $self->create_list_pop_data_tempfiles($data_dir, $list_id);
+    my $pheno_file = $temp_data_files->{pheno_file};
+    $c->stash->{plots_list_phenotype_file} = $pheno_file;
+    
     my $status;
 
      my $args = {
-	'model_id'      => $model_id,
+	'list_id'       => $list_id,
 	'plots_names'   => $plots_names,
 	'plots_ids'     => $plots_ids,
 	'traits_file'   => $traits_file,
 	'list_data_dir' => $data_dir,
+	'phenotype_file'=> $pheno_file,
     };
 
     
@@ -699,7 +741,6 @@ sub plots_list_phenotype_file {
 	do_cleanup       => 0,
     };
     
-
    eval 
    {     
 	my $pheno_job = CXGN::Tools::Run->new($config);

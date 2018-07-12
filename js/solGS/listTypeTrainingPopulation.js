@@ -92,14 +92,14 @@ function getListTypeTrainingPopDetail(listId) {
         listData      = list.getListData(listId);
 	listType      = list.getListType(listId);
 	listName      = list.listNameById(listId);
-	listElements  = listData.elements;
+	//listElements  = listData.elements;
 
-	listElementsNames = getTrainingListElementsNames(listElements);
-	listElementsIds   = getTrainingListElementsIds(listElements);
+	//listElementsNames = getTrainingListElementsNames(listElements);
+//	listElementsIds   = getTrainingListElementsIds(listElements);
     }
   
     return {'name'          : listName,
-            'list'          : listElements,	    
+            'list_id'       : listId,	    
 	    'type'          : listType,
 	    'elementsIds'   : listElementsIds,
 	    'elementsNames' : listElementsNames,
@@ -148,7 +148,6 @@ function createTrainingReqArgs (listId) {
 
     var args = {
 	'list_name'       : listName,
-	'list'            : list,
 	'list_id'         : listId,
 	'analysis_type'   : 'population download',
 	'data_set_type'   : 'single population',
