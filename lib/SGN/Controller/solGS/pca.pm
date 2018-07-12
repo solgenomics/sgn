@@ -425,7 +425,7 @@ sub _process_trials_details {
 
 	if ($p_id =~ /list/) 
 	{
-	    $c->controller('solGS::solGS')->list_population_summary($c, $p_id);
+	    $c->controller('solGS::List')->list_population_summary($c, $p_id);
 	    $pops_names{$p_id} = $c->stash->{project_name};  
 	}
 	else

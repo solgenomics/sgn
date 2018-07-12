@@ -26,14 +26,18 @@ sub search : Path('/ajax/search/trials') Args(0) {
     }
 
     print STDERR "location: " . $nd_geolocation . "\n";
+    #print STDERR Dumper $c->req->params();
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
+    my $field_trials_only = $c->req->param('field_trials_only') || 1;
+    my $trial_design_list = $c->req->param('trial_design') ? [$c->req->param('trial_design')] : [];
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,
         location_list=>\@location_names,
-        field_trials_only=>1
+        field_trials_only=>$field_trials_only,
+        trial_design_list=>$trial_design_list
     });
     my $data = $trial_search->search();
     my @result;

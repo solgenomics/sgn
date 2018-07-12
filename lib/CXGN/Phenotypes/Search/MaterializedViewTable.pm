@@ -148,7 +148,7 @@ sub search {
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
+    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
     my $order_clause = " ORDER BY trial_name, observationunit_uniquename";
 
     my @where_clause;
@@ -271,13 +271,15 @@ sub search {
     my $calendar_funcs = CXGN::Calendar->new({});
     my %unique_traits;
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
         my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
         my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
         my $observations = decode_json $observations;
         my $treatments = decode_json $treatments;
+        my $available_germplasm_seedlots = decode_json $available_germplasm_seedlots;
+        my $seedlot_transaction = $seedlot_transaction ? decode_json $seedlot_transaction : {};
 
         my %ordered_observations;
         foreach (@$observations){
@@ -358,6 +360,17 @@ sub search {
             folder_id => $folder_id,
             folder_name => $folder_name,
             folder_description => $folder_description,
+            seedlot_transaction_amount => $seedlot_transaction->{amount},
+            seedlot_transaction_weight_gram => $seedlot_transaction->{weight_gram},
+            seedlot_transaction_timestamp => $seedlot_transaction->{timestamp},
+            seedlot_transaction_operator => $seedlot_transaction->{operator},
+            seedlot_transaction_description => $seedlot_transaction->{description},
+            seedlot_stock_id => $seedlot_stock_id,
+            seedlot_uniquename => $seedlot_uniquename,
+            seedlot_current_count => $seedlot_current_count,
+            seedlot_current_weight_gram => $seedlot_current_weight_gram,
+            seedlot_box_name => $seedlot_box_name,
+            available_germplasm_seedlots => $available_germplasm_seedlots,
             treatments => $treatments,
             observations => \@return_observations,
             full_count => $full_count,

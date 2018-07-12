@@ -15,7 +15,9 @@
   *   @param {Number} height
   *   @param {Object} margin
   *     @param {Number} top
-  *     @param {Number} left
+  *     @param {Number} left - Set a strict left margin (>0)
+  *     @param {Number} left_per_digit - If !left, expand left margin by this amount per y-axis digit
+  *     @param {Number} left_base - If !left, minimum left margin.
   *     @param {Number} bottom
   *     @param {Number} right
   */
@@ -25,7 +27,8 @@
       "height":300,
       "margin":{
         "top":24,
-        "left":36,
+        "left_per_digit":12,
+        "left_base":12,
         "bottom":36,
         "right":24
       }
@@ -63,7 +66,6 @@
     var extent = d3.extent(allValues);
     var x = d3.scaleLinear()
       .domain(extent)
-      .range([layout.margin.left, layout.width-layout.margin.right])
       .nice(11);
     var boundaries = x.ticks(11);
     var xaxis = d3.axisBottom(x).tickValues(boundaries);
@@ -85,6 +87,11 @@
     var ymax = d3.max(bins,function(d){
       return d.bin.length;
     });
+    
+    var y_digits = Math.log(ymax) * Math.LOG10E + 1 | 0;
+    layout.margin.left = layout.margin.left || layout.margin["left_base"]+layout.margin["left_per_digit"]*y_digits;
+    x.range([layout.margin.left,layout.width-layout.margin.right]);
+    
     var y = d3.scaleLinear()
       .domain([0,ymax])
       .range([layout.height-layout.margin.bottom, layout.margin.top]);

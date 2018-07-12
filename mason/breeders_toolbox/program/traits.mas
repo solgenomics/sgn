@@ -154,7 +154,6 @@ function trait_summary_hist_display_change(program_id) {
 
 function trait_summary_hist_change(program_id, value) {
     jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
-
     jQuery("#program_summary_hist_dropdown").val(value);
     jQuery.ajax( {
         url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+value+'',
