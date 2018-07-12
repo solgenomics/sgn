@@ -186,6 +186,12 @@ $stock_id
     
 </div>
 <center>
+<div id="pdgv-loading-indicator">
+    <br>
+    Loading... <img src="/documents/img/spinner.gif" />
+    <br>
+    <br>
+</div>
 <div id="pdgv-wrap" style="border:solid thin #ddd;width:100%;"></div>
 </center>
 <!-- <div style="border:solid thin black; padding:1em; margin-top:0.25em;">
@@ -213,6 +219,7 @@ $stock_id
     });
     pdg.newTree(STOCK_ID,function(){
         pdg.drawViewer("#pdgv-wrap",600,600);
+        jQuery("#pdgv-loading-indicator").hide();
     });
 }());
 // ;

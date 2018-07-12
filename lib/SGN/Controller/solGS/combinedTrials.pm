@@ -315,7 +315,7 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
   
     if ($selection_pop_id =~ /list/) 
     {
-	$c->controller('solGS::solGS')->list_population_summary($c, $selection_pop_id);
+	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};

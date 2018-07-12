@@ -290,7 +290,9 @@ sub get_solgs_dirs {
     $tmp_dir            = catdir($tmp_dir, $geno_version);
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
-    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
+    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');
+    my $solqtl_cache    = catdir($tmp_dir, 'solqtl', 'cache');
+    my $solqtl_tempfiles = catdir($tmp_dir, 'solqtl', 'tempfiles');  
     my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
     my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
@@ -310,6 +312,7 @@ sub get_solgs_dirs {
 	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
 	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
 	 $anova_temp,$anova_cache,  $kcluster_temp,$kcluster_cache,
+	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	], 
 	0, 0755
 	);
@@ -328,6 +331,8 @@ sub get_solgs_dirs {
 	      anova_temp_dir              => $anova_temp,
 	      kcluster_cache_dir          => $kcluster_cache,
 	      kcluster_temp_dir           => $kcluster_temp,
+	      solqtl_cache_dir            => $solqtl_cache,
+              solqtl_tempfiles_dir        => $solqtl_tempfiles,
         );
 
 }

@@ -9,6 +9,7 @@ use Try::Tiny;
 use List::MoreUtils qw /any /;
 use CXGN::People::Person;
 use CXGN::Login;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -442,6 +443,76 @@ sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentia
             error => "Insufficient privileges for this operation." 
         };
     }
+}
+
+sub get_genotyping_data_projects : Path('/ajax/genotyping_data/projects') : ActionClass('REST') { }
+
+sub get_genotyping_data_projects_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
+
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema=>$bcs_schema,
+        trial_design_list=>['genotype_data_project']
+    });
+    my $data = $trial_search->search();
+    my @result;
+    foreach (@$data){
+        my @res;
+        if ($checkbox_select_name){
+            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{trial_id}'>";
+        }
+        push @res, (
+            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            $_->{description},
+            "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
+            $_->{year},
+            $_->{location_name},
+        );
+        push @result, \@res;
+    }
+    #print STDERR Dumper \@result;
+
+    $c->stash->{rest} = { data => \@result };
+}
+
+sub get_genotyping_data_protocols : Path('/ajax/genotyping_data/protocols') : ActionClass('REST') { }
+
+sub get_genotyping_data_protocols_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
+
+    my $data = CXGN::Genotype::Protocol::list($bcs_schema);
+    my @result;
+    foreach (@$data){
+        my @res;
+        if ($checkbox_select_name){
+            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{protocol_id}'>";
+        }
+        my $num_markers = scalar keys %{$_->{markers}};
+        my @trimmed;
+        foreach (@{$_->{header_information_lines}}){
+            $_ =~ tr/<>//d;
+            push @trimmed, $_;
+        }
+        my $description = join '<br/>', @trimmed;
+        push @res, (
+            $_->{protocol_name},
+            $description,
+            $num_markers,
+            $_->{reference_genome_name},
+            $_->{species_name},
+            $_->{sample_observation_unit_type_name}
+        );
+        push @result, \@res;
+    }
+    #print STDERR Dumper \@result;
+
+    $c->stash->{rest} = { data => \@result };
 }
 
 1;
