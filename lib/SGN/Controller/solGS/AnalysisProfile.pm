@@ -451,7 +451,7 @@ sub structure_output_details {
 
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 
-	    $solgs_controller->list_population_summary($c, $pop_id);	    
+	    $c->controller('solGS::List')->list_population_summary($c, $pop_id);	    
 	    $pop_name = $c->stash->{project_name};
 	} 
 	else 
@@ -524,7 +524,7 @@ sub structure_output_details {
 		$training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 		if ($training_pop_id =~ /list/)
 		{
-		   $c->controller('solGS::solGS')->list_population_summary($c, $training_pop_id);
+		   $c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
 		   $training_pop_name   = $c->stash->{project_name};   
 		}
 		else
@@ -541,7 +541,7 @@ sub structure_output_details {
 	    { 
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);
 	        	
-		$c->controller('solGS::solGS')->list_population_summary($c, $prediction_pop_id);
+		$c->controller('solGS::List')->list_population_summary($c, $prediction_pop_id);
 		$prediction_pop_name = $c->stash->{prediction_pop_name}; 
 	    }
 	    else 
