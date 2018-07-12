@@ -860,12 +860,18 @@ sub stock_autocomplete_GET :Args(0) {
     my ($self, $c) = @_;
 
     my $term = $c->req->param('term');
+    my $stock_type_id = $c->req->param('stock_type_id');
 
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
+    my $stock_type_where = '';
+    if ($stock_type_id){
+        $stock_type_where = " AND type_id = $stock_type_id ";
+    }
+
     my @response_list;
-    my $q = "select distinct(uniquename) from stock where uniquename ilike ? ORDER BY stock.uniquename LIMIT 100";
+    my $q = "select distinct(uniquename) from stock where uniquename ilike ? $stock_type_where ORDER BY stock.uniquename LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
     while (my ($stock_name) = $sth->fetchrow_array) {

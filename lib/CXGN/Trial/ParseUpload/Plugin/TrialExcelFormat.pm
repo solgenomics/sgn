@@ -328,8 +328,10 @@ sub _validate_with_plugin {
         }
     }
 
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my @plots = keys %seen_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
+        'type_id' => $plot_type_id,
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@plots }
     });

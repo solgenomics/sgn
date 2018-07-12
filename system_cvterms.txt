@@ -19,6 +19,7 @@ experiment_type	grafting_experiment				00079
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping
+genotype_property	vcf_snp_genotyping	JSON string encoding all VCF info	6/20/2018	nm529	00098
 geolocation_property	geolocation address				00052
 geolocation_property	geolocation year				00052
 geolocation_property	country_name	From BrAPI	03/27/2017	nm529	00076
@@ -167,6 +168,7 @@ stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076
 stock_property	entry number	From BrAPI	03/27/2017	nm529	00076
 stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076
 stock_property	current_count	For keeping current count of seedlot	09/06/2017	nm529	00086
+stock_property	current_weight_gram	For keeping current count of seedlot	09/06/2017	nm529	00092
 stock_property  crossing_metadata_json    00086
 stock_property	ploidy_level	For indicating ploidy level of accession	12/20/2017	nm529	00088
 stock_property	genome_structure	For indicating genome structure of accession	12/20/2017	nm529	00088
@@ -231,6 +233,7 @@ protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
+protocol_property	vcf_map_details	Information about protocol, such as marker set	6/20/2018	nm529	00098
 composable_cvs	trait_ontology		05/01/2017		00073
 composable_cvs	composed_trait_ontology		05/01/2017		00073
 composable_cvs	object_ontology		05/01/2017		00073

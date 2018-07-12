@@ -35,6 +35,7 @@ for (my $i=0; $i<= scalar(@$stock_types); $i++) {
 my $stock_type_select = simple_selectbox_html(
   choices   => $stock_types,
   id        => "stock_type_select",
+  selected => $accession_cvterm_id
 );
 
 my $organism_select = simple_selectbox_html(
@@ -51,16 +52,16 @@ my $breeding_programs_select = simple_selectbox_html(
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
 
-  <div id="stock_search_form" class="form-horizontal well">
+  <div id="stock_search_form" class="well well-sm">
 
-    <&| /page/info_section.mas, title => 'Uniquename', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => 'Name Search', collapsible=>1, collapsed=>0 &>
 
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
       	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
           <div class="col-sm-9" >
-            <div class="form-group">
+            <div class="form-group form-group-sm">
               <div class="input-group">
                 <span class="input-group-btn" width="20%">
                   <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
@@ -75,23 +76,23 @@ my $breeding_programs_select = simple_selectbox_html(
                 </span>
               </div>
             </div>
+            <div class="form-group form-group-sm">
+              <label class="col-sm-3 control-label">Stock Type: </label>
+              <div class="col-sm-9" >
+                <% $stock_type_select %>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
     </&>
+
+    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1 &>
+
     <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
 
     <div class="row">
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Stock Type: </label>
-          <div class="col-sm-9" >
-            <% $stock_type_select %>
-          </div>
-        </div>
-      </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Organism: </label>
@@ -100,8 +101,6 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
-    </div>
-    <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Stock Owner: </label>
@@ -110,6 +109,9 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
+    </div>
+    <br/>
+    <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Organization: </label>
@@ -221,6 +223,8 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
+    </&> <!-- closes advanced search -->
+
     <center>
     <button class="btn btn-primary" id="submit_stock_search" />Search</button>
     </center>
@@ -316,7 +320,12 @@ jQuery(document).ready(function () {
         source: '/ajax/stock/project_autocomplete',
      });
      jQuery("#any_name").autocomplete({
-        source: '/ajax/stock/stock_autocomplete',
+        source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
+     });
+     jQuery('#stock_type_select').change(function(){
+         jQuery("#any_name").autocomplete({
+            source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
+         });
      });
      jQuery("#location").autocomplete({
         source: '/ajax/stock/geolocation_autocomplete',
