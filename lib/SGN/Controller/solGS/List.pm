@@ -816,6 +816,95 @@ sub list_population_summary {
 }
 
 
+sub get_trials_list_ids {
+    my ($self, $c) = @_;
+
+    my $list_id = $c->stash->{list_id};
+    my $list_type = $c->stash->{list_type};
+
+    if ($list_type =~ /trials/)
+    {
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	my @trials_names = @{$list->elements};
+
+	my $list_type = $list->type();
+	
+	my @trials_ids;
+
+	foreach my $t_name (@trials_names) 
+	{
+	    my $trial_id = $c->model("solGS::solGS")
+		->project_details_by_name($t_name)
+		->first
+		->project_id;
+		
+	    push @trials_ids, $trial_id;
+	}
+
+	 $c->stash->{trials_ids} = \@trials_ids;
+    }   
+    
+}
+
+
+sub process_trials_list_details {
+    my ($self, $c) = @_;
+
+    my $pops_ids = $c->stash->{pops_ids_list} || [$c->stash->{pop_id}];
+
+    my @genotype_files;
+    my %pops_names = ();
+
+    foreach my $p_id (@$pops_ids)
+    {
+	$c->stash->{pop_id} = $p_id; 
+	$self->get_trial_genotype_data($c);
+	push @genotype_files, $c->stash->{genotype_file};
+
+	if ($p_id =~ /list/) 
+	{
+	    $c->controller('solGS::List')->list_population_summary($c, $p_id);
+	    $pops_names{$p_id} = $c->stash->{project_name};  
+	}
+	else
+	{
+	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
+	    $pops_names{$p_id} = $c->stash->{project_name};  
+	}      
+    }    
+
+    if (scalar(@$pops_ids) > 1 )
+    {
+	$c->stash->{pops_ids_list} = $pops_ids;
+	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
+    }
+
+    $c->stash->{genotype_files_list} = \@genotype_files;
+    $c->stash->{trials_names} = \%pops_names;
+  
+}
+
+
+sub get_trial_genotype_data {
+    my ($self, $c) = @_;
+  
+    my $pop_id = $c->stash->{pop_id};
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+
+    if (-s $geno_file)
+    {  
+	$c->stash->{genotype_file} = $geno_file;
+    }
+    else
+    {
+	$c->controller('solGS::solGS')->genotype_file($c);	
+    }
+   
+}
+
 
 sub begin : Private {
     my ($self, $c) = @_;

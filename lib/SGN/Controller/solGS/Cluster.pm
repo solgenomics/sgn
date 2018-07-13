@@ -58,8 +58,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     {
 	if ($training_pop_id && $selection_pop_id) 
 	{
-	    my @pops_ids = ($training_pop_id, $selection_pop_id);
-	    $c->stash->{pops_ids_list} = \@pops_ids;
+	    $c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
 	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
 	    $file_id = $c->stash->{combo_pops_id};
@@ -78,7 +77,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 
 	if ($list_type =~ /trials/)
 	{
-	    $self->get_trials_list_ids($c);
+	    $c->controller('solGS::List')->get_trials_list_ids($c);
 	    my $trials_ids = $c->stash->{trials_ids};
 	    
 	    $c->stash->{pops_ids_list} = $trials_ids;
@@ -87,11 +86,10 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	    $file_id = $c->stash->{combo_pops_id};
 	}	
     }
-    elsif ($referer =~ /kcluster\/analysis\/|\/solgs\/model\/combined\/populations\//  && $combo_pops_id)
+    elsif ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\//  && $combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	#$c->stash->{pop_id} = $combo_pops_id;
 	$file_id = $combo_pops_id;
     }
     else 
@@ -125,11 +123,10 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	$c->stash->{rest}{cluster_type} = $cluster_type;    
     }  
     
-
 }
 
 
-sub kcluster_result :Path('/cluster/result/') Args() {
+sub cluster_result :Path('/cluster/result/') Args() {
     my ($self, $c) = @_;
     
     my $training_pop_id  = $c->req->param('training_pop_id');
@@ -160,7 +157,7 @@ sub kcluster_result :Path('/cluster/result/') Args() {
 	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
         $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $entry);
     }
-    elsif ($referer =~ /kcluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
+    elsif ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
@@ -198,8 +195,8 @@ sub kcluster_result :Path('/cluster/result/') Args() {
     }
     else
     {
-	$self->hierachical_result_file($c);
-	$cluster_result_file = $c->stash->{hierachical_result_file};
+	$self->hierarchical_result_file($c);
+	$cluster_result_file = $c->stash->{hierarchical_result_file};
     }
 
     $c->stash->{rest}{status} = 'Cluster analysis failed.';
@@ -282,158 +279,59 @@ sub create_cluster_genotype_data {
 
     if ($data_set_type =~ /list/) 
     {
-	$self->_cluster_list_genotype_data($c);
-	
+	$self->cluster_list_genotype_data($c);	
     }
     else 
     {
-	$self->_process_trials_details($c);
+	$c->controller('solGS::List')->process_trials_list_details($c);
     }
 
 }
 
 
-sub _cluster_list_genotype_data {
+sub cluster_list_genotype_data {
     my ($self, $c) = @_;
     
-    my $list_id = $c->stash->{list_id};
-    my $list_type = $c->stash->{list_type};
-    my $pop_id = $c->stash->{pop_id};
+    my $list_id       = $c->stash->{list_id};
+    my $list_type     = $c->stash->{list_type};
+    my $pop_id        = $c->stash->{pop_id};
     my $data_set_type = $c->stash->{data_set_type};
-    my $referer = $c->req->referer;
+    my $referer       = $c->req->referer;
     my $geno_file;
     
     if ($referer =~ /solgs\/trait\/\d+\/population\//) 
     {
 	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-	$geno_file  = $c->stash->{genotype_file_name};
-	$c->stash->{genotype_file} = $geno_file; 
+	$c->stash->{genotype_file} = $c->stash->{genotype_file_name}; 
     }
     elsif ($referer =~ /solgs\/selection\//) 
     {
-	my $training_pop_id  = $c->stash->{training_pop_id};
-	my $selection_pop_id = $c->stash->{selection_pop_id};
-
-	my @pops_ids = ($training_pop_id, $selection_pop_id);
-	$c->stash->{pops_ids_list} = \@pops_ids;
-
-	$self->_process_trials_details($c);
+	$c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
+	$c->controller('solGS::List')->process_trials_list_details($c);
     }
-    elsif ($referer =~ /kcluster\/analysis\// && $data_set_type =~ 'combined_populations')
+    elsif ($referer =~ /cluster\/analysis\// && $data_set_type =~ 'combined_populations')
     {
-	my $combo_pops_id = $c->stash->{combo_pops_id};
-    	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+    	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $c->stash->{combo_pops_id});
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	#$c->stash->{pop_id} = $combo_pops_id;
-
-	$self->_process_trials_details($c);
+	$c->controller('solGS::List')->process_trials_list_details($c);
     }	   
     else
     {
 	if ($list_type eq 'accessions') 
 	{
-	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);		    
+	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
+	    $c->stash->{genotype_file} = $c->stash->{genotypes_list_genotype_file};
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
-	    $self->get_trials_list_ids($c);
+	    $c->controller('solGS::List')->get_trials_list_ids($c);
 	    my $trials_ids = $c->stash->{trials_ids};
 
 	    $c->stash->{pops_ids_list} = $trials_ids;
-	    $self->_process_trials_details($c);
+	    $c->controller('solGS::List')->process_trials_list_details($c);
 	}
     }
 
-}
-
-
-sub get_trials_list_ids {
-    my ($self, $c) = @_;
-
-    my $list_id = $c->stash->{list_id};
-    my $list_type = $c->stash->{list_type};
-
-    if ($list_type =~ /trials/)
-    {
-	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	my @trials_names = @{$list->elements};
-
-	my $list_type = $list->type();
-	
-	my @trials_ids;
-
-	foreach my $t_name (@trials_names) 
-	{
-	    my $trial_id = $c->model("solGS::solGS")
-		->project_details_by_name($t_name)
-		->first
-		->project_id;
-		
-	    push @trials_ids, $trial_id;
-	}
-
-	 $c->stash->{trials_ids} = \@trials_ids;
-    }   
-    
-}
-
-
-sub _process_trials_details {
-    my ($self, $c) = @_;
-
-    my $pops_ids = $c->stash->{pops_ids_list} || [$c->stash->{pop_id}];
-
-    my @genotype_files;
-    my %pops_names = ();
-
-    foreach my $p_id (@$pops_ids)
-    {
-	$c->stash->{pop_id} = $p_id; 
-	$self->_cluster_trial_genotype_data($c);
-	push @genotype_files, $c->stash->{genotype_file};
-
-	if ($p_id =~ /list/) 
-	{
-	    $c->controller('solGS::solGS')->list_population_summary($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};  
-	}
-	else
-	{
-	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};  
-	}      
-    }    
-
-    if (scalar(@$pops_ids) > 1 )
-    {
-	$c->stash->{pops_ids_list} = $pops_ids;
-	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-    }
-
-    $c->stash->{genotype_files_list} = \@genotype_files;
-    $c->stash->{trials_names} = \%pops_names;
-  
-}
-
-
-sub _cluster_trial_genotype_data {
-    my ($self, $c) = @_;
-  
-    my $pop_id = $c->stash->{pop_id};
-
-    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-    my $geno_file = $c->stash->{genotype_file_name};
-
-    if (-s $geno_file)
-    {  
-	$c->stash->{genotype_file} = $geno_file;
-    }
-    else
-    {
-	$c->controller('solGS::solGS')->genotype_file($c);	
-    }
-   
 }
 
 
@@ -448,8 +346,6 @@ sub combined_cluster_trials_data_file {
     $c->stash->{combined_cluster_data_file} = $tempfile;
     
 }
-
-
 
 
 sub run_cluster {
