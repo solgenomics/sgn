@@ -283,10 +283,10 @@ sub _validate_with_plugin {
         $seen_seedlot_names{$seedlot_name}++;
         push @pairs, [$seedlot_name, $accession_name];
     }
-    if (defined($num_seed_per_plot) && !($num_seed_per_plot =~ /^\d+?$/)){
+    if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
     }
-    if (defined($weight_gram_seed_per_plot) && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
+    if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell L$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
     }
 
