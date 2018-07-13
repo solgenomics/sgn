@@ -64,8 +64,6 @@ use CXGN::Metadata::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::People::Person;
 use CXGN::DB::InsertDBH;
-use CXGN::Genotype;
-use CXGN::GenotypeIO;
 use Sort::Versions;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::StoreVCFGenotypes;

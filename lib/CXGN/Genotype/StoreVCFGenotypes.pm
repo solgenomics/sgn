@@ -230,7 +230,6 @@ use CXGN::List::Validate;
 use Data::Dumper;
 use CXGN::UploadFile;
 use SGN::Model::Cvterm;
-use CXGN::GenotypeIO;
 use JSON;
 use CXGN::Trial;
 

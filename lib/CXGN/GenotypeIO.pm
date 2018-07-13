@@ -26,7 +26,10 @@ sub BUILD {
     my $plugin = CXGN::GenotypeIOmain->new();
 
     if ($args->{format} eq "vcf") { 
-	$plugin->load_plugin("VCF");
+        $plugin->load_plugin("VCF");
+    }
+    if ($args->{format} eq "vcf_new") { 
+        $plugin->load_plugin("VCFNew");
     }
     elsif ($args->{format} eq "dosage") { 
 	$plugin->load_plugin("Dosage");
