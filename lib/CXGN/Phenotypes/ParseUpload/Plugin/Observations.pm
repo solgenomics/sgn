@@ -56,7 +56,7 @@ sub validate {
 
 sub parse {
     my $self = shift;
-    my $observations = shift;
+    my $data = shift;
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
@@ -64,10 +64,10 @@ sub parse {
 
 
     # Check validity of submitted data
-    my @data = @{$observations};
+    my @data = @{$data};
     my %data = ();
     my %seen = ();
-    my ( @observations, @units, @variables, @values, @timestamps) = [];
+    my (@observations, @units, @variables, @values, @timestamps);
     foreach my $obs (@data){
         my $unique_combo = "observationUnitDbId: ".$obs->{'observationUnitDbId'}.", observationVariableDbId:".$obs->{'observationVariableDbId'}.", observationTimeStamp:".$obs->{'observationTimeStamp'};
         print STDERR "Unique combo is $unique_combo\n";
@@ -76,10 +76,14 @@ sub parse {
             #print STDERR "Invalid request: The combination of $unique_combo appears more than once\n";
             return \%parse_result;
         }
-        push @observations, $obs->{'observationDbId'} if defined $obs->{'observationDbId'};
+        if (defined $obs->{'observationDbId'}) {
+            push @observations, $obs->{'observationDbId'};
+        }
         push @units, $obs->{'observationUnitDbId'};
         push @variables, $obs->{'observationVariableDbId'};
-        push @timestamps, $obs->{'observationTimeStamp'} if defined $obs->{'observationTimeStamp'};
+        if (defined $obs->{'observationTimeStamp'}) {
+            push @timestamps, $obs->{'observationTimeStamp'};
+        }
         push @values, $obs->{'value'};
         #$data{$obs->{'observationUnitDbId'}}->{$obs->{'observationVariableDbId'}} = [$obs->{'value'}, $obs->{'observationTimeStamp'}];
         $unique_combo = $obs->{'observationUnitDbId'}.$obs->{'observationVariableDbId'}.$obs->{'observationTimeStamp'};
@@ -91,6 +95,7 @@ sub parse {
         $data{$UnitDbId}->{$VariableDbId}->{timestamp} = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : '';
         $data{$UnitDbId}->{$VariableDbId}->{value} = $obs->{'value'};
         $data{$UnitDbId}->{$VariableDbId}->{collector} = $obs->{'collector'} ? $obs->{'collector'} : '';
+        $data{$UnitDbId}->{$VariableDbId}->{observation} = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
     }
     print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;
@@ -103,13 +108,15 @@ sub parse {
 
     if (scalar @observations) {
         # my $t = CXGN::List::Transform->new();
-        # print STDERR "Observation names are: @observations\n";
+        # print STDERR "Observations are: @observations\n";
+        # my @array = @{$observations[0]};
+        # print STDERR "Array is @array\n";
         # my $observation_transform = $t->transform($schema, 'stock_ids_2_stocks', \@observations);
         # my @observation_names = @{$observation_transform->{'transform'}};
         # print STDERR "Observation names are: @observation_names\n";
-        my $validated_observations = $validator->validate($schema,'phenotypes', \@observations);
-        if ($validated_observations->{'missing'}) {
-            my @observations_missing = @{$validated_observations->{'missing'}};
+        my $validated_observations = $validator->validate($schema,'observations', \@observations);
+        my @observations_missing = @{$validated_observations->{'missing'}};
+        if (scalar @observations_missing) {
             $parse_result{'error'} = "The following observations do not exist in the database: ".@observations_missing;
             #print STDERR "Invalid observations: @observations_missing\n";
             return \%parse_result;

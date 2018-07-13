@@ -227,6 +227,7 @@ sub store {
                 my $trait_cvterm = $trait_objs{$trait_name};
 
                 #print STDERR Dumper $value_array;
+                my $observation = $data{$unit_id}->{$trait_name}->{observation};
                 my $trait_value = $data{$unit_id}->{$trait_name}->{value};
                 my $timestamp = $data{$unit_id}->{$trait_name}->{timestamp};
                 my $operator =  $data{$unit_id}->{$trait_name}->{collector};
@@ -238,27 +239,38 @@ sub store {
 
                     # change this to work depending on whether observationDbIds are supplied and valid
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
-                    # if ($overwrite_values) {
-                    #     if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                    #         push @overwritten_values, $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
-                    #     }
-                    #     $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                    # }
-
                     my $plot_trait_uniquename = "Stock: " .
                         $stock_id . ", trait: " .
                         $trait_cvterm->name .
                         " date: $timestamp" .
                         "  operator = $operator" ;
 
-                    my $phenotype = $trait_cvterm
-                        ->find_related("phenotype_cvalues", {
-                            observable_id => $trait_cvterm->cvterm_id,
-                            value => $trait_value ,
-                            uniquename => $plot_trait_uniquename,
-                        });
+                    if ($observation) {
+                        # if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                        #     push @overwritten_values, $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
+                        # }
+                        # $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
 
-                    if (!$phenotype) {
+                        my $phenotype = $trait_cvterm
+                            ->find_related("phenotype_cvalues", {
+                                observable_id => $trait_cvterm->cvterm_id,
+                                phenotype_id => $observation
+                            });
+
+                            $phenotype->value($trait_value);
+                            $phenotype->uniquename($plot_trait_uniquename);
+                            $phenotype->update();
+
+                    } else {
+
+                    # my $phenotype = $trait_cvterm
+                    #     ->find_related("phenotype_cvalues", {
+                    #         observable_id => $trait_cvterm->cvterm_id,
+                    #         value => $trait_value ,
+                    #         uniquename => $plot_trait_uniquename,
+                    #     });
+                    #
+                    # if (!$phenotype) {
 
                         my $phenotype = $trait_cvterm
                             ->create_related("phenotype_cvalues", {
