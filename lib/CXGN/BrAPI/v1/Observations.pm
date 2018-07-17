@@ -179,19 +179,8 @@ sub observations_store {
         unit_list=>\@units,
         variable_list=>\@variables,
         data=>\%parsed_data,
-        # has_timestamps=>$timestamp_included,
-        # overwrite_values=>0,
         metadata_hash=>\%phenotype_metadata
     );
-
-    # my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-    #
-    # if ($verified_error) {
-    #     print STDERR "Error: $verified_error\n";
-    # }
-    # if ($verified_warning) {
-    #     print STDERR "Warning: $verified_warning\n";
-    # }
 
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
 

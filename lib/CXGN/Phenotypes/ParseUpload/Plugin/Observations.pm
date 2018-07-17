@@ -85,7 +85,6 @@ sub parse {
             push @timestamps, $obs->{'observationTimeStamp'};
         }
         push @values, $obs->{'value'};
-        #$data{$obs->{'observationUnitDbId'}}->{$obs->{'observationVariableDbId'}} = [$obs->{'value'}, $obs->{'observationTimeStamp'}];
         $unique_combo = $obs->{'observationUnitDbId'}.$obs->{'observationVariableDbId'}.$obs->{'observationTimeStamp'};
         $seen{$unique_combo} = 1;
 
@@ -107,13 +106,7 @@ sub parse {
     my $validator = CXGN::List::Validate->new();
 
     if (scalar @observations) {
-        # my $t = CXGN::List::Transform->new();
-        # print STDERR "Observations are: @observations\n";
-        # my @array = @{$observations[0]};
-        # print STDERR "Array is @array\n";
-        # my $observation_transform = $t->transform($schema, 'stock_ids_2_stocks', \@observations);
-        # my @observation_names = @{$observation_transform->{'transform'}};
-        # print STDERR "Observation names are: @observation_names\n";
+
         my $validated_observations = $validator->validate($schema,'observations', \@observations);
         my @observations_missing = @{$validated_observations->{'missing'}};
         if (scalar @observations_missing) {
@@ -161,13 +154,13 @@ sub parse {
         }
     }
 
-    # Also should check if observationDbId is undefined. Then if so do a search for same trait, plot, and timestamp triplet. If exists, return error: "Must include the existing observationDbId to update this measurement"
+    # Also should check if observationDbId is undefined. Then if so do a search for same trait, plot, and timestamp triplet.
+    # If exists, return error: "Must include the existing observationDbId to update this measurement"
+    # Not doing yet, as timestamp is still stored in uniquename
+
     $parse_result{'data'} = \%data;
     $parse_result{'units'} = \@units;
     $parse_result{'variables'} = \@variables;
-    # return \%parse_result;
-    # $data{$plot_name}->{$trait_name}->{$timestamp}->{value} = $value;
-    # $data{$plot_name}->{$trait_name}->{$timestamp}->{collector} = $collect;
 
     return \%parse_result;
 }
