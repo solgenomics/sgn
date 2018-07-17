@@ -2517,5 +2517,16 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
 
 }
 
+sub images :  Chained('brapi') PathPart('images') Args(1) ActionClass('REST') { }
+
+sub images_GET { 
+	my $self = shift;
+	my $c = shift;
+	my $image_id = shift;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Images');
+	my $brapi_package_result = $brapi_module->detail();
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 1;

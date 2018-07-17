@@ -7,29 +7,7 @@ use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub observation_levels {
 	my $self = shift;

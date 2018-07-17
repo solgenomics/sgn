@@ -15,41 +15,7 @@ use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
 use JSON;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub seasons {
 	my $self = shift;
