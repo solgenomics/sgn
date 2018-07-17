@@ -79,13 +79,13 @@ sub observations_store {
     my @data_files = [];
     my %result = (data => \@data);
 
-    my @error_status = [];
     my @success_status = [];
 
     #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
 
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
+        push @$status, {'4003' => 'Permission Denied. Must have correct privilege.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
     }
 
@@ -101,7 +101,7 @@ sub observations_store {
         print STDERR $parse_error;
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
     } elsif ($validated_request->{'success'}) {
-        push @success_status, $validated_request->{'success'};
+        push @$status, {'info' => $validated_request->{'success'} };
     }
 
 
@@ -115,7 +115,7 @@ sub observations_store {
         print STDERR $parse_error;
         return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
     } elsif ($parsed_request->{'success'}) {
-        push @success_status, $parsed_request->{'success'};
+        push @$status, {'info' => $parsed_request->{'success'} };
         #define units (observationUnits) and variables (observationVariables) from parsed request
         @units = @{$parsed_request->{'units'}};
         @variables = @{$parsed_request->{'variables'}};
@@ -137,10 +137,13 @@ sub observations_store {
     my $response = $archived_request->get_path();
     my $file = $response->{archived_filename_with_path};
     my $archive_error_message = $response->{error_message};
+    my $archive_success_message = $response->{success_message};
     if ($archive_error_message){
         return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message);
     }
-    my $archive_success_message = $response->{success_message};
+    if ($archive_success_message){
+        push @$status, {'info' => $archive_success_message };
+    }
 
     print STDERR "Archived Request is in $file\n";
 

@@ -84,7 +84,6 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range');
 	$c->stash->{session_token} = $session_token;
 
-    print STDERR Dumper $c->req->params;
 	if (defined $c->request->data){
 		my %allParams = (%{$c->request->data}, %{$c->req->params});
 		$c->stash->{clean_inputs} = _clean_inputs(\%allParams);
@@ -2593,7 +2592,8 @@ sub observations_PUT {
         user_id => $user_id,
         username => $username,
         user_type => $user_type,
-        archive_path => $c->config->{archive_path}
+        archive_path => $c->config->{archive_path},
+        tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir}
     });
 	_standard_response_construction($c, $brapi_package_result);
 }

@@ -78,7 +78,7 @@ sub parse {
             #print STDERR "Invalid request: The combination of $unique_combo appears more than once\n";
             return \%parse_result;
         }
-        if (defined $obs->{'observationDbId'}) {
+        if ($obs->{'observationDbId'} && defined $obs->{'observationDbId'}) {
             push @observations, $obs->{'observationDbId'};
         }
         push @units, $obs->{'observationUnitDbId'};
