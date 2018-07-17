@@ -68,6 +68,7 @@ sub observations_store {
     my $username = $search_params->{username};
     my $user_type = $search_params->{user_type};
     my $archive_path = $search_params->{archive_path};
+    my $tempfiles_subdir = $search_params->{tempfiles_subdir};
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -127,12 +128,19 @@ sub observations_store {
         schema=>$schema,
         user_id => $user_id,
         user_type => $user_type,
+        tempfiles_subdir => $tempfiles_subdir,
         archive_path => $archive_path,
         format => 'observations',
         data => $observations
     });
 
-    my $file = $archived_request->get_path();
+    my $response = $archived_request->get_path();
+    my $file = $response->{archived_filename_with_path};
+    my $archive_error_message = $response->{error_message};
+    if ($archive_error_message){
+        return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message);
+    }
+    my $archive_success_message = $response->{success_message};
 
     print STDERR "Archived Request is in $file\n";
 

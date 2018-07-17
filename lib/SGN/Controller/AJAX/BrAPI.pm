@@ -84,6 +84,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range');
 	$c->stash->{session_token} = $session_token;
 
+    print STDERR Dumper $c->req->params;
 	if (defined $c->request->data){
 		my %allParams = (%{$c->request->data}, %{$c->req->params});
 		$c->stash->{clean_inputs} = _clean_inputs(\%allParams);
