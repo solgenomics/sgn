@@ -2525,7 +2525,7 @@ sub images_GET {
 	my $image_id = shift;
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Images');
-	my $brapi_package_result = $brapi_module->detail();
+	my $brapi_package_result = $brapi_module->detail( { image_id => $image_id });
 	_standard_response_construction($c, $brapi_package_result);
 }
 
