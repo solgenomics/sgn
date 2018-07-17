@@ -51,7 +51,9 @@ sub validate {
             return \%validate_result;
         }
     }
-    return 1;
+
+    $validate_result{'success'} = "Request structure is valid";
+    return \%validate_result;
 }
 
 sub parse {
@@ -158,6 +160,7 @@ sub parse {
     # If exists, return error: "Must include the existing observationDbId to update this measurement"
     # Not doing yet, as timestamp is still stored in uniquename
 
+    $parse_result{'success'} = "Request data is valid";
     $parse_result{'data'} = \%data;
     $parse_result{'units'} = \@units;
     $parse_result{'variables'} = \@variables;

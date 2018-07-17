@@ -81,72 +81,48 @@ sub observations_store {
     my @error_status = [];
     my @success_status = [];
 
-    print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
+    #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
 
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
-        # return (\@success_status, \@error_status);
     }
 
-    #validate request structure and parse data
+    ## Validate request structure and parse data
     my $timestamp_included = 1;
     my $data_level = 'stocks';
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my $validate_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema);
-    if (!$validate_request) {
-        print STDERR "Error parsing request structure.";
-        return CXGN::BrAPI::JSONResponse->return_error($status, "Error parsing request structure.");
-        # push @error_status, "Error parsing request structure.";
-        # return (\@success_status, \@error_status);
+    my $validated_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema);
+
+    if (!$validated_request || $validated_request->{'error'}) {
+        my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
+        print STDERR $parse_error;
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+    } elsif ($validated_request->{'success'}) {
+        push @success_status, $validated_request->{'success'};
     }
-    if ($validate_request == 1){
-        push @success_status, "Request structure is valid.";
-    } else {
-        # if ($validate_request->{'error'}) {
-            print STDERR $validate_request->{'error'};
-            return CXGN::BrAPI::JSONResponse->return_error($status, $validate_request->{'error'});
-            # push @error_status, $validate_request->{'error'};
-        # }
-        # return (\@success_status, \@error_status);
-    }
+
 
     my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema);
-    #
-    if (!$parsed_request) {
-        print STDERR "Error parsing request data.";
-        return CXGN::BrAPI::JSONResponse->return_error($status, "Error parsing request data.");
-        # push @error_status, "Error parsing request data.";
-        # return (\@success_status, \@error_status);
-    }
-    if ($parsed_request == 1){
-        push @success_status, "Request data is valid.";
-    } else {
-        if ($parsed_request->{'error'}) {
-            print STDERR $parsed_request->{'error'};
-            return CXGN::BrAPI::JSONResponse->return_error($status, $parsed_request->{'error'});
-            # push @error_status, $parsed_request->{'error'};
-            # return (\@success_status, \@error_status);
-        }
-    }
-
     my %parsed_data;
     my @units;
     my @variables;
 
-    print STDERR "Defining stocks (observationUnits) and traits (observationVariables) from parsed request";
-    if ($parsed_request && !$parsed_request->{'error'}) {
-        %parsed_data = %{$parsed_request->{'data'}};
+    if (!$parsed_request || $parsed_request->{'error'}) {
+        my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
+        print STDERR $parse_error;
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+    } elsif ($parsed_request->{'success'}) {
+        push @success_status, $parsed_request->{'success'};
+        #define units (observationUnits) and variables (observationVariables) from parsed request
         @units = @{$parsed_request->{'units'}};
         @variables = @{$parsed_request->{'variables'}};
-        push @success_status, "Request data is valid.";
+        %parsed_data = %{$parsed_request->{'data'}};
+        #print STDERR "Parsed data is: ".Dumper(%parsed_data)."\n";
     }
 
-    print STDERR "Parsed data is: ".Dumper(%parsed_data)."\n";
-
-    #archive in file
-
+    ## Archive in file
     my $archived_request = CXGN::BrAPI::FileRequest->new({
         schema=>$schema,
         user_id => $user_id,
@@ -160,17 +136,15 @@ sub observations_store {
 
     print STDERR "Archived Request is in $file\n";
 
-    ## Store observations and return details for response
-
     ## Set metadata
     my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     $phenotype_metadata{'archived_file'} = $file;
     $phenotype_metadata{'archived_file_type'} = 'brapi observations';
-    # $phenotype_metadata{'operator'} = $username;
     $phenotype_metadata{'date'} = $timestamp;
 
+    ## Store observations and return details for response
     my $store_observations = CXGN::Phenotypes::StoreObservations->new(
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
@@ -193,15 +167,9 @@ sub observations_store {
         $result{data} = $stored_observation_details;
     }
 
-    # will need to initiate refresh matviews in controller instead
-    # my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    # my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-
-    # my $total_count = 1;
-    # my @data;
-    # my %result = (data => \@data);
-    # my @data_files;
-    # my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    ## Will need to initiate refresh matviews in controller instead
+    #my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    #my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
 

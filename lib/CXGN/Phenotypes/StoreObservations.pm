@@ -160,8 +160,7 @@ sub store {
 
                 if (defined($trait_value) && length($trait_value)) {
 
-                    # change this to work depending on whether observationDbIds are supplied and valid
-                    #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
+                    # Update existing ot add new, depending on whether observationDbIds are supplied and valid
                     my $plot_trait_uniquename = "Stock: " .
                         $stock_id . ", trait: " .
                         $trait_cvterm->name .
@@ -291,10 +290,6 @@ sub get_linked_data {
     my %data = %{$data};
     my $unit_list = $self->unit_list;
     my $schema = $self->bcs_schema;
-
-    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
 
     my $subquery = "
     SELECT cvterm_id
