@@ -10,6 +10,36 @@ sub name {
     return "brapi observations";
 }
 
+sub check_unique_var_unit_time {
+    my $self = shift;
+    my $schema = shift;
+    my $variable = shift;
+    my $unit = shift;
+    my $timestamp = shift;
+    my %check_result;
+    my $variable_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, "|".$variable);
+
+    my $q = "
+    SELECT phenotype_id, value
+    FROM phenotype
+    JOIN nd_experiment_phenotype USING (phenotype_id)
+    JOIN nd_experiment_stock USING (nd_experiment_id)
+    WHERE observable_id = ? AND stock_id = ? AND collect_date = ?
+    ";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($variable_cvterm->cvterm_id(), $unit, $timestamp);
+    my ($id, $value) = $h->fetchrow_array();
+    if ($id) {
+        #print STDERR "Found id $id and value $value\n";
+        $check_result{'error'} = "The combination of observationVariableDbId $variable with observationUnitDbId $unit at observationTimeStamp $timestamp already exists in the database with value $value and observationDbId $id. To update this measurement includes its observationDbId in your request";
+        return \%check_result;
+	}
+
+    $check_result{'success'} = "This combination is unique";
+    return \%check_result;
+}
+
 sub validate {
     my $self = shift;
     my $observations = shift;
@@ -71,15 +101,23 @@ sub parse {
     my %seen = ();
     my (@observations, @units, @variables, @values, @timestamps);
     foreach my $obs (@data){
+
+        ## Check that observation is not duplicated in the request
         my $unique_combo = "observationUnitDbId: ".$obs->{'observationUnitDbId'}.", observationVariableDbId:".$obs->{'observationVariableDbId'}.", observationTimeStamp:".$obs->{'observationTimeStamp'};
-        #print STDERR "Unique combo is $unique_combo\n";
         if ($seen{$unique_combo}) {
-            $parse_result{'error'} = "Invalid request. The combination of $unique_combo appears more than once";
-            #print STDERR "Invalid request: The combination of $unique_combo appears more than once\n";
+            $parse_result{'error'} = "Invalid request. The combination of $unique_combo appears more than once in the request";
             return \%parse_result;
         }
+
         if ($obs->{'observationDbId'} && defined $obs->{'observationDbId'}) {
             push @observations, $obs->{'observationDbId'};
+        } else {
+            ## If observationDbId is undefined, check that same trait, stock, and timestamp triplet doesn't already exist in the database
+            my $unique_observation = $self->check_unique_var_unit_time($schema, $obs->{'observationVariableDbId'}, $obs->{'observationUnitDbId'}, $obs->{'observationTimeStamp'});
+            if (!$unique_observation || $unique_observation->{'error'}) {
+                $parse_result{'error'} = $unique_observation ? $unique_observation->{'error'} : "Error validating that observations are unique";
+                return \%parse_result;
+            }
         }
         push @units, $obs->{'observationUnitDbId'};
         push @variables, $obs->{'observationVariableDbId'};
@@ -155,10 +193,6 @@ sub parse {
             return \%parse_result;
         }
     }
-
-    # Also should check if observationDbId is undefined. Then if so do a search for same trait, plot, and timestamp triplet.
-    # If exists, return error: "Must include the existing observationDbId to update this measurement"
-    # Not doing yet, as timestamp is still stored in uniquename
 
     $parse_result{'success'} = "Request data is valid";
     $parse_result{'data'} = \%data;
