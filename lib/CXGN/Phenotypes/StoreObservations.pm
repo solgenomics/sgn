@@ -152,11 +152,11 @@ sub store {
                 my $trait_cvterm = $trait_objs{$variable};
 
                 #print STDERR Dumper $value_array;
-                my $observation = $data{$unit_id}->{$variable}->{observation};
-                my $trait_value = $data{$unit_id}->{$variable}->{value};
-                my $timestamp = $data{$unit_id}->{$variable}->{timestamp};
-                my $operator =  $data{$unit_id}->{$variable}->{collector};
                 my $unique_time;
+                my $observation = $data{$unit_id}->{$variable}->[3];
+                my $trait_value = $data{$unit_id}->{$variable}->[0];
+                my $timestamp = $data{$unit_id}->{$variable}->[1];
+                my $operator =  $data{$unit_id}->{$variable}->[2];
                 if (!$timestamp) {
                     $unique_time = 'NA';
                 }

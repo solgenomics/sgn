@@ -76,7 +76,7 @@ sub observations_store {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     my $status = $self->status;
     my @data = [];
-    my @data_files = [];
+    my @data_files = ();
     my %result = (data => \@data);
 
     my @success_status = [];

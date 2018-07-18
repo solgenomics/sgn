@@ -1,6 +1,21 @@
 
 package CXGN::Phenotypes::ParseUpload::Plugin::FieldBook;
 
+# Validate Returns %validate_result = (
+#   error => 'error message'
+#)
+
+# Parse Returns %parsed_result = (
+#   data => {
+#       plotname1 => {
+#           varname1 => [12, '2015-06-16T00:53:26Z', 'person1', '']
+#           varname2 => [120, '', 'person2', '']
+#       }
+#   },
+#   units => [plotname1],
+#   variables => [varname1, varname2]
+#)
+
 use Moose;
 use File::Slurp;
 
@@ -121,6 +136,9 @@ sub parse {
         if ($header_cell eq "timestamp") {
             $header_column_info{'timestamp'} = $header_column_number;
         }
+        if ($header_cell eq "person") {
+            $header_column_info{'person'} = $header_column_number;
+        }
         $header_column_number++;
     }
     if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
@@ -143,6 +161,8 @@ sub parse {
         #substr($row[$header_column_info{'value'}],1,-1);
         my $timestamp = $row[$header_column_info{'timestamp'}];
         $timestamp =~ s/\"//g;
+        my $collector = $row[$header_column_info{'person'}];
+        $collector =~ s/\"//g;
 
         if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
             $parse_result{'error'} = "Error getting value from file";
@@ -157,7 +177,7 @@ sub parse {
         $plots_seen{$plot_id} = 1;
         $traits_seen{$trait} = 1;
         if (defined($value) && defined($timestamp)) {
-            $data{$plot_id}->{$trait} = [$value, $timestamp];
+            $data{$plot_id}->{$trait} = [$value, $timestamp, $collector, ''];
         }
     }
 
@@ -169,8 +189,8 @@ sub parse {
     }
 
     $parse_result{'data'} = \%data;
-    $parse_result{'plots'} = \@plots;
-    $parse_result{'traits'} = \@traits;
+    $parse_result{'units'} = \@plots;
+    $parse_result{'variables'} = \@traits;
 
     return \%parse_result;
 }

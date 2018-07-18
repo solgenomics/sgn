@@ -119,6 +119,10 @@ has 'unique_trait_stock' => (isa => "HashRef",
     is => 'rw',
 );
 
+has 'unique_trait_stock_timestamp' => (isa => "HashRef",
+    is => 'rw',
+);
+
 #build is used for creating hash lookups in this case
 sub create_hash_lookups {
     my $self = shift;
@@ -144,19 +148,30 @@ sub create_hash_lookups {
 
     #for checking if values in the file are already stored in the database or in the same file
     my %check_unique_trait_stock;
+    my %check_unique_trait_stock_timestamp;
     my %check_unique_value_trait_stock;
-    my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}, 'stock.stock_id'=>{-in=>$self->stock_id_list}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
-    while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
-        my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
-        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
+
+    my $stock_ids_sql = join ("," , @{$self->stock_id_list});
+    my $cvterm_ids_sql = join ("," , @cvterm_ids);
+    my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
+    my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
+    $h->execute();
+
+    #my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}, 'stock.stock_id'=>{-in=>$self->stock_id_list}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
+    while (my ($previous_value, $cvterm_id, $collect_timestamp, $stock_id) = $h->fetchrow_array()) {
+    #while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
+        #my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
+        #my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
         if ($stock_id){
-            my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
+            #my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
             $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
+            $check_unique_trait_stock_timestamp{$cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
             $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
         }
     }
     $self->unique_value_trait_stock(\%check_unique_value_trait_stock);
     $self->unique_trait_stock(\%check_unique_trait_stock);
+    $self->unique_trait_stock_timestamp(\%check_unique_trait_stock_timestamp);
 
 }
 
@@ -192,6 +207,7 @@ sub verify {
     my %trait_objs = %{$self->trait_objs};
     my %check_unique_value_trait_stock = %{$self->unique_value_trait_stock};
     my %check_unique_trait_stock = %{$self->unique_trait_stock};
+    my %check_unique_trait_stock_timestamp = %{$self->unique_trait_stock_timestamp};
 
     my %check_trait_category;
     my $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_categories';";
@@ -280,8 +296,8 @@ sub verify {
                 #check if the plot_name, trait_name combination already exists in database.
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
-                } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
+                } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
                 }
 
                 #check if the plot_name, trait_name combination already exists in same file.
@@ -393,6 +409,8 @@ sub store {
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
                 my $timestamp = $value_array->[1];
+                my $collector = $value_array->[2];
+                my $phenotype_id = $value_array->[3];
                 if (!$timestamp) {
                     $timestamp = 'NA'.$upload_date;
                 }

@@ -102,7 +102,7 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-	'plots' => [
+	'units' => [
 	                       'test_trial21',
 	                       'test_trial210',
 	                       'test_trial211',
@@ -119,7 +119,7 @@ is_deeply($parsed_file, {
 	                       'test_trial28',
 	                       'test_trial29'
 	                     ],
-	          'traits' => [
+	          'variables' => [
 	                        'dry matter content|CO_334:0000092',
 	                        'fresh root weight|CO_334:0000012',
 	                        'fresh shoot weight|CO_334:0000016',
@@ -406,8 +406,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_01:10:56";
 my %parsed_data = %{$parsed_file->{'data'}};
-my @plots = @{$parsed_file->{'plots'}};
-my @traits = @{$parsed_file->{'traits'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -533,8 +533,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-22_01:10:56";
 my %parsed_data = %{$parsed_file->{'data'}};
-my @plots = @{$parsed_file->{'plots'}};
-my @traits = @{$parsed_file->{'traits'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -830,7 +830,7 @@ is_deeply($parsed_file, {
                                                                               ]
                                          }
                     },
-          'plots' => [
+          'units' => [
                        'test_trial21',
                        'test_trial210',
                        'test_trial211',
@@ -847,7 +847,7 @@ is_deeply($parsed_file, {
                        'test_trial28',
                        'test_trial29'
                      ],
-          'traits' => [
+          'variables' => [
                         'dry matter content|CO_334:0000092',
                         'dry yield|CO_334:0000014',
                         'fieldbook_image|CO_334:0010472'
@@ -860,8 +860,8 @@ $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-01-16_03:15:26";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 my $user_id = 41;
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -1281,13 +1281,13 @@ is_deeply($parsed_file, {
 	                                                                             ]
 	                                        }
 	                    },
-	          'traits' => [
+	          'variables' => [
 	                        'dry matter content|CO_334:0000092',
 	                        'fresh root weight|CO_334:0000012',
 	                        'fresh shoot weight|CO_334:0000016',
 	                        'harvest index|CO_334:0000015'
 	                      ],
-	          'plots' => [
+	          'units' => [
 	                       'test_trial21',
 	                       'test_trial210',
 	                       'test_trial211',
@@ -1313,8 +1313,8 @@ $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_07:11:98";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -1968,7 +1968,7 @@ is_deeply($parsed_file, {
                                                                          ]
                                          }
                     },
-          'plots' => [
+          'units' => [
                        'test_trial21',
                        'test_trial210',
                        'test_trial211',
@@ -1985,7 +1985,7 @@ is_deeply($parsed_file, {
                        'test_trial28',
                        'test_trial29'
                      ],
-          'traits' => [
+          'variables' => [
                         'dry matter content|CO_334:0000092',
                         'flower|CO_334:0000111',
                         'fresh root weight|CO_334:0000012',
@@ -2003,8 +2003,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:55:55";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -2253,11 +2253,11 @@ ok($parsed_file, "Check if parse parse phenotype plant spreadsheet works");
 print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'traits' => [
+          'variables' => [
                         'dry matter content percentage|CO_334:0000092',
                         'fresh root weight|CO_334:0000012'
                       ],
-          'plots' => [
+          'units' => [
                        'test_trial210_plant_1',
                        'test_trial210_plant_2',
                        'test_trial211_plant_1',
@@ -2598,8 +2598,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:15:21";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -2966,11 +2966,11 @@ is_deeply($parsed_file, {
                                                                                      ]
                                                 }
                     },
-          'traits' => [
+          'variables' => [
                         'dry matter content|CO_334:0000092',
                         'dry yield|CO_334:0000014'
                       ],
-          'plots' => [
+          'units' => [
                        'test_trial21_plant_1',
                        'test_trial21_plant_2',
                        'test_trial22_plant_1',
@@ -2985,8 +2985,8 @@ $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:55:17";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -6047,7 +6047,7 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'plots' => [
+          'units' => [
                        'test_trial21',
                        'test_trial210',
                        'test_trial211',
@@ -6064,7 +6064,7 @@ is_deeply($parsed_file, {
                        'test_trial28',
                        'test_trial29'
                      ],
-          'traits' => [
+          'variables' => [
                         'number of planted stakes counting|CO:0000159',
                         'root weight in air|CO:0000157',
                         'root weight in water|CO:0000158',

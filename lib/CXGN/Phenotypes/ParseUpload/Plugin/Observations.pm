@@ -1,6 +1,26 @@
 
 package CXGN::Phenotypes::ParseUpload::Plugin::Observations;
 
+# Validate Returns %validate_result = (
+#   success => 'success message',
+#   error => 'error message'
+#)
+
+# Parse Returns %parse_result = (
+#   success => 'success message',
+#   data => {
+#        plotdbid1 => {
+#           vardbid1 => ['23', '2015-06-16T00:53:26Z', 'collectorname1', phenotypedbid1],
+#           vardbid2 => ['25', '2015-06-17T00:53:26Z', 'collectorname1', ''],
+#       },
+#       plotdbid2 => {
+#           vardbid2 => ['2', '2015-08-16T00:53:26Z', 'collector2', '']
+#       }
+#   },
+#   units => [plotdbid1, plotdbid2]
+#   variables => [vardbid1, vardbid2]
+#)
+
 use Moose;
 use File::Slurp;
 use List::MoreUtils qw(uniq);
@@ -131,10 +151,11 @@ sub parse {
         # track data for store
         my $UnitDbId = $obs->{'observationUnitDbId'};
         my $VariableDbId = $obs->{'observationVariableDbId'};
-        $data{$UnitDbId}->{$VariableDbId}->{timestamp} = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : '';
-        $data{$UnitDbId}->{$VariableDbId}->{value} = $obs->{'value'};
-        $data{$UnitDbId}->{$VariableDbId}->{collector} = $obs->{'collector'} ? $obs->{'collector'} : '';
-        $data{$UnitDbId}->{$VariableDbId}->{observation} = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
+        my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : '';
+        my $value = $obs->{'value'};
+        my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
+        my $phenotype_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
+        $data{$UnitDbId}->{$VariableDbId} = [$value, $timestamp, $collector, $phenotype_id];
     }
     #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;
