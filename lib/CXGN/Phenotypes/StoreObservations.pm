@@ -291,6 +291,8 @@ sub get_linked_data {
     my $unit_list = $self->unit_list;
     my $schema = $self->bcs_schema;
 
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id;
+
     my $subquery = "
     SELECT cvterm_id
     FROM cvterm
@@ -303,7 +305,7 @@ sub get_linked_data {
         FROM stock AS unit
         JOIN cvterm AS level ON (unit.type_id = level.cvterm_id)
         JOIN stock_relationship AS rel ON (unit.stock_id = rel.subject_id AND rel.type_id IN ($subquery))
-        JOIN stock AS accession ON (rel.object_id = accession.stock_id)
+        JOIN stock AS accession ON (rel.object_id = accession.stock_id AND accession.type_id = $accession_cvterm_id)
         JOIN nd_experiment_stock ON (unit.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
         JOIN nd_experiment_project ON (nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id)

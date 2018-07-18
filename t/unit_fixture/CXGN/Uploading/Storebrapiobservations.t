@@ -124,13 +124,18 @@ $ua = LWP::UserAgent->new();
 $res = $ua->request($req);
 $response = decode_json $res->content;
 print STDERR Dumper $response;
+
+#Remove observationdbid from result because it is variable
+foreach (@{$response->{result}->{data}}){
+    delete $_->{observationDbId};
+}
+
 is_deeply($response, {
           'result' => {
                         'data' => [
                                     {
                                       'observationLevel' => 'plot',
                                       'uploadedBy' => 41,
-                                      'observationDbId' => 740534,
                                       'observationTimestamp' => '2015-06-16T00:53:26Z',
                                       'studyDbId' => 137,
                                       'observationUnitName' => 'test_trial210',
@@ -152,7 +157,6 @@ is_deeply($response, {
                                       'value' => '110',
                                       'observationVariableDbId' => 'fresh shoot weight|CO_334:0000016',
                                       'uploadedBy' => 41,
-                                      'observationDbId' => 740535,
                                       'observationTimestamp' => '2015-06-16T00:53:26Z',
                                       'studyDbId' => 137,
                                       'observationLevel' => 'plot'
