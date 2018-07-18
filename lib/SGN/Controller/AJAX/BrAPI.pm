@@ -18,6 +18,7 @@ use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
 use File::Slurp qw | read_file |;
+use File::Spec;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
 
@@ -2517,16 +2518,61 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
 
 }
 
-sub images :  Chained('brapi') PathPart('images') Args(1) ActionClass('REST') { }
-
-sub images_GET { 
-	my $self = shift;
-	my $c = shift;
-	my $image_id = shift;
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Images');
-	my $brapi_package_result = $brapi_module->detail( { image_id => $image_id });
-	_standard_response_construction($c, $brapi_package_result);
+sub images_base :  Chained('brapi') PathPart('images') CaptureArgs(1) { 
+     my $self = shift;
+     my $c = shift;
+     print STDERR "Images_base... capturing image_id\n";
+     $c->stash->{image_id} = shift;   
 }
 
+sub images :  Chained('images_base') PathPart('') Args(0) ActionClass('REST') { }
+
+sub images_GET { 
+    my $self = shift;
+    my $c = shift;
+
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $brapi_package_result = $brapi_module->detail( { image_id => $c->stash->{image_id} });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+    
+# /brapi/v1/images PUT
+sub image_store :  Chained('brapi') PathPart('images') Args(0) ActionClass('REST') { }
+
+sub image_store_PUT { 
+    my $self = shift;
+    my $c = shift;
+    print STDERR "Image store PUT...\n";
+       
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    print STDERR "Clean inputs at image_store_PUT: ".Dumper($clean_inputs);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
+    my $brapi_package_result = $brapi_module->image_metadata_store($image_dir, $clean_inputs);
+    _standard_response_construction($c, $brapi_package_result);
+
+}
+ 
+# /brapi/v1/images/<image_id>/image_data
+sub image_data_store :  Chained('images_base') PathPart('image_data') Args(0) ActionClass('REST') { }
+
+sub image_data_store_PUT { 
+    my $self = shift;
+    my $c = shift;
+
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    print STDERR Dumper($clean_inputs);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
+    my $brapi_package_result = $brapi_module->image_data_store($image_dir, $c->stash->{image_id}, $c->req->body());
+    _standard_response_construction($c, $brapi_package_result);
+
+}
+   
 1;
