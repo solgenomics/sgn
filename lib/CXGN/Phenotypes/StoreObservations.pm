@@ -156,8 +156,9 @@ sub store {
                 my $trait_value = $data{$unit_id}->{$variable}->{value};
                 my $timestamp = $data{$unit_id}->{$variable}->{timestamp};
                 my $operator =  $data{$unit_id}->{$variable}->{collector};
+                my $unique_time;
                 if (!$timestamp) {
-                    $timestamp = 'NA'.$upload_date;
+                    $unique_time = 'NA';
                 }
 
                 if (defined($trait_value) && length($trait_value)) {
@@ -166,7 +167,7 @@ sub store {
                     my $plot_trait_uniquename = "Stock: " .
                         $stock_id . ", trait: " .
                         $trait_cvterm->name .
-                        " date: $timestamp" .
+                        " date: $unique_time" .
                         "  operator = $operator" ;
 
                     my $phenotype;
@@ -176,12 +177,18 @@ sub store {
                             $phenotype = $trait_cvterm
                             ->find_related("phenotype_cvalues", {
                                 observable_id => $trait_cvterm->cvterm_id,
-                                phenotype_id => $observation
+                                phenotype_id => $observation,
                             });
 
-                            $phenotype->value($trait_value);
-                            $phenotype->uniquename($plot_trait_uniquename);
-                            $phenotype->update();
+                            ## should check that unit and variable (also checked here) are conserved in parse step, if not reject before store
+                            ## should also update operator in nd_experimentprops
+
+                            $phenotype->update({
+                                value => $trait_value,
+                                uniquename => $plot_trait_uniquename,
+                            });
+
+                            $self->handle_timestamp($timestamp, $observation);
 
                             my $q = "SELECT phenotype_id, nd_experiment_id, file_id
                             FROM phenotype
@@ -201,13 +208,14 @@ sub store {
 
                     } else {
 
-
                         $phenotype = $trait_cvterm
                             ->create_related("phenotype_cvalues", {
                                 observable_id => $trait_cvterm->cvterm_id,
                                 value => $trait_value ,
                                 uniquename => $plot_trait_uniquename,
                             });
+
+                        $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
 
                         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
                             nd_geolocation_id => $location_id,
@@ -235,7 +243,7 @@ sub store {
                         "value" => $trait_value
                     );
 
-                    if ($timestamp) { $details{'observationTimestamp'} = $timestamp};
+                    if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
                     if ($operator) { $details{'collector'} = $operator};
 
                     push @stored_details, \%details;
@@ -385,6 +393,22 @@ sub save_archived_file_metadata {
         $experiment_files->insert();
         #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
     }
+}
+
+sub handle_timestamp {
+    my $self = shift;
+    my $timestamp = shift || undef;
+    my $phenotype_id = shift;
+
+    my $q = "
+    UPDATE phenotype
+    SET collect_date = ?,
+        create_date = DEFAULT
+    WHERE phenotype_id = ?
+    ";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($timestamp, $phenotype_id);
 }
 
 
