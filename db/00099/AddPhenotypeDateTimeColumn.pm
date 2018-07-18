@@ -3,11 +3,11 @@
 
 =head1 NAME
 
- AddPhenotypeDatTimeColumn
+ AddPhenotypeDateTimeColumn
 
 =head1 SYNOPSIS
 
-mx-run AddPhenotypeDatTimeColumn [options] -H hostname -D dbname -u username [-F]
+mx-run AddPhenotypeDateTimeColumn [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -29,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddPhenotypeDatTimeColumn;
+package AddPhenotypeDateTimeColumn;
 
 use Moose;
 use Bio::Chado::Schema;
