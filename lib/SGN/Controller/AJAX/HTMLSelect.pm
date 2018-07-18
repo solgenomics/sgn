@@ -381,7 +381,7 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     my $live_search = $c->req->param("live_search") ? 'data-live-search="true"' : '';
     my $default = $c->req->param("default") || 0;
 
-    my $user_id = 45;
+    my $user_id = $c->user()->get_sp_person_id();
     my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'plots');
     my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh(), 'plots');
 
