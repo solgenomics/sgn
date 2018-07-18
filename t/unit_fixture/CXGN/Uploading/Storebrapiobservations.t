@@ -191,7 +191,6 @@ is_deeply($response, {
                                         }
                                       ],
                           'datafiles' => [
-                                           []
                                          ],
                           'pagination' => {
                                             'totalCount' => 2,

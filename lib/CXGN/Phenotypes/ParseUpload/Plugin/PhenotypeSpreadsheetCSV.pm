@@ -1,5 +1,20 @@
 package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetCSV;
 
+# Validate Returns %validate_result = (
+#   error => 'error message'
+#)
+
+# Parse Returns %parsed_result = (
+#   data => {
+#       plotname1 => {
+#           varname1 => [12, '2015-06-16T00:53:26Z']
+#           varname2 => [120, '']
+#       }
+#   },
+#   units => [plotname1],
+#   variables => [varname1, varname2]
+#)
+
 use Moose;
 use JSON;
 use Data::Dumper;
@@ -200,8 +215,8 @@ sub parse {
     }
 
     $parse_result{'data'} = \%data;
-    $parse_result{'plots'} = \@observation_units;
-    $parse_result{'traits'} = \@traits;
+    $parse_result{'units'} = \@observation_units;
+    $parse_result{'variables'} = \@traits;
     #print STDERR Dumper \%parse_result;
 
     return \%parse_result;
