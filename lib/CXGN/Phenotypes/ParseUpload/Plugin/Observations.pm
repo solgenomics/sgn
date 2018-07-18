@@ -72,7 +72,7 @@ sub parse {
     my (@observations, @units, @variables, @values, @timestamps);
     foreach my $obs (@data){
         my $unique_combo = "observationUnitDbId: ".$obs->{'observationUnitDbId'}.", observationVariableDbId:".$obs->{'observationVariableDbId'}.", observationTimeStamp:".$obs->{'observationTimeStamp'};
-        print STDERR "Unique combo is $unique_combo\n";
+        #print STDERR "Unique combo is $unique_combo\n";
         if ($seen{$unique_combo}) {
             $parse_result{'error'} = "Invalid request. The combination of $unique_combo appears more than once";
             #print STDERR "Invalid request: The combination of $unique_combo appears more than once\n";
@@ -98,7 +98,7 @@ sub parse {
         $data{$UnitDbId}->{$VariableDbId}->{collector} = $obs->{'collector'} ? $obs->{'collector'} : '';
         $data{$UnitDbId}->{$VariableDbId}->{observation} = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
     }
-    print STDERR "Data is ".Dumper(%data)."\n";
+    #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;
     @units = uniq @units;
     @variables = uniq @variables;
@@ -119,10 +119,10 @@ sub parse {
     }
 
     my $t = CXGN::List::Transform->new();
-    print STDERR "Units are: @units\n";
+    #print STDERR "Units are: @units\n";
     my $units_transform = $t->transform($schema, 'stock_ids_2_stocks', \@units);
     my @unit_names = @{$units_transform->{'transform'}};
-    print STDERR "Unit names are: @unit_names\n";
+    #print STDERR "Unit names are: @unit_names\n";
 
     my $validated_units = $validator->validate($schema,'plots_or_subplots_or_plants',\@unit_names);
     my @units_missing = @{$validated_units->{'missing'}};

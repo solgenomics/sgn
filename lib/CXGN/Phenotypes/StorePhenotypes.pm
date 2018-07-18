@@ -348,6 +348,8 @@ sub store {
     my $success_message;
 
     my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $local_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'date', 'local')->cvterm_id();
+    my $local_operator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'operator', 'local')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
@@ -429,20 +431,12 @@ sub store {
 
                         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
                             nd_geolocation_id => $location_id,
-                            type_id => $phenotyping_experiment_cvterm_id
+                            type_id => $phenotyping_experiment_cvterm_id,
+                            nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
+                            nd_experiment_projects => [{project_id => $project_id}],
+                            nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}],
+                            nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
                         });
-                        $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
-                        $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-
-                        ## Link the experiment to the project
-                        $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
-
-                        # Link the experiment to the stock
-                        $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
-
-                        ## Link the phenotype to the experiment
-                        $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-                        #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
                         $experiment_ids{$experiment->nd_experiment_id()}=1;
                     }

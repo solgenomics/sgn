@@ -34,7 +34,6 @@ sub transform {
 
     if (ref($list) eq "ARRAY" ) {
         foreach my $l (@$list) {
-            print STDERR "ID: ".Dumper($l)."\n";
             my $rs = $schema->resultset("Stock::Stock")->search( { stock_id => $l });
 
             if ($rs->count() == 0) {

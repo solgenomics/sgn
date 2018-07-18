@@ -59,7 +59,7 @@ sub observations_store {
     my $search_params = shift;
     my $observations = $search_params->{observations} ? $search_params->{observations} : ();
 
-    print STDERR "Observations are ". Dumper($observations) . "\n";
+    #print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
