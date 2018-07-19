@@ -7,7 +7,7 @@ CXGN::Phenotypes::Search::MaterializedViewTable - an object to handle searching 
 =head1 USAGE
 
 my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'MaterializedViewTable',    #can be either 'MaterializedViewTable', or 'Native', or 'MaterializedViewTable'
+    'MaterializedViewTable',    #can be either 'MaterializedViewTable' or 'Native'
     {
         bcs_schema=>$schema,
         data_level=>$data_level,
@@ -201,7 +201,7 @@ sub search {
     if ($self->data_level ne 'all') {
         push @where_clause, "observationunit_type_name = '".$self->data_level."'"; #ONLY plot or plant or subplot
     } else {
-        push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot')"; #plots AND plants AND subplots
+        push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample')"; #plots AND plants AND subplots AND tissue_samples
     }
 
     my %trait_list_check;

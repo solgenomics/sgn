@@ -160,6 +160,7 @@ sub search {
     my $field_trial_is_planned_to_cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_trial_is_planned_to_cross', 'project_property')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
@@ -345,9 +346,9 @@ sub search {
 
     if ($self->data_level ne 'all') {
         my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
-        push @where_clause, "observationunit.type_id = $stock_type_id"; #ONLY plot or plant or subplot
+        push @where_clause, "observationunit.type_id = $stock_type_id"; #ONLY plot or plant or subplot or tissue_sample
     } else {
-        push @where_clause, "(observationunit.type_id = $plot_type_id OR observationunit.type_id = $plant_type_id OR observationunit.type_id = $subplot_type_id)"; #plots AND plants AND subplots
+        push @where_clause, "(observationunit.type_id = $plot_type_id OR observationunit.type_id = $plant_type_id OR observationunit.type_id = $subplot_type_id OR observationunit.type_id = $tissue_sample_type_id)"; #plots AND plants AND subplots AND tissue_samples
     }
 
     if ($self->exclude_phenotype_outlier){
