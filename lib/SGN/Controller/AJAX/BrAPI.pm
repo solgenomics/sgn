@@ -2503,10 +2503,6 @@ sub sample_details_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-
-
-
-
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2574,5 +2570,18 @@ sub image_data_store_PUT {
     _standard_response_construction($c, $brapi_package_result);
 
 }
+
+sub seedlot_base : Chained('brapi') PathPart('seedlots') CaptureArgs(1) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{seedlot_id} = shift;
+}
+
+sub seedlot_detail : Chained('seedlot_base') PathPart('') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+}
+
    
 1;

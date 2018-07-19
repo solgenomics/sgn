@@ -99,8 +99,8 @@ Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
 =head1 AUTHOR
 
-Lukas Mueller <lam87@cornell.edu>
-Nick MOrales <nm529@cornell.edu>
+ Lukas Mueller <lam87@cornell.edu>
+ Nick Morales <nm529@cornell.edu>
 
 =head1 ACCESSORS & METHODS
 

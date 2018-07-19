@@ -89,4 +89,11 @@ sub ted : Path('/ted') Args(0) {
     $c->stash->{template} = '/site/iframe.mas';
 }
 
+sub pages : Path('/pages') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $page = shift;
+    $c->stash->{template} = "/pages/$page.mas";
+}
+
 1;
