@@ -3,11 +3,11 @@
 
 =head1 NAME
 
- AddPhenotypeDateTimeColumn
+ AddPhenotypeDateTimeAndCollectorColumns
 
 =head1 SYNOPSIS
 
-mx-run AddPhenotypeDateTimeColumn [options] -H hostname -D dbname -u username [-F]
+mx-run AddPhenotypeDateTimeAndCollectorColumns [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -29,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddPhenotypeDateTimeColumn;
+package AddPhenotypeDateTimeAndCollectorColumns;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -60,6 +60,7 @@ sub patch {
 
     my $sql = <<SQL;
 ALTER TABLE phenotype ADD COLUMN collect_date TIMESTAMP;
+ALTER TABLE phenotype ADD COLUMN operator VARCHAR(128);
 SQL
 
     $schema->storage->dbh->do($sql);

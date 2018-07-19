@@ -103,16 +103,10 @@ sub validate {
             #print STDERR $value_string."\n";
             if ($timestamp_included) {
                 my ($value, $timestamp) = split /,/, $value_string;
-                if (!$timestamp) {
-                    $parse_result{'error'} = "No timestamp found in value, but 'Timestamps Included' is selected.";
-                    print STDERR "Timestamp not found in value.\n";
+                if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                    $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                    print STDERR "value: $timestamp\n";
                     return \%parse_result;
-                } else {
-                    if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                        $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-                        print STDERR "value: $timestamp\n";
-                        return \%parse_result;
-                    }
                 }
             }
         }
@@ -190,6 +184,9 @@ sub parse {
                 if ($timestamp_included){
                     ($value, $timestamp) = split /,/, $value_string;
                 } else {
+                    $value = $value_string;
+                }
+                if (!$value){
                     $value = $value_string;
                 }
                 #print STDERR $trait_value." : ".$timestamp."\n";

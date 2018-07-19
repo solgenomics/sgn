@@ -181,6 +181,7 @@ sub create_hash_lookups {
         #my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
         if ($stock_id){
             #my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
+            $collect_timestamp = $collect_timestamp || 'NA';
             $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
             $check_unique_trait_stock_timestamp{$cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
             $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
@@ -314,7 +315,9 @@ sub verify {
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
                 }
 
                 #check if the plot_name, trait_name combination already exists in same file.
@@ -331,8 +334,6 @@ sub verify {
                             $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
                         }
                     }
-                } else {
-                    $error_message = $error_message."<small>'Timestamps Included' is selected, but no timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
                 }
             }
 
@@ -428,7 +429,7 @@ sub store {
                 my $timestamp = $value_array->[1];
                 my $operator = $value_array->[2] ? $value_array->[2] : $operator;
                 my $observation = $value_array->[3];
-                my $unique_time = $timestamp ? $timestamp : 'NA'.$upload_date;
+                my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
                 if (defined($trait_value) && length($trait_value)) {
 
@@ -462,6 +463,7 @@ sub store {
                         });
 
                         $self->handle_timestamp($timestamp, $observation);
+                        $self->handle_operator($operator, $observation);
 
                         my $q = "SELECT phenotype_id, nd_experiment_id, file_id
                         FROM phenotype
@@ -488,6 +490,7 @@ sub store {
                         });
 
                         $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
+                        $self->handle_operator($operator, $phenotype->phenotype_id);
 
                         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
                             nd_geolocation_id => $location_id,
@@ -714,6 +717,20 @@ sub handle_timestamp {
     $h->execute($timestamp, $phenotype_id);
 }
 
+sub handle_operator {
+    my $self = shift;
+    my $operator = shift || undef;
+    my $phenotype_id = shift;
+
+    my $q = "
+    UPDATE phenotype
+    SET operator = ?
+    WHERE phenotype_id = ?
+    ";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($operator, $phenotype_id);
+}
 
 ###
 1;
