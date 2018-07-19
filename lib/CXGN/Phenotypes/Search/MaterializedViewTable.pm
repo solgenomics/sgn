@@ -226,15 +226,15 @@ sub search {
         }
     }
     #if ($self->phenotype_min_value && !$self->phenotype_max_value) {
-    #    push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.')\')'; 
+    #    push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.')\')';
     #}
     # if ($self->phenotype_max_value && !$self->phenotype_min_value) {
-    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value <= '.$self->phenotype_max_value.')\')'; 
+    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value <= '.$self->phenotype_max_value.')\')';
     # }
     # if ($self->phenotype_max_value && $self->phenotype_min_value) {
-    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.' && @.value <= '.$self->phenotype_max_value.')\')'; 
+    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.' && @.value <= '.$self->phenotype_max_value.')\')';
     # }
-    # 
+    #
     #if ($self->exclude_phenotype_outlier){
     #    push @where_clause, "observations !@> '[{\"outlier\" : 1}]'";;
     #}
