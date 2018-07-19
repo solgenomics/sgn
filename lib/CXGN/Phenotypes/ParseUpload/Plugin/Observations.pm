@@ -34,11 +34,10 @@ sub name {
 sub check_unique_var_unit_time {
     my $self = shift;
     my $schema = shift;
-    my $variable = shift;
+    my $trait_cvterm = shift;
     my $unit = shift;
     my $timestamp = shift;
     my %check_result;
-    my $variable_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, "|".$variable);
 
     my $q = "
     SELECT phenotype_id, value
@@ -49,7 +48,7 @@ sub check_unique_var_unit_time {
     ";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($variable_cvterm->cvterm_id(), $unit, $timestamp);
+    $h->execute($trait_cvterm->cvterm_id(), $unit, $timestamp);
     my ($id, $value) = $h->fetchrow_array();
     if ($id) {
         #print STDERR "Found id $id and value $value\n";
@@ -129,6 +128,8 @@ sub parse {
         my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
         my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
         my $value = $obs->{'value'};
+        my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, "|".$variable_db_id);
+        my $trait_name = $trait_cvterm->name."|".$variable_db_id;
 
         my $unique_combo = $obsunit_db_id.$variable_db_id.$timestamp;
         if ($seen{$unique_combo}) {
@@ -141,14 +142,12 @@ sub parse {
             push @observations, $obs_db_id;
         } else {
             ## If observationDbId is undefined, check that same trait, stock, and timestamp triplet doesn't already exist in the database
-            my $unique_observation = $self->check_unique_var_unit_time($schema, $variable_db_id, $obsunit_db_id, $timestamp);
+            my $unique_observation = $self->check_unique_var_unit_time($schema, $trait_cvterm, $obsunit_db_id, $timestamp);
             if (!$unique_observation || $unique_observation->{'error'}) {
                 $parse_result{'error'} = $unique_observation ? $unique_observation->{'error'} : "Error validating that observations are unique";
                 return \%parse_result;
             }
         }
-        my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, "|".$variable_db_id);
-        my $trait_name = $trait_cvterm->name."|".$variable_db_id;
 
         push @unit_dbids, $obsunit_db_id;
         push @variables, $trait_name;
