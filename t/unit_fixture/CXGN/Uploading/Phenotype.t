@@ -3399,7 +3399,7 @@ my $h = $f->dbh->prepare($refresh);
 $h->execute();
 
 my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-	search_type=>'MaterializedView',
+	search_type=>'MaterializedViewTable',
 	bcs_schema=>$f->bcs_schema,
 	data_level=>'plot',
 	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],

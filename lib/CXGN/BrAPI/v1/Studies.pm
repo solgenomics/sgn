@@ -535,11 +535,12 @@ sub observation_units {
         my @brapi_observations;
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
+            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
                 observationDbId => qq|$_->{phenotype_id}|,
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimestamp => $_->{timestamp},
+                observationTimestamp => $obs_timestamp,
                 season => $obs_unit->{year},
                 collector => $_->{operator},
                 value => qq|$_->{value}|,
@@ -667,7 +668,7 @@ sub observation_units_granular {
 	my $inputs = shift;
 	my $study_id = $inputs->{study_id};
 	my $data_level = $inputs->{data_level} || 'all';
-	my $search_type = $inputs->{search_type} || 'complete';
+	my $search_type = $inputs->{search_type} || 'fast';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
 	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
 	my $page_size = $self->page_size;
@@ -679,10 +680,10 @@ sub observation_units_granular {
 		$factory_type = 'Native';
 	}
 	if ($search_type eq 'fast'){
-		$factory_type = 'MaterializedView';
+		$factory_type = 'MaterializedViewTable';
 	}
 	my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-		$factory_type,    #can be either 'MaterializedView', or 'Native'
+		$factory_type,    #can be either 'MaterializedViewTable', or 'Native'
 		{
 			bcs_schema=>$self->bcs_schema,
 			data_level=>$data_level,
@@ -697,6 +698,7 @@ sub observation_units_granular {
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($data, $page_size, $page);
 	my @data_out;
 	foreach (@$data_window){
+        my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
 		push @data_out, {
 			studyDbId => $_->{trial_id},
 			observationDbId => $_->{phenotype_id},
@@ -705,7 +707,7 @@ sub observation_units_granular {
 			observationLevel => $_->{obsunit_type_name},
 			observationVariableDbId => $_->{trait_id},
 			observationVariableName => $_->{trait_name},
-			observationTimestamp => $_->{timestamp},
+			observationTimestamp => $obs_timestamp,
 			uploadedBy => $_->{operator},
 			operator => $_->{operator},
 			germplasmDbId => $_->{accession_stock_id},

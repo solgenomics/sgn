@@ -7,7 +7,7 @@ CXGN::Phenotypes::Search::MaterializedViewTable - an object to handle searching 
 =head1 USAGE
 
 my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'MaterializedViewTable',    #can be either 'MaterializedViewTable', 'MaterializedView', or 'Native', or 'MaterializedViewTable'
+    'MaterializedViewTable',    #can be either 'MaterializedViewTable', or 'Native', or 'MaterializedViewTable'
     {
         bcs_schema=>$schema,
         data_level=>$data_level,
@@ -306,11 +306,11 @@ sub search {
                     next;
                 }
             }
+            my $phenotype_uniquename = $o->{uniquename};
             $unique_traits{$trait_name}++;
             if ($include_timestamp){
                 my $timestamp_value;
                 my $operator_value;
-                my $phenotype_uniquename = $o->{uniquename};
                 if ($phenotype_uniquename){
                     my ($p1, $p2) = split /date: /, $phenotype_uniquename;
                     if ($p2){
@@ -321,7 +321,15 @@ sub search {
                     }
                 }
                 $o->{timestamp} = $timestamp_value;
-                $o->{operator} = $operator_value;
+            }
+            if (!$o->{operator}){
+                if ($phenotype_uniquename){
+                    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
+                    if ($p2){
+                        my ($timestamp, $operator_value) = split /  operator = /, $p2;
+                        $o->{operator} = $operator_value;
+                    }
+                }
             }
             push @return_observations, $o;
         }
