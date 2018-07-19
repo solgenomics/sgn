@@ -2,18 +2,18 @@
 
 =head1 NAME
 
-MatviewTimstampsAndImprovedSubqueries.pm
+MergeMatviewsAddTimstampsAndSubqueries.pm
 
 =head1 SYNOPSIS
 
-mx-run MatviewTimstampsAndImprovedSubqueries [options] -H hostname -D dbname -u username [-F]
+mx-run MergeMatviewsAddTimstampsAndSubqueries [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates the materialized views to specify cv name in subqueries used to retrieve cvterm_ids, and add operator and timestamps
+This patch updates the materialized views to remove redundant phenoviews, specify cv name in subqueries used to retrieve cvterm_ids, and add operator and timestamps
 
 =head1 AUTHOR
 
@@ -29,14 +29,14 @@ it under the same terms as Perl itself.
 =cut
 
 
-package MatviewTimstampsAndImprovedSubqueries;
+package MergeMatviewsAddTimstampsAndSubqueries;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch updates the materialized views to specify cv name in subqueries used to retrieve cvterm_ids, and add operator and timestamps.
+This patch updates the materialized views to remove redundant phenoviews, specify cv name in subqueries used to retrieve cvterm_ids, and add operator and timestamps.
 
 sub patch {
     my $self=shift;
@@ -177,46 +177,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_phenotype_jsonb_table
 ALTER FUNCTION public.refresh_materialized_phenotype_jsonb_table_concurrently() OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
-CREATE MATERIALIZED VIEW public.materialized_phenoview AS
-SELECT
-  breeding_program.project_id AS breeding_program_id,
-  nd_experiment.nd_geolocation_id AS location_id,
-  projectprop.value AS year_id,
-  trial.project_id AS trial_id,
-  accession.stock_id AS accession_id,
-  seedlot.stock_id AS seedlot_id,
-  stock.stock_id AS stock_id,
-  phenotype.phenotype_id as phenotype_id,
-  phenotype.cvalue_id as trait_id
-  FROM stock accession
-     LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot_of' OR cvterm.name = 'plant_of' AND cv.name = 'stock_relationship')
-     LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' OR cvterm.name = 'plant' AND cv.name = 'stock_type')
-     LEFT JOIN stock_relationship seedlot_relationship ON stock.stock_id = seedlot_relationship.subject_id AND seedlot_relationship.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'seed transaction' AND cv.name = 'stock_relationship')
-     LEFT JOIN stock seedlot ON seedlot_relationship.object_id = seedlot.stock_id AND seedlot.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'seedlot' AND cv.name = 'stock_type')
-     LEFT JOIN nd_experiment_stock ON(stock.stock_id = nd_experiment_stock.stock_id AND nd_experiment_stock.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name IN ('phenotyping_experiment', 'field_layout') AND cv.name = 'experiment_type'))
-     LEFT JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id AND nd_experiment.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name IN ('phenotyping_experiment', 'field_layout') AND cv.name = 'experiment_type'))
-     FULL OUTER JOIN nd_geolocation ON nd_experiment.nd_geolocation_id = nd_geolocation.nd_geolocation_id
-     LEFT JOIN nd_experiment_project ON nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id
-     FULL OUTER JOIN project trial ON nd_experiment_project.project_id = trial.project_id
-     LEFT JOIN project_relationship ON trial.project_id = project_relationship.subject_project_id AND project_relationship.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'breeding_program_trial_relationship' AND cv.name = 'project_relationship' )
-     FULL OUTER JOIN project breeding_program ON project_relationship.object_project_id = breeding_program.project_id
-     LEFT JOIN projectprop ON trial.project_id = projectprop.project_id AND projectprop.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'project year' AND cv.name = 'project_property' )
-     LEFT JOIN nd_experiment_phenotype ON(nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id)
-     LEFT JOIN phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
-  WHERE accession.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'accession' AND cv.name = 'stock_type')
-  ORDER BY breeding_program_id, location_id, trial_id, accession_id, seedlot_id, stock.stock_id, phenotype_id, trait_id
-WITH DATA;
-
-CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,phenotype_id,trait_id) WITH (fillfactor=100);
-CREATE INDEX accession_id_pheno_idx ON public.materialized_phenoview(accession_id) WITH (fillfactor=100);
-CREATE INDEX seedlot_id_pheno_idx ON public.materialized_phenoview(seedlot_id) WITH (fillfactor=100);
-CREATE INDEX breeding_program_id_idx ON public.materialized_phenoview(breeding_program_id) WITH (fillfactor=100);
-CREATE INDEX location_id_idx ON public.materialized_phenoview(location_id) WITH (fillfactor=100);
-CREATE INDEX stock_id_idx ON public.materialized_phenoview(stock_id) WITH (fillfactor=100);
-CREATE INDEX trial_id_idx ON public.materialized_phenoview(trial_id) WITH (fillfactor=100);
-CREATE INDEX year_id_idx ON public.materialized_phenoview(year_id) WITH (fillfactor=100);
-ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
-
+-- not rebuilding it, materialized_phenotype_jsonb_table has all necessary info
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_genoview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_genoview AS
@@ -239,7 +200,7 @@ CREATE INDEX genotype_id_idx ON public.materialized_genoview(genotype_id) WITH (
 ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;
 
 
-UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXseedlots","accessionsXtrait_components","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXseedlots","breeding_programsXtrait_components","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXseedlots","genotyping_protocolsXtrait_components","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXseedlots","locationsXtrait_components","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXseedlots","plantsXtrait_components","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXseedlots","plotsXtrait_components","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","seedlotsXtrait_components","seedlotsXtraits","seedlotsXtrial_designs","seedlotsXtrial_types","seedlotsXtrials","seedlotsXyears","trait_componentsXtraits","trait_componentsXtrial_designs","trait_componentsXtrial_types","trait_componentsXtrials","trait_componentsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}' WHERE mv_name = 'materialized_phenoview';
+UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXseedlots","accessionsXtrait_components","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXseedlots","breeding_programsXtrait_components","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXseedlots","genotyping_protocolsXtrait_components","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXseedlots","locationsXtrait_components","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXseedlots","plantsXtrait_components","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXseedlots","plotsXtrait_components","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","seedlotsXtrait_components","seedlotsXtraits","seedlotsXtrial_designs","seedlotsXtrial_types","seedlotsXtrials","seedlotsXyears","trait_componentsXtraits","trait_componentsXtrial_designs","trait_componentsXtrial_types","trait_componentsXtrials","trait_componentsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}' WHERE mv_name = 'materialized_phenotype_jsonb_table';
 
 DROP MATERIALIZED VIEW IF EXISTS public.seedlots CASCADE;
 CREATE MATERIALIZED VIEW public.seedlots AS
@@ -260,7 +221,7 @@ CREATE MATERIALIZED VIEW public.accessions AS
   stock.uniquename AS accession_name
   FROM stock
   WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'accession' AND cv.name = 'stock_type') AND is_obsolete = 'f'
-  GROUP BY stock.stock_id, stock.uniquename
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessions_idx ON public.accessions(accession_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessions OWNER TO web_usr;
@@ -271,7 +232,7 @@ SELECT project.project_id AS breeding_program_id,
     project.name AS breeding_program_name
    FROM project join projectprop USING (project_id)
    WHERE projectprop.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'breeding_program' AND cv.name = 'project_property')
-  GROUP BY project.project_id, project.name
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programs_idx ON public.breeding_programs(breeding_program_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programs OWNER TO web_usr;
@@ -281,7 +242,7 @@ CREATE MATERIALIZED VIEW public.genotyping_protocols AS
 SELECT nd_protocol.nd_protocol_id AS genotyping_protocol_id,
     nd_protocol.name AS genotyping_protocol_name
    FROM nd_protocol
-  GROUP BY public.nd_protocol.nd_protocol_id, public.nd_protocol.name
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocols_idx ON public.genotyping_protocols(genotyping_protocol_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocols OWNER TO web_usr;
@@ -291,7 +252,7 @@ CREATE MATERIALIZED VIEW public.locations AS
 SELECT nd_geolocation.nd_geolocation_id AS location_id,
   nd_geolocation.description AS location_name
    FROM nd_geolocation
-  GROUP BY public.nd_geolocation.nd_geolocation_id, public.nd_geolocation.description
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locations_idx ON public.locations(location_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locations OWNER TO web_usr;
@@ -302,7 +263,7 @@ SELECT stock.stock_id AS plant_id,
     stock.uniquename AS plant_name
    FROM stock
    WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type') AND is_obsolete = 'f'
-  GROUP BY public.stock.stock_id, public.stock.uniquename
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plants_idx ON public.plants(plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plants OWNER TO web_usr;
@@ -313,7 +274,7 @@ SELECT stock.stock_id AS plot_id,
     stock.uniquename AS plot_name
    FROM stock
    WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type') AND is_obsolete = 'f'
-  GROUP BY public.stock.stock_id, public.stock.uniquename
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plots_idx ON public.plots(plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plots OWNER TO web_usr;
@@ -371,7 +332,7 @@ SELECT trial.project_id AS trial_id,
     JOIN project trial ON(subject_project_id = trial.project_id)
     JOIN projectprop on(trial.project_id = projectprop.project_id)
     WHERE projectprop.type_id NOT IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name::text = 'cross'::text OR cvterm.name::text = 'trial_folder'::text OR cvterm.name::text = 'folder_for_trials'::text OR cvterm.name::text = 'folder_for_crosses'::text)
-    GROUP BY trial.project_id, trial.name
+    GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trials_idx ON public.trials(trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
@@ -384,7 +345,7 @@ SELECT projectprop.value AS trial_design_id,
    JOIN cvterm ON(projectprop.type_id = cvterm.cvterm_id)
    JOIN cv using(cv_id)
    WHERE cvterm.name = 'design' AND cv.name = 'project_property'
-   GROUP BY projectprop.value
+   GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_designs_idx ON public.trial_designs(trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designs OWNER TO web_usr;
@@ -396,7 +357,7 @@ SELECT cvterm.cvterm_id AS trial_type_id,
    FROM cvterm
    JOIN cv USING(cv_id)
    WHERE cv.name = 'project_type'
-   GROUP BY cvterm.cvterm_id
+   GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_types_idx ON public.trial_types(trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_types OWNER TO web_usr;
@@ -407,19 +368,19 @@ SELECT projectprop.value AS year_id,
   projectprop.value AS year_name
    FROM projectprop
    WHERE projectprop.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'project year' AND cv.name = 'project_property')
-  GROUP BY public.projectprop.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX years_idx ON public.years(year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW years OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXseedlots AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     public.stock.stock_id AS seedlot_id
    FROM public.materialized_phenoview
-   LEFT JOIN stock_relationship seedlot_relationship ON materialized_phenoview.accession_id = seedlot_relationship.subject_id AND seedlot_relationship.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'collection_of' AND cv.name = 'stock_relationship')
+   LEFT JOIN stock_relationship seedlot_relationship ON materialized_phenotype_jsonb_table.germplasm_stock_id = seedlot_relationship.subject_id AND seedlot_relationship.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'collection_of' AND cv.name = 'stock_relationship')
    LEFT JOIN stock ON seedlot_relationship.object_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'seedlot' AND cv.name = 'stock_type')
-  GROUP BY public.materialized_phenoview.accession_id,public.stock.stock_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXseedlots_idx ON public.accessionsXseedlots(accession_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXseedlots OWNER TO web_usr;
@@ -488,7 +449,7 @@ CREATE MATERIALIZED VIEW public.seedlotsXtrait_components AS
 SELECT public.materialized_phenoview.seedlot_id,
 trait_component.cvterm_id AS trait_component_id
 FROM public.materialized_phenoview
-JOIN cvterm trait ON(materialized_phenoview.trait_id = trait.cvterm_id)
+JOIN cvterm trait ON(jsonb_array_elements(observations)->>'trait_id' = trait.cvterm_id)
 JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'contains' AND cv.name = 'relationship'))
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2
@@ -499,7 +460,7 @@ ALTER MATERIALIZED VIEW seedlotsXtrait_components OWNER TO web_usr;
 DROP MATERIALIZED VIEW IF EXISTS public.seedlotsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.seedlotsXtraits AS
 SELECT public.materialized_phenoview.seedlot_id,
-    public.materialized_phenoview.trait_id
+    jsonb_array_elements(observations)->>'trait_id' AS trait_id
    FROM public.materialized_phenoview
   GROUP BY 1,2
 WITH DATA;
@@ -551,10 +512,10 @@ ALTER MATERIALIZED VIEW seedlotsXyears OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtraits AS
-SELECT public.materialized_phenoview.accession_id,
-    public.materialized_phenoview.trait_id
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
+    jsonb_array_elements(observations)->>'trait_id' AS trait_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.trait_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXtraits_idx ON public.accessionsXtraits(accession_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtraits OWNER TO web_usr;
@@ -562,9 +523,9 @@ ALTER MATERIALIZED VIEW accessionsXtraits OWNER TO web_usr;
 DROP MATERIALIZED VIEW IF EXISTS public.breeding_programsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.breeding_programsXtraits AS
 SELECT public.materialized_phenoview.breeding_program_id,
-    public.materialized_phenoview.trait_id
+    jsonb_array_elements(observations)->>'trait_id' AS trait_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.trait_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtraits_idx ON public.breeding_programsXtraits(breeding_program_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtraits OWNER TO web_usr;
@@ -572,10 +533,10 @@ ALTER MATERIALIZED VIEW breeding_programsXtraits OWNER TO web_usr;
 DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocolsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtraits AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
-    public.materialized_phenoview.trait_id
+    jsonb_array_elements(observations)->>'trait_id' AS trait_id
    FROM public.materialized_genoview
    JOIN public.materialized_phenoview USING(accession_id)
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trait_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtraits_idx ON public.genotyping_protocolsXtraits(genotyping_protocol_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtraits OWNER TO web_usr;
@@ -583,9 +544,9 @@ ALTER MATERIALIZED VIEW genotyping_protocolsXtraits OWNER TO web_usr;
 DROP MATERIALIZED VIEW IF EXISTS public.locationsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.locationsXtraits AS
 SELECT public.materialized_phenoview.location_id,
-    public.materialized_phenoview.trait_id
+    jsonb_array_elements(observations)->>'trait_id' AS trait_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.trait_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXtraits_idx ON public.locationsXtraits(location_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtraits OWNER TO web_usr;
@@ -593,10 +554,10 @@ ALTER MATERIALIZED VIEW locationsXtraits OWNER TO web_usr;
 DROP MATERIALIZED VIEW IF EXISTS public.plantsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.plantsXtraits AS
 SELECT public.stock.stock_id AS plant_id,
-    public.materialized_phenoview.trait_id
+    jsonb_array_elements(observations)->>'trait_id' AS trait_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
-  GROUP BY public.stock.stock_id, public.materialized_phenoview.trait_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plantsXtraits_idx ON public.plantsXtraits(plant_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtraits OWNER TO web_usr;
@@ -604,53 +565,53 @@ ALTER MATERIALIZED VIEW plantsXtraits OWNER TO web_usr;
 DROP MATERIALIZED VIEW IF EXISTS public.plotsXtraits CASCADE;
 CREATE MATERIALIZED VIEW public.plotsXtraits AS
 SELECT public.stock.stock_id AS plot_id,
-    public.materialized_phenoview.trait_id
+    jsonb_array_elements(observations)->>'trait_id' AS trait_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
-  GROUP BY public.stock.stock_id, public.materialized_phenoview.trait_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plotsXtraits_idx ON public.plotsXtraits(plot_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtraits OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.traitsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXtrials AS
-SELECT public.materialized_phenoview.trait_id,
+SELECT jsonb_array_elements(observations)->>'trait_id' AS trait_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.trait_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX traitsXtrials_idx ON public.traitsXtrials(trait_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW traitsXtrials OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.traitsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXtrial_designs AS
-SELECT public.materialized_phenoview.trait_id,
+SELECT jsonb_array_elements(observations)->>'trait_id' AS trait_id,
     trialdesign.value AS trial_design_id
    FROM public.materialized_phenoview
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY public.materialized_phenoview.trait_id, trialdesign.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX traitsXtrial_designs_idx ON public.traitsXtrial_designs(trait_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW traitsXtrial_designs OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.traitsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXtrial_types AS
-SELECT public.materialized_phenoview.trait_id,
+SELECT jsonb_array_elements(observations)->>'trait_id' AS trait_id,
     trialterm.cvterm_id AS trial_type_id
    FROM public.materialized_phenoview
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY public.materialized_phenoview.trait_id, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX traitsXtrial_types_idx ON public.traitsXtrial_types(trait_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW traitsXtrial_types OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.traitsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.traitsXyears AS
-SELECT public.materialized_phenoview.trait_id,
+SELECT jsonb_array_elements(observations)->>'trait_id' AS trait_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.trait_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX traitsXyears_idx ON public.traitsXyears(trait_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW traitsXyears OWNER TO web_usr;
@@ -659,7 +620,7 @@ ALTER MATERIALIZED VIEW traitsXyears OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrait_components CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrait_components AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     trait_component.cvterm_id AS trait_component_id
    FROM public.materialized_phenoview
    JOIN cvterm trait ON(materialized_phenoview.trait_id = trait.cvterm_id)
@@ -825,17 +786,17 @@ CREATE MATERIALIZED VIEW public.accessions AS
   stock.uniquename AS accession_name
   FROM stock
   WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'accession' AND cv.name = 'stock_type') AND is_obsolete = 'f'
-  GROUP BY stock.stock_id, stock.uniquename
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX accessions_idx ON public.accessions(accession_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessions OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXbreeding_programs CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXbreeding_programs AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     public.materialized_phenoview.breeding_program_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.breeding_program_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX accessionsXbreeding_programs_idx ON public.accessionsXbreeding_programs(accession_id, breeding_program_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXbreeding_programs OWNER TO web_usr;
@@ -845,82 +806,82 @@ CREATE MATERIALIZED VIEW public.accessionsXgenotyping_protocols AS
 SELECT public.materialized_genoview.accession_id,
     public.materialized_genoview.genotyping_protocol_id
    FROM public.materialized_genoview
-  GROUP BY public.materialized_genoview.accession_id, public.materialized_genoview.genotyping_protocol_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX accessionsXgenotyping_protocols_idx ON public.accessionsXgenotyping_protocols(accession_id, genotyping_protocol_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXgenotyping_protocols OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXlocations CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXlocations AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     public.materialized_phenoview.location_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.location_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX accessionsXlocations_idx ON public.accessionsXlocations(accession_id, location_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXlocations OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXplants CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXplants AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     public.stock.stock_id AS plant_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_phenoview.accession_id, public.stock.stock_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX accessionsXplants_idx ON public.accessionsXplants(accession_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXplants OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXplots CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXplots AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     public.stock.stock_id AS plot_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_phenoview.accession_id, public.stock.stock_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXplots_idx ON public.accessionsXplots(accession_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXplots OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrial_designs CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrial_designs AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     trialdesign.value AS trial_design_id
    FROM public.materialized_phenoview
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY public.materialized_phenoview.accession_id, trialdesign.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXtrial_designs_idx ON public.accessionsXtrial_designs(accession_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtrial_designs OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrial_types CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrial_types AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     trialterm.cvterm_id AS trial_type_id
    FROM public.materialized_phenoview
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY public.materialized_phenoview.accession_id, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXtrial_types_idx ON public.accessionsXtrial_types(accession_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtrial_types OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXtrials CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXtrials AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXtrials_idx ON public.accessionsXtrials(accession_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtrials OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXyears CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXyears AS
-SELECT public.materialized_phenoview.accession_id,
+SELECT public.materialized_phenotype_jsonb_table.germplasm_stock_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXyears_idx ON public.accessionsXyears(accession_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXyears OWNER TO web_usr;
@@ -932,7 +893,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_genoview.genotyping_protocol_id
    FROM public.materialized_phenoview
    JOIN public.materialized_genoview USING(accession_id)
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_genoview.genotyping_protocol_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXgenotyping_protocols_idx ON public.breeding_programsXgenotyping_protocols(breeding_program_id, genotyping_protocol_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXgenotyping_protocols OWNER TO web_usr;
@@ -942,7 +903,7 @@ CREATE MATERIALIZED VIEW public.breeding_programsXlocations AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.location_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.location_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXlocations_idx ON public.breeding_programsXlocations(breeding_program_id, location_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXlocations OWNER TO web_usr;
@@ -953,7 +914,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
     public.stock.stock_id AS plant_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.stock.stock_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXplants_idx ON public.breeding_programsXplants(breeding_program_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXplants OWNER TO web_usr;
@@ -964,7 +925,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
     public.stock.stock_id AS plot_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.stock.stock_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXplots_idx ON public.breeding_programsXplots(breeding_program_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXplots OWNER TO web_usr;
@@ -975,7 +936,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
     trialdesign.value AS trial_design_id
    FROM public.materialized_phenoview
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY public.materialized_phenoview.breeding_program_id, trialdesign.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtrial_designs_idx ON public.breeding_programsXtrial_designs(breeding_program_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtrial_designs OWNER TO web_usr;
@@ -987,7 +948,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY public.materialized_phenoview.breeding_program_id, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtrial_types_idx ON public.breeding_programsXtrial_types(breeding_program_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtrial_types OWNER TO web_usr;
@@ -997,7 +958,7 @@ CREATE MATERIALIZED VIEW public.breeding_programsXtrials AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtrials_idx ON public.breeding_programsXtrials(breeding_program_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtrials OWNER TO web_usr;
@@ -1007,7 +968,7 @@ CREATE MATERIALIZED VIEW public.breeding_programsXyears AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXyears_idx ON public.breeding_programsXyears(breeding_program_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXyears OWNER TO web_usr;
@@ -1019,7 +980,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.location_id
    FROM public.materialized_genoview
    JOIN public.materialized_phenoview USING(accession_id)
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.location_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXlocations_idx ON public.genotyping_protocolsXlocations(genotyping_protocol_id, location_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXlocations OWNER TO web_usr;
@@ -1031,7 +992,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    FROM public.materialized_genoview
    JOIN public.materialized_phenoview USING(accession_id)
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXplants_idx ON public.genotyping_protocolsXplants(genotyping_protocol_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXplants OWNER TO web_usr;
@@ -1043,7 +1004,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
     FROM public.materialized_genoview
     JOIN public.materialized_phenoview USING(accession_id)
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXplots_idx ON public.genotyping_protocolsXplots(genotyping_protocol_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXplots OWNER TO web_usr;
@@ -1055,7 +1016,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
     FROM public.materialized_genoview
     JOIN public.materialized_phenoview USING(accession_id)
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, trialdesign.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtrial_designs_idx ON public.genotyping_protocolsXtrial_designs(genotyping_protocol_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrial_designs OWNER TO web_usr;
@@ -1068,7 +1029,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
     JOIN public.materialized_phenoview USING(accession_id)
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtrial_types_idx ON public.genotyping_protocolsXtrial_types(genotyping_protocol_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrial_types OWNER TO web_usr;
@@ -1079,7 +1040,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_genoview
    JOIN public.materialized_phenoview USING(accession_id)
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtrials_idx ON public.genotyping_protocolsXtrials(genotyping_protocol_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrials OWNER TO web_usr;
@@ -1090,7 +1051,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_genoview
    JOIN public.materialized_phenoview USING(accession_id)
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXyears_idx ON public.genotyping_protocolsXyears(genotyping_protocol_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXyears OWNER TO web_usr;
@@ -1103,7 +1064,7 @@ SELECT public.materialized_phenoview.location_id,
     public.stock.stock_id AS plant_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_phenoview.location_id, public.stock.stock_id
+  GROUP BY 1,2
   WITH DATA;
 CREATE UNIQUE INDEX locationsXplants_idx ON public.locationsXplants(location_id, plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXplants OWNER TO web_usr;
@@ -1114,7 +1075,7 @@ SELECT public.materialized_phenoview.location_id,
     public.stock.stock_id AS plot_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
-  GROUP BY public.materialized_phenoview.location_id, public.stock.stock_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXplots_idx ON public.locationsXplots(location_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXplots OWNER TO web_usr;
@@ -1125,7 +1086,7 @@ SELECT public.materialized_phenoview.location_id,
     trialdesign.value AS trial_design_id
    FROM public.materialized_phenoview
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY public.materialized_phenoview.location_id, trialdesign.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXtrial_designs_idx ON public.locationsXtrial_designs(location_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtrial_designs OWNER TO web_usr;
@@ -1137,7 +1098,7 @@ SELECT public.materialized_phenoview.location_id,
    FROM public.materialized_phenoview
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY public.materialized_phenoview.location_id, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXtrial_types_idx ON public.locationsXtrial_types(location_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtrial_types OWNER TO web_usr;
@@ -1147,7 +1108,7 @@ CREATE MATERIALIZED VIEW public.locationsXtrials AS
 SELECT public.materialized_phenoview.location_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXtrials_idx ON public.locationsXtrials(location_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtrials OWNER TO web_usr;
@@ -1157,7 +1118,7 @@ CREATE MATERIALIZED VIEW public.locationsXyears AS
 SELECT public.materialized_phenoview.location_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXyears_idx ON public.locationsXyears(location_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXyears OWNER TO web_usr;
@@ -1170,7 +1131,7 @@ SELECT stock.stock_id AS plant_id,
     stock.uniquename AS plant_name
    FROM stock
    WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type') AND is_obsolete = 'f'
-  GROUP BY public.stock.stock_id, public.stock.uniquename
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plants_idx ON public.plants(plant_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plants OWNER TO web_usr;
@@ -1183,7 +1144,7 @@ SELECT plant.stock_id AS plant_id,
    JOIN stock plot ON(public.materialized_phenoview.stock_id = plot.stock_id AND plot.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
    JOIN stock_relationship plant_relationship ON plot.stock_id = plant_relationship.subject_id
    JOIN stock plant ON plant_relationship.object_id = plant.stock_id AND plant.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type')
-  GROUP BY plant.stock_id, plot.stock_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plantsXplots_idx ON public.plantsXplots(plant_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXplots OWNER TO web_usr;
@@ -1195,7 +1156,7 @@ SELECT public.stock.stock_id AS plant_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
-  GROUP BY public.stock.stock_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plantsXtrials_idx ON public.plantsXtrials(plant_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtrials OWNER TO web_usr;
@@ -1207,7 +1168,7 @@ SELECT public.stock.stock_id AS plant_id,
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY stock.stock_id, trialdesign.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plantsXtrial_designs_idx ON public.plantsXtrial_designs(plant_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtrial_designs OWNER TO web_usr;
@@ -1220,7 +1181,7 @@ SELECT public.stock.stock_id AS plant_id,
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY public.stock.stock_id, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plantsXtrial_types_idx ON public.plantsXtrial_types(plant_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtrial_types OWNER TO web_usr;
@@ -1231,7 +1192,7 @@ SELECT public.stock.stock_id AS plant_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plant' AND cv.name = 'stock_type'))
-  GROUP BY public.stock.stock_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plantsXyears_idx ON public.plantsXyears(plant_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXyears OWNER TO web_usr;
@@ -1244,7 +1205,7 @@ SELECT stock.stock_id AS plot_id,
     stock.uniquename AS plot_name
    FROM stock
    WHERE stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot') AND is_obsolete = 'f'
-  GROUP BY public.stock.stock_id, public.stock.uniquename
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plots_idx ON public.plots(plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plots OWNER TO web_usr;
@@ -1255,7 +1216,7 @@ SELECT public.stock.stock_id AS plot_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
-  GROUP BY public.stock.stock_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plotsXtrials_idx ON public.plotsXtrials(plot_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtrials OWNER TO web_usr;
@@ -1267,7 +1228,7 @@ SELECT public.stock.stock_id AS plot_id,
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY stock.stock_id, trialdesign.value
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plotsXtrial_designs_idx ON public.plotsXtrial_designs(plot_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtrial_designs OWNER TO web_usr;
@@ -1280,7 +1241,7 @@ SELECT public.stock.stock_id AS plot_id,
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY public.stock.stock_id, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plotsXtrial_types_idx ON public.plotsXtrial_types(plot_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtrial_types OWNER TO web_usr;
@@ -1291,7 +1252,7 @@ SELECT public.stock.stock_id AS plot_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'plot' AND cv.name = 'stock_type'))
-  GROUP BY public.stock.stock_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plotsXyears_idx ON public.plotsXyears(plot_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXyears OWNER TO web_usr;
@@ -1306,7 +1267,7 @@ SELECT projectprop.value AS trial_design_id,
    JOIN cvterm ON(projectprop.type_id = cvterm.cvterm_id)
    JOIN cv using(cv_id)
    WHERE cvterm.name = 'design' AND cv.name = 'project_property'
-   GROUP BY projectprop.value
+   GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_designs_idx ON public.trial_designs(trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designs OWNER TO web_usr;
@@ -1319,7 +1280,7 @@ SELECT trialdesign.value AS trial_design_id,
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY trialdesign.value, trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_designsXtrial_types_idx ON public.trial_designsXtrial_types(trial_design_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designsXtrial_types OWNER TO web_usr;
@@ -1330,7 +1291,7 @@ SELECT trialdesign.value AS trial_design_id,
     public.materialized_phenoview.trial_id
    FROM public.materialized_phenoview
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY trialdesign.value, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_designsXtrials_idx ON public.trial_designsXtrials(trial_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designsXtrials OWNER TO web_usr;
@@ -1341,7 +1302,7 @@ SELECT trialdesign.value AS trial_design_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id FROM cvterm join cv using(cv_id) WHERE cvterm.name = 'design' AND cv.name = 'project_property' )
-  GROUP BY trialdesign.value, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_designsXyears_idx ON public.trial_designsXyears(trial_design_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_designsXyears OWNER TO web_usr;
@@ -1355,7 +1316,7 @@ SELECT cvterm.cvterm_id AS trial_type_id,
    FROM cvterm
    JOIN cv USING(cv_id)
    WHERE cv.name = 'project_type'
-   GROUP BY cvterm.cvterm_id
+   GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_types_idx ON public.trial_types(trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_types OWNER TO web_usr;
@@ -1367,7 +1328,7 @@ SELECT trialterm.cvterm_id AS trial_type_id,
    FROM public.materialized_phenoview
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY trialterm.cvterm_id, public.materialized_phenoview.trial_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_typesXtrials_idx ON public.trial_typesXtrials(trial_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_typesXtrials OWNER TO web_usr;
@@ -1379,7 +1340,7 @@ SELECT trialterm.cvterm_id AS trial_type_id,
    FROM public.materialized_phenoview
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-  GROUP BY trialterm.cvterm_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trial_typesXyears_idx ON public.trial_typesXyears(trial_type_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trial_typesXyears OWNER TO web_usr;
@@ -1391,7 +1352,7 @@ CREATE MATERIALIZED VIEW public.trialsXyears AS
 SELECT public.materialized_phenoview.trial_id,
     public.materialized_phenoview.year_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.trial_id, public.materialized_phenoview.year_id
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX trialsXyears_idx ON public.trialsXyears(trial_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trialsXyears OWNER TO web_usr;
