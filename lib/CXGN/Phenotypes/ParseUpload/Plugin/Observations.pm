@@ -25,6 +25,7 @@ use Moose;
 use File::Slurp;
 use List::MoreUtils qw(uniq);
 use Data::Dumper;
+use SGN::Model::Cvterm;
 
 sub name {
     return "brapi observations";
@@ -119,47 +120,49 @@ sub parse {
     my @data = @{$data};
     my %data = ();
     my %seen = ();
-    my (@observations, @units, @variables, @values, @timestamps);
+    my (@observations, @unit_dbids, @variables, @values, @timestamps);
     foreach my $obs (@data){
 
-        ## Check that observation is not duplicated in the request
-        my $unique_combo = "observationUnitDbId: ".$obs->{'observationUnitDbId'}.", observationVariableDbId:".$obs->{'observationVariableDbId'}.", observationTimeStamp:".$obs->{'observationTimeStamp'};
+        my $obsunit_db_id = $obs->{'observationUnitDbId'};
+        my $variable_db_id = $obs->{'observationVariableDbId'};
+        my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : '';
+        my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
+        my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
+        my $value = $obs->{'value'};
+
+        my $unique_combo = $obsunit_db_id.$variable_db_id.$timestamp;
         if ($seen{$unique_combo}) {
             $parse_result{'error'} = "Invalid request. The combination of $unique_combo appears more than once in the request";
             return \%parse_result;
         }
+        $seen{$unique_combo} = 1;
 
-        if ($obs->{'observationDbId'} && defined $obs->{'observationDbId'}) {
-            push @observations, $obs->{'observationDbId'};
+        if ($obs_db_id && defined $obs_db_id) {
+            push @observations, $obs_db_id;
         } else {
             ## If observationDbId is undefined, check that same trait, stock, and timestamp triplet doesn't already exist in the database
-            my $unique_observation = $self->check_unique_var_unit_time($schema, $obs->{'observationVariableDbId'}, $obs->{'observationUnitDbId'}, $obs->{'observationTimeStamp'});
+            my $unique_observation = $self->check_unique_var_unit_time($schema, $variable_db_id, $obsunit_db_id, $timestamp);
             if (!$unique_observation || $unique_observation->{'error'}) {
                 $parse_result{'error'} = $unique_observation ? $unique_observation->{'error'} : "Error validating that observations are unique";
                 return \%parse_result;
             }
         }
-        push @units, $obs->{'observationUnitDbId'};
-        push @variables, $obs->{'observationVariableDbId'};
-        if (defined $obs->{'observationTimeStamp'}) {
-            push @timestamps, $obs->{'observationTimeStamp'};
+        my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, "|".$variable_db_id);
+        my $trait_name = $trait_cvterm->name."|".$variable_db_id;
+
+        push @unit_dbids, $obsunit_db_id;
+        push @variables, $trait_name;
+        if ($timestamp && defined $timestamp) {
+            push @timestamps, $timestamp;
         }
-        push @values, $obs->{'value'};
-        $unique_combo = $obs->{'observationUnitDbId'}.$obs->{'observationVariableDbId'}.$obs->{'observationTimeStamp'};
-        $seen{$unique_combo} = 1;
+        push @values, $value;
 
         # track data for store
-        my $UnitDbId = $obs->{'observationUnitDbId'};
-        my $VariableDbId = $obs->{'observationVariableDbId'};
-        my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : '';
-        my $value = $obs->{'value'};
-        my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
-        my $phenotype_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
-        $data{$UnitDbId}->{$VariableDbId} = [$value, $timestamp, $collector, $phenotype_id];
+        $data{$obsunit_db_id}->{$trait_name} = [$value, $timestamp, $collector, $obs_db_id];
     }
     #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;
-    @units = uniq @units;
+    @unit_dbids = uniq @unit_dbids;
     @variables = uniq @variables;
     @timestamps = uniq @timestamps;
     @values = uniq @values;
@@ -178,17 +181,28 @@ sub parse {
     }
 
     my $t = CXGN::List::Transform->new();
-    #print STDERR "Units are: @units\n";
-    my $units_transform = $t->transform($schema, 'stock_ids_2_stocks', \@units);
+    my $units_transform = $t->transform($schema, 'stock_ids_2_stocks', \@unit_dbids);
     my @unit_names = @{$units_transform->{'transform'}};
-    #print STDERR "Unit names are: @unit_names\n";
 
-    my $validated_units = $validator->validate($schema,'plots_or_subplots_or_plants',\@unit_names);
+    my $validated_units = $validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@unit_names);
     my @units_missing = @{$validated_units->{'missing'}};
     if (scalar @units_missing) {
         $parse_result{'error'} = "The following observationUnitDbIds do not exist in the database: @units_missing";
-        #print STDERR "Invalid observationUnitDbIds: @units_missing\n";
         return \%parse_result;
+    }
+
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id;
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id;
+    my $obsunit_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'stock_id' => { -in => \@unit_dbids },
+        'type_id' => [$tissue_sample_cvterm_id, $plant_cvterm_id, $plot_cvterm_id, $subplot_cvterm_id]
+    });
+    my %found_observation_unit_names;
+    while (my $r=$obsunit_rs->next){
+        $found_observation_unit_names{$r->stock_id} = $r->uniquename;
     }
 
     my $validated_variables = $validator->validate($schema,'traits',\@variables);
@@ -215,9 +229,14 @@ sub parse {
         }
     }
 
+    my %formatted_data;
+    while (my ($obs_db_id, $val) = each %data){
+        $formatted_data{$found_observation_unit_names{$obs_db_id}} = $val;
+    }
+
     $parse_result{'success'} = "Request data is valid";
-    $parse_result{'data'} = \%data;
-    $parse_result{'units'} = \@units;
+    $parse_result{'data'} = \%formatted_data;
+    $parse_result{'units'} = \@unit_names;
     $parse_result{'variables'} = \@variables;
 
     return \%parse_result;

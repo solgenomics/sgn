@@ -97,7 +97,7 @@ my $data = {
         {
             observationDbId => '',
             observationUnitDbId => $plot_id1,
-            observationVariableDbId => 'dry matter content|CO_334:0000092',
+            observationVariableDbId => 'CO_334:0000092',
             collector => 'collector1',
             observationTimeStamp => '2015-06-16T00:53:26Z',
             value => '11'
@@ -105,7 +105,7 @@ my $data = {
         {
             observationDbId => '',
             observationUnitDbId => $plot_id2,
-            observationVariableDbId => 'fresh shoot weight|CO_334:0000016',
+            observationVariableDbId => 'CO_334:0000016',
             collector => 'collector1',
             observationTimeStamp => '2015-06-16T00:53:26Z',
             value => '110'
@@ -143,7 +143,7 @@ is_deeply($response, {
                                       'observationUnitDbId' => 38866,
                                       'collector' => 'collector1',
                                       'value' => '11',
-                                      'observationVariableDbId' => 'dry matter content|CO_334:0000092',
+                                      'observationVariableDbId' => 'dry matter content percentage|CO_334:0000092',
                                       'germplasmName' => 'test_accession3',
                                       'germplasmDbId' => 38842
                                     },
@@ -155,7 +155,7 @@ is_deeply($response, {
                                       'observationUnitDbId' => 38870,
                                       'collector' => 'collector1',
                                       'value' => '110',
-                                      'observationVariableDbId' => 'fresh shoot weight|CO_334:0000016',
+                                      'observationVariableDbId' => 'fresh shoot weight measurement in kg|CO_334:0000016',
                                       'uploadedBy' => 41,
                                       'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                       'studyDbId' => 137,
@@ -187,7 +187,7 @@ is_deeply($response, {
                                         },
                                         {
                                           'code' => '200',
-                                          'message' => 'All values in your request are now saved in the database!'
+                                          'message' => 'All values in your file are now saved in the database!'
                                         }
                                       ],
                           'datafiles' => [

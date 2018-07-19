@@ -8,7 +8,7 @@ use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileRequest;
-use CXGN::Phenotypes::StoreObservations;
+use CXGN::Phenotypes::StorePhenotypes;
 use utf8;
 use JSON;
 
@@ -156,15 +156,17 @@ sub observations_store {
     $phenotype_metadata{'date'} = $timestamp;
 
     ## Store observations and return details for response
-    my $store_observations = CXGN::Phenotypes::StoreObservations->new(
+    my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
-        unit_list=>\@units,
-        variable_list=>\@variables,
-        data=>\%parsed_data,
-        metadata_hash=>\%phenotype_metadata
+        stock_list=>\@units,
+        trait_list=>\@variables,
+        values_hash=>\%parsed_data,
+        has_timestamps=>1,
+        metadata_hash=>\%phenotype_metadata,
+        #image_zipfile_path=>$image_zip,
     );
 
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
