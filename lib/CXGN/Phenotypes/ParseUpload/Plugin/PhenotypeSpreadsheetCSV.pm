@@ -186,8 +186,8 @@ sub parse {
                 } else {
                     $value = $value_string;
                 }
-                if (!$value){
-                    $value = $value_string;
+                if (!defined($timestamp)){
+                    $timestamp = '';
                 }
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
