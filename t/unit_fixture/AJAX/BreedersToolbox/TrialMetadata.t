@@ -26,7 +26,7 @@ my $json = JSON->new->allow_nonref;
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'Kasese solgs trial'})->project_id();
 
