@@ -175,13 +175,13 @@ __PACKAGE__->config(
            my %element = %{$element};
            my $filled_value = $element{'value'};
            print STDERR "Filled value is $filled_value\n";
-           if ($filled_value eq '{plant_id}' || $filled_value eq '{plant_name}' || $filled_value eq '{plant_index_number}') {
+           if ($filled_value =~ m/{plant_id}/ || $filled_value =~ m/{plant_name}/  || $filled_value =~ m/{plant_index_number}/) {
                $design = $plant_design;
            }
-           if ($filled_value eq '{subplot_id}' || $filled_value eq '{subplot_name}' || $filled_value eq '{subplot_index_number}') {
+           if ($filled_value =~ m/{subplot_id}/ || $filled_value =~ m/{subplot_name}/ || $filled_value =~ m/{subplot_index_number}/) {
                $design = $subplot_design;
            }
-           if ($filled_value eq '{tissue_sample_id}' || $filled_value eq '{tissue_sample_name}' || $filled_value eq '{tissue_sample_index_number}') {
+           if ($filled_value =~ m/{tissue_sample_id}/ || $filled_value =~ m/{tissue_sample_name}/ || $filled_value =~ m/{tissue_sample_index_number}/) {
                $design = $tissue_sample_design;
            }
        }
@@ -260,7 +260,7 @@ __PACKAGE__->config(
                 $design_info{'genotyping_facility'} = $genotyping_facility;
                 $design_info{'genotyping_project_name'} = $genotyping_project_name;
                 $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
-                #print STDERR "Design info: " . Dumper(%design_info);
+                print STDERR "Design info: " . Dumper(%design_info);
 
                 if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
 
@@ -276,7 +276,9 @@ __PACKAGE__->config(
                            my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
 
                            my $filled_value = $element{'value'};
+                           print STDERR "Filled value b4: $filled_value";
                            $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
+                           print STDERR "\tFilled value after: $filled_value\n";
                            #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
                            #print STDERR "Writing to the PDF . . .\n";
                            if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
