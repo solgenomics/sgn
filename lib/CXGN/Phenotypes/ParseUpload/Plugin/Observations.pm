@@ -37,6 +37,7 @@ sub check_unique_var_unit_time {
     my $trait_cvterm = shift;
     my $unit = shift;
     my $timestamp = shift;
+    my $variable_id = $trait_cvterm->cvterm_id();
     my %check_result;
 
     my $q = "
@@ -48,11 +49,11 @@ sub check_unique_var_unit_time {
     ";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($trait_cvterm->cvterm_id(), $unit, $timestamp);
+    $h->execute($variable_id, $unit, $timestamp);
     my ($id, $value) = $h->fetchrow_array();
     if ($id) {
         #print STDERR "Found id $id and value $value\n";
-        $check_result{'error'} = "The combination of observationVariableDbId $variable with observationUnitDbId $unit at observationTimeStamp $timestamp already exists in the database with value $value and observationDbId $id. To update this measurement includes its observationDbId in your request";
+        $check_result{'error'} = "The combination of observationVariableDbId $variable_id with observationUnitDbId $unit at observationTimeStamp $timestamp already exists in the database with value $value and observationDbId $id. To update this measurement includes its observationDbId in your request";
         return \%check_result;
 	}
 
