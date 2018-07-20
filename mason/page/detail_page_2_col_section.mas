@@ -419,6 +419,9 @@ $referer => undef
                                     </div>
                                 </div>
 % }
+% if ($info_section_id eq 'stocks_search_graphical_filtering'){
+                                <& /search/stocks_graphicalfiltering.mas &>
+% }
 
                             </div>
                         </div>
