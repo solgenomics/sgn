@@ -111,6 +111,14 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#select_accession_or_cross_list_list_select', function() {
+        if ($('#select_accession_or_cross_list_list_select').val()) {
+            stock_list_id = $('#select_accession_or_cross_list_list_select').val();
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
     $(document).on('focusout', '#list_of_checks_section_list_select', function() {
         if ($('#list_of_checks_section_list_select').val()) {
             check_stock_list_id = $('#list_of_checks_section_list_select').val();
@@ -310,6 +318,7 @@ jQuery(document).ready(function ($) {
         var col_number=$('#col_number').val();
        // alert(row_number);
         var stock_list_id = $('#select_list_list_select').val();
+        var accession_or_cross_list_id = $('#select_accession_or_cross_list_list_select').val();
         var control_list_id = $('#list_of_checks_section_list_select').val();
         var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
 
@@ -318,10 +327,14 @@ jQuery(document).ready(function ($) {
             control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
         }
         var stock_list;
-        var stock_list_array;
         if (stock_list_id != "") {
-            stock_list_array = list.getList(stock_list_id);
-            stock_list = JSON.stringify(stock_list_array);
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+        }
+        var accession_or_cross_list;
+        var accession_or_cross_list_array;
+        if (accession_or_cross_list_id != "") {
+            accession_or_cross_list_array = list.getList(accession_or_cross_list_id);
+            accession_or_cross_list = JSON.stringify(accession_or_cross_list_array);
         }
         var control_list;
         if (control_list_id != "") {
@@ -399,8 +412,8 @@ jQuery(document).ready(function ($) {
         }
 
         var greenhouse_num_plants = [];
-        if (stock_list_id != "" && design_type == 'greenhouse') {
-            for (var i=0; i<stock_list_array.length; i++) {
+        if (accession_or_cross_list_id != "" && design_type == 'greenhouse') {
+            for (var i=0; i<accession_or_cross_list_array.length; i++) {
                 var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
                 if (value == '') {
                     value = 1;
@@ -424,6 +437,7 @@ jQuery(document).ready(function ($) {
                 'year': year,
                 'trial_location': trial_location,
                 'stock_list': stock_list,
+                'accession_or_cross_list': accession_or_cross_list,
                 'control_list': control_list,
                 'control_list_crbd': control_list_crbd,
                 'design_type': design_type,
@@ -745,6 +759,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         } else if (design_method == "RCBD") {
             $("#trial_multi-design_more_info").show();
             $("#FieldMap").show();
@@ -779,6 +794,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         } else if (design_method == "Alpha") {
             $("#FieldMap").show();
             $("#prephelp").hide();
@@ -813,6 +829,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         } else if (design_method == "Lattice") {
             $("#FieldMap").show();
             $("#prephelp").hide();
@@ -847,6 +864,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         } else if (design_method == "Augmented") {
             $("#FieldMap").hide();
             $("#prephelp").hide();
@@ -881,6 +899,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         } else if (design_method == "") {
             $("#FieldMap").hide();
             $("#prephelp").hide();
@@ -915,6 +934,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         }
 
         else if (design_method == "MAD") {
@@ -960,6 +980,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         }
 
         else if (design_method == 'greenhouse') {
@@ -968,7 +989,7 @@ jQuery(document).ready(function ($) {
             $("#trial_multi-design_more_info").show();
             $("#show_list_of_checks_section").hide();
             $("#crbd_show_list_of_checks_section").hide();
-            $("#show_list_of_accession_section").show();
+            $("#show_list_of_accession_section").hide();
             $("#show_list_of_unrep_accession").hide();
             $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
@@ -998,6 +1019,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
             greenhouse_show_num_plants_section();
+            $('#show_list_of_accession_or_cross_section').show();
         }
 
         else if (design_method == 'splitplot') {
@@ -1035,6 +1057,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         }
         else if (design_method == 'p-rep') {
             $("#FieldMap").hide();
@@ -1071,6 +1094,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         }
         else if (design_method == 'westcott') {
             $("#FieldMap").hide();
@@ -1108,6 +1132,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").show();
             $("#FieldMap_westcott").show();
             $("#field_map_options").hide();
+            $('#show_list_of_accession_or_cross_section').hide();
         }
         
         else {
@@ -1125,17 +1150,11 @@ jQuery(document).ready(function ($) {
         source: '/ajax/stock/accession_autocomplete',
     }); 
 
-    jQuery(document).on('change', '#select_list_list_select', function() {
+    jQuery(document).on('change', '#select_accession_or_cross_list_list_select', function() {
         if (jQuery("#select_design_method").val() == 'greenhouse') {
             greenhouse_show_num_plants_section();
         }
     });
-    jQuery(document).on('keyup', '#greenhouse_default_num_plants_per_accession_val', function() {
-        if (jQuery("#select_design_method").val() == 'greenhouse') {
-            greenhouse_show_num_plants_section();
-        }
-    });
-
     jQuery(document).on('keyup', '#greenhouse_default_num_plants_per_accession_val', function() {
         if (jQuery("#select_design_method").val() == 'greenhouse') {
             greenhouse_show_num_plants_section();
@@ -1168,11 +1187,17 @@ jQuery(document).ready(function ($) {
         var trial_location = jQuery('#add_project_location').val();
         var block_number = jQuery('#block_number').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
+        var accession_or_cross_list_id = jQuery('#select_accession_or_cross_list_list_select').val();
         var control_list_id = jQuery('#list_of_checks_section_list_select').val();
         var stock_list;
         if (stock_list_id != "") {
-            stock_list_array = list.getList(stock_list_id);
             stock_list = JSON.stringify(list.getList(stock_list_id));
+        }
+        var accession_or_cross_list;
+        var accession_or_cross_list_array;
+        if (accession_or_cross_list_id != "") {
+            accession_or_cross_list_array = list.getList(accession_or_cross_list_id);
+            accession_or_cross_list = JSON.stringify(accession_or_cross_list_array);
         }
         var control_list;
         if (control_list_id != "") {
@@ -1183,8 +1208,8 @@ jQuery(document).ready(function ($) {
             var design_type = jQuery('#select_multi-design_method').val();
         }
         var greenhouse_num_plants = [];
-        if (stock_list_id != "" && design_type == 'greenhouse') {
-            for (var i=0; i<stock_list_array.length; i++) {
+        if (accession_or_cross_list_id != "" && design_type == 'greenhouse') {
+            for (var i=0; i<accession_or_cross_list_array.length; i++) {
                 var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
                 if (value == '') {
                     value = 1;
@@ -1238,6 +1263,7 @@ jQuery(document).ready(function ($) {
                 'trial_type': trial_type,
                 'trial_location': trial_location,
                 'stock_list': stock_list,
+                'accession_or_cross_list': accession_or_cross_list,
                 'control_list': control_list,
                 'design_type': design_type,
                 'rep_count': rep_count,
@@ -1305,6 +1331,7 @@ jQuery(document).ready(function ($) {
 
         //add lists to the list select and list of checks select dropdowns.
         document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh');
+        document.getElementById("select_accession_or_cross_list").innerHTML = list.listSelect("select_accession_or_cross_list", [ 'accessions', 'crosses' ], '', 'refresh');
         document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh');
         document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh');
 
@@ -1490,7 +1517,7 @@ jQuery(document).ready(function ($) {
 
 function greenhouse_show_num_plants_section(){
     var list = new CXGN.List();
-    var stock_list_id = jQuery('#select_list_list_select').val();
+    var stock_list_id = jQuery('#select_accession_or_cross_list_list_select').val();
     var default_num = jQuery('#greenhouse_default_num_plants_per_accession_val').val();
     if (stock_list_id != "") {
         stock_list = list.getList(stock_list_id);

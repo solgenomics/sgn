@@ -81,6 +81,9 @@ sub generate_experimental_design_POST : Args(0) {
     if ($c->req->param('stock_list')) {
         @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
+    if ($c->req->param('accession_or_cross_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('accession_or_cross_list'))};
+    }
     my $seedlot_hash_json = $c->req->param('seedlot_hash');
     my @control_names;
     if ($c->req->param('control_list')) {
