@@ -293,7 +293,7 @@ $(document).ready(function($) {
                     jQuery('#label_designer_data_level_div').show();
                 },
                 error: function(response) {
-                    alert('There was a problem checking the data levels available for your field trial.');
+                    alert('There was a problem checking the data levels available for your field trial. Please contact us.');
                 }
             });
         } else {
@@ -525,7 +525,7 @@ function updateFields(data_type, value, data_level){
             }
         },
         error: function(request, status, err) {
-            alert("Unable to retrieve design elements of this trial. Please confirm this trial has a design, or try again with a different trial.");
+            alert("Unable to retrieve design elements of this trial. Please confirm this trial has a design, or try again with a different trial. Please contact us!");
         }
     });
 }
