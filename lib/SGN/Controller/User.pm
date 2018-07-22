@@ -116,7 +116,7 @@ sub reset_password_form :Path('/user/reset_password_form') Args(0) {
 
 }	
 
-sub quick_create_account :Path('/user/quick_create_account') { 
+sub quick_create_account :Path('/user/admin/quick_create_account') { 
     my $self = shift;
     my $c = shift;
 
