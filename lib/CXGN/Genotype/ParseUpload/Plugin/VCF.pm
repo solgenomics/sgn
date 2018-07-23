@@ -16,7 +16,7 @@ sub _validate_with_plugin {
     print STDERR "Reading VCF to validate during parse...\n";
     my $gtio = CXGN::GenotypeIO->new({
         file => $filename,
-        format => "vcf"
+        format => "vcf_new"
     });
 
     my $header = $gtio->header;
@@ -120,7 +120,7 @@ sub _parse_with_plugin {
     my $stock_type = $self->get_observation_unit_type_name;
 
     print STDERR "Reading VCF to parse\n";
-    my $gtio = CXGN::GenotypeIO->new({ file => $filename, format => "vcf" });
+    my $gtio = CXGN::GenotypeIO->new({ file => $filename, format => "vcf_new" });
 
     my %protocolprop_info;
     my %genotypeprop_observation_units;

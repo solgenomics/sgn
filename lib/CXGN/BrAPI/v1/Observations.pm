@@ -188,28 +188,26 @@ sub observations_store {
 
 }
 
-=comment
-sub observations_search {
-    my $self = shift;
-    my $search_params = shift;
-
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
-
-    my @collectors = $search_params->{collectors} ? @{$search_params->{collectors}} : ();
-    my @observation_db_ids = $search_params->{observationDbIds} ? @{$search_params->{observationDbIds}} : ();
-    my @observation_unit_db_ids = $search_params->{observationUnitDbIds} ? @{$search_params->{observationUnitDbIds}} : ();
-    my @observation_variable_db_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
-
-    #implement observation search here using stock search
-
-    my @data;
-    my %result = (data => \@data);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
-}
-=cut
+# sub observations_search {
+#     my $self = shift;
+#     my $search_params = shift;
+# 
+#     my $page_size = $self->page_size;
+#     my $page = $self->page;
+#     my $status = $self->status;
+# 
+#     my @collectors = $search_params->{collectors} ? @{$search_params->{collectors}} : ();
+#     my @observation_db_ids = $search_params->{observationDbIds} ? @{$search_params->{observationDbIds}} : ();
+#     my @observation_unit_db_ids = $search_params->{observationUnitDbIds} ? @{$search_params->{observationUnitDbIds}} : ();
+#     my @observation_variable_db_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
+# 
+#     #implement observation search here using stock search
+# 
+#     my @data;
+#     my %result = (data => \@data);
+#     my @data_files;
+#     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+#     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
+# }
 
 1;
