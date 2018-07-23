@@ -32,7 +32,7 @@ For field_layout trials, the design should be a HasfRef of HashRefs like:
    '1001' => {
        "plot_name" => "plot1",
        "plot_number" => 1001,
-       "accession_name" => "accession1",
+       "stock_name" => "accession1",
        "block_number" => 1,
        "row_number" => 2,
        "col_number" => 3,
@@ -44,6 +44,7 @@ For field_layout trials, the design should be a HasfRef of HashRefs like:
        "plant_names" => ["plant1", "plant2"],
    }
 }
+For field_layout trials, in the case of 'greenhouse' design_type, stock_name can be either an accession or a cross name
 
 For genotyping_layout trials, the design should be a HashRef of HashRefs like:
 {
@@ -191,7 +192,7 @@ sub validate_design {
         return $error;
     }
     if ($design_type ne 'genotyping_plate' && $design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'westcott'){
-        $error .= "Design $design_type type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot";
+        $error .= "Design $design_type type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, splitplot, or westcott";
         return $error;
     }
     my @valid_properties;
@@ -291,6 +292,7 @@ sub validate_design {
     }
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
@@ -312,7 +314,11 @@ sub validate_design {
     if ($self->get_is_genotyping) {
         @source_stock_types = ($accession_type_id, $plot_type_id, $plant_type_id, $tissue_type_id);
     } else {
-        @source_stock_types = ($accession_type_id);
+        if ($design_type eq 'greenhouse'){
+            @source_stock_types = ($accession_type_id, $cross_type_id);
+        } else {
+            @source_stock_types = ($accession_type_id);
+        }
     }
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },
@@ -343,6 +349,7 @@ sub store {
 
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
@@ -385,7 +392,11 @@ sub store {
         $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         $stock_type_id = $plot_cvterm_id;
         $stock_rel_type_id = $plot_of_cvterm_id;
-        @source_stock_types = ($accession_cvterm_id);
+        if ($design_type eq 'greenhouse'){
+            @source_stock_types = ($accession_cvterm_id, $cross_cvterm_id);
+        } else {
+            @source_stock_types = ($accession_cvterm_id);
+        }
     } else {
         $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
         $stock_type_id = $tissue_sample_cvterm_id;
@@ -427,19 +438,19 @@ sub store {
         }
     }
 
-    my %seen_accessions_hash;
+    my %seen_stocks_hash;
     my %seen_seedlots_hash;
     foreach my $key (keys %design) {
         if ($design{$key}->{stock_name}) {
             my $stock_name = $design{$key}->{stock_name};
-            $seen_accessions_hash{$stock_name}++;
+            $seen_stocks_hash{$stock_name}++;
         }
         if ($design{$key}->{seedlot_name}) {
             my $stock_name = $design{$key}->{seedlot_name};
             $seen_seedlots_hash{$stock_name}++;
         }
     }
-    my @seen_accessions = keys %seen_accessions_hash;
+    my @seen_stocks = keys %seen_stocks_hash;
     my @seen_seedlots = keys %seen_seedlots_hash;
 
     my $seedlot_rs = $chado_schema->resultset('Stock::Stock')->search({
@@ -455,7 +466,7 @@ sub store {
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },
         'type_id' => {-in=>\@source_stock_types},
-        'uniquename' => {-in=>\@seen_accessions}
+        'uniquename' => {-in=>\@seen_stocks}
     });
     my %stock_data;
     while (my $s = $rs->next()) {
