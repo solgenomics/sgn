@@ -116,5 +116,18 @@ sub reset_password_form :Path('/user/reset_password_form') Args(0) {
 
 }	
 
-	
+sub quick_create_account :Path('/user/admin/quick_create_account') { 
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) { 
+	$c->forward('/user/login');
+	return;
+    }
+
+    $c->stash->{template} = '/user/quick_create_account.mas';
+}
+
+
+
 1;
