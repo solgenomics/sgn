@@ -43,144 +43,17 @@ $folder_id => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
-<%perl>
-  use Data::Dumper;
-my $start_time = time();
-
-#print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
-</%perl>
-
 <br/>
 
 
 <& /page/page_title.mas, title=>"Details for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '<a id="edit_details"></a>'&>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Crossing Experiment Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_crossingtrial_details" style="margin:3px">Edit Crossing Experiment Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "crossingtrial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_name => $folder_name, folder_id => $folder_id &>
 
-
-<div class="panel panel-default">
-    <table class="table table-hover" >
-
-        <tr>
-            <td><b>Crossing Trial Name</b></td>
-            <td>
-                <div id="trial_name">
-% if ($trial_name) {
-%   print "$trial_name";
-% } else {
-%   print "[No Trial Name]";
-% }
-                </div>
-            </td>
-        </tr>
-
-        <tr>
-            <td><b>Breeding Program </b></td>
-            <td>
-                <span id="breeding_program">
-% if ($breeding_program_name) {
-%  print "$breeding_program_name";
-% }
-% else {
-%  print "No Breeding Program";
-% }
-                </span>
-            </td>
-        </tr>
-
-        <tr>
-            <td><b>Location</b></td>
-            <td>
-                <div id="trial_location">
-% if ($location_name) {
-%  print "$location_name";
-% } else {
-%  print "[No Location]";
-% }
-                </div>
-            </td>
-        </tr>
-
-        <tr>
-            <td><b>Year</b></td>
-            <td>
-                <div id="trial_year">
-% if ($year) {
-%  print "$year";
-% } else {
-%  print "[No Year]";
-% }
-                </div>
-            </td>
-        </tr>
-
-        <tr>
-            <td><b>Trial Type</b></td>
-            <td>
-                <div id="trial_type">
-% if ($trial_type) {
-%  print "$trial_type";
-% } else {
-% print "[Type not set]";
-% }
-                </div>
-            </td>
-        </tr>
-
-        <tr>
-            <td><b>Planting Date</b></td>
-            <td>
-                <div id="planting_date">
-% if ($planting_date) {
-  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
-% } else {
-%  print "[No Planting Date]";
-% }
-                </div>
-            </td>
-        </tr>
-
-        <tr>
-            <td><b>Harvest Date</b></td>
-            <td>
-                <div id="harvest_date">
-% if ($harvest_date) {
-  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
-% } else {
-%  print "[No Harvest Date]";
-% }
-                </div>
-            </td>
-        </tr>
-
-        <tr><td><b>Description</b></td>
-            <td>
-                <div id="trial_description">
-% if ($trial_description) {
-%  print "$trial_description";
-% } else {
-%  print "[No Description]";
-% }
-                </div>
-            </td>
-        </tr>
-
-        <tr>
-            <td><b>Folder</b></td>
-            <td>
-                <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
-                <br/><br/>
-                <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
-            </td>
-        </tr>
-    </table>
-</div>
 
 <& /breeders_toolbox/folder/folder_set.mas, project_type => 'Cross', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type => 'Cross',, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 
-
-</&>
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
@@ -196,7 +69,7 @@ my $start_time = time();
                                 <th>Cross Name</th>
                                 <th>Cross Type</th>
                                 <th>Female Parent</th>
-                                <th>Male Parent</th>                                
+                                <th>Male Parent</th>
                                 <th>Female Plot</th>
                                 <th>Male Plot</th>
                                 <th>Female Plant</th>
