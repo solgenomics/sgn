@@ -35,7 +35,7 @@ sub BUILD {
 	);
     $self->set_project_object($row);
     if (!$row) {
-	die "The breeding program  ".$self->get_project_id()." does not exist";
+	die "The breeding program  ".$self->get_program_id()." does not exist";
     }
 }
 
@@ -161,7 +161,43 @@ sub get_trials {
     return $trials_rs;
 }
 
+=head2 function get_traits_assayed()
+ Usage:
+ Desc: Find the traits assayed in the breeding program
+ Ret:  arrayref of [cvterm_id, cvterm_name]
+ Args:
+ Side Effects:
+ Example:
 
+=cut
+sub get_traits_assayed {
+    my $self= shift;
+    my $dbh = $self->schema->storage()->dbh();
+    
+    my $trials = $self->get_trials;
+    my @trial_ids;
+    while (my $trial = $trials->next() ) {
+	my $trial_id = $trial->project_id;
+	push @trial_ids , $trial_id;
+    }
+    my $trial_ids = join ',', map { "?" } @trial_ids;
+    my @traits_assayed;
+
+    my $q;
+    if ($trial_ids) {
+	$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id in ( $trial_ids )  and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+    
+
+	my $traits_assayed_q = $dbh->prepare($q);
+
+	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+	$traits_assayed_q->execute(@trial_ids, $numeric_regex );
+	while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
+	    push @traits_assayed, [$trait_id, $trait_name];
+	}
+    }
+    return \@traits_assayed;
+}
 
 =head2 get_locations
 
@@ -211,7 +247,7 @@ sub get_years {
 
  Usage: $self->get_accessions
  Desc:
- Ret: BCS Stock resultset of type_id accession
+ Ret: list of stock IDs
  Args:
  Side Effects:
  Example:
@@ -220,10 +256,26 @@ sub get_years {
 
 sub get_accessions {
     my $self = shift; 
-    my $trials = $self->get_trials();
-    my $accession_cvterm_id = $self->get_accession_cvterm_id;
-    my $accessions = $trials->nd_experiment->nd_experiment_stock->stock->search( { type_id => $accession_cvterm_id }, {distinct => 1, } );
-    return $accessions;
+    my $program_id = $self->get_program_id;
+    my $dbh = $self->schema->storage()->dbh();
+
+    my $q = "SELECT distinct acc.stock_id, acc.uniquename FROM stock AS acc 
+             JOIN  stock_relationship ON object_id = acc.stock_id 
+             JOIN  stock AS plot ON plot.stock_id = stock_relationship.subject_id
+             JOIN nd_experiment_stock ON nd_experiment_stock.stock_id = plot.stock_id
+             JOIN nd_experiment_project using (nd_experiment_id) 
+             JOIN project trial ON trial.project_id = nd_experiment_project.project_id
+             JOIN project_relationship ON project_relationship.subject_project_id = trial.project_id  
+             JOIN project program ON program.project_id = project_relationship.object_project_id
+             WHERE program.project_id = ? AND acc.type_id = ?;";
+    $q = $dbh->prepare($q);
+    $q->execute($program_id, $self->get_accession_cvterm_id);
+    
+    my @accessions;
+    while (my ( $acc_id, $acc_name ) = $q->fetchrow_array()) {
+	push @accessions,  $acc_id;
+    }
+    return \@accessions;
 }
 
 

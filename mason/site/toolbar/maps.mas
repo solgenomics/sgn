@@ -3,6 +3,7 @@
   <ul class="dropdown-menu">
     
     <li><a href="/cview/index.pl">All Maps</a></li>
+    <li><a href="http://maps.solgenomics.net">The New Comparative Viewer</a></li>
     <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></li>
     <li><a href="/cview/help/map_submission">Submit a map</a></li>
     <li role="separator" class="divider"></li>

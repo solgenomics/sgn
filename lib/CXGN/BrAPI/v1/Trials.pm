@@ -97,19 +97,21 @@ sub trial_details {
 			my $children = $folder->children();
 			foreach (@$children) {
 				push @folder_studies, {
-					studyDbId=>$_->folder_id,
+					studyDbId=>qq|$_->folder_id|,
 					studyName=>$_->name,
-					locationDbId=>$_->location_id
+					locationDbId=>qq|$_->location_id|
 				};
 			}
+            my $folder_id = $folder->folder_id;
+            my $breeding_program_id = $folder->breeding_program->project_id();
 			my %result = (
-				trialDbId=>$folder->folder_id,
+				trialDbId=>qq|$folder_id|,
 				trialName=>$folder->name,
-				programDbId=>$folder->breeding_program->project_id(),
+				programDbId=>qq|$breeding_program_id|,
 				programName=>$folder->breeding_program->name(),
 				startDate=>'',
 				endDate=>'',
-				active=>'',
+				active=>undef,
 				studies=>\@folder_studies,
 				additionalInfo=>\%additional_info
 			);
@@ -172,7 +174,7 @@ sub _get_folders {
 
     unless (%location_id_list && scalar @folder_studies < 1) { #skip empty folders if call was issued with search paramaters
         push @{$data}, {
-    					trialDbId=>$self->{'id'},
+    					trialDbId=>qq|$self->{'id'}|,
     					trialName=>$self->{'name'},
     					programDbId=>qq|$self->{'program_id'}|,
     					programName=>$self->{'program_name'},

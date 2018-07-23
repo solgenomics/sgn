@@ -33,8 +33,8 @@ sub parse {
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $parse_result = $p->parse($filename, $timestamp_included, $data_level, $schema);
-	}
+    	       $parse_result = $p->parse($filename, $timestamp_included, $data_level, $schema);
+    	}
     }
     return $parse_result;
 }

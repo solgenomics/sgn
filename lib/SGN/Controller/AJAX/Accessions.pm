@@ -339,6 +339,7 @@ sub add_accession_list_POST : Args(0) {
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
@@ -361,6 +362,7 @@ sub add_accession_list_POST : Args(0) {
                     species=>$_->{species},
                     #genus=>$_->{genus},
                     stock_id=>$_->{stock_id}, #For adding properties to an accessions
+                    is_saving=>1,
                     name=>$_->{defaultDisplayName},
                     uniquename=>$_->{germplasmName},
                     organization_name=>$_->{organizationName},
@@ -394,7 +396,10 @@ sub add_accession_list_POST : Args(0) {
                     introgression_map_version=>$_->{introgression_map_version},
                     introgression_chromosome=>$_->{introgression_chromosome},
                     introgression_start_position_bp=>$_->{introgression_start_position_bp},
-                    introgression_end_position_bp=>$_->{introgression_end_position_bp}
+                    introgression_end_position_bp=>$_->{introgression_end_position_bp},
+                    sp_person_id => $user_id,
+                    user_name => $user_name,
+                    modification_note => 'Bulk load of accession information'
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
@@ -403,30 +408,15 @@ sub add_accession_list_POST : Args(0) {
         }
     };
 
-    my $coderef_phenome = sub {
-        foreach my $stock_id (@added_stocks) {
-            $phenome_schema->resultset("StockOwner")->find_or_create({
-                stock_id     => $stock_id,
-                sp_person_id =>  $user_id,
-            });
-        }
-    };
-
     my $transaction_error;
-    my $transaction_error_phenome;
     try {
         $schema->txn_do($coderef_bcs);
     } catch {
         $transaction_error =  $_;
     };
-    try {
-        $phenome_schema->txn_do($coderef_phenome);
-    } catch {
-        $transaction_error_phenome =  $_;
-    };
-    if ($transaction_error || $transaction_error_phenome) {
-        $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error $transaction_error_phenome" };
-        print STDERR "Transaction error storing stocks: $transaction_error $transaction_error_phenome\n";
+    if ($transaction_error) {
+        $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
+        print STDERR "Transaction error storing stocks: $transaction_error\n";
         return;
     }
 

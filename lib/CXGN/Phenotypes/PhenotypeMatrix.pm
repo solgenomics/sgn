@@ -49,7 +49,7 @@ has 'bcs_schema' => (
     required => 1,
 );
 
-#PREFERRED MaterializedViewTable (MaterializedViewTable or Native or MaterializedView)
+#PREFERRED MaterializedViewTable (MaterializedViewTable or Native)
 has 'search_type' => (
     isa => 'Str',
     is => 'rw',
@@ -177,6 +177,7 @@ sub get_phenotype_matrix {
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
         my @line = @metadata_headers;
+        push @line, ('plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames');
 
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
@@ -188,8 +189,14 @@ sub get_phenotype_matrix {
             my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
+            my $available_germplasm_seedlots = $obs_unit->{available_germplasm_seedlots};
+            my %available_germplasm_seedlots_uniquenames;
+            foreach (@$available_germplasm_seedlots){
+                $available_germplasm_seedlots_uniquenames{$_->{stock_uniquename}}++;
+            }
+            my $available_germplasm_seedlots_uniquenames = join ' AND ', (keys %available_germplasm_seedlots_uniquenames);
 
-            my @line = ($obs_unit->{year}, $obs_unit->{breeding_program_id}, $obs_unit->{breeding_program_name}, $obs_unit->{breeding_program_description}, $obs_unit->{trial_id}, $obs_unit->{trial_name}, $obs_unit->{trial_description}, $obs_unit->{design}, $obs_unit->{plot_width}, $obs_unit->{plot_length}, $obs_unit->{field_size}, $obs_unit->{field_trial_is_planned_to_be_genotyped}, $obs_unit->{field_trial_is_planned_to_cross}, $obs_unit->{planting_date}, $obs_unit->{harvest_date}, $obs_unit->{trial_location_id}, $obs_unit->{trial_location_name}, $obs_unit->{germplasm_stock_id}, $obs_unit->{germplasm_uniquename}, $synonym_string, $obs_unit->{observationunit_type_name}, $obs_unit->{observationunit_stock_id}, $obs_unit->{observationunit_uniquename}, $obs_unit->{obsunit_rep}, $obs_unit->{obsunit_block}, $obs_unit->{obsunit_plot_number}, $obs_unit->{obsunit_row_number}, $obs_unit->{obsunit_col_number}, $entry_type, $obs_unit->{obsunit_plant_number});
+            my @line = ($obs_unit->{year}, $obs_unit->{breeding_program_id}, $obs_unit->{breeding_program_name}, $obs_unit->{breeding_program_description}, $obs_unit->{trial_id}, $obs_unit->{trial_name}, $obs_unit->{trial_description}, $obs_unit->{design}, $obs_unit->{plot_width}, $obs_unit->{plot_length}, $obs_unit->{field_size}, $obs_unit->{field_trial_is_planned_to_be_genotyped}, $obs_unit->{field_trial_is_planned_to_cross}, $obs_unit->{planting_date}, $obs_unit->{harvest_date}, $obs_unit->{trial_location_id}, $obs_unit->{trial_location_name}, $obs_unit->{germplasm_stock_id}, $obs_unit->{germplasm_uniquename}, $synonym_string, $obs_unit->{observationunit_type_name}, $obs_unit->{observationunit_stock_id}, $obs_unit->{observationunit_uniquename}, $obs_unit->{obsunit_rep}, $obs_unit->{obsunit_block}, $obs_unit->{obsunit_plot_number}, $obs_unit->{obsunit_row_number}, $obs_unit->{obsunit_col_number}, $entry_type, $obs_unit->{obsunit_plant_number}, $obs_unit->{seedlot_stock_id}, $obs_unit->{seedlot_uniquename}, $obs_unit->{seedlot_current_count}, $obs_unit->{seedlot_current_weight_gram}, $obs_unit->{seedlot_box_name}, $obs_unit->{seedlot_transaction_amount}, $obs_unit->{seedlot_transaction_weight_gram}, $obs_unit->{seedlot_transaction_description}, $available_germplasm_seedlots_uniquenames);
 
             my $observations = $obs_unit->{observations};
             my %trait_observations;

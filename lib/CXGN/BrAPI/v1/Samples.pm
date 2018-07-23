@@ -54,22 +54,23 @@ sub detail {
     my @data;
 
     my $s = CXGN::Stock::TissueSample->new(schema=>$self->bcs_schema, tissue_sample_id=>$sample_id);
-    my $accession_id = $s->get_accession ? $s->get_accession->[0] : undef;
-    my $accession_name = $s->get_accession ? $s->get_accession->[1] : undef;
-    my $source_plot_id = $s->get_source_plot ? $s->get_source_plot->[0] : undef;
-    my $source_plot_name = $s->get_source_plot ? $s->get_source_plot->[1] : undef;
-    my $source_plant_id = $s->get_source_plant ? $s->get_source_plant->[0] : undef;
-    my $source_plant_name = $s->get_source_plant ? $s->get_source_plant->[1] : undef;
-    my $source_sample_id = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[0] : undef;
-    my $source_sample_name = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[1] : undef;
-    my $source_obs_id = $s->source_observation_unit ? $s->source_observation_unit->[0] : undef;
-    my $source_obs_name = $s->source_observation_unit ? $s->source_observation_unit->[1] : undef;
-    my $plate_id = $s->get_plate ? $s->get_plate->[0] : undef;
-    my $plate_name = $s->get_plate ? $s->get_plate->[1] : undef;
-    my $trial_id = $s->get_trial ? $s->get_trial->[0] : undef;
-    my $trial_name = $s->get_trial ? $s->get_trial->[1] : undef;
+    my $accession_id = $s->get_accession ? $s->get_accession->[0] : "";
+    my $accession_name = $s->get_accession ? $s->get_accession->[1] : "";
+    my $source_plot_id = $s->get_source_plot ? $s->get_source_plot->[0] : "";
+    my $source_plot_name = $s->get_source_plot ? $s->get_source_plot->[1] : "";
+    my $source_plant_id = $s->get_source_plant ? $s->get_source_plant->[0] : "";
+    my $source_plant_name = $s->get_source_plant ? $s->get_source_plant->[1] : "";
+    my $source_sample_id = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[0] : "";
+    my $source_sample_name = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[1] : "";
+    my $source_obs_id = $s->source_observation_unit ? $s->source_observation_unit->[0] : "";
+    my $source_obs_name = $s->source_observation_unit ? $s->source_observation_unit->[1] : "";
+    my $plate_id = $s->get_plate ? $s->get_plate->[0] : "";
+    my $plate_name = $s->get_plate ? $s->get_plate->[1] : "";
+    my $trial_id = $s->get_trial ? $s->get_trial->[0] : "";
+    my $trial_name = $s->get_trial ? $s->get_trial->[1] : "";
+    my $sample_db_id = $s->stock_id;
     my %result = (
-        sampleDbId => qq|$s->stock_id|,
+        sampleDbId => qq|$sample_db_id|,
         sampleName => $s->uniquename,
         observationUnitDbId => qq|$source_obs_id|,
         observationUnitName => $source_obs_name,

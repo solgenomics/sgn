@@ -167,6 +167,7 @@ my $edit_privs = $curator || $submitter || $sequencer;
 
 <&| /page/info_section.mas, title => "Trait Properties" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /chado/cvtermprops.mas,
+       cv_name    => 'trait_property',
        cvterm_id  =>$cvterm_id,
        props      => $cvtermprops,
         div_name   => 'cvtermprops',

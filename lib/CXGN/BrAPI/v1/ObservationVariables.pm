@@ -65,7 +65,7 @@ sub observation_variable_data_types {
 	my $status = $self->status;
 
 	my @available;
-	my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trait_format', 'cvterm_property')->cvterm_id;
+	my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trait_format', 'trait_property')->cvterm_id;
 	my $rs = $self->bcs_schema->resultset('Cv::Cvtermprop')->search({type_id=>$trait_format_cvterm_id}, {select=>['value'], distinct=>1});
 	while (my $r = $rs->next){
 		push @available, $r->value;
@@ -242,26 +242,29 @@ sub observation_variable_detail {
 	if ($trait->display_name){
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
+        my $trait_id = $trait->cvterm_id;
+        my $trait_db_id = $trait->db_id;
 		%result = (
-			observationVariableDbId => $trait->cvterm_id,
+			observationVariableDbId => qq|$trait_id|,
 			name => $trait->display_name,
-			ontologyDbId => $trait->db_id,
+			ontologyDbId => qq|$trait_db_id|,
 			ontologyName => $trait->db,
 			trait => {
-				traitDbId => $trait->cvterm_id,
+				traitDbId => qq|$trait_id|,
 				name => $trait->name,
 				description => $trait->definition,
+                class => ''
 			},
 			method => {},
 			scale => {
 				scaleDbId =>'',
 				name =>'',
 				datatype=>$trait->format,
-				decimalPlaces=>'',
+				decimalPlaces=>undef,
 				xref=>'',
 				validValues=> {
-					min=>$trait->minimum,
-					max=>$trait->maximum,
+					min=>$trait->minimum + 0,
+					max=>$trait->maximum + 0,
 					categories=>\@brapi_categories
 				}
 			},

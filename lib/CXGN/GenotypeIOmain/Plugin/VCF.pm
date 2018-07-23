@@ -1,4 +1,3 @@
-
 package CXGN::GenotypeIOmain::Plugin::VCF;
 
 use Moose::Role;

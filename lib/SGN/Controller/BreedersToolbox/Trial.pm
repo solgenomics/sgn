@@ -81,8 +81,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_type_id} = $trial_type_data->[0];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
-
     $c->stash->{harvest_date} = $trial->get_harvest_date();
+
+    $c->stash->{plot_width} = $trial->get_plot_width();
+    $c->stash->{plot_length} = $trial->get_plot_length();
+    $c->stash->{field_size} = $trial->get_field_size();
+
+    $c->stash->{field_trial_is_planned_to_be_genotyped} = $trial->get_field_trial_is_planned_to_be_genotyped();
+    $c->stash->{field_trial_is_planned_to_cross} = $trial->get_field_trial_is_planned_to_cross();
 
     $c->stash->{trial_description} = $trial->get_description();
     $c->stash->{trial_phenotype_files} = $trial->get_phenotype_metadata();

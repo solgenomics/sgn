@@ -284,7 +284,7 @@ sub _retrieve_cvtermprop {
     my @results;
 
     try {
-        my $cvtermprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'cvterm_property')->cvterm_id();
+        my $cvtermprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'trait_property')->cvterm_id();
         my $rs = $self->schema()->resultset("Cv::Cvtermprop")->search({ cvterm_id => $self->cvterm_id(), type_id => $cvtermprop_type_id }, { order_by => {-asc => 'cvtermprop_id'} });
 
         while (my $r = $rs->next()){
@@ -302,7 +302,7 @@ sub _remove_cvtermprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'cvterm_property')->cvterm_id();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'trait_property')->cvterm_id();
     my $rs = $self->schema()->resultset("Cv::Cvtermprop")->search( { type_id=>$type_id, cvterm_id => $self->cvterm_id(), value=>$value } );
 
     if ($rs->count() == 1) {
@@ -323,7 +323,7 @@ sub _store_cvtermprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
-    my $cvtermprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'cvterm_property')->name();
+    my $cvtermprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'trait_property')->name();
     my $stored_cvtermprop = $self->cvterm->create_cvtermprops({ $cvtermprop => $value});
 }
 
