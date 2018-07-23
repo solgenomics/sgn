@@ -41,7 +41,7 @@ $folder_id => undef
 
 </style>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'CXGN.BreedersToolbox.CrossingtrialDetailPage', 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 <br/>
 
@@ -141,24 +141,3 @@ $folder_id => undef
         </div>
     </div>
 </div>
-
-
-<script>
-
-jQuery(document).ready(function(){
-
-    jQuery('#crosses_in_trial').DataTable({
-        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
-    });
-
-    jQuery('#cross_properties_trial').DataTable({
-        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
-    });
-
-    jQuery('#cross_progenies_trial').DataTable({
-        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
-    });
-
-});
-
-</script>
