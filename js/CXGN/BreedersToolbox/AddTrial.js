@@ -102,7 +102,7 @@ jQuery(document).ready(function ($) {
         if ($('#select_list_list_select').val()) {
             stock_list_id = $('#select_list_list_select').val();
             stock_list = JSON.stringify(list.getList(stock_list_id));
-            verify_stock_list(stock_list);
+            verify_accession_list(stock_list);
             if(stock_list && seedlot_list){
                 verify_seedlot_list(stock_list, seedlot_list, 'stock_list');
             } else {
@@ -115,7 +115,7 @@ jQuery(document).ready(function ($) {
         if ($('#select_accession_or_cross_list_list_select').val()) {
             stock_list_id = $('#select_accession_or_cross_list_list_select').val();
             stock_list = JSON.stringify(list.getList(stock_list_id));
-            verify_stock_list(stock_list);
+            verify_accessions_or_cross_list(stock_list);
         }
     });
 
@@ -123,7 +123,7 @@ jQuery(document).ready(function ($) {
         if ($('#list_of_checks_section_list_select').val()) {
             check_stock_list_id = $('#list_of_checks_section_list_select').val();
             check_stock_list = JSON.stringify(list.getList(check_stock_list_id));
-            verify_stock_list(check_stock_list);
+            verify_accession_list(check_stock_list);
             if(check_stock_list && seedlot_list){
                 verify_seedlot_list(check_stock_list, seedlot_list, 'check_stock_list');
             } else {
@@ -136,7 +136,7 @@ jQuery(document).ready(function ($) {
         if ($('#crbd_list_of_checks_section_list_select').val()) {
             crbd_check_stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
             crbd_check_stock_list = JSON.stringify(list.getList(crbd_check_stock_list_id));
-            verify_stock_list(crbd_check_stock_list);
+            verify_accession_list(crbd_check_stock_list);
             if(crbd_check_stock_list && seedlot_list){
                 verify_seedlot_list(crbd_check_stock_list, seedlot_list, 'crbd_check_stock_list');
             } else {
@@ -149,7 +149,7 @@ jQuery(document).ready(function ($) {
         if ($('#list_of_unrep_accession_list_select').val()) {
             unrep_stock_list_id = $('#list_of_unrep_accession_list_select').val();
             unrep_stock_list = JSON.stringify(list.getList(unrep_stock_list_id));
-            verify_stock_list(unrep_stock_list);
+            verify_accession_list(unrep_stock_list);
             if(unrep_stock_list && seedlot_list){
                 verify_seedlot_list(unrep_stock_list, seedlot_list, 'unrep_stock_list');
             } else {
@@ -162,7 +162,7 @@ jQuery(document).ready(function ($) {
         if ($('#list_of_rep_accession_list_select').val()) {
             rep_stock_list_id = $('#list_of_rep_accession_list_select').val();
             rep_stock_list = JSON.stringify(list.getList(rep_stock_list_id));
-            verify_stock_list(rep_stock_list);
+            verify_accession_list(rep_stock_list);
             if(rep_stock_list && seedlot_list){
                 verify_seedlot_list(rep_stock_list, seedlot_list, 'rep_stock_list');
             } else {
@@ -196,7 +196,7 @@ jQuery(document).ready(function ($) {
             seedlot_list = undefined;
             seedlot_list_verified = 1;
             if (stock_list){
-                verify_stock_list(stock_list);
+                verify_accession_list(stock_list);
             }
             accession_list_seedlot_hash = {};
             checks_list_seedlot_hash = {};
@@ -216,11 +216,11 @@ jQuery(document).ready(function ($) {
     });
 
     var stock_list_verified = 0;
-    function verify_stock_list(stock_list) {
+    function verify_accession_list(stock_list) {
         $.ajax({
             type: 'POST',
             timeout: 3000000,
-            url: '/ajax/trial/verify_stock_list',
+            url: '/ajax/trial/verify_accession_list',
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
@@ -241,7 +241,38 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred. sorry');
+                alert('An error occurred verifying accession list. sorry');
+                stock_list_verified = 0;
+            }
+        });
+    }
+
+    function verify_accessions_or_cross_list(stock_list) {
+        $.ajax({
+            type: 'POST',
+            timeout: 3000000,
+            url: '/ajax/trial/verify_accessions_or_cross_list',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
+            data: {
+                'stock_list': stock_list,
+            },
+            success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                    stock_list_verified = 0;
+                }
+                if (response.success){
+                    stock_list_verified = 1;
+                }
+            },
+            error: function () {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred verifying accessions/cross list. sorry');
                 stock_list_verified = 0;
             }
         });

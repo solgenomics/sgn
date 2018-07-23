@@ -357,6 +357,7 @@ sub generate_and_cache_layout {
     }
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "accession", "stock_type")->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "cross", "stock_type")->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot", "stock_type")->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plant", "stock_type")->cvterm_id();
     my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "subplot", "stock_type")->cvterm_id();
@@ -428,13 +429,49 @@ sub generate_and_cache_layout {
     my $well_notes_prop = $stockprop_hash{$notes_cvterm_id} ? join ',', @{$stockprop_hash{$notes_cvterm_id}} : undef;
     my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$ncbi_taxonomy_id_cvterm_id} ? join ',', @{$stockprop_hash{$ncbi_taxonomy_id_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
+
+    #Only for field_layout trials with greenhouse design type, it is possible to have crosses linked here. For all other trials, it is only possible to have accessions linked here (because of the store procedure).
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
         { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
         { 'join' => 'object' }
     );
-    if ($accession_rs->count != 1){
-        die "There is more than one or no (".$accession_rs->count.") accession linked here!\n";
+    my $cross_rs = $plot->search_related('stock_relationship_subjects')->search(
+        { 'me.type_id' => $plot_of_cv, 'object.type_id' => $cross_cvterm_id },
+        { 'join' => 'object' }
+    );
+    if ($accession_rs->count != 1 && $cross_rs->count != 1){
+        die "There is more than one or no (".$accession_rs->count.") accession linked here and more than one or no (".$cross_rs->count.") cross linked here!\n";
     }
+    if ($accession_rs->count > 1){
+        die "There is more than one (".$accession_rs->count.") accession linked here!\n";
+    }
+    if ($cross_rs->count > 1){
+        die "There is more than one (".$cross_rs->count.") cross linked here!\n";
+    }
+
+    my $accession = $accession_rs->first ? $accession_rs->first->object : undef;
+    my $cross = $cross_rs->first ? $cross_rs->first->object : undef;
+
+    my $accession_name = $accession ? $accession->uniquename : undef;
+    my $accession_id = $accession ? $accession->stock_id : undef;
+    my $cross_name = $cross ? $cross->uniquename : undef;
+    my $cross_id = $cross ? $cross->stock_id : undef;
+
+    if ($cross_name) {
+        $design_info{"cross_name"}=$cross_name;
+        $accession_name = $cross_name;
+    }
+    if ($cross_id) {
+        $design_info{"cross_id"}=$cross_id;
+        $accession_id = $cross_id;
+    }
+    if ($accession_name) {
+        $design_info{"accession_name"}=$accession_name;
+    }
+    if ($accession_id) {
+        $design_info{"accession_id"}=$accession_id;
+    }
+
     if ($self->get_experiment_type eq 'genotyping_layout'){
         my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
             { 'me.type_id' => { -in => [ $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
@@ -467,7 +504,7 @@ sub generate_and_cache_layout {
             }
         }
     }
-    my $accession = $accession_rs->first->object;
+
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {'object.type_id' => $plant_cvterm_id}, {order_by=>"object.stock_id"});
 	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object', {'object.type_id' => $subplot_cvterm_id}, {order_by=>"object.stock_id"});
     my $tissues = $plot->search_related('stock_relationship_objects', { 'me.type_id' => $tissue_sample_of_cv })->search_related('subject', {'subject.type_id' => $tissue_cvterm_id}, {order_by=>"subject.stock_id"});
@@ -476,33 +513,30 @@ sub generate_and_cache_layout {
         die "There is more than one seedlot linked here!\n";
     }
 
-    my $accession_name = $accession->uniquename;
-    my $accession_id = $accession->stock_id;
-
     $design_info{"plot_name"}=$plot_name;
     $design_info{"plot_id"}=$plot_id;
 
-      if ($plot_number_prop) {
-	  $design_info{"plot_number"}=$plot_number_prop;
-      }
-      else { 
-	  die "no plot number stockprop found for plot $plot_name"; 
-      }
+    if ($plot_number_prop) {
+        $design_info{"plot_number"}=$plot_number_prop;
+    }
+    else {
+        die "no plot number stockprop found for plot $plot_name";
+    }
 
     if ($block_number_prop) {
-      $design_info{"block_number"}=$block_number_prop;
+        $design_info{"block_number"}=$block_number_prop;
     }
-	if ($row_number_prop) {
-      $design_info{"row_number"}=$row_number_prop;
+    if ($row_number_prop) {
+        $design_info{"row_number"}=$row_number_prop;
     }
-	if ($col_number_prop) {
-      $design_info{"col_number"}=$col_number_prop;
+    if ($col_number_prop) {
+        $design_info{"col_number"}=$col_number_prop;
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
         if ($is_blank_prop) {
-          $design_info{"is_blank"}=1;
+            $design_info{"is_blank"}=1;
         } else {
-          $design_info{"is_blank"}=0;
+            $design_info{"is_blank"}=0;
         }
     }
     if ($well_concentration_prop){
@@ -530,27 +564,22 @@ sub generate_and_cache_layout {
         $design_info{"ncbi_taxonomy_id"} = $well_ncbi_taxonomy_id_prop;
     }
     if ($replicate_number_prop) {
-      $design_info{"rep_number"}=$replicate_number_prop;
+        $design_info{"rep_number"}=$replicate_number_prop;
     }
     if ($range_number_prop) {
-      $design_info{"range_number"}=$range_number_prop;
+        $design_info{"range_number"}=$range_number_prop;
     }
     if ($plot_geo_json_prop) {
-      $design_info{"plot_geo_json"} = decode_json $plot_geo_json_prop;
+        $design_info{"plot_geo_json"} = decode_json $plot_geo_json_prop;
     }
     if ($is_a_control_prop) {
-      $design_info{"is_a_control"}=$is_a_control_prop;
-      $unique_controls{$accession_name}=$accession_id;
+        $design_info{"is_a_control"}=$is_a_control_prop;
+        $unique_controls{$accession_name}=$accession_id;
     }
     else {
-      $unique_accessions{$accession_name}=$accession_id;
+        $unique_accessions{$accession_name}=$accession_id;
     }
-    if ($accession_name) {
-      $design_info{"accession_name"}=$accession_name;
-    }
-    if ($accession_id) {
-      $design_info{"accession_id"}=$accession_id;
-    }
+
     if ($self->get_verify_layout){
         if (!$accession_name || !$accession_id || !$plot_name || !$plot_id){
             push @{$verify_errors{errors}->{layout_errors}}, "Plot: $plot_name does not have an accession!";
@@ -590,7 +619,7 @@ sub generate_and_cache_layout {
         my %plants_tissue_hash;
         while (my $p = $plants->next()) {
             if ($self->get_verify_layout){
-                my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
+                my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>[$accession_cvterm_id, $cross_cvterm_id]});
                 if (!$plant_accession_check->first){
                     push @{$verify_errors{errors}->{layout_errors}}, "Plant: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }
@@ -624,7 +653,7 @@ sub generate_and_cache_layout {
         my @tissue_sample_index_numbers;
         while (my $t = $tissues->next()) {
             if ($self->get_verify_layout){
-                my $tissue_accession_check = $t->search_related('stock_relationship_subjects', {'me.type_id'=>$tissue_sample_of_cv})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
+                my $tissue_accession_check = $t->search_related('stock_relationship_subjects', {'me.type_id'=>$tissue_sample_of_cv})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>[$accession_cvterm_id, $cross_cvterm_id]});
                 if (!$tissue_accession_check->first){
                     push @{$verify_errors{errors}->{layout_errors}}, "Tissue Sample: ".$t->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }
@@ -653,7 +682,7 @@ sub generate_and_cache_layout {
         my %subplots_tissues_hash;
         while (my $p = $subplots->next()) {
             if ($self->get_verify_layout){
-                my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
+                my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>[$accession_cvterm_id, $cross_cvterm_id]});
                 if (!$subplot_accession_check->first){
                     push @{$verify_errors{errors}->{layout_errors}}, "Subplot: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }

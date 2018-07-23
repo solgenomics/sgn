@@ -410,17 +410,12 @@ sub generate_experimental_design_POST : Args(0) {
             $c->stash->{rest} = {error => "Could not generate design" };
             return;
         }
-        my $design_level;
-        if ($design_type eq 'greenhouse'){
-            $design_level = 'plants';
-        } elsif ($design_type eq 'splitplot') {
-            $design_level = 'subplots';
-        } else {
-            $design_level = 'plots'; 
-        }
- 
+
+        #For printing the table view of the generated design there are two designs that are different from the others:
+        # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
+        # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
+        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
         $design_map_view = design_layout_map_view(\%design, $design_type); 
-        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
         $design_info_view_html = design_info_view(\%design, \%design_info);
         my $design_json = encode_json(\%design);
         push @design_array,  $design_json;
@@ -649,9 +644,9 @@ sub verify_trial_name_GET : Args(0) {
     }
 }
 
-sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
+sub verify_accession_list : Path('/ajax/trial/verify_accession_list') : ActionClass('REST') { }
 
-sub verify_stock_list_POST : Args(0) {
+sub verify_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my @stock_names;
@@ -671,6 +666,36 @@ sub verify_stock_list_POST : Args(0) {
 
     if (scalar(@accessions_missing) > 0){
         my $error = 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
+sub verify_accessions_or_cross_list : Path('/ajax/trial/verify_accessions_or_cross_list') : ActionClass('REST') { }
+
+sub verify_accessions_or_cross_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    if ($c->req->param('stock_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No accession or cross names supplied"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @stocks_missing = @{$lv->validate($schema,'accessions_or_crosses',\@stock_names)->{'missing'}};
+
+    if (scalar(@stocks_missing) > 0){
+        my $error = 'The following accessions or crosses are not valid in the database, so you must add them first: '.join ',', @stocks_missing;
         $c->stash->{rest} = {error => $error};
     } else {
         $c->stash->{rest} = {
