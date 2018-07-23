@@ -82,7 +82,6 @@ sub check_result :Path('/pca/check/result/') Args() {
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	#$c->stash->{pop_id} = $combo_pops_id;
 	$file_id = $combo_pops_id;
     }
     else 
@@ -100,11 +99,9 @@ sub check_result :Path('/pca/check/result/') Args() {
     {
 	$ret->{result} = 1;
 	$ret->{list_id} = $list_id;
-	$ret->{combo_pops_id} = $combo_pops_id;
-#	$ret->{data_set_type} = $data_set_type;    
+	$ret->{combo_pops_id} = $combo_pops_id;    
     }  
     
-
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -123,10 +120,11 @@ sub pca_result :Path('/pca/result/') Args() {
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
+    my $referer     = $c->req->referer;
     
     my $pop_id;
     my $file_id;
-    my $referer = $c->req->referer;
+   
 
     if ($referer =~ /solgs\/selection\//)
     {

@@ -49,11 +49,9 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $list_id          = $c->req->param('list_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
     my $cluster_type     = $c->req->param('cluster_type');
-    
+    my $referer          = $c->req->referer;
     my $file_id;
-
-    my $referer = $c->req->referer;
-  
+ 
     if ($referer =~ /solgs\/selection\//)
     {
 	if ($training_pop_id && $selection_pop_id) 
@@ -137,11 +135,11 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
     
-    my $cluster_type   = $c->req->param('cluster_type');
+    my $cluster_type = $c->req->param('cluster_type');
+    my $referer      = $c->req->referer;
     
     my $pop_id;
     my $file_id;
-    my $referer = $c->req->referer;
 
     if ($referer =~ /solgs\/selection\//)
     {
@@ -208,8 +206,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	    $c->stash->{rest}{status} = 'There is no genotype data. AbortedCluster analysis.';                
 	}
 	else 
-	{
-	    
+	{	    
 	    $self->run_cluster($c);	    
 	}	
     }
@@ -238,8 +235,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
 }
 
 
-
-
 sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
     my ($self, $c) = @_;
  
@@ -258,17 +253,12 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 
     my $geno_file = $c->stash->{genotype_file};
 
-    my $ret->{status} = 'failed';
+    $c->stash->{rest}{status} = 'failed';
     if (-s $geno_file ) 
     {
-        $ret->{status} = 'success';
+        $c->stash->{rest}{status} = 'success';
     }
                
-    $ret = to_json($ret);
-        
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
 }
 
 
@@ -339,8 +329,23 @@ sub combined_cluster_trials_data_file {
     my ($self, $c) = @_;
     
     my $file_id = $c->stash->{file_id};
-    my $tmp_dir = $c->stash->{kcluster_temp_dir};
-    my $name = "combined_kcluster_data_file_${file_id}"; 
+  
+    my $cluster_type = $c->stash->{cluster_type};
+
+    my $file_name;
+    my $tmp_dir;
+    
+    if ($cluster_type =~ /k-means/)
+    {
+	$file_name = "combined_kcluster_data_file_${file_id}";
+	$tmp_dir = $c->stash->{kcluster_temp_dir};
+    }
+    else
+    {
+	$file_name = "combined_hierarchical_data_file_${file_id}";
+	$tmp_dir = $c->stash->{hierarchical_temp_dir};
+    }
+    
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
     
     $c->stash->{combined_cluster_data_file} = $tempfile;
