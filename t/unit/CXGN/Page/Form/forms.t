@@ -14,4 +14,4 @@ $f->add_field(
 );
 
 #print STDERR $f->as_table_string();
-cmp_ok($f->as_table_string(), '=~', '<br/><div class="panel panel-info"><table class="table table-hover"> <tr><td></td><td><b>test1 contents', "test as_table_string");
+cmp_ok($f->as_table_string(), '=~', '<br/><div class="panel panel-default"><table class="table table-hover"> <tr><td></td><td><b>test1 contents', "test as_table_string");

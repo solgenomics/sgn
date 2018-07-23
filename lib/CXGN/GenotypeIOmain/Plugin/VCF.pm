@@ -1,4 +1,3 @@
-
 package CXGN::GenotypeIOmain::Plugin::VCF;
 
 use Moose::Role;
@@ -26,15 +25,9 @@ has 'header' => (isa => 'ArrayRef',
 		 is => 'rw',
     );
 
-has 'header_information_lines' => (
-    isa => 'ArrayRef',
-    is => 'rw',
-);
-
-has 'observation_unit_names' => (
-    isa => 'ArrayRef',
-    is => 'rw',
-);
+has 'accessions' => (isa => 'ArrayRef',
+		     is => 'rw',
+    );
 
 sub init { 
     my $self = shift;
@@ -42,77 +35,89 @@ sub init {
 
     $self->file($args->{file});
 
-    my $F;
-    open($F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
+    # open(my $F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
 
-        my @header_info;
-        my @fields;
-        my @observation_unit_names;
+    # # gather accession names (encoded in line starting with #CHROM)
+    # #
+    # my $header = "";
+    # while (<$F>) { 
+    # 	chomp();
 
-        my @markers;
-        while (<$F>) {
-            chomp;
-            #print STDERR Dumper $_;
+    # 	if (m/\#CHROM/) { 	
+    # 	    $header = $_;
+    # 	    last();
+    # 	}
+    # }
+    
+    # close($F);
 
-            if ($_ =~ m/^##/){
-                push @header_info, $_;
-                next;
-            }
-            if ($_ =~ m/^#/){
-                my $header = $_;
-                @fields = split /\t/, $header;
-                @observation_unit_names = @fields[9..$#fields];
-                next;
-            }
+    # gather marker names
+    #
+    my @markers = ();
+    my @accessions = ();
+    
+    open(my $F, "<", $args->{file}) || die "Can't open file $args->{file}\n";
 
-            my @values = split /\t/;
-            if ($values[2] eq '.') {
-                push @markers, $values[0]."_".$values[1];
-            } else {
-                push @markers, $values[2];
-            }
-        }
+    my $header_seen = 0;
+    while (<$F>){ 
+	chomp;
+	if ($header_seen) { 
+	    my @fields = split /\t/;
+	    push @markers, $fields[2];
+	}
+	if (m/^\#CHROM/) { 
+	    $header_seen=1;
+	    my @fields = split /\t/;
+	    @accessions = @fields[9..$#fields];
+	}
 
-    close($F);
+    }
 
-    $self->header(\@fields);
-    $self->observation_unit_names(\@observation_unit_names);
     $self->markers(\@markers);
-    $self->header_information_lines(\@header_info);
-
-    my $fh = IO::File->new($args->{file});
-    my $ignore_first_line = <$fh>;
-    $self->current(1);
-    $self->fh($fh);
+    $self->accessions(\@accessions);
 }
 
 sub next {
     my $self = shift;
+    #my $file = shift;
+    my $current = shift;
 
     #print STDERR "VCF NEXT CALLED\n";
-    my $line;
-    my $fh = $self->fh();
-    if ( defined($line = <$fh>) ) {
-        chomp($line);
-        #print STDERR Dumper $line;
-        if ($line =~ m/^##/){
-            #print STDERR "H\n";
-            return (undef, undef);
-        }
-        if ($line =~ m/^#/){
-            #print STDERR "C\n";
-            return (undef, undef);
-        }
-        my @fields = split /\t/, $line;
+    open(my $F, "<", $self->file) || die "Can't open file $self->file\n";
 
-        my @marker_info = @fields[ 0..8 ];
-        my @values = @fields[ 9..$#fields ];
-        #print STDERR Dumper \@marker_info;
-        #$self->current( $self->current()+1 );
-        return (\@marker_info, \@values);
+    print STDERR "Zooming to header...\n";
+    while (<$F>) { 
+	chomp;
+	if (m/\#CHROM/) { 
+	    last();
+	}
     }
-    print STDERR "END\n";
-    return;
+
+    my @markers = ();;
+    my %rawscores = ();
+
+    print STDERR "Starting genotype parsing...\n";
+    my $lines_parsed = 0;
+    while (<$F>) { 
+	chomp;
+	my @fields = split /\t/;
+	
+	#my $score = $fields[$current+9];
+	#if (defined($score)) { 
+	    #$score =~ s/([0-9.]\/[0-9.])\:.*/$1/;
+	    #$genotype{ $fields[2] } = $score;
+	    $rawscores{ $fields[2] } = $fields[$current+9];
+	#}
+	push @markers, $fields[2];
+	$lines_parsed++;
+	if ($lines_parsed % 500 ==0) { print STDERR "$lines_parsed         \r"; }
+    }
+    
+    my $genotype = $self->accessions()->[$self->current()];
+
+    close($F);
+    $self->current( $self->current()+1 );
+    return (\@markers, \%rawscores, $genotype);
 }
 
 

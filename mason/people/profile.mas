@@ -138,7 +138,7 @@ $user_status => undef
                 <div class="well">
                     <a href="/solpeople/admin/crash_test.pl">Test website error handling</a><br />
                     <a href="/solpeople/admin/stats.pl">View user stats</a><br />
-                    <a href="/solpeople/admin/quick_create_account.pl">Create new user account</a><br />
+                    <a href="/user/admin/quick_create_account">Create new user account</a><br />
                     <a href="/solpeople/admin/create_organization.pl">Create new organization</a>
                 </div>
             </&>
