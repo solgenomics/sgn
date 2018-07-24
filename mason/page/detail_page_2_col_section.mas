@@ -419,6 +419,9 @@ $referer => undef
                                     </div>
                                 </div>
 % }
+% if (!$info_section_id){
+                                <p>No section specified! Main content goes here!</p>
+% }
 
                             </div>
                         </div>
