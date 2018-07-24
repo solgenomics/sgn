@@ -2857,6 +2857,53 @@ sub get_accessions {
 	return \@accessions;
 }
 
+=head2 get_accessions_or_crosses
+
+ Usage:        my $accessions_or_crosses = $t->get_accessions_or_crosses();
+ Desc:         retrieves the accessions or crosses used in this trial. ONLY greenhouse trial design should be able to come from cross names; all others are from only accessions
+ Ret:          an arrayref of { stock_uniquename => acc_name, stock_id => stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_accessions_or_crosses {
+    my $self = shift;
+    my @accessions_or_crosses;
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
+    my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+        FROM stock as accession
+        JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+        JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
+        JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_project using(nd_experiment_id)
+        JOIN project using(project_id)
+        WHERE accession.type_id IN ($accession_cvterm_id, $cross_cvterm_id)
+        AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id)
+        AND project.project_id = ?
+        GROUP BY accession.stock_id
+        ORDER BY accession.stock_id;";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
+        push @accessions_or_crosses, {stock_uniquename=>$uniquename, stock_id=>$stock_id };
+    }
+
+    return \@accessions_or_crosses;
+}
+
+
 =head2 get_tissue_sources
 
     Usage:        my $tissue_sources = $t->get_tissue_sources();
