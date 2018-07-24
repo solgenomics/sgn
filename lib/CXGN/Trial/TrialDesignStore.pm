@@ -295,11 +295,11 @@ sub validate_design {
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $stocks = $chado_schema->resultset('Stock::Stock')->search({
-        #type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
+        type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= "Name $s already exists in the database.";
+        $error .= "Name $s->uniquename already exists in the database.";
     }
 
     my $seedlot_validator = CXGN::List::Validate->new();
