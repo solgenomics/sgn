@@ -459,11 +459,9 @@ sub generate_and_cache_layout {
 
     if ($cross_name) {
         $design_info{"cross_name"}=$cross_name;
-        $accession_name = $cross_name;
     }
     if ($cross_id) {
         $design_info{"cross_id"}=$cross_id;
-        $accession_id = $cross_id;
     }
     if ($accession_name) {
         $design_info{"accession_name"}=$accession_name;
