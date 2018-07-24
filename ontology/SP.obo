@@ -1608,7 +1608,8 @@ is_a: SP:0000167 ! fruit metabolites
 id: SP:0000170
 name: pH
 def: "The pH of the fruit." [SGN:NM]
-is_a: SP:0000167 ! fruit metabolites
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000167 ! fruit metabolites
 
 [Term]
 id: SP:0000171
@@ -3191,7 +3192,8 @@ creation_date: 2010-07-15T03:25:42Z
 id: SP:0000345
 name: titratable acids
 def: "Grams of citric acid per 100ml. Method for measuring is NaOH titration." [SolCAP:DF]
-is_a: SP:0000166 ! citric acid
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000166 ! citric acid
 created_by: Naama
 creation_date: 2010-07-15T03:39:19Z
 
@@ -3364,7 +3366,8 @@ creation_date: 2010-07-19T11:25:30Z
 id: SP:0000366
 name: days to fruit ripening
 synonym: "days to fruit maturity" RELATED []
-is_a: SP:0000365 ! fruit ripening timing
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000365 ! fruit ripening timing
 created_by: Naama
 creation_date: 2010-07-19T11:26:41Z
 
