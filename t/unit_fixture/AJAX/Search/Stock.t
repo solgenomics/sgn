@@ -119,7 +119,7 @@ is_deeply($response, {'recordsFiltered' => 1954,'draw' => undef,'recordsTotal' =
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 $mech->post_ok('http://localhost:3010/stock/prop/add',["stock_id"=>"38842", "prop"=>"organization_name_1", "prop_type"=>"organization"] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;

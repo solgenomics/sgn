@@ -296,7 +296,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
 </&>
 
-<& /search/stocks_graphicalfiltering.mas &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Graphical Filtering on Phenotype Performance</h4>", info_section_subtitle => 'Graphically filter an accessions average performance for combinations of traits', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
 
 
 </div>
@@ -424,7 +424,7 @@ jQuery(document).ready(function () {
                     minimal_info : 1,
                     any_name : jQuery('#any_name').val(),
                     any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                    stock_type : jQuery('#stock_type_select').val(),
+                    stock_type : jQuery('#stock_type_select option:selected').text(),
                     organism : jQuery('#organism_select').val(),
                     person : jQuery('#person').val(),
                     trait : jQuery('#trait').val(),

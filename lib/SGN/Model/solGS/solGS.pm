@@ -1391,7 +1391,7 @@ sub plots_list_phenotype_data {
 #     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 # 	bcs_schema  =>$self->schema,
 # 	data_level  => 'plot',
-# 	search_type =>'Native',
+# 	search_type =>'MaterializedViewTable',
 # 	plot_list   => $plots_ids,
 # 	);
 
