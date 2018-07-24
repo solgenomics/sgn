@@ -3,6 +3,7 @@ date: 29:03:2018 15:54
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
+ontology: TEMP
 
 [Term]
 id: SP:0000000
@@ -322,6 +323,7 @@ synonym: "fruit shape index 1" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000039 ! fruit shape index
 
 [Term]
@@ -332,6 +334,7 @@ synonym: "TO:0000370" RELATED []
 xref: PATO:0000921
 xref: PO:0001052
 xref: PO:0009025
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000042 ! leaf size
 
 [Term]
@@ -369,6 +372,7 @@ synonym: "fruit shape index 2" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000039 ! fruit shape index
 
 [Term]
@@ -398,6 +402,7 @@ xref: PATO:0001875
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
@@ -408,6 +413,7 @@ synonym: "cir" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
@@ -488,6 +494,7 @@ synonym: "pear shape" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
@@ -499,6 +506,7 @@ synonym: "ovo" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
@@ -520,6 +528,7 @@ xref: PATO:0000948
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
@@ -560,6 +569,7 @@ synonym: "ver" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
@@ -570,6 +580,7 @@ synonym: "ell" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
@@ -581,6 +592,7 @@ xref: PATO:0001867
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
@@ -658,7 +670,7 @@ xref: PATO:0001234
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
-relationship: variable_of SP:0000070 ! distal fruit end shape
+relationship: part_of SP:0000070 ! distal fruit end shape
 
 [Term]
 id: SP:0000076
@@ -669,6 +681,7 @@ xref: PATO:0001234
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000070 ! distal fruit end shape
 
 [Term]
@@ -680,6 +693,7 @@ xref: PATO:0001234
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000070 ! distal fruit end shape
 
 [Term]
@@ -691,7 +705,7 @@ xref: PATO:0001195
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
-relationship: variable_of SP:0000072 ! proximal fruit end shape
+relationship: part_of SP:0000072 ! proximal fruit end shape
 
 [Term]
 id: SP:0000079
@@ -701,6 +715,7 @@ xref: PATO:0001195
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000072 ! proximal fruit end shape
 
 [Term]
@@ -713,6 +728,7 @@ xref: PATO:0000125
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000037 ! fruit
 created_by: naama
 creation_date: 2008-02-12T03:11:00Z
@@ -755,6 +771,7 @@ xref: PATO:0001323
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2008-02-12T03:11:00Z
@@ -781,6 +798,7 @@ xref: PATO:0001711
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2008-02-12T03:11:00Z
@@ -806,6 +824,7 @@ synonym: "lcn" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000011 ! fruit morphology
 created_by: naama
 creation_date: 2008-02-12T03:30:00Z
@@ -863,6 +882,7 @@ def: "The area of the pericarp (cm^2)." [SGN:EVDK]
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009084
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000371 ! pericarp
 created_by: naama
 creation_date: 2008-02-12T03:36:00Z
@@ -874,6 +894,7 @@ def: "The sum of the areas of the septum and the pericarp in cm^2." [SGN:EVDK]
 xref: PO:0005008
 xref: PO:0007010
 xref: PO:0007042
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2008-02-12T03:36:00Z
@@ -946,6 +967,7 @@ xref: PATO:0000052
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000038 ! fruit shape
 created_by: naama
 creation_date: 2008-02-22T10:26:00Z
@@ -1047,6 +1069,7 @@ name: number of leaves to 1st inflorescence
 xref: PATO:0000053
 xref: PO:0007047
 xref: PO:0009025
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000109 ! leaf number
 created_by: naama
 creation_date: 2008-02-22T10:30:00Z
@@ -1068,6 +1091,7 @@ def: "Count of the number of flowers per one inflorescence." []
 xref: PATO:0000053
 xref: PO:0007615
 xref: PO:0009046
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000007 ! inflorescence
 relationship: variable_of SP:0000117 ! flower number
 created_by: naama
@@ -1232,6 +1256,7 @@ xref: PATO:0000921
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000088 ! fruit width
 created_by: naama
 creation_date: 2008-03-12T01:08:00Z
@@ -1244,6 +1269,7 @@ synonym: "fruit maximum width" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:9001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000088 ! fruit width
 created_by: naama
 creation_date: 2008-03-12T01:08:00Z
@@ -1257,6 +1283,7 @@ xref: PATO:0000122
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000086 ! fruit length
 created_by: naama
 creation_date: 2008-03-12T01:11:00Z
@@ -1271,6 +1298,7 @@ xref: PATO:0000122
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000086 ! fruit length
 created_by: naama
 creation_date: 2008-03-12T01:11:00Z
@@ -1281,7 +1309,8 @@ name: proximal fruit end blockiness 5%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
-is_a: SP:0000078 ! proximal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000078 ! proximal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1291,7 +1320,8 @@ name: proximal fruit end blockiness 10%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
-is_a: SP:0000078 ! proximal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000078 ! proximal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1301,7 +1331,8 @@ name: proximal fruit end blockiness 20%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
-is_a: SP:0000078 ! proximal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000078 ! proximal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1311,7 +1342,8 @@ name: proximal fruit end blockiness 30%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
-is_a: SP:0000078 ! proximal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000078 ! proximal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1337,7 +1369,8 @@ name: distal fruit end blockiness 5%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
-is_a: SP:0000075 ! distal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000075 ! distal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1347,7 +1380,8 @@ name: distal fruit end blockiness 10%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
-is_a: SP:0000075 ! distal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000075 ! distal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1357,7 +1391,8 @@ name: distal fruit end blockiness 20%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
-is_a: SP:0000075 ! distal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000075 ! distal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1367,7 +1402,8 @@ name: distal fruit end blockiness 30%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
-is_a: SP:0000075 ! distal fruit end blockiness
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000075 ! distal fruit end blockiness
 created_by: naama
 creation_date: 2008-03-12T01:26:00Z
 
@@ -1447,6 +1483,7 @@ xref: PATO:f0000119
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000072 ! proximal fruit end shape
 created_by: naama
 creation_date: 2008-03-17T01:50:00Z
@@ -1497,6 +1534,7 @@ creation_date: 2008-03-25T11:13:00Z
 id: SP:0000161
 name: horizontal asymmetry obovoid
 def: "If the area of the fruit is greater below mid-height than above it, horizontal asymmetry obovoid is the average distance (Res_h) between a horizontal line through the fruit at mid-height and the midpoint of the fruit height at each width. Otherwise, it is 0." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000065 ! horizontal asymmetry
 created_by: naama
 creation_date: 2008-03-25T11:17:00Z
@@ -1505,6 +1543,7 @@ creation_date: 2008-03-25T11:17:00Z
 id: SP:0000162
 name: horizontal asymmetry ovoid
 def: "If the area of the fruit is greater above mid-height than below it, horizontal asymmetry ovoid is the average distance (Res_h) between a horizontal line through the fruit at mid-height and the midpoint of the fruit height at each width. Otherwise, it is 0." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000065 ! horizontal asymmetry
 created_by: naama
 creation_date: 2008-03-25T11:17:00Z
@@ -1534,7 +1573,8 @@ id: SP:0000165
 name: total soluble solids
 def: "The total soluble solids in the fruit (usually sugars and acids)." [SGN:NM]
 synonym: "Brix" EXACT []
-is_a: SP:0000167 ! fruit metabolites
+is_a: SP:0000500 ! Variables
+relationship: attribute_of SP:0000167 ! fruit metabolites
 relationship: variable_of SP:0000385 ! sugars
 
 [Term]
@@ -2052,6 +2092,7 @@ synonym: "TO:0000370" RELATED []
 xref: PATO:0000122
 xref: PO:0001052
 xref: PO:0009025
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000042 ! leaf size
 created_by: Naama
 creation_date: 2010-05-22T01:59:28Z
@@ -3207,6 +3248,7 @@ creation_date: 2010-07-15T04:00:40Z
 id: SP:0000352
 name: Cross section average RGB red
 def: "Measurement of the color red of the cross section on RGB scale." [SGN:DF]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000431 ! endocarp RGB-scale color
 created_by: Naama
 creation_date: 2010-07-15T04:07:07Z
@@ -3229,6 +3271,7 @@ creation_date: 2010-07-15T04:10:25Z
 id: SP:0000355
 name: Cross section average RGB green
 def: "Measurement of the color green of the cross section on RGB scale." [SGN:DF]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000431 ! endocarp RGB-scale color
 created_by: Naama
 creation_date: 2010-07-15T04:10:39Z
@@ -3237,6 +3280,7 @@ creation_date: 2010-07-15T04:10:39Z
 id: SP:0000356
 name: Cross section average RGB blue
 def: "Measurement of the color blue of the cross section on RGB scale." [SGN:DF]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000431 ! endocarp RGB-scale color
 created_by: Naama
 creation_date: 2010-07-15T04:10:55Z
@@ -3245,6 +3289,7 @@ creation_date: 2010-07-15T04:10:55Z
 id: SP:0000357
 name: Cross section average L value
 def: "THe average L value of all the pixels in CIELab color space." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000430 ! endocarp Lab-scale color
 created_by: Naama
 creation_date: 2010-07-15T04:12:02Z
@@ -3253,6 +3298,7 @@ creation_date: 2010-07-15T04:12:02Z
 id: SP:0000358
 name: Cross section average 'a' value
 def: "The average 'a' value of all the pixels in CIELab color space." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000430 ! endocarp Lab-scale color
 created_by: Naama
 creation_date: 2010-07-15T04:16:45Z
@@ -3261,6 +3307,7 @@ creation_date: 2010-07-15T04:16:45Z
 id: SP:0000359
 name: Cross section average 'b' value
 def: "THe average 'b' value of all the pixels in CIELab color space." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000430 ! endocarp Lab-scale color
 created_by: Naama
 creation_date: 2010-07-15T04:17:20Z
@@ -3341,6 +3388,7 @@ creation_date: 2010-07-19T11:31:07Z
 id: SP:0000369
 name: proximal angle micro 2%
 def: "The angle between best-fit lines drawn through the fruit perimeter on either side of the proximal end point. The Micro Distance setting determines the percentage of the perimeter from the proximal end point at which to center the linear regression points used to find the best-fit line. The points comprising 1% of the perimeter on either side of that center point are used in the regression." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000074 ! proximal fruit end angle
 created_by: Naama
 creation_date: 2010-07-19T12:39:49Z
@@ -3349,6 +3397,7 @@ creation_date: 2010-07-19T12:39:49Z
 id: SP:0000370
 name: proximal angle macro 20%
 def: "The angle between best-fit lines drawn through the fruit perimeter on either side of the proximal end point. The Macro Distance setting determines the percentage of the perimeter from the proximal end point at which to center the linear regression points used to find the best-fit line. The points comprising 5% of the perimeter on either side of that center point are used in the regression." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000074 ! proximal fruit end angle
 created_by: Naama
 creation_date: 2010-07-19T12:40:13Z
@@ -3365,6 +3414,7 @@ id: SP:0000372
 name: pericarp thickness, calculation in centimetes
 def: "Pericarp thickness in cm." [SGN:EVDK]
 synonym: "pericarp width" RELATED []
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000371 ! pericarp
 created_by: Naama
 creation_date: 2010-07-19T01:14:10Z
@@ -3455,6 +3505,7 @@ creation_date: 2011-09-16T02:49:09Z
 id: SP:0000384
 name: fruit height at widest position asymmetry
 def: "The ratio of the height at which the maximum width occurs, to the maximum height." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000058 ! fruit shape eccentric
 created_by: Naama
 creation_date: 2011-09-26T10:46:06Z
@@ -3540,6 +3591,7 @@ id: SP:0000394
 name: fruit dry weight percentage
 def: "Net dry weight (after 1 week in oven) divided by net fresh weight of the fruit and multiplied by 100." [SGN:EVDK]
 synonym: "fruit solids percentage" EXACT []
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000080 ! fruit mass, weight in grams
 created_by: naama
 creation_date: 2017-02-06T15:17:20Z
@@ -3548,6 +3600,7 @@ creation_date: 2017-02-06T15:17:20Z
 id: SP:0000395
 name: columella and placenta area measurement in square centimeters, cm^2
 def: "The area of the fruit columella and placenta in cm^2. The area of the fruit columella and placenta of fruits sliced at the equatorial axis." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2017-09-07T14:56:35Z
@@ -3556,6 +3609,7 @@ creation_date: 2017-09-07T14:56:35Z
 id: SP:0000396
 name: pericarp cell layers, counting
 def: "Number of cell layers in the tomato pericarp in axial abaxial axis. Counting the number of cells intersected by a line perpendicular to the exocarp, avoiding vascular bundles, endocarp layer, 2-4 small cell layers right bellow the exocarp, and 0-1 layers right above the endocarp." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000397 ! pericarp cells
 created_by: naama
 creation_date: 2017-09-07T14:58:51Z
@@ -3571,6 +3625,7 @@ creation_date: 2017-09-07T15:00:10Z
 id: SP:0000398
 name: pericarp max cell size, calculation in square micrometers, um^2
 def: "Size of the biggest tomato cells in the pericarp in um^2." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000397 ! pericarp cells
 created_by: naama
 creation_date: 2017-09-07T15:00:56Z
@@ -3581,6 +3636,7 @@ name: number of leaves between 2nd and 3rd inflorescence
 xref: PATO:0000053
 xref: PO:0007047
 xref: PO:0009025
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000109 ! leaf number
 created_by: naama
 creation_date: 2017-09-07T15:16:39Z
@@ -3591,6 +3647,7 @@ name: number of leaves between 3rd and 4th inflorescence
 xref: PATO:0000053
 xref: PO:0007047
 xref: PO:0009025
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000109 ! leaf number
 created_by: naama
 creation_date: 2017-09-07T15:17:08Z
@@ -3606,6 +3663,7 @@ creation_date: 2017-09-07T15:18:54Z
 id: SP:0000402
 name: plant height
 def: "The height of the full grown plant in cm." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000002 ! plant size
 created_by: naama
 creation_date: 2017-09-07T15:19:52Z
@@ -3614,6 +3672,7 @@ creation_date: 2017-09-07T15:19:52Z
 id: SP:0000403
 name: plant height until first inflorescence
 def: "The height of the plant until the first inflorescence in cm" [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000002 ! plant size
 created_by: naama
 creation_date: 2017-09-07T15:20:37Z
@@ -3622,6 +3681,7 @@ creation_date: 2017-09-07T15:20:37Z
 id: SP:0000404
 name: plant height until last inflorescence
 def: "The height of the plant until the last inflorescence in cm" [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000002 ! plant size
 created_by: naama
 creation_date: 2017-09-07T15:21:24Z
@@ -3630,6 +3690,7 @@ creation_date: 2017-09-07T15:21:24Z
 id: SP:0000405
 name: total number of inflorescences
 def: "Count of the number of inflorescences." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000007 ! inflorescence
 created_by: naama
 creation_date: 2017-09-07T15:23:57Z
@@ -3646,6 +3707,7 @@ creation_date: 2017-09-12T12:19:16Z
 id: SP:0000407
 name: Stem width between 2nd and 3rd inflorescence (mm)
 def: "Stem width between 2nd and 3rd inflorescence, measured in mm at complete developmental stage." [SGn:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000406 ! stem width
 created_by: naama
 creation_date: 2017-09-12T12:23:15Z
@@ -3654,6 +3716,7 @@ creation_date: 2017-09-12T12:23:15Z
 id: SP:0000408
 name: Stem width between 3rd and 4th inflorescence (mm)
 def: "Stem width between 3rd and 4th inflorescence, measured in mm at complete developmental stage." [SGn:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000406 ! stem width
 created_by: naama
 creation_date: 2017-09-12T12:24:40Z
@@ -3662,6 +3725,7 @@ creation_date: 2017-09-12T12:24:40Z
 id: SP:0000409
 name: number of flowers in second inflorescence
 def: "Count the number of flowers in the second inflorescence." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000117 ! flower number
 created_by: naama
 creation_date: 2017-09-12T12:43:06Z
@@ -3670,6 +3734,7 @@ creation_date: 2017-09-12T12:43:06Z
 id: SP:0000410
 name: number of flowers in third inflorescence
 def: "Count the number of flowers in the third inflorescence." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000117 ! flower number
 created_by: naama
 creation_date: 2017-09-12T12:44:18Z
@@ -3692,6 +3757,7 @@ creation_date: 2017-09-12T12:58:14Z
 id: SP:0000413
 name: number of sepals
 def: "Count sepals per flower." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000411 ! sepal
 created_by: naama
 creation_date: 2017-09-12T12:58:24Z
@@ -3700,6 +3766,7 @@ creation_date: 2017-09-12T12:58:24Z
 id: SP:0000414
 name: number of petals
 def: "Count petals per flower." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000412 ! petal
 created_by: naama
 creation_date: 2017-09-12T12:59:11Z
@@ -3708,6 +3775,7 @@ creation_date: 2017-09-12T12:59:11Z
 id: SP:0000415
 name: petal lengh
 def: "Average length of petals from a representative flower per plant. Length measured in cm. from the centre of the flower to the end of the petal." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000412 ! petal
 created_by: naama
 creation_date: 2017-09-12T13:00:12Z
@@ -3716,6 +3784,7 @@ creation_date: 2017-09-12T13:00:12Z
 id: SP:0000416
 name: petal width
 def: "Average width of petals from a representative flower per plant. Width measured in cm. between the join point of the petals." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000412 ! petal
 created_by: naama
 creation_date: 2017-09-12T13:01:44Z
@@ -3724,6 +3793,7 @@ creation_date: 2017-09-12T13:01:44Z
 id: SP:0000417
 name: sepal lengh
 def: "Average length of sepals from a representative flower per plant. Length is measured in cm. from the pedicel to the end of the sepal." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000411 ! sepal
 created_by: naama
 creation_date: 2017-09-12T13:03:58Z
@@ -3732,6 +3802,7 @@ creation_date: 2017-09-12T13:03:58Z
 id: SP:0000418
 name: sepal width
 def: "Average width of sepals from a representative flower per plant. Width was measured in cm. between the join point of the sepals." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000411 ! sepal
 created_by: naama
 creation_date: 2017-09-12T13:04:04Z
@@ -3761,6 +3832,7 @@ creation_date: 2017-09-12T13:36:21Z
 id: SP:0000422
 name: anther length measurement in cm
 def: "Length of the anthers in cm." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000419 ! anther
 created_by: naama
 creation_date: 2017-09-12T13:36:34Z
@@ -3769,6 +3841,7 @@ creation_date: 2017-09-12T13:36:34Z
 id: SP:0000423
 name: pistil length in cm
 def: "Length of the pistil in cm." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000420 ! pistil
 created_by: naama
 creation_date: 2017-09-12T13:37:40Z
@@ -3777,6 +3850,7 @@ creation_date: 2017-09-12T13:37:40Z
 id: SP:0000424
 name: ovary length
 def: "Length of the ovary in cm." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000421 ! ovary
 created_by: naama
 creation_date: 2017-09-12T13:38:20Z
@@ -3789,6 +3863,7 @@ xref: PATO:0000122
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000086 ! fruit length
 created_by: naama
 creation_date: 2017-09-12T13:58:59Z
@@ -3800,6 +3875,7 @@ def: "The ratio of curved height to the width of the fruit at mid-curved-height,
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000039 ! fruit shape index
 created_by: naama
 creation_date: 2017-09-12T14:03:15Z
@@ -3815,6 +3891,7 @@ creation_date: 2017-09-22T12:03:07Z
 id: SP:0000428
 name: stem length between 1st and 10th true leaves (cm)
 def: "The distance between the 1st and the 10th leaf in cm. Recorded at complete developmental stage." [SGn:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000427 ! stem length
 created_by: naama
 creation_date: 2017-09-22T12:03:26Z
@@ -3823,6 +3900,7 @@ creation_date: 2017-09-22T12:03:26Z
 id: SP:0000429
 name: inflorescence length
 def: "The distance from the stem to the last flower along the rachis of the inflorescence." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000007 ! inflorescence
 created_by: naama
 creation_date: 2017-09-22T12:06:11Z
@@ -3852,6 +3930,7 @@ creation_date: 2017-09-22T13:25:16Z
 id: SP:0000433
 name: epicarp Lab-scale 'L' value
 def: "Epicarp 'L' color value was recorded in a point close to pistil scar. Color is recorded in L*a*b color system using a colorimeter." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000432 ! epicarp Lab-scale color
 created_by: naama
 creation_date: 2017-09-22T13:25:35Z
@@ -3860,6 +3939,7 @@ creation_date: 2017-09-22T13:25:35Z
 id: SP:0000434
 name: epicarp Lab-scale 'a' value
 def: "Epicarp 'a' color value was recorded in a point close to pistil scar. Color is recorded in L*a*b color system using a colorimeter." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000432 ! epicarp Lab-scale color
 created_by: naama
 creation_date: 2017-09-22T13:27:36Z
@@ -3868,6 +3948,7 @@ creation_date: 2017-09-22T13:27:36Z
 id: SP:0000435
 name: epicarp Lab-scale 'b' value
 def: "Epicarp 'b' color value was recorded in a point close to pistil scar. Color is recorded in L*a*b color system using a colorimeter." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000432 ! epicarp Lab-scale color
 created_by: naama
 creation_date: 2017-09-22T13:27:50Z
@@ -3883,6 +3964,7 @@ creation_date: 2017-09-22T13:40:25Z
 id: SP:0000437
 name: number of primary leaflets per leaf
 def: "Number of primary leaflets per leaf. Counting in fully opened leaves when the plant is completely developed." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000436 ! leaflets number
 created_by: naama
 creation_date: 2017-09-22T13:40:46Z
@@ -3891,6 +3973,7 @@ creation_date: 2017-09-22T13:40:46Z
 id: SP:0000438
 name: number of secondary leaflets per leaf
 def: "Number of secondary leaflets per leaf. Counting in fully opened leaves when the plant is completely developed." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000436 ! leaflets number
 created_by: naama
 creation_date: 2017-09-22T13:41:28Z
@@ -3907,6 +3990,7 @@ creation_date: 2017-12-14T15:53:18Z
 id: SP:0000440
 name: leaf habit visual rating 1-9 scale
 def: "Description of the way the leaves are held naturally. Recorded at complete developmental stage of the plant. Visual rating 1-9 score (1:semi-erect, 3:semi-horizontal, 5:horizontal, 7:horizontal-drooping, 9:drooping)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000439 ! leaf habit
 created_by: naama
 creation_date: 2017-12-14T15:55:33Z
@@ -3915,6 +3999,7 @@ creation_date: 2017-12-14T15:55:33Z
 id: SP:0000441
 name: stem anthocyanin content
 def: "Anthocyanin content in the stem of mature plants." []
+is_a: SP:0000500 ! Variables
 relationship: part_of SP:0000343 ! hypocotyl
 relationship: variable_of SP:0000016 ! anthocyanin content
 created_by: naama
@@ -3924,6 +4009,7 @@ creation_date: 2017-12-15T15:43:57Z
 id: SP:0000442
 name: petals curvature observation 1-7 scale
 def: "The common position of the petals of fully opened flowers. 1-7 score (3:low, 5:intermediate, 7:strong)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000412 ! petal
 created_by: naama
 creation_date: 2017-12-15T16:58:22Z
@@ -3939,6 +4025,7 @@ creation_date: 2017-12-15T17:14:56Z
 id: SP:0000444
 name: stamen color observation 3-7 scale
 def: "Stamen color of fully opened flowers. 3-7 scale (3:yellow, 5:pale orange, 7:orange)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000443 ! stamen
 created_by: naama
 creation_date: 2017-12-15T17:16:28Z
@@ -3954,6 +4041,7 @@ creation_date: 2017-12-21T16:11:56Z
 id: SP:0000446
 name: style exertion. Visual rating 1-4
 def: "The position of the style compared to the stamens. 1-4 score (1:inserted, 2:same level as stamen, 3:slightly exerted, 4:highly exerted)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000445 ! style
 created_by: naama
 creation_date: 2017-12-21T16:13:08Z
@@ -3968,8 +4056,9 @@ creation_date: 2017-12-21T16:20:16Z
 
 [Term]
 id: SP:0000448
-name: immature green fruit epicarp color	, observation nominal scale 3-9
+name: immature green fruit epicarp color, observation nominal scale 3-9
 def: "Color observation of immature green fruit. 3-9 score (3:green-white, 5:light green, 7:green, 9:dark green)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000097 ! epicarp color
 relationship: variable_of SP:0000453 ! immature green fruit
 created_by: naama
@@ -3979,6 +4068,7 @@ creation_date: 2017-12-22T14:40:01Z
 id: SP:0000449
 name: epicarp fruit color, observation nominal scale 0-6
 def: "Fruit color of the epicarp. Exterior color of mature fruit. 0-6 score (0:yellow, 1:yellow-orange, 2:orange, 3:red-orange, 4:pink, 5:red, 6:intense red)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000097 ! epicarp color
 created_by: naama
 creation_date: 2017-12-22T15:06:06Z
@@ -3988,6 +4078,7 @@ id: SP:0000450
 name: fruit skin color. Nominal score 0-1
 def: "The color of the fruit epidermis. 0-1 score (0:colorless, 1:yellow)." [SGN:NM]
 synonym: "fruit epidermis color" EXACT []
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000097 ! epicarp color
 created_by: naama
 creation_date: 2017-12-22T15:10:17Z
@@ -4003,6 +4094,7 @@ creation_date: 2017-12-22T15:29:59Z
 id: SP:0000452
 name: fruit pedicel scar width. Observation 3-7 nominal scale
 def: "Scar width at the widest part of the pedicel scar. 3-7 score (3:narrow, 5:medium, 7:wide)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000451 ! fruit pedicel scar
 created_by: naama
 creation_date: 2017-12-22T15:30:20Z
@@ -4018,6 +4110,7 @@ creation_date: 2017-12-22T15:35:04Z
 id: SP:0000454
 name: longitudinal stripes presence on immature green fruits. Observation 0-1 scale
 def: "Presence of longitudinal stripes on immature fruits. 0-1 score (0:absence, 1:present)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000453 ! immature green fruit
 created_by: naama
 creation_date: 2017-12-22T15:36:50Z
@@ -4033,6 +4126,7 @@ creation_date: 2017-12-22T15:45:56Z
 id: SP:0000456
 name: leaf dissection. Observation 0-2 nominal scale
 def: "The extent of dissection in a fully opened leaf. 0-2 score (0:low, 1:intermediate, 2:high)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000455 ! leaf dissection
 created_by: naama
 creation_date: 2017-12-22T15:47:00Z
@@ -4048,6 +4142,7 @@ creation_date: 2017-12-22T15:49:28Z
 id: SP:0000458
 name: leaf border variable. Observation 0-3 nominal scale
 def: "The outline of fully opened leaf. 0-3 score (0:entire, 1:undulate, 2:serrated, 3:strong serrated)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000457 ! leaf border
 created_by: naama
 creation_date: 2017-12-22T15:52:41Z
@@ -4056,6 +4151,7 @@ creation_date: 2017-12-22T15:52:41Z
 id: SP:0000459
 name: proximal angle micro 3%
 def: "The angle between best-fit lines drawn through the fruit perimeter on either side of the proximal end point. The Micro Distance setting determines the percentage of the perimeter from the proximal end point at which to center the linear regression points used to find the best-fit line. The points comprising 1.5% of the perimeter on either side of that center point are used in the regression." [SGN:EVDK]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000074 ! proximal fruit end angle
 created_by: naama
 creation_date: 2017-12-22T15:55:07Z
@@ -4071,6 +4167,7 @@ creation_date: 2018-01-02T11:48:52Z
 id: SP:0000461
 name: Ribbing calyx end. Observation 0-9 scale
 def: "An arrangement of ribs surrounding the calyx end of a full size fruit. 0-9 score (0:absent, 3:very weak, 5:weak, 7:intermediate, 9:strong)." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000460 ! fruit calyx
 created_by: naama
 creation_date: 2018-01-02T11:49:08Z
@@ -4102,6 +4199,7 @@ creation_date: 2018-03-29T14:49:24Z
 id: SP:0000465
 name: vascular bundle content
 def: "Scored in mature green fruit. Vascular bundles network for water transportation. It begins in the stem\nscar and runs to the locules through the placenta while also extending to the\nouter pericarp. Visual score 0-7 (0:absent, 3:slight, 5:intermediate, 7:severe)." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000464 ! vascular bundle
 relationship: variable_of SP:0000466 ! mature green fruit
 created_by: naama
@@ -4118,6 +4216,7 @@ creation_date: 2018-03-29T14:52:19Z
 id: SP:0000467
 name: leaf type. Observation.
 def: "0-2 score (0:pimpinellifolium, 1:standard, 2:double feathered)." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000045 ! leaf complexity
 created_by: naama
 creation_date: 2018-03-29T15:07:38Z
@@ -4142,6 +4241,7 @@ creation_date: 2018-03-29T15:13:29Z
 id: SP:0000470
 name: plant growth habit, visual observation nominal scale
 def: "0-Determinate,\n1-Semi-determinate,\n2-Indeterminate." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000128 ! plant habit index
 created_by: naama
 creation_date: 2018-03-29T15:14:29Z
@@ -4158,6 +4258,7 @@ creation_date: 2018-03-29T15:17:03Z
 id: SP:0000472
 name: green leaf color, visual observation 3-7 scale
 def: "3:Light green, 5:medium green, 7\n:dark green." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000005 ! leaf color
 created_by: naama
 creation_date: 2018-03-29T15:17:54Z
@@ -4174,6 +4275,7 @@ creation_date: 2018-03-29T15:24:30Z
 id: SP:0000474
 name: inflorescence type, nominal scale
 def: "1: uniparous, 2: fishbone, 3: forked, 4- irregular." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000071 ! inflorescence structure
 created_by: naama
 creation_date: 2018-03-29T15:25:57Z
@@ -4182,6 +4284,7 @@ creation_date: 2018-03-29T15:25:57Z
 id: SP:0000475
 name: leafy inflorescence, observation 0-2 scale
 def: "Scored when the inflorescence is completely developed. 0-2 score (0:absent, 1:leaves, 2:leaves and shoots)." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000071 ! inflorescence structure
 created_by: naama
 creation_date: 2018-03-29T15:33:10Z
@@ -4198,6 +4301,7 @@ creation_date: 2018-03-29T15:40:35Z
 id: SP:0000477
 name: flower color, observation 1-7 nominal scale
 def: "3: Pale yellow, 5: Yellow, 7: Yellow-orange." [SGN:NM]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000009 ! flower color
 created_by: naama
 creation_date: 2018-03-29T15:41:30Z
@@ -4206,6 +4310,7 @@ creation_date: 2018-03-29T15:41:30Z
 id: SP:0000478
 name: proximal fruit end color, observation 0-7 nominal scale
 def: "0: Uniform, 3: Light green, 5:  Medium green,  7: Dark green." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000182 ! proximal fruit end color
 created_by: naama
 creation_date: 2018-03-29T15:44:49Z
@@ -4221,6 +4326,7 @@ creation_date: 2018-03-29T15:47:45Z
 id: SP:0000480
 name: distal fruit end scar shape, observation 1-7 nominal scale
 def: "1: dot, 3: linear, 5: star, 7: irregular." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000479 ! distal fruit end scar shape
 created_by: naama
 creation_date: 2018-03-29T15:48:06Z
@@ -4236,9 +4342,15 @@ creation_date: 2018-03-29T15:50:50Z
 id: SP:0000482
 name: fruit fasciation, observation 0-7 ordinal scale
 def: "0: Not present, 3: low, 5: intermediate, 7: severe." [SGN:MJD]
+is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000481 ! fruit fasciation
 created_by: naama
 creation_date: 2018-03-29T15:51:48Z
+
+[Term]
+id: SP:0000500
+name: Variables
+namespace: Solanaceae_variables
 
 [Term]
 id: SP:0000706
