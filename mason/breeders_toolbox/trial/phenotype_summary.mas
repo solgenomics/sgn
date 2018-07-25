@@ -126,7 +126,7 @@ jQuery(document).ready(function () {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
             if (display == 'plots_accession' || display == 'plants_accession') {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession Or Cross</th><th>Accession or Cross Type</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
             jQuery('#pheno_summary_table_div').empty().html(html);
             datatables_display_phenosummary();
