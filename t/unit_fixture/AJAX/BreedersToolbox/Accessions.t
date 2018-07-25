@@ -29,7 +29,7 @@ my $json = JSON->new->allow_nonref;
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
 $mech->post_ok('http://localhost:3010/ajax/accession_list/verify', [ "accession_list"=> '["new_accession1", "test_accession1", "test_accessionx", "test_accessiony", "test_accessionz"]', "do_fuzzy_search"=> "true" ]);

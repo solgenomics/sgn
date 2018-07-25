@@ -937,6 +937,20 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     $c->stash->{rest} = { plots => \@data };
 }
 
+sub trial_has_data_levels : Chained('trial') PathPart('has_data_levels') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = {
+        has_plants => $trial->has_plant_entries(),
+        has_subplots => $trial->has_subplot_entries(),
+        has_tissue_samples => $trial->has_tissue_sample_entries(),
+        trial_name => $trial->get_name
+    };
+}
+
 sub trial_has_subplots : Chained('trial') PathPart('has_subplots') Args(0) {
     my $self = shift;
     my $c = shift;

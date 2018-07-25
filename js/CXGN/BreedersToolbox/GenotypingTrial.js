@@ -456,7 +456,7 @@ jQuery(document).ready(function ($) {
         complete: function (response) {
             console.log(response);
             jQuery('#working_modal').modal('hide');
-            if (response.error) {
+            if (response.errors || response.error_string) {
                 alert(response.error);
                 if (response.missing_stocks && response.missing_stocks.length > 0){
                     jQuery('#upload_genotypes_missing_stocks_div').show();

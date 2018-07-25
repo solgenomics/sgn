@@ -7,7 +7,7 @@ CXGN::Phenotypes::Search::MaterializedViewTable - an object to handle searching 
 =head1 USAGE
 
 my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'MaterializedViewTable',    #can be either 'MaterializedViewTable', 'MaterializedView', or 'Native', or 'MaterializedViewTable'
+    'MaterializedViewTable',    #can be either 'MaterializedViewTable' or 'Native'
     {
         bcs_schema=>$schema,
         data_level=>$data_level,
@@ -201,7 +201,7 @@ sub search {
     if ($self->data_level ne 'all') {
         push @where_clause, "observationunit_type_name = '".$self->data_level."'"; #ONLY plot or plant or subplot
     } else {
-        push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot')"; #plots AND plants AND subplots
+        push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample')"; #plots AND plants AND subplots AND tissue_samples
     }
 
     my %trait_list_check;
@@ -226,15 +226,15 @@ sub search {
         }
     }
     #if ($self->phenotype_min_value && !$self->phenotype_max_value) {
-    #    push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.')\')'; 
+    #    push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.')\')';
     #}
     # if ($self->phenotype_max_value && !$self->phenotype_min_value) {
-    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value <= '.$self->phenotype_max_value.')\')'; 
+    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value <= '.$self->phenotype_max_value.')\')';
     # }
     # if ($self->phenotype_max_value && $self->phenotype_min_value) {
-    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.' && @.value <= '.$self->phenotype_max_value.')\')'; 
+    #     push @where_clause, 'JSON_EXISTS(observations, \'$[*] ? (@.value >= '.$self->phenotype_min_value.' && @.value <= '.$self->phenotype_max_value.')\')';
     # }
-    # 
+    #
     #if ($self->exclude_phenotype_outlier){
     #    push @where_clause, "observations !@> '[{\"outlier\" : 1}]'";;
     #}
@@ -306,11 +306,11 @@ sub search {
                     next;
                 }
             }
+            my $phenotype_uniquename = $o->{uniquename};
             $unique_traits{$trait_name}++;
             if ($include_timestamp){
                 my $timestamp_value;
                 my $operator_value;
-                my $phenotype_uniquename = $o->{uniquename};
                 if ($phenotype_uniquename){
                     my ($p1, $p2) = split /date: /, $phenotype_uniquename;
                     if ($p2){
@@ -321,7 +321,15 @@ sub search {
                     }
                 }
                 $o->{timestamp} = $timestamp_value;
-                $o->{operator} = $operator_value;
+            }
+            if (!$o->{operator}){
+                if ($phenotype_uniquename){
+                    my ($p1, $p2) = split /date: /, $phenotype_uniquename;
+                    if ($p2){
+                        my ($timestamp, $operator_value) = split /  operator = /, $p2;
+                        $o->{operator} = $operator_value;
+                    }
+                }
             }
             push @return_observations, $o;
         }
