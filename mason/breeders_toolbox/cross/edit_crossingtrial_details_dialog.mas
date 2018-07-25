@@ -56,7 +56,7 @@ $trial_description
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <span class="input-group-btn"><button class="btn btn-default" id="clear_crossingtrial_planting_date" type="button">Clear</button></span>
-                                        <input class="form-control" id="edit_crossingtrial_planting_date" title="planting_date" type="text" value="<%$planting_date%>"/>
+                                        <input class="form-control" id="edit_crossingtrial_planting_date" title="crossingtrial_planting_date" type="text" value="<%$planting_date%>"/>
                                     </div>
                                 </div>
                         </div>
@@ -65,7 +65,7 @@ $trial_description
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <span class="input-group-btn"><button class="btn btn-default" id="clear_crossingtrial_harvest_date" type="button">Clear</button></span>
-                                        <input class="form-control" id="edit_crossingtrial_harvest_date" title="harvest_date" type="text" value="<%$harvest_date%>"/>
+                                        <input class="form-control" id="edit_crossingtrial_harvest_date" title="crossingtrial_harvest_date" type="text" value="<%$harvest_date%>"/>
                                     </div>
                                 </div>
                         </div>
@@ -89,15 +89,15 @@ $trial_description
     </div>
 </div>
 
-<div class="modal fade" id="trial_details_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsSavedDialog">
+<div class="modal fade" id="crossingtrial_details_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="crossingtrialDetailsSavedDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDetailsSavedDialog">Details Saved</h4>
+                <h4 class="modal-title" id="crossingtrialDetailsSavedDialog">Details Saved</h4>
             </div>
-            <div class="modal-body" id="trial_details_saved_body">
-                <ul class="list-group" id="trial_details_saved_message"></ul>
+            <div class="modal-body" id="crossingtrial_details_saved_body">
+                <ul class="list-group" id="crossingtrial_details_saved_message"></ul>
             </div>
             <div class="modal-footer">
                 <button id="crossingtrial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
@@ -106,18 +106,18 @@ $trial_description
     </div>
 </div>
 
-<div class="modal fade" id="trial_details_error_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsErrorDialog">
+<div class="modal fade" id="crossingtrial_details_error_dialog" tabindex="-1" role="dialog" aria-labelledby="crossingtrialDetailsErrorDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDetailsErrorDialog">Error Saving Trial Details</h4>
+                <h4 class="modal-title" id="crossingtrialDetailsErrorDialog">Error Saving Crossing Experiment Details</h4>
             </div>
-            <div class="modal-body" id="trial_details_error_body">
-                <ul class="list-group" id="trial_details_error_message"></ul>
+            <div class="modal-body" id="crossingtrial_details_error_body">
+                <ul class="list-group" id="crossingtrial_details_error_message"></ul>
             </div>
             <div class="modal-footer">
-                <button id="trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="crossingtrial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -128,30 +128,151 @@ $trial_description
 jQuery(document).ready(function(){
 
     edit_crossingtrial_detail_dialog();
+
 });
 
 function edit_crossingtrial_detail_dialog(){
 
-    jQuery('#edit_crossingtrial_details').click(function() {
+    jQuery('#edit_crossingtrial_details').click(function(){
 
         jQuery('#crossingtrial_details_edit_dialog').modal("show");
 
 
-        //populate breeding_programs, locations, years, and types dropdowns, and save defaults
+        //populate breeding_programs, locations, years, and types dropdowns, and save default
         var default_bp = document.getElementById("edit_crossingtrial_breeding_program").getAttribute("value");
-        get_select_box('breeding_programs', 'edit_crossingtrial_breeding_program', { 'default' : default_bp } );
+        get_select_box('breeding_programs', 'edit_crossingtrial_breeding_program', {'default' : default_bp});
         jQuery('#edit_crossingtrial_breeding_program').data("originalValue", default_bp);
 
         var default_loc = document.getElementById("edit_crossingtrial_location").getAttribute("value");
-        get_select_box('locations', 'edit_crossingtrial_location', { 'default' : default_loc });
+        get_select_box('locations', 'edit_crossingtrial_location', {'default' : default_loc});
         jQuery('#edit_crossingtrial_location').data("originalValue", default_loc);
 
         var default_year = document.getElementById("edit_crossingtrial_year").getAttribute("value");
-        get_select_box('years', 'edit_crossingtrial_year', { 'default' : default_year, 'auto_generate': 1 });
+        get_select_box('years', 'edit_crossingtrial_year', {'default' : default_year, 'auto_generate': 1});
         jQuery('#edit_crossingtrial_year').data("originalValue", default_year);
+
+
+        //create bootstrap daterangepickers for planting and harvest dates
+        var crossingtrial_planting_date_element = jQuery("#edit_crossingtrial_planting_date");
+        set_daterangepicker_default (crossingtrial_planting_date_element);
+        jQuery('input[title="crossingtrial_planting_date"]').daterangepicker(
+            {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+            },
+
+            function(start){
+                crossingtrial_planting_date_element.val(start.format('MM/DD/YYYY'));
+                highlight_changed_details(crossingtrial_planting_date_element);
+            }
+        );
+
+        var crossingtrial_harvest_date_element = jQuery("#edit_crossingtrial_harvest_date");
+        set_daterangepicker_default (crossingtrial_harvest_date_element);
+        crossingtrial_harvest_date_element.daterangepicker(
+            {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+            },
+            function(start) {
+                crossingtrial_harvest_date_element.val(start.format('MM/DD/YYYY'));
+                highlight_changed_details(crossingtrial_harvest_date_element);
+            }
+        );
+
+        // set up inout handlers
+        jQuery('#clear_crossingtrial_planting_date').click(function(){
+            crossingtrial_planting_date_element.val('');
+            highlight_changed_details(crossingtrial_planting_date_element);
+        });
+
+        jQuery('#clear_crossingtrial_harvest_date').click(function(){
+            crossingtrial_harvest_date_element.val('');
+            highlight_changed_details(crossingtrial_harvest_date_element);
+        });
+
+        jQuery('[id^="edit_crossingtrial_"]').change(function(){
+            var this_element = jQuery(this);
+            highlight_changed_details(this_element);
+        });
+
+        //save dialog body html for resetting on close
+        var edit_crossingtrial_details_body_html = document.getElementById('crossingtrial_details_edit_body').innerHTML;
+
+        jQuery('#edit_crossingtrial_details_cancel_button').click(function(){
+            reset_dialog_body('crossingtrial_details_edit_body', edit_crossingtrial_details_body_html);
+        });
+
+        jQuery('#save_crossingtrial_details').click(function(){
+            var changed_elements = document.getElementsByName("changed");
+            var categories = [];
+            var new_details = {};
+            var success_message = '';
+            for(var i=0; i<changed_elements.length; i++){
+                var id = changed_elements[i].id;
+                var type = changed_elements[i].title;
+                var new_value = changed_elements[i].value;
+                if (type.match(/date/)){
+                    if (new_value){
+                        new_value = moment(new_value).format('YYYY/MM/DD HH:mm:ss') || 'remove' ;
+                    } else {
+                        new_value = 'remove';
+                    }
+                }
+                categories.push(type);
+                new_details[type] = new_value;
+                if(jQuery('#'+id).is("select")){
+                    new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
+                }
+                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
+            }
+
+            jQuery('#crossingtrial_details_edit_dialog').modal("hide");
+            save_crossingtrial_details(categories, new_details, success_message);
+
+        });
 
     });
 
+    jQuery('#crossingtrial_details_error_close_button').click(function(){
+        document.getElementById('crossingtrial_details_error_message').innerHTML = "";
+    });
+
+    jQuery('#crossingtrial_details_saved_close_button').click(function(){
+      location.reload();
+    });
+
+}
+
+function save_crossingtrial_details (categories, details, success_message){
+    var trial_id = get_trial_id();
+    jQuery.ajax({
+        url: '/ajax/breeders/trial/'+trial_id+'/details/',
+        type: 'POST',
+        data: {'categories' : categories, 'details' : details},
+        beforeSend: function(){
+            disable_ui();
+        },
+        complete : function(){
+            enable_ui();
+        },
+        success: function(response){
+            if (response.success){
+                document.getElementById('crossingtrial_details_saved_message').innerHTML = success_message;
+                jQuery('#crossingtrial_details_saved_dialog').modal("show");
+                return;
+            }else{
+                document.getElementById('crossingtrial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+response.error+"</li>";
+                jQuery('#crossingtrial_details_error_dialog').modal("show");
+            }
+        },
+        error: function(response){
+            document.getElementById('crossingtrial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Crossing experiment detail update AJAX request failed. Update not completed.</li>";
+            jQuery('#crossingtrial_details_error_dialog').modal("show");
+        },
+    });
 }
 
 
