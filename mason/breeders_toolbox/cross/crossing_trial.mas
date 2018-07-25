@@ -29,17 +29,6 @@ $folder_name => undef
 $folder_id => undef
 </%args>
 
-<style>
-
-@media (min-width: 1200px) {
-    .affix {
-        top:100px;
-        right:0;
-        position:fixed;
-    }
-}
-
-</style>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'CXGN.BreedersToolbox.CrossingtrialDetailPage', 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
@@ -53,6 +42,7 @@ $folder_id => undef
 
 <& /breeders_toolbox/folder/folder_set.mas, project_type => 'Cross', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type => 'Cross',, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+<& /breeders_toolbox/cross/edit_crossingtrial_details_dialog.mas, trial_name => $trial_name, breeding_program_id => $breeding_program_id, location_id => $location_id, year => $year, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
@@ -141,3 +131,22 @@ $folder_id => undef
         </div>
     </div>
 </div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#crosses_in_trial').DataTable({
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
+    });
+
+    jQuery('#cross_properties_trial').DataTable({
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_properties_trial',
+    });
+
+    jQuery('#cross_progenies_trial').DataTable({
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
+    });
+});
+
+</script>

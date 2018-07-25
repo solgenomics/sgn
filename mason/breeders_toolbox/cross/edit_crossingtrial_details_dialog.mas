@@ -1,8 +1,8 @@
 
 <%args>
 $trial_name
-$breeding_program
-$location
+$breeding_program_id
+$location_id
 $year
 $planting_date
 $harvest_date
@@ -31,7 +31,7 @@ $trial_description
                             <label class="col-sm-3 control-label" for="edit_crossingtrial_breeding_program">Breeding Program: </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <select class="form-control" id="edit_crossingtrial_breeding_program" title="breeding_program" value="<%$breeding_program%>"></select>
+                                        <select class="form-control" id="edit_crossingtrial_breeding_program" title="breeding_program" value="<%$breeding_program_id%>"></select>
                                     </div>
                                 </div>
                         </div>
@@ -39,7 +39,7 @@ $trial_description
                             <label class="col-sm-3 control-label" for="edit_crossingtrial_location">Location: </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <select class="form-control" id="edit_crossingtrial_location" title="location" value="<%$location%>"></select>
+                                        <select class="form-control" id="edit_crossingtrial_location" title="location" value="<%$location_id%>"></select>
                                     </div>
                                 </div>
                         </div>
@@ -55,7 +55,7 @@ $trial_description
                             <label class="col-sm-3 control-label" for="edit_crossingtrial_planting_date">Planting Date: </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_planting_date" type="button">Clear</button></span>
+                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_crossingtrial_planting_date" type="button">Clear</button></span>
                                         <input class="form-control" id="edit_crossingtrial_planting_date" title="planting_date" type="text" value="<%$planting_date%>"/>
                                     </div>
                                 </div>
@@ -64,7 +64,7 @@ $trial_description
                             <label class="col-sm-3 control-label" for="edit_crossingtrial_harvest_date">Harvest Date: </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_harvest_date" type="button">Clear</button></span>
+                                        <span class="input-group-btn"><button class="btn btn-default" id="clear_crossingtrial_harvest_date" type="button">Clear</button></span>
                                         <input class="form-control" id="edit_crossingtrial_harvest_date" title="harvest_date" type="text" value="<%$harvest_date%>"/>
                                     </div>
                                 </div>
@@ -122,3 +122,37 @@ $trial_description
         </div>
     </div>
 </div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    edit_crossingtrial_detail_dialog();
+});
+
+function edit_crossingtrial_detail_dialog(){
+
+    jQuery('#edit_crossingtrial_details').click(function() {
+
+        jQuery('#crossingtrial_details_edit_dialog').modal("show");
+
+
+        //populate breeding_programs, locations, years, and types dropdowns, and save defaults
+        var default_bp = document.getElementById("edit_crossingtrial_breeding_program").getAttribute("value");
+        get_select_box('breeding_programs', 'edit_crossingtrial_breeding_program', { 'default' : default_bp } );
+        jQuery('#edit_crossingtrial_breeding_program').data("originalValue", default_bp);
+
+        var default_loc = document.getElementById("edit_crossingtrial_location").getAttribute("value");
+        get_select_box('locations', 'edit_crossingtrial_location', { 'default' : default_loc });
+        jQuery('#edit_crossingtrial_location').data("originalValue", default_loc);
+
+        var default_year = document.getElementById("edit_crossingtrial_year").getAttribute("value");
+        get_select_box('years', 'edit_crossingtrial_year', { 'default' : default_year, 'auto_generate': 1 });
+        jQuery('#edit_crossingtrial_year').data("originalValue", default_year);
+
+    });
+
+}
+
+
+</script>
