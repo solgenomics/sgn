@@ -75,6 +75,11 @@ has 'accession_list' => (
     is => 'rw',
 );
 
+has 'cross_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'plot_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
@@ -148,7 +153,7 @@ sub search {
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
+    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_or_planted_cross_uniquename, germplasm_or_planted_cross_stock_id, germplasm_or_planted_cross_type_id, germplasm_or_planted_cross_type_name, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
     my $order_clause = " ORDER BY trial_name, observationunit_uniquename";
 
     my @where_clause;
@@ -184,7 +189,13 @@ sub search {
         my $arrayref = $self->accession_list;
         my $sql = join ("','" , @$arrayref);
         my $accession_sql = "'" . $sql . "'";
-        push @where_clause, "germplasm_stock_id in ($accession_sql)";
+        push @where_clause, "germplasm_or_planted_cross_stock_id in ($accession_sql)";
+    }
+    if ($self->cross_list && scalar(@{$self->cross_list})>0) {
+        my $arrayref = $self->cross_list;
+        my $sql = join ("','" , @$arrayref);
+        my $cross_sql = "'" . $sql . "'";
+        push @where_clause, "germplasm_or_planted_cross_stock_id in ($cross_sql)";
     }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
         my $arrayref = $self->location_list;
@@ -271,10 +282,10 @@ sub search {
     my $calendar_funcs = CXGN::Calendar->new({});
     my %unique_traits;
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_or_planted_cross_uniquename, $germplasm_or_planted_cross_stock_id, $germplasm_or_planted_cross_type_id, $germplasm_or_planted_cross_type_name, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
         my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
-        my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
+        my $synonyms = $synonym_hash_lookup{$germplasm_or_planted_cross_uniquename};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
         my $observations = decode_json $observations;
         my $treatments = decode_json $treatments;
@@ -338,9 +349,11 @@ sub search {
             observationunit_stock_id => $observationunit_stock_id,
             observationunit_uniquename => $observationunit_uniquename,
             observationunit_type_name => $observationunit_type_name,
-            germplasm_uniquename => $germplasm_uniquename,
-            germplasm_stock_id => $germplasm_stock_id,
+            germplasm_or_planted_cross_uniquename => $germplasm_or_planted_cross_uniquename,
+            germplasm_or_planted_cross_stock_id => $germplasm_or_planted_cross_stock_id,
             germplasm_synonyms => $synonyms,
+            germplasm_or_planted_cross_type_id => $germplasm_or_planted_cross_type_id,
+            germplasm_or_planted_cross_type_name => $germplasm_or_planted_cross_type_name,
             obsunit_rep => $rep,
             obsunit_block => $block,
             obsunit_plot_number => $plot_number,

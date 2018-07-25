@@ -242,7 +242,7 @@ sub _get_unique_accession_names_from_trial {
     my %design = %{$self->get_design()};
     my @acc_names;
     my %unique_acc;
-    no warnings 'numeric'; #for genotyping trial so that wells don't give warning
+    no warnings; #for genotyping trial so that wells don't give warning
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
@@ -718,6 +718,7 @@ sub generate_and_cache_layout {
     $design{$plot_number_prop}=\%design_info;
   }
 
+    #print STDERR Dumper \%design;
     my $trial_layout_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property');
     my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $trial_layout_json_cvterm->cvterm_id });
     while (my $t = $trial_layout_json_rs->next) {
