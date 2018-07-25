@@ -1,0 +1,178 @@
+
+<& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &>
+<& /page/page_title.mas, title=>"Data Explorer" &>
+
+<style media="screen">
+    .de-panel{
+        width:100%;
+    }
+    .de-form-multi-dropdown{
+        padding-right: 3em;
+        position: relative;
+        margin-bottom: 0.6em;
+    }
+    .de-form-multi-dropdown>.de-fmd-rem,
+    .de-form-multi-dropdown>.de-fmd-new{
+        display: block;
+        text-align: center;
+        font-size: 2em;
+        padding-top: 0.18em;
+        position:absolute;
+        right:0;
+        width: 1.2em;
+        top:0;
+        color: #fff;
+        border-radius: 4px;
+        height: 100%;
+        -moz-user-select: -moz-none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -o-user-select: none;
+        user-select: none;
+    }
+    .de-form-multi-dropdown:last-of-type:not(:nth-of-type(3))>.de-fmd-rem{
+        display: none;
+    }
+    .de-form-multi-dropdown:not(:last-of-type)>.de-fmd-new,
+    .de-form-multi-dropdown:nth-of-type(3)>.de-fmd-new{
+        display: none;
+    }
+    select[disabled]~.de-fmd-rem,
+    select[disabled]~.de-fmd-new{
+        background:#eee;
+    }
+    select[disabled]~.de-fmd-rem:active,
+    select[disabled]~.de-fmd-new:active{
+        background:#eee;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class = "col-md-6" id="vis1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 de-form">
+            <div class="panel panel-default de-panel">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="dataset">Dataset</label>
+                        <select class="form-control" name="dataset">
+                            <option disabled selected value="">Select Unit...</option>
+                            <option value="ds_id">DS_A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="unit">Display</label>
+                        <select class="form-control" name="unit" disabled>
+                            <option disabled selected value="">Select Unit...</option>
+                            <option value="plots">plots</option>
+                            <option value="years">years</option>
+                            <option value="traits">traits</option>
+                            <option value="trials">trials</option>
+                            <option value="locations">locations</option>
+                            <option value="accessions">accessions</option>
+                            <option value="trial_types">trial_types</option>
+                            <option value="trial_designs">trial_designs</option>
+                            <option value="breeding_programs">breeding_programs</option>
+                            <option value="genotyping_protocols">genotyping_protocols</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="withvars">With Variables</label>
+                        <div class="de-form-multi-dropdown">
+                            <select class="form-control" name="withvars">
+                                <option disabled selected value="">Select...</option>
+                                <option value="a">A</option>
+                                <option value="b">B</option>
+                            </select>
+                            <div class="de-fmd-rem btn-danger">&times;</div>
+                            <div class="de-fmd-new btn-primary">&plus;</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Go</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+var yourVlSpec = {
+"$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
+"description": "A simple bar chart with embedded data.",
+"data": {
+"values": [
+{"a": "A","b": 28}, {"a": "B","b": 55}, {"a": "C","b": 43},
+{"a": "D","b": 91}, {"a": "E","b": 81}, {"a": "F","b": 53},
+{"a": "G","b": 19}, {"a": "H","b": 87}, {"a": "I","b": 52}
+]
+},
+"mark": "bar",
+"encoding": {
+"x": {"field": "a", "type": "ordinal"},
+"y": {"field": "b", "type": "quantitative"}
+}
+}
+vegaEmbed("#vis1", yourVlSpec, window.VEGA_DEFAULTS);
+
+(function() {
+    'use strict';
+    $(".de-form").on("change","select[name=dataset]",function(){
+        reset_unit();
+        reset_vars();
+        get_units($(this).val());
+    });
+    function get_units(dataset_id){
+        var ph = {
+            "categories": {
+                "plots": [],
+                "years": [],
+                "traits": [],
+                "trials": [],
+                "locations": [],
+                "accessions": ["38840", "38841", "38842", "38843", "38844"],
+                "trial_types": [],
+                "trial_designs": [],
+                "breeding_programs": ["134"],
+                "genotyping_protocols": []
+            },
+            "category_order": ["breeding_programs", "accessions", "plots"]
+        };
+    }
+    function reset_unit(){
+        var unit_select = $(".de-form select[name=unit]");
+        unit_select.attr("disabled",true)
+            .val("")
+            .children(':not([disabled])')
+                .remove();
+    }
+    function reset_vars(){
+        $(".de-form select[name=withvars]").attr("disabled",true);
+        var select_groups = $(".de-form .de-form-multi-dropdown");
+        var first_select = $(select_groups[0]).children("select");
+        for (var i = 1; i < select_groups.length; i++) {
+            $(select_groups[i]).remove();
+        }
+        first_select.val("");
+        first_select.children(':not([disabled])').remove();
+        return first_select;
+    }
+    $(".de-form").on("click","select:not([disabled])~.de-fmd-rem",function(){
+        $(this.parentNode).remove();
+    })
+    $(".de-form").on("click","select:not([disabled])~.de-fmd-new",function(){
+        var group = $(this.parentNode);
+        group.clone().insertAfter(group);
+    });
+}());
+</script>
