@@ -76,7 +76,7 @@ sub validate {
         return \%parse_result;
     }
     if ($data_level eq 'plots' && ( $worksheet->get_cell(6,0)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,1)->value() ne 'accession_name' ||
+                                    $worksheet->get_cell(6,1)->value() ne 'accession_name_or_cross_name' ||
                                     $worksheet->get_cell(6,2)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,3)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'is_a_control' ||
@@ -84,13 +84,13 @@ sub validate {
                                     $worksheet->get_cell(6,6)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,7)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,8)->value() ne 'trial_name' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control',  'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: 'plot_name', 'accession_name_or_cross_name', 'plot_number', 'block_number', 'is_a_control',  'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plots\n";
         return \%parse_result;
     }
     if ($data_level eq 'plants' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
+                                    $worksheet->get_cell(6,2)->value() ne 'accession_name_or_cross_name' ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
@@ -98,13 +98,13 @@ sub validate {
                                     $worksheet->get_cell(6,7)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,8)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,9)->value() ne 'trial_name') ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name_or_cross_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plants\n";
         return \%parse_result;
     }
     if ($data_level eq 'subplots' && ( ($worksheet->get_cell(6,0)->value() ne 'subplot_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
+                                    $worksheet->get_cell(6,2)->value() ne 'accession_name_or_cross_name' ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
@@ -114,7 +114,7 @@ sub validate {
                                     $worksheet->get_cell(6,9)->value() ne 'trial_name') && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                                                     $worksheet->get_cell(6,1)->value() ne 'subplot_name' ||
                                                                     $worksheet->get_cell(6,2)->value() ne 'plot_name' ||
-                                                                    $worksheet->get_cell(6,3)->value() ne 'accession_name' ||
+                                                                    $worksheet->get_cell(6,3)->value() ne 'accession_name_or_cross_name' ||
                                                                     $worksheet->get_cell(6,4)->value() ne 'plot_number' ||
                                                                     $worksheet->get_cell(6,5)->value() ne 'block_number' ||
                                                                     $worksheet->get_cell(6,6)->value() ne 'is_a_control' ||
@@ -122,7 +122,7 @@ sub validate {
                                                                     $worksheet->get_cell(6,8)->value() ne 'planting_date' ||
                                                                     $worksheet->get_cell(6,9)->value() ne 'harvest_date' ||
                                                                     $worksheet->get_cell(6,10)->value() ne 'trial_name') ) ) {
-        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name' OR 2) 'plant_name', 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) 'subplot_name', 'plot_name', 'accession_name_or_cross_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name' OR 2) 'plant_name', 'subplot_name', 'plot_name', 'accession_name_or_cross_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is subplots\n";
         return \%parse_result;
     }
@@ -130,15 +130,15 @@ sub validate {
     my @fixed_columns;
     if ($data_level eq 'subplots'){
         if ($name_head eq 'plant_name'){
-            @fixed_columns = qw | plant_name subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | plant_name subplot_name plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'subplot_name'){
-            @fixed_columns = qw | subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | subplot_name plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     } else {
         if ($name_head eq 'plot_name') {
-            @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'plant_name') {
-            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | plant_name plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     }
     my $num_fixed_col = scalar(@fixed_columns);
@@ -219,15 +219,15 @@ sub parse {
     my @fixed_columns;
     if ($data_level eq 'subplots'){
         if ($name_head eq 'plant_name'){
-            @fixed_columns = qw | plant_name subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | plant_name subplot_name plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'subplot_name'){
-            @fixed_columns = qw | subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | subplot_name plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     } else {
         if ($name_head eq 'plot_name') {
-            @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'plant_name') {
-            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+            @fixed_columns = qw | plant_name plot_name accession_name_or_cross_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     }
     my $num_fixed_col = scalar(@fixed_columns);
@@ -316,7 +316,7 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'units'} = \@plots;
     $parse_result{'variables'} = \@traits;
-    print STDERR Dumper \%parse_result;
+    #print STDERR Dumper \%parse_result;
 
     return \%parse_result;
 }
