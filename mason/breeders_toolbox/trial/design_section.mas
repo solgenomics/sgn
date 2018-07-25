@@ -12,16 +12,16 @@ $design_name
     <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
 % if ($design_name eq 'greenhouse'){
-    <&| /page/info_section.mas, id => "trial_accessions_or_crosses", title=>"Accessions or Crosses", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_accessions_or_crosses", title=>"Accessions or Crosses Planted", is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_accessions_or_crosses.mas, trial_id => $trial_id &>
     </&>
 % } else {
-    <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions Planted", is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
     </&>
 % }
 
-    <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots Planted", is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
     </&>
 

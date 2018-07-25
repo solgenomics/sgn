@@ -1324,13 +1324,12 @@ jQuery(document).ready(function ($) {
                 'add_project_trial_source': selectedTrials,
             },
             success: function (response) {
+                jQuery('#working_modal').modal("hide");
                 if (response.error) {
-                    jQuery('#working_modal').modal("hide");
                     alert(response.error);
                 } else {
                     //alert('Trial design saved');
                     refreshTrailJsTree(0);
-                    jQuery('#working_modal').modal("hide");
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
@@ -1344,9 +1343,9 @@ jQuery(document).ready(function ($) {
     }
 
     jQuery(document).on('click', '[name="create_trial_success_complete_button"]', function(){
-        alert('Trial was saved in the database');
         jQuery('#add_project_dialog').modal('hide');
-        location.reload();
+        window.location.href = '/breeders/trials';
+        return false;
     });
 
     jQuery('#new_trial_confirm_submit').click(function () {
@@ -1355,6 +1354,7 @@ jQuery(document).ready(function ($) {
 
     $('#redo_trial_layout_button').click(function () {
         generate_experimental_design();
+        return false;
     });
 
     function open_project_dialog() {
