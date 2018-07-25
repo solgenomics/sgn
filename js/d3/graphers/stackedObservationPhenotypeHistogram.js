@@ -58,9 +58,10 @@
     });
     var accessions = {};
     var emptyBlocks = {};
+    //console.log(observations);
     observations.forEach(function(observation){
-      accessions[observation.germplasmDbId] = observation.germplasmName;
-      emptyBlocks[observation.germplasmDbId] = 0;
+      accessions[observation.germplasmOrPlantedCrossDbId] = observation.germplasmOrPlantedCrossName;
+      emptyBlocks[observation.germplasmOrPlantedCrossDbId] = 0;
     })
     
     var extent = d3.extent(allValues);
@@ -187,7 +188,7 @@
   }
   
   var accNest = d3.nest().key(function(d){
-    return d.germplasmDbId;
+    return d.germplasmOrPlantedCrossDbId;
   }).rollup(function(observations){
     return observations.map(function(d){
       return d.value;
