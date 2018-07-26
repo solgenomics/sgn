@@ -634,8 +634,7 @@ jQuery(document).ready(function ($) {
                                                                 .style("stroke", strokes)
                                                                 .style("fill", colors); 
                                                                 
-                                                                cards.transition().duration(1000)
-                                                                    .style("fill", colors) ;                          
+                                                                cards.style("fill", colors) ;                          
 
                                                                 cards.select("title").text(function(d) { return d.plot_msg; }) ;
                                                                 
@@ -643,8 +642,8 @@ jQuery(document).ready(function ($) {
                                                                 //console.log('out');
                                                             });                                
                                                               
-                          cards.transition().duration(1000)
-                              .style("fill", colors) ;  
+                          
+                          cards.style("fill", colors) ;  
 
                           cards.select("title").text(function(d) { return d.plot_msg; }) ; 
                           
