@@ -562,7 +562,7 @@ rect.bordered {
                                 <div class="form-group"  id="FieldMap">
                                     <label class="col-sm-4 control-label">Field map display: </label>
                                     <div class="col-sm-8" >
-                                        <input type="checkbox" id="show_field_map_options" />
+                                        <input type="checkbox" id="show_field_map_options" checked="checked"/>
                                     </div>
                                 </div>
 
@@ -585,7 +585,7 @@ rect.bordered {
                                           <select class="form-control" id="plot_layout_format" name="plot_layout_format">
                                             <option value="">select plot layout format</option>
                                             <option value=zigzag>Zigzag(unserpentine)</option>
-                                            <option value=serpentine>Serpentine</option>
+                                            <option value=serpentine selected="selected">Serpentine</option>
                                           </select>
                                         </div>
                                     </div>
