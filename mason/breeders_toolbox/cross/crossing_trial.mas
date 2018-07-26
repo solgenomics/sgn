@@ -132,6 +132,10 @@ $folder_id => undef
     </div>
 </div>
 
+<div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
+% print $trial_id;
+</div>
+
 <script>
 
 jQuery(document).ready(function(){
