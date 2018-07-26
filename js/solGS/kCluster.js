@@ -14,7 +14,7 @@ jQuery(document).ready( function() {
     
     var url = window.location.pathname;
     
-    if (url.match(/kcluster\/analysis/) != null) {
+    if (url.match(/cluster\/analysis/) != null) {
     
         var list = new CXGN.List();
         
@@ -58,7 +58,7 @@ function checkKClusterResult () {
 	       'combo_pops_id' : comboPopsId,
 	       'training_pop_id' : popId.training_pop_id,
 	       'selection_pop_id': popId.selection_pop_id},
-        url: '/kcluster/check/result/',
+        url: '/cluster/check/result/',
         success: function(response) {
             if (response.result) {
 		
@@ -91,7 +91,7 @@ jQuery(document).ready( function() {
      
     var url = window.location.pathname;
     
-    if (url.match(/kcluster\/analysis/) != null) {  
+    if (url.match(/cluster\/analysis/) != null) {  
         var listId;
         
         jQuery("<option>", {value: '', selected: true}).prependTo("#kcluster_genotypes_list_select");

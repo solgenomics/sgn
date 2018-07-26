@@ -36,8 +36,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 	$c->stash->{data_set_type} = 'combined_populations';	
     }
     
-    $c->stash->{template} = '/cluster/analysis.mas';
-
+    $c->stash->{template} = '/kcluster/analysis.mas';
 }
 
 
@@ -346,7 +345,7 @@ sub combined_cluster_trials_data_file {
 	$tmp_dir = $c->stash->{hierarchical_temp_dir};
     }
     
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file_name);
     
     $c->stash->{combined_cluster_data_file} = $tempfile;
     
