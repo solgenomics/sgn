@@ -50,7 +50,7 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    my @header = ('Plate ID', 'Row', 'Column', 'Organism Species', 'Genotype Tissue', 'Comments');
+    my @header = ('Plate ID', 'Row', 'Column', 'Organism', 'Species', 'Genotype', 'Tissue', 'Comments');
     my $col_count = 0;
     foreach (@header){
         $ws->write(0, $col_count, $_);
@@ -62,14 +62,17 @@ sub download {
     my $design = $trial_layout->get_design();
     #print STDERR Dumper $design;
     my $row_count = 1;
-    while (my ($key, $val) = each (%$design)){
-        my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
+    foreach my $key (sort keys %$design){
+        my $val = $design->{$key};
+        my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
         $ws->write($row_count, 0, $trial_name);
         $ws->write($row_count, 1, $val->{row_number});
         $ws->write($row_count, 2, $val->{col_number});
         $ws->write($row_count, 3, $val->{species});
-        $ws->write($row_count, 4, $val->{source_observation_unit_name});
-        $ws->write($row_count, 5, $comments);
+        $ws->write($row_count, 4, $val->{species});
+        $ws->write($row_count, 5, $val->{source_observation_unit_name});
+        $ws->write($row_count, 6, $val->{tissue_type});
+        $ws->write($row_count, 7, $comments);
         $row_count++;
     }
 

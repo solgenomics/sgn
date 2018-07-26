@@ -18,6 +18,7 @@ use DateTime;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use JSON;
+use Spreadsheet::Read;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -947,5 +948,177 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 ok($response->{trial_id});
+my $geno_trial_id = $response->{trial_id};
+$mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=intertekxls&dataLevel=plate");
+my $intertek_download = $mech->content;
+my @contents = ReadData ($intertek_download);
+#print STDERR Dumper @contents->[0]->[0];
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+
+my $columns = @contents->[0]->[1]->{'cell'};
+#print STDERR Dumper scalar(@$columns);
+ok(scalar(@$columns) == 7, "check number of col in created file.");
+
+print STDERR Dumper $columns;
+is_deeply($columns, [
+          [],
+          [
+            undef,
+            'Sample ID',
+            '18DNA00001_A01',
+            '18DNA00001_B01',
+            '18DNA00001_B04',
+            '18DNA00001_C01',
+            '18DNA00001_C04',
+            '18DNA00001_D01'
+          ],
+          [
+            undef,
+            'Plate ID',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1'
+          ],
+          [
+            undef,
+            'Well location',
+            'A01',
+            'B01',
+            'B04',
+            'C01',
+            'C04',
+            'D01'
+          ],
+          [
+            undef,
+            'Subject Barcode',
+            'test_accession1',
+            'test_accession1',
+            'BLANK',
+            'test_accession2',
+            'BLANK',
+            'test_accession2'
+          ],
+          [
+            undef,
+            'Plate Barcode',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1'
+          ],
+          [
+            undef,
+            'Comments',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB'
+          ]
+        ], 'test intertek genotyping trial download');
+
+$mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=dartseqxls&dataLevel=plate");
+my $intertek_download = $mech->content;
+my @contents = ReadData ($intertek_download);
+#print STDERR Dumper @contents->[0]->[0];
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+
+my $columns = @contents->[0]->[1]->{'cell'};
+#print STDERR Dumper scalar(@$columns);
+ok(scalar(@$columns) == 9, "check number of col in created file.");
+
+print STDERR Dumper $columns;
+is_deeply($columns, [
+          [],
+          [
+            undef,
+            'Plate ID',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1',
+            'test_genotype_upload_coordinate_trial1'
+          ],
+          [
+            undef,
+            'Row',
+            'A',
+            'B',
+            'B',
+            'C',
+            'C',
+            'D'
+          ],
+          [
+            undef,
+            'Column',
+            '1',
+            '1',
+            '4',
+            '1',
+            '4',
+            '1'
+          ],
+          [
+            undef,
+            'Organism',
+            'Solanum lycopersicum',
+            'Solanum lycopersicum',
+            undef,
+            'Solanum lycopersicum',
+            undef,
+            'Solanum lycopersicum'
+          ],
+          [
+            undef,
+            'Species',
+            'Solanum lycopersicum',
+            'Solanum lycopersicum',
+            undef,
+            'Solanum lycopersicum',
+            undef,
+            'Solanum lycopersicum'
+          ],
+          [
+            undef,
+            'Genotype',
+            'test_accession1',
+            'test_accession1',
+            'BLANK',
+            'test_accession2',
+            'BLANK',
+            'test_accession2'
+          ],
+          [
+            undef,
+            'Tissue',
+            'Leaf',
+            'Leaf',
+            'Leaf',
+            'Leaf',
+            'Leaf',
+            'Leaf'
+          ],
+          [
+            undef,
+            'Comments',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB'
+          ]
+        ], 'test dartseq genotyping trial download');
 
 done_testing();

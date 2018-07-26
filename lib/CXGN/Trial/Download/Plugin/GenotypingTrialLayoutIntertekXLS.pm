@@ -62,7 +62,8 @@ sub download {
     my $design = $trial_layout->get_design();
     #print STDERR Dumper $design;
     my $row_count = 1;
-    while (my ($key, $val) = each (%$design)){
+    foreach my $key (sort keys %$design){
+        my $val = $design->{$key};
         my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
         $ws->write($row_count, 0, $val->{plot_name});
         $ws->write($row_count, 1, $trial_name);
