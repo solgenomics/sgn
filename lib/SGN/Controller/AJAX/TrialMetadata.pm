@@ -654,7 +654,8 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
 
     my $upload_plants_txn = sub {
         my %plot_plant_hash;
-        while (my ($key, $val) = each(%$parsed_data)){
+        while (my $line_number = sort keys %$parsed_data){
+            my $val = $parsed_data->{$line_number};
             $plot_plant_hash{$val->{plot_stock_id}}->{plot_name} = $val->{plot_name};
             push @{$plot_plant_hash{$val->{plot_stock_id}}->{plant_names}}, $val->{plant_name};
         }
