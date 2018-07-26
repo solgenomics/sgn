@@ -516,7 +516,7 @@ sub quick_create_user :Path('/ajax/user/quick_create_account') Args(0) {
     my $logged_in_person_id = $c->user()->get_sp_person_id();
 
     my $logged_in_user=CXGN::People::Person->new($c->dbc->dbh(), $logged_in_person_id);
-    my $logged_in_person_id=$logged_in_user->get_sp_person_id();
+    $logged_in_person_id=$logged_in_user->get_sp_person_id();
     my $logged_in_username=$logged_in_user->get_first_name()." ".$logged_in_user->get_last_name();
     my $logged_in_user_type=$logged_in_user->get_user_type();
     
