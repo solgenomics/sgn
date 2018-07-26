@@ -589,12 +589,7 @@ function save_trial_details (categories, details, success_message) {
     url: '/ajax/breeders/trial/'+trial_id+'/details/',
     type: 'POST',
     data: { 'categories' : categories, 'details' : details },
-    beforeSend: function(){
-      disable_ui();
-    },
-    complete : function(){
-      enable_ui();
-    },
+
     success: function(response) {
       if (response.success) {
         document.getElementById('trial_details_saved_message').innerHTML = success_message;
