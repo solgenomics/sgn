@@ -949,9 +949,9 @@ sub _get_alpha_lattice_design {
     if (!$fieldmap_row_number)  {
       for my $rep (1 .. ($number_of_blocks * $number_of_reps)){
         if ($rep % 2){
-          push @col_number_fieldmaps, (1..$number_of_blocks);
+          push @col_number_fieldmaps, (1..$block_size);
         } else {
-          push @col_number_fieldmaps, (reverse 1..$number_of_blocks);
+          push @col_number_fieldmaps, (reverse 1..$block_size);
         }
       }
     } else {
