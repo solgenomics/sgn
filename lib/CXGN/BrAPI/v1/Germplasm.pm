@@ -229,7 +229,7 @@ sub germplasm_pedigree {
     if ($notation) {
         push @$status, { 'info' => 'Notation not yet implemented. Returns a simple parent1/parent2 string.' };
         if ($notation ne 'purdy') {
-            push @$status, { 'error' => 'Unsupported notation code. Allowed notation: purdy' };
+            push @$status, { 'error' => "Unsupported notation code '$notation'. Allowed notation: 'purdy'" };
         }
     }
 
@@ -253,16 +253,18 @@ sub germplasm_pedigree {
         my $cross_year = $cross_info ? $cross_info->[3] : '';
         my $cross_type = $cross_info ? $cross_info->[2] : '';
 
-        my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
-        #print STDERR Dumper $progenies;
         my @siblings;
-        foreach (@$progenies){
-            if ($_->[5] ne $uniquename){
-                my $germplasm_id = $_->[4];
-                push @siblings, {
-                    germplasmDbId => qq|$germplasm_id|,
-                    defaultDisplayName => $_->[5]
-                };
+        if ($female_name && $male_name){
+            my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
+            #print STDERR Dumper $progenies;
+            foreach (@$progenies){
+                if ($_->[5] ne $uniquename){
+                    my $germplasm_id = $_->[4];
+                    push @siblings, {
+                        germplasmDbId => qq|$germplasm_id|,
+                        defaultDisplayName => $_->[5]
+                    };
+                }
             }
         }
 
