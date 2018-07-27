@@ -202,7 +202,17 @@ sub get_layout_output {
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plate') {
-        @possible_cols = ('trial_name', 'acquisition_date', 'plot_name', 'plot_number', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank');
+        #to make the download in the header for genotyping trials more easily understood, the terms change here
+        if (exists($selected_cols{'plot_name'})){
+            $selected_cols{'tissue_sample_name'} = 1;
+            delete $selected_cols{'plot_name'};
+        }
+        if (exists($selected_cols{'plot_number'})){
+            $selected_cols{'well_A01'} = 1;
+            delete $selected_cols{'plot_number'};
+        }
+        $selected_cols{'exported_tissue_sample_name'} = 1;
+        @possible_cols = ('trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank');
     }
 
     my @header;
@@ -782,6 +792,12 @@ sub _construct_ouput_for_wells_in_plate {
         if ($selected_cols->{$_}){
             if ($_ eq 'trial_name'){
                 push @$line, $trial_name;
+            } elsif ($_ eq 'tissue_sample_name'){
+                push @$line, $design_info->{'plot_name'};
+            } elsif ($_ eq 'well_A01'){
+                push @$line, $design_info->{'plot_number'};
+            } elsif ($_ eq 'exported_tissue_sample_name'){
+                push @$line, $design_info->{'plot_name'}.'|||'.$design_info->{'accession_name'};
             } else {
                 push @$line, $design_info->{$_};
             }
