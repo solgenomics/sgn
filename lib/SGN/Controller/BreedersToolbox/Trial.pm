@@ -147,7 +147,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
     }
     elsif ($design_type eq "treatment"){
-        $c->stash->{template} = '/breeders_toolbox/treatment.mas';
+        $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
     else {
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
