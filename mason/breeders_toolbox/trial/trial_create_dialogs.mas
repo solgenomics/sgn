@@ -548,6 +548,8 @@ rect.bordered {
                             </&>
                             <&| /util/workflow.mas:step, title=> "Field Map Information" &>
                                 <& /page/page_title.mas, title=>"Specify the number of rows and columns for the entire field" &>
+                                <p>By default field map display is set to serpentine and uses the block or rep number as row number.</p>
+                                <p>If you do not want to create field map along with this trial, set 'Plot layout format' to 'select plot layout format'.</p>
                                 <p>If you do not know exactly in which rows and columns you will end up planting the plots, do not provide this and go to the next step.</p>
                                 <p>If you will plant your plots in an irregular (non-rectangular) layout, do not provide this and go to the next step.</p>
                                 <p>You can upload the exact row and column information for your plots (in any layout shape) on the Trial Detail Page after you have created the trial in the database and actually planted the experiment.</p>
@@ -562,11 +564,11 @@ rect.bordered {
                                 <div class="form-group"  id="FieldMap">
                                     <label class="col-sm-4 control-label">Field map display: </label>
                                     <div class="col-sm-8" >
-                                        <input type="checkbox" id="show_field_map_options" />
+                                        <input type="checkbox" id="show_field_map_options" checked="checked"/>
                                     </div>
                                 </div>
 
-                                <div id="field_map_options" style="display: none">
+                                <div id="field_map_options" >
                                     <!--<div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Number of columns per row (uses accession number by default): </label>
                                         <div class="col-sm-5" >
@@ -585,7 +587,7 @@ rect.bordered {
                                           <select class="form-control" id="plot_layout_format" name="plot_layout_format">
                                             <option value="">select plot layout format</option>
                                             <option value=zigzag>Zigzag(unserpentine)</option>
-                                            <option value=serpentine>Serpentine</option>
+                                            <option value=serpentine selected="selected">Serpentine</option>
                                           </select>
                                         </div>
                                     </div>
