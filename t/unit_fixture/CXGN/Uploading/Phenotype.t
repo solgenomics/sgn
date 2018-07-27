@@ -99,305 +99,9 @@ ok($validate_file == 1, "Check if parse validate works for phenotype file");
 my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
-#print STDERR Dumper $parsed_file;
+print STDERR Dumper $parsed_file;
 
-is_deeply($parsed_file, {
-	'plots' => [
-	                       'test_trial21',
-	                       'test_trial210',
-	                       'test_trial211',
-	                       'test_trial212',
-	                       'test_trial213',
-	                       'test_trial214',
-	                       'test_trial215',
-	                       'test_trial22',
-	                       'test_trial23',
-	                       'test_trial24',
-	                       'test_trial25',
-	                       'test_trial26',
-	                       'test_trial27',
-	                       'test_trial28',
-	                       'test_trial29'
-	                     ],
-	          'traits' => [
-	                        'dry matter content|CO_334:0000092',
-	                        'fresh root weight|CO_334:0000012',
-	                        'fresh shoot weight|CO_334:0000016',
-	                        'harvest index|CO_334:0000015'
-	                      ],
-	          'data' => {
-	                      'test_trial24' => {
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '23',
-	                                                                               '2016-02-11 11:12:20-0500',
-	                                                                             ],
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 11:12:20-0500',
-	                                                                            ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '3.8',
-	                                                                          '2016-03-16 11:12:20-0500',
-	                                                                        ],
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '39',
-	                                                                               '2016-04-27 11:12:20-0500',
-	                                                                             ]
-	                                        },
-	                      'test_trial215' => {
-	                                           'dry matter content|CO_334:0000092' => [
-	                                                                                '38',
-	                                                                                '2016-04-27 19:12:20-0500',
-	                                                                              ],
-	                                           'fresh root weight|CO_334:0000012' => [
-	                                                                               '15',
-	                                                                               '2016-01-15 19:12:20-0500',
-	                                                                             ],
-	                                           'harvest index|CO_334:0000015' => [
-	                                                                           '14.8',
-	                                                                           '2016-03-16 19:12:20-0500',
-	                                                                         ],
-	                                           'fresh shoot weight|CO_334:0000016' => [
-	                                                                                '34',
-	                                                                                '2016-02-11 19:12:20-0500',
-	                                                                              ]
-	                                         },
-	                      'test_trial25' => {
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 09:12:20-0500',
-	                                                                            ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '4.8',
-	                                                                          '2016-03-16 09:12:20-0500',
-	                                                                        ],
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '24',
-	                                                                               '2016-02-11 09:12:20-0500',
-	                                                                             ],
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '35',
-	                                                                               '2016-04-27 09:12:20-0500',
-	                                                                             ]
-	                                        },
-	                      'test_trial26' => {
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '30',
-	                                                                               '2016-04-27 16:12:20-0500',
-	                                                                             ],
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '25',
-	                                                                               '2016-02-11 16:12:20-0500',
-	                                                                             ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '5.8',
-	                                                                          '2016-03-16 16:12:20-0500',
-	                                                                        ],
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 16:12:20-0500',
-	                                                                            ]
-	                                        },
-	                      'test_trial29' => {
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '35',
-	                                                                               '2016-04-27 14:12:20-0500',
-	                                                                             ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '8.8',
-	                                                                          '2016-03-16 14:12:20-0500',
-	                                                                        ],
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 14:12:20-0500',
-	                                                                            ],
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '28',
-	                                                                               '2016-02-11 14:12:20-0500',
-	                                                                             ]
-	                                        },
-	                      'test_trial211' => {
-	                                           'fresh shoot weight|CO_334:0000016' => [
-	                                                                                '30',
-	                                                                                '2016-02-11 03:12:20-0500',
-	                                                                              ],
-	                                           'fresh root weight|CO_334:0000012' => [
-	                                                                               '15',
-	                                                                               '2016-01-15 03:12:20-0500',
-	                                                                             ],
-	                                           'harvest index|CO_334:0000015' => [
-	                                                                           '10.8',
-	                                                                           '2016-03-16 03:12:20-0500',
-	                                                                         ],
-	                                           'dry matter content|CO_334:0000092' => [
-	                                                                                '38',
-	                                                                                '2016-04-27 03:12:20-0500',
-	                                                                              ]
-	                                         },
-	                      'test_trial23' => {
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 01:12:20-0500',
-	                                                                            ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '2.8',
-	                                                                          '2016-03-16 01:12:20-0500',
-	                                                                        ],
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '22',
-	                                                                               '2016-02-11 01:12:20-0500',
-	                                                                             ],
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '38',
-	                                                                               '2016-04-27 01:12:20-0500',
-	                                                                             ]
-	                                        },
-	                      'test_trial21' => {
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '0.8',
-	                                                                          '2016-03-16 12:12:20-0500',
-	                                                                        ],
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 12:12:20-0500',
-	                                                                            ],
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '20',
-	                                                                               '2016-02-11 12:12:20-0500',
-	                                                                             ],
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '35',
-	                                                                               '2016-04-27 12:12:20-0500',
-	                                                                             ]
-	                                        },
-	                      'test_trial213' => {
-	                                           'fresh root weight|CO_334:0000012' => [
-	                                                                               '15',
-	                                                                               '2016-01-15 22:12:20-0500',
-	                                                                             ],
-	                                           'harvest index|CO_334:0000015' => [
-	                                                                           '12.8',
-	                                                                           '2016-03-16 22:12:20-0500',
-	                                                                         ],
-	                                           'fresh shoot weight|CO_334:0000016' => [
-	                                                                                '32',
-	                                                                                '2016-02-11 22:12:20-0500',
-	                                                                              ],
-	                                           'dry matter content|CO_334:0000092' => [
-	                                                                                '35',
-	                                                                                '2016-04-27 22:12:20-0500',
-	                                                                              ]
-	                                         },
-	                      'test_trial212' => {
-	                                           'dry matter content|CO_334:0000092' => [
-	                                                                                '39',
-	                                                                                '2016-04-27 21:12:20-0500',
-	                                                                              ],
-	                                           'fresh root weight|CO_334:0000012' => [
-	                                                                               '15',
-	                                                                               '2016-01-15 21:12:20-0500',
-	                                                                             ],
-	                                           'harvest index|CO_334:0000015' => [
-	                                                                           '11.8',
-	                                                                           '2016-03-16 21:12:20-0500',
-	                                                                         ],
-	                                           'fresh shoot weight|CO_334:0000016' => [
-	                                                                                '31',
-	                                                                                '2016-02-11 21:12:20-0500',
-	                                                                              ]
-	                                         },
-	                      'test_trial22' => {
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '21',
-	                                                                               '2016-02-11 02:12:20-0500',
-	                                                                             ],
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 02:12:20-0500',
-	                                                                            ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '1.8',
-	                                                                          '2016-03-16 02:12:20-0500',
-	                                                                        ],
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '30',
-	                                                                               '2016-04-27 02:12:20-0500',
-	                                                                             ]
-	                                        },
-	                      'test_trial27' => {
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '38',
-	                                                                               '2016-04-27 17:12:20-0500',
-	                                                                             ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '6.8',
-	                                                                          '2016-03-16 17:12:20-0500',
-	                                                                        ],
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 17:12:20-0500',
-	                                                                            ],
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '26',
-	                                                                               '2016-02-11 17:12:20-0500',
-	                                                                             ]
-	                                        },
-	                      'test_trial28' => {
-	                                          'dry matter content|CO_334:0000092' => [
-	                                                                               '39',
-	                                                                               '2016-04-27 13:12:20-0500',
-	                                                                             ],
-	                                          'fresh shoot weight|CO_334:0000016' => [
-	                                                                               '27',
-	                                                                               '2016-02-11 13:12:20-0500',
-	                                                                             ],
-	                                          'fresh root weight|CO_334:0000012' => [
-	                                                                              '15',
-	                                                                              '2016-01-15 13:12:20-0500',
-	                                                                            ],
-	                                          'harvest index|CO_334:0000015' => [
-	                                                                          '7.8',
-	                                                                          '2016-03-16 13:12:20-0500',
-	                                                                        ]
-	                                        },
-	                      'test_trial214' => {
-	                                           'dry matter content|CO_334:0000092' => [
-	                                                                                '30',
-	                                                                                '2016-04-27 23:12:20-0500',
-	                                                                              ],
-	                                           'fresh shoot weight|CO_334:0000016' => [
-	                                                                                '33',
-	                                                                                '2016-02-11 23:12:20-0500',
-	                                                                              ],
-	                                           'fresh root weight|CO_334:0000012' => [
-	                                                                               '15',
-	                                                                               '2016-01-15 23:12:20-0500',
-	                                                                             ],
-	                                           'harvest index|CO_334:0000015' => [
-	                                                                           '13.8',
-	                                                                           '2016-03-16 23:12:20-0500',
-	                                                                         ]
-	                                         },
-	                      'test_trial210' => {
-	                                           'dry matter content|CO_334:0000092' => [
-	                                                                                '30',
-	                                                                                '2016-04-27 15:12:20-0500',
-	                                                                              ],
-	                                           'fresh shoot weight|CO_334:0000016' => [
-	                                                                                '29',
-	                                                                                '2016-02-11 15:12:20-0500',
-	                                                                              ],
-	                                           'harvest index|CO_334:0000015' => [
-	                                                                           '9.8',
-	                                                                           '2016-03-16 15:12:20-0500',
-	                                                                         ],
-	                                           'fresh root weight|CO_334:0000012' => [
-	                                                                               '15',
-	                                                                               '2016-01-15 15:12:20-0500',
-	                                                                             ]
-	                                         }
-	                    }
-             }, "Check parse phenotyping spreadsheet" );
+is_deeply($parsed_file, {'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'variables' => ['dry matter content|CO_334:0000092','fresh root weight|CO_334:0000012','fresh shoot weight|CO_334:0000016','harvest index|CO_334:0000015'],'data' => {'test_trial212' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 21:12:20-0500'],'harvest index|CO_334:0000015' => ['11.8','2016-03-16 21:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['31','2016-02-11 21:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 21:12:20-0500']},'test_trial25' => {'fresh shoot weight|CO_334:0000016' => ['24','2016-02-11 09:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 09:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 09:12:20-0500'],'harvest index|CO_334:0000015' => ['4.8','2016-03-16 09:12:20-0500']},'test_trial22' => {'dry matter content|CO_334:0000092' => ['30','2016-04-27 02:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['21','2016-02-11 02:12:20-0500'],'harvest index|CO_334:0000015' => ['1.8','2016-03-16 02:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 02:12:20-0500']},'test_trial213' => {'dry matter content|CO_334:0000092' => ['35','2016-04-27 22:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['32','2016-02-11 22:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 22:12:20-0500'],'harvest index|CO_334:0000015' => ['12.8','2016-03-16 22:12:20-0500']},'test_trial28' => {'harvest index|CO_334:0000015' => ['7.8','2016-03-16 13:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 13:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 13:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['27','2016-02-11 13:12:20-0500']},'test_trial210' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 15:12:20-0500'],'harvest index|CO_334:0000015' => ['9.8','2016-03-16 15:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['29','2016-02-11 15:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 15:12:20-0500']},'test_trial21' => {'fresh shoot weight|CO_334:0000016' => ['20','2016-02-11 12:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 12:12:20-0500'],'harvest index|CO_334:0000015' => ['0.8','2016-03-16 12:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 12:12:20-0500']},'test_trial215' => {'harvest index|CO_334:0000015' => ['14.8','2016-03-16 19:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 19:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['34','2016-02-11 19:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 19:12:20-0500']},'test_trial24' => {'dry matter content|CO_334:0000092' => ['39','2016-04-27 11:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['23','2016-02-11 11:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 11:12:20-0500'],'harvest index|CO_334:0000015' => ['3.8','2016-03-16 11:12:20-0500']},'test_trial27' => {'dry matter content|CO_334:0000092' => ['38','2016-04-27 17:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['26','2016-02-11 17:12:20-0500'],'harvest index|CO_334:0000015' => ['6.8','2016-03-16 17:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 17:12:20-0500']},'test_trial26' => {'harvest index|CO_334:0000015' => ['5.8','2016-03-16 16:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 16:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['25','2016-02-11 16:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 16:12:20-0500']},'test_trial211' => {'dry matter content|CO_334:0000092' => ['38','2016-04-27 03:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['30','2016-02-11 03:12:20-0500'],'harvest index|CO_334:0000015' => ['10.8','2016-03-16 03:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 03:12:20-0500']},'test_trial23' => {'fresh shoot weight|CO_334:0000016' => ['22','2016-02-11 01:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 01:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 01:12:20-0500'],'harvest index|CO_334:0000015' => ['2.8','2016-03-16 01:12:20-0500']},'test_trial29' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 14:12:20-0500'],'harvest index|CO_334:0000015' => ['8.8','2016-03-16 14:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 14:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['28','2016-02-11 14:12:20-0500']},'test_trial214' => {'dry matter content|CO_334:0000092' => ['30','2016-04-27 23:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['33','2016-02-11 23:12:20-0500'],'harvest index|CO_334:0000015' => ['13.8','2016-03-16 23:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 23:12:20-0500']}}}, "Check parse phenotyping spreadsheet" );
 
 
 my %phenotype_metadata;
@@ -406,8 +110,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_01:10:56";
 my %parsed_data = %{$parsed_file->{'data'}};
-my @plots = @{$parsed_file->{'plots'}};
-my @traits = @{$parsed_file->{'traits'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -533,8 +237,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-22_01:10:56";
 my %parsed_data = %{$parsed_file->{'data'}};
-my @plots = @{$parsed_file->{'plots'}};
-my @traits = @{$parsed_file->{'traits'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -667,192 +371,9 @@ ok($validate_file == 1, "Check if parse validate works for fieldbook");
 $parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse fieldbook works");
 
-#print STDERR Dumper $parsed_file;
+print STDERR Dumper $parsed_file;
 
-is_deeply($parsed_file, {
-          'data' => {
-                      'test_trial26' => {
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '0',
-                                                                      '2016-01-07 12:08:49-0500',
-                                                                    ],
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '',
-                                                                               '2016-01-07 12:08:49-0500',
-                                                                             ]
-                                        },
-                      'test_trial21' => {
-                                          'fieldbook_image|CO_334:0010472' => [
-                                                                            '/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg',
-                                                                            '2016-01-07 12:10:24-0500',
-                                                                          ],
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '42',
-                                                                               '2016-01-07 12:08:24-0500',
-                                                                             ],
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '42',
-                                                                      '2016-01-07 12:08:24-0500',
-                                                                    ]
-                                        },
-                      'test_trial25' => {
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '25',
-                                                                      '2016-01-07 12:08:48-0500',
-                                                                    ],
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '25',
-                                                                               '2016-01-07 12:08:48-0500',
-                                                                             ]
-                                        },
-                      'test_trial28' => {
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '41',
-                                                                               '2016-01-07 12:08:53-0500',
-                                                                             ],
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '41',
-                                                                      '2016-01-07 12:08:53-0500',
-                                                                    ]
-                                        },
-                      'test_trial211' => {
-                                           'dry matter content|CO_334:0000092' => [
-                                                                                '13',
-                                                                                '2016-01-07 12:08:58-0500',
-                                                                              ],
-                                           'dry yield|CO_334:0000014' => [
-                                                                       '13',
-                                                                       '2016-01-07 12:08:58-0500',
-                                                                     ]
-                                         },
-                      'test_trial24' => {
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '14',
-                                                                               '2016-01-07 12:08:46-0500',
-                                                                             ],
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '14',
-                                                                      '2016-01-07 12:08:46-0500',
-                                                                    ]
-                                        },
-                      'test_trial212' => {
-                                           'dry yield|CO_334:0000014' => [
-                                                                       '42',
-                                                                       '2016-01-07 12:09:02-0500',
-                                                                     ],
-                                           'dry matter content|CO_334:0000092' => [
-                                                                                '42',
-                                                                                '2016-01-07 12:09:02-0500',
-                                                                              ]
-                                         },
-                      'test_trial27' => {
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '0',
-                                                                      '2016-01-07 12:08:51-0500',
-                                                                    ],
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '52',
-                                                                               '2016-01-07 12:08:51-0500',
-                                                                             ]
-                                        },
-                      'test_trial210' => {
-                                           'dry yield|CO_334:0000014' => [
-                                                                       '12',
-                                                                       '2016-01-07 12:08:56-0500',
-                                                                     ],
-                                           'dry matter content|CO_334:0000092' => [
-                                                                                '12',
-                                                                                '2016-01-07 12:08:56-0500',
-                                                                              ]
-                                         },
-                      'test_trial22' => {
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '45',
-                                                                      '2016-01-07 12:08:26-0500',
-                                                                    ],
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '45',
-                                                                               '2016-01-07 12:08:26-0500',
-                                                                             ],
-                                          'fieldbook_image|CO_334:0010472' => [
-                                                                            '/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg',
-                                                                            '2016-01-07 12:10:25-0500',
-                                                                          ]
-                                        },
-                      'test_trial213' => {
-                                           'dry yield|CO_334:0000014' => [
-                                                                       '35',
-                                                                       '2016-01-07 12:09:04-0500',
-                                                                     ],
-                                           'dry matter content|CO_334:0000092' => [
-                                                                                '35',
-                                                                                '2016-01-07 12:09:04-0500',
-                                                                              ]
-                                         },
-                      'test_trial215' => {
-                                           'dry matter content|CO_334:0000092' => [
-                                                                                '31',
-                                                                                '2016-01-07 12:09:07-0500',
-                                                                              ],
-                                           'dry yield|CO_334:0000014' => [
-                                                                       '31',
-                                                                       '2016-01-07 12:09:07-0500',
-                                                                     ]
-                                         },
-                      'test_trial23' => {
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '41',
-                                                                               '2016-01-07 12:08:27-0500',
-                                                                             ],
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '41',
-                                                                      '2016-01-07 12:08:27-0500',
-                                                                    ]
-                                        },
-                      'test_trial29' => {
-                                          'dry yield|CO_334:0000014' => [
-                                                                      '24',
-                                                                      '2016-01-07 12:08:55-0500',
-                                                                    ],
-                                          'dry matter content|CO_334:0000092' => [
-                                                                               '',
-                                                                               '2016-01-07 12:08:55-0500',
-                                                                             ]
-                                        },
-                      'test_trial214' => {
-                                           'dry yield|CO_334:0000014' => [
-                                                                       '32',
-                                                                       '2016-01-07 12:09:05-0500',
-                                                                     ],
-                                           'dry matter content|CO_334:0000092' => [
-                                                                                '32',
-                                                                                '2016-01-07 12:09:05-0500',
-                                                                              ]
-                                         }
-                    },
-          'plots' => [
-                       'test_trial21',
-                       'test_trial210',
-                       'test_trial211',
-                       'test_trial212',
-                       'test_trial213',
-                       'test_trial214',
-                       'test_trial215',
-                       'test_trial22',
-                       'test_trial23',
-                       'test_trial24',
-                       'test_trial25',
-                       'test_trial26',
-                       'test_trial27',
-                       'test_trial28',
-                       'test_trial29'
-                     ],
-          'traits' => [
-                        'dry matter content|CO_334:0000092',
-                        'dry yield|CO_334:0000014',
-                        'fieldbook_image|CO_334:0010472'
-                      ]
-        }, "Check parse fieldbook");
+is_deeply($parsed_file, {'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'data' => {'test_trial23' => {'dry yield|CO_334:0000014' => ['41','2016-01-07 12:08:27-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']},'test_trial212' => {'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:09:02-0500','johndoe',''],'dry yield|CO_334:0000014' => ['42','2016-01-07 12:09:02-0500','johndoe','']},'test_trial28' => {'dry yield|CO_334:0000014' => ['41','2016-01-07 12:08:53-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:53-0500','johndoe','']},'test_trial215' => {'dry matter content|CO_334:0000092' => ['31','2016-01-07 12:09:07-0500','johndoe',''],'dry yield|CO_334:0000014' => ['31','2016-01-07 12:09:07-0500','johndoe','']},'test_trial25' => {'dry matter content|CO_334:0000092' => ['25','2016-01-07 12:08:48-0500','johndoe',''],'dry yield|CO_334:0000014' => ['25','2016-01-07 12:08:48-0500','johndoe','']},'test_trial29' => {'dry matter content|CO_334:0000092' => ['','2016-01-07 12:08:55-0500','johndoe',''],'dry yield|CO_334:0000014' => ['24','2016-01-07 12:08:55-0500','johndoe','']},'test_trial26' => {'dry matter content|CO_334:0000092' => ['','2016-01-07 12:08:49-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:49-0500','johndoe','']},'test_trial22' => {'fieldbook_image|CO_334:0010472' => ['/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg','2016-01-07 12:10:25-0500','johndoe',''],'dry yield|CO_334:0000014' => ['45','2016-01-07 12:08:26-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial213' => {'dry matter content|CO_334:0000092' => ['35','2016-01-07 12:09:04-0500','johndoe',''],'dry yield|CO_334:0000014' => ['35','2016-01-07 12:09:04-0500','johndoe','']},'test_trial24' => {'dry yield|CO_334:0000014' => ['14','2016-01-07 12:08:46-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['14','2016-01-07 12:08:46-0500','johndoe','']},'test_trial210' => {'dry yield|CO_334:0000014' => ['12','2016-01-07 12:08:56-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['12','2016-01-07 12:08:56-0500','johndoe','']},'test_trial27' => {'dry matter content|CO_334:0000092' => ['52','2016-01-07 12:08:51-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:51-0500','johndoe','']},'test_trial21' => {'dry yield|CO_334:0000014' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'fieldbook_image|CO_334:0010472' => ['/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg','2016-01-07 12:10:24-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe','']},'test_trial214' => {'dry yield|CO_334:0000014' => ['32','2016-01-07 12:09:05-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['32','2016-01-07 12:09:05-0500','johndoe','']},'test_trial211' => {'dry matter content|CO_334:0000092' => ['13','2016-01-07 12:08:58-0500','johndoe',''],'dry yield|CO_334:0000014' => ['13','2016-01-07 12:08:58-0500','johndoe','']}},'variables' => ['dry matter content|CO_334:0000092','dry yield|CO_334:0000014','fieldbook_image|CO_334:0010472']}, "Check parse fieldbook");
 
 
 $phenotype_metadata{'archived_file'} = $filename;
@@ -860,8 +381,8 @@ $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-01-16_03:15:26";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 my $user_id = 41;
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -1281,13 +802,13 @@ is_deeply($parsed_file, {
 	                                                                             ]
 	                                        }
 	                    },
-	          'traits' => [
+	          'variables' => [
 	                        'dry matter content|CO_334:0000092',
 	                        'fresh root weight|CO_334:0000012',
 	                        'fresh shoot weight|CO_334:0000016',
 	                        'harvest index|CO_334:0000015'
 	                      ],
-	          'plots' => [
+	          'units' => [
 	                       'test_trial21',
 	                       'test_trial210',
 	                       'test_trial211',
@@ -1313,8 +834,8 @@ $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_07:11:98";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -1968,7 +1489,7 @@ is_deeply($parsed_file, {
                                                                          ]
                                          }
                     },
-          'plots' => [
+          'units' => [
                        'test_trial21',
                        'test_trial210',
                        'test_trial211',
@@ -1985,7 +1506,7 @@ is_deeply($parsed_file, {
                        'test_trial28',
                        'test_trial29'
                      ],
-          'traits' => [
+          'variables' => [
                         'dry matter content|CO_334:0000092',
                         'flower|CO_334:0000111',
                         'fresh root weight|CO_334:0000012',
@@ -2003,8 +1524,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:55:55";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -2253,11 +1774,11 @@ ok($parsed_file, "Check if parse parse phenotype plant spreadsheet works");
 print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'traits' => [
+          'variables' => [
                         'dry matter content percentage|CO_334:0000092',
                         'fresh root weight|CO_334:0000012'
                       ],
-          'plots' => [
+          'units' => [
                        'test_trial210_plant_1',
                        'test_trial210_plant_2',
                        'test_trial211_plant_1',
@@ -2598,8 +2119,8 @@ $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:15:21";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -2911,82 +2432,15 @@ ok($parsed_file, "Check if parse parse phenotype plant fieldbook works");
 
 print STDERR Dumper $parsed_file;
 
-is_deeply($parsed_file, {
-          'data' => {
-                      'test_trial23_plant_1' => {
-                                                  'dry matter content|CO_334:0000092' => [
-                                                                                       '41',
-                                                                                       '2016-01-07 12:08:27-0500',
-                                                                                     ]
-                                                },
-                      'test_trial22_plant_2' => {
-                                                  'dry yield|CO_334:0000014' => [
-                                                                              '0',
-                                                                              '2016-01-07 12:08:26-0500',
-                                                                            ],
-                                                  'dry matter content|CO_334:0000092' => [
-                                                                                       '45',
-                                                                                       '2016-01-07 12:08:26-0500',
-                                                                                     ]
-                                                },
-                      'test_trial21_plant_2' => {
-                                                  'dry matter content|CO_334:0000092' => [
-                                                                                       '42',
-                                                                                       '2016-01-07 12:08:24-0500',
-                                                                                     ],
-                                                  'dry yield|CO_334:0000014' => [
-                                                                              '0',
-                                                                              '2016-01-07 12:08:24-0500',
-                                                                            ]
-                                                },
-                      'test_trial21_plant_1' => {
-                                                  'dry yield|CO_334:0000014' => [
-                                                                              '42',
-                                                                              '2016-01-07 12:08:24-0500',
-                                                                            ],
-                                                  'dry matter content|CO_334:0000092' => [
-                                                                                       '42',
-                                                                                       '2016-01-07 12:08:24-0500',
-                                                                                     ]
-                                                },
-                      'test_trial23_plant_2' => {
-                                                  'dry matter content|CO_334:0000092' => [
-                                                                                       '41',
-                                                                                       '2016-01-07 12:08:27-0500',
-                                                                                     ]
-                                                },
-                      'test_trial22_plant_1' => {
-                                                  'dry yield|CO_334:0000014' => [
-                                                                              '45',
-                                                                              '2016-01-07 12:08:26-0500',
-                                                                            ],
-                                                  'dry matter content|CO_334:0000092' => [
-                                                                                       '45',
-                                                                                       '2016-01-07 12:08:26-0500',
-                                                                                     ]
-                                                }
-                    },
-          'traits' => [
-                        'dry matter content|CO_334:0000092',
-                        'dry yield|CO_334:0000014'
-                      ],
-          'plots' => [
-                       'test_trial21_plant_1',
-                       'test_trial21_plant_2',
-                       'test_trial22_plant_1',
-                       'test_trial22_plant_2',
-                       'test_trial23_plant_1',
-                       'test_trial23_plant_2'
-                     ]
-        }, "check parse fieldbook plant file");
+is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092','dry yield|CO_334:0000014'],'data' => {'test_trial21_plant_2' => {'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:24-0500','johndoe','']},'test_trial23_plant_1' => {'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']},'test_trial21_plant_1' => {'dry yield|CO_334:0000014' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe','']},'test_trial22_plant_1' => {'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe',''],'dry yield|CO_334:0000014' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial22_plant_2' => {'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:26-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial23_plant_2' => {'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']}},'units' => ['test_trial21_plant_1','test_trial21_plant_2','test_trial22_plant_1','test_trial22_plant_2','test_trial23_plant_1','test_trial23_plant_2']}, "check parse fieldbook plant file");
 
 $phenotype_metadata{'archived_file'} = $filename;
 $phenotype_metadata{'archived_file_type'}="tablet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_05:55:17";
 %parsed_data = %{$parsed_file->{'data'}};
-@plots = @{$parsed_file->{'plots'}};
-@traits = @{$parsed_file->{'traits'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     bcs_schema=>$f->bcs_schema,
@@ -3944,20 +3398,6 @@ my $refresh = 'SELECT refresh_materialized_views()';
 my $h = $f->dbh->prepare($refresh);
 $h->execute();
 
-my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-	search_type=>'MaterializedView',
-	bcs_schema=>$f->bcs_schema,
-	data_level=>'plot',
-	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-	trial_list=>[137],
-	plot_list=>\@plot_ids,
-	include_timestamp=>0,
-	phenotype_min_value=>1,
-	phenotype_max_value=>100,
-);
-my @data = $phenotypes_search->get_phenotype_matrix();
-#print STDERR Dumper \@data;
-is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 fast');
 
 my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	search_type=>'Native',
@@ -3985,7 +3425,7 @@ foreach my $line (@data){
 }
 shift @plant_ids;
 
-#print STDERR Dumper \@test_result;
+print STDERR Dumper \@test_result;
 is_deeply(\@test_result, [
           [
             'studyYear',
@@ -4263,8 +3703,8 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '42,2016-01-07 12:08:24-0500',
-            '42,2016-01-07 12:08:24-0500',
+            '42,2016-01-07 12:08:24',
+            '42,2016-01-07 12:08:24',
             '20'
           ],
           [
@@ -4298,7 +3738,7 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '42,2016-01-07 12:08:24-0500',
+            '42,2016-01-07 12:08:24',
             undef,
             '21'
           ],
@@ -4333,7 +3773,7 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '41,2016-01-07 12:08:27-0500',
+            '41,2016-01-07 12:08:27',
             undef,
             '24'
           ],
@@ -4368,7 +3808,7 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '41,2016-01-07 12:08:27-0500',
+            '41,2016-01-07 12:08:27',
             undef,
             '25'
           ],
@@ -4678,7 +4118,7 @@ foreach my $line (@data){
 	$line_array[21] = 'variable';
 	push @test_result, \@line_array;
 }
-#print STDERR Dumper \@test_result;
+print STDERR Dumper \@test_result;
 
 is_deeply(\@test_result, [
           [
@@ -4748,9 +4188,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '35,2016-04-27 12:12:20-0500',
+            '35,2016-04-27 12:12:20',
             '36',
-            '20,2016-02-11 12:12:20-0500',
+            '20,2016-02-11 12:12:20',
             '45'
           ],
           [
@@ -4784,9 +4224,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '30,2016-04-27 15:12:20-0500',
+            '30,2016-04-27 15:12:20',
             '45',
-            '29,2016-02-11 15:12:20-0500',
+            '29,2016-02-11 15:12:20',
             '45'
           ],
           [
@@ -4892,9 +4332,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '38,2016-04-27 03:12:20-0500',
+            '38,2016-04-27 03:12:20',
             '46',
-            '30,2016-02-11 03:12:20-0500',
+            '30,2016-02-11 03:12:20',
             undef
           ],
           [
@@ -5000,9 +4440,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '30,2016-04-27 23:12:20-0500',
+            '30,2016-04-27 23:12:20',
             '49',
-            '33,2016-02-11 23:12:20-0500',
+            '33,2016-02-11 23:12:20',
             undef
           ],
           [
@@ -5108,7 +4548,7 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '42,2016-01-07 12:08:24-0500',
+            '42,2016-01-07 12:08:24',
             '20',
             undef,
             undef
@@ -5144,7 +4584,7 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '42,2016-01-07 12:08:24-0500',
+            '42,2016-01-07 12:08:24',
             '21',
             undef,
             undef
@@ -5180,9 +4620,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '38,2016-04-27 01:12:20-0500',
+            '38,2016-04-27 01:12:20',
             '38',
-            '22,2016-02-11 01:12:20-0500',
+            '22,2016-02-11 01:12:20',
             '23'
           ],
           [
@@ -5216,7 +4656,7 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '41,2016-01-07 12:08:27-0500',
+            '41,2016-01-07 12:08:27',
             '24',
             undef,
             undef
@@ -5252,7 +4692,7 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '41,2016-01-07 12:08:27-0500',
+            '41,2016-01-07 12:08:27',
             '25',
             undef,
             undef
@@ -5288,9 +4728,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '39,2016-04-27 11:12:20-0500',
+            '39,2016-04-27 11:12:20',
             '39',
-            '23,2016-02-11 11:12:20-0500',
+            '23,2016-02-11 11:12:20',
             '78'
           ],
           [
@@ -5396,9 +4836,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '35,2016-04-27 09:12:20-0500',
+            '35,2016-04-27 09:12:20',
             '40',
-            '24,2016-02-11 09:12:20-0500',
+            '24,2016-02-11 09:12:20',
             '56'
           ],
           [
@@ -5504,9 +4944,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '30,2016-04-27 16:12:20-0500',
+            '30,2016-04-27 16:12:20',
             '41',
-            '25,2016-02-11 16:12:20-0500',
+            '25,2016-02-11 16:12:20',
             '45'
           ],
           [
@@ -5612,9 +5052,9 @@ is_deeply(\@test_result, [
             undef,
             'test',
             undef,
-            '39,2016-04-27 13:12:20-0500',
+            '39,2016-04-27 13:12:20',
             '43',
-            '27,2016-02-11 13:12:20-0500',
+            '27,2016-02-11 13:12:20',
             '23'
           ],
           [
@@ -6047,7 +5487,7 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'plots' => [
+          'units' => [
                        'test_trial21',
                        'test_trial210',
                        'test_trial211',
@@ -6064,7 +5504,7 @@ is_deeply($parsed_file, {
                        'test_trial28',
                        'test_trial29'
                      ],
-          'traits' => [
+          'variables' => [
                         'number of planted stakes counting|CO:0000159',
                         'root weight in air|CO:0000157',
                         'root weight in water|CO:0000158',

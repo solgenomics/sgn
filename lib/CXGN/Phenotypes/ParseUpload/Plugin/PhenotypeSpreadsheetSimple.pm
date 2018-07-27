@@ -1,5 +1,20 @@
 package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetSimple;
 
+# Validate Returns %validate_result = (
+#   error => 'error message'
+#)
+
+# Parse Returns %parsed_result = (
+#   data => {
+#       plotname1 => {
+#           varname1 => [12, '2015-06-16T00:53:26Z']
+#           varname2 => [120, '']
+#       }
+#   },
+#   units => [plotname1],
+#   variables => [varname1, varname2]
+#)
+
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
@@ -60,16 +75,10 @@ sub validate {
                 #print STDERR $value_string."\n";
                 if ($timestamp_included) {
                     ($value, $timestamp) = split /,/, $value_string;
-                    if (!$timestamp) {
-                        $parse_result{'error'} = "No timestamp found in value, but 'Timestamps Included' is selected.";
-                        print STDERR "Timestamp not found in value.\n";
+                    if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                        $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                        print STDERR "value: $timestamp\n";
                         return \%parse_result;
-                    } else {
-                        if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                            $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-                            print STDERR "value: $timestamp\n";
-                            return \%parse_result;
-                        }
                     }
                 }
             }
@@ -148,6 +157,9 @@ sub parse {
                                     } else {
                                         $trait_value = $value_string;
                                     }
+                                    if (!defined($timestamp)){
+                                        $timestamp = '';
+                                    }
                                     #print STDERR $trait_value." : ".$timestamp."\n";
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
@@ -172,8 +184,8 @@ sub parse {
     }
 
     $parse_result{'data'} = \%data;
-    $parse_result{'plots'} = \@observation_units;
-    $parse_result{'traits'} = \@traits;
+    $parse_result{'units'} = \@observation_units;
+    $parse_result{'variables'} = \@traits;
     #print STDERR Dumper \%parse_result;
 
     return \%parse_result;

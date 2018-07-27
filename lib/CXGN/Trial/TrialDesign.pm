@@ -939,7 +939,7 @@ sub _get_alpha_lattice_design {
 
   if ($plot_layout_format eq "zigzag") {
     if (!$fieldmap_col_number){
-      @col_number_fieldmaps = ((1..$number_of_blocks) x ($number_of_blocks * $number_of_reps));
+      @col_number_fieldmaps = ((1..$block_size) x ($number_of_blocks * $number_of_reps));
       #print STDERR Dumper(\@col_number_fieldmaps);
     } else {
         @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
@@ -949,9 +949,9 @@ sub _get_alpha_lattice_design {
     if (!$fieldmap_row_number)  {
       for my $rep (1 .. ($number_of_blocks * $number_of_reps)){
         if ($rep % 2){
-          push @col_number_fieldmaps, (1..$number_of_blocks);
+          push @col_number_fieldmaps, (1..$block_size);
         } else {
-          push @col_number_fieldmaps, (reverse 1..$number_of_blocks);
+          push @col_number_fieldmaps, (reverse 1..$block_size);
         }
       }
     } else {
@@ -2045,6 +2045,9 @@ sub _build_plot_names {
 	elsif ($self->get_design_type() eq "Augmented") {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;
 	}
+    elsif ($self->get_design_type() eq "greenhouse") {
+        $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;
+    }
 	else {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
 	}

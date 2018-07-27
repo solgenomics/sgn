@@ -1,0 +1,41 @@
+
+            
+<& /page/page_title.mas, title=>"Quick Create Account" &>
+
+<div id="quick_create_account_input_form_div">
+  <form id="quick_create_account_input_form" method="post" action="/user/quick_create_account">
+    
+    <table cellpadding="2" cellspacing="2" width="100%" align="center">
+      <tr><td colspan="2"><b>Curators may use this form to create accounts for new users.<br />&nbsp;</b></td></tr>
+      <tr><td>First Name</td><td><input type="text" name="first_name" size="20" value=""></td></tr>
+      <tr><td>Last Name</td><td><input type="text" name="last_name" size="20" value=""></td></tr>
+      <tr><td>Username (at least 7 characters)</td><td><input type="text" name="username" size="12" value=""></td></tr>
+      <tr><td>Password (at least 7 characters)</td><td><input type="password" name="password" size="12" value=""></td></tr>
+      <tr><td>Confirm Password</td><td><input type="password" name="confirm_password" size="12" value=""></td></tr>
+      <tr><td>Private Email Address</td><td><input type="text" name="confirm_email" size="40" value=""></td></tr>
+      <tr><td>User Type</td><td><input type="text" name="user_type" size="10" value=""></td></tr>
+      <tr><td>&nbsp;</td></tr>
+      <tr><td colspan="2" align="center">
+	  <button class="btn btn-default" id="create_account" name="create_account" type="button">Save</button>
+      </tr>
+    </table>
+</form>
+</div>
+
+<script>
+   jQuery(document).ready(function() { 
+      jQuery('#create_account').click( function() {
+         var form_data = jQuery('#quick_create_account_input_form').serialize();
+         jQuery.ajax( { 
+            url : '/ajax/user/quick_create_account',
+            data: form_data,
+            success: function(r) { 
+              if (r.error) { alert(r.error); }
+              else { 
+                jQuery('#quick_create_account_input_form_div').html(r.html);
+              }
+            }
+         });
+      });
+   });
+</script>

@@ -654,7 +654,8 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
 
     my $upload_plants_txn = sub {
         my %plot_plant_hash;
-        while (my ($key, $val) = each(%$parsed_data)){
+        foreach my $line_number (sort keys %$parsed_data){
+            my $val = $parsed_data->{$line_number};
             $plot_plant_hash{$val->{plot_stock_id}}->{plot_name} = $val->{plot_name};
             push @{$plot_plant_hash{$val->{plot_stock_id}}->{plant_names}}, $val->{plant_name};
         }
@@ -935,6 +936,20 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my @data = $trial->get_plots();
 
     $c->stash->{rest} = { plots => \@data };
+}
+
+sub trial_has_data_levels : Chained('trial') PathPart('has_data_levels') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = {
+        has_plants => $trial->has_plant_entries(),
+        has_subplots => $trial->has_subplot_entries(),
+        has_tissue_samples => $trial->has_tissue_sample_entries(),
+        trial_name => $trial->get_name
+    };
 }
 
 sub trial_has_subplots : Chained('trial') PathPart('has_subplots') Args(0) {
