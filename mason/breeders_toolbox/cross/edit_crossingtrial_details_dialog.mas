@@ -77,6 +77,18 @@ $trial_description
                                     </div>
                                 </div>
                         </div>
+                        <div id="edit_trial_type" style="display:none;">
+                        </div>
+                        <div id="edit_trial_field_size" style="display:none;">
+                        </div>
+                        <div id="edit_trial_plot_width" style="display:none;">
+                        </div>
+                        <div id="edit_trial_plot_length" style="display:none;">
+                        </div>
+                        <div id="edit_trial_plan_to_genotype" style="display:none;">
+                        </div>
+                        <div id="edit_trial_plan_to_cross" style="display:none;">
+                        </div>
                     </form>
                 </div>
             </div>
@@ -122,122 +134,3 @@ $trial_description
         </div>
     </div>
 </div>
-
-<script>
-
-jQuery(document).ready(function(){
-
-    jQuery('#edit_crossingtrial_details').click(function(){
-
-        jQuery('#crossingtrial_details_edit_dialog').modal("show");
-
-        //populate breeding_programs, locations, years, and types dropdowns, and save default
-        var default_bp = document.getElementById("edit_trial_breeding_program").getAttribute("value");
-        get_select_box('breeding_programs', 'edit_trial_breeding_program', {'default' : default_bp});
-        jQuery('#edit_trial_breeding_program').data("originalValue", default_bp);
-
-        var default_loc = document.getElementById("edit_trial_location").getAttribute("value");
-        get_select_box('locations', 'edit_trial_location', {'default' : default_loc});
-        jQuery('#edit_trial_location').data("originalValue", default_loc);
-
-        var default_year = document.getElementById("edit_trial_year").getAttribute("value");
-        get_select_box('years', 'edit_trial_year', {'default' : default_year, 'auto_generate': 1});
-        jQuery('#edit_trial_year').data("originalValue", default_year);
-
-
-        //create bootstrap daterangepickers for planting and harvest dates
-        var planting_date_element = jQuery("#edit_trial_planting_date");
-        set_daterangepicker_default (planting_date_element);
-        jQuery('input[title="planting_date"]').daterangepicker(
-            {
-                "singleDatePicker": true,
-                "showDropdowns": true,
-                "autoUpdateInput": false,
-            },
-
-            function(start){
-                planting_date_element.val(start.format('MM/DD/YYYY'));
-                highlight_changed_details(planting_date_element);
-            }
-        );
-
-        var harvest_date_element = jQuery("#edit_trial_harvest_date");
-        set_daterangepicker_default (harvest_date_element);
-        harvest_date_element.daterangepicker(
-            {
-                "singleDatePicker": true,
-                "showDropdowns": true,
-                "autoUpdateInput": false,
-            },
-            function(start) {
-                harvest_date_element.val(start.format('MM/DD/YYYY'));
-                highlight_changed_details(harvest_date_element);
-            }
-        );
-
-        // set up inout handlers
-        jQuery('#clear_planting_date').click(function(){
-            planting_date_element.val('');
-            highlight_changed_details(planting_date_element);
-        });
-
-        jQuery('#clear_harvest_date').click(function(){
-            harvest_date_element.val('');
-            highlight_changed_details(harvest_date_element);
-        });
-
-        jQuery('[id^="edit_trial_"]').change(function(){
-            var this_element = jQuery(this);
-            highlight_changed_details(this_element);
-        });
-
-        //save dialog body html for resetting on close
-        var edit_trial_details_body_html = document.getElementById('trial_details_edit_body').innerHTML;
-
-        jQuery('#edit_trial_details_cancel_button').click(function(){
-            reset_dialog_body('trial_details_edit_body', edit_trial_details_body_html);
-        });
-
-        jQuery('#save_trial_details').click(function(){
-            var changed_elements = document.getElementsByName("changed");
-            var categories = [];
-            var new_details = {};
-            var success_message = '';
-            for(var i=0; i<changed_elements.length; i++){
-                var id = changed_elements[i].id;
-                var type = changed_elements[i].title;
-                var new_value = changed_elements[i].value;
-                if (type.match(/date/)){
-                    if (new_value){
-                        new_value = moment(new_value).format('YYYY/MM/DD HH:mm:ss') || 'remove' ;
-                    } else {
-                        new_value = 'remove';
-                    }
-                }
-                categories.push(type);
-                new_details[type] = new_value;
-                if(jQuery('#'+id).is("select")){
-                    new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
-                }
-                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
-            }
-
-            jQuery('#trial_details_edit_dialog').modal("hide");
-            save_trial_details(categories, new_details, success_message);
-
-        });
-
-    });
-
-    jQuery('#trial_details_error_close_button').click(function(){
-        document.getElementById('trial_details_error_message').innerHTML = "";
-    });
-
-    jQuery('#trial_details_saved_close_button').click(function(){
-        location.reload();
-    });
-
-});
-
-
-</script>
