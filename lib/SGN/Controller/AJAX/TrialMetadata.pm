@@ -654,14 +654,10 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
 
     my $upload_plants_txn = sub {
         my %plot_plant_hash;
-        foreach my $line_number (sort keys %$parsed_data){
-            print STDERR Dumper $line_number;
-            my $val = $parsed_data->{$line_number};
-            $plot_plant_hash{$val->{plot_stock_id}}->{plot_name} = $val->{plot_name};
-            push @{$plot_plant_hash{$val->{plot_stock_id}}->{plant_names}}, $val->{plant_name};
-            if ($val->{plot_name} eq '2018-17B6MultiplicationTrialIB2-1-MS414-IITA-TMS-IBA30572'){
-                print STDERR Dumper $val->{plant_name};
-            }
+        my $parsed_entries = $parsed_data->{data};
+        foreach (@$parsed_entries){
+            $plot_plant_hash{$_->{plot_stock_id}}->{plot_name} = $_->{plot_name};
+            push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
         $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments);
