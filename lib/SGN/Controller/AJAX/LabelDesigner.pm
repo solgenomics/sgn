@@ -223,7 +223,7 @@ __PACKAGE__->config(
        # if needed retrieve pedigrees in bulk
        my $pedigree_strings;
        foreach my $element (@$label_params) {
-           if ($element->{'value'} eq '{pedigree_string}') {
+           if ($element->{'value'} =~ m/{pedigree_string}/ ) {
                $pedigree_strings = get_all_pedigrees($schema, $design);
            }
        }
