@@ -162,7 +162,7 @@ sub list {
     $h->execute();
     
     my @results;
-    while (my ($protocol_id, $protocol_name, $protocolprop_json, $stock_id, $stock_name, $stock_type_id, $stock_type_name, $project_id, $project_name, $full_count) = $h->fetchrow_array()) {
+    while (my ($protocol_id, $protocol_name, $protocolprop_json, $project_id, $project_name, $full_count) = $h->fetchrow_array()) {
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : undef;
         my $all_protocol_marker_names = $protocol ? $protocol->{'marker_names'} : undef;
         my $marker_set = $protocol ? $protocol->{markers} : undef;
@@ -179,7 +179,9 @@ sub list {
             header_information_lines => $header_information_lines,
             reference_genome_name => $reference_genome_name,
             species_name => $species_name,
-            sample_observation_unit_type_name => $sample_observation_unit_type_name
+            sample_observation_unit_type_name => $sample_observation_unit_type_name,
+            project_name => $project_name,
+            project_id => $project_id
         };
     }
     #print STDERR Dumper \@results;
