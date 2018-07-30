@@ -1064,6 +1064,7 @@ sub _new_metadata_id {
     my $metadata_schema = CXGN::Metadata::Schema->connect(
         sub { $self->schema()->storage()->dbh() },
         );
+    $metadata_schema->storage->dbh->do('SET search_path TO metadata');
     my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema);
     $metadata->set_create_person_id($sp_person_id);
     my $metadata_id = $metadata->store()->get_metadata_id();
@@ -1072,6 +1073,7 @@ sub _new_metadata_id {
         $metadata->set_modification_note($modification_note);
         $metadata_id = $metadata->store()->get_metadata_id();
     }
+    $metadata_schema->storage->dbh->do('SET search_path TO public,sgn');
     return $metadata_id;
 }
 
