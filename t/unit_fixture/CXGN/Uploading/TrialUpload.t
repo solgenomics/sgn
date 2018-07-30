@@ -966,12 +966,12 @@ is_deeply($columns, [
           [
             undef,
             'Sample ID',
-            '18DNA00001_A01',
-            '18DNA00001_B01',
-            '18DNA00001_B04',
-            '18DNA00001_C01',
-            '18DNA00001_C04',
-            '18DNA00001_D01'
+            '18DNA00001_A01|||test_accession1',
+            '18DNA00001_B01|||test_accession1',
+            '18DNA00001_B04|||BLANK',
+            '18DNA00001_C01|||test_accession2',
+            '18DNA00001_C04|||BLANK',
+            '18DNA00001_D01|||test_accession2'
           ],
           [
             undef,
@@ -1092,12 +1092,12 @@ is_deeply($columns, [
           [
             undef,
             'Genotype',
-            'test_accession1',
-            'test_accession1',
-            'BLANK',
-            'test_accession2',
-            'BLANK',
-            'test_accession2'
+            '18DNA00001_A01|||test_accession1',
+            '18DNA00001_B01|||test_accession1',
+            '18DNA00001_B04|||BLANK',
+            '18DNA00001_C01|||test_accession2',
+            '18DNA00001_C04|||BLANK',
+            '18DNA00001_D01|||test_accession2'
           ],
           [
             undef,
