@@ -742,14 +742,36 @@ jQuery(document).ready(function (){
 			 + popId;
 		 }	    
 	     }
-	 
+	    
 	     var args = {'trait_id'        : traitIds, 
 			 'training_pop_id' : [ popId ], 
 			 'analysis_type'   : analysisType,
 			 'data_set_type'   : dataSetType,
 			};
 
-	     solGS.waitPage(page, args);
+
+	     solGS.getTrainingPopSize(popId, dataSetType);
+	     var trainingPopSize = jQuery('#training_pop_size').val();
+	     alert(trainingPopSize)
+	     if (trainingPopSize >= 20) {
+		 solGS.waitPage(page, args);
+	     } else {
+		 jQuery('<div />')
+		    .html('The training population size (' + trainingPopSize + ') is too small. Minimum required is 20.')
+		    .dialog({
+			height : 200,
+			width  : 250,
+			modal  : true,
+			title  : 'Error message',
+			buttons: {
+			    OK: function () {
+				jQuery(this).dialog('close');
+				window.location = window.location.href;
+			    }
+			}			
+		    });	    
+		 
+	     }
 	 } else {
 	     selectTraitMessage();
 	 }
@@ -757,6 +779,8 @@ jQuery(document).ready(function (){
      });
     
 });
+
+
 
 
 // solGS.alertMessage = function (msg) {
@@ -789,6 +813,24 @@ solGS.getTraitDetails = function (traitId) {
 	});
     }
 
+}
+
+
+solGS.getTrainingPopSize = function (popId, dataSetType) {
+    console.log(popId + ' ' + dataSetType)
+    if (popId) {	
+	jQuery.ajax({
+	    dataType: 'json',
+	    type    : 'POST',
+	    data    : {'training_pop_id': popId, 'data_set_type': dataSetType},
+	    url     : '/solgs/check/training/pop/size/',
+	    success: function (res) {
+		console.log(res.member_count)
+		jQuery(document.body)
+		    .append('<input type="hidden" id="training_pop_size" value="' + res.member_count + '"></input>');	
+	    },	    
+	});
+    }
 }
 
 
