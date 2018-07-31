@@ -274,6 +274,10 @@ $referer => undef
                                 <& /breeders_toolbox/cross/progenies_in_crossingtrial.mas, trial_id=>$trial_id &>
 % } #End progenies_in_crossingtrial_section
 
+% if ($info_section_id eq 'crossing_trial_from_field_trial_section'){
+                                <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
+% } #End crossing_trial_from_field_trial_section
+
                             </div>
                         </div>
                     </&>

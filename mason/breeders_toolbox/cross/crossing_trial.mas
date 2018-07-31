@@ -1,4 +1,3 @@
-
 <%doc>
 
 =head1 NAME
@@ -6,7 +5,6 @@
 /breeders_toolbox/cross/crossing_trial.mas - a mason component to display a crossing trial detail page
 
 =head1
-
 
 =cut
 
@@ -41,33 +39,11 @@ $folder_id => undef
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Crosses in this experiment</h4>", info_section_subtitle => 'View cross names, parents and cross types in this experiment.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "crosses_in_crossingtrial_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Crossing Experimental Info</h4>", info_section_subtitle => 'View crossing details (e.g., pollination date, number of flowers, number of seeds)', icon_class => "glyphicon glyphicon-pencil", info_section_id => "cross_properties_crossingtrial_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Progeny Info</h4>", info_section_subtitle => 'View number of progenies derived from each cross', icon_class => "glyphicon glyphicon-retweet", info_section_id => "progenies_in_crossingtrial_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Linkage</h4>", info_section_subtitle => 'View field trial(s) that are part of this crossing experiment', icon_class => "glyphicon glyphicon-link", info_section_id => "crossing_trial_from_field_trial_section" &>
 
 <& /breeders_toolbox/folder/folder_set.mas, project_type => 'Cross', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type => 'Cross',, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 <& /breeders_toolbox/cross/edit_crossingtrial_details_dialog.mas, trial_name => $trial_name, breeding_program_id => $breeding_program_id, location_id => $location_id, year => $year, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
-
-
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-<div class="row">
-    <div class="col-sm-12">
-        <div class="well">
-            <div class="row">
-                <div class="col-sm-1">
-                    <span style="font-size:3.5em;" class="glyphicon glyphicon-link"></span>
-                </div>
-                <div class="col-sm-11">
-                    <h4>Trial Linkage</h4>
-
-                    <&| /page/info_section.mas, title => 'Field Trial to Crossing Trial Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
-                        <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
-                    </&>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
