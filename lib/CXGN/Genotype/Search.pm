@@ -11,10 +11,12 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     accession_list=>$accession_list,
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
-    protocol_id_list=>$protocol_id_list
+    protocol_id_list=>$protocol_id_list,
+    marker_name_list=>['S80_265728', 'S80_265723']
+    marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
+    marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
 });
-my $resultset = $genotypes_search->get_genotype_info();
-my $genotypes = $resultset->{genotypes};
+my ($total_count, $data) = $genotypes_search->get_genotype_info();
 
 =head1 DESCRIPTION
 
@@ -72,6 +74,21 @@ has 'genotype_data_project_list' => (
     is => 'ro',
 );
 
+has 'marker_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'ro',
+);
+
+has 'marker_search_hash_list' => (
+    isa => 'ArrayRef[HashRef]|Undef',
+    is => 'ro',
+);
+
+has 'marker_score_search_hash_list' => (
+    isa => 'ArrayRef[HashRef]|Undef',
+    is => 'ro',
+);
+
 has 'limit' => (
     isa => 'Int',
     is => 'rw',
@@ -96,6 +113,9 @@ sub get_genotype_info {
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
     my $tissue_sample_list = $self->tissue_sample_list;
+    my $marker_name_list = $self->marker_name_list;
+    my $marker_search_hash_list = $self->marker_search_hash_list;
+    my $marker_score_search_hash_list = $self->marker_score_search_hash_list;
     my $limit = $self->limit;
     my $offset = $self->offset;
     my @data;
@@ -149,6 +169,22 @@ sub get_genotype_info {
     if ($markerprofile_id_list && scalar(@$markerprofile_id_list)>0) {
         my $markerprofile_sql = join ("," , @$markerprofile_id_list);
         push @where_clause, "genotype_values.genotypeprop_id in ($markerprofile_sql)";
+    }
+    if ($marker_name_list && scalar(@$marker_name_list)>0) {
+        my $search_vals_sql = "'".join ("','" , @$marker_name_list)."'";
+        push @where_clause, "nd_protocolprop.value->'markers' \\?& array[$search_vals_sql]";
+    }
+    if ($marker_search_hash_list && scalar(@$marker_search_hash_list)>0) {
+        foreach (@$marker_search_hash_list){
+            my $json_val = encode_json $_;
+            push @where_clause, "nd_protocolprop.value->'markers' \\@> $json_val"."::jsonb";
+        }
+    }
+    if ($marker_score_search_hash_list && scalar(@$marker_score_search_hash_list)>0) {
+        foreach (@$marker_score_search_hash_list){
+            my $json_val = encode_json $_;
+            push @where_clause, "genotype_values.value \\@> $json_val"."::jsonb";
+        }
     }
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
