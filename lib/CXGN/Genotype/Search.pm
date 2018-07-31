@@ -103,6 +103,7 @@ sub get_genotype_info {
     my $igd_genotypeprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'igd number', 'genotype_property')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 
     my @trials_accessions;
     foreach (@$trial_list){
@@ -149,10 +150,12 @@ sub get_genotype_info {
         $offset_clause = " OFFSET $offset ";
     }
 
-    my $q = "SELECT genotype_values.genotypeprop_id, genotype_values.value, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, stock.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, project.project_id, project.name, count(genotype_values.genotypeprop_id) OVER() AS full_count
+    my $q = "SELECT genotype_values.genotypeprop_id, genotype_values.value, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, stock.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, project.project_id, project.name, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
-        JOIN nd_experiment_stock USING(stock_id)
+        LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
+        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id)
+        JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN nd_experiment_protocol USING(nd_experiment_id)
         JOIN nd_experiment_project USING(nd_experiment_id)
@@ -173,7 +176,7 @@ sub get_genotype_info {
     $h->execute();
 
     my $total_count = 0;
-    while (my ($genotypeprop_id, $genotypeprop_json, $igd_number_json, $protocol_id, $protocol_name, $protocolprop_json, $stock_id, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $project_id, $project_name, $full_count) = $h->fetchrow_array()) {
+    while (my ($genotypeprop_id, $genotypeprop_json, $igd_number_json, $protocol_id, $protocol_name, $protocolprop_json, $stock_id, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $project_id, $project_name, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $genotype = decode_json $genotypeprop_json;
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : undef;
         my $all_protocol_marker_names = $protocol ? $protocol->{'marker_names'} : undef;
@@ -185,10 +188,23 @@ sub get_genotype_info {
             $dosage_hash{$marker_name} = $val->{'DS'};
         }
 
+        my $germplasmName = '';
+        my $germplasmDbId = '';
+        if ($stock_type_name eq 'accession'){
+            $germplasmName = $stock_name;
+            $germplasmDbId = $stock_id;
+        }
+        if ($stock_type_name eq 'tissue_sample'){
+            $germplasmName = $accession_uniquename;
+            $germplasmDbId = $accession_id;
+        }
+
         push @data, {
             markerProfileDbId => $genotypeprop_id,
-            germplasmDbId => $stock_id,
-            germplasmName => $stock_name,
+            germplasmDbId => $germplasmDbId,
+            germplasmName => $germplasmName,
+            stock_id => $stock_id,
+            stock_name => $stock_name,
             stock_type_id => $stock_type_id,
             stock_type_name => $stock_type_name,
             genotypeDbId => $genotype_id,
@@ -206,7 +222,7 @@ sub get_genotype_info {
         };
         $total_count = $full_count;
     }
-    #print STDERR Dumper \@data;
+    print STDERR Dumper \@data;
 
     return ($total_count, \@data);
 }

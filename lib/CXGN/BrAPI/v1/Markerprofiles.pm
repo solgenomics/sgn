@@ -80,8 +80,8 @@ sub markerprofiles_search {
 			markerprofileDbId => qq|$_->{markerProfileDbId}|,
 			germplasmDbId => qq|$_->{germplasmDbId}|,
 			uniqueDisplayName => $_->{genotypeUniquename},
-			extractDbId => $_->{genotypeUniquename},
-			sampleDbId => $_->{genotypeUniquename},
+			extractDbId => $_->{stock_id},
+			sampleDbId => $_->{stock_id},
 			analysisMethod => $_->{analysisMethod},
 			resultCount => $_->{resultCount}
 		};
