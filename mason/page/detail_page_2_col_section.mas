@@ -264,11 +264,15 @@ $referer => undef
 
 % if ($info_section_id eq 'crosses_in_crossingtrial_section'){
                                 <& /breeders_toolbox/cross/crosses_in_crossingtrial.mas, trial_id=>$trial_id &>
-% } #End crosses_in_trial
+% } #End crosses_in_crossingtrial_section
 
 % if ($info_section_id eq 'cross_properties_crossingtrial_section'){
                                 <& /breeders_toolbox/cross/cross_properties_crossingtrial.mas, trial_id=>$trial_id &>
-% } #End crosses_in_trial
+% } #End cross_properties_crossingtrial_section
+
+% if ($info_section_id eq 'progenies_in_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/progenies_in_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End progenies_in_crossingtrial_section
 
                             </div>
                         </div>
