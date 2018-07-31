@@ -125,4 +125,4 @@ $acronym
 
 
 <input type="hidden" id="population_id" value="<% $pop_id %>" />
-<!-- <input type="hidden" id="training_pop_size" value="" /> -->
+

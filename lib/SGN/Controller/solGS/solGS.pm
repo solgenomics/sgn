@@ -654,7 +654,7 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     my $type   = $c->req->param('data_set_type');
     
     my $count = $self->training_pop_member_count($c, $pop_id);
-  print STDERR "\n $pop_id : $type - $count\n";
+  print STDERR "\n id: $pop_id - type: $type - cnt: $count\n";
     my $ret->{status} = 'failed';
         
     if ($count) 
