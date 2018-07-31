@@ -652,9 +652,16 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
 
     my $pop_id = $c->req->param('training_pop_id');
     my $type   = $c->req->param('data_set_type');
-    
-    my $count = $self->training_pop_member_count($c, $pop_id);
-  print STDERR "\n id: $pop_id - type: $type - cnt: $count\n";
+
+    my $count;
+    if ($type =~ /single/)
+    {
+	$count = $self->training_pop_member_count($c, $pop_id);
+    }
+    elsif ($type =~ /combined/)
+    {
+	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_members($c, $pop_id);	
+    }
     my $ret->{status} = 'failed';
         
     if ($count) 

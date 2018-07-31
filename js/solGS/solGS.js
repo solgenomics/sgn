@@ -49,8 +49,13 @@ solGS.waitPage = function (page, args) {
 		    args = JSON.parse(args);
 		    displayAnalysisNow(page, args);
 		} else {
-		   		    
-		    checkTrainingPopRequirement(page, args);  
+		    if (window.location.href.match(/solgs\/search\//)) {
+			args = JSON.parse(args);
+			askUser(page, args);
+			
+		    } else {
+			checkTrainingPopRequirement(page, args);		
+		    }
 		}
 		
 	    },
@@ -66,8 +71,7 @@ solGS.waitPage = function (page, args) {
 	args = JSON.parse(args);
 	var popId = args.training_pop_id[0];
 	var dataSetType = args.data_set_type;
-	
-	console.log(popId + ' getTrainingPOpsize ' + dataSetType)
+
 	if (popId) {	
 	    jQuery.ajax({
 		dataType: 'json',
@@ -75,7 +79,6 @@ solGS.waitPage = function (page, args) {
 		data    : {'training_pop_id': popId, 'data_set_type': dataSetType},
 		url     : '/solgs/check/training/pop/size/',
 		success : function (res) {
-
 		    var trainingPopSize = res.member_count;
 		    if (trainingPopSize >= 20) {	   
 			askUser(page, args);		

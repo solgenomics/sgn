@@ -731,7 +731,7 @@ sub combined_pops_summary {
 	$markers_no = scalar(split ('\t', $unfiltered_geno_rows[0])) - 1;	
     }
 
-    my $stocks_no   =  scalar(@unfiltered_geno_rows) - 1;
+    my $stocks_no   =  $self->count_combined_trials_members($c, $combo_pops_id);
     my $training_pop = "Training population $combo_pops_id";
     
     my $protocol = $c->config->{default_genotyping_protocol};
@@ -756,18 +756,22 @@ sub cache_combined_pops_data {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
-    my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
-                             file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
-                             stash_key => 'trait_combined_pheno_file'
-    };
-      
-    my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
-                            file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
-                            stash_key => 'trait_combined_geno_file'
-    };
-    
-    $c->controller('solGS::Files')->cache_file($c, $cache_pheno_data);
-    $c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
+
+    if ($trait_abbr)
+    {
+	my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
+				 file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
+				 stash_key => 'trait_combined_pheno_file'
+	};
+	
+	my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
+				file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
+				stash_key => 'trait_combined_geno_file'
+	};
+	
+	$c->controller('solGS::Files')->cache_file($c, $cache_pheno_data);
+	$c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
+    }
 
 }
 
@@ -958,14 +962,16 @@ sub combined_trials_desc {
     my @traits_list = read_file($traits_list_file);
     my $traits_no   = scalar(@traits_list) - 1;
 
-    my $stock_no  = scalar(@geno_lines) - 1;
+    #my $stock_no  = scalar(@geno_lines) - 1;
 
     my $training_pop = "Training population $combo_pops_id";
     
     my $protocol = $c->config->{default_genotyping_protocol};
     $protocol = 'N/A' if !$protocol;
 
-    $c->stash(stocks_no    => $stock_no,
+    my $stocks_no = $self->count_combined_trials_members($c, $combo_pops_id);
+   
+    $c->stash(stocks_no    => $stocks_no,
 	      markers_no   => $markers_no,
               traits_no    => $traits_no,
               project_desc => $desc,
@@ -973,6 +979,51 @@ sub combined_trials_desc {
               owner        => $projects_owners,
 	      protocol     => $protocol,
         );
+}
+
+
+sub count_combined_trials_members {
+    my ($self, $c, $combo_pops_id) = @_;
+
+    $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id if $combo_pops_id;        
+    
+    my $genos_cnt;
+    
+    $self->cache_combined_pops_data($c);   
+    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+
+    my $size = -s $combined_pops_geno_file;
+
+    if (-s $combined_pops_geno_file)
+    {
+	my @geno_data = read_file($combined_pops_geno_file);
+	$genos_cnt = scalar(@geno_data) - 1;	
+    }
+    else
+    {
+	$self->get_combined_pops_arrayref($c);
+	my $pops_ids = $c->stash->{arrayref_combined_pops_ids};
+	
+	$self->multi_pops_geno_files($c, $pops_ids);
+	my $geno_files = $c->stash->{multi_pops_geno_files};
+
+	my @geno_files = split(/\t/, $geno_files);
+
+	my @genotypes;
+	foreach my $geno_file (@geno_files) {
+	    my $geno_data = read_file($geno_file);
+	    my @genos = map{(split(/\t/), $_)[0]} split(/\n/, $geno_data);
+	    shift(@genos);
+	    push @genotypes, @genos;	
+	}
+	
+	$genos_cnt = scalar(uniq(@genotypes));
+	 print STDERR "\ncount: $genos_cnt\n";	
+    }
+  
+    return $genos_cnt;
+    
 }
 
 

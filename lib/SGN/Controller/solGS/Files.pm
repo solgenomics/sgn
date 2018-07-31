@@ -92,26 +92,29 @@ sub trait_phenodata_file {
     my $data_set_type = $c->stash->{data_set_type};
    
     my $cache_data;
-
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
+    
+    if ($trait)
     {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-        $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
-                       file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
-    else 
-    {
-        $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
-                       file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
+	no warnings 'uninitialized';
 
-    $self->cache_file($c, $cache_data);
+	if ($data_set_type =~ /combined populations/)
+	{
+	    my $combo_identifier = $c->stash->{combo_pops_id}; 
+	    $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
+			   file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
+			   stash_key => 'trait_phenodata_file'
+	    };
+	}
+	else 
+	{
+	    $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
+			   file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
+			   stash_key => 'trait_phenodata_file'
+	    };
+	}
+
+	$self->cache_file($c, $cache_data);
+    }
 }
 
 
