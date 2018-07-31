@@ -11,7 +11,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     accession_list=>$accession_list,
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
-    protocol_id=>$protocol_id
+    protocol_id_list=>$protocol_id_list
 });
 my $resultset = $genotypes_search->get_genotype_info();
 my $genotypes = $resultset->{genotypes};
@@ -42,10 +42,14 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     required => 1,
 );
 
-has 'protocol_id' => (
-    isa => 'Int',
+has 'protocol_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
-    required => 1,
+);
+
+has 'markerprofile_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
 );
 
 has 'accession_list' => (
@@ -88,7 +92,8 @@ sub get_genotype_info {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $trial_list = $self->trial_list;
-    my $protocol_id = $self->protocol_id;
+    my $protocol_id_list = $self->protocol_id_list;
+    my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
     my $tissue_sample_list = $self->tissue_sample_list;
     my $limit = $self->limit;
@@ -127,7 +132,10 @@ sub get_genotype_info {
         }
     }
 
-    push @where_clause, "nd_protocol.nd_protocol_id = $protocol_id";
+    if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
+        my $protocol_sql = join ("," , @$protocol_id_list);
+        push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
+    }
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);
         push @where_clause, "stock.stock_id in ($accession_sql)";
@@ -138,8 +146,12 @@ sub get_genotype_info {
         push @where_clause, "stock.stock_id in ($stock_sql)";
         push @where_clause, "stock.type_id = $tissue_sample_cvterm_id";
     }
+    if ($markerprofile_id_list && scalar(@$markerprofile_id_list)>0) {
+        my $markerprofile_sql = join ("," , @$markerprofile_id_list);
+        push @where_clause, "genotype_values.genotypeprop_id in ($markerprofile_sql)";
+    }
 
-    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';
     my $limit_clause = '';
@@ -222,7 +234,7 @@ sub get_genotype_info {
         };
         $total_count = $full_count;
     }
-    print STDERR Dumper \@data;
+    #print STDERR Dumper \@data;
 
     return ($total_count, \@data);
 }
