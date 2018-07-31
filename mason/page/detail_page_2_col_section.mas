@@ -262,6 +262,10 @@ $referer => undef
                                 <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
 % } #End crossingtrial_details
 
+% if ($info_section_id eq 'crosses_in_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/crosses_in_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End crosses_in_trial
+
                             </div>
                         </div>
                     </&>
