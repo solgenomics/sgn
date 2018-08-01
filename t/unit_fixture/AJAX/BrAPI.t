@@ -135,7 +135,7 @@ is_deeply($response, {'result' => {'data' => ['Cassava']},'metadata' => {'datafi
 $mech->get_ok('http://localhost:3010/brapi/v1/seasons?access_token='.$access_token );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'year' => '2014','seasonDbId' => '145','season' => ''},{'season' => '','seasonDbId' => '147','year' => '2015'},{'seasonDbId' => '151','year' => '2016','season' => ''},{'year' => '2017','seasonDbId' => '174','season' => ''}]},'metadata' => {'status' => [{'code' => 'info','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v1::Studies','code' => 'info'},{'message' => 'Seasons list result constructed','code' => '200'}],'datafiles' => [],'pagination' => {'currentPage' => 0,'totalCount' => 4,'totalPages' => 1,'pageSize' => 10}}}, 'seasons');
+is_deeply($response, {'metadata' => {'pagination' => {'totalPages' => 1,'pageSize' => 10,'currentPage' => 0,'totalCount' => 4},'status' => [{'code' => 'info','message' => 'BrAPI base call found with page=0, pageSize=10'},{'code' => 'info','message' => 'Loading CXGN::BrAPI::v1::Studies'},{'message' => 'Seasons list result constructed','code' => '200'}],'datafiles' => []},'result' => {'data' => [{'season' => '','seasonDbId' => '2014','year' => '2014'},{'season' => '','year' => '2015','seasonDbId' => '2015'},{'seasonDbId' => '2016','year' => '2016','season' => ''},{'year' => '2017','seasonDbId' => '2017','season' => ''}]}}, 'seasons');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/studytypes?access_token='.$access_token );
 $response = decode_json $mech->content;
