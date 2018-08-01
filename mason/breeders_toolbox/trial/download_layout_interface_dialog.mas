@@ -410,7 +410,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
     var format = jQuery('#create_fieldbook_format_<% $download_type %>').val();
     console.log(format); 
-    //SGN::Controller:BreedersToolbox::Trial
+    //Calls SGN::Controller:BreedersToolbox::Trial
     window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id);
 }
 

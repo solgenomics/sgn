@@ -33,7 +33,7 @@ $westcott_description => "Generates fieldplan for an unreplicated design with ge
 
 rect.bordered {
     stroke: #E6E6E6;
-    stroke-width:2px;   
+    stroke-width:2px;
   }
 
   text.mono {
@@ -49,7 +49,7 @@ rect.bordered {
   text.axis-worktime {
     fill: #000;
   }
-  
+
   .legend { list-style: none; }
   .legend li { float: left; margin-right: 10px; }
   .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
@@ -342,7 +342,7 @@ rect.bordered {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                     <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                     <div class="col-sm-5" >
@@ -497,7 +497,7 @@ rect.bordered {
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
                                 <br/>
                                 <div class="well">
@@ -533,7 +533,7 @@ rect.bordered {
                                     </div>
                                 </div>
 
-                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing trial in the database.</p>
+                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.</p>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -554,6 +554,8 @@ rect.bordered {
                             </&>
                             <&| /util/workflow.mas:step, title=> "Field Map Information" &>
                                 <& /page/page_title.mas, title=>"Specify the number of rows and columns for the entire field" &>
+                                <p>By default field map display is set to serpentine and uses the block or rep number as row number.</p>
+                                <p>If you do not want to create field map along with this trial, set 'Plot layout format' to 'select plot layout format'.</p>
                                 <p>If you do not know exactly in which rows and columns you will end up planting the plots, do not provide this and go to the next step.</p>
                                 <p>If you will plant your plots in an irregular (non-rectangular) layout, do not provide this and go to the next step.</p>
                                 <p>You can upload the exact row and column information for your plots (in any layout shape) on the Trial Detail Page after you have created the trial in the database and actually planted the experiment.</p>
@@ -568,11 +570,11 @@ rect.bordered {
                                 <div class="form-group"  id="FieldMap">
                                     <label class="col-sm-4 control-label">Field map display: </label>
                                     <div class="col-sm-8" >
-                                        <input type="checkbox" id="show_field_map_options" />
+                                        <input type="checkbox" id="show_field_map_options" checked="checked"/>
                                     </div>
                                 </div>
 
-                                <div id="field_map_options" style="display: none">
+                                <div id="field_map_options" >
                                     <!--<div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Number of columns per row (uses accession number by default): </label>
                                         <div class="col-sm-5" >
@@ -591,7 +593,7 @@ rect.bordered {
                                           <select class="form-control" id="plot_layout_format" name="plot_layout_format">
                                             <option value="">select plot layout format</option>
                                             <option value=zigzag>Zigzag(unserpentine)</option>
-                                            <option value=serpentine>Serpentine</option>
+                                            <option value=serpentine selected="selected">Serpentine</option>
                                           </select>
                                         </div>
                                     </div>
@@ -700,7 +702,7 @@ rect.bordered {
                             </&>
 
                         </&><!-- End of workflow-->
-                    </form>    
+                    </form>
 
                 </div>
             </div>

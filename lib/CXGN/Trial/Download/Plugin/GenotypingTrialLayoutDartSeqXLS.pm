@@ -1,9 +1,9 @@
 
-package CXGN::Trial::Download::Plugin::GenotypingTrialLayoutIntertekXLS;
+package CXGN::Trial::Download::Plugin::GenotypingTrialLayoutDartSeqXLS;
 
 =head1 NAME
 
-CXGN::Trial::Download::Plugin::GenotypingTrialLayoutIntertekXLS
+CXGN::Trial::Download::Plugin::GenotypingTrialLayoutDartSeqXLS
 
 =head1 SYNOPSIS
 
@@ -13,7 +13,7 @@ This plugin module is loaded from CXGN::Trial::Download
 
 For downloading a genotyping trial's layout (as used from CXGN::Trial::Download->trial_download):
 
-my $plugin = "GenotypingTrialLayoutIntertekXLS";
+my $plugin = "GenotypingTrialLayoutDartSeqXLS";
 
 my $download = CXGN::Trial::Download->new({
     bcs_schema => $schema,
@@ -50,7 +50,7 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    my @header = ('Sample ID', 'Plate ID', 'Well location', 'Subject Barcode', 'Plate Barcode', 'Comments');
+    my @header = ('Plate ID', 'Row', 'Column', 'Organism', 'Species', 'Genotype', 'Tissue', 'Comments');
     my $col_count = 0;
     foreach (@header){
         $ws->write(0, $col_count, $_);
@@ -64,14 +64,16 @@ sub download {
     my $row_count = 1;
     foreach my $key (sort keys %$design){
         my $val = $design->{$key};
-        my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
+        my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
         my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
-        $ws->write($row_count, 0, $sample_name);
-        $ws->write($row_count, 1, $trial_name);
-        $ws->write($row_count, 2, $val->{plot_number});
-        $ws->write($row_count, 3, $val->{source_observation_unit_name});
-        $ws->write($row_count, 4, $trial_name);
-        $ws->write($row_count, 5, $comments);
+        $ws->write($row_count, 0, $trial_name);
+        $ws->write($row_count, 1, $val->{row_number});
+        $ws->write($row_count, 2, $val->{col_number});
+        $ws->write($row_count, 3, $val->{species});
+        $ws->write($row_count, 4, $val->{species});
+        $ws->write($row_count, 5, $sample_name);
+        $ws->write($row_count, 6, $val->{tissue_type});
+        $ws->write($row_count, 7, $comments);
         $row_count++;
     }
 

@@ -388,11 +388,15 @@ sub validate {
     my @observation_unit_uniquenames_stripped;
     if ($include_igd_numbers){
         foreach (@$observation_unit_uniquenames) {
-            my ($observation_unit_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
     } else {
-        @observation_unit_uniquenames_stripped = @$observation_unit_uniquenames;
+        foreach (@$observation_unit_uniquenames) {
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
+            push @observation_unit_uniquenames_stripped, $observation_unit_name;
+        }
     }
 
     my $stock_type = $self->observation_unit_type_name;
@@ -615,11 +619,15 @@ sub store {
     my @observation_unit_uniquenames_stripped;
     if ($igd_numbers_included){
         foreach (@$observation_unit_uniquenames) {
-            my ($observation_unit_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
     } else {
-        @observation_unit_uniquenames_stripped = @$observation_unit_uniquenames;
+        foreach (@$observation_unit_uniquenames) {
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
+            push @observation_unit_uniquenames_stripped, $observation_unit_name;
+        }
     }
 
     my $stock_rs = $schema->resultset("Stock::Stock")->search({
@@ -633,13 +641,17 @@ sub store {
     }
 
     foreach (@$observation_unit_uniquenames) {
+        my $observation_unit_name_with_accession_name;
         my $observation_unit_name;
+        my $accession_name;
         my $igd_number;
         if ($igd_numbers_included){
-            ($observation_unit_name, $igd_number) = split(/:/, $_);
+            ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         } else {
-            $observation_unit_name = $_;
+            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
         }
+        #print STDERR Dumper $observation_unit_name;
         my $stock_id = $stock_lookup{$observation_unit_name};
 
         if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){

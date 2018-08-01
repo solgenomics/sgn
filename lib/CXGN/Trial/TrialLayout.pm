@@ -173,6 +173,7 @@ has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbe
 sub _lookup_trial_id {
     my $self = shift;
     print STDERR "CXGN::Trial::TrialLayout ".localtime."\n";
+    $self->get_schema->storage->dbh->do('SET search_path TO public,sgn');
 
   #print STDERR "Check 2.1: ".localtime()."\n";
   $self->_set_project_from_id();
@@ -500,6 +501,12 @@ sub generate_and_cache_layout {
                 $design_info{"source_observation_unit_id"} = $r->stock_id;
             }
         }
+        my $organism_q = "SELECT species, genus FROM organism WHERE organism_id = ?;";
+        my $h = $self->get_schema->storage->dbh()->prepare($organism_q);
+        $h->execute($plot->organism_id);
+        my ($species, $genus) = $h->fetchrow_array;
+        $design_info{"species"} = $species;
+        $design_info{"genus"} = $genus;
     }
 
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {'object.type_id' => $plant_cvterm_id}, {order_by=>"object.stock_id"});

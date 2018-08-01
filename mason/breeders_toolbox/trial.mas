@@ -240,7 +240,15 @@ $field_trial_is_planned_to_cross => undef
 
 jQuery(document).ready(function () {
 
-  trial_detail_page_setup_dialogs();
+    jQuery('#edit_trial_details').click(function(){
+
+        jQuery('#trial_details_edit_dialog').modal("show");
+
+        edit_trial_details();
+
+    });
+
+    trial_detail_page_setup_dialogs();
 
   jQuery('#delete_breeding_program_trial_association_link').click(
      function() {
