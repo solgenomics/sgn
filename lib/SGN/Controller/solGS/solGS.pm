@@ -662,8 +662,9 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     {
 	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_members($c, $pop_id);	
     }
+    
     my $ret->{status} = 'failed';
-        
+  
     if ($count) 
     {
 	$ret->{status} = 'success';

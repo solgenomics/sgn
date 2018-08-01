@@ -824,7 +824,6 @@ sub predict_selection_pop_combined_pops_model {
 }
 
 
-
 sub combine_trait_data {
     my ($self, $c) = @_;
 

@@ -83,7 +83,9 @@ solGS.waitPage = function (page, args) {
 		    if (trainingPopSize >= 20) {	   
 			askUser(page, args);		
 		    } else {
-			var msg = 'The training population size (' + trainingPopSize + ') is too small. Minimum required is 20.';
+			var msg = 'The training population size ('
+			    + trainingPopSize + ') is too small. Minimum required is 20.';
+			
 			solGS.alertMessage(msg);
 			
 		    }	
@@ -580,38 +582,14 @@ solGS.waitPage = function (page, args) {
 		    runAnalysis(profile);
 		    ////confirmRequest();
 		    
-		} else { 
-		    jQuery('<div />', {id: 'error-message'})
-			.html('Failed saving your analysis profile.')
-			.dialog({
-			    height : 200,
-			    width  : 250,
-			    modal  : true,
-			    title  : 'Error message',
-			    buttons: {
-				OK: function () {
-				    jQuery(this).dialog('close');
-				    window.location = window.location.href;
-				}
-			    }			
-			});
+		} else {
+		    var message = 'Failed saving your analysis profile.';
+		    solGS.alertMessage(message);
 		}
 	    },
 	    error: function () {
-		jQuery('<div />')
-		    .html('Error occured calling the function to save your analysis profile.')
-		    .dialog({
-			height : 200,
-			width  : 250,
-			modal  : true,
-			title  : 'Error message',
-			buttons: {
-			    OK: function () {
-				jQuery(this).dialog('close');
-				window.location = window.location.href;
-			    }
-			}			
-		    });	    
+		var message = 'Error occured calling the function to save your analysis profile.';
+		solGS.alertMessage(message);
 	    }
 	});
 
@@ -629,37 +607,15 @@ solGS.waitPage = function (page, args) {
 		if (response.result.match(/Submitted/)) {
 		    confirmRequest();
 		} else {
-		    jQuery('<div />')
-			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
-			.dialog({
-			    height : 200,
-			    width  : 250,
-			    modal  : true,
-			    title  : 'Error message',
-			    buttons: {
-				OK: function () {
-				    jQuery(this).dialog('close');
-				    window.location = window.location.href;
-				}
-			    }			
-			});	     
+		    var message = 'Error occured submitting the job. Please contact the developers.'
+			+ "\n\nHint: " + response.result;
+		    solGS.alertMessage(message);
 		}
 	    },
 	    error: function (response) {
-		 jQuery('<div />')
-			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
-			.dialog({
-			    height : 200,
-			    width  : 250,
-			    modal  : true,
-			    title  : 'Error message',
-			    buttons: {
-				OK: function () {
-				    jQuery(this).dialog('close');
-				    window.location = window.location.href;
-				}
-			    }			
-			});	     
+		var message = 'Error occured submitting the job. Please contact the developers.'
+		    + "\n\nHint: " + response.result;
+		solGS.alertMessage(message);		
 	    }
 	});
 	
@@ -692,8 +648,7 @@ function selectTraitMessage () {
 			class: 'btn btn-success',
                         id   : 'select_trait_message',
 			click: function() {
-			    jQuery(this).dialog("close");			  
-			    
+			    jQuery(this).dialog("close");			  			    
 			},
 		    }, 
 		}
@@ -789,13 +744,17 @@ jQuery(document).ready(function (){
 });
 
 
-solGS.alertMessage = function (msg, msgTitle) {
+solGS.alertMessage = function (msg, msgTitle, divId) {
 
     if (!msgTitle) { 
-	msgTitle = 'Error Message';
+	msgTitle = 'Hmmmm....';
+    }
+
+    if (!divId) { 
+	divId = 'error_message';
     }
     
-    jQuery('<div />')
+    jQuery('<div />', {id: divId})
 	.html(msg)
 	.dialog({
 	    height : 200,
@@ -805,7 +764,7 @@ solGS.alertMessage = function (msg, msgTitle) {
 	    buttons: {
 		OK: function () {
 		    jQuery(this).dialog('close');
-		    window.location = window.location.href;
+		    //window.location = window.location.href;
 		}
 	    }			
 	});	    	    
