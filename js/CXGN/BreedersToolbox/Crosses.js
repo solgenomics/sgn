@@ -27,7 +27,7 @@ jQuery(document).ready(function($) {
     $('#create_crossingtrial_submit').click(function() {
         var crossingtrial_name = $("#crossingtrial_name").val();
         if (!crossingtrial_name) {
-            alert("Crossing trial name is required");
+            alert("Crossing Experiment name is required");
             return;
         }
 
@@ -155,7 +155,7 @@ jQuery(document).ready(function($) {
 
         var crossing_trial_id = $("#crossing_trial").val();
             if (!crossing_trial_id) {
-                alert("A crossing trial is required");
+                alert("A crossing experiment is required");
                 return;
             }
 
@@ -436,7 +436,7 @@ jQuery(document).ready(function($) {
     function upload_crosses_file() {
         var crossing_trial_id = $("#cross_upload_crossing_trial").val();
         if (!crossing_trial_id) {
-            alert("A crossing trial is required");
+            alert("A crossing experiment is required");
             return;
         }
 

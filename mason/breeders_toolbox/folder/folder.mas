@@ -44,7 +44,7 @@ $has_child_folders => undef
 
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#trials" aria-controls="trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;&nbsp;&nbsp;Trials</a></li>
-    <li role="presentation"><a href="#crosses" aria-controls="crosses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-grain text-success"></span>&nbsp;&nbsp;&nbsp;Crossing Trials</a></li>
+    <li role="presentation"><a href="#crosses" aria-controls="crosses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-grain text-success"></span>&nbsp;&nbsp;&nbsp;Crossing Experiments</a></li>
     <li role="presentation"><a href="#genotyping_trials" aria-controls="genotyping_trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-th text-success"></span>&nbsp;&nbsp;&nbsp;Genotyping Trials</a></li>
     <li role="presentation"><a href="#folders" aria-controls="folders" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;&nbsp;&nbsp;Folders</a></li>
     <li role="presentation"><a href="#breeding_program" aria-controls="breeding_program" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;&nbsp;&nbsp;Breeding Program</a></li>
