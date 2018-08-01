@@ -18,7 +18,7 @@ $folder_for_genotyping_trials => undef
 % my $dialog_type;
 % if ($project_type eq 'Trial') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial(s)'}
 % if ($project_type eq 'Genotyping Trial') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Trial(s)'}
-% if ($project_type eq 'Cross') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Trial(s)' }
+% if ($project_type eq 'Cross') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Experiment(s)' }
 % if (!$project_type) { $dialog_type = 'Trial(s)' }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>

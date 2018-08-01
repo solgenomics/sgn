@@ -33,7 +33,7 @@ $westcott_description => "Generates fieldplan for an unreplicated design with ge
 
 rect.bordered {
     stroke: #E6E6E6;
-    stroke-width:2px;   
+    stroke-width:2px;
   }
 
   text.mono {
@@ -49,7 +49,7 @@ rect.bordered {
   text.axis-worktime {
     fill: #000;
   }
-  
+
   .legend { list-style: none; }
   .legend li { float: left; margin-right: 10px; }
   .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
@@ -254,7 +254,7 @@ rect.bordered {
                                         <label class="col-sm-7 control-label">List of accessions to include (required):</label>
                                         <div class="col-sm-5" id="select_list" name="select_list">
                                         </div>
-                                    </div>                                    
+                                    </div>
                                     <div class="form-group" id="westcott_check_1_section" style="display: none">
                                       <label class="col-sm-3 control-label">Name of Check 1: </label>
                                       <div class="col-sm-9" >
@@ -266,7 +266,7 @@ rect.bordered {
                                       <div class="col-sm-9" >
                                         <input class="form-control" id="westcott_check_2" name="westcott_check_2" placeholder="Required"> </input>
                                       </div>
-                                    </div>                                    
+                                    </div>
                                     <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
                                         <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                         <div class="col-sm-5" id="list_of_checks_section" >
@@ -336,7 +336,7 @@ rect.bordered {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                     <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                     <div class="col-sm-5" >
@@ -491,7 +491,7 @@ rect.bordered {
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
                                 <br/>
                                 <div class="well">
@@ -527,7 +527,7 @@ rect.bordered {
                                     </div>
                                 </div>
 
-                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing trial in the database.</p>
+                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.</p>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -696,7 +696,7 @@ rect.bordered {
                             </&>
 
                         </&><!-- End of workflow-->
-                    </form>    
+                    </form>
 
                 </div>
             </div>
