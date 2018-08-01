@@ -24,7 +24,7 @@ my $schema = $f->bcs_schema;
 my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
 });
-my $result = $trial_search->search();
+my ($result, $total_count) = $trial_search->search();
 print STDERR Dumper $result;
 is_deeply($result, [
           {
@@ -178,7 +178,7 @@ $trial_search = CXGN::Trial::Search->new({
     location_list=>['test_location'],
     program_list=>['test'],
 });
-$result = $trial_search->search();
+($result, $total_count) = $trial_search->search();
 print STDERR Dumper $result;
 is_deeply($result, [
           {

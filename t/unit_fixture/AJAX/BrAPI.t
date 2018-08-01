@@ -135,7 +135,7 @@ is_deeply($response, {'result' => {'data' => ['Cassava']},'metadata' => {'datafi
 $mech->get_ok('http://localhost:3010/brapi/v1/seasons?access_token='.$access_token );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'pagination' => {'totalPages' => 1,'pageSize' => 10,'currentPage' => 0,'totalCount' => 4},'status' => [{'code' => 'info','message' => 'BrAPI base call found with page=0, pageSize=10'},{'code' => 'info','message' => 'Loading CXGN::BrAPI::v1::Studies'},{'message' => 'Seasons list result constructed','code' => '200'}],'datafiles' => []},'result' => {'data' => [{'season' => '','seasonDbId' => '2014','year' => '2014'},{'season' => '','year' => '2015','seasonDbId' => '2015'},{'seasonDbId' => '2016','year' => '2016','season' => ''},{'year' => '2017','seasonDbId' => '2017','season' => ''}]}}, 'seasons');
+is_deeply($response, {'result' => {'data' => [{'seasonDbId' => '2014','season' => '','year' => '2014'},{'season' => '','year' => '2015','seasonDbId' => '2015'},{'seasonDbId' => '2016','year' => '2016','season' => ''},{'seasonDbId' => '2017','year' => '2017','season' => ''}]},'metadata' => {'status' => [{'code' => 'info','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v1::Studies','code' => 'info'},{'code' => '200','message' => 'Seasons list result constructed'}],'datafiles' => [],'pagination' => {'totalPages' => 1,'currentPage' => 0,'pageSize' => 10,'totalCount' => 4}}}, 'seasons');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/studytypes?access_token='.$access_token );
 $response = decode_json $mech->content;
@@ -156,6 +156,16 @@ $mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&page=3&
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => [{'startDate' => undef,'locationDbId' => '23','trialDbId' => '','active' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),'programName' => 'test','programDbId' => '134','studyType' => undef,'trialName' => undef,'additionalInfo' => {'design' => 'CRD','description' => 'test tets'},'name' => 'test_t','seasons' => ['2016'],'studyDbId' => '144','locationName' => 'test_location','endDate' => undef},{'name' => 'test_trial','seasons' => ['2014'],'studyDbId' => '137','locationName' => 'test_location','endDate' => '2017-July-04','startDate' => '2017-July-21','locationDbId' => '23','trialDbId' => '','programName' => 'test','active' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),'studyType' => undef,'trialName' => undef,'programDbId' => '134','additionalInfo' => {'description' => 'test trial','design' => 'CRD'}}]},'metadata' => {'datafiles' => [],'pagination' => {'pageSize' => 2,'totalPages' => 5,'totalCount' => 9,'currentPage' => 3},'status' => [{'message' => 'BrAPI base call found with page=3, pageSize=2','code' => 'info'},{'code' => 'info','message' => 'Loading CXGN::BrAPI::v1::Studies'},{'message' => 'Studies-search result constructed','code' => '200'}]}}, 'studies-search');
+
+$mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&page=0&programDbIds=134&access_token='.$access_token );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {}, 'studies-search with program');
+
+$mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&page=0&trialDbIds=167&access_token='.$access_token );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {}, 'studies-search with trial');
 
 $mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&page=0&studyLocations=test_location&access_token='.$access_token );
 $response = decode_json $mech->content;

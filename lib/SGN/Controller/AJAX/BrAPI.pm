@@ -812,38 +812,61 @@ sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : Acti
 #}
 
 sub studies_search_POST {
-	my $self = shift;
-	my $c = shift;
-	studies_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->studies_search({
+        programDbIds => $clean_inputs->{programDbIds},
+        programNames => $clean_inputs->{programNames},
+        studyDbIds => $clean_inputs->{studyDbIds},
+        studyNames => $clean_inputs->{studyNames},
+        trialDbIds => $clean_inputs->{trialDbIds},
+        trialNames => $clean_inputs->{trialNames},
+        studyLocationDbIds => $clean_inputs->{locationDbIds},
+        studyLocationNames => $clean_inputs->{studyLocations},
+        studyTypeName => $clean_inputs->{studyType}->[0],
+        germplasmDbIds => $clean_inputs->{germplasmDbIds},
+        germplasmNames => $clean_inputs->{germplasmNames},
+        seasons => $clean_inputs->{seasonDbIds},
+        observationVariableDbIds => $clean_inputs->{observationVariableDbIds},
+        observationVariableNames => $clean_inputs->{observationVariableNames},
+        active => $clean_inputs->{active}->[0],
+        sortBy => $clean_inputs->{sortBy}->[0],
+        sortOrder => $clean_inputs->{sortOrder}->[0],
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub studies_search_GET {
-	my $self = shift;
-	my $c = shift;
-	studies_search_process($self, $c);
-}
-
-sub studies_search_process {
-	my $self = shift;
-	my $c = shift;
-	my $auth = _authenticate_user($c);
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Studies');
-	my $brapi_package_result = $brapi_module->studies_search({
-		programDbIds => $clean_inputs->{programDbId},
-		programNames => $clean_inputs->{programName},
-		studyDbIds => $clean_inputs->{studyDbId},
-		studyNames => $clean_inputs->{studyName},
-		studyLocationDbIds => $clean_inputs->{locationDbId},
-		studyLocationNames => $clean_inputs->{locationName},
-		studyTypeName => $clean_inputs->{studyType},
-		germplasmDbIds => $clean_inputs->{germplasmDbId},
-		germplasmNames => $clean_inputs->{germplasmName},
-		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
-		observationVariableNames => $clean_inputs->{observationVariableName},
-	});
-	_standard_response_construction($c, $brapi_package_result);
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->studies_search({
+        programDbIds => $clean_inputs->{programDbId},
+        programNames => $clean_inputs->{programName},
+        studyDbIds => $clean_inputs->{studyDbId},
+        studyNames => $clean_inputs->{studyName},
+        trialDbIds => $clean_inputs->{trialDbId},
+        trialNames => $clean_inputs->{trialName},
+        studyLocationDbIds => $clean_inputs->{locationDbId},
+        studyLocationNames => $clean_inputs->{locationName},
+        seasons => $clean_inputs->{seasonDbId},
+        studyTypeName => $clean_inputs->{studyType}->[0],
+        germplasmDbIds => $clean_inputs->{germplasmDbId},
+        germplasmNames => $clean_inputs->{germplasmName},
+        observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+        observationVariableNames => $clean_inputs->{observationVariableName},
+        active => $clean_inputs->{active}->[0],
+        sortBy => $clean_inputs->{sortBy}->[0],
+        sortOrder => $clean_inputs->{sortOrder}->[0],
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 #BrAPI Trials are modeled as Folders
