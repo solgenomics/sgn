@@ -97,13 +97,13 @@ $timestamp
                             <div class="well">
                                 <div class="row">
                                     <div class="col-sm-3">
-                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-th"></span>
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-flag"></span>
                                     </div>
                                     <div class="col-sm-7">
-                                        <h4>Prepare a 96 or 384 well plate for a genotyping experiment</h4>
+                                        <h4>Plan tissue sampling</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button id="guided_help_genotyping_trial_button" class="btn btn-primary btn-sm">Go</button>
+                                        <button name="tissue_sample_guided_help" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>
@@ -156,6 +156,38 @@ $timestamp
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-th"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Prepare a 96 or 384 well plate for a genotyping experiment</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="create_genotyping_trial_link" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-map-marker"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Upload VCF genotypic data</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="upload_genotyping_data_link" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -165,14 +197,18 @@ $timestamp
     </div>
 </div>
 
+<& /help/workflow_guided/tissue_sample_help.mas &>
+
 <& /help/workflow_guided/seedlot_inventory_modal.mas, timestamp=>$timestamp &>
 <& /help/workflow_guided/phenotype_upload_modal.mas &>
-<& /help/workflow_guided/genotyping_trial_modal.mas &>
 <& /help/workflow_guided/trial_barcoding_modal.mas &>
 <& /help/workflow_guided/trial_comparison_modal.mas &>
 
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, breeding_programs=>$breeding_programs, locations=>$locations &>
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>

@@ -305,6 +305,7 @@ sub get_all_locations {
         my $country_code = '';
         my $location_type = '';
         my $abbreviation = '';
+        my $address = '';
 
         while (my $sp = $loc_props->next()) {
             if ($sp->get_column('cvterm_name') eq 'country_name') {
@@ -315,12 +316,14 @@ sub get_all_locations {
                 $location_type = $sp->get_column('value');
             } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
                 $abbreviation = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'geolocation address') {
+                $address = $sp->get_column('value');
             } else {
                 $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation],
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address],
     }
 
     return \@locations;
@@ -358,6 +361,308 @@ sub get_breeding_programs {
     }
     return  \@projects;
 }
+
+=head2 function set_field_trials_source_field_trials()
+
+ Usage:
+ Desc:         sets associated source field trials for the current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [source_trial_id1, source_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_field_trials_source_field_trials {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $field_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'subject_project_id' => $self->get_trial_id(),
+                'object_project_id' => $_,
+                'type_id' => $field_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_field_trials_source_field_trials();
+    return $projects;
+}
+
+=head2 function get_field_trials_source_field_trials()
+
+ Usage:
+ Desc:         return associated source field trials for the current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_source_field_trials {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $field_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.subject_project_id' => $self->get_trial_id(),
+        'me.type_id' => $field_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->object_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+=head2 function get_field_trials_sourced_from_field_trials()
+
+ Usage:
+ Desc:         return associated source field trials for the current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_sourced_from_field_trials {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $field_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $field_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->subject_project_id, $r->get_column('trial_name') ];
+    }
+    return  \@projects;
+}
+
+=head2 function set_genotyping_trials_from_field_trial()
+
+ Usage:
+ Desc:         sets associated genotyping trials for the current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [genotyping_trial_id1, genotyping_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_genotyping_trials_from_field_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'subject_project_id' => $self->get_trial_id(),
+                'object_project_id' => $_,
+                'type_id' => $genotyping_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_genotyping_trials_from_field_trial();
+    return $projects;
+}
+
+=head2 function get_genotyping_trials_from_field_trial()
+
+ Usage:
+ Desc:         return associated genotyping trials for the current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_trials_from_field_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.subject_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->object_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+=head2 function set_source_field_trials_for_genotyping_trial()
+
+ Usage:
+ Desc:         sets associated field trials for the current genotyping trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [field_trial_id1, field_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_source_field_trials_for_genotyping_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'object_project_id' => $self->get_trial_id(),
+                'subject_project_id' => $_,
+                'type_id' => $genotyping_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_field_trials_source_of_genotyping_trial();
+    return $projects;
+}
+
+=head2 function get_field_trials_source_of_genotyping_trial()
+
+ Usage:
+ Desc:         return associated field trials for current genotying trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_source_of_genotyping_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->subject_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+
+=head2 function set_crossing_trials_from_field_trial()
+
+ Usage:
+ Desc:         sets associated crossing trials for the current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [crossing_trial_id1, crossing_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_crossing_trials_from_field_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'subject_project_id' => $self->get_trial_id(),
+                'object_project_id' => $_,
+                'type_id' => $genotyping_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_crossing_trials_from_field_trial();
+    return $projects;
+}
+
+=head2 function get_crossing_trials_from_field_trial()
+
+ Usage:
+ Desc:         return associated crossing trials for athe current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_crossing_trials_from_field_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.subject_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->object_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
+=head2 function get_field_trials_source_of_crossing_trial()
+
+ Usage:
+ Desc:         return associated crossing trials for athe current field trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_source_of_crossing_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->subject_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
+
 
 =head2 function get_project_type()
 
@@ -870,6 +1175,115 @@ sub set_genotyping_plate_sample_type {
     $self->_set_projectprop('genotyping_plate_sample_type', $value);
 }
 
+=head2 accessors get_field_trial_is_planned_to_be_genotyped(), set_field_trial_is_planned_to_be_genotyped()
+
+ Usage: For field trials, this records whether the trial will be genotyped
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trial_is_planned_to_be_genotyped {
+    my $self = shift;
+    return $self->_get_projectprop('field_trial_is_planned_to_be_genotyped');
+}
+
+sub set_field_trial_is_planned_to_be_genotyped {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('field_trial_is_planned_to_be_genotyped', $value);
+}
+
+=head2 accessors get_field_trial_is_planned_to_cross(), set_field_trial_is_planned_to_cross()
+
+ Usage: For field trials, this records whether the trial will be involved in crosses
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trial_is_planned_to_cross {
+    my $self = shift;
+    return $self->_get_projectprop('field_trial_is_planned_to_cross');
+}
+
+sub set_field_trial_is_planned_to_cross {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('field_trial_is_planned_to_cross', $value);
+}
+
+=head2 accessors get_plot_width(), set_plot_width()
+
+ Usage: For field trials, this records plot width in meters
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plot_width {
+    my $self = shift;
+    return $self->_get_projectprop('plot_width');
+}
+
+sub set_plot_width {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('plot_width', $value);
+}
+
+=head2 accessors get_plot_length(), set_plot_length()
+
+ Usage: For field trials, this records plot length in meters
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plot_length {
+    my $self = shift;
+    return $self->_get_projectprop('plot_length');
+}
+
+sub set_plot_length {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('plot_length', $value);
+}
+
+=head2 accessors get_field_size(), set_field_size()
+
+ Usage: For field trials, this recordsfield size in hectares
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_size {
+    my $self = shift;
+    return $self->_get_projectprop('field_size');
+}
+
+sub set_field_size {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('field_size', $value);
+}
 
 
 sub _get_projectprop {
@@ -1025,7 +1439,7 @@ sub get_phenotype_metadata {
 
 =head2 function delete_phenotype_metadata()
 
- Usage:        $trial->delete_metadata($metadata_schema, $phenome_schema);
+ Usage:        $trial->delete_phenotype_metadata($metadata_schema, $phenome_schema);
  Desc:         obsoletes the metadata entries for this trial.
  Ret:
  Args:
@@ -1083,7 +1497,7 @@ sub delete_phenotype_metadata {
 
 =head2 function delete_metadata()
 
- Usage:        $trial->delete_metadata($metadata_schema, $phenome_schema);
+ Usage:        $trial->delete_metadata();
  Desc:         obsoletes the metadata entries for this trial.
  Ret:
  Args:
@@ -1552,7 +1966,7 @@ sub get_stock_phenotypes_for_traits {
  Usage:
  Desc:         returns the cvterm_id and name for traits assayed
  Ret:
- Args:
+ Args:          stock_type can be the cvterm name for a specific stock type like 'plot'. not providing stock_type will return all traits assayed in the trial. trait_format can be for only returning numeric, categorical, etc traits. not providing trait_format will return all trait types.
  Side Effects:
  Example:
 
@@ -1560,25 +1974,33 @@ sub get_stock_phenotypes_for_traits {
 
 sub get_traits_assayed {
     my $self = shift;
-	my $stock_type = shift;
+    my $stock_type = shift;
+    my $trait_format = shift;
     my $dbh = $self->bcs_schema->storage()->dbh();
 
     my @traits_assayed;
 
-	my $q;
-	if ($stock_type) {
-		my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
-	} else {
-		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
-	}
+    my $cvtermprop_join = '';
+    my $cvtermprop_where = '';
+    if ($trait_format){
+        my $trait_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'trait_format', 'trait_property')->cvterm_id();
+        $cvtermprop_join = ' JOIN cvtermprop ON (cvtermprop.cvterm_id = cvterm.cvterm_id) ';
+        $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
+    }
+
+    my $q;
+    if ($stock_type) {
+        my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+    } else {
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+    }
 
     my $traits_assayed_q = $dbh->prepare($q);
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $traits_assayed_q->execute($self->get_trial_id(), $numeric_regex );
+    $traits_assayed_q->execute($self->get_trial_id());
     while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-	push @traits_assayed, [$trait_id, $trait_name];
+        push @traits_assayed, [$trait_id, $trait_name];
     }
     return \@traits_assayed;
 }
@@ -2849,10 +3271,10 @@ sub get_trial_contacts {
 	);
 
 	while(my $prop = $prop_rs->next()) {
-		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email, user_type, phone_number FROM sgn_people.sp_person WHERE sp_person_id=?;";
+		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email, user_type, phone_number, organization FROM sgn_people.sp_person WHERE sp_person_id=?;";
 		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
 		$h->execute($prop->value);
-		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email, $user_type, $phone) = $h->fetchrow_array()){
+		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email, $user_type, $phone, $organization) = $h->fetchrow_array()){
 			push @contacts, {
 				sp_person_id => $sp_person_id,
 				salutation => $salutation,
@@ -2861,12 +3283,43 @@ sub get_trial_contacts {
 				username => $username,
 				email => $email,
 				type => $user_type,
-				phone_number => $phone
+				phone_number => $phone,
+                organization => $organization
 			};
 		}
 	}
 
 	return \@contacts;
+}
+
+
+=head2 function get_data_agreement()
+
+	Usage:        $trial->get_data_agreement();
+	Desc:         return data agreement saved for trial.
+	Ret:          
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub get_data_agreement {
+    my $self = shift;
+    my $chado_schema = $self->bcs_schema();
+    my $cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'data_agreement', 'project_property' );
+
+    my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+        type_id => $cvterm->cvterm_id(),
+        project_id => $self->get_trial_id(),
+    });
+
+    if ($rs) {
+        return $rs->value();
+    } else {
+        return;
+	}
+
 }
 
 =head2 suppress_plot_phenotype

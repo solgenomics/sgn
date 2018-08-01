@@ -28,9 +28,9 @@
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_wizard_phenotypes_level_option">
+                        <option value="all">All</option>
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
-                        <option value="all">All</option>
                     </select>
                 </div>
             </div>
@@ -80,15 +80,6 @@
                             <input id="download_wizard_phenotype_phenotype_max" name="download_wizard_phenotype_phenotype_max" type="number" class="form-control" />
                         </div>
                     </div>
-                </div>
-            </div>
-</&>
-<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Download Type: </label>
-                <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="search_type" id="search_type" value="complete">Complete</label>
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="search_type" id="search_type" value="fast" checked>Fast (plots only)</label>
                 </div>
             </div>
 </&>

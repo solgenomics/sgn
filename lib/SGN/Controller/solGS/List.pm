@@ -25,9 +25,11 @@ use JSON;
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
+use Storable qw/ nstore retrieve /;
 use String::CRC;
 use Try::Tiny;
 use POSIX qw(strftime);
+use Carp qw/ carp confess croak /;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -66,7 +68,7 @@ sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection'
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     
-    $c->stash->{uploaded_prediction} = 1;
+    $c->stash->{list_prediction} = 1;
    
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
    
@@ -99,7 +101,7 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     $c->stash->{model_id}            = $training_pop_id; 
     $c->stash->{pop_id}              = $training_pop_id; 
     $c->stash->{selection_pop_id}    = $selection_pop_id;  
-    $c->stash->{uploaded_prediction} = $args->{population_type};
+    $c->stash->{list_prediction} = $args->{population_type};
     $c->stash->{trait_id}            = $trait_id;
 
     if ($args->{data_set_type} =~ /combined populations/) 
@@ -143,7 +145,7 @@ sub solgs_list_login_message :Path('/solgs/list/login/message') Args(0) {
     my $page = $c->req->param('page');
 
     my $message = "This is a private data. If you are the owner, "
-	. "please <a href=\"/solpeople/login.pl?goto_url=$page\">login</a> to view it.";
+	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
 
     $c->stash->{message} = $message;
 
@@ -220,7 +222,7 @@ sub genotypes_list_genotype_data_file {
     my ($self, $c, $list_pop_id) = @_;
     
     my $geno_data = $c->stash->{genotypes_list_genotype_data};
-    my $dir = $c->stash->{solgs_prediction_upload_dir};
+    my $dir = $c->stash->{solgs_lists_dir};
         
     my $files = $self->create_list_pop_tempfiles($dir, $list_pop_id);
     my $geno_file = $files->{geno_file};
@@ -262,16 +264,17 @@ sub create_list_population_metadata_file {
     my ($self, $c, $list_pop_id) = @_;
     
     my $user_id = $c->user->id;
-    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+    my $tmp_dir = $c->stash->{solgs_lists_dir};
               
     my $file = catfile ($tmp_dir, "metadata_${user_id}_${list_pop_id}");
- 
+   
     $self->create_list_population_metadata($c);
     my $metadata = $c->stash->{user_list_population_metadata};
     
     write_file($file, $metadata);
  
     $c->stash->{user_list_population_metadata_file} = $file;
+ 
   
 }
 
@@ -283,25 +286,25 @@ sub predict_list_selection_pop_single_pop_model {
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
     
-    $c->stash->{uploaded_prediction} = 1;
+    $c->stash->{list_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+    my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
    
-    if (!-s $prediction_pop_gebvs_file)
+    if (!-s $rrblup_selection_gebvs_file)
     {
-	$c->controller('solGS::solGS')->phenotype_file_name($c, $training_pop_id);
+	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	$c->stash->{phenotype_file} =$c->stash->{phenotype_file_name};
 
-	$c->controller('solGS::solGS')->genotype_file_name($c, $training_pop_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	$c->stash->{genotype_file} =$c->stash->{genotype_file_name};
 
-	$self->user_prediction_population_file($c, $selection_pop_id); 
+	$self->user_selection_population_file($c, $selection_pop_id); 
 
 	$c->stash->{pop_id} = $c->stash->{training_pop_id};
-	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-	$c->controller("solGS::solGS")->get_rrblup_output($c);
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::solGS')->get_rrblup_output($c);
 	$c->stash->{status} = 'success';
     }
     else 
@@ -347,22 +350,22 @@ sub predict_list_selection_pop_combined_pops_model {
    
     $c->stash->{prediction_pop_id} = $c->stash->{selection_pop_id};
     $c->stash->{pop_id} = $training_pop_id;
-    $c->stash->{uploaded_prediction} = 1;
+    $c->stash->{list_prediction} = 1;
 
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    $c->controller("solGS::solGS")->prediction_pop_gebvs_file($c, $identifier, $trait_id);        
-    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);        
+    my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
   
-    if (!-s $prediction_pop_gebvs_file)
+    if (!-s $rrblup_selection_gebvs_file)
     {    
 	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id); 
 	
-	$c->controller("solGS::solGS")->cache_combined_pops_data($c);
+	$c->controller("solGS::combinedTrials")->cache_combined_pops_data($c);
 	    
 	my $pheno_file = $c->stash->{trait_combined_pheno_file};
 	my $geno_file  = $c->stash->{trait_combined_geno_file};
 	
-	$self->user_prediction_population_file($c, $selection_pop_id);
+	$self->user_selection_population_file($c, $selection_pop_id);
 	
 	$c->controller("solGS::solGS")->get_rrblup_output($c);
 	$c->stash->{status} = 'success';
@@ -415,17 +418,17 @@ sub predict_list_selection_gebvs {
 }
 
 
-sub user_prediction_population_file {
+sub user_selection_population_file {
     my ($self, $c, $pred_pop_id) = @_;
  
-    my $upload_dir = $c->stash->{solgs_prediction_upload_dir};
+    my $list_dir = $c->stash->{solgs_lists_dir};
    
-    my ($fh, $tempfile) = tempfile("prediction_population_${pred_pop_id}-XXXXX", 
-                                   DIR => $upload_dir
+    my ($fh, $tempfile) = tempfile("selection_population_${pred_pop_id}-XXXXX", 
+                                   DIR => $list_dir
         );
 
     
-    $c->controller("solGS::solGS")->genotype_file_name($c, $pred_pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pred_pop_id);
     my $pred_pop_file = $c->stash->{genotype_file_name};
 
     $c->stash->{genotypes_list_genotype_data_file} = $pred_pop_file;
@@ -433,7 +436,7 @@ sub user_prediction_population_file {
     $fh->print($pred_pop_file);
     $fh->close; 
 
-    $c->stash->{prediction_population_file} = $tempfile;
+    $c->stash->{selection_population_file} = $tempfile;
   
 }
 
@@ -518,7 +521,7 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
     
     $self->genotypes_list_genotype_file($c, $model_id);
     
-    my $tmp_dir  = $c->stash->{solgs_prediction_upload_dir};
+    my $tmp_dir  = $c->stash->{solgs_lists_dir};
       
     my $files = $self->create_list_pop_tempfiles($tmp_dir, $model_id);
     my $pheno_file = $files->{pheno_file};
@@ -537,27 +540,6 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
         
     $c->res->content_type('application/json');
     $c->res->body($ret);
-
-}
-
-
-sub genotypes_list_genotype_data {
-    my ($self, $args) = @_;
-   
-    my $list_pop_id   = $args->{model_id} || $args->{list_pop_id} || $args->{selection_pop_id};
-    my $genotypes     = $args->{genotypes_list};
-    my $genotypes_ids = $args->{genotypes_ids};
-    my $tmp_dir       = $args->{list_data_dir};
-   
-    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
-					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
-					      });
-
-    my $geno_data = $model->genotypes_list_genotype_data($genotypes);
-    my $files = $self->create_list_pop_tempfiles($tmp_dir, $list_pop_id);
-
-    my $geno_file = $files->{geno_file};
-    write_file($geno_file, $geno_data);
 
 }
 
@@ -585,7 +567,7 @@ sub genotypes_list_genotype_file {
     my $genotypes = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
 
-    my $data_dir  = $c->stash->{solgs_prediction_upload_dir};
+    my $data_dir  = $c->stash->{solgs_lists_dir};
 
     my $args = {
 	'list_pop_id'    => $list_pop_id,
@@ -595,72 +577,65 @@ sub genotypes_list_genotype_file {
     };
 
     $c->stash->{r_temp_file} = 'genotypes-list-genotype-data-query';
-    $c->controller('solGS::solGS')->create_cluster_acccesible_tmp_files($c);
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $report_file = $c->controller('solGS::solGS')->create_tempfile($temp_dir, 'geno-data-query-report-args');
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
     $c->stash->{report_file} = $report_file;
 
     my $status;
-    try 
-    { 
-        my $geno_job = CXGN::Tools::Run->run_cluster_perl({
-           
-            method        => ["SGN::Controller::solGS::List" => "genotypes_list_genotype_data"],
-    	    args          => [$args],
-    	    load_packages => ['SGN::Controller::solGS::List', 'SGN::Context', 'SGN::Model::solGS::solGS'],
-    	    run_opts      => {
-    		              out_file    => $out_temp_file,
-			      err_file    => $err_temp_file,
-    		              working_dir => $temp_dir,
-			      max_cluster_jobs => 1_000_000_000,
-	    },
-	    
-         });
+    
+    my $config = {
+	backend => $c->config->{backend},
+	temp_base => $temp_dir,
+	queue => $c->config->{'web_cluster_queue'},
+	max_cluster_jobs => 1_000_000_000,
+	out_file         => $out_temp_file,
+	err_file         => $err_temp_file,
+	do_cleanup       => 0,
+    };
 
-	$c->stash->{r_job_tempdir} = $geno_job->tempdir();
-	$c->stash->{geno_data_query_job_id} = $geno_job->job_id();
-	$c->stash->{cluster_job} = $geno_job;
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
+    $c->stash->{report_file} = $args_file;
 
-	unless ($background_job)
-	{
-	    $geno_job->wait();
+    nstore $args, $args_file 
+		or croak "data query script: $! serializing model details to $args_file ";
+	
+    my $cmd = 'mx-run solGS::Cluster ' 
+	. ' --data_type genotype '
+	. ' --population_type genotypes_list '
+	. ' --args_file ' . $args_file;
+    
+
+   eval 
+   {
+       my $geno_job = CXGN::Tools::Run->new($config);
+       $geno_job->do_not_cleanup(1);
+
+       if ($background_job) {
+	   $geno_job->is_async(1),
+	   $geno_job->run_cluster($cmd);
+	 
+	   $c->stash->{r_job_tempdir} = $geno_job->tempdir();
+	   $c->stash->{r_job_id}      = $geno_job->jobid();
+	   $c->stash->{cluster_job}    = $geno_job;
+	} else {
+	    $geno_job->is_cluster(1);
+	    $geno_job->run_cluster($cmd);
+	    $geno_job->wait;
 	}
 	
+   };
+
+    if ($@) {
+	print STDERR "An error occurred! $@\n";
+	$c->stash->{Error} =  $@;
     }
-    catch 
-    {
-	$status = $_;
-	$status =~ s/\n at .+//s;           
-    }; 
 
-}
-
-
-sub plots_list_phenotype_data {
-    my ($self, $args) = @_;
-   
-    my $model_id    = $args->{model_id};
-    my $plots_names = $args->{plots_names};
-    my $plots_ids   = $args->{plots_ids};
-    my $traits_file = $args->{traits_file};
-    my $tmp_dir     = $args->{list_data_dir};
-   
-    my $model = SGN::Model::solGS::solGS->new({schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
-    my $pheno_data = $model->plots_list_phenotype_data($plots_names);
-  
-    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
-    
-    my $files = $self->create_list_pop_tempfiles($tmp_dir, $model_id);
-
-    my $pheno_file = $files->{pheno_file};
-    
-    write_file($pheno_file, $pheno_data);
-      
 }
 
 
@@ -677,21 +652,14 @@ sub plots_list_phenotype_file {
     my $plots_ids = $c->stash->{list_elements_ids};
 
     $c->stash->{pop_id} = $model_id;
-    $c->controller("solGS::solGS")->traits_list_file($c);    
+    $c->controller('solGS::Files')->traits_list_file($c);    
     my $traits_file =  $c->stash->{traits_list_file};
   
-    my $data_dir = $c->stash->{solgs_prediction_upload_dir};
-
-    my $args = {
-	'model_id'      => $model_id,
-	'plots_names'   => $plots_names,
-	'plots_ids'     => $plots_ids,
-	'traits_file'   => $traits_file,
-	'list_data_dir' => $data_dir,
-    };
+    my $data_dir = $c->stash->{solgs_lists_dir};
 
     $c->stash->{r_temp_file} = 'plots-phenotype-data-query';
-    $c->controller('solGS::solGS')->create_cluster_acccesible_tmp_files($c);
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+     
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -699,46 +667,119 @@ sub plots_list_phenotype_file {
     my $background_job = $c->stash->{background_job};
 
     my $status;
- 
-    try 
-    { 
-        my $pheno_job = CXGN::Tools::Run->run_cluster_perl({
-           
-            method        => ["SGN::Controller::solGS::List" => "plots_list_phenotype_data"],
-    	    args          => [$args],
-    	    load_packages => ['SGN::Controller::solGS::List', 'SGN::Controller::solGS::solGS', 'SGN::Context', 'SGN::Model::solGS::solGS'],
-    	    run_opts      => {
-    		              out_file    => $out_temp_file,
-			      err_file    => $err_temp_file,
-    		              working_dir => $temp_dir,
-			      max_cluster_jobs => 1_000_000_000,
-	    },
-	    
-         });
 
-	$c->stash->{r_job_tempdir} = $pheno_job->tempdir();
-	$c->stash->{pheno_data_query_job_id} = $pheno_job->job_id();
-	$c->stash->{cluster_job} = $pheno_job;
+     my $args = {
+	'model_id'      => $model_id,
+	'plots_names'   => $plots_names,
+	'plots_ids'     => $plots_ids,
+	'traits_file'   => $traits_file,
+	'list_data_dir' => $data_dir,
+    };
 
-	unless ($background_job)
-	{
-	    $pheno_job->wait();
+    
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
+    $c->stash->{report_file} = $args_file;
+  
+    nstore $args, $args_file 
+		or croak "data query script: $! serializing data query details to $args_file ";
+	
+    my $cmd = 'mx-run solGS::Cluster ' 
+	. ' --data_type phenotype '
+	. ' --population_type plots_list '
+	. ' --args_file ' . $args_file;
+
+
+    my $config = {
+	backend => $c->config->{backend},
+	temp_base => $temp_dir,
+	queue => $c->config->{'web_cluster_queue'},
+	max_cluster_jobs => 1_000_000_000,
+	out_file         => $out_temp_file,
+	err_file         => $err_temp_file,
+	do_cleanup       => 0,
+    };
+    
+
+   eval 
+   {     
+	my $pheno_job = CXGN::Tools::Run->new($config);
+	$pheno_job->do_not_cleanup(1);
+
+	if ($background_job) {
+	    $pheno_job->is_async(1),
+	    $pheno_job->run_cluster($cmd);
+        
+	    $c->stash->{r_job_tempdir} = $pheno_job->tempdir();
+	    $c->stash->{r_job_id}      = $pheno_job->jobid();
+	    $c->stash->{cluster_job}   = $pheno_job;
+	} else {
+	   $pheno_job->is_cluster(1);
+	   $pheno_job->run_cluster($cmd);
+	   $pheno_job->wait;
 	}
 	
+    };
+
+    if ($@) {
+	print STDERR "An error occurred! $@\n";
+	$c->stash->{Error} =  $@;
     }
-    catch 
-    {
-	$status = $_;
-	$status =~ s/\n at .+//s;           
-    }; 
 
 }
+
+
+sub list_population_summary {
+    my ($self, $c, $list_pop_id) = @_;
+    
+    my $tmp_dir = $c->stash->{solgs_lists_dir};
+   
+    if (!$c->user)
+    {
+	my $page = "/" . $c->req->path;
+	$c->res->redirect("/solgs/list/login/message?page=$page");
+	$c->detach;
+    }
+    else
+    {
+	my $user_name = $c->user->id;
+    
+	#my $model_id = $c->stash->{model_id};
+	#my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+ 
+	my $protocol = $c->config->{default_genotyping_protocol};
+	$protocol = 'N/A' if !$protocol;
+
+	if ($list_pop_id) 
+	{
+	    my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${list_pop_id}");
+       
+	    my @metadata_tr = read_file($metadata_file_tr) if $list_pop_id;
+       
+	    my ($key, $list_name, $desc);
+     
+	    ($desc)        = grep {/description/} @metadata_tr;       
+	    ($key, $desc)  = split(/\t/, $desc);
+      
+	    ($list_name)       = grep {/list_name/} @metadata_tr;      
+	    ($key, $list_name) = split(/\t/, $list_name); 
+	   
+	    $c->stash(project_id          => $list_pop_id,
+		      project_name        => $list_name,
+		      prediction_pop_name => $list_name,
+		      project_desc        => $desc,
+		      owner               => $user_name,
+		      protocol            => $protocol,
+		);  
+	}
+    }
+}
+
 
 
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

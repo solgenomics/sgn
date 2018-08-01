@@ -1,0 +1,78 @@
+<%args>
+$stock_id
+$type_name
+$stockref => {}
+$stockprops
+$edit_privs
+$editable_stock_props
+$editor_link
+$source_dbs => {}
+$new_locus_link => ''
+$locus_add_uri
+$allele_div
+$is_owner
+</%args>
+
+<div class="panel panel-default">
+    <div class="panel-body panel-body-sm">
+
+        <&| /page/info_section.mas, title => "Synonyms", is_subsection => 1 &>
+            <& /stock/stockprops.mas,
+                stock_id    => $stock_id,
+                props      => $stockprops ,
+                div_name   =>'synonyms',
+                subset     => [ 'stock_synonym', 'solcap number'],
+                editable   => [ 'stock_synonym' ],
+                edit_privs => $edit_privs   &>
+        </&>
+
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body panel-body-sm">
+
+        <&| /page/info_section.mas, title => "Additional information", is_subsection => 1 &>
+            <& /stock/stockprops.mas,
+                stock_id  =>$stock_id,
+                props      => $stockprops,
+                div_name   => 'stockprops',
+                edit_privs => $edit_privs,
+                subset     => $editable_stock_props,
+                editable   => $editable_stock_props  &>
+        </&>
+
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body panel-body-sm">
+        <b>Stock editors: </b>
+        <br/>
+        <% $editor_link %>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body panel-body-sm">
+        <b>External Database Links: </b>
+        <ul>
+% foreach my $db_url (keys %$source_dbs) {
+            <li>
+                <a href="<% $db_url %>" ><% $source_dbs->{$db_url} %></a>
+            </li>
+% }
+        </ul>
+    </div>
+</div>
+
+% if ($type_name eq 'accession'){
+    <div class="panel panel-default">
+        <div class="panel-body panel-body-sm">
+
+            <&| /page/info_section.mas, title => "Associated loci (" . $stockref->{allele_count} . ")" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
+                <& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
+            </&>
+        </div>
+    </div>
+% }

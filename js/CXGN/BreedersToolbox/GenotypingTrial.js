@@ -24,11 +24,15 @@ jQuery(document).ready(function ($) {
     // defined in CXGN.BreedersToolbox.HTMLSelect
     get_select_box("locations", "location_select_div", {});
     get_select_box("breeding_programs", "breeding_program_select_div", {});
-    get_select_box("years", "year_select_div", {});
+    get_select_box("years", "year_select_div", {'auto_generate': 1});
 
-    get_select_box("locations", "location_select_div", {});
-    get_select_box("breeding_programs", "breeding_program_select_div", {});
-    get_select_box("years", "year_select_div", {});
+    get_select_box("locations", "upload_genotype_location_select_div", {'id': 'upload_genotype_location_select', 'name': 'upload_genotype_location_select'});
+    get_select_box("breeding_programs", "upload_genotype_breeding_program_select_div", {'id': 'upload_genotype_breeding_program_select', 'name': 'upload_genotype_breeding_program_select'});
+    get_select_box("years", "upload_genotype_year_select_div", {'auto_generate': 1, 'id': 'upload_genotype_year_select', 'name': 'upload_genotype_year_select'});
+
+    jQuery("#upload_genotypes_species_name_input").autocomplete({
+        source: '/organism/autocomplete'
+    });
 
     jQuery(function() {
         jQuery( "#genotyping_trials_accordion" ).accordion({
@@ -47,9 +51,6 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    jQuery('#create_genotyping_trial_link').click(function () {
-        open_genotyping_trial_dialog();
-    });
 
     var plate_data = new Object();
     jQuery('#add_geno_trial_submit').click(function () {
@@ -83,7 +84,12 @@ jQuery(document).ready(function ($) {
         if (uploadFileXLS === ''){
             var uploadFileCoordinate = jQuery("#genotyping_trial_layout_upload_coordinate").val();
             if (uploadFileCoordinate === ''){
-                submit_genotype_trial_create(plate_data);
+                var uploadFileCoordinateCustom = jQuery("#genotyping_trial_layout_upload_coordinate_template").val();
+                if (uploadFileCoordinateCustom === ''){
+                    submit_genotype_trial_create(plate_data);
+                } else {
+                    submit_genotype_trial_upload(plate_data);
+                }
             } else {
                 submit_genotype_trial_upload(plate_data);
             }
@@ -102,7 +108,7 @@ jQuery(document).ready(function ($) {
         jQuery('#genotyping_trial_dialog').modal("show");
     }
 
-    jQuery('#create_genotyping_trial_link').click(function() {
+    jQuery('[name="create_genotyping_trial_link"]').click(function() {
         open_genotyping_trial_dialog();
     });
 
@@ -286,7 +292,8 @@ jQuery(document).ready(function ($) {
     function store_plate(plate_data) {
         //console.log(plate_data);
         var brapi_plate_data = new Object();
-        $.ajax({
+
+        jQuery.ajax({
             url: '/ajax/breeders/storegenotypetrial',
             method: 'POST',
             beforeSend: function(){
@@ -306,7 +313,9 @@ jQuery(document).ready(function ($) {
                     if (plate_data.genotyping_facility_submit == 'yes'){
                         submit_plate_to_gdf(brapi_plate_data);
                     } else {
-                        location.reload();
+                        Workflow.complete('#add_geno_trial_submit');
+                        Workflow.focus("#genotyping_trial_create_workflow", -1); //Go to success page
+                        Workflow.check_complete("#genotyping_trial_create_workflow");
                     }
                 }
             },
@@ -359,48 +368,122 @@ jQuery(document).ready(function ($) {
         var trial_id = get_trial_id();
         var yes = confirm("Are you sure you want to delete this experiment with id "+trial_id+" ? This action cannot be undone.");
         if (yes) {
-            jQuery('#working_modal').modal("show");
-            var html = jQuery('#working_msg').html();
-            jQuery('#working_msg').html(html+"Deleting genotyping experiment...<br />");
             jQuery.ajax({
-                async: false,
                 url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#working_msg').html("Deleting genotyping experiment...<br />");
+                },
                 success: function(response) {
                     if (response.error) {
-                        jQuery('#working_modal').modal("hide");
                         alert(response.error);
                     }
                     else {
-                        //Do nothing, as the process continues...
+                        jQuery.ajax({
+                            url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
+                            beforeSend: function(){
+                                jQuery('#working_msg').html("Removing the project entry...");
+                            },
+                            success: function(response) {
+                                jQuery('#working_modal').modal("hide");
+                                jQuery('#working_msg').html('');
+                                if (response.error) {
+                                    alert(response.error);
+                                }
+                                else {
+                                    alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
+                                    window.location.href="/breeders/trial/"+trial_id;
+                                }
+                            },
+                            error: function(response) {
+                                jQuery('#working_modal').modal("hide");
+                                jQuery('#working_msg').html('');
+                                alert("An error occurred.");
+                            }
+                        });
                     }
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
+                    jQuery('#working_msg').html('');
                     alert("An error occurred.");
                 }
             });
-            html = jQuery('#working_msg').html();
-            jQuery('#working_msg').html(html+"Removing the project entry...");
+        }
+    });
+    
+    jQuery('#generate_genotyping_trial_barcode_link').click(function () {
+        jQuery('#generate_genotyping_trial_barcode_button_dialog').modal("show");
+    });
+    
+    jQuery('#geno_trial_accession_barcode').click(function () {
+        $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
+        $('#generate_genotrial_barcode_dialog').modal("show");
+    });
+    
+    jQuery('#trial_tissue_sample_barcode').click(function () {
+        $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
+        $('#generate_genotrial_barcode_dialog').modal("show");
+    });
+    
+    jQuery('#trial_plateID_barcode').click(function () {
+        $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
+        $('#genotrial_barcode_dialog').modal("show");
+    });
 
-            jQuery.ajax({
-                async: false,
-                url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-                success: function(response) {
-                    if (response.error) {
-                        jQuery('#working_modal').modal("hide");
-                        alert(response.error);
+    jQuery('button[name="manage_tissue_samples_create_field_trial_samples"]').click(function(){
+        jQuery('#field_trial_tissue_sample_dialog').modal("show");
+    });
+
+    jQuery('button[name="upload_genotyping_data_link"]').click(function(){
+        jQuery('#upload_genotypes_dialog').modal('show');
+    });
+
+    jQuery('#upload_genotype_submit').click(function () {
+        submit_genotype_data_upload()
+    });
+
+    function submit_genotype_data_upload() {
+        jQuery('#working_modal').modal('show');
+        jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
+        jQuery("#upload_genotypes_form").submit();
+    }
+
+    jQuery('#upload_genotypes_form').iframePostForm({
+        json: true,
+        post: function () {
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal('hide');
+            if (response.errors || response.error_string) {
+                alert(response.error_string);
+                if (response.missing_stocks && response.missing_stocks.length > 0){
+                    jQuery('#upload_genotypes_missing_stocks_div').show();
+                    var missing_stocks_html = "<div class='well well-sm'><h3>Add the missing stocks to a list as accessions</h3><div id='upload_genotypes_missing_stock_vals' style='display:none'></div><div id='upload_genotypes_add_missing_stocks'></div></div><br/>";
+                    jQuery("#upload_genotypes_add_missing_stocks_html").html(missing_stocks_html);
+
+                    var missing_stocks_vals = '';
+                    for(var i=0; i<response.missing_stocks.length; i++) {
+                        missing_stocks_vals = missing_stocks_vals + response.missing_stocks[i] + '\n';
                     }
-                    else {
-                        jQuery('#working_modal').modal("hide");
-                        alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-                        window.location.href="/breeders/trial/"+trial_id;
-                    }
-                },
-                error: function(response) { 
-                    jQuery('#working_modal').modal("hide");
-                    alert("An error occurred.");
+                    jQuery("#upload_genotypes_missing_stock_vals").html(missing_stocks_vals);
+                    addToListMenu('upload_genotypes_add_missing_stocks', 'upload_genotypes_missing_stock_vals', {
+                        selectText: true,
+                        listType: 'accessions'
+                    });
                 }
-            });
+                return;
+            }
+            if (response.warning) {
+                jQuery('#upload_genotypes_warnings_html').html(response.warning);
+                jQuery('#upload_genotypes_warnings_div').show();
+                return;
+            }
+            if (response.success) {
+                Workflow.complete('#upload_genotype_submit');
+                Workflow.focus("#upload_genotypes_workflow", -1); //Go to success page
+            }
         }
     });
 

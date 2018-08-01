@@ -58,7 +58,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     #print STDERR $format;
     my $user = $c->user();
     if (!$user) {
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -81,8 +81,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_type_id} = $trial_type_data->[0];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
-
     $c->stash->{harvest_date} = $trial->get_harvest_date();
+
+    $c->stash->{plot_width} = $trial->get_plot_width();
+    $c->stash->{plot_length} = $trial->get_plot_length();
+    $c->stash->{field_size} = $trial->get_field_size();
+
+    $c->stash->{field_trial_is_planned_to_be_genotyped} = $trial->get_field_trial_is_planned_to_be_genotyped();
+    $c->stash->{field_trial_is_planned_to_cross} = $trial->get_field_trial_is_planned_to_cross();
 
     $c->stash->{trial_description} = $trial->get_description();
     $c->stash->{trial_phenotype_files} = $trial->get_phenotype_metadata();
@@ -141,7 +147,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
     }
     elsif ($design_type eq "treatment"){
-        $c->stash->{template} = '/breeders_toolbox/treatment.mas';
+        $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
     else {
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
@@ -203,7 +209,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $user = $c->user();
     if (!$user) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -279,6 +285,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ( ($format eq "intertekxls") && ($what eq "layout")) {
         $plugin = "GenotypingTrialLayoutIntertekXLS";
     }
+    if ( ($format eq "dartseqxls") && ($what eq "layout")) {
+        $plugin = "GenotypingTrialLayoutDartSeqXLS";
+    }
 
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
@@ -306,7 +315,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $error = $download->download();
 
-    if ($format eq 'intertekxls'){
+    if ($format eq 'intertekxls' || $format eq 'dartseqxls'){
         $format = 'xls';
     }
 

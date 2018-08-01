@@ -1,0 +1,288 @@
+<%args>
+$trial_id => undef
+$trial_name => undef
+$stock_id => undef
+$stock_uniquename => undef
+$col1_width_class => "col-sm-1"
+$col2_width_class => "col-sm-11"
+$icon_class => "glyphicon glyphicon-th"
+$info_section_collapsible => 1
+$info_section_collapsed => 1
+$info_section_id => "2col_id"
+$info_section_title => "A title"
+$info_section_subtitle => "A subtitle"
+$buttons_html => undef
+
+#Specific to trial detail page
+$has_plant_entries => undef
+$has_subplot_entries => undef
+$has_tissue_sample_entries => undef
+$has_expression_atlas => undef
+$expression_atlas_url => undef
+$site_project_name => undef
+$sgn_session_id => undef
+$user_name => undef
+$main_production_site_url => undef
+$trial_phenotype_files => undef
+$hidap_enabled => undef
+$location_name => undef
+$breeding_program_name => undef
+$year => undef
+$trial_type => undef
+$design_name => undef
+$planting_date => undef
+$harvest_date => undef
+$trial_description => undef
+$folder_name => undef
+$folder_id => undef
+$plot_width => undef
+$plot_length => undef
+$field_size => undef
+$field_trial_is_planned_to_be_genotyped => undef
+$field_trial_is_planned_to_cross => undef
+$identifier_prefix => undef
+
+#Specific to stock detail page
+$type_name => undef
+$stockref => {}
+$stockprops => undef
+$edit_privs => undef
+$editable_stock_props => undef
+$editor_link => undef
+$source_dbs => {}
+$locus_add_uri => undef
+$new_locus_link => undef
+$allele_div => undef
+$is_owner => undef
+$map_html => undef
+$direct_genotypes => {}
+$has_pedigree => undef
+$image_ids => undef
+$related_image_ids => undef
+$dbh => undef
+$trait_ontology_db_name => undef
+$pubs => undef
+$cvterm_add_uri => undef
+$referer => undef
+</%args>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="<% $col1_width_class %>">
+                    <span style="font-size:3.5em;" class="<% $icon_class %>"></span>
+                </div>
+                <div class="<% $col2_width_class %>">
+
+                    <&| /page/info_section.mas, id => $info_section_id, title => $info_section_title, collapsible=>$info_section_collapsible, collapsed => $info_section_collapsed, subtitle=> $info_section_subtitle &>
+
+% if ($buttons_html){
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <% $buttons_html %>
+                            </div>
+                        </div>
+% }
+
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+
+% if ($info_section_id eq 'pheno_heatmap'){
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+% } #End pheno_heatmap
+% if ($info_section_id eq 'trial_design_section'){
+                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
+% } #End trial_design_section
+% if ($info_section_id eq 'trial_detail_traits_assayed'){
+
+% if ($has_expression_atlas) {
+                                <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name, main_production_site_url=>$main_production_site_url &>
+% }
+
+                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+
+% } #End trial_detail_traits_assayed
+% if ($info_section_id eq 'compute_derived_traits'){
+                                <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+% } #End compute_derived_traits
+% if ($info_section_id eq 'trial_upload_files'){
+                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files &>
+% } #End trial_upload_files
+% if ($info_section_id eq 'trial_analysis_tools'){
+                                <!-- Phenotypic correlation analysis -->
+                                <& /solgs/population/correlation.mas,
+                                    trial_id => $trial_id
+                                &>
+
+                                <& /anova.mas,
+                                    trial_id => $trial_id
+                                &>
+
+                                <!-- Population structure analysis PCA -->
+                                <& /solgs/model/pca.mas,
+                                    trial_id => $trial_id
+                                &>
+
+% if ($hidap_enabled) {
+                                <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
+% }
+% } #End trial_analysis_tools
+% if ($info_section_id eq 'trial_weather_data'){
+                                <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+% } #End trial_weather_data
+% if ($info_section_id eq 'trial_jbrowse_data'){
+                                <& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
+%} #End trial_jbrowse_data
+% if ($info_section_id eq 'trial_linkage_section'){
+                                <&| /page/info_section.mas, title => 'Field Trial to Field Trial Linkage', id => 'field_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                                </&>
+                                <&| /page/info_section.mas, title => 'Field Trial to Genotyping Trial Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
+                                </&>
+                                <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
+                                </&>
+%} #End trial_linkage_section
+% if ($info_section_id eq 'trial_deletion_section'){
+                                <&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+                                    <& /breeders_toolbox/trial/trial_deletion.mas, trial_id => $trial_id  &>
+                                </&>
+%} #End trial_deletion_section
+% if ($info_section_id eq 'trial_data_agreement_section'){
+                                <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
+% } #End trial_data_agreement_section
+
+% if ($info_section_id eq 'stock_additional_info_section'){
+                                <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
+% } #End stock_additional_info_section
+% if ($info_section_id eq 'stock_trials_section'){
+                                <& /stock/trials.mas, stock_id => $stock_id &>
+% } #End stock_trials_section
+% if ($info_section_id eq 'stock_traits_section'){
+                                <& /stock/traits.mas, stock_id => $stock_id &>
+% } #End stock_traits_section
+% if ($info_section_id eq 'stock_genotypes_section'){
+
+% print $map_html;
+% foreach my $project (keys %$direct_genotypes) {
+%     my $genotypes = $direct_genotypes->{$project} ;
+                                <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
+%     foreach my $genotype (@$genotypes) {
+%                                   print $genotype->description . "\n";
+%     }
+                                </&>
+% }
+
+%} #End stock_genotypes_section
+% if ($info_section_id eq 'stock_pedigree_section'){
+                                <&| /page/info_section.mas, title=>"Pedigree and Descendants" , collapsible=> 1, collapsed=>0 &>
+                                    <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
+                                </&>
+
+                                <& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
+% } #End stock_pedigree_section
+% if ($info_section_id eq 'stock_related_stock_section'){
+                                <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End stock_related_stock_section
+% if ($info_section_id eq 'stock_images_section'){
+                                <&| /page/info_section.mas, title=>"Images of This Stock(" .  scalar(@$image_ids)  . ")", collapsible=>1, collapsed=>0 &>
+                                    <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
+                                </&>
+
+                                <&| /page/info_section.mas, title=>"Images of Related Stock(s) (" .  scalar(@$related_image_ids)  . ")", collapsible=>1, collapsed=>0 &>
+                                    <& /image/print_images.mas , images=>$related_image_ids , dbh=>$dbh &>
+                                </&>
+% } #End stock_images_section
+% if ($info_section_id eq 'stock_literature_annotation_section'){
+                                <&| /page/info_section.mas, title=>"Literature annotation (".scalar( @$pubs ).")" , id=>"publications" , collapsible=>1, collapsed=>1 &>
+
+
+% foreach my $publication ( @$pubs  ) {
+  <& /chado/publication.mas, pub=>$publication &>
+    <br >
+% }
+
+                                </&>
+
+                                <&| /page/info_section.mas, id   => 'stock_ontology', title=>"Ontology annotation (" . $stockref->{ontology_count} . ")" &>
+                                    <& /ontology/associate_ontology.mas,
+                                    trait_db_name => $trait_ontology_db_name,
+                                    object_id     => $stock_id ,
+                                    object_name   => "stock",
+                                    cvterm_add_uri=> $cvterm_add_uri,
+                                    ontology_url  => "/stock/$stock_id/ontologies/",
+                                    reference_uri => "/stock/$stock_id/references/",
+                                    evidence_with_uri => "/stock/$stock_id/evidences/",
+                                    show_form     => $is_owner  &>
+                                </&>
+% } #End stock_literature_annotation_section
+% if ($info_section_id eq 'stock_jbrowse_section'){
+                                <p id="jbrowse_check">[loading...]</p>
+% } #End stock_jbrowse_section
+% if ($info_section_id eq 'stock_comments_section'){
+                                <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
+% } #End stock_comments_section
+
+
+% if ($info_section_id eq 'manage_tissue_samples_field_trials'){
+                                <& /breeders_toolbox/tissue_samples/field_trials_with_tissue_samples.mas &>
+% } #End manage_tissue_samples_field_trials
+% if ($info_section_id eq 'manage_tissue_samples_genotyping_trials'){
+                                <& /breeders_toolbox/tissue_samples/genotyping_trials.mas &>
+% } #End manage_tissue_samples_genotyping_trials
+% if ($info_section_id eq 'trial_details'){
+                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross &>
+% } #End trial_details
+% if ($info_section_id eq 'stocks_search_graphical_filtering'){
+                                <& /search/stocks_graphicalfiltering.mas &>
+% } #End stocks_search_graphical_filtering
+% if ($info_section_id eq 'management_factor_details'){
+                                <table class="table table-hover table-bordered" >
+                                    <tr>
+                                    <td><b>Field Management Factor Name</b></td>
+                                    <td>
+                                        <div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "[No Trial Name]";
+% }
+                                        </div>
+                                    </td>
+                                    </tr>
+                                </table>
+% } #End management_factor_details
+% if ($info_section_id eq 'management_factor_design'){
+                                <& /breeders_toolbox/trial/design_section_management_factor.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
+% } #End management_factor_design
+
+% if ($info_section_id eq 'crossingtrial_details'){
+                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
+% } #End crossingtrial_details
+
+% if ($info_section_id eq 'crosses_in_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/crosses_in_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End crosses_in_crossingtrial_section
+
+% if ($info_section_id eq 'cross_properties_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/cross_properties_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End cross_properties_crossingtrial_section
+
+% if ($info_section_id eq 'progenies_in_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/progenies_in_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End progenies_in_crossingtrial_section
+
+% if ($info_section_id eq 'crossing_trial_from_field_trial_section'){
+                                <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
+% } #End crossing_trial_from_field_trial_section
+
+                            </div>
+                        </div>
+                    </&>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

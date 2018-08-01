@@ -13,30 +13,20 @@ library(gplots)
 library(ltm)
 library(plyr)
 library(rjson)
+library(methods)
 
+allArgs <- commandArgs()
 
-allargs<-commandArgs()
+outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
+                    what = "character")
 
-geneticDataFile <- grep("combined_gebvs",
-                        allargs,
-                        ignore.case=TRUE,
-                        perl=TRUE,
-                        value=TRUE
-                      )
+inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
+                    what = "character")
 
-correTableFile <- grep("genetic_corre_table",
-                       allargs,
-                       ignore.case=TRUE,
-                       perl=TRUE,
-                       value=TRUE
-                       )
+correTableFile <- grep("corre_coefficients_table", outputFiles, value=TRUE)
+correJsonFile  <- grep("corre_coefficients_json", outputFiles, value=TRUE)
 
-correJsonFile <- grep("genetic_corre_json",
-                      allargs,
-                      ignore.case=TRUE,
-                      perl=TRUE,
-                      value=TRUE
-                      )
+geneticDataFile <- grep("combined_gebvs", inputFiles, value=TRUE)
 
 geneticData <- read.table(geneticDataFile,
                           header = TRUE,
@@ -50,7 +40,6 @@ coefpvalues <- rcor.test(geneticData,
                          method="pearson",
                          use="pairwise"
                          )
-
 
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat

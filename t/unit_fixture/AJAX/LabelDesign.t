@@ -16,7 +16,7 @@ my $schema = $f->bcs_schema;
 
 my $mech = Test::WWW::Mechanize->new;
 
-$mech->get_ok("http://localhost:3010//tools/label_designer/retrieve_longest_fields?data_type=Trials&value=139");
+$mech->get_ok("http://localhost:3010//tools/label_designer/retrieve_longest_fields?data_type=Field%20Trials&value=139");
 my $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
@@ -36,7 +36,7 @@ my $expected_response = {
 is_deeply($response->{fields}, $expected_response, 'retrieve longest fields test');
 
 my $download_type = 'pdf';
-my $data_type = 'Trials';
+my $data_type = 'Field Trials';
 my $value = 139;
 my $design_json = encode_json {
    "page_format" => "US Letter PDF",

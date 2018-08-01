@@ -1,0 +1,154 @@
+
+<%args>
+$breeding_programs
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js', 'd3pie_min.js' ] &>
+
+<& /page/page_title.mas, title => 'Database Stats' &>
+
+<&| /page/info_section.mas, title => "Data categories" &>
+
+<table><tr><td>
+
+<span id="trial_types_div"></span>
+
+</td><td>
+
+<span id="trials_by_breeding_programs_div"></span>
+
+</td></tr>
+<tr><td>
+
+<span id="traits_div"></span>
+
+</td><td>
+
+<span id="stocks_div"></span>
+
+</td></tr>
+</table>
+
+
+
+</&>
+
+<&| /page/info_section.mas, title => "Activity - past 52 weeks" &>
+
+  <svg class="bargraph" width="800" height="200"></svg>
+    
+</&>
+
+<&| /page/info_section.mas, title => "Breeding Program Summaries", collapsible=>1 &>
+
+%  foreach (@$breeding_programs){
+
+    <div class="well">
+
+        <h3>Breeding Program: <% $_->[1] %></h3>
+
+        <&| /page/info_section.mas, title => "Trials" , collapsible=>1 &>
+            <& /breeders_toolbox/program/trials.mas, program_id => $_->[0] &>
+        </&>
+
+        <&| /page/info_section.mas, title => "Traits" , collapsible=>1 &>
+            <& /breeders_toolbox/program/traits.mas, program_id => $_->[0], collapse_phenotypes_section => 0  &>
+        </&>
+
+    </div>
+
+%  }
+
+</&>
+
+<script>
+  jQuery.ajax({
+    url: '/ajax/dbstats/trial_types',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+  //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('trial_types_div', response);
+      
+    }
+  });
+
+  jQuery.ajax({
+    url: '/ajax/dbstats/trials_by_breeding_program',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+      //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('trials_by_breeding_programs_div', response);
+    }
+  });
+
+  jQuery.ajax({
+    url: '/ajax/dbstats/traits',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+      //alert('success' + JSON.stringify(response)); 
+      var types_pie = new d3pie('traits_div', response);
+    }
+  });
+  
+  jQuery.ajax({
+    url: '/ajax/dbstats/stocks',
+    error: function(response) { alert('An error occurred' + JSON.stringify(response));  },
+    success: function(response)  { 
+      var types_pie = new d3pie('stocks_div', response);
+    }
+  });
+
+
+
+jQuery.ajax( { 
+  url : '/ajax/dbstats/activity',
+  error: function(r) { alert('An error occurred.'); },
+  success:  function(d) {
+     d.frequency = +d.frequency;
+     bargraph(d);
+  }
+  });
+
+function bargraph(data) { 
+    var svg = d3.select(".bargraph"),
+    margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom;
+
+    var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+        y = d3.scaleLinear().rangeRound([height, 0]);
+
+    var g = svg.append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    x.domain(data.map(function(d) { return d.letter; }));
+ 
+    y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+  
+    g.append("g")
+      .attr("class", "axis axis--x")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+    g.append("g")
+      .attr("class", "axis axis--y")
+      .call(d3.axisLeft(y).ticks(10, ""))
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+      .text("Frequency");
+
+  g.selectAll(".bar")
+    .data(data)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d.letter); })
+      .attr("y", function(d) { return y(d.frequency); })
+      .attr("width", x.bandwidth())
+      .attr("height", function(d) { return height - y(d.frequency); })
+      .attr("fill", "#AAAAEE");
+  }
+
+</script>

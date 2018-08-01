@@ -23,7 +23,7 @@ use Moose;
 
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
-use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use CXGN::Page::FormattingHelpers qw | simple_selectbox_html simple_checkbox_html |;
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Onto;
@@ -126,6 +126,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $breeding_program_id = $c->req->param("breeding_program_id");
     my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
     my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
+    my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -136,7 +137,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    breeding_program_id => $breeding_program_id,
         folder_for_trials => $folder_for_trials,
-        folder_for_crosses => $folder_for_crosses
+        folder_for_crosses => $folder_for_crosses,
+        folder_for_genotyping_trials => $folder_for_genotyping_trials
     });
 
     if ($empty) {
@@ -154,12 +156,25 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $id = $c->req->param("id") || "trial_type_select";
     my $name = $c->req->param("name") || "trial_type_select";
     my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
 
-    my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
+    my @all_types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
+
+    my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
+    my $pollinating_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pollinating_trial', 'project_type')->cvterm_id();
+    my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_trial', 'project_type')->cvterm_id();
+
+    my @types;
+
+    foreach my $type(@all_types){
+        if (($type->[0] != $crossing_trial_cvterm_id) && ($type->[0] != $pollinating_trial_cvterm_id) && ($type->[0] != $genotyping_trial_cvterm_id)){
+            push @types, $type;
+        }
+    }
 
     if ($empty) {
         unshift @types, [ '', "None" ];
@@ -168,10 +183,10 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
     my $default = $c->req->param("default") || $types[0]->[0];
 
     my $html = simple_selectbox_html(
-      name => $name,
-      id => $id,
-      choices => \@types,
-      selected => $default
+        name => $name,
+        id => $id,
+        choices => \@types,
+        selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -200,17 +215,84 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
+    my $get_field_trials = $c->req->param("get_field_trials");
+    my $get_crossing_trials = $c->req->param("get_crossing_trials");
+    my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
+
+    my $projects;
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
+    } else {
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my $multiple = $c->req->param("multiple") || 0;
+    my $live_search = $c->req->param("live_search") || 0;
+
+    my @projects;
+    foreach my $project (@$projects) {
+        my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+        if ($get_field_trials){
+            if ($field_trials && scalar(@$field_trials)>0){
+                my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
+                push @projects, @trials;
+            }
+        }
+        if ($get_crossing_trials){
+            if ($cross_trials && scalar(@$cross_trials)>0){
+                my @trials = sort { $a->[1] cmp $b->[1] } @$cross_trials;
+                push @projects, @trials;
+            }
+        }
+        if ($get_genotyping_trials){
+            if ($genotyping_trials && scalar(@$genotyping_trials)>0){
+                my @trials = sort { $a->[1] cmp $b->[1] } @$genotyping_trials;
+                push @projects, @trials;
+            }
+        }
+    }
+
+    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+
+    my $html = simple_selectbox_html(
+      multiple => $multiple,
+      live_search => $live_search,
+      name => $name,
+      id => $id,
+      size => $size,
+      choices => \@projects,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
 
     my $projects;
-    if (!$breeding_program_id) {
-      $projects = $p->get_breeding_programs();
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
     } else {
-      push @$projects, [$breeding_program_id];
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
     }
 
     my $id = $c->req->param("id") || "html_trial_select";
@@ -245,14 +327,18 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 sub get_genotyping_trials_select : Path('/ajax/html/select/genotyping_trials') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
 
     my $projects;
-    if (!$breeding_program_id) {
-      $projects = $p->get_breeding_programs();
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
     } else {
-      push @$projects, [$breeding_program_id];
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
     }
 
     my $id = $c->req->param("id") || "html_trial_select";
@@ -546,6 +632,47 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        page_size => 1000000,
+        page => 0,
+        status => []
+    });
+
+    #Using code pattern found in SGN::Controller::Ontology->onto_browser
+    my $onto_root_namespaces = $c->config->{trait_variable_onto_root_namespaces};
+    my @namespaces = split ", ", $onto_root_namespaces;
+    foreach my $n (@namespaces) {
+        $n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
+    }
+
+    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces});
+    #print STDERR Dumper $result;
+
+    my @ontos;
+    foreach my $o (@{$result->{result}->{data}}) {
+        push @ontos, [$o->{ontologyDbId}, $o->{ontologyName}." (".$o->{description}.")" ];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $data_related = $c->req->param("data-related") || "";
+
+    @ontos = sort { $a->[1] cmp $b->[1] } @ontos;
+
+    my $html = simple_checkbox_html(
+        name => $name,
+        id => $id,
+        choices => \@ontos,
+        data_related => $data_related
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -672,15 +799,18 @@ sub get_composable_cvs_allowed_combinations_select : Path('/ajax/html/select/com
 sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     my $self = shift;
     my $c = shift;
-
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
-
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $breeding_program_name = $c->req->param("breeding_program_name");
+
     my $projects;
-    if (!$breeding_program_id) {
-      $projects = $p->get_breeding_programs();
+    if (!$breeding_program_id && !$breeding_program_name) {
+        $projects = $p->get_breeding_programs();
+    } elsif ($breeding_program_id){
+        push @$projects, [$breeding_program_id];
     } else {
-      push @$projects, [$breeding_program_id];
+        push @$projects, [$schema->resultset('Project::Project')->find({name => $breeding_program_name})->project_id()];
     }
 
     my $id = $c->req->param("id") || "html_trial_select";

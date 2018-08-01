@@ -30,6 +30,7 @@ my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->sto
  Jeremy D. Edwards (jde22@cornell.edu)
  Naama Menda (nm249@cornell.edu)
  Nicolas Morales (nm529@cornell.edu)
+ Bryan Ellerbrock (bje24@cornell.edu)
 
 =cut
 
@@ -47,75 +48,95 @@ use CXGN::ZipFile;
 use CXGN::UploadFile;
 use CXGN::List::Transform;
 
-has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1,
 );
 
-has 'metadata_schema' => ( isa => 'CXGN::Metadata::Schema',
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
     is => 'rw',
     required => 1,
 );
 
-has 'phenome_schema' => ( isa => 'CXGN::Phenome::Schema',
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
     is => 'rw',
     required => 1,
 );
 
-has 'user_id' => (isa => "Int",
+has 'user_id' => (
+    isa => "Int",
     is => 'rw',
     required => 1
 );
 
-has 'stock_list' => (isa => "ArrayRef",
+has 'stock_list' => (
+    isa => "ArrayRef",
     is => 'rw',
     required => 1
 );
 
-has 'stock_id_list' => (isa => "ArrayRef[Int]|Undef",
+has 'stock_id_list' => (
+    isa => "ArrayRef[Int]|Undef",
     is => 'rw',
     required => 0,
 );
 
-has 'trait_list' => (isa => "ArrayRef",
+has 'trait_list' => (
+    isa => "ArrayRef",
     is => 'rw',
     required => 1
 );
 
-has 'values_hash' => (isa => "HashRef",
+has 'values_hash' => (
+    isa => "HashRef",
     is => 'rw',
     required => 1
 );
 
-has 'has_timestamps' => (isa => "Bool",
+has 'has_timestamps' => (
+    isa => "Bool",
     is => 'rw',
     default => 0
 );
 
-has 'overwrite_values' => (isa => "Bool",
+has 'overwrite_values' => (
+    isa => "Bool",
     is => 'rw',
     default => 0
 );
 
-has 'metadata_hash' => (isa => "HashRef",
+has 'metadata_hash' => (
+    isa => "HashRef",
     is => 'rw',
     required => 1
 );
 
-has 'image_zipfile_path' => (isa => "Str | Undef",
+has 'image_zipfile_path' => (
+    isa => "Str | Undef",
     is => 'rw',
     required => 0
 );
 
-has 'trait_objs' => (isa => "HashRef",
+has 'trait_objs' => (
+    isa => "HashRef",
     is => 'rw',
 );
 
-has 'unique_value_trait_stock' => (isa => "HashRef",
+has 'unique_value_trait_stock' => (
+    isa => "HashRef",
     is => 'rw',
 );
 
-has 'unique_trait_stock' => (isa => "HashRef",
+has 'unique_trait_stock' => (
+    isa => "HashRef",
+    is => 'rw',
+);
+
+has 'unique_trait_stock_timestamp' => (
+    isa => "HashRef",
     is => 'rw',
 );
 
@@ -144,19 +165,31 @@ sub create_hash_lookups {
 
     #for checking if values in the file are already stored in the database or in the same file
     my %check_unique_trait_stock;
+    my %check_unique_trait_stock_timestamp;
     my %check_unique_value_trait_stock;
-    my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}, 'stock.stock_id'=>{-in=>$self->stock_id_list}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
-    while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
-        my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
-        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
+
+    my $stock_ids_sql = join ("," , @{$self->stock_id_list});
+    my $cvterm_ids_sql = join ("," , @cvterm_ids);
+    my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
+    my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
+    $h->execute();
+
+    #my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}, 'stock.stock_id'=>{-in=>$self->stock_id_list}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
+    while (my ($previous_value, $cvterm_id, $collect_timestamp, $stock_id) = $h->fetchrow_array()) {
+    #while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
+        #my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
+        #my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
         if ($stock_id){
-            my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
+            #my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
+            $collect_timestamp = $collect_timestamp || 'NA';
             $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
+            $check_unique_trait_stock_timestamp{$cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
             $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
         }
     }
     $self->unique_value_trait_stock(\%check_unique_value_trait_stock);
     $self->unique_trait_stock(\%check_unique_trait_stock);
+    $self->unique_trait_stock_timestamp(\%check_unique_trait_stock_timestamp);
 
 }
 
@@ -173,7 +206,7 @@ sub verify {
     #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants',\@plot_list)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
     @trait_list = @{$self->trait_list};
     my $error_message;
@@ -192,6 +225,7 @@ sub verify {
     my %trait_objs = %{$self->trait_objs};
     my %check_unique_value_trait_stock = %{$self->unique_value_trait_stock};
     my %check_unique_trait_stock = %{$self->unique_trait_stock};
+    my %check_unique_trait_stock_timestamp = %{$self->unique_trait_stock_timestamp};
 
     my %check_trait_category;
     my $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_categories';";
@@ -244,7 +278,7 @@ sub verify {
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
             #print STDERR "$plot_name, $trait_name, $trait_value\n";
-            if ($trait_value) {
+            if ($trait_value || $trait_value eq '0') {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
@@ -280,6 +314,8 @@ sub verify {
                 #check if the plot_name, trait_name combination already exists in database.
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
+                } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
                 }
@@ -298,8 +334,6 @@ sub verify {
                             $error_message = $error_message."<small>Bad timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Should be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</small><hr>";
                         }
                     }
-                } else {
-                    $error_message = $error_message."<small>'Timestamps Included' is selected, but no timestamp for value for Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."</small><hr>";
                 }
             }
 
@@ -326,6 +360,7 @@ sub verify {
 sub store {
     my $self = shift;
     $self->create_hash_lookups();
+    my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     my %trait_objs = %{$self->trait_objs};
@@ -348,21 +383,22 @@ sub store {
     my $success_message;
 
     my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $local_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'date', 'local')->cvterm_id();
+    my $local_operator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'operator', 'local')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
 
-    ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
-    ## Used later to attach file metadata.
-    my %experiment_ids;##
-    ###
+    my %experiment_ids;
+    my @stored_details;
 
     my %check_unique_trait_stock = %{$self->unique_trait_stock};
 
     my $rs;
     my %data;
     $rs = $schema->resultset('Stock::Stock')->search(
-        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
+        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id, $tissue_sample_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
         {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
             '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
             '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
@@ -391,9 +427,9 @@ sub store {
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
                 my $timestamp = $value_array->[1];
-                if (!$timestamp) {
-                    $timestamp = 'NA'.$upload_date;
-                }
+                my $operator = $value_array->[2] ? $value_array->[2] : $operator;
+                my $observation = $value_array->[3];
+                my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
                 if (defined($trait_value) && length($trait_value)) {
 
@@ -408,44 +444,84 @@ sub store {
                     my $plot_trait_uniquename = "Stock: " .
                         $stock_id . ", trait: " .
                         $trait_cvterm->name .
-                        " date: $timestamp" .
+                        " date: $unique_time" .
                         "  operator = $operator" ;
 
-                    my $phenotype = $trait_cvterm
-                        ->find_related("phenotype_cvalues", {
+                    my $phenotype;
+                    if ($observation) {
+                        $phenotype = $trait_cvterm->find_related("phenotype_cvalues", {
+                            observable_id => $trait_cvterm->cvterm_id,
+                            phenotype_id => $observation,
+                        });
+
+                        ## should check that unit and variable (also checked here) are conserved in parse step, if not reject before store
+                        ## should also update operator in nd_experimentprops
+
+                        $phenotype->update({
+                            value => $trait_value,
+                            uniquename => $plot_trait_uniquename,
+                        });
+
+                        $self->handle_timestamp($timestamp, $observation);
+                        $self->handle_operator($operator, $observation);
+
+                        my $q = "SELECT phenotype_id, nd_experiment_id, file_id
+                        FROM phenotype
+                        JOIN nd_experiment_phenotype using(phenotype_id)
+                        JOIN nd_experiment_stock using(nd_experiment_id)
+                        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+                        JOIN stock using(stock_id)
+                        WHERE stock.stock_id=?
+                        AND phenotype.cvalue_id=?";
+
+                        my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+                        $h->execute($stock_id, $trait_cvterm->cvterm_id);
+                        while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+                            push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_id];
+                            $experiment_ids{$nd_experiment_id}=1;
+                        }
+
+                    } else {
+
+                        $phenotype = $trait_cvterm->create_related("phenotype_cvalues", {
                             observable_id => $trait_cvterm->cvterm_id,
                             value => $trait_value ,
                             uniquename => $plot_trait_uniquename,
                         });
 
-                    if (!$phenotype) {
-
-                        my $phenotype = $trait_cvterm
-                            ->create_related("phenotype_cvalues", {
-                                observable_id => $trait_cvterm->cvterm_id,
-                                value => $trait_value ,
-                                uniquename => $plot_trait_uniquename,
-                            });
+                        $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
+                        $self->handle_operator($operator, $phenotype->phenotype_id);
 
                         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
                             nd_geolocation_id => $location_id,
-                            type_id => $phenotyping_experiment_cvterm_id
+                            type_id => $phenotyping_experiment_cvterm_id,
+                            nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
+                            nd_experiment_projects => [{project_id => $project_id}],
+                            nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}],
+                            nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
                         });
-                        $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
-                        $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-
-                        ## Link the experiment to the project
-                        $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
-
-                        # Link the experiment to the stock
-                        $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
-
-                        ## Link the phenotype to the experiment
-                        $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-                        #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
                         $experiment_ids{$experiment->nd_experiment_id()}=1;
                     }
+
+                    my %details = (
+                        "germplasmDbId"=> $linked_data{$plot_name}->{germplasmDbId},
+                        "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
+                        "observationDbId"=> $phenotype->phenotype_id,
+                        "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
+                        "observationUnitDbId"=> $linked_data{$plot_name}->{observationUnitDbId},
+                        "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
+                        "observationVariableDbId"=> $trait_name,
+                        "observationVariableName"=> $trait_cvterm->name,
+                        "studyDbId"=> $project_id,
+                        "uploadedBy"=> $user_id,
+                        "value" => $trait_value
+                    );
+
+                    if ($timestamp) { $details{'observationTimeStamp'} = $timestamp};
+                    if ($operator) { $details{'collector'} = $operator};
+
+                    push @stored_details, \%details;
                 }
             }
         }
@@ -478,7 +554,7 @@ sub store {
         $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
     }
 
-    return ($error_message, $success_message);
+    return ($error_message, $success_message, \@stored_details);
 }
 
 
@@ -583,6 +659,78 @@ sub save_archived_file_metadata {
     }
 }
 
+sub get_linked_data {
+    my $self = shift;
+    my %data;
+    my $unit_list = $self->stock_list;
+    my $schema = $self->bcs_schema;
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
+
+    my $subquery = "
+        SELECT cvterm_id
+        FROM cvterm
+        JOIN cv USING (cv_id)
+        WHERE cvterm.name IN ('plot_of', 'plant_of', 'subplot_of') AND cv.name = 'stock_relationship'
+        ";
+
+    my $query = "
+        SELECT unit.stock_id, unit.uniquename, level.name, accession.stock_id, accession.uniquename, nd_experiment.nd_geolocation_id, nd_experiment_project.project_id
+        FROM stock AS unit
+        JOIN cvterm AS level ON (unit.type_id = level.cvterm_id)
+        JOIN stock_relationship AS rel ON (unit.stock_id = rel.subject_id AND rel.type_id IN ($subquery))
+        JOIN stock AS accession ON (rel.object_id = accession.stock_id AND accession.type_id = $accession_cvterm_id)
+        JOIN nd_experiment_stock ON (unit.stock_id = nd_experiment_stock.stock_id)
+        JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+        JOIN nd_experiment_project ON (nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        WHERE unit.uniquename = ANY (?)
+        ";
+
+    my $h = $schema->storage->dbh()->prepare($query);
+    $h->execute($unit_list);
+    while (my ($unit_id, $unit_name, $level, $accession_id, $accession_name, $location_id, $project_id) = $h->fetchrow_array()) {
+        $data{$unit_name}{observationUnitName} = $unit_name;
+        $data{$unit_name}{observationUnitDbId} = $unit_id;
+        $data{$unit_name}{observationLevel} = $level;
+        $data{$unit_name}{germplasmDbId} = $accession_id;
+        $data{$unit_name}{germplasmName} = $accession_name;
+        $data{$unit_name}{locationDbId} = $location_id;
+        $data{$unit_name}{studyDbId} = $project_id;
+    }
+
+    return \%data;
+}
+
+sub handle_timestamp {
+    my $self = shift;
+    my $timestamp = shift || undef;
+    my $phenotype_id = shift;
+
+    my $q = "
+    UPDATE phenotype
+    SET collect_date = ?,
+        create_date = DEFAULT
+    WHERE phenotype_id = ?
+    ";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($timestamp, $phenotype_id);
+}
+
+sub handle_operator {
+    my $self = shift;
+    my $operator = shift || undef;
+    my $phenotype_id = shift;
+
+    my $q = "
+    UPDATE phenotype
+    SET operator = ?
+    WHERE phenotype_id = ?
+    ";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($operator, $phenotype_id);
+}
 
 ###
 1;

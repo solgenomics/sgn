@@ -21,6 +21,8 @@ use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
+use Data::Dumper;
+use CXGN::Chado::Publication;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -224,12 +226,14 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     ####################
     my $is_owner;
     my $owner_ids = $c->stash->{owner_ids} || [] ;
+    my $editor_info = $self->_stock_editor_info($stock);
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
     my $image_ids = $self->_stock_images($stock, $type);
+    my $related_image_ids = $self->_related_stock_images($stock, $type);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
@@ -253,6 +257,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             dbh       => $dbh,
             is_owner  => $is_owner,
             owners    => $owner_ids,
+            editor_info => $editor_info,
             props     => $props,
             dbxrefs   => $dbxrefs,
             pubs      => $pubs,
@@ -263,6 +268,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
+            related_image_ids => $related_image_ids,
             allele_count   => $c->stash->{allele_count},
             ontology_count => $c->stash->{ontology_count},
 	    has_pedigree => $c->stash->{has_pedigree},
@@ -841,33 +847,41 @@ sub _stock_cvterms {
 sub _stock_pubs {
     my ($self, $stock) = @_;
     my $bcs_stock = $stock->get_object_row;
-    my $pubs ;
+    my @pubs ;
     if ($bcs_stock) {
         my $stock_pubs = $bcs_stock->search_related("stock_pubs");
         while (my $spub = $stock_pubs->next ) {
-            my $pub = $spub->pub;
-            my $pub_dbxrefs = $pub->pub_dbxrefs;
-            while (my $pub_dbxref = $pub_dbxrefs->next ) {
-                $pubs->{$pub_dbxref->dbxref->db->name . ":" .  $pub_dbxref->dbxref->accession } = $pub ;
-            }
-        }
+            my $pub_id = $spub->pub_id;
+	    my $cxgn_pub = CXGN::Chado::Publication->new( $self->schema->storage->dbh(), $pub_id);
+	    push @pubs, $cxgn_pub;
+	}
     }
-    return $pubs;
+    return \@pubs;
 }
 
-# get all images. Includes those of subject stocks
 sub _stock_images {
     my ($self, $stock) = @_;
-    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ? OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )";
-    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
-        ( $query,
-          undef,
-          $stock->get_stock_id,
-          $stock->get_stock_id,
-        );
-    return $ids;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ?";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
 }
 
+sub _related_stock_images {
+    my ($self, $stock) = @_;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? ) OR stock_id IN (SELECT object_id FROM stock_relationship WHERE subject_id = ? )";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id, $stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
+}
 
 sub _stock_allele_ids {
     my ($self, $stock) = @_;
@@ -887,6 +901,18 @@ sub _stock_owner_ids {
          $stock->get_stock_id
         );
     return $ids;
+}
+
+sub _stock_editor_info {
+    my ($self,$stock) = @_;
+    my @owner_info;
+    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $h = $stock->get_schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($sp_person_id, $timestamp, $modification_note) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp, $modification_note];
+    }
+    return \@owner_info;
 }
 
 sub _stock_has_pedigree {

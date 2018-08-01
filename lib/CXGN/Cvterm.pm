@@ -153,12 +153,14 @@ sub BUILD {
 
 sub get_image_ids {
     my $self = shift;
-    my $ids = $self->schema()->storage->dbh->selectcol_arrayref
-	( "SELECT image_id FROM metadata.md_image_cvterm WHERE cvterm_id=? AND obsolete = 'f' ",
-	  undef,
-	  $self->cvterm_id
-        );
-    return @$ids;
+    my @ids;
+    my $q = "SELECT image_id FROM metadata.md_image_cvterm WHERE cvterm_id=? AND obsolete = 'f' ";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->cvterm_id);
+    while (my ($image_id) = $h->fetchrow_array()){
+        push @ids, [$image_id, 'cvterm'];
+    }
+    return @ids;
 }
 
 
@@ -282,7 +284,7 @@ sub _retrieve_cvtermprop {
     my @results;
 
     try {
-        my $cvtermprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'cvterm_property')->cvterm_id();
+        my $cvtermprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'trait_property')->cvterm_id();
         my $rs = $self->schema()->resultset("Cv::Cvtermprop")->search({ cvterm_id => $self->cvterm_id(), type_id => $cvtermprop_type_id }, { order_by => {-asc => 'cvtermprop_id'} });
 
         while (my $r = $rs->next()){
@@ -300,7 +302,7 @@ sub _remove_cvtermprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'cvterm_property')->cvterm_id();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'trait_property')->cvterm_id();
     my $rs = $self->schema()->resultset("Cv::Cvtermprop")->search( { type_id=>$type_id, cvterm_id => $self->cvterm_id(), value=>$value } );
 
     if ($rs->count() == 1) {
@@ -321,7 +323,7 @@ sub _store_cvtermprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
-    my $cvtermprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'cvterm_property')->name();
+    my $cvtermprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'trait_property')->name();
     my $stored_cvtermprop = $self->cvterm->create_cvtermprops({ $cvtermprop => $value});
 }
 

@@ -79,13 +79,27 @@ function PedigreeViewer(server,auth,urlFunc){
                 }
                 return true;
             }).map(function(ped_pro_germId){
+                var mother = null, 
+                    father = null;
+                if(ped_pro_germId[0].parent1Type=="FEMALE"){
+                    mother = ped_pro_germId[0].parent1DbId;
+                }
+                if(ped_pro_germId[0].parent1Type=="MALE"){
+                    father = ped_pro_germId[0].parent1DbId;
+                }
+                if(ped_pro_germId[0].parent2Type=="FEMALE"){
+                    mother = ped_pro_germId[0].parent2DbId;
+                }
+                if(ped_pro_germId[0].parent2Type=="MALE"){
+                    father = ped_pro_germId[0].parent2DbId;
+                }
                 return {
                     'id':ped_pro_germId[2],
-                    'mother_id':ped_pro_germId[0].parent1Id,
-                    'father_id':ped_pro_germId[0].parent2Id,
+                    'mother_id':mother,
+                    'father_id':father,
                     'name':ped_pro_germId[1].defaultDisplayName,
-                    'children':ped_pro_germId[1].data.filter(Boolean).map(function(d){
-                        return d.progenyGermplasmDbId;
+                    'children':ped_pro_germId[1].progeny.filter(Boolean).map(function(d){
+                        return d.germplasmDbId;
                     })
                 };
             }).each(function(node){

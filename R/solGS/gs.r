@@ -7,6 +7,7 @@
 
 options(echo = FALSE)
 
+library(methods)
 library(rrBLUP)
 library(plyr)
 library(stringr)
@@ -18,6 +19,7 @@ library(genoDataFilter)
 library(phenoAnalysis)
 library(caret)
 library(dplyr)
+
 
 allArgs <- commandArgs()
 
@@ -51,13 +53,13 @@ if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("kinship", trait, sep = "_")
+kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
 blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
-markerTrait <- paste("marker", trait, sep = "_")
+markerTrait <- paste("marker_effects", trait, sep = "_")
 markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
@@ -140,7 +142,11 @@ if (datasetInfo == 'combined populations') {
     
     colnames(phenoTrait)[1] <- 'genotypes'
    
-  } else {
+} else if (length(grep('list', phenoFile)) != 0) {
+
+    phenoTrait <- averageTrait(phenoData, trait)
+    
+} else {
 
     phenoTrait <- getAdjMeans(phenoData, trait)
 
@@ -166,7 +172,7 @@ if (is.null(filteredGenoData)) {
 
 genoData <- genoData[order(row.names(genoData)), ]
 
-predictionTempFile <- grep("prediction_population", inputFiles, ignore.case = TRUE, value = TRUE)
+predictionTempFile <- grep("selection_population", inputFiles, ignore.case = TRUE, value = TRUE)
 
 predictionFile       <- c()
 filteredPredGenoFile <- c()
@@ -184,7 +190,7 @@ if (length(predictionTempFile) !=0 ) {
   message('prediction filtered genotype file: ', predictionFile)
 }
 
-predictionPopGEBVsFile <- grep("prediction_pop_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
+predictionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
 
 message("filtered pred geno file: ", filteredPredGenoFile)
 message("prediction gebv file: ",  predictionPopGEBVsFile)
@@ -528,6 +534,7 @@ if(!is.null(validationAll)) {
            )
 }
 
+
 if (!is.null(ordered.markerEffects)) {
     fwrite(ordered.markerEffects,
            file  = markerFile,
@@ -535,7 +542,8 @@ if (!is.null(ordered.markerEffects)) {
            sep   = "\t",
            quote = FALSE,
            )
-  }
+}
+
 
 if (!is.null(ordered.trGEBV)) {
     fwrite(ordered.trGEBV,
@@ -545,6 +553,7 @@ if (!is.null(ordered.trGEBV)) {
            quote = FALSE,
            )
 }
+
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
@@ -564,6 +573,7 @@ if (length(combinedGebvsFile) != 0 ) {
     }
 }
 
+
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
     fwrite(traitPhenoData,
            file  = traitPhenoFile,
@@ -572,6 +582,7 @@ if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
            quote = FALSE,
            )
 }
+
 
 if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
   fwrite(filteredGenoData,
@@ -619,6 +630,7 @@ if (file.info(relationshipMatrixFile)$size == 0) {
          quote = FALSE,
          )
 }
+
 
 if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
   fwrite(formattedPhenoData,
