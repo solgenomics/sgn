@@ -2319,9 +2319,16 @@ sub save_plant_entries {
             my $parent_plot_organism = $plot_row->organism_id();
 
             my $plant_index_number = 1;
-            foreach my $plant_name (@{$val->{plant_names}}) {
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+            my $plant_names = $val->{plant_names};
+            my $plant_index_numbers = $val->{plant_index_numbers};
+            my $increment = 0;
+            foreach my $plant_name (@$plant_names) {
+                my $given_plant_index_number = $plant_index_numbers->[$increment];
+                my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
+
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
                 $plant_index_number++;
+                $increment++;
             }
         }
 
