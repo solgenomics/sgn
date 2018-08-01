@@ -254,7 +254,7 @@
 
 jQuery(document).ready(function() {
 
-    jQuery("button[name='personal_calendar_link']").click(function(){
+    jQuery(document).on('click', "button[name='personal_calendar_link']", function() {
         jQuery("#calendar_modal").modal("show");
     });
 
@@ -285,7 +285,7 @@ jQuery(document).ready(function() {
         //},
         agendaWeek_view: {
             url: '/ajax/calendar/populate/personal/agendaWeek',
-            error: function() {window.location.replace('/solpeople/login.pl');},
+            error: function() {window.location.replace('/user/login');},
             className: 'bg-info',
             textColor: '#000',
             borderColor: '#FFF',

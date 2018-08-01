@@ -91,7 +91,7 @@ function listGenCorPopulations ()  {
     jQuery("#corre_select_a_population_div").empty().append(popsList).show();
      
     var dbSelPopsList;
-    if (modelData.id.match(/uploaded/) == null) {
+    if (modelData.id.match(/list/) == null) {
         dbSelPopsList = addSelectionPopulations();
     }
 
@@ -99,7 +99,7 @@ function listGenCorPopulations ()  {
             jQuery("#corre_select_a_population_div ul").append(dbSelPopsList); 
     }
       
-    var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
+    var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
     if (userUploadedSelExists == true) {
       
         var userSelPops = listUploadedSelPopulations();
@@ -154,13 +154,13 @@ function formatGenCorInputData (popId, type, indexFile) {
         dataType: 'json',
         data: {'model_id': modelDetail.population_id, 'corr_population_id': popId, 'type' : type, 'index_file': indexFile},
         url: '/correlation/genetic/data/',
-        success: function(response) {
-           
-            if(response.status == 'success') {
+        success: function(response) {           
+            if (response.result) {
+
                 gebvsFile = response.gebvs_file;
-                   
+              
                 var divPlace;
-                if(indexFile) {
+                if (indexFile) {
                     divPlace = '#si_correlation_canvas';
                 }
 
@@ -171,7 +171,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'gebvs_file': gebvsFile,
                     'div_place' : divPlace,
                 };
-              
+          
                 runGenCorrelationAnalysis(args);
 
             } else {

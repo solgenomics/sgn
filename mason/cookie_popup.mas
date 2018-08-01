@@ -1,0 +1,42 @@
+
+<div id="cookie_popup" name="cookie_popup" style="display:none">
+    <div class="container-fluid">
+        <div id="cookie_popup_content_div">
+            <div class="panel panel-danger">
+                <div class="panel-body bg-danger">
+                    <div class="row">
+                        <div class="col-sm-10">
+                            <p>This site uses cookies to provide logins and other features. Please accept the use of cookies by clicking Accept.</p>
+                        </div>
+                        <div class="col-sm-2">
+                            <button class="btn btn-primary btn-sm" id="cookie_agree_submit">Accept</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+    jQuery(document).ready(function(){
+
+        jQuery('#cookie_agree_submit').click( function () {
+            jQuery.cookie("cookies_approved", "1", { expires: 1000000000 } );
+            jQuery('#cookie_popup_content_div').html('<div class="panel panel-success"><div class="panel-body bg-success"><center><h3>Thank you :-)</h3></center></div></div>');
+            setTimeout(function() {
+                jQuery('#cookie_popup').hide('slow');
+            }, 1500);
+        });
+
+        if (jQuery.cookie("cookies_approved") == 1) {
+            jQuery('#cookie_popup').hide();
+        } else {
+            jQuery('#cookie_popup').show();
+        }
+    })
+
+</script>

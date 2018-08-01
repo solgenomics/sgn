@@ -62,11 +62,11 @@ sub _validate_with_plugin {
     }
 
     for my $column (1 .. $col_max){
-      my $header_string = $worksheet->get_cell(0,$column)->value();
+        my $header_string = $worksheet->get_cell(0,$column)->value();
 
-      if (!$valid_properties{$header_string}){
-          push @error_messages, "Invalid info type: $header_string";
-      }
+        if (!$valid_properties{$header_string}){
+            push @error_messages, "Invalid info type: $header_string";
+        }
     }
 
     my %seen_cross_names;

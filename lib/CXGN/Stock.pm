@@ -59,6 +59,12 @@ has 'stock_id' => (
     is => 'rw',
 );
 
+has 'is_saving' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
 # Returns the stock_owners as [sp_person_id, sp_person_id2, ..]
 has 'owners' => (
     isa => 'Maybe[ArrayRef[Int]]',
@@ -150,6 +156,20 @@ has 'populations' => (
     is => 'rw'
 );
 
+has 'sp_person_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
+has 'user_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'modification_note' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
 
 sub BUILD {
     my $self = shift;
@@ -158,10 +178,10 @@ sub BUILD {
     my $stock;
     if ($self->stock_id){
         $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-    }
-    if (defined $stock) {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
+    }
+    if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
         $self->name($stock->name);
         $self->uniquename($stock->uniquename);
@@ -276,12 +296,12 @@ sub store {
             $self->name($self->uniquename);
         }
         my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-        $row->name($self->name());
-        $row->uniquename($self->uniquename());
-        $row->description($self->description());
-        $row->type_id($self->type_id());
-        $row->organism_id($self->organism_id());
-        $row->is_obsolete($self->is_obsolete());
+        if ($self->name){ $row->name($self->name()) };
+        if ($self->uniquename){ $row->uniquename($self->uniquename()) };
+        if ($self->description){ $row->description($self->description()) };
+        if ($self->type_id){ $row->type_id($self->type_id()) };
+        if ($self->organism_id){ $row->organism_id($self->organism_id()) };
+        if ($self->is_obsolete){ $row->is_obsolete($self->is_obsolete()) };
         $row->update();
         if ($self->organization_name){
             $self->_update_stockprop('organization', $self->organization_name());
@@ -290,6 +310,8 @@ sub store {
             $self->_update_population_relationship();
         }
     }
+    $self->associate_owner($self->sp_person_id, $self->sp_person_id, $self->user_name, $self->modification_note);
+
     return $self->stock_id();
 }
 
@@ -494,12 +516,14 @@ sub set_species {
 
 sub get_image_ids {
     my $self = shift;
-    my $ids = $self->schema()->storage->dbh->selectcol_arrayref
-	( "SELECT image_id FROM phenome.stock_image WHERE stock_id=? ",
-	  undef,
-	  $self->stock_id
-        );
-    return @$ids;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ?";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return @ids;
 }
 
 =head2 associate_allele
@@ -553,21 +577,23 @@ sub associate_owner {
     my $self = shift;
     my $owner_id = shift;
     my $sp_person_id = shift;
+    my $user_name = shift;
+    my $modification_note = shift;
     if (!$owner_id || !$sp_person_id) {
         warn "Need both owner_id and person_id for linking the stock with an owner!";
         return;
     }
-    my $metadata_id = $self->_new_metadata_id($sp_person_id);
+    my $metadata_id = $self->_new_metadata_id($sp_person_id, $user_name, $modification_note);
     #check if the owner is already linked
     my $ids =  $self->schema()->storage()->dbh()->selectcol_arrayref
-        ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND owner_id = ?",
+        ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND sp_person_id = ?",
           undef,
           $self->stock_id,
           $owner_id
         );
     if ($ids) { warn "Owner $owner_id is already linked with stock " . $self->stock_id ; }
 #store the owner_id - stock_id link
-    my $q = "INSERT INTO phenome.stock_owner (stock_id, owner_id, metadata_id) VALUES (?,?,?) RETURNING stock_owner_id";
+    my $q = "INSERT INTO phenome.stock_owner (stock_id, sp_person_id, metadata_id) VALUES (?,?,?) RETURNING stock_owner_id";
     my $sth  = $self->schema()->storage()->dbh()->prepare($q);
     $sth->execute($self->stock_id, $owner_id, $metadata_id);
     my ($id) =  $sth->fetchrow_array;
@@ -1033,12 +1059,21 @@ Args:  sp_person_id
 sub _new_metadata_id {
     my $self = shift;
     my $sp_person_id = shift;
+    my $user_name = shift;
+    my $modification_note = shift;
     my $metadata_schema = CXGN::Metadata::Schema->connect(
         sub { $self->schema()->storage()->dbh() },
         );
+    $metadata_schema->storage->dbh->do('SET search_path TO metadata');
     my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema);
     $metadata->set_create_person_id($sp_person_id);
     my $metadata_id = $metadata->store()->get_metadata_id();
+    if ($modification_note){
+        my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $user_name, $metadata_id);
+        $metadata->set_modification_note($modification_note);
+        $metadata_id = $metadata->store()->get_metadata_id();
+    }
+    $metadata_schema->storage->dbh->do('SET search_path TO public,sgn');
     return $metadata_id;
 }
 

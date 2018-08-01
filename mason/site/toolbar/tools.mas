@@ -9,7 +9,7 @@
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Mapping</li>
-    <li><a href="/jbrowse_solgenomics/?data=data/json/SL3.0">Genome Browser (Jbrowse)</a></li>
+    <li><a href="/jbrowse/">Genome Browser (Jbrowse)</a></li>
     <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Map Viewer</a></li>
     <li><a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
     <li><a href="/search/phenotypes/qtl">solQTL: QTL Mapping</a></li>

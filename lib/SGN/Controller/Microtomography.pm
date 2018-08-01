@@ -32,4 +32,11 @@ sub microtomography_cicero_stylet_2018 :Path('/microtomography/cicero_stylet_201
     $c->stash->{template} = '/microtomography/cicero_stylet_2018.mas';
 }
 
+sub microtomography_cicero_alimentarycanal_2018 :Path('/microtomography/cicero_alimentarycanal_2018') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/microtomography/cicero_alimentarycanal_2018.mas';
+}
+
 1;

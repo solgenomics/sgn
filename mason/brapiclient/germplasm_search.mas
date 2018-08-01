@@ -15,6 +15,7 @@
     <option value="https://yambase.org">yambase.org</option>
     <option value="https://fernbase.org">fernbase.org</option>
     <option value="https://solgenomics.net">solgenomics.net</option>
+    <option value="https://www.crop-diversity.org/mgis">crop-diversity.org</option>
 </select>
 
 <h4>Germplasm Search</h4>
@@ -115,14 +116,14 @@ jQuery(document).ready(function() {
             germplasmPUIs = [];
         }
         var search_query_data = { 
-          'germplasmName' :  germplasmNames,
-          'accessionNumber' : accessionNumbers,
-          'germplasmGenus' : genusNames,
-          'germplasmSubTaxa' : subtaxaNames,
-          'germplasmSpecies' : speciesNames,
-          'germplasmDbId' : germplasmDbIds,
-          'germplasmPUI' : germplasmPUIs,
-          'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
+            'germplasmNames' :  germplasmNames,
+            'accessionNumbers' : accessionNumbers,
+            'germplasmGenus' : genusNames,
+            'germplasmSubTaxa' : subtaxaNames,
+            'germplasmSpecies' : speciesNames,
+            'germplasmDbIds' : germplasmDbIds,
+            'germplasmPUIs' : germplasmPUIs,
+            'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
         };
         return_url = jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search';
         jQuery.ajax( {

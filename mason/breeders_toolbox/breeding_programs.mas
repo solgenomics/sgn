@@ -32,7 +32,7 @@ if ($user && $user->check_roles("curator")) {
     <%perl>
       foreach my $bp (@$breeding_programs) { 
 
-        print "<tr><td><b>$bp->[1]</b></td><td>$bp->[2]</td>";
+        print "<tr><td><b><a href=\"/breeders/program/$bp->[0]\" >$bp->[1]</a></b></td><td>$bp->[2]</td>";
 
   	if ($delete_flag) { 
 	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a></td></tr>";
@@ -136,57 +136,7 @@ jQuery(document).ready(function() {
    });
 });
 
-//jQuery('#new_breeding_program_dialog').dialog( { 
-//  title: "Add new breeding program",
-//  width: 400,
-//  height: 200,
-//  buttons: { 
-//    'OK':     { id: 'new_breeding_program_dialog_ok_button',
-//                text: 'OK',
-//                click: function() { store_new_breeding_program(); }
-//              },
-//    'Cancel': { id: 'new_breeding_program_dialog_cancel_button',
-//                text: 'Cancel',
-//                click: function() {  
-//                  jQuery('#new_breeding_program_dialog').dialog("close"); }
-//              }
-//  },
-//  autoOpen: false
-//});
 
-//function store_new_breeding_program() { 
-//   var name = jQuery('#new_breeding_program_name').val();
-//   var desc = jQuery('#new_breeding_program_desc').val();
-//   if ( (name === '') || (desc === '')) { 
-//     alert("Please enter a name and a description.");
-//     return;
-//   }
-//   jQuery.ajax( { 
-//     url: '/breeders/program/new',
-//     data: { 'name': name, 'desc': desc },
-//async: false,
-//     beforeSend: function()  { jQuery('#working').dialog("open") },
-//     error: function(response) { 
-//        alert("An error occurred."+ response.responseText);
-//       jQuery('#working').dialog("close");
-//     },
-//
-//     success: function(response) { 
-//       if (response.error) { 
-//         alert(response.error);
-//       
-//       }
-//       else { 
-//         alert("The new breeding program "+name+" was created");
-//       }
-//       jQuery('#working').dialog("close");
-//       location.reload();
-//     }
-//
-//   });
-//   jQuery('#new_breeding_program_dialog').dialog("close");
-//
-//}
 
 function delete_breeding_program(program_id) { 
    if (confirm("Delete breeding program? The associated trials will not be deleted, but be listed under 'Other'")) { 

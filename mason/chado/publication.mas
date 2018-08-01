@@ -46,10 +46,8 @@ Naama Menda <nm249@cornell.edu>
 
 <& /util/import_javascript.mas, classes => 'CXGN.Phenome.Publication' &>
 <div class="publication_embedded">
-  <a href="/publication/<% $pub->get_pub_id |h%>/view">
-    <% $db |h%>:<% $accession |h%>
-  </a>
-  <span class="title"> <% $pub->get_title |h%> (<% $pub->get_pyear |h%>) <% $doi %></span>
+  <span class="title"> <% $doi %> <% $pub->get_title |h%> </span>  <a href="/publication/<% $pub->get_pub_id |h%>/view">
+    <% $pub->get_series_name |h%> (<% $pub->get_pyear |h%>) </a>
   <br />
   <a class="toggle_abstract" href="#">Show / hide abstract</a>
   <div class="detail">

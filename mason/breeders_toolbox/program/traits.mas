@@ -1,0 +1,182 @@
+
+<%args>
+$program_id
+$collapse_phenotypes_section => 1
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
+
+
+<div class="well well-sm table-responsive">
+  <center><h4>Raw Data Statistics</h4></center>
+  <br/>
+
+  <div id="pheno_summary_table_div">
+    <table id="phenotype_summary_data_<% $program_id %>" class="display">
+      <thead>
+        <tr>
+          <th>Trait</th>
+          <th>Mean</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Std Dev</th>
+          <th>CV</th>
+          <th>Count</th>
+          <th>Histogram</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>  
+
+
+<div class="well well-sm" id="raw_data_histogram_well">
+  <center><h4>Raw Data Histogram</h4></center><hr>
+  <div id="program_summary_hist_div">
+    <div class="row">
+      <div class="col-sm-8">
+        <form class="form-horizontal">
+          <div class="form-group form-group-sm">
+            <label for="program_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
+            <div class="col-sm-10">
+              <div id="traits_assayed_dropdown">
+              </div>
+            </div>
+          </div>
+      </div>
+      <div class="col-sm-4" id="traits_assayed_histogram_cvterm_link">
+      </div>
+    </div>
+    
+    <div id="program_summary_hist">
+    </div>
+    
+  </div>
+</div>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+
+<script>
+var d3 = d3v4;
+var draw_histogram = stackedObservationPhenotypeHistogram.draw;
+
+
+jQuery(document).ready(function () {
+
+%  if ($collapse_phenotypes_section){
+    jQuery('#program_traits_assayed_onswitch').click( function() {
+        jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( {
+            'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
+        });
+        trait_summary_hist_display_change("<% $program_id %>");
+    });
+%  } else {
+    jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( {
+        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
+    });
+    trait_summary_hist_display_change("<% $program_id %>");
+%  }
+    ///clicking on the histogram glyph from the dataTable 
+    /// scrolls down to the histogram div
+    ///
+    jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
+        var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
+        var target = jQuery(this.getAttribute('href'));
+        if( target.length ) {
+            event.preventDefault();
+            jQuery('html, body').stop().animate({
+                scrollTop: target.offset().top - offset
+            }, 1500);
+        }
+    });
+});
+
+
+///
+///
+function trait_summary_hist_display_change(program_id) {
+    jQuery.ajax ( {
+        url : '/ajax/breeders/program/'+ program_id + '/traits_assayed',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            //console.log(response);
+            if (response.traits_assayed[0][0]) {
+                var traits_assayed_html = "<select class='form-control' id='program_summary_hist_dropdown'>";
+                for (i=0; i<response.traits_assayed[0].length; i++) {
+                    traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                }
+                traits_assayed_html = traits_assayed_html +"</select>";
+                jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
+                jQuery("#traits_assayed_dropdown>select").change(function(){
+                 trait_summary_hist_change(program_id, this.value);
+                });
+
+                jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+
+                jQuery.ajax( {
+                    url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+jQuery("#program_summary_hist_dropdown").val(),
+                    type: 'POST',
+                    success: function(response){
+                        jQuery("#working_modal").modal("hide");
+                        if (response.error) {
+                            alert(response.error);
+                        } 
+                        else if (response.status!="success"){
+                            alert("Problem loading plant/plot data: "+response.status);
+                        }
+                        else {
+                            draw_histogram(response.data, d3.select("#program_summary_hist").node());
+                        }
+                    },
+                    error: function(response) {
+                        jQuery("#working_modal").modal("hide");
+                        alert('An error occured retrieving trait histogram data.');
+                    }
+                });
+            } else {
+                jQuery("#working_modal").modal("hide");
+                jQuery("#program_summary_hist").html("<center><h4>There is no data to plot.</h4></center>");
+            }
+
+        },
+        error: function(response){
+            alert('Error retrieving traits assayed in this breeding program');
+        }
+
+    });
+}
+
+function trait_summary_hist_change(program_id, value) {
+    jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
+    jQuery("#program_summary_hist_dropdown").val(value);
+    jQuery.ajax( {
+        url : '/ajax/breeders/program/'+ program_id +'/trait_phenotypes/?trait='+value+'',
+        type: 'POST',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+                alert(response.error);
+            }
+            else if (response.status!="success"){
+                alert("Problem loading plant/plot data: "+response.status);
+            }
+            else {
+                draw_histogram(response.data, d3.select("#program_summary_hist").node());
+            }
+        },
+        error: function(response) {
+            jQuery("#working_modal").modal("hide");
+            alert('An error occured retrieving trait histogram data.');
+        }
+    });
+}							       
+</script>

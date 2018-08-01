@@ -9,6 +9,7 @@ use Try::Tiny;
 use List::MoreUtils qw /any /;
 use CXGN::People::Person;
 use CXGN::Login;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -106,11 +107,20 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
     my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
     my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
+    my $upload_coordinate_custom = $c->req->upload('genotyping_trial_layout_upload_coordinate_template');
     if ($upload_xls && $upload_coordinate){
         $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
         return;
     }
-    if (!$upload_xls && !$upload_coordinate){
+    if ($upload_xls && $upload_coordinate_custom){
+        $c->stash->{rest} = {error => "Do not upload both XLS and Custom Coordinate file at the same time!" };
+        return;
+    }
+    if ($upload_coordinate && $upload_coordinate_custom){
+        $c->stash->{rest} = {error => "Do not upload both Coordinate file and Custom Coordinate file at the same time!" };
+        return;
+    }
+    if (!$upload_xls && !$upload_coordinate && !$upload_coordinate_custom){
         $c->stash->{rest} = {error => "You must upload a genotyping trial file!" };
         return;
     }
@@ -125,6 +135,10 @@ sub parse_genotype_trial_file_POST : Args(0) {
     if ($upload_coordinate){
         $upload = $upload_coordinate;
         $upload_type = 'GenotypeTrialCoordinate';
+    }
+    if ($upload_coordinate_custom){
+        $upload = $upload_coordinate_custom;
+        $upload_type = 'GenotypeTrialCoordinateTemplate';
     }
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -303,6 +317,25 @@ sub store_genotype_trial_POST : Args(0) {
         $c->detach();
     }
 
+    my $field_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id;
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
+    my %source_stock_names;
+    foreach (values %{$plate_info->{design}}){
+        $source_stock_names{$_->{stock_name}}++;
+    }
+    my @source_stock_names = keys %source_stock_names;
+
+    #If plots or plants or tissue samples are provided as the source, we can get the field trial and use it to save the link between genotyping trial and field trial directly.
+    my %field_trial_ids;
+    my $plant_rs = $schema->resultset('Stock::Stock')->search({'me.uniquename' => {-in => \@source_stock_names}, 'me.type_id' => {-in => [$plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id]}, 'nd_experiment_stocks.type_id'=>$field_nd_experiment_type_id, 'nd_experiment.type_id'=>$field_nd_experiment_type_id}, {'join' => {'nd_experiment_stocks' => {'nd_experiment' => 'nd_experiment_projects'}}, '+select'=>['nd_experiment_projects.project_id'], '+as'=>['trial_id']});
+    while(my $r=$plant_rs->next){
+        $field_trial_ids{$r->get_column('trial_id')}++;
+    }
+    my @field_trial_ids = keys %field_trial_ids;
+    #print STDERR Dumper \@field_trial_ids;
+
     print STDERR "Creating the genotyping trial...\n";
 
     my $message;
@@ -327,6 +360,7 @@ sub store_genotype_trial_POST : Args(0) {
             genotyping_facility => $plate_info->{genotyping_facility},
             genotyping_plate_format => $plate_info->{plate_format},
             genotyping_plate_sample_type => $plate_info->{sample_type},
+            genotyping_trial_from_field_trial => \@field_trial_ids,
         });
 
         $message = $ct->save_trial();
@@ -352,7 +386,7 @@ sub store_genotype_trial_POST : Args(0) {
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop');
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'genotyping_layout'});
     my $saved_design = $saved_layout->get_design();
@@ -409,6 +443,76 @@ sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentia
             error => "Insufficient privileges for this operation." 
         };
     }
+}
+
+sub get_genotyping_data_projects : Path('/ajax/genotyping_data/projects') : ActionClass('REST') { }
+
+sub get_genotyping_data_projects_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
+
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema=>$bcs_schema,
+        trial_design_list=>['genotype_data_project']
+    });
+    my $data = $trial_search->search();
+    my @result;
+    foreach (@$data){
+        my @res;
+        if ($checkbox_select_name){
+            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{trial_id}'>";
+        }
+        push @res, (
+            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            $_->{description},
+            "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
+            $_->{year},
+            $_->{location_name},
+        );
+        push @result, \@res;
+    }
+    #print STDERR Dumper \@result;
+
+    $c->stash->{rest} = { data => \@result };
+}
+
+sub get_genotyping_data_protocols : Path('/ajax/genotyping_data/protocols') : ActionClass('REST') { }
+
+sub get_genotyping_data_protocols_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
+
+    my $data = CXGN::Genotype::Protocol::list($bcs_schema);
+    my @result;
+    foreach (@$data){
+        my @res;
+        if ($checkbox_select_name){
+            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{protocol_id}'>";
+        }
+        my $num_markers = scalar keys %{$_->{markers}};
+        my @trimmed;
+        foreach (@{$_->{header_information_lines}}){
+            $_ =~ tr/<>//d;
+            push @trimmed, $_;
+        }
+        my $description = join '<br/>', @trimmed;
+        push @res, (
+            $_->{protocol_name},
+            $description,
+            $num_markers,
+            $_->{reference_genome_name},
+            $_->{species_name},
+            $_->{sample_observation_unit_type_name}
+        );
+        push @result, \@res;
+    }
+    #print STDERR Dumper \@result;
+
+    $c->stash->{rest} = { data => \@result };
 }
 
 1;

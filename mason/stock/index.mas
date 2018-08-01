@@ -53,7 +53,6 @@ $barcode_tempdir => undef
 $barcode_tempuri => undef
 $identifier_prefix => 'SGN'
 $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
-
 </%args>
 
 
@@ -94,8 +93,8 @@ my $is_owner = $stockref->{is_owner};
 
 my $this_page = "/stock/$stock_id/view";
 
-my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">[Add new image]</a>|;
 my $image_ids =  $stockref->{image_ids} || [] ;
+my $related_image_ids =  $stockref->{related_image_ids} || [] ;
 my $stockprops = $stockref->{props};
 
 
@@ -104,30 +103,42 @@ my $stockprops = $stockref->{props};
 #my $stock_pedigree = $stockref->{stock_pedigree};
 #my $stock_descendants = $stockref->{stock_descendants};
 
-my $resources = [ 'stock_synonym', 'solcap number'];
-
 my $allele_div = "stock_alleles";
-my $new_locus_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new locus]</a> | : '' ;
+my $new_locus_link = !$person_id ? qq|<a href="/user/login">[log-in to associate new locus]</a> | : '' ;
 
 #owner
-my $owners = $stockref->{owners};
-my $editor_link;
-foreach my $o_id (@$owners) {
+my $owners = $stockref->{editor_info};
+my $owner_ids = $stockref->{owners};
+my $owners_html = '';
+my %unique_owners;
+foreach my $o_id (@$owner_ids) {
+    $unique_owners{$o_id}++;
+}
+my @owner_ids = keys %unique_owners;
+foreach my $o_id (@owner_ids){
   my $person = CXGN::People::Person->new($dbh, $o_id);
   my $first_name = $person->get_first_name;
   my $last_name = $person->get_last_name;
-  $editor_link .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
+  $owners_html .= qq|<a href="/solpeople/personal-info.pl?sp_person_id=$o_id">$first_name $last_name</a> |;
 }
+my $editor_link_table = "<table class='table table-bordered'><thead><tr><th>Editor</th><th>Timestamp</th><th>Modification Note</th></tr></thead><tbody>";
+foreach my $o_id (@$owners) {
+  my $person = CXGN::People::Person->new($dbh, $o_id->[0]);
+  my $first_name = $person->get_first_name;
+  my $last_name = $person->get_last_name;
+  $editor_link_table .= qq|<tr><td><a href="/solpeople/personal-info.pl?sp_person_id=$o_id->[0]">$first_name $last_name</a></td><td>$o_id->[1]</td><td>$o_id->[2]</td></tr>|;
+}
+$editor_link_table .= "</tbody></table>";
+$editor_link_table = "<br/>".$owners_html."<br/><br/>".$editor_link_table;
 
 #phenotypes measured directly on this stock
 my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
-#my $p_download_link = qq|<a href = "/stock/$stock_id/phenotypes">[Download phenotypes]</a>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
-my $p_download_link = '<a target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete&include_row_and_column_numbers=1">[Download phenotypes]</a>';
+my $p_download_link = '<a class="btn btn-sm btn-default" style="margin:3px" target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete&">Download All Phenotypes</a>';
 my $direct_genotypes = $stockref->{direct_genotypes};
-my $g_download_link = qq|<a href =  "/stock/$stock_id/genotypes">Download genotypes</a>| if (keys %$direct_genotypes) ;
+my $g_download_link = keys %$direct_genotypes ? qq|<a class="btn btn-default btn-sm" style="margin:3px" href =  "/stock/$stock_id/genotypes">Download Genotypes</a>| : 'No genotypes available!' ;
 ############################
 my $map_html = $stockref->{map_html};
 my $map;
@@ -149,9 +160,7 @@ if ($stock_id) {
 my $has_qtl_data = $stockref->{has_qtl_data};
 
 
-my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| : qq|<span class=\"ghosted\">[Associate publication]</span>| ;
-
-my $pub_count = scalar( keys %$pubs );
+my $new_pub_link = $curator || $submitter || $sequencer  ?   qq|<a class="btn btn-sm btn-default" style="margin:3px" href="/chado/add_publication.pl?type=stock&amp;type_id=$stock_id&amp;refering_page=$this_page&amp;action=new">Associate publication</a>| : qq|<span class=\"btn btn-sm btn-default ghosted\" style="margin:3px" disabled>Associate publication</span>| ;
 
 ## EUSOL, tgrc (stock_dbxref)
 my $dbxrefs = $stockref->{dbxrefs};
@@ -165,8 +174,8 @@ foreach my $db_name ( keys %$dbxrefs ) {
 }
 
 my $ontology_subtitle = $curator || $submitter || $sequencer  ?
-  qq|<a href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">[Add ontology annotations]</a> | :
-  qq |<span class = "ghosted"> [Add ontology annotations]</span> |;
+  qq|<a class="btn btn-sm btn-default" style="margin:3px" href="javascript:Tools.toggleContent('associate_cvterm_form', 'stock_ontology')">Add ontology annotations</a> | :
+  qq |<span class = "btn btn-default btn-sm ghosted" style="margin:3px" disabled>Add ontology annotations</span> |;
 
 my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="javascript:Tools.toggleContent('add_phenotype_form', 'stock_phenotype')" >[Add phenotype]</a> | :   qq |<span class = "ghosted"> [Add phenotype]</span> |;
 
@@ -191,178 +200,102 @@ function jqueryStuff() {
   });
 }
 </script>
+
+
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , subtitle => "<a href=/phenome/qtl_form.pl>New QTL population</a> | <a href=/search/stocks/>Back to stock search</a>"  &>
+<&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' href='/phenome/qtl_form.pl'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' href='/search/stocks/'>Back to stock search</button>"  &>
 
-<div class="row">
-  <div class="col-sm-6">
+    <div class="panel panel-default">
+        <div class="panel-body">
 
-  <& /page/form.mas,
-  object_type=>'stock',
-  object_id=>"$stock_id",
-  form_name=> 'stock_form',
-  server_side_script => '/phenome/stock/stock_ajax_form.pl',
-  form_div_name=>'stock_details',
-  js_object_name=> 'stockForm',
-  page_url => "/stock/$stock_id/view/" ,
-  alternate_new_button => '<a href ="/stock/0/new">[New]</a>'
-  &>
+            <div class="row">
+                <div class="col-sm-6">
 
-  </div>
-  <br /><br />
-  <div class="col-sm-6">
-<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &><br /><br />
-%#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
-%# <& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
-%#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"qrcode" &>
-  </div>
-</div>
+                    <& /page/form.mas,
+                        object_type=>'stock',
+                        object_id=>"$stock_id",
+                        form_name=> 'stock_form',
+                        server_side_script => '/phenome/stock/stock_ajax_form.pl',
+                        form_div_name=>'stock_details',
+                        js_object_name=> 'stockForm',
+                        page_url => "/stock/$stock_id/view/" ,
+                        #alternate_new_button => '<a class="btn btn-sm btn-default" href ="/stock/0/new">New</a>'
+                        alternate_new_button => ''
+                    &>
 
-<div><b>Stock editors: </b> <% $editor_link %></div>
-<br />
-% foreach my $db_url (keys %source_dbs) {
-<div><a href=<% $db_url %>><% $source_dbs{$db_url} %></a> </div>
-%}
-<br />
-% my $div_name = join("_", @$resources);
-% my $subtitle = $edit_privs ? "[<a id=\"stock_add_synonym\" href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
-   <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
-      <& /stock/stockprops.mas,
-       stock_id    => $stock_id,
-       props      => $stockprops ,
-       div_name   =>'synonyms',
-       subset     =>$resources,
-       editable   => [ 'stock_synonym' ],
-       edit_privs => $edit_privs   &>
-</&>
-%  $div_name = join("_", @editable_stock_props);
-% my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
-
-    <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
-      <& /stock/stockprops.mas,
-       stock_id  =>$stock_id,
-       props      => $stockprops,
-        div_name   => 'stockprops',
-	edit_privs => $edit_privs,
-	subset     => \@editable_stock_props,
-	editable   => \@editable_stock_props  &>
-</&>
-
+                </div>
+                <div class="col-sm-6">
+                    <br /><br />
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &>
+                    <br /><br />
+                </div>
+            </div>
+        </div>
+    </div>
 
 </&>
 
+<&| /page/info_section.mas, title => "Navigator" , collapsible=> 1, collapsed=>0 &>
 
-<&| /page/info_section.mas, title => "Associated loci (" . $stockref->{allele_count} . ")" , subtitle => $new_locus_link, collapsible=> 1 , collapsed => 1 &>
+% my $subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_synonym\" >Add Synonym</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Synonym</button>";
+% my $props_subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_props\" >Add Additional Info</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Additional Info</button>";
 
-<& /phenome/associate_locus.mas, object_id => $stock_id , object_name => "stock", locus_add_uri=> $locus_add_uri,   allele_div => $allele_div , show_form => $is_owner &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, type_name => $type_name, stockref => $stockref, buttons_html => $subtitle.$props_subtitle, info_section_title => "<h4 style='display:inline'>Additional Info</h4>", info_section_subtitle => 'View and edit additional properties such as synonyms, editors, and all types of properties.', icon_class => "glyphicon glyphicon-info-sign", info_section_id => "stock_additional_info_section", stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => \@editable_stock_props, editor_link => $editor_link_table, source_dbs => \%source_dbs, locus_add_uri => $locus_add_uri, new_locus_link => $new_locus_link, allele_div => $allele_div, is_owner => $is_owner &>
 
-</&>
-
-
-
-
-% if($is_owner) {
-<&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
-
-</&>
-
-
+% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Experiment Usage</h4>", info_section_subtitle => 'View experiments that this stock has been used in.', icon_class => "glyphicon glyphicon-leaf", info_section_id => "stock_trials_section" &>
 % }
 
-<&| /page/info_section.mas, title => "Trials" &>
+% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'subplot' || $type_name eq 'tissue_sample'){
 
-  <& /stock/trials.mas, stock_id => $stock_id &>
+%    my $trait_assayed_buttons = $type_name eq 'plot' ? "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link <a class='btn btn-sm btn-default' style='margin:3px' target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>" : "<button class='btn btn-sm btn-primary' style='margin:3px' id='stock_download_phenotypes_button'>Download Phenotypes</button> $p_download_link";
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Traits Assayed</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stock_traits_section", buttons_html => $trait_assayed_buttons &>
+% }
+
+% if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'tissue_sample'){
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section", buttons_html => $g_download_link, map_html => $map_html, direct_genotypes => $direct_genotypes &>
+% }
+
+% if ($type_name eq 'accession'){
+
+<%perl>
+        my $collapsible = 0;
+        if ($has_pedigree==1) {
+            $collapsible = 1;
+        }
+        my $add_parent_link = '<button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" disabled>Add parent</button>';
+        if ($person_id && ($submitter || $curator || $sequencer)) { $add_parent_link = qq | <button class="btn btn-primary btn-sm" style="margin:3px" id="add_parent_link" >Add parent</button> |; }
+
+        my $remove_parent_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link" disabled>Remove parent</button>';
+        if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="remove_parent_link">Remove parent</button> |; }
+</%perl>
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Pedigree</h4>", info_section_subtitle => 'View and edit pedigree information.', icon_class => "glyphicon glyphicon-random", info_section_id => "stock_pedigree_section", buttons_html => $add_parent_link.$remove_parent_link, has_pedigree => $has_pedigree, info_section_collapsed => 0 &>
+% }
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any plots, plants, tissue_sample, and/or accessions that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Images</h4>", info_section_subtitle => 'View and add images of this stock and of related stocks.', icon_class => "glyphicon glyphicon-camera", info_section_id => "stock_images_section", image_ids => $image_ids, related_image_ids => $related_image_ids, dbh => $dbh, buttons_html => qq|<a class="btn btn-sm btn-default" style="margin:3px" href="/image/add?type_id=$stock_id&action=new&type=stock&refering_page=$this_page">Add new image</a>| &>
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Literature Annotation</h4>", info_section_subtitle => 'View annotations for this stock found in literatur and ontologies.', icon_class => "glyphicon glyphicon-book", info_section_id => "stock_literature_annotation_section", buttons_html => $new_pub_link.$ontology_subtitle, pubs => $pubs, cvterm_add_uri => $cvterm_add_uri, stockref => $stockref, trait_ontology_db_name => $trait_ontology_db_name, is_owner => $is_owner, dbh=>$dbh &>
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>JBrowse Genome Alignments</h4>", info_section_subtitle => 'View JBrowse tracks for this stock.', icon_class => "glyphicon glyphicon-align-left", info_section_id => "stock_jbrowse_section" &>
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Comments</h4>", info_section_subtitle => 'View and add comments to this stock.', icon_class => "glyphicon glyphicon-pencil", info_section_id => "stock_comments_section", referer => $this_page &>
 
 </&>
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
 
-% if ($type_name eq 'plot'){
-    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>] [<a target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>]" &>
-
-        <& /stock/traits.mas, stock_id => $stock_id &>
-
-  </&>
-% }
-% else {
-    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
-        <& /stock/traits.mas, stock_id => $stock_id &>
-
-  </&>
-% }
-
-
-<%perl>
- my $collapsible = 0;
- if ($has_pedigree==1) {
-  $collapsible = 1;
- }
- my $add_parent_link = "Add parent";
- if ($person_id && ($submitter || $curator || $sequencer)) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
-
-my $remove_parent_link = "Remove parent";
-if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link = qq | <a id="remove_parent_link">Remove parent</a> |; }
-
-</%perl>
-
 <div id="remove_parent_dialog">
-Remove a parent (this will only remove the link to the parent, not the parent accession itself).<br /><br />
-  <div id="remove_parent_list">[loading parent list...]</div>
+    Remove a parent (this will only remove the link to the parent, not the parent accession itself).
+    <br /><br />
+    <div id="remove_parent_list">[loading parent list...]</div>
 </div>
 
-
-% if ($type_name eq 'accession'){
-
-<&| /page/info_section.mas, title=>"Pedigree and Descendants" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
-  <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
-</&>
-
-<& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
-
-% }
-
-
-<&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
-  <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $uniquename, stock_type => $type_name &>
-
-</&>
-
-<&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
-  <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
-
-</&>
-
-
-<&| /page/info_section.mas, title=>"Literature annotation ($pub_count)" , subtitle=>$new_pub_link, id=>"publications" , collapsible=>1, collapsed=>1 &>
-
-% my $pub_count = 0;
-% foreach my $full_accession ( keys %$pubs  ) {
-% my $pub = CXGN::Chado::Publication->new($dbh, $pubs->{$full_accession}->pub_id );
-% my ($pub_db_name, $accession) = split ':' , $full_accession;
-<& /chado/publication.mas, pub=>$pub, count=>$pub_count++, db=>$pub_db_name, accession=>$accession &>
-  <br >
-% }
-
-</&>
-
-<&| /page/info_section.mas,
-  id   => 'stock_ontology',
-  title=>"Ontology annotation (" . $stockref->{ontology_count} . ")",
-  collapsible=>1,
-  collapsed=>1,
-  subtitle=>$ontology_subtitle &>
-  <& /ontology/associate_ontology.mas,
-  trait_db_name => $trait_ontology_db_name,
-  object_id     => $stock_id ,
-  object_name   => "stock",
-  cvterm_add_uri=> $cvterm_add_uri,
-  ontology_url  => "/stock/$stock_id/ontologies/",
-  reference_uri => "/stock/$stock_id/references/",
-  evidence_with_uri => "/stock/$stock_id/evidences/",
-  show_form     => $is_owner  &>
-</&>
 
 <&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
 % foreach my $project (keys %$direct_phenotypes) {
@@ -404,69 +337,43 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 </&>
 
 <div id="stock_trials_info_popup">
-  <table id="stock_trials_info_table" >
-    <thead>
-    <tr><th>Trait</th><th>Average</th><th>Std dev</th><th>Count</th></tr>
-    </thead>
-  </table>
+    <table id="stock_trials_info_table" >
+        <thead>
+            <tr><th>Trait</th><th>Average</th><th>Std dev</th><th>Count</th></tr>
+        </thead>
+    </table>
 </div>
 
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-
-
-
-%#<&| /page/info_section.mas, title => "Phenotypic data" &>
-
-%#  <& /stock/phenotypes.mas, stock_id => $stock_id &>
-
-%#</&>
-
-<&| /page/info_section.mas, title=>"Genotype data ", subtitle=> $g_download_link, collapsible => 1 , collapsed => 1 &>
-% print $map_html;
-% foreach my $project (keys %$direct_genotypes) {
-%  my $genotypes = $direct_genotypes->{$project} ;
-<&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
-% foreach my $genotype (@$genotypes) {
-%  print $genotype->description . "\n";
-% }
-  </&>
-% }
-</&>
-
-% if ($type_name eq 'accession'){
-
-<&| /page/info_section.mas, title=>"Accession JBrowse", collapsible => 1 , collapsed => 0 &>
-<p id="jbrowse_check">[loading...]</p>
-</&>
-
-% }
-
-<& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
-
-
 <script>
-  jQuery(document).ready(function() {
-    stock_detail_page_init_dialogs();
+    jQuery(document).ready(function() {
+        stock_detail_page_init_dialogs();
 
-    jQuery('#remove_parent_link').click( function() {
-      jQuery('#remove_parent_dialog').dialog("open");
-      get_remove_parents_list(<% $stock_id %>);
-    });
+        jQuery('#stock_add_synonym').click(function(){
+            synonyms_addPropDialog();
+        });
 
-    jQuery.ajax({
-      url: "<% $test_url %>",
-      success: function(response) {
-        if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
-	         jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
-		       }
-        else { // if not found, display message that dataset doesn't exist
-	           jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
-     		   				   }
-						       },
-      error: function() {
-        jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
-      }
-    });
+        jQuery('#stock_add_props').click(function(){
+            stockprops_addPropDialog();
+        });
+
+        jQuery('#remove_parent_link').click( function() {
+            jQuery('#remove_parent_dialog').dialog("open");
+            get_remove_parents_list(<% $stock_id %>);
+        });
+
+        jQuery.ajax({
+            url: "<% $test_url %>",
+            success: function(response) {
+                if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
+                    jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
+                }
+                else { // if not found, display message that dataset doesn't exist
+                    jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
+                }
+            },
+            error: function() {
+                jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
+            }
+        });
   });
 </script>

@@ -50,13 +50,11 @@ sub get_regression_data_files {
     my $trait_abbr = $c->stash->{trait_abbr}; 
     my $cache_dir  = $c->stash->{solgs_cache_dir};
  
-    my $solgs_controller = $c->controller('solGS::solGS');
-   
     my $phenotype_file = "phenotype_trait_${trait_abbr}_${pop_id}";
-    $phenotype_file    = $solgs_controller->grep_file($cache_dir, $phenotype_file);
+    $phenotype_file    = $c->controller('solGS::Files')->grep_file($cache_dir, $phenotype_file);
        
-    my $gebv_file = "gebv_kinship_${trait_abbr}_${pop_id}";
-    $gebv_file    = $solgs_controller->grep_file($cache_dir,  $gebv_file);
+    my $gebv_file = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";
+    $gebv_file    = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
    
     $c->stash->{regression_gebv_file} = $gebv_file;
     $c->stash->{regression_pheno_file} = $phenotype_file;  
@@ -69,11 +67,9 @@ sub get_heritability {
     
     my $trait_abbr = $c->stash->{trait_abbr};
     my $pop_id     = $c->stash->{pop_id};
-    
-    my $solgs_controller = $c->controller('solGS::solGS');
-    my $cache_dir = $c->stash->{solgs_cache_dir};
+    my $cache_dir  = $c->stash->{solgs_cache_dir};
 
-    $solgs_controller->variance_components_file($c);
+    $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
 
     my ($txt, $value) = map { split(/\t/)  } 
@@ -144,7 +140,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

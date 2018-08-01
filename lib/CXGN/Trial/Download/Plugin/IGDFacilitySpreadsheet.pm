@@ -118,8 +118,8 @@ sub download {
 	$ws->write(2 + $line, 2, $t->get_name());
 	$ws->write(2 + $line, 3, $k);
 	$ws->write(2 + $line, 4, $layout->{$k}->{igd_synonym});
-	$ws->write(2 + $line, 16, "Manihot");
-	$ws->write(2 + $line, 17, "esculenta");
+	$ws->write(2 + $line, 16, $layout->{$k}->{genus});
+	$ws->write(2 + $line, 17, $layout->{$k}->{species});
 	$ws->write(2 + $line, 20, $t->get_location());
 	$line++;
     }

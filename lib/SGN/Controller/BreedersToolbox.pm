@@ -31,7 +31,7 @@ sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -56,7 +56,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -88,7 +88,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     if (!$c->user()) {
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -113,7 +113,7 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -127,6 +127,19 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_roles.mas';
 }
 
+sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+    $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
+}
+
 
 sub manage_locations : Path("/breeders/locations") Args(0) {
     my $self = shift;
@@ -136,7 +149,7 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -153,7 +166,7 @@ sub manage_nurseries : Path("/breeders/nurseries") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -184,7 +197,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -213,7 +226,7 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -232,7 +245,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if (!$c->user()) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -256,7 +269,7 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     my $stock_id = $c->req->param('stock_id');
 
     if (!$c->user()) {
-	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	      return;
     }
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id=>$stock_id })->uniquename();
@@ -274,7 +287,7 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
     my $trial_id = $c->req->param('trial_id');
 
     if (!$c->user()) {
-	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	      return;
     }
     my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
@@ -290,7 +303,7 @@ sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if (!$c->user()) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
     $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
@@ -356,7 +369,7 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
 
     }
     else {
-      $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+      $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
 }
@@ -379,7 +392,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $visible_to_role = $c->req->param('visible_to_role');
 
     if (! $c->user()) { # redirect
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -498,7 +511,7 @@ sub selection_index : Path("/selection/index") :Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -524,7 +537,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -627,7 +640,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 

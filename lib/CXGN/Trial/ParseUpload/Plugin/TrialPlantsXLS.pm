@@ -181,7 +181,7 @@ sub _parse_with_plugin {
             next;
         }
 
-        $parsed_entries{$row} = {
+        push @{$parsed_entries{'data'}}, {
             plot_name => $plot_name,
             plot_stock_id => $plot_lookup{$plot_name},
             plant_name => $plant_name,

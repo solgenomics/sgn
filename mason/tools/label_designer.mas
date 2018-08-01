@@ -40,6 +40,14 @@
                 <select class="form-control" id="label_format"></select>
             </div>
         </div>
+        <div class="col-md-12" id="label_designer_data_level_div" style="margin-bottom:20px; display:none;" >
+            <div class="col-md-2">
+                <label>Label For Every:</label>
+            </div>
+            <div class="col-md-4">
+                <div id="label_designer_data_level_select_div"></div>
+            </div>
+        </div>
         <div class="col-md-12" id="d3-custom-dimensions-div" style="display:none;">
             <div class="col-md-6" id="d3-page-custom-dimensions-div" style="visibility:hidden">
                 <div class="col-md-12">
@@ -286,7 +294,7 @@
                     <div class="col-md-1"></div>
                     <div class="col-md-3">
                         <center>
-                        <br><label>Filter Plots:</label>
+                        <br><label>Filter by Rep:</label>
                             <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
                             </select><br>
                         </center>

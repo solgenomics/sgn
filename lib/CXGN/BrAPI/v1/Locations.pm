@@ -42,7 +42,7 @@ sub locations_list {
 	my @data;
 	foreach (@$data_window){
 		push @data, {
-			locationDbId => $_->[0],
+			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
 			name=> $_->[1],
 			abbreviation=>$_->[9],
@@ -51,6 +51,8 @@ sub locations_list {
 			latitude=>$_->[2],
 			longitude=>$_->[3],
 			altitude=>$_->[4],
+            instituteName=>'',
+            instituteAddress=>$_->[10],
 			additionalInfo=> $_->[7]
 		};
 	}

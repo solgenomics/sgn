@@ -214,6 +214,7 @@ sub validate_design {
         );
         #plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
     } elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot' || $design_type eq 'Lattice' || $design_type eq 'MAD' || $design_type eq 'greenhouse' || $design_type eq 'westcott'){
+        # valid plot's properties
         @valid_properties = (
             'seedlot_name',
             'num_seed_per_plot',
@@ -294,11 +295,11 @@ sub validate_design {
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $stocks = $chado_schema->resultset('Stock::Stock')->search({
-        #type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
+        type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= "Name $s already exists in the database.";
+        $error .= "Name $s->uniquename already exists in the database.";
     }
 
     my $seedlot_validator = CXGN::List::Validate->new();
@@ -347,31 +348,30 @@ sub store {
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
     my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
-    my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type');
-    my $subplot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship');
-    my $plant_of_subplot = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship');
-    my $subplot_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_index_number', 'stock_property');
-    my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type');
-    my $plant_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship');
-    my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property');
-    my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property');
-    my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property');
-    my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property');
-    my $is_control_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is a control', 'stock_property');
-    my $range_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'range', 'stock_property');
-    my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property');
-    my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property');
-    my $is_blank_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is_blank', 'stock_property');
-    my $concentration_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'concentration', 'stock_property');
-    my $volume_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'volume', 'stock_property');
-    my $dna_person_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'dna_person', 'stock_property');
-    my $extraction_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'extraction', 'stock_property');
-    my $tissue_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property');
-    my $acquisition_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'acquisition date', 'stock_property');
-    my $ncbi_taxonomy_id_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'ncbi_taxonomy_id', 'stock_property');
-    my $notes_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property');
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship')->cvterm_id();
+    my $subplot_index_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_index_number', 'stock_property')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $plant_index_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
+    my $replicate_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id;
+    my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+    my $is_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is a control', 'stock_property')->cvterm_id();
+    my $range_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'range', 'stock_property')->cvterm_id();
+    my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
+    my $is_blank_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is_blank', 'stock_property')->cvterm_id();
+    my $concentration_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'concentration', 'stock_property')->cvterm_id();
+    my $volume_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'volume', 'stock_property')->cvterm_id();
+    my $dna_person_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'dna_person', 'stock_property')->cvterm_id();
+    my $extraction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'extraction', 'stock_property')->cvterm_id();
+    my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property')->cvterm_id();
+    my $acquisition_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'acquisition date', 'stock_property')->cvterm_id();
+    my $ncbi_taxonomy_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'ncbi_taxonomy_id', 'stock_property')->cvterm_id();
+    my $notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property')->cvterm_id();
     my $treatment_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
-    my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
+    my $project_design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property')->cvterm_id();
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
     my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
     my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
@@ -393,6 +393,7 @@ sub store {
         @source_stock_types = ($accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id);
     }
 
+    #$chado_schema->storage->debug(1);
     my $nd_experiment_id;
     if ($self->has_nd_experiment_id){
         $nd_experiment_id = $self->get_nd_experiment_id();
@@ -471,6 +472,8 @@ sub store {
 
         #print STDERR Dumper \%design;
         my %new_stock_ids_hash;
+        my $stock_rs = $chado_schema->resultset("Stock::Stock");
+
         foreach my $key (keys %design) {
 
             if ($key eq 'treatments'){
@@ -605,75 +608,61 @@ sub store {
             }
 
             #create the plot, if plot given
-            my $plot;
+            my $new_plot_id;
             if ($plot_name) {
-                $plot = $chado_schema->resultset("Stock::Stock")
-                ->create({
-                    organism_id => $organism_id_checked,
-                    name       => $plot_name,
-                    uniquename => $plot_name,
-                    type_id => $stock_type_id,
-                });
-                $new_stock_ids_hash{$plot_name} = $plot->stock_id();
-                $plot->create_stockprops({$replicate_cvterm->name() => $rep_number});
-                $plot->create_stockprops({$block_cvterm->name() => $block_number});
-                $plot->create_stockprops({$plot_number_cvterm->name() => $plot_number});
+                my @plot_stock_props = (
+                    { type_id => $replicate_cvterm_id, value => $rep_number },
+                    { type_id => $block_cvterm_id, value => $block_number },
+                    { type_id => $plot_number_cvterm_id, value => $plot_number }
+                );
                 if ($is_a_control) {
-                    $plot->create_stockprops({$is_control_cvterm->name() => $is_a_control});
+                    push @plot_stock_props, { type_id => $is_control_cvterm_id, value => $is_a_control };
                 }
                 if ($range_number) {
-                    $plot->create_stockprops({$range_cvterm->name() => $range_number});
+                    push @plot_stock_props, { type_id => $range_cvterm_id, value => $range_number };
                 }
                 if ($row_number) {
-                    $plot->create_stockprops({$row_number_cvterm->name() => $row_number});
+                    push @plot_stock_props, { type_id => $row_number_cvterm_id, value => $row_number };
                 }
                 if ($col_number) {
-                    $plot->create_stockprops({$col_number_cvterm->name() => $col_number});
+                    push @plot_stock_props, { type_id => $col_number_cvterm_id, value => $col_number };
                 }
                 if ($well_is_blank) {
-                    $plot->create_stockprops({$is_blank_cvterm->name() => $well_is_blank});
+                    push @plot_stock_props, { type_id => $is_blank_cvterm_id, value => $well_is_blank };
                 }
                 if ($well_concentration) {
-                    $plot->create_stockprops({$concentration_cvterm->name() => $well_concentration});
+                    push @plot_stock_props, { type_id => $concentration_cvterm_id, value => $well_concentration };
                 }
                 if ($well_volume) {
-                    $plot->create_stockprops({$volume_cvterm->name() => $well_volume});
+                    push @plot_stock_props, { type_id => $volume_cvterm_id, value => $well_volume };
                 }
                 if ($well_extraction) {
-                    $plot->create_stockprops({$extraction_cvterm->name() => $well_extraction});
+                    push @plot_stock_props, { type_id => $extraction_cvterm_id, value => $well_extraction };
                 }
                 if ($well_tissue_type) {
-                    $plot->create_stockprops({$tissue_type_cvterm->name() => $well_tissue_type});
+                    push @plot_stock_props, { type_id => $tissue_type_cvterm_id, value => $well_tissue_type };
                 }
                 if ($well_dna_person) {
-                    $plot->create_stockprops({$dna_person_cvterm->name() => $well_dna_person});
+                    push @plot_stock_props, { type_id => $dna_person_cvterm_id, value => $well_dna_person };
                 }
                 if ($acquisition_date) {
-                    $plot->create_stockprops({$acquisition_date_cvterm->name() => $acquisition_date});
+                    push @plot_stock_props, { type_id => $acquisition_date_cvterm_id, value => $acquisition_date };
                 }
                 if ($notes) {
-                    $plot->create_stockprops({$notes_cvterm->name() => $notes});
+                    push @plot_stock_props, { type_id => $notes_cvterm_id, value => $notes };
                 }
                 if ($ncbi_taxonomy_id) {
-                    $plot->create_stockprops({$ncbi_taxonomy_id_cvterm->name() => $ncbi_taxonomy_id});
+                    push @plot_stock_props, { type_id => $ncbi_taxonomy_id_cvterm_id, value => $ncbi_taxonomy_id };
                 }
 
+                my @plot_subjects;
+                my @plot_objects;
+
                 my $parent_stock;
-                # For field_layout trials this will always be accession; however, for genotyping layout this could be a tissue_sample, plant, plot, or accession
-                if ($stock_type_checked == $accession_cvterm_id ){
-                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        object_id => $stock_id_checked,
-                        type_id => $stock_rel_type_id,
-                        subject_id => $plot->stock_id()
-                    });
-                }
+                push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $stock_id_checked };
+
                 # For genotyping trial, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $plot_cvterm_id){
-                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        object_id => $stock_id_checked,
-                        type_id => $stock_rel_type_id,
-                        subject_id => $plot->stock_id()
-                    });
                     my $parent_plot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$plot_of_cvterm_id,
@@ -683,58 +672,36 @@ sub store {
                         die "Plot $stock_id_checked is linked to more than one accession!\n"
                     }
                     if ($parent_plot_accession_rs->count == 1){
-                        my $parent_plot_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
-                            object_id => $parent_plot_accession_rs->first->object_id,
-                            type_id => $stock_rel_type_id,
-                            subject_id => $plot->stock_id()
-                        });
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_accession_rs->first->object_id };
                     }
                 }
                 # For genotyping trial, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
                 if ($stock_type_checked == $plant_cvterm_id){
-                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        object_id => $stock_id_checked,
-                        type_id => $stock_rel_type_id,
-                        subject_id => $plot->stock_id()
-                    });
                     my $parent_plant_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$plant_of->cvterm_id,
+                        'me.type_id'=>$plant_of_cvterm_id,
                         'object.type_id'=>$accession_cvterm_id
                     }, {join => "object"});
                     if ($parent_plant_accession_rs->count > 1){
                         die "Plant $stock_id_checked is linked to more than one accession!\n"
                     }
                     if ($parent_plant_accession_rs->count == 1){
-                        my $parent_plant_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
-                            object_id => $parent_plant_accession_rs->first->object_id,
-                            type_id => $stock_rel_type_id,
-                            subject_id => $plot->stock_id()
-                        });
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_accession_rs->first->object_id };
                     }
                     my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$plant_of->cvterm_id,
+                        'me.type_id'=>$plant_of_cvterm_id,
                         'object.type_id'=>$plot_cvterm_id
                     }, {join => "object"});
                     if ($parent_plot_of_plant_rs->count > 1){
                         die "Plant $stock_id_checked is linked to more than one plot!\n"
                     }
                     if ($parent_plot_of_plant_rs->count == 1){
-                        my $parent_plot_of_plant_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
-                            object_id => $parent_plot_of_plant_rs->first->object_id,
-                            type_id => $stock_rel_type_id,
-                            subject_id => $plot->stock_id()
-                        });
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_of_plant_rs->first->object_id };
                     }
                 }
                 # For genotyping trial, if the well tissue_sample is sourced from another tissue_sample, then we store relationships between the new tissue_sample and the source tissue_sample, and the new tissue_sample and the tissue_sample's plant if it exists, and the new tissue_sample and the tissue_sample's plot if it exists, and the new tissue sample and the tissue_sample's accession if it exists.
                 if ($stock_type_checked == $tissue_sample_cvterm_id){
-                    $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        object_id => $stock_id_checked,
-                        type_id => $stock_rel_type_id,
-                        subject_id => $plot->stock_id()
-                    });
                     my $parent_tissue_sample_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$tissue_sample_of_cvterm_id,
@@ -744,11 +711,7 @@ sub store {
                         die "Tissue_sample $stock_id_checked is linked to more than one accession!\n"
                     }
                     if ($parent_tissue_sample_accession_rs->count == 1){
-                        my $parent_plant_accession = $chado_schema->resultset("Stock::StockRelationship")->create({
-                            object_id => $parent_tissue_sample_accession_rs->first->object_id,
-                            type_id => $stock_rel_type_id,
-                            subject_id => $plot->stock_id()
-                        });
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_tissue_sample_accession_rs->first->object_id };
                     }
                     my $parent_plot_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -759,11 +722,7 @@ sub store {
                         die "Tissue_sample $stock_id_checked is linked to more than one plot!\n"
                     }
                     if ($parent_plot_of_tissue_sample_rs->count == 1){
-                        my $parent_plot_of_tissue_sample = $chado_schema->resultset("Stock::StockRelationship")->create({
-                            object_id => $parent_plot_of_tissue_sample_rs->first->object_id,
-                            type_id => $stock_rel_type_id,
-                            subject_id => $plot->stock_id()
-                        });
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_of_tissue_sample_rs->first->object_id };
                     }
                     my $parent_plant_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -774,19 +733,26 @@ sub store {
                         die "Tissue_sample $stock_id_checked is linked to more than one plant!\n"
                     }
                     if ($parent_plant_of_tissue_sample_rs->count == 1){
-                        my $parent_plant_of_tissue_sample = $chado_schema->resultset("Stock::StockRelationship")->create({
-                            object_id => $parent_plant_of_tissue_sample_rs->first->object_id,
-                            type_id => $stock_rel_type_id,
-                            subject_id => $plot->stock_id()
-                        });
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_of_tissue_sample_rs->first->object_id };
                     }
                 }
 
-                my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                    nd_experiment_id => $nd_experiment_id,
-                    type_id => $nd_experiment_type_id,
-                    stock_id => $plot->stock_id(),
+                my @plot_nd_experiment_stocks = (
+                    { nd_experiment_id => $nd_experiment_id, type_id => $nd_experiment_type_id }
+                );
+
+                my $plot = $stock_rs->create({
+                    organism_id => $organism_id_checked,
+                    name       => $plot_name,
+                    uniquename => $plot_name,
+                    type_id => $stock_type_id,
+                    stockprops => \@plot_stock_props,
+                    stock_relationship_subjects => \@plot_subjects,
+                    stock_relationship_objects => \@plot_objects,
+                    nd_experiment_stocks => \@plot_nd_experiment_stocks,
                 });
+                $new_plot_id = $plot->stock_id();
+                $new_stock_ids_hash{$plot_name} = $new_plot_id;
 
                 if ($seedlot_stock_id && $seedlot_name){
                     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
@@ -813,166 +779,113 @@ sub store {
             if ($plant_names) {
                 my $plant_index_number = 1;
                 foreach my $plant_name (@$plant_names) {
-                    my $plant = $chado_schema->resultset("Stock::Stock")
-                    ->create({
+
+                    my @plant_stock_props = (
+                        { type_id => $plant_index_number_cvterm_id, value => $plant_index_number },
+                        { type_id => $replicate_cvterm_id, value => $rep_number },
+                        { type_id => $block_cvterm_id, value => $block_number },
+                        { type_id => $plot_number_cvterm_id, value => $plot_number }
+                    );
+                    if ($is_a_control) {
+                        push @plant_stock_props, { type_id => $is_control_cvterm_id, value => $is_a_control };
+                    }
+                    if ($range_number) {
+                        push @plant_stock_props, { type_id => $range_cvterm_id, value => $range_number };
+                    }
+                    if ($row_number) {
+                        push @plant_stock_props, { type_id => $row_number_cvterm_id, value => $row_number };
+                    }
+                    if ($col_number) {
+                        push @plant_stock_props, { type_id => $col_number_cvterm_id, value => $col_number };
+                    }
+
+                    my @plant_objects = (
+                        { type_id => $plant_of_cvterm_id, subject_id => $new_plot_id }
+                    );
+                    my @plant_subjects = (
+                        { type_id => $plant_of_cvterm_id, object_id => $stock_id_checked }
+                    );
+                    my @plant_nd_experiment_stocks = (
+                        { type_id => $nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
+                    );
+
+                    my $plant = $stock_rs->create({
                         organism_id => $organism_id_checked,
                         name       => $plant_name,
                         uniquename => $plant_name,
-                        type_id => $plant_cvterm->cvterm_id,
+                        type_id => $plant_cvterm_id,
+                        stockprops => \@plant_stock_props,
+                        stock_relationship_subjects => \@plant_subjects,
+                        stock_relationship_objects => \@plant_objects,
+                        nd_experiment_stocks => \@plant_nd_experiment_stocks,
                     });
                     $new_stock_ids_hash{$plant_name} = $plant->stock_id();
-                    $plant->create_stockprops({$plant_index_number_cvterm->name() => $plant_index_number});
                     $plant_index_number++;
-                    $plant->create_stockprops({$replicate_cvterm->name() => $rep_number});
-                    $plant->create_stockprops({$block_cvterm->name() => $block_number});
-                    $plant->create_stockprops({$plot_number_cvterm->name() => $plot_number});
-                    if ($is_a_control) {
-                        $plant->create_stockprops({$is_control_cvterm->name() => $is_a_control});
-                    }
-                    if ($range_number) {
-                        $plant->create_stockprops({$range_cvterm->name() => $range_number});
-                    }
-                    if ($row_number) {
-                        $plant->create_stockprops({$row_number_cvterm->name() => $row_number});
-                    }
-                    if ($col_number) {
-                        $plant->create_stockprops({$col_number_cvterm->name() => $col_number});
-                    }
-
-                    my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        subject_id => $plot->stock_id,
-                        object_id => $plant->stock_id(),
-                        type_id => $plant_of->cvterm_id(),
-                    });
-
-                    my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        object_id => $stock_id_checked,
-                        type_id => $plant_of->cvterm_id(),
-                        subject_id => $plant->stock_id()
-                    });
-
-                    my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                        nd_experiment_id => $nd_experiment_id,
-                        type_id => $nd_experiment_type_id,
-                        stock_id => $plant->stock_id(),
-                    });
-
                 }
             }
             #Create subplot entry if given. Currently this is for the splitplot trial creation.
             if ($subplot_names) {
                 my $subplot_index_number = 1;
                 foreach my $subplot_name (@$subplot_names) {
-                    my $subplot = $chado_schema->resultset("Stock::Stock")
-                    ->create({
-                        organism_id => $organism_id_checked,
-                        name       => $subplot_name,
-                        uniquename => $subplot_name,
-                        type_id => $subplot_cvterm->cvterm_id,
-                    });
-                    $new_stock_ids_hash{$subplot_name} = $subplot->stock_id();
-                    $subplot->create_stockprops({$subplot_index_number_cvterm->name() => $subplot_index_number});
-                    $subplot_index_number++;
-                    $subplot->create_stockprops({$replicate_cvterm->name() => $rep_number});
-                    $subplot->create_stockprops({$block_cvterm->name() => $block_number});
-                    $subplot->create_stockprops({$plot_number_cvterm->name() => $plot_number});
+                    my @subplot_stockprops = (
+                        { type_id => $subplot_index_number_cvterm_id, value => $subplot_index_number },
+                        { type_id => $replicate_cvterm_id, value => $rep_number },
+                        { type_id => $block_cvterm_id, value => $block_number },
+                        { type_id => $plot_number_cvterm_id, value => $plot_number }
+                    );
                     if ($is_a_control) {
-                        $subplot->create_stockprops({$is_control_cvterm->name() => $is_a_control});
+                        push @subplot_stockprops, { type_id => $is_control_cvterm_id, value => $is_a_control };
                     }
                     if ($range_number) {
-                        $subplot->create_stockprops({$range_cvterm->name() => $range_number});
+                        push @subplot_stockprops, { type_id => $range_cvterm_id, value => $range_number };
                     }
                     if ($row_number) {
-                        $subplot->create_stockprops({$row_number_cvterm->name() => $row_number});
+                        push @subplot_stockprops, { type_id => $row_number_cvterm_id, value => $row_number };
                     }
                     if ($col_number) {
-                        $subplot->create_stockprops({$col_number_cvterm->name() => $col_number});
+                        push @subplot_stockprops, { type_id => $col_number_cvterm_id, value => $col_number };
                     }
 
-                    my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        subject_id => $plot->stock_id,
-                        object_id => $subplot->stock_id(),
-                        type_id => $subplot_of->cvterm_id(),
-                    });
-
-                    my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-                        object_id => $stock_id_checked,
-                        type_id => $subplot_of->cvterm_id(),
-                        subject_id => $subplot->stock_id()
-                    });
-
-                    my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                        nd_experiment_id => $nd_experiment_id,
-                        type_id => $nd_experiment_type_id,
-                        stock_id => $subplot->stock_id(),
-                    });
+                    my @subplot_objects = (
+                        { type_id => $subplot_of_cvterm_id, subject_id => $new_plot_id }
+                    );
+                    my @subplot_subjects = (
+                        { type_id => $subplot_of_cvterm_id, object_id => $stock_id_checked }
+                    );
+                    my @subplot_nd_experiment_stocks = (
+                        { type_id => $nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
+                    );
 
                     if ($subplots_plant_names){
                         my $subplot_plants = $subplots_plant_names->{$subplot_name};
                         foreach (@$subplot_plants) {
                             my $plant_stock_id = $new_stock_ids_hash{$_};
-                            my $plant_to_subplot = $chado_schema->resultset("Stock::StockRelationship")->create({
-                                object_id => $subplot->stock_id(),
-                                type_id => $plant_of_subplot->cvterm_id(),
-                                subject_id => $plant_stock_id
-                            });
+                            push @subplot_objects, { type_id => $plant_of_subplot_cvterm_id, subject_id => $plant_stock_id };
                         }
                     }
+
+                    my $subplot = $stock_rs->create({
+                        organism_id => $organism_id_checked,
+                        name       => $subplot_name,
+                        uniquename => $subplot_name,
+                        type_id => $subplot_cvterm_id,
+                        stockprops => \@subplot_stockprops,
+                        stock_relationship_subjects => \@subplot_subjects,
+                        stock_relationship_objects => \@subplot_objects,
+                        nd_experiment_stocks => \@subplot_nd_experiment_stocks,
+                    });
+                    $new_stock_ids_hash{$subplot_name} = $subplot->stock_id();
+                    $subplot_index_number++;
 
                 }
             }
         }
 
         if (exists($design{treatments})){
+            print STDERR "Saving treatments\n";
             while(my($treatment_name, $stock_names) = each(%{$design{treatments}})){
 
-                my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
-                ->create({
-                    nd_geolocation_id => $nd_geolocation_id,
-                    type_id => $treatment_nd_experiment_type_id,
-                });
-
-                #Create a project for each treatment_name
-                my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
-                my $treatment_project = $chado_schema->resultset('Project::Project')
-                ->create({
-                    name => $project_treatment_name,
-                    description => '',
-                });
-                $treatment_project->create_projectprops({
-                    $project_design_cvterm->name() => "treatment"
-                });
-
-                if ($self->get_new_treatment_has_plant_entries){
-                    my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                        type_id => $has_plants_cvterm,
-                        value => $self->get_new_treatment_has_plant_entries,
-                        project_id => $treatment_project->project_id(),
-                    });
-                }
-                if ($self->get_new_treatment_has_subplot_entries){
-                    my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                        type_id => $has_subplots_cvterm,
-                        value => $self->get_new_treatment_has_subplot_entries,
-                        project_id => $treatment_project->project_id(),
-                    });
-                }
-                if ($self->get_new_treatment_has_tissue_sample_entries){
-                    my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-                        type_id => $has_tissues_cvterm,
-                        value => $self->get_new_treatment_has_tissue_sample_entries,
-                        project_id => $treatment_project->project_id(),
-                    });
-                }
-
-                $nd_experiment->create_related('nd_experiment_projects',{project_id => $treatment_project->project_id()});
-
-                my $trial_treatment_relationship = $chado_schema->resultset("Project::ProjectRelationship")->create({
-                    object_project_id => $self->get_trial_id(),
-                    subject_project_id => $treatment_project->project_id(),
-                    type_id => $trial_treatment_relationship_cvterm_id,
-                });
-
+                my @treatment_nd_experiment_stocks;
                 foreach (@$stock_names){
                     my $stock_id;
                     if (exists($new_stock_ids_hash{$_})){
@@ -980,12 +893,46 @@ sub store {
                     } else {
                         $stock_id = $chado_schema->resultset("Stock::Stock")->find({uniquename=>$_})->stock_id();
                     }
-                    my $treatment_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                        nd_experiment_id => $nd_experiment->nd_experiment_id(),
-                        type_id => $treatment_nd_experiment_type_id,
-                        stock_id => $stock_id,
-                    });
+                    push @treatment_nd_experiment_stocks, { type_id => $treatment_nd_experiment_type_id, stock_id => $stock_id };
                 }
+
+                my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
+                    nd_geolocation_id => $nd_geolocation_id,
+                    type_id => $treatment_nd_experiment_type_id,
+                    nd_experiment_stocks => \@treatment_nd_experiment_stocks
+                });
+
+                my @treatment_project_props = (
+                    { type_id => $project_design_cvterm_id, value => 'treatment' }
+                );
+
+                if ($self->get_new_treatment_has_plant_entries){
+                    push @treatment_project_props, { type_id => $has_plants_cvterm, value => $self->get_new_treatment_has_plant_entries };
+                }
+                if ($self->get_new_treatment_has_subplot_entries){
+                    push @treatment_project_props, { type_id => $has_subplots_cvterm, value => $self->get_new_treatment_has_subplot_entries };
+                }
+                if ($self->get_new_treatment_has_tissue_sample_entries){
+                    push @treatment_project_props, { type_id => $has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
+                }
+
+                my @treatment_nd_experiment_project = (
+                    { nd_experiment_id => $nd_experiment->nd_experiment_id }
+                );
+
+                my @treatment_relationships = (
+                    { type_id => $trial_treatment_relationship_cvterm_id, object_project_id => $self->get_trial_id }
+                );
+
+                #Create a project for each treatment_name
+                my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
+                my $treatment_project = $chado_schema->resultset('Project::Project')->create({
+                    name => $project_treatment_name,
+                    description => '',
+                    projectprops => \@treatment_project_props,
+                    project_relationship_subject_projects => \@treatment_relationships,
+                    nd_experiment_projects => \@treatment_nd_experiment_project
+                });
             }
         }
 

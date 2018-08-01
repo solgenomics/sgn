@@ -142,7 +142,7 @@ sub generate_form {
 	CXGN::Phenome::Locus::LinkageGroup::get_lg_arms( $self->get_dbh() );
 
     if ( $self->get_action =~ /new|store/ ) {
-	$self->get_form->add_select(
+	$form->add_select(
 	    display_name       => "Organism ",
 	    field_name         => "common_name_id",
 	    contents           => $locus->get_common_name_id(),
@@ -153,8 +153,8 @@ sub generate_form {
 	    select_list_ref    => $organism_names_ref,
 	    select_id_list_ref => $organism_ids_ref,
 	    );
-
     }
+
     if ( $locus->get_obsolete() eq 't' ) {
 	$form->add_label(
 	    display_name => "Status",

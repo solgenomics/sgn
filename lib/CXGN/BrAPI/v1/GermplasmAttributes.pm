@@ -71,14 +71,15 @@ sub germplasm_attributes_list {
 
 	foreach (keys %attribute_hash) {
 		my $prophash = $self->get_cvtermprop_hash($_);
+        my $attributeCategoryDbId = $attribute_hash{$_}->[0];
 		push @data, {
-			attributeDbId => $_,
+			attributeDbId => "$_",
 			code => $prophash->{'code'} ? join ',', @{$prophash->{'code'}} : '',
 			uri => $prophash->{'uri'} ? join ',', @{$prophash->{'uri'}} : '',
 			name => $attribute_hash{$_}->[3],
 			description => $attribute_hash{$_}->[4],
-			attributeCategoryDbId => $attribute_hash{$_}->[0],
-			attributeCategoryName => $attribute_hash{$_}->[1],
+			attributeCategoryDbId => "$attributeCategoryDbId",
+			#attributeCategoryName => $attribute_hash{$_}->[1],
 			datatype => $prophash->{'datatype'} ? join ',', @{$prophash->{'datatype'}} : '',
 			values => $attribute_hash{$_}->[5]
 		};
@@ -111,8 +112,8 @@ sub germplasm_attributes_categories_list {
 	my @data;
 	while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc) = $h->fetchrow_array()) {
 		push @data, {
-			attributeCategoryDbId => $attributeCategoryDbId,
-			attributeCategoryName => $attributeCategoryName,
+			attributeCategoryDbId => "$attributeCategoryDbId",
+			name => $attributeCategoryName,
 		};
 	}
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);

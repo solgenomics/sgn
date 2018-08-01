@@ -263,58 +263,49 @@ $(document).ready(function($) {
 
     $(document).on("change", "#source_select", function() {
         var data_type = $('#source_select :selected').parent().attr('label');
-        if (data_type.match(/List/)) {
-            $('#sort_order').val('list_order');
-        }
 
-        jQuery.ajax({
-            url: '/tools/label_designer/retrieve_longest_fields',
-            timeout: 60000,
-            method: 'POST',
-            data: {
-                data_type: data_type,
-                value: this.value
-            },
-            beforeSend: function() {
-                disable_ui();
-            },
-            complete: function() {
-                enable_ui();
-                $('#page_format').focus();
-            },
-            success: function(response) {
-                if (response.error) {
-                    alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
-                    getDataSourceSelect();
-                } else {
-                    add_fields = response.fields;
-                    add_fields["Select a field"] = {};
+        updateFields(data_type, this.value, '');
 
-                    // if reps, add reps as options for filtering
-                    reps = response.reps;
-                    addPlotFilter(reps);
-
-                    createAdders(add_fields);
-                    initializeCustomModal(add_fields);
-                    showLoadOption();
-
-                    if ( d3.select("#page_format").node().value && d3.select("#page_format").node().value != 'Select a page format') {
-                        switchPageDependentOptions( d3.select("#page_format").node().value );
-                    } else {
-                        var page_format_select = d3.select("#page_format");
-                        page_format_select.selectAll("option")
-                        .data(Object.keys(page_formats))
-                        .enter().append("option")
-                        .text(function(d) {
-                            return d
-                        });
+        if (data_type == 'Field Trials'){
+            jQuery.ajax({
+                url: '/ajax/breeders/trial/'+this.value+'/has_data_levels',
+                method: 'GET',
+                beforeSend: function() {
+                    disable_ui();
+                },
+                complete: function() {
+                    enable_ui();
+                    jQuery('#page_format').focus();
+                },
+                success: function(response) {
+                    var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">Plots</option>';
+                    if(response.has_plants){
+                        html = html + '<option value="plants">Plants</option>';
                     }
+                    if(response.has_subplots){
+                        html = html + '<option value="subplots">Subplots</option>';
+                    }
+                    if(response.has_tissue_samples){
+                        html = html + '<option value="tissue_samples">Tissue Samples</option>';
+                    }
+                    html = html + '</select>';
+                    jQuery('#label_designer_data_level_select_div').html(html);
+                    jQuery('#label_designer_data_level_div').show();
+                },
+                error: function(response) {
+                    alert('There was a problem checking the data levels available for your field trial. Please contact us.');
                 }
-            },
-            error: function(request, status, err) {
-                alert("Unable to retrieve design elements of this trial. Please confirm this trial has a design, or try again with a different trial.");
-            }
-        });
+            });
+        } else {
+            jQuery('#label_designer_data_level_select_div').html('');
+            jQuery('#label_designer_data_level_div').hide();
+        }
+    });
+
+    jQuery(document).on('change', '#label_designer_data_level', function(){
+        var data_type = $('#source_select :selected').parent().attr('label');
+        var value = jQuery('#source_select').val();
+        updateFields(data_type, value, this.value);
     });
 
     var page_format_select = d3.select("#page_format");
@@ -482,6 +473,62 @@ $(document).ready(function($) {
         });
     });
 });
+
+function updateFields(data_type, value, data_level){
+    if (data_type.match(/List/)) {
+        jQuery('#sort_order').val('list_order');
+    }
+
+    jQuery.ajax({
+        url: '/tools/label_designer/retrieve_longest_fields',
+        timeout: 60000,
+        method: 'POST',
+        data: {
+            data_type: data_type,
+            value: value,
+            data_level: data_level
+        },
+        beforeSend: function() {
+            disable_ui();
+        },
+        complete: function() {
+            enable_ui();
+            jQuery('#page_format').focus();
+        },
+        success: function(response) {
+            if (response.error) {
+                alert("An error occured while retrieving the design elements of this trial: " + JSON.stringify(response.error));
+                getDataSourceSelect();
+            } else {
+                add_fields = response.fields;
+                add_fields["Select a field"] = {};
+
+                // if reps, add reps as options for filtering
+                reps = response.reps;
+                addPlotFilter(reps);
+
+                createAdders(add_fields);
+                initializeCustomModal(add_fields);
+                showLoadOption();
+
+                if ( d3.select("#page_format").node().value && d3.select("#page_format").node().value != 'Select a page format') {
+                    switchPageDependentOptions( d3.select("#page_format").node().value );
+                } else {
+                    var page_format_select = d3.select("#page_format");
+                    page_format_select.selectAll("option")
+                    .data(Object.keys(page_formats))
+                    .enter().append("option")
+                    .text(function(d) {
+                        return d
+                    });
+                }
+            }
+        },
+        error: function(request, status, err) {
+            alert("Unable to retrieve design elements of this trial. Please confirm this trial has a design, or try again with a different trial. Please contact us!");
+        }
+    });
+}
 
 function changeLabelSize(width, height) {
     var width = width * 2.83 //convert from pixels to dots (72/inch to 8/mm)
@@ -978,7 +1025,7 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     document.getElementById("vertical_gap").value = vertical_gap;
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
-    document.getElementById("plot_filter").value = plot_filter;
+    document.getElementById("plot_filter").value = plot_filter || 'all';
     document.getElementById("sort_order").value = sort_order;
     document.getElementById("copies_per_plot").value = copies_per_plot;
 }
@@ -1021,7 +1068,7 @@ function addPlotFilter(reps) {
         reps[newkey] = key;
         delete reps[key];
     });
-    reps['All Plots'] = 'all';
+    reps['All'] = 'all';
 
     d3.select("#plot_filter").selectAll("option").remove();
     d3.select("#plot_filter").selectAll("option")
@@ -1216,13 +1263,13 @@ function saveLabelDesign() {
 }
 
 function fillInPlaceholders(match, placeholder) { // replace placeholders with actual values
-    //console.log("Placeholder is "+placeholder);
-    if (placeholder.match(/Number:/)) {
-        var parts = placeholder.split(':');
-        return parts[1];
-    } else {
-        return add_fields[placeholder];
-    }
+        var filled = add_fields[placeholder];
+        // console.log("Filling "+placeholder+" with "+filled);
+        if (typeof filled === 'undefined') {
+            // console.log(placeholder+" is undefined. Alerting with warning");
+            alert("Missing field. Your selected design includes the field "+placeholder+" which is not available from the selected data source. Please pick a different saved design or data source, or remove the undefined field from the design area.")
+        }
+        return filled;
 }
 
 function showLoadOption() {

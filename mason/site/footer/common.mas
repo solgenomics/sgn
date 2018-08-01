@@ -1,0 +1,50 @@
+<%init>
+	my $feedback_email = eval{ $c->get_conf('email') };
+	$feedback_email = $feedback_email ? qq|<a class="footer" href="mailto:$feedback_email">$feedback_email</a>|
+	                                  : '<span style="font-weight: bold; color: red">[email not set]</b>';
+</%init>
+
+
+<!-- LOAD WORKING MODAL, LIST MODAL, AND CALENDAR MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
+
+<& /site/list.mas &>
+<& /site/dataset.mas &>
+<& /calendar/events_by_user_role.mas &>
+<& /site/login_dialog.mas &>
+
+<!--
+<div id="working" style="text-align : center;">
+  <img src="/img/wheel.gif" />
+  <div id="working_msg"></div>
+</div>
+-->
+
+<div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+	<center>
+          <h4 class="modal-title" id="workingModalDialog">Working</h4>
+	</center>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <center>
+	    <img src="/img/wheel.gif" />
+    	    <div id="working_msg"></div>
+	  </center>
+        </div>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- END CONTENT WRAPPER -->
+
+</div>
+<div class="col-md-1 col-lg-1 col-xl-2">
+</div>
+</div>
+</div>

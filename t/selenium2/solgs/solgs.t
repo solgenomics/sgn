@@ -15,33 +15,18 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->get_ok('/solgs', 'solgs home page');
     sleep(3);
-
-    $d->find_element_ok('D', 'link_text', 'index of solgs traits')->click();
-    sleep(3);
-    $d->find_element_ok('dry matter content percentage', 'link_text', 'select trait')->click();
-    sleep(3);
-    $d->find_element_ok('dry matter', 'partial_link_text', 'go to trials with trait data page')->click();
-    sleep(5);
-
-    $d->get_ok('/solgs', 'solgs home page');
-    sleep(3);
-    $d->find_element_ok('search_trait_form', 'id', 'search trait form');
-    sleep(1);
-    $d->find_element_ok('search_trait_entry', 'id', 'search trait form')->send_keys('dry matter content');
-    sleep(1);
-    $d->find_element_ok('search_trait', 'id', 'submit trait entry')->click();
-    sleep(3);
-
-    $d->driver->go_back();
-
-    $d->find_element_ok('Select a training population', 'partial_link_text', 'toggle trial search')->click();
-    sleep(5);
-    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2');
+    
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');   
     sleep(5);
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
-    sleep(5);   
-    $d->find_element_ok('search_all_training_pops', 'id', 'search all training pops')->click();    
+    sleep(10);
+    $d->find_element_ok('population_search_entry', 'id', 'clear search box')->clear();
     sleep(2);
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    sleep(5); 
+    $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
+    sleep(5);  
+    
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(5);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
@@ -51,19 +36,27 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Download correlation', 'partial_link_text', 'create training pop')->click();
     sleep(5);
     $d->driver->go_back();
-    sleep(3);
+    sleep(30);
     ### trial type training population: single trait modeling
-    $d->find_element_ok('dry matter content percentage', 'link_text', 'build model')->click();
-    sleep(3);
+    #$d->find_element_ok('dry matter content percentage', 'link_text', 'build model')->click();
+    #sleep(10);
+    #$d->find_element_ok('//table[@id="population_traits_list"]/tr[1]/td[1]/a[text()="dry matter content percentage"]', 'xpath',  'build model')->click();
+   # sleep(10);
+   # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+
+    $d->driver->refresh();
+    $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select a trait')->click();
+    $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(10);
+    
+    sleep(260);
     $d->find_element_ok('run_pca', 'id', 'run pca trial type tr pop')->click();
     sleep(30);
     $d->find_element_ok('Download PCA', 'partial_link_text', 'download pca')->click();
     sleep(5);
     $d->driver->go_back();
-    sleep(3);
-
+    sleep(30);
+    $d->driver->refresh();
     ### trial type training population: single trait prediction of trial type selection population
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(5);
