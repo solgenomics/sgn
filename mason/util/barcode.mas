@@ -35,6 +35,9 @@ $trial_name => ''
 
 our %urlencode;
 use Tie::UrlEncoder;
+use URI::Encode;
+my $uri     = URI::Encode->new( { encode_reserved => 0 } );
+
 
 my $encoded_id = $urlencode{$identifier};
 my $encoded_text = $urlencode{$text};
@@ -49,8 +52,10 @@ if ($format eq "trial_qrcode"){
   $barcode_name = $trial_name." ".$identifier;
 }
 if ($format eq "stock_qrcode") {
-  $link = "/barcode/trial/$encoded_text/$format";
-  $barcode_name = $text;
+    my $encoded = $uri->encode($encoded_text);
+    $link = "/barcode/trial/$encoded/$format";
+    #$link = "/barcode/trial/$encoded_text/$format";
+    $barcode_name = $text;
 }
 if ($format eq "qrcode") {
   $link = "/barcode/trial/$trial_id";

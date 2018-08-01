@@ -20,7 +20,7 @@ my $population_name = "ajax_test_pop_1";
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 is($response->{'userDisplayName'}, 'Jane Doe');
 is($response->{'expires_in'}, '7200');
 

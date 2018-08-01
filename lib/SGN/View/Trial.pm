@@ -192,20 +192,22 @@ sub design_layout_map_view {
     return  \%return;    
 }
 
-
+#For printing the table view of the generated design there are two designs that are different from the others:
+# 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
+# 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
 sub design_layout_view {
     my $design_ref = shift;
     my $design_info_ref = shift;
-    my $design_level = shift;
+    my $design_type = shift;
     my %design = %{$design_ref};
     my %design_info = %{$design_info_ref};
     my $design_result_html;
 
     $design_result_html .= '<table class="table table-bordered table-hover">';
 
-    if ($design_level eq 'plants') {
+    if ($design_type eq 'greenhouse') {
         $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
-    } elsif ($design_level eq 'subplots') {
+    } elsif ($design_type eq 'splitplot') {
         $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
     } else {
         $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};

@@ -407,17 +407,12 @@ sub generate_experimental_design_POST : Args(0) {
             $c->stash->{rest} = {error => "Could not generate design" };
             return;
         }
-        my $design_level;
-        if ($design_type eq 'greenhouse'){
-            $design_level = 'plants';
-        } elsif ($design_type eq 'splitplot') {
-            $design_level = 'subplots';
-        } else {
-            $design_level = 'plots'; 
-        }
- 
+
+        #For printing the table view of the generated design there are two designs that are different from the others:
+        # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
+        # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
+        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
         $design_map_view = design_layout_map_view(\%design, $design_type); 
-        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
         $design_info_view_html = design_info_view(\%design, \%design_info);
         my $design_json = encode_json(\%design);
         push @design_array,  $design_json;
@@ -490,10 +485,9 @@ sub save_experimental_design_POST : Args(0) {
     my $plot_length = $c->req->param('plot_length');
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('field_trial_is_planned_to_be_genotyped') || 'No';
     my $field_trial_is_planned_to_cross = $c->req->param('field_trial_is_planned_to_cross') || 'No';
-    my $add_project_trial_source = $c->req->param('add_project_trial_source[]');
+    my @add_project_trial_source = $c->req->param('add_project_trial_source[]');
     my $add_project_trial_genotype_trial;
     my $add_project_trial_crossing_trial;
-    my $add_project_trial_source_select = ref($add_project_trial_source) eq 'ARRAY' ? $add_project_trial_source : [$add_project_trial_source];
     my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
 
@@ -559,7 +553,7 @@ sub save_experimental_design_POST : Args(0) {
             operator => $user_name,
             field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
             field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
-            field_trial_from_field_trial => $add_project_trial_source_select,
+            field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
         );
@@ -614,7 +608,7 @@ sub save_experimental_design_POST : Args(0) {
     }
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => "1",}; 
     return;
@@ -743,6 +737,7 @@ sub upload_trial_file_POST : Args(0) {
 
     print STDERR "Check 1: ".localtime()."\n";
 
+    #print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -759,10 +754,9 @@ sub upload_trial_file_POST : Args(0) {
     my $plot_length = $c->req->param('trial_upload_plot_length');
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('upload_trial_trial_will_be_genotyped');
     my $field_trial_is_planned_to_cross = $c->req->param('upload_trial_trial_will_be_crossed');
-    my $add_project_trial_source = $c->req->param('upload_trial_trial_source_select');
+    my @add_project_trial_source = $c->req->param('upload_trial_trial_source_select');
     my $add_project_trial_genotype_trial;
     my $add_project_trial_crossing_trial;
-    my $add_project_trial_source_select = ref($add_project_trial_source) eq 'ARRAY' ? $add_project_trial_source : [$add_project_trial_source];
     my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
 
@@ -879,7 +873,7 @@ sub upload_trial_file_POST : Args(0) {
             operator => $c->user()->get_object()->get_username(),
             field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
             field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
-            field_trial_from_field_trial => $add_project_trial_source_select,
+            field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
         );

@@ -180,6 +180,7 @@ $locations
                                             <option value=Augmented>Augmented</option>
                                             <option value=MAD>Modified Augmented Design</option>
                                             <option value=westcott>Westcott Design</option>
+                                            <option value=Lattice>Lattice</option>
                                             <!--  <option value=MADIII>MADIII</option>   -->
                                             <!--  <option value=MADIV>MADIV</option> -->
                                             <!--  <option value=MADV>MADV</option> -->
@@ -199,7 +200,7 @@ $locations
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -234,7 +235,7 @@ $locations
                                     </div>
                                 </div>
 
-                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing trial in the database.</p>
+                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.</p>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -357,7 +358,7 @@ $locations
                                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                                     The trial file was uploaded successfully
                                 </p>
-                                
+
                                 <ul>
                                     <li>You may want to proceed to the trial detail page for the trial you just created.</li>
                                     <li>You can print barcodes for the plots or plants or tissue samples in this trial.</li>
@@ -461,4 +462,3 @@ jQuery(document).ready(function(){
     });
 })
 </script>
-

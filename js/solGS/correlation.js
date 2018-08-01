@@ -91,7 +91,7 @@ function listGenCorPopulations ()  {
     jQuery("#corre_select_a_population_div").empty().append(popsList).show();
      
     var dbSelPopsList;
-    if (modelData.id.match(/uploaded/) == null) {
+    if (modelData.id.match(/list/) == null) {
         dbSelPopsList = addSelectionPopulations();
     }
 
@@ -99,7 +99,7 @@ function listGenCorPopulations ()  {
             jQuery("#corre_select_a_population_div ul").append(dbSelPopsList); 
     }
       
-    var userUploadedSelExists = jQuery("#uploaded_selection_pops_table").doesExist();
+    var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
     if (userUploadedSelExists == true) {
       
         var userSelPops = listUploadedSelPopulations();

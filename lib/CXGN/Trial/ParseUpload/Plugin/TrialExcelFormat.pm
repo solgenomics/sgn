@@ -283,10 +283,10 @@ sub _validate_with_plugin {
         $seen_seedlot_names{$seedlot_name}++;
         push @pairs, [$seedlot_name, $accession_name];
     }
-    if (defined($num_seed_per_plot) && !($num_seed_per_plot =~ /^\d+?$/)){
+    if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
     }
-    if (defined($weight_gram_seed_per_plot) && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
+    if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell L$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
     }
 
@@ -328,8 +328,10 @@ sub _validate_with_plugin {
         }
     }
 
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my @plots = keys %seen_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
+        'type_id' => $plot_type_id,
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@plots }
     });
@@ -446,7 +448,9 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,9)) {
         $seedlot_name = $worksheet->get_cell($row, 9)->value();
     }
-    $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    if ($seedlot_name){
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    }
     if ($worksheet->get_cell($row,10)) {
         $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
     }

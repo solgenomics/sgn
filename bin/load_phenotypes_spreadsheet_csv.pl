@@ -162,8 +162,8 @@ my @plots;
 my @traits;
 if ($parsed_file && !$parsed_file->{'error'}) {
     %parsed_data = %{$parsed_file->{'data'}};
-    @plots = @{$parsed_file->{'plots'}};
-    @traits = @{$parsed_file->{'traits'}};
+    @plots = @{$parsed_file->{'units'}};
+    @traits = @{$parsed_file->{'variables'}};
 }
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(

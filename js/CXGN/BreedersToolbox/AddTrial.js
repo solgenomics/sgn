@@ -634,8 +634,7 @@ jQuery(document).ready(function ($) {
                                                                 .style("stroke", strokes)
                                                                 .style("fill", colors); 
                                                                 
-                                                                cards.transition().duration(1000)
-                                                                    .style("fill", colors) ;                          
+                                                                cards.style("fill", colors) ;                          
 
                                                                 cards.select("title").text(function(d) { return d.plot_msg; }) ;
                                                                 
@@ -643,8 +642,8 @@ jQuery(document).ready(function ($) {
                                                                 //console.log('out');
                                                             });                                
                                                               
-                          cards.transition().duration(1000)
-                              .style("fill", colors) ;  
+                          
+                          cards.style("fill", colors) ;  
 
                           cards.select("title").text(function(d) { return d.plot_msg; }) ; 
                           
@@ -1217,7 +1216,10 @@ jQuery(document).ready(function ($) {
         var field_size = $('#new_trial_field_size').val();
         var field_trial_is_planned_to_be_genotyped = $('#add_project_trial_will_be_genotyped').val();
         var field_trial_is_planned_to_cross = $('#add_project_trial_will_be_crossed').val();
-        var add_project_trial_source_select = $('#add_project_trial_source_select').val();
+        var selectedTrials = [];
+        jQuery('#add_project_trial_source_select :selected').each(function(i, selectedElement) {
+            selectedTrials.push(jQuery(selectedElement).val());
+        });
 
         jQuery.ajax({
            type: 'POST',
@@ -1261,16 +1263,15 @@ jQuery(document).ready(function ($) {
                 'plot_length': plot_length,
                 'field_trial_is_planned_to_be_genotyped': field_trial_is_planned_to_be_genotyped,
                 'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross,
-                'add_project_trial_source': add_project_trial_source_select,
+                'add_project_trial_source': selectedTrials,
             },
             success: function (response) {
+                jQuery('#working_modal').modal("hide");
                 if (response.error) {
-                    jQuery('#working_modal').modal("hide");
                     alert(response.error);
                 } else {
                     //alert('Trial design saved');
                     refreshTrailJsTree(0);
-                    jQuery('#working_modal').modal("hide");
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
@@ -1284,9 +1285,9 @@ jQuery(document).ready(function ($) {
     }
 
     jQuery(document).on('click', '[name="create_trial_success_complete_button"]', function(){
-        alert('Trial was saved in the database');
         jQuery('#add_project_dialog').modal('hide');
-        location.reload();
+        window.location.href = '/breeders/trials';
+        return false;
     });
 
     jQuery('#new_trial_confirm_submit').click(function () {
@@ -1295,6 +1296,7 @@ jQuery(document).ready(function ($) {
 
     $('#redo_trial_layout_button').click(function () {
         generate_experimental_design();
+        return false;
     });
 
     function open_project_dialog() {

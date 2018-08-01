@@ -48,14 +48,14 @@
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Crossing trial" &>
-                            <& /page/page_title.mas, title=>"Select a crossing trial" &>
+                        <&| /util/workflow.mas:step, title=> "Crossing Experiment" &>
+                            <& /page/page_title.mas, title=>"Select a crossing experiment" &>
 
-                            <p>Crossing trials are for grouping crosses together. The grouping is most often done for geographic reasons, such as a group of crosses done in the same field trial. This grouping can be used to encapsulate a crossing block field trial that you have saved in the database (e.g. in Manage Trials your crossing block will appear as a field trial with plots)</p>
+                            <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
                             <hr>
 
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Crossing Trial: </label>
+                                <label class="col-sm-2 control-label">Crossing Experiment: </label>
                                 <div class="col-sm-10">
                                     <div id="upload_crosses_select_crossingtrial_3" name="upload_crosses_select_crossingtrial_3" >
                                     </div>
@@ -64,8 +64,8 @@
                             <hr>
 
                             <center>
-                                <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a crossing trial, click here</button><br/><br/>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing trial, go to Next Step</button>
+                                <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a crossing experiment, click here</button><br/><br/>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing experiment, go to Next Step</button>
                             </center>
 
                         </&>
@@ -85,7 +85,7 @@
 
                                 <h3>Required:</h3>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">Crossing Trial: </label>
+                                    <label class="col-sm-2 control-label">Crossing Experiment: </label>
                                     <div class="col-sm-10">
                                         <div id="upload_crosses_select_crossingtrial_4" name="upload_crosses_select_crossingtrial_4" >
                                         </div>
@@ -392,7 +392,7 @@
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                                 The cross was added successfully
                             </p>
-                            
+
                             <ul>
                                 <li>You may want to proceed to the cross detail page for the cross you just created.</li>
                                 <li>You can print barcodes for the cross.</li>

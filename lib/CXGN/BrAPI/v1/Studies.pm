@@ -13,6 +13,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
+use JSON;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -73,7 +74,7 @@ sub seasons {
 	foreach (@$data_window){
 		my ($year, $season) = split '\|', $_->[0];
 		push @data, {
-			seasonDbId=>$_->[1],
+			seasonDbId=>qq|$_->[1]|,
 			season=>$season ? $season : '',
 			year=>$year ? $year : ''
 		};
@@ -161,7 +162,7 @@ sub studies_search {
 			programName => $_->{breeding_program_name},
 			startDate => $_->{project_harvest_date},
 			endDate => $_->{project_planting_date},
-			active=>'',
+			active=>JSON::true,
 			additionalInfo=>\%additional_info
 		);
 		push @data_out, \%data_obj;
@@ -190,7 +191,7 @@ sub studies_germplasm {
 	foreach (@$data_window){
 		my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$_->{stock_id}});
 		push @germplasm_data, {
-			germplasmDbId=>$_->{stock_id},
+			germplasmDbId=>qq|$_->{stock_id}|,
 			germplasmName=>$_->{accession_name},
 			entryNumber=>$stock_object->entryNumber,
 			accessionNumber=>$stock_object->accessionNumber,
@@ -202,7 +203,7 @@ sub studies_germplasm {
 	}
 
 	my %result = (
-		studyDbId=>$study_id,
+		studyDbId=>qq|$study_id|,
 		studyName=>$tl->get_name,
 		data =>\@germplasm_data
 	);
@@ -285,25 +286,28 @@ sub studies_detail {
             }
 
             my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
+            my $study_db_id = $t->get_trial_id();
+            my $folder_db_id = $folder->project_parent->project_id();
+            my $breeding_program_id = $folder->breeding_program->project_id();
 			%result = (
-				studyDbId=>$t->get_trial_id(),
+				studyDbId=>qq|$study_db_id|,
 				studyName=>$t->get_name(),
-				trialDbId=>$folder->project_parent->project_id(),
+				trialDbId=>qq|$folder_db_id|,
 				trialName=>$folder->project_parent->name(),
 				studyType=>$project_type,
 				seasons=>\@years,
                 studyDescription=>$t->get_description(),
-				locationDbId=>$location_id,
+				locationDbId=>qq|$location_id|,
 				locationName=>$location_name,
-				programDbId=>$folder->breeding_program->project_id(),
+				programDbId=>qq|$breeding_program_id|,
 				programName=>$folder->breeding_program->name(),
 				startDate => $planting_date,
 				endDate => $harvest_date,
 				additionalInfo=>\%additional_info,
-				active=>'',
+				active=>JSON::true,
                 license=>$data_agreement,
 				location=> {
-					locationDbId => $location->[0],
+					locationDbId => qq|$location->[0]|,
 					locationType=>$location->[8],
 					name=> $location->[1],
 					abbreviation=>$location->[9],
@@ -350,6 +354,7 @@ sub studies_observation_variables {
 	my $study_check = $self->bcs_schema->resultset('Project::Project')->find({project_id=>$study_id});
 	if ($study_check) {
 		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+        $result{studyName} = $t->get_name;
 		my $traits_assayed = $t->get_traits_assayed();
 		my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($traits_assayed, $page_size, $page);
 
@@ -357,30 +362,33 @@ sub studies_observation_variables {
 			my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$_->[0]});
 			my $categories = $trait->categories;
 			my @brapi_categories = split '/', $categories;
+            my $trait_id = $trait->cvterm_id;
+            my $trait_db_id = $trait->db_id;
 			push @data, {
-				observationVariableDbId => $trait->cvterm_id,
+				observationVariableDbId => qq|$trait_id|,
 				name => $trait->display_name,
-				ontologyDbId => $trait->db_id,
+				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
                 language => 'EN',
                 synonyms => [],
                 crop => $crop,
 				trait => {
-					traitDbId => $trait->cvterm_id,
+					traitDbId => qq|$trait_id|,
 					name => $trait->name,
 					description => $trait->definition,
-                    xref => $trait->term
+                    xref => $trait->term,
+                    class => ''
 				},
 				method => {},
 				scale => {
 					scaleDbId =>'',
 					name =>'',
 					datatype=>$trait->format,
-					decimalPlaces=>'',
+					decimalPlaces=>undef,
 					xref=>'',
 					validValues=> {
-						min=>$trait->minimum,
-						max=>$trait->maximum,
+						min=>$trait->minimum + 0,
+						max=>$trait->maximum + 0,
 						categories=>\@brapi_categories
 					}
 				},
@@ -408,10 +416,10 @@ sub studies_layout {
 	my $status = $self->status;
 	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id, experiment_type=>'field_layout' });
 	my $design = $tl->get_design();
+    my $design_type = $tl->get_design_type();
 
 	my $plot_data = [];
 	my $formatted_plot = {};
-	my %additional_info;
 	my $check_id;
 	my $type;
 	my $count = 0;
@@ -425,21 +433,35 @@ sub studies_layout {
 			} else {
 				$type = 'Test';
 			}
+            my %additional_info;
 			if ($design->{$plot_number}->{plant_names}){
 				$additional_info{plantNames} = $design->{$plot_number}->{plant_names};
 			}
 			if ($design->{$plot_number}->{plant_ids}){
 				$additional_info{plantDbIds} = $design->{$plot_number}->{plant_ids};
 			}
+            my $image_id = CXGN::Stock->new({
+    			schema => $self->bcs_schema,
+    			stock_id => $design->{$plot_number}->{plot_id},
+    		}); 
+    		my @plot_image_ids = $image_id->get_image_ids();
+            my @ids;
+            foreach my $arrayimage (@plot_image_ids){
+                push @ids, $arrayimage->[0];
+            }
+            $additional_info{plotImageDbIds} = \@ids;
+            $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
+            $additional_info{designType} = $design_type;
+             
 			$formatted_plot = {
 				studyDbId => $study_id,
 				observationUnitDbId => $design->{$plot_number}->{plot_id},
 				observationUnitName => $design->{$plot_number}->{plot_name},
 				observationLevel => 'plot',
-				replicate => $design->{$plot_number}->{replicate} ? $design->{$plot_number}->{replicate} : '',
+				replicate => $design->{$plot_number}->{rep_number} ? $design->{$plot_number}->{rep_number} : '',
 				blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
-				X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
-				Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
+				Y => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
+				X => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
 				entryType => $type,
 				germplasmName => $design->{$plot_number}->{accession_name},
 				germplasmDbId => $design->{$plot_number}->{accession_id},
@@ -449,7 +471,7 @@ sub studies_layout {
             $window_count++;
 		}
 		$count++;
-	}
+	} 
 	my %result;
     my @data_files;
     if ($format eq 'json'){
@@ -513,14 +535,15 @@ sub observation_units {
         my @brapi_observations;
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
+            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
-                observationDbId => $_->{phenotype_id},
-                observationVariableDbId => $_->{trait_id},
+                observationDbId => qq|$_->{phenotype_id}|,
+                observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimestamp => $_->{timestamp},
+                observationTimestamp => $obs_timestamp,
                 season => $obs_unit->{year},
                 collector => $_->{operator},
-                value => $_->{value},
+                value => qq|$_->{value}|,
             };
         }
         my @brapi_treatments;
@@ -545,7 +568,7 @@ sub observation_units {
             germplasmName => $obs_unit->{germplasm_uniquename},
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            studyLocationDbId => $obs_unit->{trial_location_id},
+            studyLocationDbId => qq|$obs_unit->{trial_location_id}|,
             studyLocation => $obs_unit->{trial_location_name},
             programName => $obs_unit->{breeding_program_name},
             X => $obs_unit->{obsunit_col_number},
@@ -598,7 +621,7 @@ sub studies_table {
 		$total_count = scalar(@data)-1;
 		my @header_names = @{$data[0]};
 		#print STDERR Dumper \@header_names;
-		my @trait_names = @header_names[30 .. $#header_names];
+		my @trait_names = @header_names[39 .. $#header_names];
 		#print STDERR Dumper \@trait_names;
 		my @header_ids;
 		foreach my $t (@trait_names) {
@@ -618,8 +641,7 @@ sub studies_table {
 		#print STDERR Dumper \@data_window;
 
 		%result = (
-			studyDbId => $study_id,
-			headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber'],
+			headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber', 'plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames'],
 			observationVariableDbIds => \@header_ids,
 			observationVariableNames => \@trait_names,
 			data=>\@data_window
@@ -642,57 +664,53 @@ sub studies_table {
 }
 
 sub observation_units_granular {
-	my $self = shift;
-	my $inputs = shift;
-	my $study_id = $inputs->{study_id};
-	my $data_level = $inputs->{data_level} || 'all';
-	my $search_type = $inputs->{search_type} || 'complete';
+    my $self = shift;
+    my $inputs = shift;
+    my $study_id = $inputs->{study_id};
+    my $data_level = $inputs->{data_level} || 'all';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
-	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
+    my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
 
-	my $factory_type;
-	if ($search_type eq 'complete'){
-		$factory_type = 'Native';
-	}
-	if ($search_type eq 'fast'){
-		$factory_type = 'MaterializedView';
-	}
-	my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-		$factory_type,    #can be either 'MaterializedView', or 'Native'
-		{
-			bcs_schema=>$self->bcs_schema,
-			data_level=>$data_level,
-			trial_list=>[$study_id],
-			trait_list=>\@trait_ids_array,
-			include_timestamp=>1,
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$data_level,
+            trial_list=>[$study_id],
+            trait_list=>\@trait_ids_array,
+            include_timestamp=>1,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier
-		}
-	);
-	my $data = $phenotypes_search->search();
-	#print STDERR Dumper $data;
-	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($data, $page_size, $page);
-	my @data_out;
-	foreach (@$data_window){
-		push @data_out, {
-			studyDbId => $_->{trial_id},
-			observationDbId => $_->{phenotype_id},
-			observationUnitDbId => $_->{obsunit_stock_id},
-			observationUnitName => $_->{obsunit_uniquename},
-			observationLevel => $_->{obsunit_type_name},
-			observationVariableDbId => $_->{trait_id},
-			observationVariableName => $_->{trait_name},
-			observationTimestamp => $_->{timestamp},
-			uploadedBy => $_->{operator},
-			operator => $_->{operator},
-			germplasmDbId => $_->{accession_stock_id},
-			germplasmName => $_->{accession_uniquename},
-			value => $_->{phenotype_value},
-		};
-	}
-	my %result = (data=>\@data_out);
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    #print STDERR Dumper $data;
+    my @data_out;
+    foreach my $d (@$data){
+        my $observations = $d->{observations};
+        foreach my $o (@$observations){
+            my $obs_timestamp = $o->{collect_date} ? $o->{collect_date} : $o->{timestamp};
+            push @data_out, {
+                studyDbId => $d->{trial_id},
+                observationDbId => $o->{phenotype_id},
+                observationUnitDbId => $d->{observationunit_stock_id},
+                observationUnitName => $d->{observationunit_uniquename},
+                observationLevel => $d->{observationunit_type_name},
+                observationVariableDbId => $o->{trait_id},
+                observationVariableName => $o->{trait_name},
+                observationTimestamp => $obs_timestamp,
+                uploadedBy => $o->{operator},
+                operator => $o->{operator},
+                germplasmDbId => $d->{germplasm_stock_id},
+                germplasmName => $d->{germplasm_uniquename},
+                value => $o->{value},
+            };
+        }
+    }
+    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data_out, $page_size, $page);
+	my %result = (data=>$data_window);
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations granular result constructed');
 }

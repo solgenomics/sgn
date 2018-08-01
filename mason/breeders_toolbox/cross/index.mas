@@ -60,6 +60,8 @@ $user_id => undef
                                 <th>Male Accession</th>
                                 <th>Female Plot</th>
                                 <th>Male Plot</th>
+                                <th>Female Plant</th>
+                                <th>Male Plant</th>
                             </tr>
                         </thead>
                     </table>

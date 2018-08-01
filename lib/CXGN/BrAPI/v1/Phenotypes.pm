@@ -9,6 +9,7 @@ use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use Try::Tiny;
+use CXGN::Phenotypes::PhenotypeMatrix;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -92,39 +93,41 @@ sub search {
         my @brapi_observations;
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
+            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
-                observationDbId => $_->{phenotype_id},
-                observationVariableDbId => $_->{trait_id},
+                observationDbId => qq|$_->{phenotype_id}|,
+                observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimestamp => $_->{timestamp},
+                observationTimeStamp => $obs_timestamp,
                 season => $obs_unit->{year},
                 collector => $_->{operator},
-                value => $_->{value},
+                value => qq|$_->{value}|,
             };
         }
         my @brapi_treatments;
         my $treatments = $obs_unit->{treatments};
         while (my ($factor, $modality) = each %$treatments){
+            my $modality = $modality ? $modality : '';
             push @brapi_treatments, {
                 factor => $factor,
                 modality => $modality,
             };
         }
-        my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
+        my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
         push @data_window, {
             observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
             observationLevel => $obs_unit->{observationunit_type_name},
             observationLevels => $obs_unit->{observationunit_type_name},
             plotNumber => $obs_unit->{obsunit_plot_number},
             plantNumber => $obs_unit->{obsunit_plant_number},
-            blockNumber => $obs_unit->{obsunit_block_number},
-            replicate => $obs_unit->{obsunit_rep_number},
+            blockNumber => $obs_unit->{obsunit_block},
+            replicate => $obs_unit->{obsunit_rep},
             observationUnitName => $obs_unit->{observationunit_uniquename},
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            studyLocationDbId => $obs_unit->{trial_location_id},
+            studyLocationDbId => qq|$obs_unit->{trial_location_id}|,
             studyLocation => $obs_unit->{trial_location_name},
             programName => $obs_unit->{breeding_program_name},
             X => $obs_unit->{obsunit_col_number},
@@ -179,7 +182,7 @@ sub search_table {
     my @data_files;
     my $total_count = scalar(@data)-1;
     my @header_names = @{$data[0]};
-    my @trait_names = @header_names[30 .. $#header_names];
+    my @trait_names = @header_names[39 .. $#header_names];
     my @header_ids;
     foreach my $t (@trait_names) {
         push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
@@ -198,7 +201,7 @@ sub search_table {
     #print STDERR Dumper \@data_window;
 
     my %result = (
-        headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber'],
+        headerRow => ['studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber', 'plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames'],
         observationVariableDbIds => \@header_ids,
         observationVariableNames => \@trait_names,
         data=>\@data_window

@@ -61,6 +61,7 @@ $genotyping_plate_sample_type => undef
             </div>
 
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-primary">Download Intertek Formatted File</a>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqxls&dataLevel=plate" class="btn btn-primary">Download DartSeq Formatted File</a>
 
         </div>
         <div class="col-sm-3">
@@ -78,6 +79,25 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 -->
 
 <&| /page/info_section.mas, title=>"Navigator",  collapsible => 1 &>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="well">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <span style="font-size:3.5em;" class="glyphicon glyphicon-qrcode"></span>
+                    </div>
+                    <div class="col-sm-7">
+                        <h4>Generate barcode labels for samples, accessions or plate ID.</h4>
+                    </div>
+                    <div class="col-sm-2"> 
+                        <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
+
+                        <button id="generate_genotyping_trial_barcode_link" class="btn btn-primary btn-sm">Go</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
     <div class="row">
         <div class="col-sm-12">
             <div class="well">
@@ -178,6 +198,11 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     </div>
 </&>
 
+<&| /page/info_section.mas, id=>"genotyping_trial_check_layout_section", title=>"Check Plate Design", collapsible=>1, collapsed=>1 &>
+    <div id="genotyping_trial_check_layout_section_div">
+        <div class="well well-sm">LOADING...</div>
+    </div>
+</&>
 
 
 <script>
@@ -185,6 +210,32 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     jQuery(document).ready(function(){
         load_breeding_program_info(<% $trial_id %>);
         //load_genotyping_status_info(<% $plate_id %>);
+    });
+    
+    jQuery('#genotyping_custom_barcode').click(function () {
+        location.href = '/tools/label_designer';
+    });
+
+    jQuery('#genotyping_trial_check_layout_section_onswitch').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/trial_completion_layout_section',
+            success: function(response){
+                var html = '';
+                if (response.has_layout == 1){
+                    html += '<p class="text-success" title="This trial has plots and their layout information saved in the database. All relationships between accessions, plots, seedlots, plants, and subplots are consistent. You can view and download this information in the Design section on this page."><small>Has Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                } else {
+                    html += '<p class="text-danger" title="There is something wrong with the layout! If this occurs please contact us because this should not occur! (click here for more info)"><span id="layout_error_button"><small>Bad Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></span></p>';
+                }
+                jQuery(document).on('click', 'span[id="layout_error_button"]', function(){
+                    alert(response.layout_errors);
+                });
+                jQuery('#genotyping_trial_check_layout_section_div').html(html);
+            },
+            error: function(response){
+                alert('Error retrieving trial check layout section');
+            }
+
+        });
     });
 
 </script>
