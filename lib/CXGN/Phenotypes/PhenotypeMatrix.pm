@@ -49,7 +49,7 @@ has 'bcs_schema' => (
     required => 1,
 );
 
-#PREFERRED MaterializedViewTable (MaterializedViewTable or Native or MaterializedView)
+#PREFERRED MaterializedViewTable (MaterializedViewTable or Native)
 has 'search_type' => (
     isa => 'Str',
     is => 'rw',
