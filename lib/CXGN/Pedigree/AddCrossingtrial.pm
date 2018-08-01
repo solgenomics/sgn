@@ -1,6 +1,6 @@
 =head1 NAME
 
-CXGN::Pedigree::AddCrossingtrial - a module for adding crossing trial
+CXGN::Pedigree::AddCrossingtrial - a module for adding crossing experiment
 
 =cut
 
@@ -75,14 +75,14 @@ sub save_crossingtrial {
     my $schema = $self->get_chado_schema();
 
     if ($self->existing_crossingtrials()){
-        print STDERR "Can't create crossing trial: Crossing trial name already exists\n";
-        return {error => "Crossing trial not saved: Crossing trial name already exists"};
+        print STDERR "Can't create crossing experiment: Crossing experiment name already exists\n";
+        return {error => "Crossing experiment not saved: Crossing experiment name already exists"};
     }
 
 
     if (!$self->get_breeding_program_id()){
-        print STDERR "Can't create crossing trial: Breeding program does not exist\n";
-        return {error => "Crossing trial not saved: Breeding program does not exist"};
+        print STDERR "Can't create crossing experiment: Breeding program does not exist\n";
+        return {error => "Crossing experiment not saved: Breeding program does not exist"};
     }
 
     my $parent_folder_id;
@@ -96,7 +96,7 @@ sub save_crossingtrial {
               description => $self->get_project_description(),
         });
 
-    #add crossing trial to folder if one was specified
+    #add crossing experiment to folder if one was specified
     		if ($parent_folder_id) {
     		my $folder = CXGN::Trial::Folder->new(
     			{
