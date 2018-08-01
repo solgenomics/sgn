@@ -16,72 +16,82 @@ use CXGN::BrAPI::JSONResponse;
 use JSON;
 
 has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
 );
 
 has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
+    isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+    required => 1,
 );
 
 has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
-	is => 'rw',
-	required => 1,
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+    required => 1,
 );
 
 has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
 );
 
 has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
 );
 
 has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
+    isa => 'ArrayRef[Maybe[HashRef]]',
+    is => 'rw',
+    required => 1,
 );
 
 sub seasons {
-	my $self = shift;
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
+    my $self = shift;
+    my $year_filter = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
 
-	my @data;
-	my $total_count = 0;
-	my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
-	my $project_years_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$year_cvterm_id});
-	my %unique_years;
-	while (my $p_year = $project_years_rs->next()) {
-		$unique_years{$p_year->value} = $p_year->projectprop_id;
-	}
-	my @sorted_years;
-	foreach (sort keys %unique_years){
-		push @sorted_years, [$_, $unique_years{$_}];
-	}
+    my @data;
+    my $total_count = 0;
+    my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
+    my $project_years_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$year_cvterm_id});
+    my %unique_years;
+    while (my $p_year = $project_years_rs->next()) {
+        $unique_years{$p_year->value} = $p_year->projectprop_id;
+    }
+    my @sorted_years;
+    foreach (sort keys %unique_years){
+        my ($year, $season) = split '\|', $_;
+        if ($year_filter){
+            if ($year eq $year_filter){
+                push @sorted_years, [$year, $season, $_];
+            }
+        } else {
+            push @sorted_years, [$year, $season, $_];
+        }
+    }
 
-	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@sorted_years, $page_size, $page);
-	foreach (@$data_window){
-		my ($year, $season) = split '\|', $_->[0];
-		push @data, {
-			seasonDbId=>qq|$_->[1]|,
-			season=>$season ? $season : '',
-			year=>$year ? $year : ''
-		};
-	}
-	my %result = (data=>\@data);
-	my @data_files;
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seasons list result constructed');
+    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@sorted_years, $page_size, $page);
+    foreach (@$data_window){
+        my $year = $_->[0] ? $_->[0] : '';
+        my $season = $_->[1] ? $_->[1] : '';
+        my $projectprop_id = $_->[2] ? $_->[2] : '';
+        push @data, {
+            seasonDbId=>qq|$projectprop_id|,
+            season=>$season,
+            year=>$year
+        };
+    }
+    my %result = (data=>\@data);
+    my @data_files;
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seasons list result constructed');
 }
 
 sub study_types {

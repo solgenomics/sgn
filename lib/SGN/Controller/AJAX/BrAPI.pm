@@ -334,25 +334,28 @@ sub observation_levels_GET {
 sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }
 
 sub seasons_POST {
-	my $self = shift;
-	my $c = shift;
-	seasons_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    seasons_process($self, $c);
 }
 
 sub seasons_GET {
-	my $self = shift;
-	my $c = shift;
-	seasons_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    seasons_process($self, $c);
 }
 
 sub seasons_process {
-	my $self = shift;
-	my $c = shift;
+    my $self = shift;
+    my $c = shift;
     my $auth = _authenticate_user($c);
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Studies');
-	my $brapi_package_result = $brapi_module->seasons();
-	_standard_response_construction($c, $brapi_package_result);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->seasons(
+        $clean_inputs->{year}->[0],
+    );
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
