@@ -141,7 +141,7 @@ $referer => undef
                                 <&| /page/info_section.mas, title => 'Field Trial to Genotyping Trial Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
-                                <&| /page/info_section.mas, title => 'Field Trial to Crossing Trial Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
 %} #End trial_linkage_section
@@ -258,10 +258,29 @@ $referer => undef
                                 <& /breeders_toolbox/trial/design_section_management_factor.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
 % } #End management_factor_design
 
+% if ($info_section_id eq 'crossingtrial_details'){
+                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
+% } #End crossingtrial_details
+
+% if ($info_section_id eq 'crosses_in_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/crosses_in_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End crosses_in_crossingtrial_section
+
+% if ($info_section_id eq 'cross_properties_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/cross_properties_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End cross_properties_crossingtrial_section
+
+% if ($info_section_id eq 'progenies_in_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/progenies_in_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End progenies_in_crossingtrial_section
+
+% if ($info_section_id eq 'crossing_trial_from_field_trial_section'){
+                                <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
+% } #End crossing_trial_from_field_trial_section
+
                             </div>
                         </div>
                     </&>
-
                 </div>
             </div>
         </div>

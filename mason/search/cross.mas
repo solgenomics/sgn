@@ -23,7 +23,7 @@
                <input type="text" class="form-control" id="pedigree_female_parent" placeholder="Enter female parent/population">
                 <div class="input-group-btn">
                  <button class="btn btn-info" id="search_pedigree_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
-                 <button class="btn btn-primary" id="search_all_progenies"><i class="glyphicon glyphicon-search"></i> All Progenies </button>
+                 <button class="btn btn-primary" id="search_all_progenies"><i class="glyphicon glyphicon-search"></i> All Progenies of this Female Parent </button>
                 </div>
               </div>
             </div>
@@ -37,7 +37,7 @@
             </select>
            </select>
           <div class="input-group-btn">
-           <button class="btn btn-info" id="search_pedigree"><i class="glyphicon glyphicon-search"></i> Progenies </button>
+           <button class="btn btn-info" id="search_pedigree"><i class="glyphicon glyphicon-search"></i> Progenies of these Parents </button>
           </div>
         </div>
        </div>
