@@ -193,8 +193,6 @@ sub markerprofiles_allelematrix {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         markerprofile_id_list=>\@markerprofile_ids,
-        offset=>$page_size*$page,
-        limit=>$page_size
     });
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
     #print STDERR Dumper $genotypes;
