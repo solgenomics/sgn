@@ -168,6 +168,8 @@ sub search {
     my $accession_name_list = $self->accession_name_list;
     my $trial_has_tissue_samples = $self->trial_has_tissue_samples;
     my $trait_list = $self->trait_list;
+    my $limit = $self->limit;
+    my $offset = $self->offset;
     my $sort_by = $self->sort_by;
     my $order_by = $self->order_by;
 
@@ -222,8 +224,9 @@ sub search {
         push @where_clause, "breeding_program.project_id in ($sql)";
     }
     if ($program_list && scalar(@$program_list)>0) {
-        my $sql = join ("," , @$program_list);
-        push @where_clause, "breeding_program.name in ($sql)";
+        my $sql = join ("','" , @$program_list);
+        my $program_sql = "'" . $sql . "'";
+        push @where_clause, "breeding_program.name in ($program_sql)";
     }
     if ($year_list && scalar(@$year_list)>0) {
         my $sql = join ("','" , @$year_list);
@@ -231,8 +234,9 @@ sub search {
         push @where_clause, "year.value in ($year_sql)";
     }
     if ($trial_type_list && scalar(@$trial_type_list)>0) {
-        my $sql = join ("," , @$trial_type_list);
-        push @where_clause, "trial_type_name.name in ($sql)";
+        my $sql = join ("','" , @$trial_type_list);
+        my $trial_type_sql = "'" . $sql . "'";
+        push @where_clause, "trial_type_name.name in ($trial_type_sql)";
     }
     if ($trial_id_list && scalar(@$trial_id_list)>0) {
         my $sql = join ("," , @$trial_id_list);
@@ -240,8 +244,9 @@ sub search {
     }
     if ($trial_name_is_exact){
         if ($trial_name_list && scalar(@$trial_name_list)>0) {
-            my $sql = join ("," , @$trial_name_list);
-            push @where_clause, "study.name in ($sql)";
+            my $sql = join ("','" , @$trial_name_list);
+            my $trial_sql = "'" . $sql . "'";
+            push @where_clause, "study.name in ($trial_sql)";
         }
     } else {
         if ($trial_name_list && scalar(@$trial_name_list)>0) {
@@ -258,8 +263,9 @@ sub search {
         push @where_clause, "folder.project_id in ($sql)";
     }
     if ($folder_name_list && scalar(@$folder_name_list)>0) {
-        my $sql = join ("," , @$folder_name_list);
-        push @where_clause, "folder.name in ($sql)";
+        my $sql = join ("','" , @$folder_name_list);
+        my $folder_sql = "'" . $sql . "'";
+        push @where_clause, "folder.name in ($folder_sql)";
     }
     if ($trial_design_list && scalar(@$trial_design_list)>0) {
         my $sql = join ("','" , @$trial_design_list);
@@ -280,27 +286,19 @@ sub search {
         push @where_clause, "accession.stock_id in ($sql)";
     }
     if ($accession_name_list && scalar(@$accession_name_list)>0) {
-        my $sql = join ("," , @$accession_name_list);
-        push @where_clause, "accession.uniquename in ($sql)";
+        my $sql = join ("','" , @$accession_name_list);
+        my $accession_sql = "'" . $sql . "'";
+        push @where_clause, "accession.uniquename in ($accession_sql)";
     }
 
     my $trait_join = '';
     if ($trait_list && scalar(@$trait_list)>0) {
         my $sql = join ("," , @$trait_list);
         push @where_clause, "phenotype.cvalue_id in ($sql)";
-        $trait_join = " JOIN nd_experiment_project ON(study.project_id=nd_experiment_project.project_id) JOIN nd_experiment AS trial_experiment ON(trial_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_stock ON(trial_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock AS obs_unit ON(nd_experiment_stock.stock_id=obs_unit.stock_id) JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=obs_unit.stock_id) JOIN nd_experiment AS phenotype_experiment ON(nd_experiment_stock.nd_experiment_id=phenotype_experiment.nd_experiment_id AND phenotype_experiment.type_id=$phenotyping_experiment_cvterm_id) JOIN nd_experiment_phenotype ON(nd_experiment_phenotype.nd_experiment_id=phenotype_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) ";
+        $trait_join = " JOIN nd_experiment_project ON(study.project_id=nd_experiment_project.project_id) JOIN nd_experiment AS trial_experiment ON(trial_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_stock ON(trial_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock AS obs_unit ON(nd_experiment_stock.stock_id=obs_unit.stock_id) JOIN nd_experiment_stock AS nd_experiment_stock_obs ON(nd_experiment_stock_obs.stock_id=obs_unit.stock_id) JOIN nd_experiment AS phenotype_experiment ON(nd_experiment_stock_obs.nd_experiment_id=phenotype_experiment.nd_experiment_id AND phenotype_experiment.type_id=$phenotyping_experiment_cvterm_id) JOIN nd_experiment_phenotype ON(nd_experiment_phenotype.nd_experiment_id=phenotype_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) ";
     }
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
-
-    my $offset_clause = '';
-    my $limit_clause = '';
-    if ($self->limit){
-        $limit_clause = " LIMIT ".$self->limit;
-    }
-    if ($self->offset){
-        $offset_clause = " OFFSET ".$self->offset;
-    }
 
     my $q = "SELECT study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, count(study.project_id) OVER() AS full_count
         FROM project AS study
@@ -321,9 +319,7 @@ sub search {
         $trait_join
         $where_clause
         GROUP BY(study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value)
-        ORDER BY study.name
-        $limit_clause
-        $offset_clause;";
+        ORDER BY study.name;";
 
     print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
@@ -343,7 +339,7 @@ sub search {
             next;
         }
         if ($self->field_trials_only){
-            if ($design && ($design eq 'genotype_data_project' || $design eq 'genotyping_plate')) {
+            if ($design && ($design eq 'treatment' || $design eq 'genotype_data_project' || $design eq 'genotyping_plate')) {
                 $subtract_count++;
                 next();
             }
@@ -351,10 +347,6 @@ sub search {
                 $subtract_count++;
                 next();
             }
-        }
-        if ($design eq 'treatment'){
-            $subtract_count++;
-            next();
         }
 
         push @result, {
@@ -377,10 +369,26 @@ sub search {
         };
         $total_count = $full_count;
     }
+
+    #pagination in sql query not possible unitl we have project_class explicitly
+    my @data_window;
+    if (($limit && defined($limit) || ($offset && defined($offset)))){
+        my $start = $offset;
+        my $end = $offset + $limit - 1;
+        for( my $i = $start; $i <= $end; $i++ ) {
+            if ($result[$i]) {
+                push @data_window, $result[$i];
+            }
+        }
+    } else {
+        @data_window = @result;
+    }
+    
+    #print STDERR "TOTAL: $total_count SUBTRACT: $subtract_count \n";
     $total_count = $total_count-$subtract_count;
     #print STDERR Dumper \@result;
 
-    return (\@result, $total_count);
+    return (\@data_window, $total_count);
 }
 
 1;
