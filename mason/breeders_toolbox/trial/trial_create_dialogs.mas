@@ -416,40 +416,13 @@ rect.bordered {
                                                 <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
                                             </div>
                                         </div>
-                                        <div class="form-group form-group-sm" >
-                                            <label class="col-sm-7 control-label">Subplot 5 Treatment Name: </label>
-                                            <div class="col-sm-5" >
-                                                <input class="form-control" id="create_trial_with_treatment_name_input5" name="create_trial_with_treatment_name_input5" type="text" placeholder="Optional Treatment 5"/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group form-group-sm" >
-                                            <label class="col-sm-7 control-label">Subplot 6 Treatment Name: </label>
-                                            <div class="col-sm-5" >
-                                                <input class="form-control" id="create_trial_with_treatment_name_input6" name="create_trial_with_treatment_name_input6" type="text" placeholder="Optional Treatment 6"/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group form-group-sm" >
-                                            <label class="col-sm-7 control-label">Subplot 7 Treatment Name: </label>
-                                            <div class="col-sm-5" >
-                                                <input class="form-control" id="create_trial_with_treatment_name_input7" name="create_trial_with_treatment_name_input7" type="text" placeholder="Optional Treatment 7"/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group form-group-sm" >
-                                            <label class="col-sm-7 control-label">Subplot 8 Treatment Name: </label>
-                                            <div class="col-sm-5" >
-                                                <input class="form-control" id="create_trial_with_treatment_name_input8" name="create_trial_with_treatment_name_input8" type="text" placeholder="Optional Treatment 8"/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group form-group-sm" >
-                                            <label class="col-sm-7 control-label">Subplot 9 Treatment Name: </label>
-                                            <div class="col-sm-5" >
-                                                <input class="form-control" id="create_trial_with_treatment_name_input9" name="create_trial_with_treatment_name_input9" type="text" placeholder="Optional Treatment 9"/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group form-group-sm" >
-                                            <label class="col-sm-7 control-label">Subplot 10 Treatment Name: </label>
-                                            <div class="col-sm-5" >
-                                                <input class="form-control" id="create_trial_with_treatment_name_input10" name="create_trial_with_treatment_name_input10" type="text" placeholder="Optional Treatment 10"/>
+                                        <div id="create_trial_with_treatment_additional_treatment">
+                                            <input type="hidden" id="create_trial_with_treatment_additional_count" value=0>
+                                            <div class="form-group form-group-sm" >
+                                                <label class="col-sm-7 control-label">Add Another Treatment: </label>
+                                                <div class="col-sm-5" >
+                                                    <button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">+ Treatment</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

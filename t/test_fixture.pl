@@ -24,6 +24,7 @@ use SGN::Devel::MyDevLibs;
 my $verbose = 0;
 my $nocleanup;
 my $noserver;
+my $dumpupdatedfixture;
 my $noparallel = 0;
 # relative to `sgn/ (or parent of wherever this script is located)
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
@@ -32,6 +33,7 @@ GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
     "nocleanup" => \$nocleanup,
+    "dumpupdatedfixture" => \$dumpupdatedfixture,
     "noserver" => \$noserver,
     "noparallel" => \$noparallel,
     "fixture_path" => \$fixture_path,
@@ -124,6 +126,10 @@ system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p post
 print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview\n";
 system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview");
 
+if ($dumpupdatedfixture){
+    print STDERR "Dumping new updated fixture with all patches run on it to t/data/fixture/cxgn_fixture.sql\n";
+    system("pg_dump -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
+}
 
 print STDERR "Done.\n";
 
