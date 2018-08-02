@@ -1,0 +1,22 @@
+{
+  "name": "@solgenomics/cxgn_js",
+  "version": "0.0.0",
+  "description": "npm package manifest describing external dependancies and containing cxgn-specific js files",
+  "main": "webpack.config.js",
+  "scripts": {
+    "build": "rm -r build/ || true && npm install . && webpack",
+    "build-watch": "rm -r build/ || true && npm install . && webpack -w"
+  },
+  "private": true,
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.55",
+    "@babel/preset-env": "^7.0.0-beta.55",
+    "babel-loader": "^8.0.0-beta.4",
+    "null-loader": "^0.1.1",
+    "webpack": "^4.16.3",
+    "webpack-cli": "^3.1.0"
+  },
+  "dependencies": {}
+}
