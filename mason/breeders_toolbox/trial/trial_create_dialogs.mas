@@ -416,6 +416,15 @@ rect.bordered {
                                                 <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
                                             </div>
                                         </div>
+                                        <div id="create_trial_with_treatment_additional_treatment">
+                                            <input type="hidden" id="create_trial_with_treatment_additional_count" value=0>
+                                            <div class="form-group form-group-sm" >
+                                                <label class="col-sm-7 control-label">Add Another Treatment: </label>
+                                                <div class="col-sm-5" >
+                                                    <button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">+ Treatment</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
