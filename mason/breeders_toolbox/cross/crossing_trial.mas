@@ -50,16 +50,3 @@ $folder_id => undef
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
 </div>
-
-<script>
-
-jQuery(document).ready(function(){
-
-    jQuery('#edit_crossingtrial_details').click(function(){
-        jQuery('#crossingtrial_details_edit_dialog').modal("show");
-        edit_trial_details();
-    });
-
-});
-
-</script>
