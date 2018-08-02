@@ -629,7 +629,13 @@ rect.bordered {
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Plot start number: </label>
                                         <div class="col-sm-5" >
-                                            <input type="text" class="form-control" id="start_number" name="start_number" />
+                                            <select class="form-control" id="start_number" name="start_number">
+                                                <option value="">select starting number</option>
+                                                <option value=1 >1</option>
+                                                <option value=101 >101</option>
+                                                <option value=1001 >1001</option>
+                                            </select>
+                                            <!--<input type="text" class="form-control" id="start_number" name="start_number" />-->
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
