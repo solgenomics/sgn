@@ -68,24 +68,30 @@ ALTER TABLE nd_protocolprop ALTER COLUMN value TYPE JSONB USING value::JSON;
 SQL
         $schema->storage->dbh->do($sql);
 
-        my $q = "SELECT genotypeprop_id, value FROM genotypeprop WHERE type_id = $snp_genotyping_cvterm_id ORDER BY genotypeprop_id ASC;";
+        my $pre_q = "SELECT genotype_id FROM genotype;";
+        my $q = "SELECT genotypeprop_id, value FROM genotypeprop WHERE type_id = $snp_genotyping_cvterm_id AND genotype_id = ?;";
         my $update1_q = "UPDATE genotypeprop SET value = ? WHERE genotypeprop_id = ?;";
         my $update2_q = "UPDATE genotypeprop SET type_id = $vcf_snp_genotyping_cvterm_id WHERE genotypeprop_id = ?;";
 
+        my $pre_h = $schema->storage->dbh()->prepare($pre_q);
         my $h = $schema->storage->dbh()->prepare($q);
         my $h_update1 = $schema->storage->dbh()->prepare($update1_q);
         my $h_update2 = $schema->storage->dbh()->prepare($update2_q);
 
-        $h->execute();
-        while (my ($genotypeprop_id, $json_val) = $h->fetchrow_array()) {
-            my $val = decode_json $json_val;
-            my %new_val;
-            while (my ($marker_name, $dosage_value) = each %$val) {
-                $new_val{$marker_name} = {'DS' => $dosage_value};
+        $pre_h->execute();
+        while (my ($genotype_id) = $pre_h->fetchrow_array()) {
+            $h->execute($genotype_id);
+            while (my ($genotypeprop_id, $json_val) = $h->fetchrow_array()) {
+                print STDERR "Converting $genotypeprop_id \n";
+                my $val = decode_json $json_val;
+                my %new_val;
+                while (my ($marker_name, $dosage_value) = each %$val) {
+                    $new_val{$marker_name} = {'DS' => $dosage_value};
+                }
+                my $genotypeprop_json = encode_json \%new_val;
+                $h_update1->execute($genotypeprop_json, $genotypeprop_id);
+                $h_update2->execute($genotypeprop_id);
             }
-            my $genotypeprop_json = encode_json \%new_val;
-            $h_update1->execute($genotypeprop_json, $genotypeprop_id);
-            $h_update2->execute($genotypeprop_id);
         }
     };
 
