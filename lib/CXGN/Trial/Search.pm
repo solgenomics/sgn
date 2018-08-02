@@ -325,6 +325,7 @@ sub search {
         $limit_clause
         $offset_clause;";
 
+    print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
@@ -332,9 +333,9 @@ sub search {
     my $total_count = 0;
     my $subtract_count = 0;
     while (my ($study_name, $study_id, $study_description, $folder_name, $folder_id, $folder_description, $trial_type_id, $trial_type_name, $year, $location_id, $breeding_program_name, $breeding_program_id, $breeding_program_description, $harvest_date, $planting_date, $design, $full_count) = $h->fetchrow_array()) {
-        my $location_name = $locations{$location_id};
-        my $project_harvest_date = $calendar_funcs->display_start_date($harvest_date);
-        my $project_planting_date = $calendar_funcs->display_start_date($planting_date);
+        my $location_name = $location_id ? $locations{$location_id} : '';
+        my $project_harvest_date = $harvest_date ? $calendar_funcs->display_start_date($harvest_date) : '';
+        my $project_planting_date = $planting_date ? $calendar_funcs->display_start_date($planting_date) : '';
 
         #In the future a 'project_class' would make this more clean by differentiating different project classes explicitly
         if ( $not_trials{$study_id} ) {
@@ -342,7 +343,11 @@ sub search {
             next;
         }
         if ($self->field_trials_only){
-            if ($design eq 'genotype_data_project' || $design eq 'genotyping_plate' || $trial_type_name eq 'crossing_trial'){
+            if ($design && ($design eq 'genotype_data_project' || $design eq 'genotyping_plate')) {
+                $subtract_count++;
+                next();
+            }
+            if ($trial_type_name && ($trial_type_name eq 'crossing_trial')) {
                 $subtract_count++;
                 next();
             }
@@ -373,7 +378,7 @@ sub search {
         $total_count = $full_count;
     }
     $total_count = $total_count-$subtract_count;
-    print STDERR Dumper \@result;
+    #print STDERR Dumper \@result;
 
     return (\@result, $total_count);
 }

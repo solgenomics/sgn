@@ -162,6 +162,7 @@ sub studies_search {
         field_trials_only => 1
     });
     my ($data, $total_count) = $trial_search->search();
+    #print STDERR Dumper $data;
 
     my @data_out;
     foreach (@$data){
