@@ -229,7 +229,7 @@ sub germplasm_pedigree {
     if ($notation) {
         push @$status, { 'info' => 'Notation not yet implemented. Returns a simple parent1/parent2 string.' };
         if ($notation ne 'purdy') {
-            push @$status, { 'error' => 'Unsupported notation code. Allowed notation: purdy' };
+            push @$status, { 'error' => "Unsupported notation code '$notation'. Allowed notation: 'purdy'" };
         }
     }
 
