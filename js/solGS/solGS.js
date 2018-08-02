@@ -747,7 +747,7 @@ jQuery(document).ready(function (){
 solGS.alertMessage = function (msg, msgTitle, divId) {
 
     if (!msgTitle) { 
-	msgTitle = 'Hmmmm....';
+	msgTitle = 'Message';
     }
 
     if (!divId) { 
