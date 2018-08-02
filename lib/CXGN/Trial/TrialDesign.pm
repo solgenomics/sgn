@@ -746,7 +746,7 @@ sub _get_rcbd_design {
   #print STDERR Dumper \@plot_numbers;
   @block_numbers = $result_matrix->get_column("block");
   @stock_names = $result_matrix->get_column("trt");
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers)};
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $number_of_blocks)};
 
   #generate col_number
 
@@ -1992,18 +1992,11 @@ sub _convert_plot_numbers {
   my $self = shift;
   my $plot_numbers_ref = shift;
   my $rep_numbers_ref = shift;
+  my $number_of_reps = shift;
   my @plot_numbers = @{$plot_numbers_ref};
   my @rep_numbers = @{$rep_numbers_ref};
-  
   my $total_plot_count = scalar(@plot_numbers);
-  print STDERR Dumper($total_plot_count);
-  my $number_of_reps;
-  if ($self->has_number_of_blocks()) {
-    $number_of_reps = $self->get_number_of_blocks();
-  }
   my $rep_plot_count = $total_plot_count / $number_of_reps;
-  print STDERR Dumper($rep_plot_count);
-  
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my $plot_number;
     my $first_plot_number;
@@ -2017,7 +2010,6 @@ sub _convert_plot_numbers {
           $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
         }
         
-        #my $plot_num_last_digit = $plot_number % 10;
         my $cheking = ($rep_numbers[$i] * $rep_plot_count) / $rep_plot_count;
         print STDERR Dumper($cheking);
         my $new_plot;
