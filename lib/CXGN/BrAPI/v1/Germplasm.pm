@@ -253,16 +253,18 @@ sub germplasm_pedigree {
         my $cross_year = $cross_info ? $cross_info->[3] : '';
         my $cross_type = $cross_info ? $cross_info->[2] : '';
 
-        my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
-        #print STDERR Dumper $progenies;
         my @siblings;
-        foreach (@$progenies){
-            if ($_->[5] ne $uniquename){
-                my $germplasm_id = $_->[4];
-                push @siblings, {
-                    germplasmDbId => qq|$germplasm_id|,
-                    defaultDisplayName => $_->[5]
-                };
+        if ($female_name || $male_name){
+            my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
+            #print STDERR Dumper $progenies;
+            foreach (@$progenies){
+                if ($_->[5] ne $uniquename){
+                    my $germplasm_id = $_->[4];
+                    push @siblings, {
+                        germplasmDbId => qq|$germplasm_id|,
+                        defaultDisplayName => $_->[5]
+                    };
+                }
             }
         }
 
