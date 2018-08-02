@@ -58,9 +58,9 @@ $pop_id = undef if $list_id || $combo_pops_id;
  <div class="fileupload-buttonbar">
    
     <div class="list_upload" id="list_label">
-      <label for="kcluster_genotypes_list">Select</label>
+      <label for="cluster_genotypes_list">Select</label>
     </div> 
-    <div class="list_upload" id="kcluster_genotypes_list">      
+    <div class="list_upload" id="cluster_genotypes_list">      
     </div>
     <div class="list_upload go_btn">
       <input type="button" value="Go" />
@@ -75,7 +75,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
     <br>
    
     <!-- The container for the list of kcluster populations -->
-    <div class="sub_infosectioncontent" id="list_kcluster_populations" style="display:none"></div>
+    <div class="sub_infosectioncontent" id="list_cluster_populations" style="display:none"></div>
     <br>
 
 </div>

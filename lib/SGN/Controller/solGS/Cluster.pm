@@ -12,15 +12,15 @@ use JSON;
 use CXGN::List;
 
 
-BEGIN { extends 'Catalyst::Controller::REST' }
+BEGIN { extends 'Catalyst::Controller' }
 
 
-__PACKAGE__->config(
-    default   => 'application/json',
-    stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 
-		   'text/html' => 'JSON' },
-    );
+# __PACKAGE__->config(
+#     default   => 'application/json',
+#     stash_key => 'rest',
+#     map       => { 'application/json' => 'JSON', 
+# 		   'text/html' => 'JSON' },
+#     );
 
 
 sub cluster_analysis :Path('/cluster/analysis/') Args() {
@@ -36,7 +36,8 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 	$c->stash->{data_set_type} = 'combined_populations';	
     }
     
-    $c->stash->{template} = '/kcluster/analysis.mas';
+    $c->stash->{template} = '/cluster/analysis.mas';
+
 }
 
 
