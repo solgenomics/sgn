@@ -2037,13 +2037,11 @@ sub _convert_plot_numbers {
             if (length($first_plot_number) == 3 ){
                 $new_plot = $cheking * 100;
                 $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
-                #$plot_number = $first_plot_number + ($i * $self->get_plot_number_increment()) + $new_plot;
             }
             print STDERR Dumper($new_plot);
             if (length($first_plot_number) == 4 ){
                 $new_plot = $cheking * 1000;
                 $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
-                #$plot_number = $first_plot_number + ($i * $self->get_plot_number_increment()) + $new_plot;
             }
         }
         
