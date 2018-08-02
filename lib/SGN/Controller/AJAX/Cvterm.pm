@@ -360,7 +360,7 @@ sub add_cvtermprop_POST {
 
 	my $cvterm = $schema->resultset("Cv::Cvterm")->find( { cvterm_id => $cvterm_id } );
 
-    if ($cvterm && $prop && $prop_type) {
+    if ($cvterm && defined($prop) && $prop_type) {
 
         try {
             $cvterm->create_cvtermprops( { $prop_type => $prop }, { cv_name => $cv_name , autocreate => 1 } );

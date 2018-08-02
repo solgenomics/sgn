@@ -52,14 +52,20 @@ sub _validate_with_plugin {
     my $number_observation_units = scalar(@$observation_unit_names);
     print STDERR "Number observation units: $number_observation_units...\n";
 
+    my @observation_units_names_trim;
     if ($self->get_igd_numbers_included){
-        my @observation_units_names_trim;
-        foreach (@$observation_unit_names){
-            my ($observation_unit_name, $igd_number) = split(/:/, $_);
+        foreach (@$observation_unit_names) {
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_units_names_trim, $observation_unit_name;
         }
-        $observation_unit_names = \@observation_units_names_trim;
+    } else {
+        foreach (@$observation_unit_names) {
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
+            push @observation_units_names_trim, $observation_unit_name;
+        }
     }
+    $observation_unit_names = \@observation_units_names_trim;
 
     my $organism_id = $self->get_organism_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();

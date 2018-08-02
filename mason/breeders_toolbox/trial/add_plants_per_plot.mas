@@ -16,7 +16,7 @@ $trial_name => undef
 
 	       <form class="form-horizontal" role="form" method="post" id="add_plants_dialog_form" name="add_plants_dialog_form">
 	        <div class="form-group">
-      	      <label class="col-sm-3 control-label">Number of plants per plot: </label>
+      	      <label class="col-sm-3 control-label">Maximum number of plants per plot: </label>
       	      <div class="col-sm-9" >
                 <input name="add_plants_per_plot_num" id="add_plants_per_plot_num" class="form-control" type="number" autofocus/>
               </div>
