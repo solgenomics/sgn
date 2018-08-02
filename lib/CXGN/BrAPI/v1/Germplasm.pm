@@ -254,7 +254,7 @@ sub germplasm_pedigree {
         my $cross_type = $cross_info ? $cross_info->[2] : '';
 
         my @siblings;
-        if ($female_name && $male_name){
+        if ($female_name || $male_name){
             my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
             #print STDERR Dumper $progenies;
             foreach (@$progenies){
