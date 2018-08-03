@@ -105,6 +105,28 @@
     </div>
 </div>
 
+<div class="modal fade" id="progenies_saved_dialog_message" name="progenies_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="progeniesSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="progeniesSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The progenies were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_progenies_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="update_crossinfo_dialog" name="update_crossinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="updateCrossinfoDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -325,11 +347,14 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                jQuery('#cross_saved_dialog_message').modal("show");
+                jQuery('#progenies_saved_dialog_message').modal("show");
             }
         }
     });
 
+    jQuery("#dismiss_progenies_saved_dialog").click(function(){
+        location.reload();
+    });
 
 });
 
