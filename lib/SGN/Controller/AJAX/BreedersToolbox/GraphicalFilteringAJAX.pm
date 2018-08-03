@@ -148,7 +148,7 @@ sub common_traits_by_plot_list_GET : Args(0) {
 
    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
       bcs_schema=> $schema,
-      search_type => "Native",
+      search_type => "MaterializedViewTable",
       data_level => "plot",
       trait_list=> \@trait_list,
       plot_list=>  \@plot_list

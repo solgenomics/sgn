@@ -4,6 +4,7 @@ package SGN::Controller::AJAX::User;
 use Moose;
 use IO::File;
 use Data::Dumper;
+use HTML::Entities;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -498,5 +499,87 @@ HTML
 	return $c->stash->{rest} = { html => $html };
     }
 }
+
+sub quick_create_user :Path('/ajax/user/quick_create_account') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+     if (!$c->user()) { 
+	$c->stash->{rest} = { error => "Need to be logged in to use feature." };
+	return;
+    }
+
+    if (!$c->user()->check_roles("curator")) { 
+	$c->stash->{rest} = { error => "You don't have the privileges to use this feature" };
+	return;
+    }
+    my $logged_in_person_id = $c->user()->get_sp_person_id();
+
+    my $logged_in_user=CXGN::People::Person->new($c->dbc->dbh(), $logged_in_person_id);
+    $logged_in_person_id=$logged_in_user->get_sp_person_id();
+    my $logged_in_username=$logged_in_user->get_first_name()." ".$logged_in_user->get_last_name();
+    my $logged_in_user_type=$logged_in_user->get_user_type();
+    
+    my ($username, $password, $confirm_password, $email_address, $new_user_type, $first_name, $last_name) = 
+	map { print STDERR $_." ".$c->req->param($_)."\n"; $c->req->param($_) } qw | username password confirm_password confirm_email user_type first_name last_name |;
+
+    print STDERR "$username, $password, $confirm_password, $email_address, $new_user_type, $first_name, $last_name\n";
+
+    my $new_user_login=CXGN::People::Login->new($c->dbc->dbh);
+
+    if ($username) {
+        my @fail=();
+ 
+	if(length($username)<7){push @fail,"Username is too short. Username must be 7 or more characters";} 
+        my $existing_login=CXGN::People::Login->get_login($c->dbc->dbh, $username);
+
+        if($existing_login->get_username()){push @fail,"Username \"$username\" is already in use. Please pick a different us
+ername.";}
+        
+	if(length($password)<7){push @fail,"Password is too short. Password must be 7 or more characters";}
+        
+	if("$password" ne "$confirm_password"){push @fail,"Password and confirm password do not match.";}
+        
+	if($password eq $username){push @fail,"Password must not be the same as your username.";}
+        
+	if($new_user_type ne 'user' and $new_user_type ne 'sequencer' and $new_user_type ne 'submitter'){
+	    push @fail,"Sorry, but you cannot create user of type \"$new_user_type\" with web interface.";}
+        if(@fail)
+        {
+            my $fail_str="";
+            foreach(@fail)
+            {
+                $fail_str .= "<li>$_</li>\n"
+            }
+	    $c->stash->{rest} = { error => $fail_str };
+	    return;
+
+        }
+    }
+
+    eval { 
+	$new_user_login->set_username(encode_entities($username));
+	$new_user_login->set_password($password);
+	$new_user_login->set_private_email(encode_entities($email_address));
+	$new_user_login->set_user_type(encode_entities($new_user_type));
+	$new_user_login->store();
+	my $new_user_person_id=$new_user_login->get_sp_person_id();
+	my $new_user_person=CXGN::People::Person->new($c->dbc->dbh, $new_user_person_id);
+	$new_user_person->set_first_name(encode_entities($first_name));
+	$new_user_person->set_last_name(encode_entities($last_name));
+	##removed. This was causing problems with creating new accounts for people,
+	##and then not finding it in the people search.
+	#$new_user_person->set_censor(1);#censor by default, since we are creating this account, not the person whose info might be displayed, and they might not want it to be displayed
+	$new_user_person->store();
+    };
+
+    if ($@) { 
+	$c->stash->{rest} = { html => "An error occurred. $@" };
+    }
+    else { 
+	$c->stash->{rest} = { html => "<center><h4>Account successfully created for $first_name $last_name</h4><a href=\"/user/quick_create_account\">Create another account" }; 
+    }
+}
+    
 
 1;

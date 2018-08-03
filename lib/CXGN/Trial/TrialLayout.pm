@@ -173,6 +173,7 @@ has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbe
 sub _lookup_trial_id {
     my $self = shift;
     print STDERR "CXGN::Trial::TrialLayout ".localtime."\n";
+    $self->get_schema->storage->dbh->do('SET search_path TO public,sgn');
 
   #print STDERR "Check 2.1: ".localtime()."\n";
   $self->_set_project_from_id();
@@ -372,6 +373,9 @@ sub generate_and_cache_layout {
   my $seed_transaction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'seed transaction', 'stock_relationship' )->cvterm_id();
   my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'collection_of', 'stock_relationship' )->cvterm_id();
   my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot number', 'stock_property' )->cvterm_id();
+  my $plant_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_index_number', 'stock_property' )->cvterm_id();
+  my $tissue_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'tissue_sample_index_number', 'stock_property' )->cvterm_id();
+  my $subplot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_index_number', 'stock_property' )->cvterm_id();
   my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'block', 'stock_property' )->cvterm_id();
   my $replicate_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'replicate', 'stock_property' )->cvterm_id();
   my $range_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'range', 'stock_property' )->cvterm_id();
@@ -463,6 +467,12 @@ sub generate_and_cache_layout {
                 $design_info{"source_observation_unit_id"} = $r->stock_id;
             }
         }
+        my $organism_q = "SELECT species, genus FROM organism WHERE organism_id = ?;";
+        my $h = $self->get_schema->storage->dbh()->prepare($organism_q);
+        $h->execute($plot->organism_id);
+        my ($species, $genus) = $h->fetchrow_array;
+        $design_info{"species"} = $species;
+        $design_info{"genus"} = $genus;
     }
     my $accession = $accession_rs->first->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {'object.type_id' => $plant_cvterm_id}, {order_by=>"object.stock_id"});
@@ -583,6 +593,7 @@ sub generate_and_cache_layout {
     if ($plants) {
         my @plant_names;
         my @plant_ids;
+        my @plant_index_numbers;
         my %plants_tissue_hash;
         while (my $p = $plants->next()) {
             if ($self->get_verify_layout){
@@ -596,6 +607,13 @@ sub generate_and_cache_layout {
             push @plant_names, $plant_name;
             push @plant_ids, $plant_id;
 
+            my $plant_number_rs = $p->search_related('stockprops', {'me.type_id' => $plant_number_cvterm_id });
+            if ($plant_number_rs->count != 1){
+                print STDERR "Problem with plant_index_number stockprop for plant: $plant_name\n";
+            }
+            my $plant_index_number = $plant_number_rs->first->value;
+            push @plant_index_numbers, $plant_index_number;
+
             my $tissues_of_plant = $p->search_related('stock_relationship_objects', { 'me.type_id' => $tissue_sample_of_cv })->search_related('subject', {'subject.type_id'=>$tissue_cvterm_id});
             while (my $t = $tissues_of_plant->next()){
                 push @{$plants_tissue_hash{$plant_name}}, $t->uniquename();
@@ -604,11 +622,13 @@ sub generate_and_cache_layout {
         }
         $design_info{"plant_names"}=\@plant_names;
         $design_info{"plant_ids"}=\@plant_ids;
+        $design_info{"plant_index_numbers"}=\@plant_index_numbers;
         $design_info{"plants_tissue_sample_names"}=\%plants_tissue_hash;
     }
     if ($tissues) {
         my @tissue_sample_names;
         my @tissue_sample_ids;
+        my @tissue_sample_index_numbers;
         while (my $t = $tissues->next()) {
             if ($self->get_verify_layout){
                 my $tissue_accession_check = $t->search_related('stock_relationship_subjects', {'me.type_id'=>$tissue_sample_of_cv})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$accession_cvterm_id});
@@ -620,13 +640,22 @@ sub generate_and_cache_layout {
             my $tissue_id = $t->stock_id();
             push @tissue_sample_names, $tissue_name;
             push @tissue_sample_ids, $tissue_id;
+
+            my $tissue_number_rs = $t->search_related('stockprops', {'me.type_id' => $tissue_number_cvterm_id });
+            if ($tissue_number_rs->count != 1){
+                print STDERR "Problem with tissue_sample_index_number stockprop for tissue_sample: $tissue_name\n";
+            }
+            my $tissue_sample_index_number = $tissue_number_rs->first->value;
+            push @tissue_sample_index_numbers, $tissue_sample_index_number;
         }
         $design_info{"tissue_sample_names"}=\@tissue_sample_names;
         $design_info{"tissue_sample_ids"}=\@tissue_sample_ids;
+        $design_info{"tissue_sample_index_numbers"}=\@tissue_sample_index_numbers;
     }
     if ($subplots) {
         my @subplot_names;
         my @subplot_ids;
+        my @subplot_index_numbers;
         my %subplots_plants_hash;
         my %subplots_tissues_hash;
         while (my $p = $subplots->next()) {
@@ -641,6 +670,13 @@ sub generate_and_cache_layout {
             push @subplot_names, $subplot_name;
             push @subplot_ids, $subplot_id;
 
+            my $subplot_number_rs = $p->search_related('stockprops', {'me.type_id' => $subplot_number_cvterm_id });
+            if ($subplot_number_rs->count != 1){
+                print STDERR "Problem with subplot_index_number stockprop for subplot: $subplot_name\n";
+            }
+            my $subplot_index_number = $subplot_number_rs->first->value;
+            push @subplot_index_numbers, $subplot_index_number;
+
             my $plants_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $plant_of_subplot_rel_cvterm_id })->search_related('subject', {'subject.type_id'=>$plant_cvterm_id});
             while (my $pp = $plants_of_subplot->next()){
                 push @{$subplots_plants_hash{$subplot_name}}, $pp->uniquename();
@@ -650,11 +686,11 @@ sub generate_and_cache_layout {
             while (my $t = $tissues_of_subplot->next()){
                 push @{$subplots_tissues_hash{$subplot_name}}, $t->uniquename();
             }
-            
         }
         if (scalar(@subplot_names)>0){
             $design_info{"subplot_names"}=\@subplot_names;
             $design_info{"subplot_ids"}=\@subplot_ids;
+            $design_info{"subplot_index_numbers"}=\@subplot_index_numbers;
             $design_info{"subplots_plant_names"}=\%subplots_plants_hash;
             $design_info{"subplots_tissue_sample_names"}=\%subplots_tissues_hash;
         }

@@ -93,11 +93,12 @@ sub search {
         my @brapi_observations;
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
+            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
                 observationDbId => qq|$_->{phenotype_id}|,
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimeStamp => $_->{timestamp},
+                observationTimeStamp => $obs_timestamp,
                 season => $obs_unit->{year},
                 collector => $_->{operator},
                 value => qq|$_->{value}|,

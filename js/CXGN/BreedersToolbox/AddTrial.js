@@ -295,6 +295,20 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    jQuery(document).on('click', '#create_trial_with_treatment_additional_treatment_buton', function(){
+        var count = jQuery('#create_trial_with_treatment_additional_count').val();
+        var new_count = parseInt(count) + 1;
+        var return_count = new_count + 4;
+        var html = '';
+        for (var i=0; i<new_count; i++){
+            var display_count = i + 5;
+            html = html + '<div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Subplot '+display_count+ 'Treatment Name: </label><div class="col-sm-5" ><input class="form-control" id="create_trial_with_treatment_name_input'+display_count+'" name="create_trial_with_treatment_name_input'+display_count+'" type="text" placeholder="Optional Treatment '+display_count+'"/></div></div>';
+        }
+        html = html + '<input type="hidden" id="create_trial_with_treatment_additional_count" value='+return_count+'><div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Add Another Treatment: </label><div class="col-sm-5" ><button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">+ Treatment</button></div></div>';
+        jQuery('#create_trial_with_treatment_additional_treatment').html(html);
+        return false;
+    });
+
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
     function generate_experimental_design() {
@@ -383,13 +397,14 @@ jQuery(document).ready(function ($) {
 
         var treatments = []
         if (design_type == 'splitplot'){
-            for(var i=1; i<5; i++){
-                var treatment_value = $('#create_trial_with_treatment_name_input'+i).val();
+            var count = jQuery('#create_trial_with_treatment_additional_count').val();
+            var int_count = parseInt(count);
+            for(var i=1; i<=int_count; i++){
+                var treatment_value = jQuery('#create_trial_with_treatment_name_input'+i).val();
                 if(treatment_value != ''){
                     treatments.push(treatment_value);
                 }
             }
-            //console.log(treatments);
             var num_plants_per_treatment = $('#num_plants_per_treatment').val();
             num_plants_per_plot = 0;
             if (num_plants_per_treatment){
@@ -634,8 +649,7 @@ jQuery(document).ready(function ($) {
                                                                 .style("stroke", strokes)
                                                                 .style("fill", colors); 
                                                                 
-                                                                cards.transition().duration(1000)
-                                                                    .style("fill", colors) ;                          
+                                                                cards.style("fill", colors) ;                          
 
                                                                 cards.select("title").text(function(d) { return d.plot_msg; }) ;
                                                                 
@@ -643,8 +657,8 @@ jQuery(document).ready(function ($) {
                                                                 //console.log('out');
                                                             });                                
                                                               
-                          cards.transition().duration(1000)
-                              .style("fill", colors) ;  
+                          
+                          cards.style("fill", colors) ;  
 
                           cards.select("title").text(function(d) { return d.plot_msg; }) ; 
                           
@@ -1267,13 +1281,12 @@ jQuery(document).ready(function ($) {
                 'add_project_trial_source': selectedTrials,
             },
             success: function (response) {
+                jQuery('#working_modal').modal("hide");
                 if (response.error) {
-                    jQuery('#working_modal').modal("hide");
                     alert(response.error);
                 } else {
                     //alert('Trial design saved');
                     refreshTrailJsTree(0);
-                    jQuery('#working_modal').modal("hide");
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
@@ -1287,9 +1300,9 @@ jQuery(document).ready(function ($) {
     }
 
     jQuery(document).on('click', '[name="create_trial_success_complete_button"]', function(){
-        alert('Trial was saved in the database');
         jQuery('#add_project_dialog').modal('hide');
-        location.reload();
+        window.location.href = '/breeders/trials';
+        return false;
     });
 
     jQuery('#new_trial_confirm_submit').click(function () {
@@ -1298,6 +1311,7 @@ jQuery(document).ready(function ($) {
 
     $('#redo_trial_layout_button').click(function () {
         generate_experimental_design();
+        return false;
     });
 
     function open_project_dialog() {
