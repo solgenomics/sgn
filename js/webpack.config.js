@@ -4,42 +4,42 @@ const filemap = require(path.resolve(__dirname,"./webpack-filemap-plugin.js"));
 const webpack = require("webpack");
 const exec = require('child_process').exec;
 
+const sourcePath = path.resolve(__dirname, "source/");
 
 module.exports = {
-    // context: __dirname,
     mode: "production",
     entry: (() => {
         var entries = {};
-        glob.sync(path.resolve(__dirname, "source/*.expose.js")).forEach(val => {
+        glob.sync(path.resolve(sourcePath, "*.expose.js")).forEach(val => {
             var key = val.match(/([^\/]*)\.expose\.js$/)[1];
             entries[key] = val;
         });
         return entries;
     })(),
     output: {
-        path: path.resolve(__dirname, "build"),
+        path: path.resolve(__dirname, "build/"),
         publicPath: '/js',
-        filename: '[name].js',
+        filename: '[name].min.js',
         library: ["jsMod", "[name]"],
-        sourceMapFilename: "[name].js.map",
         libraryTarget: "umd"
     },
     module: {
-        rules: [{
-                test: path.resolve(__dirname, 'legacy'),
-                use: {
-                    loader: path.resolve(__dirname,"./webpack-legacy-jsan-adaptor.js"),
-                }
-            },
+        rules: [
             {
                 test: /\.js$/,
                 exclude: /(node_modules|bower_components)/,
-                include: path.resolve(__dirname, "source/"),
+                include: sourcePath,
                 use: {
                     loader: 'babel-loader',
                     options: {
                         presets: ['@babel/preset-env']
                     }
+                }
+            },
+            {
+                test: path.resolve(__dirname, 'legacy/'),
+                use: {
+                    loader: path.resolve(__dirname,"./JSAN/adaptor-loader.js"),
                 }
             }
         ]
@@ -51,13 +51,13 @@ module.exports = {
                 default: false,
                 shared: {
                     minChunks: 2,
-                    test: path.resolve(__dirname, "source/"),
+                    test: sourcePath,
                     chunks: "initial",
                     minSize: 1
                 },
                 async: {
                     minChunks: 2,
-                    test: path.resolve(__dirname, "source/"),
+                    test: sourcePath,
                     chunks: "async",
                     minSize: 1
                 }
@@ -65,11 +65,5 @@ module.exports = {
         }
     },
     devtool: false,
-    plugins: [
-        new filemap(),
-        new webpack.SourceMapDevToolPlugin({})
-    ],
+    plugins: [new filemap()],
 };
-
-// console.log(module.exports.entry())
-//
