@@ -1,6 +1,12 @@
 const path = require('path');
 const fs = require('fs');
-const jsan_re = require(path.resolve(__dirname,"./webpack-legacy-jsan-adaptor.js")).jsan_re;
+const jsan_re = RegExp(
+  fs.readFileSync(
+    path.resolve(__dirname,"./JSAN/dependency.regex"), 
+    "utf8"
+  ).replace(/^[\s\n]+|[\s\n]+$/,""),
+  'g'
+);
 
 function path_inside(parent, dir) {
     var relative_path = path.relative(parent, dir);
@@ -43,21 +49,6 @@ FileMapPlugin.prototype.apply = function(compiler) {
     
     callback();
   });
-  // compiler.hooks.afterEmit.tap('AfterEmitPlugin', (compilation) => {
-  //     fs.readFile(path.resolve(__dirname, "build/mapping.json"),(err,content)=>{
-  //         var entries = JSON.parse(content);
-  //         var parsedFiles = [];
-  //         entries.keys().forEach(name=>{
-  //           entries[name].modern.forEach(file=>{
-  //             parsedFiles.push(new Promise((res,rej=>{
-  //               fs.readFile(path.resolve(__dirname, "build/", file),(err,code)=>{
-  // 
-  //               });
-  //             })));
-  //           })
-  //         });
-  //     });
-  // });
 };
 
 module.exports = FileMapPlugin;
