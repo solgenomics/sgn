@@ -35,7 +35,7 @@ for (my $i=0; $i<= scalar(@$stock_types); $i++) {
 my $stock_type_select = simple_selectbox_html(
   choices   => $stock_types,
   id        => "stock_type_select",
-  selected  => $accession_cvterm_id,
+  selected => $accession_cvterm_id
 );
 
 my $organism_select = simple_selectbox_html(
@@ -52,16 +52,16 @@ my $breeding_programs_select = simple_selectbox_html(
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
 
-  <div id="stock_search_form" class="form-horizontal well">
+  <div id="stock_search_form" class="well well-sm">
 
-    <&| /page/info_section.mas, title => 'Uniquename', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => 'Name Search', collapsible=>1, collapsed=>0 &>
 
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
       	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
           <div class="col-sm-9" >
-            <div class="form-group">
+            <div class="form-group form-group-sm">
               <div class="input-group">
                 <span class="input-group-btn" width="20%">
                   <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
@@ -76,23 +76,23 @@ my $breeding_programs_select = simple_selectbox_html(
                 </span>
               </div>
             </div>
+            <div class="form-group form-group-sm">
+              <label class="col-sm-3 control-label">Stock Type: </label>
+              <div class="col-sm-9" >
+                <% $stock_type_select %>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
     </&>
+
+    <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1 &>
+
     <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
 
     <div class="row">
-      <div class="col-sm-6">
-        <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Stock Type: </label>
-          <div class="col-sm-9" >
-            <% $stock_type_select %>
-          </div>
-        </div>
-      </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Organism: </label>
@@ -101,8 +101,6 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
-    </div>
-    <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Stock Owner: </label>
@@ -111,6 +109,9 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
+    </div>
+    <br/>
+    <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Organization: </label>
@@ -222,6 +223,8 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
+    </&> <!-- closes advanced search -->
+
     <center>
     <button class="btn btn-primary" id="submit_stock_search" />Search</button>
     </center>
@@ -293,12 +296,14 @@ my $breeding_programs_select = simple_selectbox_html(
 
 </&>
 
-<& /search/stocks_graphicalfiltering.mas &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Graphical Filtering on Phenotype Performance</h4>", info_section_subtitle => 'Graphically filter an accessions average performance for combinations of traits', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
 
 
 </div>
 
 <script>
+
+var stock_table;
 
 jQuery(document).ready(function () {
 
@@ -315,7 +320,12 @@ jQuery(document).ready(function () {
         source: '/ajax/stock/project_autocomplete',
      });
      jQuery("#any_name").autocomplete({
-        source: '/ajax/stock/stock_autocomplete',
+        source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
+     });
+     jQuery('#stock_type_select').change(function(){
+         jQuery("#any_name").autocomplete({
+            source: '/ajax/stock/stock_autocomplete?stock_type_id='+jQuery('#stock_type_select option:selected').val(),
+         });
      });
      jQuery("#location").autocomplete({
         source: '/ajax/stock/geolocation_autocomplete',
@@ -370,41 +380,10 @@ jQuery(document).ready(function () {
             jQuery('#stock_search_results_div').html(table_header_html);
         }
         stock_table.destroy();
-        _load_stock_search_results();
+        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
     });
 
-    var stock_table;
-    _load_stock_search_results();
-
-    function _load_stock_search_results(){
-        stock_table = jQuery('#stock_search_results').DataTable( {
-            'destroy' : true,
-            'searching' : false,
-            'ordering'  : false,
-            'processing': true,
-            'serverSide': true,
-            'lengthMenu': [10,20,50,100,1000,5000],
-            'ajax': { 'url':  '/ajax/search/stocks',
-                'data': function(d) {
-                  d.any_name  = jQuery('#any_name').val();
-                  d.any_name_matchtype = jQuery('#any_name_matchtype').val();
-                  d.stock_type   = jQuery('#stock_type_select').val();
-                  d.organism     = jQuery('#organism_select').val();
-                  d.person       = jQuery('#person').val();
-                  d.trait        = jQuery('#trait').val();
-                  d.minimum_trait_value        = jQuery('#minimum_trait_value').val();
-                  d.maximum_trait_value        = jQuery('#maximum_trait_value').val();
-                  d.project      = jQuery('#project').val();
-                  d.location     = jQuery('#location').val();
-                  d.year         = jQuery('#year').val();
-                  d.breeding_program = jQuery('#breeding_program').val();
-                  d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
-                  d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
-                  d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
-                }
-            }
-        });
-    }
+    _load_stock_search_results('accession', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
       var name_links = stock_table.column(0).data();
@@ -422,7 +401,8 @@ jQuery(document).ready(function () {
     });
 
    jQuery('#submit_stock_search').click( function() {
-        stock_table.search("stock_search_results").draw();
+        //stock_table.search("stock_search_results").draw();
+        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
    });
 
    jQuery('#stock_search_form').keypress( function( e ) {
@@ -444,7 +424,7 @@ jQuery(document).ready(function () {
                     minimal_info : 1,
                     any_name : jQuery('#any_name').val(),
                     any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                    stock_type : jQuery('#stock_type_select').val(),
+                    stock_type : jQuery('#stock_type_select option:selected').text(),
                     organism : jQuery('#organism_select').val(),
                     person : jQuery('#person').val(),
                     trait : jQuery('#trait').val(),
@@ -491,5 +471,36 @@ jQuery(document).ready(function () {
 
 
 });
+
+function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
+    console.log(stock_type);
+    stock_table = jQuery('#stock_search_results').DataTable({
+        'destroy' : true,
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url':  '/ajax/search/stocks',
+            'data': function(d) {
+              d.any_name  = jQuery('#any_name').val();
+              d.any_name_matchtype = jQuery('#any_name_matchtype').val();
+              d.stock_type   = stock_type;
+              d.organism     = jQuery('#organism_select').val();
+              d.person       = jQuery('#person').val();
+              d.trait        = jQuery('#trait').val();
+              d.minimum_trait_value        = jQuery('#minimum_trait_value').val();
+              d.maximum_trait_value        = jQuery('#maximum_trait_value').val();
+              d.project      = jQuery('#project').val();
+              d.location     = jQuery('#location').val();
+              d.year         = jQuery('#year').val();
+              d.breeding_program = jQuery('#breeding_program').val();
+              d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
+              d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
+              d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
+            }
+        }
+    });
+}
 
 </script>

@@ -143,8 +143,8 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
     $self->combine_trait_data($c); 
     $self->build_model_combined_trials_trait($c);
     
-    $c->controller('solGS::Files')->rrblup_gebvs_file($c);    
-    my $gebv_file = $c->stash->{rrblup_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);    
+    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
    
     if ( -s $gebv_file ) 
     {
@@ -289,7 +289,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->controller('solGS::solGS')->trait_phenotype_stat($c);    
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller('solGS::solGS')->model_accuracy($c);
-    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->blups_file($c);
     $c->controller('solGS::solGS')->download_urls($c);
     $c->controller('solGS::Files')->marker_effects_file($c);
@@ -313,9 +313,9 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
         
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   
   
-    if ($selection_pop_id =~ /uploaded/) 
+    if ($selection_pop_id =~ /list/) 
     {
-	$c->controller('solGS::solGS')->uploaded_population_summary($c, $selection_pop_id);
+	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
@@ -341,8 +341,8 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     $c->stash->{protocol} = $protocol;
     
     my $identifier    = $model_id . '_' . $selection_pop_id;
-    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-    my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+    my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
     my @stock_rows = read_file($gebvs_file);
     $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
@@ -731,7 +731,7 @@ sub combined_pops_summary {
 	$markers_no = scalar(split ('\t', $unfiltered_geno_rows[0])) - 1;	
     }
 
-    my $stocks_no   =  scalar(@unfiltered_geno_rows) - 1;
+    my $stocks_no   =  $self->count_combined_trials_members($c, $combo_pops_id);
     my $training_pop = "Training population $combo_pops_id";
     
     my $protocol = $c->config->{default_genotyping_protocol};
@@ -756,18 +756,22 @@ sub cache_combined_pops_data {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
-    my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
-                             file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
-                             stash_key => 'trait_combined_pheno_file'
-    };
-      
-    my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
-                            file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
-                            stash_key => 'trait_combined_geno_file'
-    };
-    
-    $c->controller('solGS::Files')->cache_file($c, $cache_pheno_data);
-    $c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
+
+    if ($trait_abbr)
+    {
+	my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
+				 file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
+				 stash_key => 'trait_combined_pheno_file'
+	};
+	
+	my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
+				file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
+				stash_key => 'trait_combined_geno_file'
+	};
+	
+	$c->controller('solGS::Files')->cache_file($c, $cache_pheno_data);
+	$c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
+    }
 
 }
 
@@ -777,8 +781,8 @@ sub build_model_combined_trials_trait {
   
     $c->stash->{data_set_type} = 'combined populations';
   
-    $c->controller('solGS::Files')->rrblup_gebvs_file($c);
-    my $gebv_file = $c->stash->{rrblup_gebvs_file};
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
     unless  ( -s $gebv_file ) 
     {   
@@ -804,21 +808,20 @@ sub predict_selection_pop_combined_pops_model {
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $identifier = $combo_pops_id . '_' . $prediction_pop_id;
-    $c->controller('solGS::Files')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
         
-    my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
+    my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
      
-    if (!-s $prediction_pop_gebvs_file)
+    if (!-s $rrblup_selection_gebvs_file)
     {    
 	$self->cache_combined_pops_data($c);
  
-	$c->controller('solGS::Files')->prediction_population_file($c, $prediction_pop_id);
+	$c->controller('solGS::Files')->selection_population_file($c, $prediction_pop_id);
   
 	$c->controller('solGS::solGS')->get_rrblup_output($c); 
     }
 
 }
-
 
 
 sub combine_trait_data {
@@ -958,14 +961,16 @@ sub combined_trials_desc {
     my @traits_list = read_file($traits_list_file);
     my $traits_no   = scalar(@traits_list) - 1;
 
-    my $stock_no  = scalar(@geno_lines) - 1;
+    #my $stock_no  = scalar(@geno_lines) - 1;
 
     my $training_pop = "Training population $combo_pops_id";
     
     my $protocol = $c->config->{default_genotyping_protocol};
     $protocol = 'N/A' if !$protocol;
 
-    $c->stash(stocks_no    => $stock_no,
+    my $stocks_no = $self->count_combined_trials_members($c, $combo_pops_id);
+   
+    $c->stash(stocks_no    => $stocks_no,
 	      markers_no   => $markers_no,
               traits_no    => $traits_no,
               project_desc => $desc,
@@ -973,6 +978,51 @@ sub combined_trials_desc {
               owner        => $projects_owners,
 	      protocol     => $protocol,
         );
+}
+
+
+sub count_combined_trials_members {
+    my ($self, $c, $combo_pops_id) = @_;
+
+    $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id if $combo_pops_id;        
+    
+    my $genos_cnt;
+    
+    $self->cache_combined_pops_data($c);   
+    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+
+    my $size = -s $combined_pops_geno_file;
+
+    if (-s $combined_pops_geno_file)
+    {
+	my @geno_data = read_file($combined_pops_geno_file);
+	$genos_cnt = scalar(@geno_data) - 1;	
+    }
+    else
+    {
+	$self->get_combined_pops_arrayref($c);
+	my $pops_ids = $c->stash->{arrayref_combined_pops_ids};
+	
+	$self->multi_pops_geno_files($c, $pops_ids);
+	my $geno_files = $c->stash->{multi_pops_geno_files};
+
+	my @geno_files = split(/\t/, $geno_files);
+
+	my @genotypes;
+	foreach my $geno_file (@geno_files) {
+	    my $geno_data = read_file($geno_file);
+	    my @genos = map{(split(/\t/), $_)[0]} split(/\n/, $geno_data);
+	    shift(@genos);
+	    push @genotypes, @genos;	
+	}
+	
+	$genos_cnt = scalar(uniq(@genotypes));
+	 print STDERR "\ncount: $genos_cnt\n";	
+    }
+  
+    return $genos_cnt;
+    
 }
 
 

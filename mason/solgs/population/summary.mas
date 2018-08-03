@@ -24,7 +24,7 @@ $markers_no
 $traits_no
 $trait_name => ''
 $protocol
-$uploaded_reference => ''
+$list_reference => ''
 $owner => ''
 $combined_populations => ''
 

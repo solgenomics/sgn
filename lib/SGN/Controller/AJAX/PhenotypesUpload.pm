@@ -310,8 +310,8 @@ sub _prep_upload {
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
-            @plots = @{$parsed_file->{'plots'}};
-            @traits = @{$parsed_file->{'traits'}};
+            @plots = @{$parsed_file->{'units'}};
+            @traits = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }

@@ -136,7 +136,7 @@ sub germplasm_search {
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'},
+            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} + 0,
             countryOfOriginCode=>$_->{'country of origin'},
             typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},
@@ -203,7 +203,7 @@ sub germplasm_detail {
         commonCropName=>$result->[0]->{common_name},
         instituteCode=>$result->[0]->{'institute code'},
         instituteName=>$result->[0]->{'institute name'},
-        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'},
+        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
         countryOfOriginCode=>$result->[0]->{'country of origin'},
         typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
         genus=>$result->[0]->{genus},
@@ -229,7 +229,7 @@ sub germplasm_pedigree {
     if ($notation) {
         push @$status, { 'info' => 'Notation not yet implemented. Returns a simple parent1/parent2 string.' };
         if ($notation ne 'purdy') {
-            push @$status, { 'error' => 'Unsupported notation code. Allowed notation: purdy' };
+            push @$status, { 'error' => "Unsupported notation code '$notation'. Allowed notation: 'purdy'" };
         }
     }
 
@@ -253,20 +253,23 @@ sub germplasm_pedigree {
         my $cross_year = $cross_info ? $cross_info->[3] : '';
         my $cross_type = $cross_info ? $cross_info->[2] : '';
 
-        my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
-        #print STDERR Dumper $progenies;
         my @siblings;
-        foreach (@$progenies){
-            if ($_->[5] ne $uniquename){
-                push @siblings, {
-                    germplasmDbId => $_->[4],
-                    defaultDisplayName => $_->[5]
-                };
+        if ($female_name || $male_name){
+            my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
+            #print STDERR Dumper $progenies;
+            foreach (@$progenies){
+                if ($_->[5] ne $uniquename){
+                    my $germplasm_id = $_->[4];
+                    push @siblings, {
+                        germplasmDbId => qq|$germplasm_id|,
+                        defaultDisplayName => $_->[5]
+                    };
+                }
             }
         }
 
         %result = (
-            germplasmDbId=>$stock_id,
+            germplasmDbId=>qq|$stock_id|,
             defaultDisplayName=>$uniquename,
             pedigree=>$pedigree_string,
             crossingPlan=>$cross_type,
@@ -382,7 +385,7 @@ sub germplasm_markerprofiles {
     }
     my $total_count = scalar(@marker_profiles);
     my %result = (
-        germplasmDbId=>$stock_id,
+        germplasmDbId=>qq|$stock_id|,
         markerprofileDbIds=>\@marker_profiles
     );
     my @data_files;

@@ -126,7 +126,7 @@ sub get_owner_hash_lookup {
         $where_clause = "WHERE stock_id IN ($stock_id_sql)";
     }
     my $schema = $self->get_schema();
-    my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) $where_clause ORDER BY sp_person_id;";
+    my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) $where_clause GROUP BY (stock_id, sp_person_id, username, first_name, last_name) ORDER BY sp_person_id;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;

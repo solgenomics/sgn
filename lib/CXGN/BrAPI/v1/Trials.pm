@@ -102,10 +102,12 @@ sub trial_details {
 					locationDbId=>qq|$_->location_id|
 				};
 			}
+            my $folder_id = $folder->folder_id;
+            my $breeding_program_id = $folder->breeding_program->project_id();
 			my %result = (
-				trialDbId=>qq|$folder->folder_id|,
+				trialDbId=>qq|$folder_id|,
 				trialName=>$folder->name,
-				programDbId=>qq|$folder->breeding_program->project_id()|,
+				programDbId=>qq|$breeding_program_id|,
 				programName=>$folder->breeding_program->name(),
 				startDate=>'',
 				endDate=>'',
