@@ -105,6 +105,28 @@
     </div>
 </div>
 
+<div class="modal fade" id="progenies_saved_dialog_message" name="progenies_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="progeniesSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="progeniesSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The progenies were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_progenies_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="update_crossinfo_dialog" name="update_crossinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="updateCrossinfoDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -192,7 +214,7 @@
                         </tbody>
                     </table>
                     <b>
-                      Required columns:
+                        Required columns:
                     </b>
                     <br>
                         <b>-cross_name</b> (must exist in the database, must not have duplicate cross name in the upload file)
@@ -213,3 +235,127 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="cross_info_saved_dialog_message" name="cross_info_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="crossInfoSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="crossInfoSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The cross information was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_cross_info_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("#upload_cross_info").click(function(){
+
+        jQuery("#update_crossinfo_spreadsheet_format").click(function(){
+            jQuery("#update_crossinfo_spreadsheet_info_dialog").modal("show");
+        });
+
+        jQuery("#update_crossinfo_dialog").modal("show");
+    });
+
+    jQuery("#update_crossinfo_submit").click(function(){
+        var uploadFile = jQuery("#crossinfo_upload_file").val();
+        jQuery('#upload_crossinfo_form').attr("action", "/ajax/cross/upload_info");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_crossinfo_form").submit();
+        jQuery("#update_crossinfo_dialog").modal("hide");
+    });
+
+    jQuery('#upload_crossinfo_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string){
+                jQuery("#upload_crossinfo_error_display tbody").html('');
+                jQuery("#upload_crossinfo_error_display tbody").append(response.error_string);
+                jQuery("#upload_crossinfo_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#cross_info_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_cross_info_saved_dialog").click(function(){
+        location.reload();
+    });
+
+    jQuery("#upload_progenies_existing_crosses").click(function(){
+
+        jQuery("#update_progenies_spreadsheet_format_info").click(function(){
+            jQuery("#update_progenies_spreadsheet_info_dialog").modal("show");
+        });
+
+        jQuery("#update_progenies_crosses_dialog").modal("show");
+    });
+
+    jQuery("#update_progenies_submit").click(function(){
+        var uploadFile = jQuery("#progenies_upload_file").val();
+        jQuery('#upload_progenies_form').attr("action", "/ajax/cross/upload_progenies");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_progenies_form").submit();
+        jQuery("#update_progenies_crosses_dialog").modal("hide");
+    });
+
+    jQuery('#upload_progenies_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_progenies_error_display tbody").html('');
+                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
+                jQuery("#upload_progenies_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#progenies_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_progenies_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>

@@ -1625,10 +1625,7 @@ sub _delete_field_layout_experiment {
 
     #print STDERR Dumper \@all_stock_ids;
     my $stock_delete_rs = $self->bcs_schema->resultset('Stock::Stock')->search({stock_id=>{'-in'=>\@all_stock_ids}});
-    while (my $r = $stock_delete_rs->next){
-        print STDERR "Deleting associated ".$r->uniquename." (".$r->stock_id.")\n";
-        $r->delete;
-    }
+    $stock_delete_rs->delete();
 
     my $has_plants = $self->has_plant_entries();
     my $has_subplots = $self->has_subplot_entries();
