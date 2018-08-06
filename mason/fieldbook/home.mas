@@ -54,7 +54,7 @@ foreach my $file (@file_metadata) {
   foreach my $trait_ref (@trait_files) {
     my @trait_array = @{$trait_ref};
     my $trait_file_name = $trait_array[0];
-    my $trait_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download File</a>] |   [<a id="delete_fieldbook_layout_link" href="/fieldbook/delete_file/'.$trait_array[1].'">Delete File</a>]';
+    my $trait_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download File</a>] |   [<a id="delete_trait_file_link" href="/fieldbook/delete_file/'.$trait_array[1].'">Delete File</a>]';
     print $trait_array[0]."$trait_file_download<br>";
     #print $trial_array[4]."</br>";
   }
