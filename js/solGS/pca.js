@@ -14,7 +14,7 @@ jQuery(document).ready( function() {
     
     var url = window.location.pathname;
     
-    if (url.match(/pca\/analysis/) != null) {
+    if (url.match(/pca\/analysis/)) {
     
         var list = new CXGN.List();
         
@@ -47,7 +47,7 @@ function checkPcaResult () {
 
     var listId = jQuery('#list_id').val();
   
-    var popId = solGS.getPopulationDetails();
+    var popDetails = solGS.getPopulationDetails();
     
     var comboPopsId = jQuery('#combo_pops_id').val();
     console.log('combo ' + comboPopsId)
@@ -56,8 +56,8 @@ function checkPcaResult () {
         dataType: 'json',
 	data: {'list_id': listId,
 	       'combo_pops_id' : comboPopsId,
-	       'training_pop_id' : popId.training_pop_id,
-	       'selection_pop_id': popId.selection_pop_id},
+	       'training_pop_id' : popDetails.training_pop_id,
+	       'selection_pop_id': popdetails.selection_pop_id},
         url: '/pca/check/result/',
         success: function(response) {
             if (response.result) {
@@ -156,11 +156,11 @@ function loadPcaGenotypesList(listId) {
 
 function pcaResult () {
 
-    var popId  = solGS.getPopulationDetails();
+    var popDetails  = solGS.getPopulationDetails();
     var listId = getListId();
  
     if (listId) {
-	popId['training_pop_id'] = 'list_' + listId;
+	popDetails['training_pop_id'] = 'list_' + listId;
     }
   
     var listName;
@@ -172,7 +172,7 @@ function pcaResult () {
 	listType = genoList.listType;
     }
     
-    if (listId || popId.training_pop_id || popId.selection_pop_id) {
+    if (listId || popDetails.training_pop_id || popDetails.selection_pop_id) {
 	jQuery("#pca_message").html("Running PCA... please wait...");
 	jQuery("#run_pca").hide();
     }  
@@ -180,9 +180,9 @@ function pcaResult () {
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'training_pop_id': popId.training_pop_id,
-	       'selection_pop_id': popId.selection_pop_id,
-	       'combo_pops_id': popId.combo_pops_id,
+        data: {'training_pop_id': popDetails.training_pop_id,
+	       'selection_pop_id': popDetails.selection_pop_id,
+	       'combo_pops_id': popDetails.combo_pops_id,
 	       'list_id': listId, 
 	       'list_name': listName, 
 	       'list_type': listType,

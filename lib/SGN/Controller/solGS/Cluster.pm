@@ -51,7 +51,8 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $cluster_type     = $c->req->param('cluster_type');
     my $referer          = $c->req->referer;
     my $file_id;
- 
+
+    print STDERR "\n list id: $list_id -  cluster type: $cluster_type\n";
     if ($referer =~ /solgs\/selection\//)
     {
 	if ($training_pop_id && $selection_pop_id) 
@@ -111,15 +112,24 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	$cluster_result_file = $c->stash->{hierarchical_result_file};	
     }
     
-    $c->stash->{rest}{result} = undef;
+    my $ret->{ret} = undef;
    
     if (-s $cluster_result_file && $file_id =~ /\d+/) 
     {
-	$c->stash->{rest}{result} = 1;
-	$c->stash->{rest}{list_id} = $list_id;
-	$c->stash->{rest}{combo_pops_id} = $combo_pops_id;
-	$c->stash->{rest}{cluster_type} = $cluster_type;    
-    }  
+	$ret->{result} = 1;
+	$ret->{list_id} = $list_id;
+	$ret->{cluster_type} = $cluster_type;
+	$ret->{combo_pops_id} = $combo_pops_id;
+	# $c->stash->{rest}{result} = 1;
+	# $c->stash->{rest}{list_id} = $list_id;
+	# $c->stash->{rest}{combo_pops_id} = $combo_pops_id;
+	# $c->stash->{rest}{cluster_type} = $cluster_type;    
+    }
+
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
     
 }
 
@@ -352,6 +362,23 @@ sub combined_cluster_trials_data_file {
     
 }
 
+
+sub kcluster_result_file {
+    my ($self, $c) = @_;
+    
+    my $file_id = $c->stash->{file_id};
+    my $pca_dir = $c->stash->{cluster_cache_dir};
+
+    $c->stash->{cache_dir} = $pca_dir;
+
+    my $cache_data = {key       => "kcluster_result_${file_id}",
+                      file      => "kcluster_result_${file_id}",,
+                      stash_key => 'kcluster_result_file'
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
 
 sub run_cluster {
     my ($self, $c) = @_;
