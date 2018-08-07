@@ -870,7 +870,7 @@ sub _get_alpha_lattice_design {
 
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
-    print STDERR "block size = $block_size\n";
+    #print STDERR "block size = $block_size\n";
     if ($block_size < 3) {
       die "Block size must be greater than 2 for alpha lattice design\n";
     }
@@ -1378,9 +1378,9 @@ sub _get_madii_design {
 
 #=comment
 
-  print STDERR join "\n", "@stock_list\n";
+  #print STDERR join "\n", "@stock_list\n";
 
-  print STDERR join "\n", "$number_of_rows\n";
+  #print STDERR join "\n", "$number_of_rows\n";
 
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
@@ -2031,14 +2031,14 @@ sub _convert_plot_numbers {
         }
         
         my $cheking = ($rep_numbers[$i] * $rep_plot_count) / $rep_plot_count;
-        print STDERR Dumper($cheking);
+        #print STDERR Dumper($cheking);
         my $new_plot;
         if ($cheking != 1){
             if (length($first_plot_number) == 3 ){
                 $new_plot = $cheking * 100;
                 $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
             }
-            print STDERR Dumper($new_plot);
+            #print STDERR Dumper($new_plot);
             if (length($first_plot_number) == 4 ){
                 $new_plot = $cheking * 1000;
                 $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
