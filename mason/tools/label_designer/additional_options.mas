@@ -1,0 +1,17 @@
+<div class="col-md-4">
+    <center>
+    <br>
+        <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
+    </center>
+</div>
+<div class="col-md-4">
+    <center>
+        <label>Save label design:</label>
+        <div class="input-group" id="save_design_div">
+            <input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input>
+            <span class="input-group-btn">
+                <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
+            </span>
+        </div>
+    </center>
+</div>

@@ -1,0 +1,67 @@
+
+
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.LabelDesigner', 'CXGN.BreederSearch', 'bootstrap-select_min'] &>
+<& /page/page_title.mas, title=>"Label Designer" &>
+
+<&| /util/workflow.mas , id=> "label_designer_workflow"&>
+
+    <&| /util/workflow.mas:step, title=>"Select Data Source" &>
+        /*<& /breeders_toolbox/select_datasource.mas &>*/
+        <div class="col-md-2">
+            <label><b>Data Source:</b></label>
+        </div>
+        <div class="col-md-4" id="data_source">
+        </div>
+        <div class="col-md-2">
+            <label>Label For Every:</label>
+        </div>
+        <div class="col-md-4">
+            <div id="label_designer_data_level_select_div"></div>
+        </div>
+        <br>
+        <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+    </&>
+    <&| /util/workflow.mas:step, title=>"Start Designing" &>
+        <& /breeders_toolbox/start_designing.mas &>
+        <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+    </&>
+    <&| /util/workflow.mas:step, title=>"Drag and Drop" &>
+        <& /breeders_toolbox/drag_and_drop.mas &>
+        <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+    </&>
+    <&| /util/workflow.mas:step, title=>"Additional Options" &>
+        /*<& /breeders_toolbox/additional_options.mas &>*/
+        <div class="col-md-4">
+            <center>
+            <br>
+                <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
+            </center>
+        </div>
+        <div class="col-md-4">
+            <center>
+                <label>Save label design:</label>
+                <div class="input-group" id="save_design_div">
+                    <input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
+                    </span>
+                </div>
+            </center>
+        </div>
+        <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+    </&>
+    <&| /util/workflow.mas:step, title=>"Download Labels" &>
+      <div class="col-md-4">
+          <center>
+              <br>
+              <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none;">Download pdf</button>
+              <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none;">Download zpl file</button>
+          </center>
+          &nbsp
+          &nbsp
+      </div>
+      </&>
+</&>
+
+<& /breeders_toolbox/label_designer_modals.mas &>

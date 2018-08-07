@@ -1,0 +1,12 @@
+<div class="col-md-2">
+    <label><b>Data Source:</b></label>
+</div>
+<div class="col-md-4" id="data_source">
+</div>
+<div class="col-md-2">
+    <label>Label For Every:</label>
+</div>
+<div class="col-md-4">
+    <div id="label_designer_data_level_select_div"></div>
+</div>
+<br>

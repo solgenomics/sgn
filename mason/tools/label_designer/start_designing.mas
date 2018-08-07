@@ -1,0 +1,62 @@
+<div class="col-md-2" id="design_label" style="display:none;">
+    <label><i>Load Saved Design (Optional):</i></label>
+</div>
+<div class="col-md-4" id="design_list" style="display:none;">
+</div>
+
+<p>OR</p>
+
+<div class="col-md-12" style="margin-bottom:20px;">
+    <div class="col-md-2">
+        <label>Page Format:</label>
+    </div>
+    <div class="col-md-4">
+        <select class="form-control" id="page_format" ></select>
+    </div>
+    <div class="col-md-2">
+        <label>Label Format:</label>
+    </div>
+    <div class="col-md-4">
+        <select class="form-control" id="label_format"></select>
+    </div>
+</div>
+<div class="col-md-12" id="d3-custom-dimensions-div" style="display:none;">
+    <div class="col-md-6" id="d3-page-custom-dimensions-div" style="visibility:hidden">
+        <div class="col-md-12">
+            <div class="col-md-6">
+                <center>
+                    <label>Page Width:</label><br>
+                    <input class="form-control" placeholder="In pixels" type="number" id="page_width" style="max-width: 100%;">
+                </center>
+            </div>
+            <div class="col-md-6">
+                <center>
+                    <label>Page Height:</label><br>
+                    <input class="form-control" placeholder="In pixels" type="number" id="page_height" style="max-width: 100%;">
+                </center>
+            </div>
+        </div>
+        <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
+    </div>
+    <div class="col-md-6" id="d3-label-custom-dimensions-div" style="visibility:hidden">
+        <div class="col-md-12">
+            <div class="col-md-5">
+                <center>
+                    <label>Label Width:</label><br>
+                    <input class="form-control" placeholder="In pixels" type="number" id="label_width" style="max-width: 100%;">
+                </center>
+            </div>
+            <div class="col-md-5">
+                <center>
+                    <label>Label Height:</label><br>
+                    <input class="form-control" placeholder="In pixels" type="number" id="label_height" style="max-width: 100%;">
+                </center>
+            </div>
+            <div class="col-md-2">
+                <br>
+                <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
+            </div>
+        </div>
+        <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
+    </div>
+</div>
