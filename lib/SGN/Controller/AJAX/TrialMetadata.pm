@@ -822,8 +822,8 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $upload = $c->req->upload('trial_upload_plants_with_number_of_plants_file');
-    my $inherits_plot_treatments = $c->req->param('upload_plants_with_number_of_plants_inherit_treatments');
-    my $plants_per_plot = $c->req->param('upload_plants_with_number_of_plants_number');
+    my $inherits_plot_treatments = $c->req->param('upload_plants_with_num_plants_inherit_treatments');
+    my $plants_per_plot = $c->req->param('upload_plants_with_num_plants_per_plot_number');
 
     my $subdirectory = "trial_plants_upload";
     my $upload_original_name = $upload->filename();
