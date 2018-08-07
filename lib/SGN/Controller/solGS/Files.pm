@@ -185,18 +185,27 @@ sub phenotype_file_name {
 }
 
 
-sub modeling_error_file {
+sub analysis_error_file {
     my ($self, $c) = @_;
    
     my $model_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id};
     my $trait_id = $c->stash->{trait_id};
+    my $type     = $c->stash->{analysis_type};
 
-    my $name = "modeling_error_file_${trait_id}_${model_id}";
-    
+    my $name;
+ 
+    if ($trait_id) 
+    {    
+	$name = "${type}_error_file_${trait_id}_${model_id}";
+    }
+    else
+    {
+	$name = "${type}_error_${model_id}"
+    }
   
     my $cache_data = { key       => $name, 
 		       file      => $name . '.txt',
-		       stash_key => 'modeling_error_file',
+		       stash_key => "${type}_error_file",
     };
     
     $self->cache_file($c, $cache_data);
@@ -211,7 +220,16 @@ sub analysis_report_file {
     my $trait_id = $c->stash->{trait_id};
     my $type     = $c->stash->{analysis_type};
     
-    my $name = "${type}_report_${trait_id}_${model_id}";
+    my $name;
+
+    if ($trait_id) 
+    {    
+	$name = "${type}_report_${trait_id}_${model_id}";
+    }
+    else
+    {
+	$name = "${type}_report_${model_id}"
+    }
     
   
     my $cache_data = { key       => $name, 

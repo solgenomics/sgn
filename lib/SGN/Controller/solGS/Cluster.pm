@@ -112,7 +112,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	$cluster_result_file = $c->stash->{hierarchical_result_file};	
     }
     
-    my $ret->{ret} = undef;
+    my $ret->{result} = undef;
    
     if (-s $cluster_result_file && $file_id =~ /\d+/) 
     {
@@ -147,6 +147,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
     
     my $cluster_type = $c->req->param('cluster_type');
     my $referer      = $c->req->referer;
+
+    $c->stash->{cluster_type} = $cluster_type;
     
     my $pop_id;
     my $file_id;
@@ -207,13 +209,13 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	$cluster_result_file = $c->stash->{hierarchical_result_file};
     }
 
-    $c->stash->{rest}{status} = 'Cluster analysis failed.';
+    my $ret->{status} = 'Cluster analysis failed.';
    
     if( !-s $cluster_result_file)
     {	
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{	  
-	    $c->stash->{rest}{status} = 'There is no genotype data. AbortedCluster analysis.';                
+	    $ret->{status} = 'There is no genotype data. Aborted Cluster analysis.';                
 	}
 	else 
 	{	    
@@ -235,12 +237,12 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
     if ($cluster_result)
     {
-        $c->stash->{rest}{cluster} = $cluster_result;
-        $c->stash->{rest}{status} = 'success';  
-	$c->stash->{rest}{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
-	$c->stash->{rest}{trials_names} = $c->stash->{trials_names};
-	$c->stash->{rest}{output_link}  = $output_link;
-    }    
+        $ret->{cluster} = $cluster_result;
+        $ret->{status} = 'success';  
+	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
+	#$ret->{trials_names} = $c->stash->{trials_names};
+	$ret->{output_link}  = $output_link;
+    }   
 
 }
 
@@ -263,10 +265,10 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 
     my $geno_file = $c->stash->{genotype_file};
 
-    $c->stash->{rest}{status} = 'failed';
+    my $ret->{status} = 'failed';
     if (-s $geno_file ) 
     {
-        $c->stash->{rest}{status} = 'success';
+        $ret->{status} = 'success';
     }
                
 }
@@ -317,10 +319,12 @@ sub cluster_list_genotype_data {
     }	   
     else
     {
-	if ($list_type eq 'accessions') 
+	if ($list_type eq 'accessions')
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
 	    $c->stash->{genotype_file} = $c->stash->{genotypes_list_genotype_file};
+
+	    print STDERR "\ncreating genotype data  for $list_type\n";
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
@@ -367,18 +371,108 @@ sub kcluster_result_file {
     my ($self, $c) = @_;
     
     my $file_id = $c->stash->{file_id};
-    my $pca_dir = $c->stash->{cluster_cache_dir};
+    my $cluster_dir = $c->stash->{cluster_cache_dir};
 
-    $c->stash->{cache_dir} = $pca_dir;
+    $c->stash->{cache_dir} = $cluster_dir;
 
     my $cache_data = {key       => "kcluster_result_${file_id}",
-                      file      => "kcluster_result_${file_id}",,
+                      file      => "kcluster_result_${file_id}.txt",
                       stash_key => 'kcluster_result_file'
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
+
+
+sub hierarchical_result_file {
+    my ($self, $c) = @_;
+    
+    my $file_id = $c->stash->{file_id};
+    my $cluster_dir = $c->stash->{cluster_cache_dir};
+
+    $c->stash->{cache_dir} = $cluster_dir;
+
+    my $cache_data = {key       => "hierarchical_result_${file_id}",
+                      file      => "hierarchical_result_${file_id}.txt",
+                      stash_key => 'hierarchical_result_file'
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub cluster_output_files {
+    my ($self, $c) = @_;
+
+    my $file_id = $c->stash->{file_id};
+    my $cluster_type = $c->stash->{cluster_type};
+
+    my $result_file;
+
+    if ($cluster_type =~ 'k-means')	
+    {
+	$self->kcluster_result_file($c);
+	$result_file = $c->stash->{kcluster_result_file};
+    }
+    else
+    {
+	$self->hierarchical_result_file($c);
+	$result_file = $c->stash->{hierarchical_result_file};
+    }
+
+    $c->stash->{analysis_type} = $cluster_type;
+    $c->stash->{pop_id} = $file_id;
+    $c->controller('solGS::Files')->analysis_report_file($c);
+    my $analysis_report_file = $c->{stash}->{"${cluster_type}_report_file"};
+
+    $c->controller('solGS::Files')->analysis_error_file($c);
+    my $analysis_error_file = $c->{stash}->{"${cluster_type}_error_file"};
+    
+    my $file_list = join ("\t",
+                          $result_file,
+			  $analysis_report_file,
+			  $analysis_error_file
+	);
+     
+    
+    my $tmp_dir = $c->stash->{cluster_temp_dir};
+    my $name = "cluster_output_files_${file_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
+    write_file($tempfile, $file_list);
+    
+    $c->stash->{cluster_output_files} = $tempfile;
+
+}
+
+
+sub cluster_input_files {
+    my ($self, $c) = @_;
+          
+    my $file_id = $c->stash->{file_id};
+    my $tmp_dir = $c->stash->{cluster_temp_dir};
+    
+    my $name     = "cluster_input_files_${file_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+
+    my $files;
+
+    if ($c->stash->{genotype_files_list}) 
+    {
+	$files = join("\t", @{$c->stash->{genotype_files_list}});			      
+    }
+    else 
+    {
+	$files = $c->stash->{genotype_file};
+    }
+    
+    write_file($tempfile, $files);
+    
+    $c->stash->{cluster_input_files} = $tempfile;
+
+}
+
 
 sub run_cluster {
     my ($self, $c) = @_;
@@ -408,7 +502,8 @@ sub run_cluster {
 	$c->stash->{r_temp_file}  = "hierarchical-${file_id}";
 	$c->stash->{r_script}     = 'R/solGS/hierarchical.r';	
     }
-    
+
+    print STDERR "\nrun_cluster: input: $input_file -- output: $output_file\n";
     $c->controller("solGS::solGS")->run_r_script($c);
     
 }

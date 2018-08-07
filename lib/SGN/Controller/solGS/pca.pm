@@ -365,7 +365,7 @@ sub pca_scores_file {
     $c->stash->{cache_dir} = $pca_dir;
 
     my $cache_data = {key       => "pca_scores_${file_id}",
-                      file      => "pca_scores_${file_id}",,
+                      file      => "pca_scores_${file_id}.txt",
                       stash_key => 'pca_scores_file'
     };
 
@@ -383,7 +383,7 @@ sub pca_variance_file {
     $c->stash->{cache_dir} = $pca_dir;
 
     my $cache_data = {key       => "pca_variance_${file_id}",
-                      file      => "pca_variance_${file_id}",,
+                      file      => "pca_variance_${file_id}.txt",
                       stash_key => 'pca_variance_file'
     };
 
@@ -401,7 +401,7 @@ sub pca_loadings_file {
     $c->stash->{cache_dir} = $pca_dir;
 
     my $cache_data = {key       => "pca_loadings_${file_id}",
-                      file      => "pca_loadings_${file_id}",,
+                      file      => "pca_loadings_${file_id}.txt",
                       stash_key => 'pca_loadings_file'
     };
 

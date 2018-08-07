@@ -50,14 +50,14 @@ function checkPcaResult () {
     var popDetails = solGS.getPopulationDetails();
     
     var comboPopsId = jQuery('#combo_pops_id').val();
-    console.log('combo ' + comboPopsId)
+    console.log('combo ' + comboPopsId + ' listId: ' + listId)
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
 	data: {'list_id': listId,
 	       'combo_pops_id' : comboPopsId,
 	       'training_pop_id' : popDetails.training_pop_id,
-	       'selection_pop_id': popdetails.selection_pop_id},
+	       'selection_pop_id': popDetails.selection_pop_id},
         url: '/pca/check/result/',
         success: function(response) {
             if (response.result) {
