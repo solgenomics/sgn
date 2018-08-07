@@ -64,6 +64,6 @@ module.exports = {
             }
         }
     },
-    devtool: false,
+    devtool: "source-map",
     plugins: [new filemap()],
 };
