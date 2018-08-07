@@ -188,7 +188,7 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     $c->res->body($contents);
 }
 
-sub delete_fieldbook_layout : Path('/fieldbook/delete_FB_layout/') Args(1) {
+sub delete_file : Path('/fieldbook/delete_file/') Args(1) {
      my $self  =shift;
      my $c = shift;
      my $json = new JSON;
@@ -202,10 +202,10 @@ sub delete_fieldbook_layout : Path('/fieldbook/delete_FB_layout/') Args(1) {
      my $dbh = $c->dbc->dbh();
      my $h_nd_exp_md_files = $dbh->prepare("delete from phenome.nd_experiment_md_files where file_id=?;");
      $h_nd_exp_md_files->execute($decoded);
-     
+
      my $h_md_files = $dbh->prepare("delete from metadata.md_files where file_id=?;");
      $h_md_files->execute($decoded);
-     print STDERR "Layout deleted successfully.\n";
+     print STDERR "File successfully deleted.\n";
 	$c->response->redirect('/fieldbook');
 }
 
