@@ -14,4 +14,11 @@ sub trial_search_page : Path('/search/trials/') Args(0) {
 
 }
 
+sub genotyping_trial_search_page : Path('/search/genotyping_trials/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/search/genotyping_trials.mas';
+}
+
 1;

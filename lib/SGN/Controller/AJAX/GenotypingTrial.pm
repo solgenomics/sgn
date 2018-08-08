@@ -470,6 +470,7 @@ sub get_genotyping_data_projects_GET : Args(0) {
             "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
             $_->{year},
             $_->{location_name},
+            $_->{genotyping_facility}
         );
         push @result, \@res;
     }

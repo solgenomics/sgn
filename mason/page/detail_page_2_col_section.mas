@@ -228,6 +228,22 @@ $referer => undef
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
+% if ($info_section_id eq 'genotyping_data_project_details'){
+                                <table class="table table-hover table-bordered" >
+                                    <tr>
+                                    <td><b>Genotyping Data Project Name</b></td>
+                                    <td>
+                                        <div id="genotyping_data_project_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "[No Trial Name]";
+% }
+                                        </div>
+                                    </td>
+                                    </tr>
+                                </table>
+% } #End genotyping_data_project_details
 % if ($info_section_id eq 'management_factor_details'){
                                 <table class="table table-hover table-bordered" >
                                     <tr>
