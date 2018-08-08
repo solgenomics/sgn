@@ -229,6 +229,9 @@
                                     </div>
                                 </div>
 
+                                <div id="upload_genotypes_errors_div">
+                                </div>
+
                                 <div id="upload_genotypes_warnings_div" style="display:none">
                                     <div id="upload_genotypes_warnings_html">
                                     </div>
