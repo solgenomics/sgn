@@ -38,6 +38,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use JSON;
+use CXGN::Stock::Accession;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -198,7 +199,7 @@ sub get_genotype_info {
         $offset_clause = " OFFSET $offset ";
     }
 
-    my $q = "SELECT genotype_values.genotypeprop_id, genotype_values.value, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, stock.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, project.project_id, project.name, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
+    my $q = "SELECT genotype_values.genotypeprop_id, genotype_values.value, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, stock.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
@@ -224,7 +225,7 @@ sub get_genotype_info {
     $h->execute();
 
     my $total_count = 0;
-    while (my ($genotypeprop_id, $genotypeprop_json, $igd_number_json, $protocol_id, $protocol_name, $protocolprop_json, $stock_id, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $project_id, $project_name, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
+    while (my ($genotypeprop_id, $genotypeprop_json, $igd_number_json, $protocol_id, $protocol_name, $protocolprop_json, $stock_id, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $genotype = decode_json $genotypeprop_json;
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : undef;
         my $all_protocol_marker_names = $protocol ? $protocol->{'marker_names'} : undef;
@@ -247,20 +248,25 @@ sub get_genotype_info {
             $germplasmDbId = $accession_id;
         }
 
+        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
+
         push @data, {
             markerProfileDbId => $genotypeprop_id,
             germplasmDbId => $germplasmDbId,
             germplasmName => $germplasmName,
+            synonyms => $stock_object->synonyms,
             stock_id => $stock_id,
             stock_name => $stock_name,
             stock_type_id => $stock_type_id,
             stock_type_name => $stock_type_name,
             genotypeDbId => $genotype_id,
             genotypeUniquename => $genotype_uniquename,
+            genotypeDescription => $genotype_description,
             analysisMethodDbId => $protocol_id,
             analysisMethod => $protocol_name,
             genotypingDataProjectDbId => $project_id,
             genotypingDataProjectName => $project_name,
+            genotypingDataProjectDescription => $project_description,
             genotype_hash => \%dosage_hash,
             full_genotype_hash => $genotype,
             full_protocol_hash => $protocol,
