@@ -41,6 +41,7 @@ $user_name => undef
 $design_name => undef
 $phenotypes_fully_uploaded => undef
 $identifier_prefix => 'SGN'
+$genotyping_facility => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -49,9 +50,11 @@ $identifier_prefix => 'SGN'
 
 <& /page/page_title.mas, title=>"Genotyping Data Project: ".$trial_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility &>
 
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Protocols</h4>", info_section_subtitle => 'View basic information about the genotyping protocols used in this genotyping data project.', icon_class => "glyphicon glyphicon-cog", info_section_id => "genotyping_data_project_protocols" &>
 
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_data_project_data" &>
 
 % my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
 % if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }

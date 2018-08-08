@@ -42,6 +42,7 @@ $field_size => undef
 $field_trial_is_planned_to_be_genotyped => undef
 $field_trial_is_planned_to_cross => undef
 $identifier_prefix => undef
+$genotyping_facility => undef
 
 #Specific to stock detail page
 $type_name => undef
@@ -230,8 +231,14 @@ $referer => undef
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
 % if ($info_section_id eq 'genotyping_data_project_details'){
-                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix &>
+                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility &>
 % } #End genotyping_data_project_details
+% if ($info_section_id eq 'genotyping_data_project_protocols'){
+                                <& /breeders_toolbox/genotyping_data_project/protocols.mas, trial_id=>$trial_id &>
+% } #End genotyping_data_project_protocols
+% if ($info_section_id eq 'genotyping_data_project_data'){
+                                <& /breeders_toolbox/genotyping_data_project/genotype_data.mas, trial_id=>$trial_id &>
+% } #End genotyping_data_project_data
 % if ($info_section_id eq 'management_factor_details'){
                                 <table class="table table-hover table-bordered" >
                                     <tr>

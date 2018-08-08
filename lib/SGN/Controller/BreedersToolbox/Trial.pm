@@ -128,6 +128,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
+    $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
 
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
