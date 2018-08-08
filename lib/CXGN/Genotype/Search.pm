@@ -12,8 +12,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     trial_list=>$trial_list,
     protocol_id=>$protocol_id
 });
-my $resultset = $genotypes_search->get_genotype_info();
-my $genotypes = $resultset->{genotypes};
+my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
 =head1 DESCRIPTION
 
