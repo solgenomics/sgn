@@ -16,7 +16,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
     marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
 });
-my ($total_count, $data) = $genotypes_search->get_genotype_info();
+my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
 =head1 DESCRIPTION
 

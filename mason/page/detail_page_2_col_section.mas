@@ -168,7 +168,7 @@ $referer => undef
 % print $map_html;
 % foreach my $project (keys %$direct_genotypes) {
 %     my $genotypes = $direct_genotypes->{$project} ;
-                                <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
+                                <&| /page/info_section.mas, title=>"Genotype Data Project: $project", is_subsection => 1, collapsible => 1 &>
 %     foreach my $genotype (@$genotypes) {
 %                                   print $genotype->description . "\n";
 %     }
