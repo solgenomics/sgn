@@ -520,7 +520,7 @@ function plotPca(plotData){
     pcaPlot.append("a")
 	.attr("xlink:href", shareLink)
 	.append("text")
-	.text("[Share plot ]")
+	.text("[Share plot]")
 	.attr("y", pad.top + height + 100)
         .attr("x", pad.left)
         .attr("font-size", 14)

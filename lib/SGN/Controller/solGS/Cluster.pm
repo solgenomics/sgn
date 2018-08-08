@@ -385,6 +385,42 @@ sub kcluster_result_file {
 }
 
 
+sub kcluster_plot_kmeans_file {
+    my ($self, $c) = @_;
+    
+    my $file_id = $c->stash->{file_id};
+    my $cluster_dir = $c->stash->{cluster_cache_dir};
+
+    $c->stash->{cache_dir} = $cluster_dir;
+
+     my $cache_data = {key       => "kcluster_plot_kmeans_${file_id}",
+                      file      => "kcluster_plot_kmeans_${file_id}.png",
+                      stash_key => 'kcluster_plot_kmeans_file'
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub kcluster_plot_pam_file {
+    my ($self, $c) = @_;
+    
+    my $file_id = $c->stash->{file_id};
+    my $cluster_dir = $c->stash->{cluster_cache_dir};
+
+    $c->stash->{cache_dir} = $cluster_dir;
+
+    my $cache_data = {key       => "kcluster_plot_pam_${file_id}",
+                      file      => "kcluster_plot_pam_${file_id}.png",
+                      stash_key => 'kcluster_plot_pam_file'
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
 sub hierarchical_result_file {
     my ($self, $c) = @_;
     
@@ -410,11 +446,19 @@ sub cluster_output_files {
     my $cluster_type = $c->stash->{cluster_type};
 
     my $result_file;
+    my $plot_pam_file;
+    my $plot_kmeans_file;
 
     if ($cluster_type =~ 'k-means')	
     {
 	$self->kcluster_result_file($c);
 	$result_file = $c->stash->{kcluster_result_file};
+
+	$self->kcluster_plot_kmeans_file($c);
+	$plot_kmeans_file = $c->stash->{kcluster_plot_kmeans_file};
+
+	$self->kcluster_plot_pam_file($c);
+	$plot_pam_file = $c->stash->{kcluster_plot_pam_file};
     }
     else
     {
@@ -432,11 +476,12 @@ sub cluster_output_files {
     
     my $file_list = join ("\t",
                           $result_file,
+			  $plot_pam_file,
+			  $plot_kmeans_file,
 			  $analysis_report_file,
 			  $analysis_error_file
 	);
-     
-    
+        
     my $tmp_dir = $c->stash->{cluster_temp_dir};
     my $name = "cluster_output_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
@@ -495,7 +540,7 @@ sub run_cluster {
     if ($cluster_type = ~/k-means/)
     {
 	$c->stash->{r_temp_file}  = "kcluster-${file_id}";
-	$c->stash->{r_script}     = 'R/solGS/kcluster.r';
+	$c->stash->{r_script}     = 'R/solGS/kCluster.r';
     }
     else
     {
