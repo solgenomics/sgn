@@ -256,7 +256,7 @@ function jqueryStuff() {
 % }
 
 % if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'tissue_sample'){
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section", buttons_html => $g_download_link, map_html => $map_html, direct_genotypes => $direct_genotypes &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download genotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section", buttons_html => $g_download_link, map_html => $map_html, direct_genotypes => $direct_genotypes &>
 % }
 
 % if ($type_name eq 'accession'){

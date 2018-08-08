@@ -333,6 +333,8 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock = $c->stash->{stock_row};
     my $stock_id = $stock->stock_id;
     my $stock_name = $stock->uniquename;
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     if ($stock_id) {
 
 	print STDERR "Exporting genotype file...\n";
@@ -347,14 +349,10 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my %cvterms ; #hash for unique cvterms
             ##############
             my $genotypes =  $self->_stock_project_genotypes( $stock );
-            write_file($filename, ("project\tmarker\t$stock_name\n") );
+            write_file($filename, ("project\tmarker\t$stock_name\tmarker_info\tgenotype_info\n") );
             foreach my $project (keys %$genotypes ) {
 		foreach my $geno (@ { $genotypes->{$project} } ) {
-		    my $genotypeprop_rs = $geno->search_related('genotypeprops' ); # , {
-		    #just check if the value type is JSON
-		    #this is the current genotype we have , add more here as necessary
-			#'type.name' => 'infinium array' } , {
-			#    join => 'type' } );
+		    my $genotypeprop_rs = $geno->search_related('genotypeprops', {'me.type_id' => {'-in' => [$snp_genotyping_cvterm_id, $vcf_snp_genotyping_cvterm_id]}} );
 		    while (my $prop = $genotypeprop_rs->next) {
 			my $json_text = $prop->value ;
 			my $genotype_values = JSON::Any->decode($json_text);
@@ -363,7 +361,13 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 			foreach my $marker_name (keys %$genotype_values) {
 			    $count++;
 			    #if ($count % 1000 == 0) { print STDERR "Processing $count     \r"; }
-			    my $read = $genotype_values->{$marker_name};
+			    my $read;
+                if ($genotype_values->{$marker_name}->{GT}){
+                    $read = $genotype_values->{$marker_name}->{GT};
+                }
+                if ($genotype_values->{$marker_name}->{DS}){
+                    $read = $genotype_values->{$marker_name}->{DS};
+                }
 			    push @lines, (join "\t", ($project, $marker_name, $read))."\n";
 			}
 			my @sorted_lines = sort chr_sort @lines;
@@ -775,7 +779,7 @@ sub _stock_project_genotypes {
 
     # hash of experiment_id => project(s) desc
     my %project_descriptions =
-        map { $_->nd_experiment_id => join( ', ', map $_->project->description, $_->nd_experiment_projects ) }
+        map { $_->nd_experiment_id => join( ', ', map "Name:".$_->project->name.",Description:".$_->project->description, $_->nd_experiment_projects ) }
         $bcs_stock->search_related('nd_experiment_stocks')
                   ->search_related('nd_experiment',
                                    {},
