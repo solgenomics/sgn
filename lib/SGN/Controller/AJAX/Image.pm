@@ -45,7 +45,6 @@ sub basic_ajax_image_GET {
     my $c = shift;
     
     $c->stash->{image_id} = shift;
-    print STDERR "Stashing image...\n";
     $c->stash->{image} = SGN::Image->new($c->dbc->dbh(), $c->stash->{image_id});    
 }
 
@@ -54,7 +53,6 @@ sub basic_ajax_image_POST {
     my $c = shift;
     $c->stash->{image_id} = shift;
 
-    print STDERR "Stashing image...\n";
     $c->stash->{image} = SGN::Image->new($c->dbc->dbh(), $c->stash->{image_id});
 }
 
