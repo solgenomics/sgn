@@ -502,7 +502,7 @@ sub get_genotyping_data_protocols_GET : Args(0) {
         }
         my $description = join '<br/>', @trimmed;
         push @res, (
-            $_->{protocol_name},
+            "<a href=\"/breeders_toolbox/protocol/$_->{protocol_id}\">$_->{protocol_name}</a>",
             $description,
             $num_markers,
             $_->{reference_genome_name},

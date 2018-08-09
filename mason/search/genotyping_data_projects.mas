@@ -1,6 +1,5 @@
 
 <%args>
-$nd_geolocation => 'not_provided'
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
