@@ -65,12 +65,13 @@ sub download {
     foreach my $key (sort keys %$design){
         my $val = $design->{$key};
         my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
+        my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
         $ws->write($row_count, 0, $trial_name);
         $ws->write($row_count, 1, $val->{row_number});
         $ws->write($row_count, 2, $val->{col_number});
         $ws->write($row_count, 3, $val->{species});
         $ws->write($row_count, 4, $val->{species});
-        $ws->write($row_count, 5, $val->{source_observation_unit_name});
+        $ws->write($row_count, 5, $sample_name);
         $ws->write($row_count, 6, $val->{tissue_type});
         $ws->write($row_count, 7, $comments);
         $row_count++;

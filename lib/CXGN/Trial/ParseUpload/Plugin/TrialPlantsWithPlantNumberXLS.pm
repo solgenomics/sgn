@@ -1,4 +1,4 @@
-package CXGN::Trial::ParseUpload::Plugin::TrialPlantsXLS;
+package CXGN::Trial::ParseUpload::Plugin::TrialPlantsWithPlantNumberXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -44,19 +44,19 @@ sub _validate_with_plugin {
 
     #get column headers
     my $plot_name_head;
-    my $plant_name_head;
+    my $plant_index_number_head;
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
-        $plant_name_head  = $worksheet->get_cell(0,1)->value();
+        $plant_index_number_head  = $worksheet->get_cell(0,1)->value();
     }
     if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
         push @error_messages, "Cell A1: plot_name is missing from the header";
     }
-    if (!$plant_name_head || $plant_name_head ne 'plant_name') {
-        push @error_messages, "Cell B1: plant_name is missing from the header";
+    if (!$plant_index_number_head || $plant_index_number_head ne 'plant_index_number') {
+        push @error_messages, "Cell B1: plant_index_number is missing from the header";
     }
 
     my %seen_plot_names;
@@ -64,13 +64,13 @@ sub _validate_with_plugin {
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $plot_name;
-        my $plant_name;
+        my $plant_index_number;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $plant_name = $worksheet->get_cell($row,1)->value();
+            $plant_index_number = $worksheet->get_cell($row,1)->value();
         }
 
         if (!$plot_name || $plot_name eq '' ) {
@@ -83,14 +83,18 @@ sub _validate_with_plugin {
             $seen_plot_names{$plot_name}=$row_name;
         }
 
-        if (!$plant_name || $plant_name eq '') {
-            push @error_messages, "Cell B$row_name: plant_name missing";
-        } elsif ($plant_name =~ /\s/ || $plant_name =~ /\// || $plant_name =~ /\\/ ) {
-            push @error_messages, "Cell B$row_name: plant_name must not contain spaces or slashes.";
+        if (!$plant_index_number || $plant_index_number eq '') {
+            push @error_messages, "Cell B$row_name: plant_index_number missing";
+        } if (!($plant_index_number =~ /^\d+?$/)) {
+            push @error_messages, "Cell B$row_name: plant_indeX_number must be a number";
         } else {
             #file must not contain duplicate plot names
+            my $plant_name = $plot_name."_".$plant_index_number;
             if ($seen_plant_names{$plant_name}) {
                 push @error_messages, "Cell B$row_name: duplicate plant_name at cell A".$seen_plant_names{$plant_name}.": $plant_name";
+            }
+            if (!$plant_name){
+                push @error_messages, "CellB$row_name: No plant name could be made!";
             }
             $seen_plant_names{$plant_name}++;
         }
@@ -149,11 +153,12 @@ sub _parse_with_plugin {
             $plot_name = $worksheet->get_cell($row,0)->value();
             $seen_plot_names{$plot_name}++;
         }
-        my $plant_name;
+        my $plant_index_number;
         if ($worksheet->get_cell($row,1)) {
-            $plant_name = $worksheet->get_cell($row,1)->value();
-            $seen_plant_names{$plant_name}++;
+            $plant_index_number = $worksheet->get_cell($row,1)->value();
         }
+        my $plant_name = $plot_name."_".$plant_index_number;
+        $seen_plant_names{$plant_name}++;
     }
     my @plots = keys %seen_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -167,14 +172,15 @@ sub _parse_with_plugin {
 
     for my $row ( 1 .. $row_max ) {
         my $plot_name;
-        my $plant_name;
+        my $plant_index_number;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $plant_name = $worksheet->get_cell($row,1)->value();
+            $plant_index_number = $worksheet->get_cell($row,1)->value();
         }
+        my $plant_name = $plot_name."_".$plant_index_number;
 
         #skip blank lines
         if (!$plot_name && !$plant_name) {
@@ -185,6 +191,7 @@ sub _parse_with_plugin {
             plot_name => $plot_name,
             plot_stock_id => $plot_lookup{$plot_name},
             plant_name => $plant_name,
+            plant_index_number => $plant_index_number
         };
     }
 

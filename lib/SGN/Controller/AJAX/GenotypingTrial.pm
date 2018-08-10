@@ -457,7 +457,7 @@ sub get_genotyping_data_projects_GET : Args(0) {
         bcs_schema=>$bcs_schema,
         trial_design_list=>['genotype_data_project']
     });
-    my $data = $trial_search->search();
+    my ($data, $total_count) = $trial_search->search();
     my @result;
     foreach (@$data){
         my @res;
