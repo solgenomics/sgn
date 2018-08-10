@@ -18,7 +18,6 @@ use Fcntl qw( S_ISREG S_ISLNK );
 use JSAN::ServerSide;
 use List::MoreUtils qw/ uniq first_index /;
 
-use File::Monitor;
 use JSON;
 use File::Slurp;
 use Data::Dumper;
@@ -28,6 +27,7 @@ BEGIN { extends 'Catalyst::Controller' }
 __PACKAGE__->config(
     namespace       => 'js',
     js_path => SGN->path_to('js/build'),
+    dependency_json_path => SGN->path_to('js/build/mapping.json'),
     js_legacy_path => SGN->path_to('js/legacy')
    );
 
@@ -40,21 +40,17 @@ __PACKAGE__->config(
         isa    => $inc,
         coerce => 1,
        );
+   has 'dependency_json_path' => (
+       is     => 'ro',
+       isa    => $inc,
+       coerce => 1,
+      );
     has 'js_legacy_path' => (
         is     => 'ro',
         isa    => $inc,
         coerce => 1,
        );
 }
-
-my $modern_js_files = decode_json(read_file(SGN->path_to('js/build/mapping.json')));
-my $modern_js_monitor = File::Monitor->new();
-$modern_js_monitor->watch('otherfile.txt', sub {
-    my ($name, $event, $change) = @_;
-    my $json_string = read_file(SGN->path_to('js/build/mapping.json'));
-    $modern_js_files = decode_json $json_string;
-});
-$modern_js_monitor->scan();
 
 =head1 PUBLIC ACTIONS
 
@@ -120,24 +116,39 @@ sub legacy :Path('legacy') {
 
 =head1 PRIVATE ACTIONS
 
-=head2 resolve_modern_javascript
+=head2 get_js_module_dependencies
 
 =cut
 
-sub resolve_modern_javascript :Private {
-    my ( $self, $c ) = @_;
-    
-    $modern_js_monitor->scan();
+my $js_module_dependencies = {};
+my $js_module_dependencies_modtime = 0;
+sub get_js_module_dependencies :Private {
+    my ( $self, $names ) = @_;
 
-    my $names = $c->stash->{js_modern}
-        or return;
+    my ( $modtime ) = (stat( $self->dependency_json_path->[0] ))[9];
+    if( ! $js_module_dependencies_modtime || $js_module_dependencies_modtime < $modtime) {
+        $js_module_dependencies = decode_json(read_file($self->dependency_json_path->[0]));
+        $js_module_dependencies_modtime = $modtime;
+    } 
     
-    my @names = uniq @$names;
+    my $result = {
+        files => [],
+        legacy => []
+    };
     
-    foreach my $name (@names) {
-        my @modern_files = $modern_js_files->{$name}->{files};
-        my @legacy_classes = $modern_js_files->{$name}->{files};
+    print Dumper $names;
+    print Dumper $js_module_dependencies;
+    
+    for my $n (@$names) {
+        if (exists $js_module_dependencies->{$n}){
+            push @{$result->{files}}, @{$js_module_dependencies->{$n}->{files}};
+            push @{$result->{legacy}}, @{$js_module_dependencies->{$n}->{legacy}};
+        }
     }
+    
+    print Dumper $result;
+    
+    return $result;
 }
 
 =head2 resolve_javascript_classes
@@ -147,26 +158,33 @@ sub resolve_modern_javascript :Private {
 sub resolve_javascript_classes :Private {
     my ( $self, $c ) = @_;
 
-    my $files = $c->stash->{js_classes}
-        or return;
+    my $jsan_classes = $c->stash->{jsan_classes};
+    my $js_modules = $c->stash->{js_modules};
+    
+    my $module_deps = $self->get_js_module_dependencies($js_modules);
+    push @{ $jsan_classes }, @{$module_deps->{legacy}};
 
-    my @files = uniq @$files; #< do not sort, load order might be important
-    for (@files) {
+    my @jsan_deps = uniq @$jsan_classes; #< do not sort, load order might be important
+    for (@jsan_deps) {
         s/\.js$//;
         s!\.!/!g;
     }
     # if prototype is present, move it to the front to prevent it
     # conflicting with jquery
-    my $prototype_idx = first_index { /Prototype$/i } @files;
+    my $prototype_idx = first_index { /Prototype$/i } @jsan_deps;
     if( $prototype_idx > -1 ) {
-        my ($p) = splice @files, $prototype_idx, 1;
-        unshift @files, $p;
+        my ($p) = splice @jsan_deps, $prototype_idx, 1;
+        unshift @jsan_deps, $p;
     }
 
     # add in JSAN.use dependencies
-    @files = $self->_resolve_jsan_dependencies( \@files );
+    my @deps = $self->_resolve_jsan_dependencies( \@jsan_deps );
+    
+    for my $dep (@{$module_deps->{files}}) {
+        push @deps, File::Spec->catfile( "/js/build/", $dep )
+    }
 
-    $c->stash->{js_uris} = \@files;
+    $c->stash->{js_uris} = \@deps;
 }
 
 ########## helpers #########
