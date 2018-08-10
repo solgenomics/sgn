@@ -47,6 +47,7 @@ use SGN::Image;
 use CXGN::ZipFile;
 use CXGN::UploadFile;
 use CXGN::List::Transform;
+use CXGN::Stock;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -148,6 +149,7 @@ sub create_hash_lookups {
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
+    @trait_list = map { $_ eq 'description' ? () : ($_) } @trait_list; # omit description field from trait validation
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -197,6 +199,7 @@ sub verify {
     my $self = shift;
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
+    @trait_list = map { $_ eq 'description' ? () : ($_) } @trait_list; # omit description field from trait validation
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -208,7 +211,6 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    @trait_list = @{$self->trait_list};
     my $error_message;
     my $warning_message;
 
@@ -363,6 +365,7 @@ sub store {
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
+    @trait_list = map { $_ eq 'description' ? () : ($_) } @trait_list; # omit description trait list so it can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
@@ -418,6 +421,12 @@ sub store {
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
 
+            # Check if there is a description of this plot, If so add it using dedicated function
+            my $description_array = $plot_trait_value{$plot_name}->{'description'};
+            if (defined $description_array) {
+                $self->store_stock_description($stock_id, $description_array, $operator);
+            }
+
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
@@ -427,7 +436,7 @@ sub store {
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
                 my $timestamp = $value_array->[1];
-                my $operator = $value_array->[2] ? $value_array->[2] : $operator;
+                $operator = $value_array->[2] ? $value_array->[2] : $operator;
                 my $observation = $value_array->[3];
                 my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
@@ -557,6 +566,23 @@ sub store {
     return ($error_message, $success_message, \@stored_details);
 }
 
+sub store_stock_description {
+    my $self = shift;
+    my $stock_id = shift;
+    my $description_array = shift;
+    my $operator = shift;
+    my $description = $description_array->[0];
+    my $timestamp = $description_array->[1];
+    $operator = $description_array->[2] ? $description_array->[2] : $operator;
+
+    print STDERR "Stock_id is $stock_id and description in sub is $description, timestamp is $timestamp, operator is $operator\n";
+
+    my $stock = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
+    my $existing_description = $stock->description();
+    my $updated_description = $existing_description . "\n$description (Operator: $operator, Time: $timestamp)";
+    my $updated_stock = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id, description => $updated_description);
+    $updated_stock->store();
+}
 
 sub delete_previous_phenotypes {
     my $self = shift;
