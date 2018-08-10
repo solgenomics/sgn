@@ -47,9 +47,16 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name: </label>
+                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
                                     <div class="col-sm-9" >
-                                        <div id="cross_wishlist_trial_select_list_div">
+                                        <div id="cross_wishlist_female_trial_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_male_trial_select_list_div">
                                         </div>
                                     </div>
                                 </div>
@@ -307,17 +314,19 @@ jQuery(document).ready(function($) {
     get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
     get_select_box('trials', 'cross_wishlist_trial_select_no_list_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1, 'multiple':0 });
 
-    get_select_box('trials', 'cross_wishlist_trial_select_list_div', { 'name' : 'cross_wishlist_list_trial_id', 'id' : 'cross_wishlist_list_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_female_trial_select_list_div', { 'name' : 'cross_wishlist_list_female_trial_id', 'id' : 'cross_wishlist_list_female_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_male_trial_select_list_div', { 'name' : 'cross_wishlist_list_male_trial_id', 'id' : 'cross_wishlist_list_male_trial_id', 'empty':1, 'multiple':0 });
 
-    jQuery(document).on('change', "#cross_wishlist_list_trial_id", function() {
+    jQuery(document).on('change', "#cross_wishlist_list_female_trial_id", function() {
         cross_wishlist_change_trials_lists();
     });
 
-    jQuery(document).on('change', "#cross_wishlist_trial_id", function() {
+    jQuery(document).on('change', "#cross_wishlist_female_trial_id", function() {
         cross_wishlist_change_trials();
     });
 
-    var trial_id;
+    var female_trial_id;
+    var male_trial_id;
     var cross_data = [];
     var female_male_tracker = {};
     var selected_plot_ids = [];
@@ -325,12 +334,13 @@ jQuery(document).ready(function($) {
         cross_data = [];
         female_male_tracker = {};
         selected_plot_ids = [];
-        trial_id;
+        female_trial_id;
+        male_trial_id;
     });
 
     var trial_ids_array = [];
     function cross_wishlist_change_trials () {
-        var trial_ids = jQuery('#cross_wishlist_trial_id').val();
+        var trial_ids = jQuery('#cross_wishlist_female_trial_id').val();
         var trial_ids_string = '';
         if ( jQuery.isArray(trial_ids) ) {
             trial_ids_array = trial_ids;
@@ -347,8 +357,10 @@ jQuery(document).ready(function($) {
                 var cross_wishlist_name;
                 if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
                     cross_wishlist_name = 'cross_wishlist_test.csv';
-                } else {
+                } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
                     cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
+                } else {
+                    cross_wishlist_name = 'cross_wishlist_<% $c->config->{project_name} %>.csv';
                 }
                 jQuery('#cross_wishlist_trial_select_no_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
             },
@@ -361,7 +373,7 @@ jQuery(document).ready(function($) {
     };
 
     function cross_wishlist_change_trials_lists () {
-        var trial_ids = jQuery('#cross_wishlist_list_trial_id').val();
+        var trial_ids = jQuery('#cross_wishlist_list_female_trial_id').val();
         var trial_ids_string = '';
         if ( jQuery.isArray(trial_ids) ) {
             trial_ids_array = trial_ids;
@@ -375,7 +387,15 @@ jQuery(document).ready(function($) {
             url: '/ajax/breeders/trial/'+trial_ids_array[0]+'/location',
             success: function(response) {
                 //console.log(response);
-                jQuery('#cross_wishlist_trial_select_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="cross_wishlist_'+response.location[1]+'" />');
+                var cross_wishlist_name;
+                if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
+                    cross_wishlist_name = 'cross_wishlist_test.csv';
+                } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
+                    cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
+                } else {
+                    cross_wishlist_name = 'cross_wishlist_<% $c->config->{project_name} %>.csv';
+                }
+                jQuery('#cross_wishlist_trial_select_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
             },
             error: function(response) {
                 alert("An error occurred getting trial location");
@@ -434,7 +454,8 @@ jQuery(document).ready(function($) {
         cross_data = [];
         female_male_tracker = {};
         selected_plot_ids = [];
-        trial_id;
+        female_trial_id;
+        male_trial_id;
 
         var male_accession_limit = 10;
         if (active_tab == 'cross_wishlist_no_list_tab'){

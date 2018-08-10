@@ -911,7 +911,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
     my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
 
-    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists are separated by location
+    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists can be separated by location
     my $is_test_form;
     if ($ona_form_name eq $test_ona_form_name){
         $is_test_form = 1;
