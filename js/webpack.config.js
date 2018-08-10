@@ -3,8 +3,10 @@ const glob = require("glob");
 const filemap = require(path.resolve(__dirname,"./webpack-filemap-plugin.js"));
 const webpack = require("webpack");
 const exec = require('child_process').exec;
+const UglifyWebpackPlugin = require("uglifyjs-webpack-plugin");
 
 const sourcePath = path.resolve(__dirname, "source/");
+const legacyPath = path.resolve(__dirname, "legacy/");
 
 module.exports = {
     mode: "production",
@@ -29,23 +31,31 @@ module.exports = {
                 test: /\.js$/,
                 exclude: /(node_modules|bower_components)/,
                 include: sourcePath,
-                use: {
+                use: [{
                     loader: 'babel-loader',
                     options: {
                         presets: ['@babel/preset-env']
                     }
-                }
+                },{
+                    loader: path.resolve(__dirname,"./JSAN/jsan-preprocess-loader.js"),
+                    options:{'legacyPath':legacyPath}
+                }]
             },
             {
-                test: path.resolve(__dirname, 'legacy/'),
-                use: {
-                    loader: path.resolve(__dirname,"./JSAN/adaptor-loader.js"),
-                }
+                test: legacyPath,
+                use: [{
+                    loader: path.resolve(__dirname,"./JSAN/jsan-error-loader.js")
+                }]
             }
         ]
     },
     optimization: {
-        minimize: false,
+        minimize: true,
+        minimizer: [new UglifyWebpackPlugin({ 
+            'sourceMap': true,
+            'parallel': 4,
+            
+        })],
         splitChunks: {
             cacheGroups: {
                 default: false,
@@ -65,5 +75,5 @@ module.exports = {
         }
     },
     devtool: "source-map",
-    plugins: [new filemap()],
+    plugins: [new filemap({'legacy_regex':"./JSAN/dependency.regex"})],
 };

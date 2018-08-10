@@ -1,7 +1,7 @@
 {
   "name": "@solgenomics/cxgn_js",
   "version": "0.0.0",
-  "description": "npm package manifest describing external dependancies and containing cxgn-specific js files",
+  "description": "node package containing all importable CXGN/SGN JavaScript files.",
   "main": "webpack.config.js",
   "scripts": {
     "build": "rm -r build/ || true && npm install . && webpack",
@@ -14,6 +14,8 @@
     "@babel/core": "^7.0.0-beta.55",
     "@babel/preset-env": "^7.0.0-beta.55",
     "babel-loader": "^8.0.0-beta.4",
+    "loader-utils": "^1.1.0",
+    "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^4.16.3",
     "webpack-cli": "^3.1.0"
   },

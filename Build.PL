@@ -88,7 +88,6 @@ my $build = SGN::Build->new(
         'File::Basename'                           => 0,
         'File::Copy'                               => 0,
         'File::Flock'                              => 0,
-        'File::Monitor'                            => 0,
         'File::NFSLock'                            => 0,
         'File::Slurp'                              => '9999.19',
         'File::Spec::Functions'                    => 0,
