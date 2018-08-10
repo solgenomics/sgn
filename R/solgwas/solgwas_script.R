@@ -1,6 +1,8 @@
 #install.packages("rrBLUP")
 #install.packages("corrplot")
+#install.packages("dplyr")
 setwd("/home/vagrant/cxgn/sgn/")
+library("dplyr")
 
 ########################################
 ##### Read data from temp files #####
@@ -22,30 +24,27 @@ kinship_check <- args[9]
 print("temp file name:")
 figure1_file_name
 
-# temporarily hard-coding the PC and Kinship flags
 print("pc_check:")
 pc_check
 print("kinship_check:")
 kinship_check
 
 
-pheno[1:5,1:21]
+# pheno[1:5,1:21]
 # Note: still need to test how well this pmatch deals with other trickier cases
 pheno_vector <- pheno[,pmatch(study_trait, names(pheno))]
 pheno_vector[1:5]
 # Make a new phenotype table, including only the phenotype selected:
-pheno_mod <- pheno[,1:17]
-pheno_mod <- cbind(pheno_mod, pheno_vector)
-pheno_vector[1:10]
-pheno_mod[1:5,1:18]
-pheno[1:5,1:21]
+pheno_mod <- cbind(pheno, pheno_vector)
+#pheno_vector[1:10]
+#pheno_mod[1:5,1:18]
+#pheno[1:5,1:21]
+colnames(pheno_mod)
 
-
-### Note this is currently set for column 18, because the above code makes a new table including
 ### only the data for the trait selected....
 png(figure1_file_name)
 study_trait_read <- gsub(".", " ", study_trait, fixed=TRUE)
-hist(pheno_mod[,18], col="black",xlab=study_trait_read,ylab="Frequency",
+hist(pheno_mod$pheno_vector, col="black",xlab=study_trait_read,ylab="Frequency",
      border="white",breaks=10,main="Phenotype Histogram (Unfiltered)")
 dev.off()
 write.table(pheno_mod, "pheno_mod_temp_file.csv", sep = ",", col.names = TRUE)
@@ -121,16 +120,20 @@ dev.off()
 
 ##### Work to match phenotyes and genotypes #####
 pheno_mod[1:5,1:18]
-# NOTA BENE: Still need to extract only unique phenotype values (as I did above with genotype...), also need to exclude NAs, I think...
+# NOTA BENE: Currently extracting unique phenotype values, also need to exclude NAs, I think...
 # Ultimately, it may be better to take an average? TBD...
 # Maybe RRblup can handle multiple phenotypes per genotype? I doubt this, don't see how it would work...
 dim(pheno_mod)
 pheno_mod=pheno_mod[which(pheno_mod$pheno_vector != "NA"),]
 print("Filtering out NAs...")
 dim(pheno_mod)
-pheno_mod <- pheno_mod[!duplicated(pheno_mod$germplasmDbId),]
-print("Filtering out duplicated stock IDs...")
+#pheno_mod <- pheno_mod[!duplicated(pheno_mod$germplasmDbId),]
+pheno_mod <- distinct(pheno_mod, germplasmDbId, .keep_all = TRUE)
+print("Filtering out duplicated stock IDs, keeping only single row for each stock ID...")
 dim(pheno_mod)
+rownames(geno.gwas)
+colnames(pheno_mod)
+colnames(pheno)
 pheno_mod=pheno_mod[pheno_mod$germplasmDbId%in%rownames(geno.gwas),]
 print("Filtering out stock IDs not in geno matrix...")
 dim(pheno_mod)
