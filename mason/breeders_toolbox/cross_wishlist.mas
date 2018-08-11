@@ -418,7 +418,7 @@ jQuery(document).ready(function($) {
 
     function cross_wishlist_select_females () {
 
-        var male_trial_ids = jQuery('#cross_wishlist_list_male_trial_id').val();
+        var male_trial_ids = jQuery('#cross_wishlist_male_trial_id').val();
         var male_trial_ids_string = '';
         if ( jQuery.isArray(male_trial_ids) ) {
             male_trial_ids_array = male_trial_ids;
@@ -426,6 +426,10 @@ jQuery(document).ready(function($) {
         } else {
             male_trial_ids_array = [male_trial_ids];
             male_trial_ids_string = male_trial_ids;
+        }
+        if (male_trial_ids.length == 0){
+            alert('Please select a male trial first!');
+            return;
         }
 
         var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
@@ -436,8 +440,6 @@ jQuery(document).ready(function($) {
         html = html + '</tbody></table>';
         jQuery('#cross_wishlist_male_parent_div').html(html);
 
-        get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':male_trial_ids_array, 'names_as_select':1 });
-
         var cross_wishlist_male_parents = jQuery('#cross_wishlist_male_select_table')
              .find("div")
              .map(function() { return this.id; })
@@ -445,7 +447,7 @@ jQuery(document).ready(function($) {
         //console.log(cross_wishlist_male_parents);
         for(var i=0; i<cross_wishlist_male_parents.length; i++){
             var female_id = jQuery('#cross_wishlist_male_accession_id_'+ i +'_priority').data('related');
-            get_select_box('stocks', cross_wishlist_male_parents[i], { 'name' : 'cross_wishlist_male_accession_id_select', 'id' : 'cross_wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids_array, 'names_as_select':1, 'data-related':female_id });
+            get_select_box('stocks', cross_wishlist_male_parents[i], { 'name' : 'cross_wishlist_male_accession_id_select', 'id' : 'cross_wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':male_trial_ids_array, 'names_as_select':1, 'data-related':female_id });
         };
     };
 
