@@ -90,9 +90,16 @@
 
                             <form class="form-horizontal" >
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name: </label>
+                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
                                     <div class="col-sm-9" >
-                                        <div id="cross_wishlist_trial_select_no_list_div">
+                                        <div id="cross_wishlist_female_trial_select_no_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_male_trial_select_no_list_div">
                                         </div>
                                     </div>
                                 </div>
@@ -312,7 +319,8 @@ jQuery(document).ready(function($) {
     });
 
     get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
-    get_select_box('trials', 'cross_wishlist_trial_select_no_list_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_female_trial_select_no_list_div', { 'name' : 'cross_wishlist_female_trial_id', 'id' : 'cross_wishlist_female_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_male_trial_select_no_list_div', { 'name' : 'cross_wishlist_male_trial_id', 'id' : 'cross_wishlist_male_trial_id', 'empty':1, 'multiple':0 });
 
     get_select_box('trials', 'cross_wishlist_female_trial_select_list_div', { 'name' : 'cross_wishlist_list_female_trial_id', 'id' : 'cross_wishlist_list_female_trial_id', 'empty':1, 'multiple':0 });
     get_select_box('trials', 'cross_wishlist_male_trial_select_list_div', { 'name' : 'cross_wishlist_list_male_trial_id', 'id' : 'cross_wishlist_list_male_trial_id', 'empty':1, 'multiple':0 });
@@ -470,7 +478,7 @@ jQuery(document).ready(function($) {
                     female_male_tracker[female_id] = [male_id];
                 }
             });
-            trial_id = jQuery('#cross_wishlist_trial_id').val();
+            female_trial_id = jQuery('#cross_wishlist_female_trial_id').val();
         }
         if (active_tab == 'cross_wishlist_list_tab'){
             jQuery('input[name="cross_wishlist_cross_grid_inputs"]').each(function() {
@@ -486,13 +494,13 @@ jQuery(document).ready(function($) {
                     }
                 }
             });
-            trial_id = jQuery('#cross_wishlist_list_trial_id').val();
+            female_trial_id = jQuery('#cross_wishlist_list_female_trial_id').val();
         }
         //console.log(cross_data);
         //console.log(trial_id);
         //console.log(female_male_tracker);
-        if(!trial_id){
-            alert('You must select a trial!');
+        if(!female_trial_id){
+            alert('You must select a female trial!');
             return;
         }
         for (f in female_male_tracker){
@@ -507,7 +515,8 @@ jQuery(document).ready(function($) {
             method: 'POST',
             data: {
                 'crosses': JSON.stringify(cross_data),
-                'trial_id': trial_id
+                'female_trial_id': female_trial_id,
+                'male_trial_id': male_trial_id
             },
             dataType:'json',
             beforeSend: function() {
@@ -537,12 +546,19 @@ jQuery(document).ready(function($) {
 
         jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
             if (this.checked){
-                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'female_plot_id' : jQuery(this).val(), 'male_genotypes_string' : jQuery(this).data('male_genotypes_string') });
+                selected_plot_ids.push({
+                    'cross_female_accession_name' : jQuery(this).data('female_accession_name'),
+                    'female_plot_id' : jQuery(this).val(),
+                    'male_genotypes_string' : jQuery(this).data('male_genotypes_string')
+                });
             }
         });
         jQuery('input[name="cross_wishlist_plot_select_male_input"]').each(function() {
             if (this.checked){
-                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'male_plot_id' : jQuery(this).val() });
+                selected_plot_ids.push({
+                    'cross_female_accession_name' : jQuery(this).data('female_accession_name'),
+                    'male_plot_id' : jQuery(this).val()
+                });
                 if (jQuery(this).data('female_accession_name') in female_male_tracker){
                     female_male_tracker[jQuery(this).data('female_accession_name')].push(jQuery(this).val());
                 } else {
@@ -566,7 +582,8 @@ jQuery(document).ready(function($) {
             data: {
                 'crosses': JSON.stringify(cross_data),
                 'selected_plot_ids': JSON.stringify(selected_plot_ids),
-                'trial_id': trial_id,
+                'female_trial_id': female_trial_id,
+                'male_trial_id': male_trial_id,
                 'form_id': jQuery('#cross_wishlist_availabe_odk_crossing_forms').val(),
                 'form_name': jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
             },
