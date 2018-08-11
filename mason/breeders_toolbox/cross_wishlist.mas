@@ -346,20 +346,21 @@ jQuery(document).ready(function($) {
         male_trial_id;
     });
 
-    var trial_ids_array = [];
+    var female_trial_ids_array = [];
+    var male_trial_ids_array = [];
     function cross_wishlist_change_trials () {
-        var trial_ids = jQuery('#cross_wishlist_female_trial_id').val();
-        var trial_ids_string = '';
-        if ( jQuery.isArray(trial_ids) ) {
-            trial_ids_array = trial_ids;
-            trial_ids_string = trial_ids.join();
+        var female_trial_ids = jQuery('#cross_wishlist_female_trial_id').val();
+        var female_trial_ids_string = '';
+        if ( jQuery.isArray(female_trial_ids) ) {
+            female_trial_ids_array = female_trial_ids;
+            trial_ids_string = female_trial_ids.join();
         } else {
-            trial_ids_array = [trial_ids];
-            trial_ids_string = trial_ids;
+            female_trial_ids_array = [female_trial_ids];
+            female_trial_ids_string = female_trial_ids;
         }
 
         jQuery.ajax({
-            url: '/ajax/breeders/trial/'+trial_ids_array[0]+'/location',
+            url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
             success: function(response) {
                 //console.log(response);
                 var cross_wishlist_name;
@@ -377,22 +378,22 @@ jQuery(document).ready(function($) {
             }
         });
 
-        get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids_array, 'names_as_select':1 });
+        get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':female_trial_ids_array, 'names_as_select':1 });
     };
 
     function cross_wishlist_change_trials_lists () {
-        var trial_ids = jQuery('#cross_wishlist_list_female_trial_id').val();
-        var trial_ids_string = '';
-        if ( jQuery.isArray(trial_ids) ) {
-            trial_ids_array = trial_ids;
-            trial_ids_string = trial_ids.join();
+        var female_trial_ids = jQuery('#cross_wishlist_list_female_trial_id').val();
+        var female_trial_ids_string = '';
+        if ( jQuery.isArray(female_trial_ids) ) {
+            female_trial_ids_array = female_trial_ids;
+            female_trial_ids_string = female_trial_ids.join();
         } else {
-            trial_ids_array = [trial_ids];
-            trial_ids_string = trial_ids;
+            female_trial_ids_array = [female_trial_ids];
+            female_trial_ids_string = female_trial_ids;
         }
 
         jQuery.ajax({
-            url: '/ajax/breeders/trial/'+trial_ids_array[0]+'/location',
+            url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
             success: function(response) {
                 //console.log(response);
                 var cross_wishlist_name;
@@ -416,6 +417,17 @@ jQuery(document).ready(function($) {
     });
 
     function cross_wishlist_select_females () {
+
+        var male_trial_ids = jQuery('#cross_wishlist_list_male_trial_id').val();
+        var male_trial_ids_string = '';
+        if ( jQuery.isArray(male_trial_ids) ) {
+            male_trial_ids_array = male_trial_ids;
+            male_trial_ids_string = male_trial_ids.join();
+        } else {
+            male_trial_ids_array = [male_trial_ids];
+            male_trial_ids_string = male_trial_ids;
+        }
+
         var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
         var html = '<table class="table table-bordered" id="cross_wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 10 : lowest )</th></tr></thead><tbody>';
         for(var i=0; i<female_accession_ids.length; i++){
@@ -423,6 +435,9 @@ jQuery(document).ready(function($) {
         };
         html = html + '</tbody></table>';
         jQuery('#cross_wishlist_male_parent_div').html(html);
+
+        get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':male_trial_ids_array, 'names_as_select':1 });
+
         var cross_wishlist_male_parents = jQuery('#cross_wishlist_male_select_table')
              .find("div")
              .map(function() { return this.id; })
