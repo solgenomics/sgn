@@ -496,6 +496,7 @@ jQuery(document).ready(function($) {
                 }
             });
             female_trial_id = jQuery('#cross_wishlist_female_trial_id').val();
+            male_trial_id = jQuery('#cross_wishlist_male_trial_id').val();
         }
         if (active_tab == 'cross_wishlist_list_tab'){
             jQuery('input[name="cross_wishlist_cross_grid_inputs"]').each(function() {
@@ -512,12 +513,17 @@ jQuery(document).ready(function($) {
                 }
             });
             female_trial_id = jQuery('#cross_wishlist_list_female_trial_id').val();
+            male_trial_id = jQuery('#cross_wishlist_list_male_trial_id').val();
         }
         //console.log(cross_data);
         //console.log(trial_id);
         //console.log(female_male_tracker);
         if(!female_trial_id){
             alert('You must select a female trial!');
+            return;
+        }
+        if(!male_trial_id){
+            alert('You must select a male trial! It can be the same trial as the female trial.');
             return;
         }
         for (f in female_male_tracker){
