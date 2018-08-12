@@ -486,8 +486,14 @@ sub get_genotyping_data_protocols_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
+    my @protocol_list = $c->req->param('protocol_ids') ? split ',', $c->req->param('protocol_ids') : ();
+    my @accession_list = $c->req->param('accession_ids') ? split ',', $c->req->param('accession_ids') : ();
+    my @tissue_sample_list = $c->req->param('tissue_sample_ids') ? split ',', $c->req->param('tissue_sample_ids') : ();
+    my @genotyping_data_project_list = $c->req->param('genotyping_data_project_ids') ? split ',', $c->req->param('genotyping_data_project_ids') : ();
+    my $limit;
+    my $offset;
 
-    my $data = CXGN::Genotype::Protocol::list($bcs_schema);
+    my $data = CXGN::Genotype::Protocol::list($bcs_schema, \@protocol_list, \@accession_list, \@tissue_sample_list, $limit, $offset, \@genotyping_data_project_list);
     my @result;
     foreach (@$data){
         my @res;

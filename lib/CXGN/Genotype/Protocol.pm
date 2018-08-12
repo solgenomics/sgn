@@ -108,6 +108,7 @@ sub list {
     my $tissue_sample_list = shift;
     my $limit = shift;
     my $offset = shift;
+    my $genotyping_data_project_list = shift;
     my @where_clause;
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
@@ -119,6 +120,10 @@ sub list {
     if ($protocol_list && scalar(@$protocol_list)>0) {
         my $protocol_sql = join ("," , @$protocol_list);
         push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
+    }
+    if ($genotyping_data_project_list && scalar(@$genotyping_data_project_list)>0) {
+        my $sql = join ("," , @$genotyping_data_project_list);
+        push @where_clause, "project.project_id in ($sql)";
     }
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);

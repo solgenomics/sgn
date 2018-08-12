@@ -33,8 +33,14 @@ sub genotyping_protocol_search_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @protocol_list = $c->req->param('protocol_ids') ? split ',', $c->req->param('protocol_ids') : ();
+    my @accession_list = $c->req->param('accession_ids') ? split ',', $c->req->param('accession_ids') : ();
+    my @tissue_sample_list = $c->req->param('tissue_sample_ids') ? split ',', $c->req->param('tissue_sample_ids') : ();
+    my @genotyping_data_project_list = $c->req->param('genotyping_data_project_ids') ? split ',', $c->req->param('genotyping_data_project_ids') : ();
+    my $limit;
+    my $offset;
 
-    my $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema);
+    my $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema, \@protocol_list, \@accession_list, \@tissue_sample_list, $limit, $offset, \@genotyping_data_project_list);
     my @result;
     foreach (@$protocol_search_result){
         my $num_markers = scalar keys %{$_->{markers}};
