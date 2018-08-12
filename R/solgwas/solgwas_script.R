@@ -1,7 +1,7 @@
 #install.packages("rrBLUP")
 #install.packages("corrplot")
 #install.packages("dplyr")
-setwd("/home/vagrant/cxgn/sgn/")
+
 library("dplyr")
 
 ########################################
