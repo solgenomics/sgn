@@ -231,6 +231,7 @@ sub get_genotype_info {
         my $all_protocol_marker_names = $protocol ? $protocol->{'marker_names'} : undef;
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
+        my $igd_number = !$igd_number && $igd_number_hash ? $igd_number_hash->{'igd_number'} : undef;
 
         my %dosage_hash;
         while(my($marker_name, $val) = each %$genotype) {
@@ -248,7 +249,7 @@ sub get_genotype_info {
             $germplasmDbId = $accession_id;
         }
 
-        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
+        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$germplasmDbId});
 
         push @data, {
             markerProfileDbId => $genotypeprop_id,

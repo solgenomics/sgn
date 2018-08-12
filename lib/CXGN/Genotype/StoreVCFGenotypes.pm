@@ -388,7 +388,7 @@ sub validate {
     my @observation_unit_uniquenames_stripped;
     if ($include_igd_numbers){
         foreach (@$observation_unit_uniquenames) {
-            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
@@ -636,7 +636,7 @@ sub store {
     my @observation_unit_uniquenames_stripped;
     if ($igd_numbers_included){
         foreach (@$observation_unit_uniquenames) {
-            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
@@ -670,7 +670,7 @@ sub store {
         my $accession_name;
         my $igd_number;
         if ($igd_numbers_included){
-            ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         } else {
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
