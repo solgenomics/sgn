@@ -47,9 +47,16 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name: </label>
+                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
                                     <div class="col-sm-9" >
-                                        <div id="cross_wishlist_trial_select_list_div">
+                                        <div id="cross_wishlist_female_trial_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_male_trial_select_list_div">
                                         </div>
                                     </div>
                                 </div>
@@ -83,9 +90,16 @@
 
                             <form class="form-horizontal" >
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name: </label>
+                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
                                     <div class="col-sm-9" >
-                                        <div id="cross_wishlist_trial_select_no_list_div">
+                                        <div id="cross_wishlist_female_trial_select_no_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_male_trial_select_no_list_div">
                                         </div>
                                     </div>
                                 </div>
@@ -305,19 +319,22 @@ jQuery(document).ready(function($) {
     });
 
     get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
-    get_select_box('trials', 'cross_wishlist_trial_select_no_list_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_female_trial_select_no_list_div', { 'name' : 'cross_wishlist_female_trial_id', 'id' : 'cross_wishlist_female_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_male_trial_select_no_list_div', { 'name' : 'cross_wishlist_male_trial_id', 'id' : 'cross_wishlist_male_trial_id', 'empty':1, 'multiple':0 });
 
-    get_select_box('trials', 'cross_wishlist_trial_select_list_div', { 'name' : 'cross_wishlist_list_trial_id', 'id' : 'cross_wishlist_list_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_female_trial_select_list_div', { 'name' : 'cross_wishlist_list_female_trial_id', 'id' : 'cross_wishlist_list_female_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_male_trial_select_list_div', { 'name' : 'cross_wishlist_list_male_trial_id', 'id' : 'cross_wishlist_list_male_trial_id', 'empty':1, 'multiple':0 });
 
-    jQuery(document).on('change', "#cross_wishlist_list_trial_id", function() {
+    jQuery(document).on('change', "#cross_wishlist_list_female_trial_id", function() {
         cross_wishlist_change_trials_lists();
     });
 
-    jQuery(document).on('change', "#cross_wishlist_trial_id", function() {
+    jQuery(document).on('change', "#cross_wishlist_female_trial_id", function() {
         cross_wishlist_change_trials();
     });
 
-    var trial_id;
+    var female_trial_id;
+    var male_trial_id;
     var cross_data = [];
     var female_male_tracker = {};
     var selected_plot_ids = [];
@@ -325,30 +342,34 @@ jQuery(document).ready(function($) {
         cross_data = [];
         female_male_tracker = {};
         selected_plot_ids = [];
-        trial_id;
+        female_trial_id;
+        male_trial_id;
     });
 
-    var trial_ids_array = [];
+    var female_trial_ids_array = [];
+    var male_trial_ids_array = [];
     function cross_wishlist_change_trials () {
-        var trial_ids = jQuery('#cross_wishlist_trial_id').val();
-        var trial_ids_string = '';
-        if ( jQuery.isArray(trial_ids) ) {
-            trial_ids_array = trial_ids;
-            trial_ids_string = trial_ids.join();
+        var female_trial_ids = jQuery('#cross_wishlist_female_trial_id').val();
+        var female_trial_ids_string = '';
+        if ( jQuery.isArray(female_trial_ids) ) {
+            female_trial_ids_array = female_trial_ids;
+            trial_ids_string = female_trial_ids.join();
         } else {
-            trial_ids_array = [trial_ids];
-            trial_ids_string = trial_ids;
+            female_trial_ids_array = [female_trial_ids];
+            female_trial_ids_string = female_trial_ids;
         }
 
         jQuery.ajax({
-            url: '/ajax/breeders/trial/'+trial_ids_array[0]+'/location',
+            url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
             success: function(response) {
                 //console.log(response);
                 var cross_wishlist_name;
                 if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
                     cross_wishlist_name = 'cross_wishlist_test.csv';
-                } else {
+                } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
                     cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
+                } else {
+                    cross_wishlist_name = 'cross_wishlist_<% $c->config->{project_name} %>.csv';
                 }
                 jQuery('#cross_wishlist_trial_select_no_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
             },
@@ -357,25 +378,33 @@ jQuery(document).ready(function($) {
             }
         });
 
-        get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids_array, 'names_as_select':1 });
+        get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':female_trial_ids_array, 'names_as_select':1 });
     };
 
     function cross_wishlist_change_trials_lists () {
-        var trial_ids = jQuery('#cross_wishlist_list_trial_id').val();
-        var trial_ids_string = '';
-        if ( jQuery.isArray(trial_ids) ) {
-            trial_ids_array = trial_ids;
-            trial_ids_string = trial_ids.join();
+        var female_trial_ids = jQuery('#cross_wishlist_list_female_trial_id').val();
+        var female_trial_ids_string = '';
+        if ( jQuery.isArray(female_trial_ids) ) {
+            female_trial_ids_array = female_trial_ids;
+            female_trial_ids_string = female_trial_ids.join();
         } else {
-            trial_ids_array = [trial_ids];
-            trial_ids_string = trial_ids;
+            female_trial_ids_array = [female_trial_ids];
+            female_trial_ids_string = female_trial_ids;
         }
 
         jQuery.ajax({
-            url: '/ajax/breeders/trial/'+trial_ids_array[0]+'/location',
+            url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
             success: function(response) {
                 //console.log(response);
-                jQuery('#cross_wishlist_trial_select_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="cross_wishlist_'+response.location[1]+'" />');
+                var cross_wishlist_name;
+                if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
+                    cross_wishlist_name = 'cross_wishlist_test.csv';
+                } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
+                    cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
+                } else {
+                    cross_wishlist_name = 'cross_wishlist_<% $c->config->{project_name} %>.csv';
+                }
+                jQuery('#cross_wishlist_trial_select_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
             },
             error: function(response) {
                 alert("An error occurred getting trial location");
@@ -388,6 +417,21 @@ jQuery(document).ready(function($) {
     });
 
     function cross_wishlist_select_females () {
+
+        var male_trial_ids = jQuery('#cross_wishlist_male_trial_id').val();
+        var male_trial_ids_string = '';
+        if ( jQuery.isArray(male_trial_ids) ) {
+            male_trial_ids_array = male_trial_ids;
+            male_trial_ids_string = male_trial_ids.join();
+        } else {
+            male_trial_ids_array = [male_trial_ids];
+            male_trial_ids_string = male_trial_ids;
+        }
+        if (male_trial_ids.length == 0){
+            alert('Please select a male trial first!');
+            return;
+        }
+
         var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
         var html = '<table class="table table-bordered" id="cross_wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 10 : lowest )</th></tr></thead><tbody>';
         for(var i=0; i<female_accession_ids.length; i++){
@@ -395,6 +439,7 @@ jQuery(document).ready(function($) {
         };
         html = html + '</tbody></table>';
         jQuery('#cross_wishlist_male_parent_div').html(html);
+
         var cross_wishlist_male_parents = jQuery('#cross_wishlist_male_select_table')
              .find("div")
              .map(function() { return this.id; })
@@ -402,7 +447,7 @@ jQuery(document).ready(function($) {
         //console.log(cross_wishlist_male_parents);
         for(var i=0; i<cross_wishlist_male_parents.length; i++){
             var female_id = jQuery('#cross_wishlist_male_accession_id_'+ i +'_priority').data('related');
-            get_select_box('stocks', cross_wishlist_male_parents[i], { 'name' : 'cross_wishlist_male_accession_id_select', 'id' : 'cross_wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids_array, 'names_as_select':1, 'data-related':female_id });
+            get_select_box('stocks', cross_wishlist_male_parents[i], { 'name' : 'cross_wishlist_male_accession_id_select', 'id' : 'cross_wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':male_trial_ids_array, 'names_as_select':1, 'data-related':female_id });
         };
     };
 
@@ -434,7 +479,8 @@ jQuery(document).ready(function($) {
         cross_data = [];
         female_male_tracker = {};
         selected_plot_ids = [];
-        trial_id;
+        female_trial_id;
+        male_trial_id;
 
         var male_accession_limit = 10;
         if (active_tab == 'cross_wishlist_no_list_tab'){
@@ -449,7 +495,8 @@ jQuery(document).ready(function($) {
                     female_male_tracker[female_id] = [male_id];
                 }
             });
-            trial_id = jQuery('#cross_wishlist_trial_id').val();
+            female_trial_id = jQuery('#cross_wishlist_female_trial_id').val();
+            male_trial_id = jQuery('#cross_wishlist_male_trial_id').val();
         }
         if (active_tab == 'cross_wishlist_list_tab'){
             jQuery('input[name="cross_wishlist_cross_grid_inputs"]').each(function() {
@@ -465,13 +512,18 @@ jQuery(document).ready(function($) {
                     }
                 }
             });
-            trial_id = jQuery('#cross_wishlist_list_trial_id').val();
+            female_trial_id = jQuery('#cross_wishlist_list_female_trial_id').val();
+            male_trial_id = jQuery('#cross_wishlist_list_male_trial_id').val();
         }
         //console.log(cross_data);
         //console.log(trial_id);
         //console.log(female_male_tracker);
-        if(!trial_id){
-            alert('You must select a trial!');
+        if(!female_trial_id){
+            alert('You must select a female trial!');
+            return;
+        }
+        if(!male_trial_id){
+            alert('You must select a male trial! It can be the same trial as the female trial.');
             return;
         }
         for (f in female_male_tracker){
@@ -486,7 +538,8 @@ jQuery(document).ready(function($) {
             method: 'POST',
             data: {
                 'crosses': JSON.stringify(cross_data),
-                'trial_id': trial_id
+                'female_trial_id': female_trial_id,
+                'male_trial_id': male_trial_id
             },
             dataType:'json',
             beforeSend: function() {
@@ -516,12 +569,19 @@ jQuery(document).ready(function($) {
 
         jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
             if (this.checked){
-                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'female_plot_id' : jQuery(this).val(), 'male_genotypes_string' : jQuery(this).data('male_genotypes_string') });
+                selected_plot_ids.push({
+                    'cross_female_accession_name' : jQuery(this).data('female_accession_name'),
+                    'female_plot_id' : jQuery(this).val(),
+                    'male_genotypes_string' : jQuery(this).data('male_genotypes_string')
+                });
             }
         });
         jQuery('input[name="cross_wishlist_plot_select_male_input"]').each(function() {
             if (this.checked){
-                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'male_plot_id' : jQuery(this).val() });
+                selected_plot_ids.push({
+                    'cross_female_accession_name' : jQuery(this).data('female_accession_name'),
+                    'male_plot_id' : jQuery(this).val()
+                });
                 if (jQuery(this).data('female_accession_name') in female_male_tracker){
                     female_male_tracker[jQuery(this).data('female_accession_name')].push(jQuery(this).val());
                 } else {
@@ -545,7 +605,8 @@ jQuery(document).ready(function($) {
             data: {
                 'crosses': JSON.stringify(cross_data),
                 'selected_plot_ids': JSON.stringify(selected_plot_ids),
-                'trial_id': trial_id,
+                'female_trial_id': female_trial_id,
+                'male_trial_id': male_trial_id,
                 'form_id': jQuery('#cross_wishlist_availabe_odk_crossing_forms').val(),
                 'form_name': jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
             },
