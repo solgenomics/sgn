@@ -96,20 +96,20 @@ if (is.null(filteredGenoFile) == TRUE) {
 
 genoData <- data.frame(genoData)
 
-optimalK <- pamk(genoData)
-message('recommended k no: ', optimalK$nc)
+kmeansOut <- kmeansruns(genoData)
+message('recommended k no: ', kmeansOut$bestK)
 
-clusterResult <- pam(genoData, optimalK$nc)
-print(clusterResult)
+#clusterResult <- pam(genoData, koptimalK$nc)
+#print(clusterResult)
 
-print(clusterResult$objective)
+#print(clusterResult$objective)
 
 png(plotKmeansFile)
-autoplot(kmeans(genoData, 4), data=genoData, frame = TRUE, frame.type='norm', x=2, y=3)
+autoplot(kmeans(genoData, 3), data=genoData, frame = TRUE, frame.type='norm', x=2, y=3)
 dev.off()
 
 png(plotPamFile)
-autoplot(pam(genoData, 4), frame = TRUE, frame.type = 'norm', x=2, y=3)
+autoplot(pam(genoData, 3), frame = TRUE, frame.type = 'norm', x=2, y=3)
 dev.off()
 
 

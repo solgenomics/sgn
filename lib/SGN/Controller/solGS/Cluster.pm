@@ -3,6 +3,7 @@ package SGN::Controller::solGS::Cluster;
 use Moose;
 use namespace::autoclean;
 
+use File::Basename;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw / mkpath  /;
 use File::Temp qw / tempfile tempdir /;
@@ -223,8 +224,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	}	
     }
     
-    my $cluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $cluster_result_file);
-   
+    #my $cluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $cluster_result_file);
+    my $kcluster_plot = $self->copy_kmeans_plot_to_images_dir($c);
     my $host = $c->req->base;
 
     if ( $host !~ /localhost/)
@@ -235,14 +236,19 @@ sub cluster_result :Path('/cluster/result/') Args() {
     
     my $output_link = $host . 'cluster/analysis/' . $pop_id;
 
-    if ($cluster_result)
+    if ($kcluster_plot)
     {
-        $ret->{cluster} = $cluster_result;
+        $ret->{kcluster_plot} = $kcluster_plot;
         $ret->{status} = 'success';  
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	#$ret->{trials_names} = $c->stash->{trials_names};
 	$ret->{output_link}  = $output_link;
-    }   
+    }  
+
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret); 
 
 }
 
@@ -270,7 +276,11 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
     {
         $ret->{status} = 'success';
     }
-               
+     
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);         
 }
 
 
@@ -436,6 +446,25 @@ sub hierarchical_result_file {
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
+}
+
+
+sub copy_kmeans_plot_to_images_dir {
+    my ($self, $c) = @_;
+
+    my $images_dir = catfile($c->tempfiles_subdir, 'temp_images');
+    my $fpath_images_dir = catfile($c->config->{basepath}, $images_dir);
+  
+    $self->kcluster_plot_kmeans_file($c);   
+    my $plot = $c->stash->{kcluster_plot_kmeans_file};
+
+
+    $c->controller('solGS::Files')->copy_file($plot, $fpath_images_dir);
+
+    my $image_dir_file = catfile($images_dir, basename($plot));
+
+    return $image_dir_file;
+    
 }
 
 

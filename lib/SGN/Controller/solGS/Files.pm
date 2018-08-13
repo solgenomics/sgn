@@ -606,6 +606,16 @@ sub create_tempfile {
 }
 
 
+sub copy_file {
+    my ($self, $file, $dir) = @_;
+    
+    mkpath($dir, 0, 755);
+    
+    copy($file, $dir) 
+	or die "could not copy $file to $dir: @!";    
+}
+
+
 sub grep_file {
     my ($self, $dir, $exp) = @_;
 
