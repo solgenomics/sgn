@@ -278,7 +278,6 @@ sub search {
             { 'me.name'          => {'ilike' => $start.$any_name.$end} },
             { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
             { 'me.description'   => {'ilike' => $start.$any_name.$end} },
-            { 'stockprops.value'   => {'ilike' => $start.$any_name.$end} }
         ];
     } else {
         $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
