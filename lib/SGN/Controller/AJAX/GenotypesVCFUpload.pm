@@ -221,13 +221,13 @@ sub upload_genotype_verify_POST : Args(0) {
     });
     my $verified_errors = $store_genotypes->validate();
     if (scalar(@{$verified_errors->{error_messages}}) > 0){
-        print STDERR Dumper $verified_errors->{error_messages};
+        #print STDERR Dumper $verified_errors->{error_messages};
         my $error_string = join ', ', @{$verified_errors->{error_messages}};
         $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
         $c->detach();
     }
     if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        print STDERR Dumper $verified_errors->{warning_messages};
+        #print STDERR Dumper $verified_errors->{warning_messages};
         my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
         if (!$accept_warnings){
             $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };

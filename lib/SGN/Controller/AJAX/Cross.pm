@@ -777,11 +777,12 @@ sub create_cross_wishlist_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
-    my $trial_id = $c->req->param('trial_id');
+    my $female_trial_id = $c->req->param('female_trial_id');
+    my $male_trial_id = $c->req->param('male_trial_id');
     #print STDERR Dumper $data;
 
-    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-    my $location = $t->get_location();
+    my $female_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $female_trial_id });
+    my $location = $female_trial->get_location();
     my $location_name = $location->[1];
     #if ($location_name ne 'Arusha'){
     #    $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
@@ -809,8 +810,8 @@ sub create_cross_wishlist_POST : Args(0) {
     }
     #print STDERR Dumper \%ordered_data;
 
-    my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
-    my $design_layout = $trial->get_design();
+    my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
+    my $design_layout = $female_trial_layout->get_design();
     #print STDERR Dumper $design_layout;
 
     my %block_plot_hash;
@@ -904,14 +905,15 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
     #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
-    my $trial_id = $c->req->param('trial_id');
+    my $female_trial_id = $c->req->param('female_trial_id');
+    my $male_trial_id = $c->req->param('male_trial_id');
     my $ona_form_id = $c->req->param('form_id');
     my $ona_form_name = $c->req->param('form_name');
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
     my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
     my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
 
-    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists are separated by location
+    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists can be separated by location
     my $is_test_form;
     if ($ona_form_name eq $test_ona_form_name){
         $is_test_form = 1;
@@ -956,23 +958,31 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     }
     #print STDERR Dumper \%ordered_data;
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-    my $location = $trial->get_location();
-    my $location_name = $location->[1];
-    my $location_id = $location->[0];
-    my $trial_name = $trial->get_name();
-    my $planting_date = $trial->get_planting_date() || " ";
-    my $trial_year = $trial->get_year();
+    my $female_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $female_trial_id });
+    my $female_location = $female_trial->get_location();
+    my $female_location_name = $female_location->[1];
+    my $female_location_id = $female_location->[0];
+    my $female_trial_name = $female_trial->get_name();
+    my $female_planting_date = $female_trial->get_planting_date() || " ";
+    my $female_trial_year = $female_trial->get_year();
+    my $male_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $male_trial_id });
+    my $male_location = $male_trial->get_location();
+    my $male_location_name = $male_location->[1];
+    my $male_location_id = $male_location->[0];
+    my $male_trial_name = $male_trial->get_name();
+    my $male_planting_date = $male_trial->get_planting_date() || " ";
+    my $male_trial_year = $male_trial->get_year();
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' });
-    my $design_layout = $trial_layout->get_design();
-    #print STDERR Dumper $design_layout;
+    my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
+    my $female_design_layout = $female_trial_layout->get_design();
+    my $male_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $male_trial_id, experiment_type=>'field_layout' });
+    my $male_design_layout = $male_trial_layout->get_design();
 
     my $file_type;
     if ($is_test_form){
         $file_type = 'cross_wishlist_test_'.$ona_form_id;
     } elsif ($separate_crosswishlist_by_location){
-        $file_type = 'cross_wishlist_'.$location_name.'_'.$ona_form_id;
+        $file_type = 'cross_wishlist_'.$female_location_name.'_'.$ona_form_id;
     } else {
         $file_type = 'cross_wishlist_'.$ona_form_id;
     }
@@ -1007,7 +1017,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($is_test_form){
         $germplasm_info_file_type = 'cross_wishlist_germplasm_info_test_'.$ona_form_id;
     } elsif ($separate_crosswishlist_by_location){
-        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$location_name.'_'.$ona_form_id;
+        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$female_location_name.'_'.$ona_form_id;
     } else {
         $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$ona_form_id;
     }
@@ -1039,10 +1049,30 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my @plot_info_lines;
 
     my %accession_id_hash;
-    while ( my ($key,$value) = each %$design_layout){
+    my %female_and_male_trials;
+    while ( my ($key,$value) = each %$female_design_layout){
         my $accession_id = $value->{accession_id};
         $accession_id_hash{$accession_id} = $value;
+        $female_and_male_trials{female}->{design}->{$key} = $value;
     }
+    while ( my ($key,$value) = each %$male_design_layout){
+        my $accession_id = $value->{accession_id};
+        $accession_id_hash{$accession_id} = $value;
+        $female_and_male_trials{male}->{design}->{$key} = $value;
+    }
+    $female_and_male_trials{female}->{location_name} = $female_location->[1];
+    $female_and_male_trials{female}->{location_id} = $female_location->[0];
+    $female_and_male_trials{female}->{trial_id} = $female_trial_id;
+    $female_and_male_trials{female}->{trial_name} = $female_trial->get_name();
+    $female_and_male_trials{female}->{planting_date} = $female_trial->get_planting_date() || " ";
+    $female_and_male_trials{female}->{year} = $female_trial->get_year();
+    $female_and_male_trials{male}->{location_name} = $male_location->[1];
+    $female_and_male_trials{male}->{location_id} = $male_location->[0];
+    $female_and_male_trials{male}->{trial_id} = $male_trial_id;
+    $female_and_male_trials{male}->{trial_name} = $male_trial->get_name();
+    $female_and_male_trials{male}->{planting_date} = $male_trial->get_planting_date() || " ";
+    $female_and_male_trials{male}->{year} = $male_trial->get_year();
+
     my @accession_ids = keys %accession_id_hash;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $stock_search = CXGN::Stock::Search->new({
@@ -1060,73 +1090,41 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     }
 
     my %plot_id_hash;
-    while ( my ($key,$value) = each %$design_layout){
-        my $plot_id = $value->{plot_id};
-        $plot_id_hash{$plot_id} = $value;
-        my $plant_names = $value->{plant_names};
-        my $plant_ids = $value->{plant_ids};
-        my $plot_name = $value->{plot_name};
-        my $accession_name = $value->{accession_name};
-        my $accession_id = $value->{accession_id};
-        my $plot_number = $value->{plot_number};
-        my $block_number = $value->{block_number} || '';
-        my $rep_number = $value->{rep_number} || '';
-        my $row_number = $value->{row_number} || '';
-        my $col_number = $value->{col_number} || '';
-        my $is_a_control = $value->{is_a_control} || '';
-        my $tier = $row_number && $col_number ? $row_number."/".$col_number : '';
-        my $seedlot_name = $value->{seedlot_name} || '';
-        my $seedlot_transaction_operator = $value->{seed_transaction_operator} || '';
-        my $seedlot_num_seed_per_plot = $value->{num_seed_per_plot} || '';
+    while ( my ($k,$v) = each %female_and_male_trials){
+        my $design = $v->{design};
+        my $location_name = $v->{location_name};
+        my $location_id = $v->{location_id};
+        my $trial_id = $v->{trial_id};
+        my $trial_name = $v->{trial_name};
+        my $planting_date = $v->{planting_date};
+        my $trial_year = $v->{year};
 
-        if (!exists($seen_info_obs_units{$plot_id})){
-            my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
-            my $accession_info = $accession_info_hash{$accession_id};
-            my $synonyms = join(',',@{$accession_info->{synonyms}});
-            my $pedigree = $accession_stock->get_pedigree_string("Parents");
-            my $genus = $accession_stock->get_genus;
-            my $species = $accession_stock->get_species;
-            my $variety = $accession_info->{variety};
-            my $donors = encode_json($accession_stock->donors);
-            my $countryoforigin = $accession_info->{'country of origin'};
-            my $state = $accession_info->{'state'};
-            my $institute_code = $accession_info->{'institute code'};
-            my $institute_name = $accession_info->{'institute name'};
-            my $bio = $accession_info->{'biological status of accession code'};
-            my $notes = $accession_info->{notes};
-            my $accession_number = $accession_info->{'accession number'};
-            my $pui = $accession_info->{'PUI'};
-            my $seedsource = $accession_info->{'seed source'};
-            my $storage_code = $accession_info->{'type of germplasm storage code'};
-            my $acquisition_date = $accession_info->{'acquisition date'};
-            my $organization = $accession_info->{organization};
-            my $population = $accession_stock->population_name || '';
-            my $stock_descendant_hash = $accession_stock->get_descendant_hash();
-            my $descendants = $stock_descendant_hash->{descendants};
-            my @descendents_array;
-            while (my($k,$v) = each %$descendants){
-                push @descendents_array, $v->{name};
-            }
-            my $descendents_string = join ',', @descendents_array;
-            my $t = time;
-            my $entry_timestamp = strftime '%F %T', localtime $t;
-            $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-            push @plot_info_lines, '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","","","","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+        while ( my ($key,$value) = each %$design){
+            my $plot_id = $value->{plot_id};
+            $plot_id_hash{$plot_id} = $value;
+            my $plant_names = $value->{plant_names};
+            my $plant_ids = $value->{plant_ids};
+            my $plot_name = $value->{plot_name};
+            my $accession_name = $value->{accession_name};
+            my $accession_id = $value->{accession_id};
+            my $plot_number = $value->{plot_number};
+            my $block_number = $value->{block_number} || '';
+            my $rep_number = $value->{rep_number} || '';
+            my $row_number = $value->{row_number} || '';
+            my $col_number = $value->{col_number} || '';
+            my $is_a_control = $value->{is_a_control} || '';
+            my $tier = $row_number && $col_number ? $row_number."/".$col_number : '';
+            my $seedlot_name = $value->{seedlot_name} || '';
+            my $seedlot_transaction_operator = $value->{seed_transaction_operator} || '';
+            my $seedlot_num_seed_per_plot = $value->{num_seed_per_plot} || '';
 
-            $seen_info_obs_units{$plot_id}++;
-        }
-
-        my $plant_number = 1;
-        my $plant_index = 0;
-        foreach (@$plant_names){
-            my $plant_id = $plant_ids->[$plant_index];
-            if (!exists($seen_info_obs_units{$plant_id})){
+            if (!exists($seen_info_obs_units{$plot_id})){
                 my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
                 my $accession_info = $accession_info_hash{$accession_id};
                 my $synonyms = join(',',@{$accession_info->{synonyms}});
                 my $pedigree = $accession_stock->get_pedigree_string("Parents");
-                my $genus = $accession_stock->get_genus;
-                my $species = $accession_stock->get_species;
+                my $genus = $accession_stock->get_genus || '';
+                my $species = $accession_stock->get_species || '';
                 my $variety = $accession_info->{variety};
                 my $donors = encode_json($accession_stock->donors);
                 my $countryoforigin = $accession_info->{'country of origin'};
@@ -1152,12 +1150,54 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 my $t = time;
                 my $entry_timestamp = strftime '%F %T', localtime $t;
                 $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                push @plot_info_lines, '"plant","'.$_.'","'.$plant_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+                push @plot_info_lines, '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","","","","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
 
-                $seen_info_obs_units{$plant_id}++;
+                $seen_info_obs_units{$plot_id}++;
             }
-            $plant_number++;
-            $plant_index++;
+
+            my $plant_number = 1;
+            my $plant_index = 0;
+            foreach (@$plant_names){
+                my $plant_id = $plant_ids->[$plant_index];
+                if (!exists($seen_info_obs_units{$plant_id})){
+                    my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
+                    my $accession_info = $accession_info_hash{$accession_id};
+                    my $synonyms = join(',',@{$accession_info->{synonyms}});
+                    my $pedigree = $accession_stock->get_pedigree_string("Parents");
+                    my $genus = $accession_stock->get_genus || '';
+                    my $species = $accession_stock->get_species || '';
+                    my $variety = $accession_info->{variety};
+                    my $donors = encode_json($accession_stock->donors);
+                    my $countryoforigin = $accession_info->{'country of origin'};
+                    my $state = $accession_info->{'state'};
+                    my $institute_code = $accession_info->{'institute code'};
+                    my $institute_name = $accession_info->{'institute name'};
+                    my $bio = $accession_info->{'biological status of accession code'};
+                    my $notes = $accession_info->{notes};
+                    my $accession_number = $accession_info->{'accession number'};
+                    my $pui = $accession_info->{'PUI'};
+                    my $seedsource = $accession_info->{'seed source'};
+                    my $storage_code = $accession_info->{'type of germplasm storage code'};
+                    my $acquisition_date = $accession_info->{'acquisition date'};
+                    my $organization = $accession_info->{organization};
+                    my $population = $accession_stock->population_name || '';
+                    my $stock_descendant_hash = $accession_stock->get_descendant_hash();
+                    my $descendants = $stock_descendant_hash->{descendants};
+                    my @descendents_array;
+                    while (my($k,$v) = each %$descendants){
+                        push @descendents_array, $v->{name};
+                    }
+                    my $descendents_string = join ',', @descendents_array;
+                    my $t = time;
+                    my $entry_timestamp = strftime '%F %T', localtime $t;
+                    $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+                    push @plot_info_lines, '"plant","'.$_.'","'.$plant_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+
+                    $seen_info_obs_units{$plant_id}++;
+                }
+                $plant_number++;
+                $plant_index++;
+            }
         }
     }
 
@@ -1333,7 +1373,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($is_test_form){
         $archive_name = 'cross_wishlist_test.csv';
     } elsif ($separate_crosswishlist_by_location){
-        $archive_name = 'cross_wishlist_'.$location_name.'.csv';
+        $archive_name = 'cross_wishlist_'.$female_location_name.'.csv';
     } else {
         $archive_name = 'cross_wishlist_'.$site_name.'.csv';
     }
@@ -1373,7 +1413,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($is_test_form){
         $germplasm_info_archive_name = 'germplasm_info_test.csv';
     } elsif ($separate_crosswishlist_by_location){
-        $germplasm_info_archive_name = 'germplasm_info_'.$location_name.'.csv';
+        $germplasm_info_archive_name = 'germplasm_info_'.$female_location_name.'.csv';
     } else {
         $germplasm_info_archive_name = 'germplasm_info_'.$site_name.'.csv';
     }
@@ -1436,13 +1476,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             "data_value"=>$uploaded_file
         ]
     );
-    
+
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
         #print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
-    
+
             my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
             $md_row->insert();
             my $file_row = $metadata_schema->resultset("MdFiles")
@@ -1464,7 +1504,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         #print STDERR Dumper $resp;
         $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
     }
-    
+
     my $germplasm_info_resp = $ua->post(
         $server_endpoint,
         Content_Type => 'form-data',
@@ -1475,13 +1515,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             "data_value"=>$germplasm_info_uploaded_file
         ]
     );
-    
+
     if ($germplasm_info_resp->is_success) {
         my $message = $germplasm_info_resp->decoded_content;
         my $message_hash = decode_json $message;
         #print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
-    
+
             my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
             $md_row->insert();
             my $file_row = $metadata_schema->resultset("MdFiles")
@@ -1494,7 +1534,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     comment => $message_hash->{id}
                 });
             $file_row->insert();
-    
+
             $c->stash->{rest}->{success} .= 'The germplasm info file is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
         } else {
             $c->stash->{rest}->{error} .= 'The germplasm info file was not posted to ONA. Please try again.';
