@@ -520,7 +520,7 @@ sub get_image_ids {
     my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
     my $h = $self->schema->storage->dbh()->prepare($q);
     $h->execute($self->stock_id);
-    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+    while (my ($image_id, $stock_type, $display_order) = $h->fetchrow_array()){
         push @ids, [$image_id, $stock_type];
     }
     return @ids;
