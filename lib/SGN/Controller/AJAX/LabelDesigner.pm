@@ -159,7 +159,7 @@ __PACKAGE__->config(
        my $data_type = $c->req->param("data_type");
        my $value = $c->req->param("value");
        my $design_json = $c->req->param("design_json");
-       my $labels_to_download = $c->req->param("labels_to_download");
+       my $labels_to_download = $c->req->param("labels_to_download") || 10000000000;
        my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
        # decode json
