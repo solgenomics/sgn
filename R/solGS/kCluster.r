@@ -27,23 +27,21 @@ outputFiles <- scan(outputFile, what = "character")
 inputFile  <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFile, what = "character")
 
-
 kResultFile <- grep("kcluster_result_file", outputFiles, value = TRUE)
-reportFile  <- grep("report_file", outputFiles, value = TRUE)
-errorFile   <- grep("error_file", outputFiles, value = TRUE)
-plotPamFile   <- grep("plot_pam", outputFiles, value = TRUE)
+reportFile  <- grep("report", outputFiles, value = TRUE)
+errorFile   <- grep("error", outputFiles, value = TRUE)
+
+plotPamFile      <- grep("plot_pam", outputFiles, value = TRUE)
 plotKmeansFile   <- grep("plot_kmeans", outputFiles, value = TRUE)
 
 message("k means result file: ", kResultFile)
 message("k means plot file: ", plotKmeansFile)
-
 
 if (is.null(kResultFile))
 {
   stop("Scores output file is missing.")
   q("no", 1, FALSE) 
 }
-
 
 genoData <- c()
 genoMetaData <- c()
@@ -95,22 +93,18 @@ if (is.null(filteredGenoFile) == TRUE) {
 }
 
 genoData <- data.frame(genoData)
-
 kmeansOut <- kmeansruns(genoData)
-message('recommended k no: ', kmeansOut$bestK)
 
-#clusterResult <- pam(genoData, koptimalK$nc)
-#print(clusterResult)
-
-#print(clusterResult$objective)
+recK <- paste0('Recommended number of clusters (k) for this data set is: ', kmeansOut$bestk)
+cat(recK, file=reportFile, sep="\n", append=TRUE)
 
 png(plotKmeansFile)
-autoplot(kmeans(genoData, 3), data=genoData, frame = TRUE, frame.type='norm', x=2, y=3)
+autoplot(kmeans(genoData, kmeansOut$bestk), data=genoData, frame = TRUE, frame.type='norm', x=1, y=2)
 dev.off()
 
-png(plotPamFile)
-autoplot(pam(genoData, 3), frame = TRUE, frame.type = 'norm', x=2, y=3)
-dev.off()
+#png(plotPamFile)
+#autoplot(pam(genoData, 3), frame = TRUE, frame.type = 'norm', x=1, y=2)
+#dev.off()
 
 
 ####

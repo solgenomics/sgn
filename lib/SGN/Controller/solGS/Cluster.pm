@@ -53,7 +53,6 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $referer          = $c->req->referer;
     my $file_id;
 
-    print STDERR "\n list id: $list_id -  cluster type: $cluster_type\n";
     if ($referer =~ /solgs\/selection\//)
     {
 	if ($training_pop_id && $selection_pop_id) 
@@ -333,8 +332,6 @@ sub cluster_list_genotype_data {
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
 	    $c->stash->{genotype_file} = $c->stash->{genotypes_list_genotype_file};
-
-	    print STDERR "\ncreating genotype data  for $list_type\n";
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
@@ -381,9 +378,8 @@ sub kcluster_result_file {
     my ($self, $c) = @_;
     
     my $file_id = $c->stash->{file_id};
-    my $cluster_dir = $c->stash->{cluster_cache_dir};
-
-    $c->stash->{cache_dir} = $cluster_dir;
+   
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
     my $cache_data = {key       => "kcluster_result_${file_id}",
                       file      => "kcluster_result_${file_id}.txt",
@@ -399,9 +395,8 @@ sub kcluster_plot_kmeans_file {
     my ($self, $c) = @_;
     
     my $file_id = $c->stash->{file_id};
-    my $cluster_dir = $c->stash->{cluster_cache_dir};
-
-    $c->stash->{cache_dir} = $cluster_dir;
+  
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
      my $cache_data = {key       => "kcluster_plot_kmeans_${file_id}",
                       file      => "kcluster_plot_kmeans_${file_id}.png",
@@ -497,9 +492,11 @@ sub cluster_output_files {
 
     $c->stash->{analysis_type} = $cluster_type;
     $c->stash->{pop_id} = $file_id;
+
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
     $c->controller('solGS::Files')->analysis_report_file($c);
     my $analysis_report_file = $c->{stash}->{"${cluster_type}_report_file"};
-
+ 
     $c->controller('solGS::Files')->analysis_error_file($c);
     my $analysis_error_file = $c->{stash}->{"${cluster_type}_error_file"};
     
@@ -577,7 +574,6 @@ sub run_cluster {
 	$c->stash->{r_script}     = 'R/solGS/hierarchical.r';	
     }
 
-    print STDERR "\nrun_cluster: input: $input_file -- output: $output_file\n";
     $c->controller("solGS::solGS")->run_r_script($c);
     
 }

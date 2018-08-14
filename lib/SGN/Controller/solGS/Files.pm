@@ -216,9 +216,10 @@ sub analysis_error_file {
 sub analysis_report_file {
     my ($self, $c) = @_;
    
-    my $model_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id};
-    my $trait_id = $c->stash->{trait_id};
-    my $type     = $c->stash->{analysis_type};
+    my $model_id  = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id};
+    my $trait_id  = $c->stash->{trait_id};
+    my $type      = $c->stash->{analysis_type};
+    my $cache_dir = $c->stash->{cache_dir};
     
     my $name;
 
@@ -229,11 +230,11 @@ sub analysis_report_file {
     else
     {
 	$name = "${type}_report_${model_id}"
-    }
-    
+    }    
   
     my $cache_data = { key       => $name, 
 		       file      => $name . '.txt',
+		       cache_dir => $cache_dir;
 		       stash_key => "${type}_report_file",
     };
     
@@ -560,8 +561,8 @@ sub template {
 sub cache_file {
     my ($self, $c, $cache_data) = @_;
   
-    my $cache_dir = $c->stash->{cache_dir};
-   
+    $cache_dir = $cache_data->{cache_dir} || $c->stash->{cache_dir};
+    
     unless ($cache_dir) 
     {
 	$cache_dir = $c->stash->{solgs_cache_dir};
