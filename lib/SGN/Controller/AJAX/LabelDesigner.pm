@@ -159,6 +159,7 @@ __PACKAGE__->config(
        my $data_type = $c->req->param("data_type");
        my $value = $c->req->param("value");
        my $design_json = $c->req->param("design_json");
+       my $labels_to_download = $c->req->param("labels_to_download") || 10000000000;
        my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
        # decode json
@@ -252,6 +253,10 @@ __PACKAGE__->config(
 
            # loop through plot data in design hash
            foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
+
+               if ($key_number >= $labels_to_download){
+                   last;
+               }
 
                 #print STDERR "Design key is $key\n";
                 my %design_info = %{$design{$key}};
@@ -380,6 +385,11 @@ __PACKAGE__->config(
            $zpl_obj->end_sequence();
            my $zpl_template = $zpl_obj->render();
            foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
+
+               if ($key_number >= $labels_to_download){
+                   last;
+               }
+
             #    print STDERR "Design key is $key\n";
                my %design_info = %{$design{$key}};
                $design_info{'trial_name'} = $trial_name;
