@@ -454,11 +454,11 @@ sub retrieve_genotypes {
     my $protocol_id = shift;
 
     my $genotypes_search = CXGN::Genotype::Search->new(
-	bcs_schema => $self->schema(),
-	accession_list => $self->accessions(),
-	trial_list => $self->trials(),
-	protocol_id => $protocol_id
-	);
+        bcs_schema => $self->schema(),
+        accession_list => $self->accessions(),
+        trial_list => $self->trials(),
+        protocol_id_list => [$protocol_id]
+    );
     my ($total_count, $dataref) = $genotypes_search->get_genotype_info();
     return $dataref;
 }
