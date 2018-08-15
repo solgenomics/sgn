@@ -2689,9 +2689,12 @@ sub create_tissue_samples {
 sub has_col_and_row_numbers {
 	my $self = shift;
 	my $chado_schema = $self->bcs_schema();
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
-    my $design = $layout->get_design();
-    
+    my $design;
+    try {
+        my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
+        $design = $layout->get_design();
+    }
+
     my (@row_numbers, @col_numbers);
     foreach my $plot (keys %$design) {
         my $row_number = $design->{$plot}->{row_number};
