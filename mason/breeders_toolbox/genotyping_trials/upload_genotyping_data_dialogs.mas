@@ -40,6 +40,7 @@
                                             <th>Breeding program</th>
                                             <th>Year</th>
                                             <th>Location</th>
+                                            <th>Genotyping Facility</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -222,11 +223,14 @@
                                         <label class="col-sm-5 control-label">Add these missing stocks as new accessions?: </label>
                                         <div class="col-sm-7">
                                             <select class="form-control" id="upload_genotype_add_new_accessions" name="upload_genotype_add_new_accessions">
-                                                <option value="">No</option>
-                                                <option value="1">Yes</option>
+                                                <option value="">No (currently disabled for safety)</option>
+                                                <!--option value="1">Yes</option-->
                                             </select>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div id="upload_genotypes_errors_div">
                                 </div>
 
                                 <div id="upload_genotypes_warnings_div" style="display:none">
