@@ -4,8 +4,8 @@
   "description": "node package containing all importable CXGN/SGN JavaScript files.",
   "main": "webpack.config.js",
   "scripts": {
-    "build": "rm -r build/ || true && npm install . && webpack",
-    "build-watch": "rm -r build/ || true && npm install . && webpack -w"
+    "build": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack",
+    "build-watch": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack -w"
   },
   "private": true,
   "author": "",
@@ -16,8 +16,13 @@
     "babel-loader": "^8.0.0-beta.4",
     "loader-utils": "^1.1.0",
     "uglifyjs-webpack-plugin": "^1.2.7",
-    "webpack": "^4.16.3",
-    "webpack-cli": "^3.1.0"
+    "webpack": "^4.16.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "webpack-command": "^0.4.1"
+  },
+  "engines": {
+    "node": ">=10.6.0",
+    "npm": ">=6.1.0"
+  }
 }
