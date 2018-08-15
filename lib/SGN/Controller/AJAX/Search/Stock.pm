@@ -77,7 +77,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         breeding_program_id_list=>$params->{breeding_program} ? [$params->{breeding_program}] : undef,
         location_name_list=>$params->{location} ? [$params->{location}] : undef,
         year_list=>$params->{year} ? [$params->{year}] : undef,
-        stockprops_values=>\%stockprops_values,
+        stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
         limit=>$limit,
         offset=>$offset,

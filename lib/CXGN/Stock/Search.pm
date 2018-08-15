@@ -196,7 +196,7 @@ has 'year_list' => (
 );
 
 has 'stockprops_values' => (
-    isa => 'HashRef[ArrayRef[Str]]|Undef',
+    isa => 'HashRef|Undef',
     is => 'rw',
 );
 
@@ -409,7 +409,7 @@ sub search {
     my $using_stockprop_filter;
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
         $using_stockprop_filter = 1;
-        print STDERR Dumper $self->stockprops_values;
+        #print STDERR Dumper $self->stockprops_values;
         my @stockprop_wheres;
         foreach my $term_name (keys %{$self->stockprops_values}){
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
@@ -427,7 +427,7 @@ sub search {
                 } elsif ( $matchtype eq 'ends_with' ) {
                     $end = '';
                 }
-                my $search = $start.$value.$end;
+                my $search = "'$start$value$end'";
                 if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
                     $search =~ tr/*?/%_/;
                 }
@@ -435,9 +435,9 @@ sub search {
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, "\"$term_name\" \\?| array[$search_vals_sql]";
+                    push @stockprop_wheres, $term_name."::text \\?| array[$search_vals_sql]";
                 } else {
-                    push @stockprop_wheres, "\"$term_name\" ilike $search";
+                    push @stockprop_wheres, $term_name."::text ilike $search";
                 }
 
             } else {
