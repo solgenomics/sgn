@@ -192,7 +192,7 @@ sub _R_version_current {
     my $r = `R --version`;
     return 0 unless $r;
 
-    $r =~ /R version ([\d\.]+)/;
+    $r =~ /R version ([\d+\.]+)/;
 
     return version->new($1);
 }
