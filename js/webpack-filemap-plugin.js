@@ -18,7 +18,7 @@ function FileMapPlugin(options) {
 
 FileMapPlugin.prototype.apply = function(compiler) {
   var self = this;
-  compiler.plugin('emit', function(compilation,callback) {
+  compiler.hooks.emit.tapAsync('SGNFileMapPlugin', function(compilation,callback) {
     var entrypoints = {};
     var legacy_lists = {};
     [...compilation.entrypoints].forEach((kvpair)=>{
