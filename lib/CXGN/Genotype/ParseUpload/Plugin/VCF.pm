@@ -52,36 +52,41 @@ sub _validate_with_plugin {
     my $number_observation_units = scalar(@$observation_unit_names);
     print STDERR "Number observation units: $number_observation_units...\n";
 
+    my @observation_units_names_trim;
     if ($self->get_igd_numbers_included){
-        my @observation_units_names_trim;
-        foreach (@$observation_unit_names){
-            my ($observation_unit_name, $igd_number) = split(/:/, $_);
+        foreach (@$observation_unit_names) {
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_units_names_trim, $observation_unit_name;
         }
-        $observation_unit_names = \@observation_units_names_trim;
+    } else {
+        foreach (@$observation_unit_names) {
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
+            push @observation_units_names_trim, $observation_unit_name;
+        }
     }
+    $observation_unit_names = \@observation_units_names_trim;
 
     my $organism_id = $self->get_organism_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     my $stock_type = $self->get_observation_unit_type_name;
-    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-    my $stock_rs = $schema->resultset("Stock::Stock")->search({
-        uniquename => {-in => $observation_unit_names},
-        type_id => $stock_type_id,
-        organism_id => $organism_id
-    });
-    my %found_stock_names;
-    while(my $r = $stock_rs->next){
-        $found_stock_names{$r->uniquename}++;
+    my @missing_stocks;
+    my $validator = CXGN::List::Validate->new();
+    if ($stock_type eq 'tissue_sample'){
+        @missing_stocks = @{$validator->validate($schema,'tissue_samples',$observation_unit_names)->{'missing'}};
+    } elsif ($stock_type eq 'accession'){
+        @missing_stocks = @{$validator->validate($schema,'accessions',$observation_unit_names)->{'missing'}};
+    } else {
+        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms)!"
     }
-    my %missing_stocks;
-    foreach (@$observation_unit_names){
-        if (!$found_stock_names{$_}){
-            $missing_stocks{$_}++;
-        }
+
+    my %unique_stocks;
+    foreach (@missing_stocks){
+        $unique_stocks{$_}++;
     }
-    my @missing_stocks = sort keys %missing_stocks;
+
+    @missing_stocks = sort keys %unique_stocks;
     my @missing_stocks_return;
     foreach (@missing_stocks){
         if (!$self->get_create_missing_observation_units_as_accessions){

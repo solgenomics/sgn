@@ -10,28 +10,28 @@
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="creatCrossingTrial">Add New Crossing Trial</h4></center>
+                <center><h4 class="modal-title" id="creatCrossingTrial">Add New Crossing Experiment</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
                     <&| /util/workflow.mas, id=> "add_crossing_trial_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"What are crossing trials?" &>
+                            <& /page/page_title.mas, title=>"What are crossing experiments?" &>
 
-                            <p>Crossing trials group crosses. The grouping can reflect crosses done in the same field trial or crosses in a breeding program in a given year. This grouping can be used to encapsulate all the crosses done in a crossing block field trial that you have saved in the database (e.g. in Manage Trials your crossing block will appear as a field trial with plots)</p>
+                            <p>Crossing experiments group crosses. The grouping can reflect crosses done in the same field trial, crosses in a breeding program in a given year, or crosses that have the same breeding objective. This grouping can be used to encapsulate all the crosses done in a crossing block field trial that you have saved in the database (e.g. in Manage Trials your crossing block will appear as a field trial with plots)</p>
                             <hr>
 
                             <center>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Add a crossing trial" &>
-                            <& /page/page_title.mas, title=>"Enter basic information about the crossing trial" &>
+                        <&| /util/workflow.mas:step, title=> "Add a crossing experiment" &>
+                            <& /page/page_title.mas, title=>"Enter basic information about the crossing experiment" &>
 
                             <form class="form-horizontal" role="form" name="create_crossingtrial_form" id="create_crossingtrial_form">
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-lable">Crossing Trial Name: </label>
+                                    <label class="col-sm-2 control-lable">Crossing Experiment Name: </label>
                                     <div class="col-sm-10">
                                         <input class="form-control" id="crossingtrial_name" name="crossingtrial_name" type="text" />
                                     </div>
@@ -50,7 +50,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">Location of crossing trial: </label>
+                                    <label class="col-sm-2 control-label">Location of crossing experiment </label>
                                     <div class="col-sm-10">
                                         <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
                                             <option value="">Select Location</option>
@@ -81,15 +81,15 @@
                             </center>
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your crossing trial is now in the database" &>
+                            <& /page/page_title.mas, title=>"Finished! Your crossing experiment is now in the database" &>
                             <p>
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                Crossing trial was added successfully
+                                Crossing experiment was added successfully
                             </p>
-                            
+
                             <ul>
-                                <li>You may want to proceed to the crossing trial detail page you just created.</li>
-                                <li>You can add or upload crosses into your crossing trial as they become available.</li>
+                                <li>You may want to proceed to the crossing experiment detail page you just created.</li>
+                                <li>You can add or upload crosses into your crossing experiment as they become available.</li>
                                 <li>You can add crossing information as it becomes available (e.g. number of seeds, progeny, etc).</li>
                             </ul>
                             <br/>
@@ -103,4 +103,3 @@
         </div>
     </div>
 </div>
-

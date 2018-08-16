@@ -23,6 +23,7 @@ $project_name
 $project_desc
 $markers_no
 $traits_no
+$stocks_no
 $protocol
 $owner=>''
 $acronym
@@ -55,6 +56,7 @@ $acronym
     project_desc => $project_desc,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
+    stocks_no    => $stocks_no,
     protocol     => $protocol,
     owner        => $owner,
  &>

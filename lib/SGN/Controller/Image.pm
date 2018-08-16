@@ -29,6 +29,7 @@ sub view :Path('/image/view/') Args(1) {
 
         object_id => $image_id,
         dbh       => $dbh,
+        size      => $c->req->param("size")
        );
 }
 
@@ -132,6 +133,20 @@ sub store :Path('/image/store') {
     # go to the image detail page
     # open for editing.....
     $c->res->redirect( $c->uri_for('view',$image_id )->relative() );
+}
+
+sub image_display_order :Path('/image/display_order') Args(0) { 
+    my $self  = shift;
+    my $c = shift;
+
+    $c->stash->{image_id} = $c->req->param("image_id");
+    $c->stash->{type} = $c->req->param("type");
+    $c->stash->{id} = $c->req->param("id");
+    $c->stash->{display_order} = $c->req->param("display_order");
+    
+    print STDERR "image_id = ".$c->stash->{image_id}."\n";
+    
+    $c->stash->{template} = '/image/display_order.mas';
 }
 
 sub validate_image_filename :Private {
