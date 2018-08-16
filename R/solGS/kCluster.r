@@ -31,6 +31,8 @@ kResultFile <- grep("kcluster_result_file", outputFiles, value = TRUE)
 reportFile  <- grep("report", outputFiles, value = TRUE)
 errorFile   <- grep("error", outputFiles, value = TRUE)
 
+combinedDataFile <- grep("combined_cluster_data_file", outputFiles, value = TRUE)
+
 plotPamFile      <- grep("plot_pam", outputFiles, value = TRUE)
 plotKmeansFile   <- grep("plot_kmeans", outputFiles, value = TRUE)
 
@@ -50,6 +52,8 @@ filteredGenoFile <- c()
 
 if (length(inputFiles) > 1 ) {   
     allGenoFiles <- inputFiles
+
+    message('allGenoFiles: ', allGenoFiles)
     genoData <- combineGenoData(allGenoFiles)
     
     genoMetaData   <- genoData$trial
@@ -106,6 +110,16 @@ dev.off()
 #autoplot(pam(genoData, 3), frame = TRUE, frame.type = 'norm', x=1, y=2)
 #dev.off()
 
+
+if (length(inputFiles) > 1) {
+    fwrite(genoData,
+       file      = combinedDataFile,
+       sep       = "\t",
+       row.names = TRUE,
+       quote     = FALSE,
+       )
+
+}
 
 ####
 q(save = "no", runLast = FALSE)

@@ -234,7 +234,7 @@ sub analysis_report_file {
   
     my $cache_data = { key       => $name, 
 		       file      => $name . '.txt',
-		       cache_dir => $cache_dir;
+		       cache_dir => $cache_dir,
 		       stash_key => "${type}_report_file",
     };
     
@@ -561,7 +561,7 @@ sub template {
 sub cache_file {
     my ($self, $c, $cache_data) = @_;
   
-    $cache_dir = $cache_data->{cache_dir} || $c->stash->{cache_dir};
+    my $cache_dir = $cache_data->{cache_dir} || $c->stash->{cache_dir};
     
     unless ($cache_dir) 
     {

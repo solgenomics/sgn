@@ -337,7 +337,7 @@ sub cluster_list_genotype_data {
 	{
 	    $c->controller('solGS::List')->get_trials_list_ids($c);
 	    my $trials_ids = $c->stash->{trials_ids};
-
+	    print STDERR "\n trials ids: @$trials_ids\n";
 	    $c->stash->{pops_ids_list} = $trials_ids;
 	    $c->controller('solGS::List')->process_trials_list_details($c);
 	}
@@ -499,13 +499,17 @@ sub cluster_output_files {
  
     $c->controller('solGS::Files')->analysis_error_file($c);
     my $analysis_error_file = $c->{stash}->{"${cluster_type}_error_file"};
+
+    $self->combined_cluster_trials_data_file($c);
+    my $combined_cluster_data_file =  $c->stash->{combined_cluster_data_file};
     
     my $file_list = join ("\t",
                           $result_file,
 			  $plot_pam_file,
 			  $plot_kmeans_file,
 			  $analysis_report_file,
-			  $analysis_error_file
+			  $analysis_error_file,
+			  $combined_cluster_data_file,
 	);
         
     my $tmp_dir = $c->stash->{cluster_temp_dir};
