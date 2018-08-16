@@ -380,11 +380,14 @@ sub delete {
 
 	$dbh->begin_work();
 
+	if ($self->cross_deletion_possible()) {
+	    return "Cross has associated data. Cannot delete...\n";
+	}
 	my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 	# delete the project entries
 	#
 	print STDERR "Deleting project entry for cross...\n";
-	my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
+	    my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
 	my $h1 = $dbh->prepare($q1);
 	$h1->execute($self->cross_stock_id(), $cross_typeid);
 
@@ -410,6 +413,25 @@ sub delete {
     else {
 	$dbh->commit();
     }
+}
+
+sub cross_deletion_possible { 
+    my $self = shift;
+    
+    my $q = "SELECT stock.uniquename, subject.uniquename from stock join stock_relationship on (stock.stock_id=stock_relationship.object_id) join stock as subject on(stock_relationship.subject_id=subject.stock_id) where stock.stock_id = ?";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    
+    $h->execute();
+
+    my @subjects = ();
+    while (my($stock, $subject) = $h->fetchrow_array()) { 
+	push @subjects, [$stock, $subject];
+    }
+
+    print STDERR "SUBJECTS: ".join(",", map { $->[1] } @subjects);
+
+
 }
 
 1;
