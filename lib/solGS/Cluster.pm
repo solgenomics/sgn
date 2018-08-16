@@ -125,15 +125,14 @@ sub genotypes_list_genotype_data {
     my $genotypes     = $args->{genotypes_list};
     my $genotypes_ids = $args->{genotypes_ids};
     my $data_dir      = $args->{list_data_dir};
+    my $geno_file     = $args->{genotype_file};
    
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
 					      });
 
     my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids);
-    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $list_pop_id);
-
-    my $geno_file = $files->{geno_file};
+   
     write_file($geno_file, $geno_data);
 
 }
