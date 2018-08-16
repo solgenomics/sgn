@@ -12,8 +12,9 @@ module.exports = {
     mode: "production",
     entry: (() => {
         var entries = {};
-        glob.sync(path.resolve(sourcePath, "*.expose.js")).forEach(val => {
-            var key = val.match(/([^\/]*)\.expose\.js$/)[1];
+        glob.sync(path.resolve(sourcePath, "**/*.expose.jsm")).forEach(val => {
+            var prekey = val.replace(sourcePath+"/","");
+            var key = prekey.match(/(.*)\.expose\.jsm$/)[1];
             entries[key] = val;
         });
         return entries;
@@ -22,13 +23,13 @@ module.exports = {
         path: path.resolve(__dirname, "build/"),
         publicPath: '/js',
         filename: '[name].min.js',
-        library: ["jsMod", "[name]"],
+        library: ["jsMod","[name]"],
         libraryTarget: "umd"
     },
     module: {
         rules: [
             {
-                test: /\.js$/,
+                test: /\.jsm$/,
                 exclude: /(node_modules|bower_components)/,
                 include: sourcePath,
                 use: [{
