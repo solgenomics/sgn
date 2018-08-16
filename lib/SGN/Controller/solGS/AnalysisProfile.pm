@@ -329,6 +329,11 @@ sub parse_arguments {
 	  {
 	      $c->stash->{list_name} = $arguments->{$k}; 
 	  }
+
+	  if ($k eq 'list_id') 
+	  {
+	      $c->stash->{list_id} = $arguments->{$k}; 
+	  }
 	
 	  if ($k eq 'analysis_type') 
 	  {

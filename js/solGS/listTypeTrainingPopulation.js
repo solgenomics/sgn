@@ -84,9 +84,9 @@ function getListTypeTrainingPopDetail(listId) {
     var listData;
     var listType;
     var listName;
-    var listElements;
-    var listElementsNames;
-    var listElementsIds;
+    //var listElements;
+   // var listElementsNames;
+   // var listElementsIds;
 
     if (listId) {
         listData      = list.getListData(listId);
@@ -95,15 +95,14 @@ function getListTypeTrainingPopDetail(listId) {
 	//listElements  = listData.elements;
 
 	//listElementsNames = getTrainingListElementsNames(listElements);
-//	listElementsIds   = getTrainingListElementsIds(listElements);
+	//listElementsIds   = getTrainingListElementsIds(listElements);
     }
   
-    return {'name'          : listName,
-            'list_id'       : listId,	    
+    return {'name'          : listName,	    
 	    'type'          : listType,
-	    'elementsIds'   : listElementsIds,
-	    'elementsNames' : listElementsNames,
+	    'list_id'       : listId
            };
+    
 }
 
 

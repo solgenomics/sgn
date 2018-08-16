@@ -855,63 +855,19 @@ sub structure_genotype_data {
 
 
 sub genotypes_list_genotype_data {
-    my ($self, $genotypes) = @_;
+    my ($self, $genotypes_ids) = @_;
 
-   
- #    my $protocol_id = $self->protocol_id();
+    my $protocol_id = $self->protocol_id();
 	    
- #    my $dataset = CXGN::Dataset->new({
- # 	people_schema => $self->people_schema,
- # 	schema  => $self->schema,
- # 	accessions => $genotypes_ids});	
+    my $dataset = CXGN::Dataset->new({
+ 	people_schema => $self->people_schema,
+ 	schema  => $self->schema,
+ 	accessions => $genotypes_ids});	
 
- #    my $dataref = $dataset->retrieve_genotypes($protocol_id);
- #    $geno_data  = $self->structure_genotype_data($dataref);	   
+    my $dataref = $dataset->retrieve_genotypes($protocol_id);
+    my $geno_data  = $self->structure_genotype_data($dataref);	   
 
-
-    my $genotypes_rs = $self->accessions_list_genotypes_rs($genotypes);
-
-    my $markers;
-  
-    while (my $stock_rs = $genotypes_rs->next) 
-    {
-	$markers = $self->extract_project_markers($stock_rs);
-	last if $markers;
-    }
-
-    my $geno_data = "\t" . $markers . "\n";
-
-    my @markers = split(/\t/, $markers);
-
-    my $cnt = 0;
-    my @stocks;
-    
-    while (my $stock_rs = $genotypes_rs->next) 
-    {
-	$cnt++;
-	my $duplicate_stock;
-	my $stock;
-
-	if ($cnt > 1)
-	{
-		$stock = $stock_rs->get_column('stock_name');
-		$duplicate_stock = $stock ~~ @stocks; #grep(/^$stock$/, @stocks);
-	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
-	    
-	} 
-   
-	if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
-	{
-	    push @stocks, $stock;
-
-	    my $geno_values = $self->stock_genotype_values(\@markers, $stock_rs);	    
-	    $geno_data .= $geno_values;
-	}
-	
-
-    }
-
-    return \$geno_data;
+    return $geno_data;
 
 }
 
@@ -995,7 +951,7 @@ sub project_genotype_data_rs {
     my @accessions;
 
     foreach my $st  (@$trial_accessions){
-	push @accessions, $st->{accession_name};
+	push @accessions, $st->{stock_id};
     }
 
     my $genotype_rs = $self->accessions_list_genotypes_rs(\@accessions);
@@ -1043,22 +999,15 @@ sub individual_stock_genotypes_rs {
 
 
 sub accessions_list_genotypes_rs {
-    my ($self, $accessions_list) = @_;
+    my ($self, $genotypes_ids) = @_;
 
-    my $stocks_rs = $self->get_stocks_rs($accessions_list);
-   
-    my @genotypes_ids;    
-    while (my $row = $stocks_rs->next)
-    {
-    	push @genotypes_ids, $row->get_column('stock_id');
-    }
-    
+
     my $protocol = $self->genotyping_protocol();
     my $genotype_rs = $self->schema->resultset('NaturalDiversity::NdExperiment')
 	->search(
 	{ 
 	    'nd_protocol.name' => $protocol,
-	    'stock.stock_id' => {-in =>\@genotypes_ids},
+	    'stock.stock_id' => {-in =>$genotypes_ids},
 	    'type.name'  => 'snp genotyping',
 	    'cv.name' => 'genotype_property',	   
 	},

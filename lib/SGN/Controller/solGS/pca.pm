@@ -341,7 +341,6 @@ sub pca_list_genotype_data {
 	if ($list_type eq 'accessions') 
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
-	    $c->stash->{genotype_file} = $c->stash->{genotypes_list_genotype_file};	    
 	} 
 	elsif ( $list_type eq 'trials') 
 	{

@@ -131,7 +131,11 @@ sub genotypes_list_genotype_data {
 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
 					      });
 
-    my $geno_data = $model->genotypes_list_genotype_data($genotypes);
+    my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids);
+    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $list_pop_id);
+
+    my $geno_file = $files->{geno_file};
+
     write_file($geno_file, $geno_data);
 
 }
