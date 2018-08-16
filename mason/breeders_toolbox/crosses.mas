@@ -23,7 +23,7 @@ $user_id => undef
     <thead>
         <tr>
             <th>Information</th>
-            <th>Breeding Programs -- Folders -- Crossing Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html">Refresh</button></th>
+            <th>Breeding Programs -- Folders -- Crossing Experiments&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html">Refresh</button></th>
         </tr>
     </thead>
     <tbody>
@@ -33,13 +33,13 @@ $user_id => undef
                 <input type="text" class="form-control input-sm" id="cross_tree_search" placeholder="Search" />
                 <hr>
 
-                <h5><i>Double click<br />crossing trial (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+                <h5><i>Double click<br />crossing experiment (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
                 <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
 
                 <h4>Folders</h4>
                 <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move crossing trial(s) to folder</button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move crossing experiment(s) to folder</button><br/><br/>
                 <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
 
                 <div id="folder_edit_options" style="display:none">

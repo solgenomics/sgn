@@ -152,10 +152,6 @@ sub generate_experimental_design_POST : Args(0) {
             $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
             return;
         }
-        if (($num_plants_per_plot%(scalar(@treatments)))!=0){
-            $c->stash->{rest} = {error => "Number of plants per plot needs to divide evenly by the number of treatments. For example: if you have two treatments and there are 3 plants per treatment, that means you have 6 plants per plot." };
-            return;
-        }
     }
 
     my $row_in_design_number = $c->req->param('row_in_design_number');
@@ -407,17 +403,12 @@ sub generate_experimental_design_POST : Args(0) {
             $c->stash->{rest} = {error => "Could not generate design" };
             return;
         }
-        my $design_level;
-        if ($design_type eq 'greenhouse'){
-            $design_level = 'plants';
-        } elsif ($design_type eq 'splitplot') {
-            $design_level = 'subplots';
-        } else {
-            $design_level = 'plots'; 
-        }
- 
+
+        #For printing the table view of the generated design there are two designs that are different from the others:
+        # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
+        # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
+        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
         $design_map_view = design_layout_map_view(\%design, $design_type); 
-        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
         $design_info_view_html = design_info_view(\%design, \%design_info);
         my $design_json = encode_json(\%design);
         push @design_array,  $design_json;

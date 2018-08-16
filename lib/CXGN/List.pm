@@ -193,7 +193,7 @@ around 'BUILDARGS' => sub {
     my $class = shift;
     my $args = shift;
     
-    my $q = "SELECT content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+    my $q = "SELECT content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=? ORDER BY list_item_id ASC;";
 
     my $h = $args->{dbh}->prepare($q);
     $h->execute($args->{list_id});
@@ -506,7 +506,7 @@ sub retrieve_elements_with_ids {
     my $self = shift;
     my $list_id = shift;
 
-    my $q = "SELECT list_item_id, content from sgn_people.list_item  WHERE list_id=?";
+    my $q = "SELECT list_item_id, content from sgn_people.list_item  WHERE list_id=? ORDER BY list_item_id ASC;";
 
     my $h = $self->dbh()->prepare($q);
     $h->execute($list_id);

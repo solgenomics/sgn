@@ -77,7 +77,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_name} = $trial->get_name();
 
     my $trial_type_data = $trial->get_project_type();
-    $c->stash->{trial_type} = $trial_type_data->[1];
+    my $trial_type_name = $trial_type_data ? $trial_type_data->[1] : '';
+    $c->stash->{trial_type} = $trial_type_name;
     $c->stash->{trial_type_id} = $trial_type_data->[0];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
@@ -127,6 +128,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
+    $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
 
     #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
@@ -147,13 +149,16 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
     }
     elsif ($design_type eq "treatment"){
-        $c->stash->{template} = '/breeders_toolbox/treatment.mas';
+        $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
+    }
+    elsif ($design_type eq "genotype_data_project"){
+        $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
     else {
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
-    if ($trial_type_data->[1] eq "crossing_trial"){
+    if ($trial_type_name eq "crossing_trial"){
         print STDERR "It's a crossing trial!\n\n";
         $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
     }
@@ -285,6 +290,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ( ($format eq "intertekxls") && ($what eq "layout")) {
         $plugin = "GenotypingTrialLayoutIntertekXLS";
     }
+    if ( ($format eq "dartseqxls") && ($what eq "layout")) {
+        $plugin = "GenotypingTrialLayoutDartSeqXLS";
+    }
 
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
@@ -312,7 +320,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $error = $download->download();
 
-    if ($format eq 'intertekxls'){
+    if ($format eq 'intertekxls' || $format eq 'dartseqxls'){
         $format = 'xls';
     }
 

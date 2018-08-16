@@ -278,15 +278,15 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">Plots</option>';
+                    var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">Plot</option>';
                     if(response.has_plants){
-                        html = html + '<option value="plants">Plants</option>';
+                        html = html + '<option value="plants">Plant</option>';
                     }
                     if(response.has_subplots){
-                        html = html + '<option value="subplots">Subplots</option>';
+                        html = html + '<option value="subplots">Subplot</option>';
                     }
                     if(response.has_tissue_samples){
-                        html = html + '<option value="tissue_samples">Tissue Samples</option>';
+                        html = html + '<option value="tissue_samples">Tissue Sample</option>';
                     }
                     html = html + '</select>';
                     jQuery('#label_designer_data_level_select_div').html(html);
@@ -438,6 +438,8 @@ $(document).ready(function($) {
         design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
         var design_json = JSON.stringify(design);
 
+        var labels_to_download = jQuery('#label_designer_labels_to_print').val();
+
         //send to server to build pdf file
         jQuery.ajax({
             url: '/tools/label_designer/download',
@@ -447,7 +449,8 @@ $(document).ready(function($) {
                 'download_type': download_type,
                 'data_type' : data_type,
                 'value': value,
-                'design_json': design_json
+                'design_json': design_json,
+                'labels_to_download': labels_to_download
             },
             beforeSend: function() {
                 console.log("Downloading "+download_type+" file . . . ");

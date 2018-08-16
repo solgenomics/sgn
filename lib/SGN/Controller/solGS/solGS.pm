@@ -608,12 +608,8 @@ sub project_description {
 	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
     }
    
-    $c->controller("solGS::Files")->trait_phenodata_file($c);
-    my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
-    my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
- 
-    my $stocks_no = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
-    
+    my $stocks_no = $self->training_pop_member_count($c, $pr_id);
+
     $c->controller('solGS::Files')->traits_acronym_file($c);
     my $traits_file = $c->stash->{traits_acronym_file};
     my @lines = read_file($traits_file);
@@ -626,6 +622,62 @@ sub project_description {
         );
 
 }
+
+
+sub training_pop_member_count {
+    my ($self, $c, $pop_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id if $pop_id;
+     
+    $c->controller("solGS::Files")->trait_phenodata_file($c);
+    my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
+    my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
+
+    my @geno_lines;
+    if (!@trait_pheno_lines) 
+    {
+	$c->controller('solGS::Files')->genotype_file_name($c);
+	my $geno_file  = $c->stash->{genotype_file_name};
+	@geno_lines = read_file($geno_file);
+    }
+    
+    my $count = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
+
+    return $count;
+}
+
+
+sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->req->param('training_pop_id');
+    my $type   = $c->req->param('data_set_type');
+
+    my $count;
+    if ($type =~ /single/)
+    {
+	$count = $self->training_pop_member_count($c, $pop_id);
+    }
+    elsif ($type =~ /combined/)
+    {
+	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_members($c, $pop_id);	
+    }
+    
+    my $ret->{status} = 'failed';
+  
+    if ($count) 
+    {
+	$ret->{status} = 'success';
+	$ret->{member_count} = $count;
+    }
+        
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+       
+}
+
 
 
 sub selection_trait :Path('/solgs/selection/') Args(5) {
@@ -3087,7 +3139,7 @@ sub analyzed_traits {
 sub filter_phenotype_header {
     my ($self, $c) = @_;
        
-    my @headers =   ('studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate',    'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber' ,  'colNumber',  'entryType', 'plantNumber');
+    my @headers =   ('studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate',    'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber' ,  'colNumber',  'entryType', 'plantNumber', 'plantedSeedlotStockDbId',  'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames');
 
     my $meta_headers = join("\t", @headers);
     if ($c) 

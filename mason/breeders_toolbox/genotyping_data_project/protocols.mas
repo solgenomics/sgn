@@ -1,0 +1,29 @@
+<%args>
+$trial_id
+</%args>
+
+
+<table id="genotyping_data_project_protocols" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+      <th>Protocol</th>
+      <th>Genotyping Data Project</th>
+      <th>Description</th>
+      <th>Number of Markers</th>
+      <th>Reference Genome</th>
+      <th>Species Name</th>
+      <th>Sample Type</th>
+</tr>
+</thead>
+</table>
+
+
+<script>
+
+jQuery(document).ready(function () {
+   var protocols_table = jQuery('#genotyping_data_project_protocols').DataTable( {
+       'ajax': '/ajax/genotyping_protocol/search?genotyping_data_project_ids=<% $trial_id %>',
+   });
+});
+
+</script>

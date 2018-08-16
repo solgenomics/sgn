@@ -19,6 +19,7 @@ $project_name
 $project_desc
 $markers_no
 $traits_no
+$stocks_no
 $owner => ''
 $protocol
 
@@ -47,7 +48,7 @@ $traits_no = 1 if !$traits_no;
     </td>    
     <td>
       <& /page/columnar_table.mas,        
-         data       => [[' ',  ' '],
+         data       => [['No. of lines ',  $stocks_no],
                         ['No. of traits', $traits_no],
                         ['No. of markers', $markers_no],
 			['Genotyping version', $protocol],

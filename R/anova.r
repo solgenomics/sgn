@@ -79,10 +79,10 @@ for (trait in traits) {
     errorFile  <- grep("anova_error",
                        outputFiles,
                        value = TRUE)
-    
+
     anovaOut <- runAnova(phenoData, trait)
-  
-    if (class(anovaOut)[1] == 'merModLmerTest') {
+    
+    if (class(anovaOut)[1] == 'lmerModLmerTest') {
     
         png(diagnosticsFile, 960, 480)
         par(mfrow=c(1,2))
@@ -98,14 +98,15 @@ for (trait in traits) {
                                     tableType="html",
                                     traitName=trait,
                                     out=anovaHtmlFile)
-
+       
         anovaTable <- getAnovaTable(anovaOut,
                                     tableType="text",
                                     traitName=trait,
                                     out=anovaTxtFile)
-      
+        
+  
         adjMeans   <- getAdjMeans(phenoData, trait)
-
+  
         fwrite(adjMeans,
                file      = adjMeansFile,
                row.names = FALSE,
