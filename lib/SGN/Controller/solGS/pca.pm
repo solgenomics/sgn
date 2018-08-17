@@ -125,20 +125,13 @@ sub pca_result :Path('/pca/result/') Args() {
     my $pop_id;
     my $file_id;
    
-
     if ($referer =~ /solgs\/selection\//)
     {
-	my @pops_ids = ($training_pop_id, $selection_pop_id);
-	$c->stash->{pops_ids_list} = \@pops_ids;
-	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
+	$c->controller('solGS::List')->register_trials_list($c);
 	$combo_pops_id =  $c->stash->{combo_pops_id};
 	$c->stash->{pop_id} =  $combo_pops_id;
 	$file_id = $combo_pops_id;
-	$pop_id = $combo_pops_id;
-
-	my $ids = join(',', @pops_ids);
-	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
-        $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $entry);
     }
     elsif ($referer =~ /pca\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
     {

@@ -911,6 +911,24 @@ sub get_trial_genotype_data {
 }
 
 
+
+sub register_trials_list  {
+    my ($self, $c) = @_;
+
+    my $trials_ids = $c->stash->{pops_ids_list};
+
+    if ($trials_ids)
+    {
+	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	my $combo_pops_id =  $c->stash->{combo_pops_id};
+
+	my $ids = join(',', @$trials_ids);
+	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
+	$c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $entry);
+    }
+    
+}
+
 sub begin : Private {
     my ($self, $c) = @_;
 
