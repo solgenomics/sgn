@@ -32,9 +32,9 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     $c->stash->{protocol_id} = $protocol_id;
     $c->stash->{protocol_name} = $protocol->protocol_name;
     $c->stash->{protocol_description} = $protocol->protocol_description;
-    $c->stash->{markers} = $protocol->markers;
-    $c->stash->{marker_names} = $protocol->marker_names;
-    $c->stash->{header_information_lines} = $protocol->header_information_lines;
+    $c->stash->{markers} = $protocol->markers || {};
+    $c->stash->{marker_names} = $protocol->marker_names || [];
+    $c->stash->{header_information_lines} = $protocol->header_information_lines || [];
     $c->stash->{reference_genome_name} = $protocol->reference_genome_name;
     $c->stash->{species_name} = $protocol->species_name;
     $c->stash->{create_date} = $protocol->create_date;

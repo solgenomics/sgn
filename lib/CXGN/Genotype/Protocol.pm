@@ -88,7 +88,7 @@ sub BUILD {
     my $protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->search({
         'me.nd_protocol_id'=>$self->nd_protocol_id,
         'me.type_id'=>$geno_cvterm_id,
-        'nd_protocolprops.type_id'=>$protocol_vcf_details_cvterm_id
+        #'nd_protocolprops.type_id'=>$protocol_vcf_details_cvterm_id
     }, {
         join => 'nd_protocolprops',
         '+select' => ['nd_protocolprops.value'],
@@ -99,19 +99,26 @@ sub BUILD {
         return;
     }
     my $protocol = $protocol_rs->first;
-    my $map_details = decode_json $protocol->get_column('value');
-    $self->markers($map_details->{markers});
-    $self->marker_names($map_details->{marker_names});
+    my $map_details = $protocol->get_column('value') ? decode_json $protocol->get_column('value') : {};
+    my $markers = $map_details->{markers} || {};
+    my $marker_names = $map_details->{marker_names} || [];
+    my $header_information_lines = $map_details->{header_information_lines} || [];
+    my $reference_genome_name = $map_details->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
+    my $species_name = $map_details->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
+    my $sample_observation_unit_type_name = $map_details->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
+    $self->markers($markers);
+    $self->marker_names($marker_names);
     $self->protocol_name($protocol->name);
-    $self->header_information_lines($map_details->{header_information_lines});
-    $self->reference_genome_name($map_details->{reference_genome_name});
-    $self->species_name($map_details->{species_name});
-    $self->sample_observation_unit_type_name($map_details->{sample_observation_unit_type_name});
+    $self->header_information_lines($header_information_lines);
+    $self->reference_genome_name($reference_genome_name);
+    $self->species_name($species_name);
+    $self->sample_observation_unit_type_name($sample_observation_unit_type_name);
 
     my $q = "SELECT create_date, description FROM nd_protocol WHERE nd_protocol_id = ?;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($self->nd_protocol_id);
     my ($create_date, $description) = $h->fetchrow_array();
+    $create_date = $create_date || 'Not set. Please reload these genotypes using new genotype format!';
     $self->create_date($create_date);
     $self->protocol_description($description);
 
@@ -133,7 +140,7 @@ sub list {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
 
-    push @where_clause, "nd_protocolprop.type_id = $vcf_map_details_cvterm_id";
+    #push @where_clause, "nd_protocolprop.type_id = $vcf_map_details_cvterm_id";
 
     if ($protocol_list && scalar(@$protocol_list)>0) {
         my $protocol_sql = join ("," , @$protocol_list);
@@ -162,7 +169,7 @@ sub list {
     if ($offset){
         $offset_clause = " OFFSET $offset ";
     }
-    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
+    my $where_clause = scalar(@where_clause) > 0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name, count(nd_protocol.nd_protocol_id) OVER() AS full_count
         FROM stock
@@ -186,14 +193,14 @@ sub list {
     
     my @results;
     while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name, $full_count) = $h->fetchrow_array()) {
-        my $protocol = $protocolprop_json ? decode_json $protocolprop_json : undef;
-        my $all_protocol_marker_names = $protocol ? $protocol->{'marker_names'} : undef;
-        my $marker_set = $protocol ? $protocol->{markers} : undef;
-        my $marker_names = $protocol ? $protocol->{marker_names} : undef;
-        my $header_information_lines = $protocol ? $protocol->{header_information_lines} : undef;
-        my $reference_genome_name = $protocol ? $protocol->{reference_genome_name} : undef;
-        my $species_name = $protocol ? $protocol->{species_name} : undef;
-        my $sample_observation_unit_type_name = $protocol ? $protocol->{sample_observation_unit_type_name} : undef;
+        my $protocol = $protocolprop_json ? decode_json $protocolprop_json : {};
+        my $marker_set = $protocol->{markers} || {};
+        my $marker_names = $protocol->{marker_names} || [];
+        my $header_information_lines = $protocol->{header_information_lines} || [];
+        my $reference_genome_name = $protocol->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
+        my $species_name = $protocol->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
+        my $sample_observation_unit_type_name = $protocol->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
+        $create_date = $create_date || 'Not set. Please reload these genotypes using new genotype format!';
         push @results, {
             protocol_id => $protocol_id,
             protocol_name => $protocol_name,
