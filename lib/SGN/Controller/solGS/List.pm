@@ -582,19 +582,25 @@ sub genotypes_list_genotype_file {
     my ($self, $c, $list_pop_id) = @_;
 
     my $list_id = $c->stash->{list_id};
-   
+
+    $list_pop_id = $c->stash->{pop_id} || $c->stash->{model_id} if !$list_pop_id;
+    
     $self->get_genotypes_list_details($c);
       
     my $genotypes_list = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
    
     my $data_dir  = $c->stash->{solgs_lists_dir};
-
+    
+    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $list_pop_id);
+    my $geno_file = $files->{geno_file};
+    
     my $args = {
 	'list_pop_id'    => $list_pop_id,
 	'genotypes_list' => $genotypes_list,	 
 	'genotypes_ids'  => $genotypes_ids,
 	'list_data_dir'  => $data_dir,
+	'genotype_file'  => $geno_file,
     };
 
     $c->stash->{r_temp_file} = 'genotypes-list-genotype-data-query';
@@ -657,6 +663,8 @@ sub genotypes_list_genotype_file {
 	$c->stash->{Error} =  $@;
     }
 
+    $c->stash->{genotype_file} = $geno_file;
+    
 }
 
 
