@@ -214,7 +214,7 @@ $trial_name => undef
                     <br/>
                     plot_name (must exist in the database already)
                     <br />
-                    plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number)
+                    plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)
                 </div>
             </div>
             <div class="modal-footer">
