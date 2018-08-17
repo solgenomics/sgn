@@ -339,7 +339,7 @@ sub _get_crd_design {
 
         @rep_numbers = $result_matrix->get_column("r");
         @stock_names = $result_matrix->get_column("trt");
-        @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+        @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
         #print STDERR Dumper \@converted_plot_numbers;
 
         #generate col_number
@@ -402,6 +402,8 @@ sub _get_crd_design {
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
         $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+        $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+        $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
         if ($fieldmap_row_numbers[$i]){
           $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
           $plot_info{'col_number'} = $col_number_fieldmaps[$i];
@@ -488,8 +490,8 @@ sub _get_westcott_design {
     my @row_numbers = $result_matrix->get_column("row");
     my @col_numbers = $result_matrix->get_column("col");
     @block_numbers = $result_matrix->get_column("row");
-    
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)}; 
+    my $max_block = max( @block_numbers );
+    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max_block)}; 
     
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
       my %plot_info;
@@ -499,6 +501,8 @@ sub _get_westcott_design {
       $plot_info{'plot_name'} = $converted_plot_numbers[$i];
       $plot_info{'row_number'} = $row_numbers[$i];
       $plot_info{'col_number'} = $col_numbers[$i];
+      $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+      $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
 
       $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
@@ -548,6 +552,7 @@ sub _get_p_rep_design {
     if ($self->has_block_sequence()) {
       $block_sequence = $self->get_block_sequence();
     }
+    my ($rep_size,$number_of_reps) = split(',', $block_sequence);
     if ($self->has_col_in_design_number()) {
       $col_in_design_number = $self->get_col_in_design_number();
     }   
@@ -634,7 +639,7 @@ sub _get_p_rep_design {
      my @row_numbers = $result_matrix->get_column("row_number");
      my @col_numbers = $result_matrix->get_column("col_number");
      @block_numbers = $result_matrix->get_column("block");
-     @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+     @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $number_of_reps)};
      
      my $counting = 0;
      my %seedlot_hash;
@@ -657,6 +662,8 @@ sub _get_p_rep_design {
        $plot_info{'plot_name'} = $converted_plot_numbers[$i];
        $plot_info{'row_number'} = $row_numbers[$i];
        $plot_info{'col_number'} = $col_numbers[$i];
+       $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+       $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
 
        $prep_design{$converted_plot_numbers[$i]} = \%plot_info;
      }
@@ -746,7 +753,7 @@ sub _get_rcbd_design {
   #print STDERR Dumper \@plot_numbers;
   @block_numbers = $result_matrix->get_column("block");
   @stock_names = $result_matrix->get_column("trt");
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $number_of_blocks)};
 
   #generate col_number
 
@@ -799,7 +806,9 @@ sub _get_rcbd_design {
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $block_numbers[$i];
-    $plot_info{'plot_num_per_block'} = $plot_numbers[$i];
+    #$plot_info{'plot_num_per_block'} = $plot_numbers[$i];
+    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
     #$plot_info_per_block{}
       if ($fieldmap_row_numbers[$i]){
@@ -861,7 +870,7 @@ sub _get_alpha_lattice_design {
 
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
-    print STDERR "block size = $block_size\n";
+    #print STDERR "block size = $block_size\n";
     if ($block_size < 3) {
       die "Block size must be greater than 2 for alpha lattice design\n";
     }
@@ -935,7 +944,7 @@ sub _get_alpha_lattice_design {
   @block_numbers = $result_matrix->get_column("block");
   @rep_numbers = $result_matrix->get_column("replication");
   @stock_names = $result_matrix->get_column("trt");
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
 
   if ($plot_layout_format eq "zigzag") {
     if (!$fieldmap_col_number){
@@ -988,6 +997,8 @@ sub _get_alpha_lattice_design {
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
     if ($fieldmap_row_numbers[$i]){
       $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
       $plot_info{'col_number'} = $col_number_fieldmaps[$i];
@@ -1101,7 +1112,7 @@ sub _get_lattice_design {
   my $max = max( @block_numbers );
   @rep_numbers = $result_matrix->get_column("r");
   @stock_names = $result_matrix->get_column("trt");
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
 
   if ($plot_layout_format eq "zigzag") {
     if (!$fieldmap_col_number){
@@ -1154,6 +1165,8 @@ sub _get_lattice_design {
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
     if ($fieldmap_row_numbers[$i]){
       $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
       $plot_info{'col_number'} = $col_number_fieldmaps[$i];
@@ -1249,7 +1262,8 @@ sub _get_augmented_design {
   @plot_numbers = $result_matrix->get_column("plots");
   @block_numbers = $result_matrix->get_column("block");
   @stock_names = $result_matrix->get_column("trt");
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  my $max = max( @block_numbers );
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max)};
 
   my %seedlot_hash;
   if($self->get_seedlot_hash){
@@ -1265,6 +1279,8 @@ sub _get_augmented_design {
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
     $augmented_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
   %augmented_design = %{_build_plot_names($self,\%augmented_design)};
@@ -1362,9 +1378,9 @@ sub _get_madii_design {
 
 #=comment
 
-  print STDERR join "\n", "@stock_list\n";
+  #print STDERR join "\n", "@stock_list\n";
 
-  print STDERR join "\n", "$number_of_rows\n";
+  #print STDERR join "\n", "$number_of_rows\n";
 
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
@@ -1462,8 +1478,8 @@ sub _get_madii_design {
   @check_names=$result_matrix->get_column("Check");
 
 #Row.Blk Col.Blk
-
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  my $max = max( @block_numbers );
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max)};
 
   my %seedlot_hash;
   if($self->get_seedlot_hash){
@@ -1485,6 +1501,8 @@ sub _get_madii_design {
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
     $madii_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
 
@@ -1701,12 +1719,12 @@ sub _get_madiii_design {
   @stock_names = $result_matrix->get_column("Entry");
   @check_names=$result_matrix->get_column("Check");
 
-
+my $max = max( @block_numbers );
 #Row.Blk Col.Blk
 
 
 
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max)};
 
   my %seedlot_hash;
   if($self->get_seedlot_hash){
@@ -1727,6 +1745,8 @@ sub _get_madiii_design {
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
     $madiii_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
@@ -1948,8 +1968,8 @@ sub _get_madiv_design {
 #Row.Blk Col.Blk
 
 
-
-  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+  my $max = max( @block_numbers );
+  @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max)};
 
   my %seedlot_hash;
   if($self->get_seedlot_hash){
@@ -1970,6 +1990,8 @@ sub _get_madiv_design {
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
     $madiv_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
@@ -1989,7 +2011,12 @@ sub _get_madiv_design {
 sub _convert_plot_numbers {
   my $self = shift;
   my $plot_numbers_ref = shift;
+  my $rep_numbers_ref = shift;
+  my $number_of_reps = shift;
   my @plot_numbers = @{$plot_numbers_ref};
+  my @rep_numbers = @{$rep_numbers_ref};
+  my $total_plot_count = scalar(@plot_numbers);
+  my $rep_plot_count = $total_plot_count / $number_of_reps;
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my $plot_number;
     my $first_plot_number;
@@ -2002,6 +2029,23 @@ sub _convert_plot_numbers {
         if ($self->has_plot_number_increment()){
           $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
         }
+        
+        my $cheking = ($rep_numbers[$i] * $rep_plot_count) / $rep_plot_count;
+        #print STDERR Dumper($cheking);
+        my $new_plot;
+        if ($cheking != 1){
+            if (length($first_plot_number) == 3 ){
+                $new_plot = $cheking * 100;
+                $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
+            }
+            #print STDERR Dumper($new_plot);
+            if (length($first_plot_number) == 4 ){
+                $new_plot = $cheking * 1000;
+                $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
+            }
+        }
+        
+        
         else {
           $plot_number = $first_plot_number + $i;
         }
@@ -2213,7 +2257,7 @@ sub _get_splitplot_design {
     @rep_numbers = $result_matrix->get_column("block");
     @stock_names = $result_matrix->get_column("accessions");
     @treatments = $result_matrix->get_column("treatments");
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
     #print STDERR Dumper \@converted_plot_numbers;
 
     if ($plot_layout_format eq "zigzag") {
@@ -2300,6 +2344,7 @@ sub _get_splitplot_design {
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
         $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+        $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
         if ($fieldmap_row_numbers[$i]){
             $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
             $plot_info{'col_number'} = $col_number_fieldmaps[$i];

@@ -37,27 +37,16 @@ $folder_id => undef
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Crossing Experiment Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_crossingtrial_details" style="margin:3px">Edit Crossing Experiment Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "crossingtrial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_name => $folder_name, folder_id => $folder_id &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Crosses in this experiment</h4>", info_section_subtitle => 'View cross names, parents and cross types in this experiment.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "crosses_in_crossingtrial_section" &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Crossing Experimental Info</h4>", info_section_subtitle => 'View crossing details (e.g., pollination date, number of flowers, number of seeds)', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "cross_properties_crossingtrial_section" &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Progeny Info</h4>", info_section_subtitle => 'View number of progenies derived from each cross', icon_class => "glyphicon glyphicon-retweet", info_section_id => "progenies_in_crossingtrial_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Crossing Experimental Info</h4>", info_section_subtitle => 'View crossing details (e.g., pollination date, number of flowers, number of seeds)', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_cross_info">Upload Experimental Info of Existing Crosses</button>', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "cross_properties_crossingtrial_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Progeny Info</h4>", info_section_subtitle => 'View number of progenies derived from each cross', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_progenies_existing_crosses">Upload Progenies of Existing Crosses</button>', icon_class => "glyphicon glyphicon-retweet", info_section_id => "progenies_in_crossingtrial_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Linkage</h4>", info_section_subtitle => 'View field trial(s) that are part of this crossing experiment', icon_class => "glyphicon glyphicon-link", info_section_id => "crossing_trial_from_field_trial_section" &>
 
 <& /breeders_toolbox/folder/folder_set.mas, project_type => 'Cross', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type => 'Cross',, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 <& /breeders_toolbox/cross/edit_crossingtrial_details_dialog.mas, trial_name => $trial_name, breeding_program_id => $breeding_program_id, location_id => $location_id, year => $year, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
+<& /breeders_toolbox/cross/upload_update_crosses.mas &>
+
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
 </div>
-
-<script>
-
-jQuery(document).ready(function(){
-
-    jQuery('#edit_crossingtrial_details').click(function(){
-        jQuery('#crossingtrial_details_edit_dialog').modal("show");
-        edit_trial_details();
-    });
-
-});
-
-</script>

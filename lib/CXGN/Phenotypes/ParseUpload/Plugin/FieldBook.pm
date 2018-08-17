@@ -18,6 +18,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::FieldBook;
 
 use Moose;
 use File::Slurp;
+use Text::CSV;
 
 sub name {
     return "field book";
@@ -29,14 +30,12 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
-    my @file_lines;
-    my $delimiter = ',';
-    my $header;
-    my @header_row;
     my %parse_result;
+    my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
+                or die "Cannot use CSV: ".Text::CSV->error_diag ();
 
-    ## Check that the file could be read
-    @file_lines = read_file($filename);
+    ## Check that the file can be read
+    my @file_lines = read_file($filename);
     if (!@file_lines) {
         $parse_result{'error'} = "Could not read file.";
         print STDERR "Could not read file.\n";
@@ -49,9 +48,10 @@ sub validate {
         return \%parse_result;
     }
 
-    $header = shift(@file_lines);
-    chomp($header);
-    @header_row = split($delimiter, $header);
+    my $header = shift(@file_lines);
+    my $status  = $csv->parse($header);
+    my @header_row = $csv->fields();
+
     if (!$header_row[1]) {
         $parse_result{'error'} = "File has no header row.";
         print STDERR "File has no header row.\n";
@@ -59,8 +59,8 @@ sub validate {
     }
 
     #  Check header row contents
-    if ($header_row[0] ne "\"plot_id\"" && $header_row[0] ne "\"plot_name\"" && $header_row[0] ne "\"plant_name\"" && $header_row[0] ne "\"subplot_name\""){
-        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id, plot_name, plant_name, or subplot_name.";
+    if ($header_row[0] ne 'plot_id' && $header_row[0] ne 'plot_name' && $header_row[0] ne 'plant_name' && $header_row[0] ne 'subplot_name'){
+        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0], but it must be plot_id, plot_name, plant_name, or subplot_name.";
         return \%parse_result;
     }
 
@@ -68,20 +68,20 @@ sub validate {
         $parse_result{'error'} = "You must specify if you are uploading plot, plant, or subplot level phenotypes.";
         return \%parse_result;
     }
-    if($data_level eq 'plots' && ($header_row[0] ne "\"plot_id\"" && $header_row[0] ne "\"plot_name\"")){
-        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading plot level phenotypes.";
+    if($data_level eq 'plots' && ($header_row[0] ne "plot_id" && $header_row[0] ne "plot_name")){
+        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0] but must be plot_id or plot_name if you are uploading plot level phenotypes.";
         return \%parse_result;
-    } elsif ($data_level eq 'plants' && $header_row[0] ne "\"plant_name\""){
-        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading plant level phenotypes.";
+    } elsif ($data_level eq 'plants' && $header_row[0] ne "plant_name"){
+        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0] but must be plot_id or plot_name if you are uploading plant level phenotypes.";
         return \%parse_result;
-    } elsif ($data_level eq 'subplots' && $header_row[0] ne "\"subplot_name\""){
-        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading subplot level phenotypes.";
+    } elsif ($data_level eq 'subplots' && $header_row[0] ne "subplot_name"){
+        $parse_result{'error'} = "File contents incorrect. First column in header is $header_row[0] but must be plot_id or plot_name if you are uploading subplot level phenotypes.";
         return \%parse_result;
     }
 
     my %header_column_info;
     foreach my $header_cell (@header_row) {
-        $header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
+        # $header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
 
         if ($header_cell eq "trait") {
             $header_column_info{'trait'}++;
@@ -107,7 +107,6 @@ sub parse {
     my $schema = shift;
     my %parse_result;
     my @file_lines;
-    my $delimiter = ',';
     my $header;
     my @header_row;
     my $header_column_number = 0;
@@ -118,14 +117,16 @@ sub parse {
     my @traits;
     my %data;
 
+    my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
+                or die "Cannot use CSV: ".Text::CSV->error_diag ();
+
     @file_lines = read_file($filename);
     $header = shift(@file_lines);
-    chomp($header);
-    @header_row = split($delimiter, $header);
+    my $status  = $csv->parse($header);
+    my @header_row = $csv->fields();
 
     ## Get column numbers (indexed from 1) of the plot_id, trait, and value.
     foreach my $header_cell (@header_row) {
-        $header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
 
         if ($header_cell eq "trait") {
             $header_column_info{'trait'} = $header_column_number;
@@ -148,21 +149,17 @@ sub parse {
     }
 
     foreach my $line (sort @file_lines) {
-        chomp($line);
-        my @row =  split($delimiter, $line);
+        my $status  = $csv->parse($line);
+        my @row = $csv->fields();
         my $plot_id = $row[0];
-        $plot_id =~ s/\"//g;
-        #substr($row[$header_column_info{'plot_id'}],1,-1);
+
         my $trait = $row[$header_column_info{'trait'}];
-        $trait =~ s/\"//g;
-        #substr($row[$header_column_info{'trait'}],1,-1);
+
         my $value = $row[$header_column_info{'value'}];
-        $value =~ s/\"//g;
-        #substr($row[$header_column_info{'value'}],1,-1);
+
         my $timestamp = $row[$header_column_info{'timestamp'}];
-        $timestamp =~ s/\"//g;
+
         my $collector = $row[$header_column_info{'person'}];
-        $collector =~ s/\"//g;
 
         if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
             $parse_result{'error'} = "Error getting value from file";
