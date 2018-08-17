@@ -14,11 +14,13 @@
               <tr>
                   <th>Protocol</th>
                   <th>Genotyping Data Project</th>
-                  <th>Description</th>
+                  <th>Header Description</th>
                   <th>Number of Markers</th>
+                  <th>Protocol Description</th>
                   <th>Reference Genome</th>
                   <th>Species Name</th>
                   <th>Sample Type</th>
+                  <th>Create Date</th>
             </tr>
             </thead>
             </table>
