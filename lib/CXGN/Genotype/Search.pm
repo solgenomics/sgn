@@ -231,7 +231,7 @@ sub get_genotype_info {
         my $all_protocol_marker_names = $protocol ? $protocol->{'marker_names'} : undef;
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
-        my $igd_number = !$igd_number && $igd_number_hash ? $igd_number_hash->{'igd_number'} : undef;
+        $igd_number = !$igd_number && $igd_number_hash ? $igd_number_hash->{'igd_number'} : undef;
 
         my %dosage_hash;
         while(my($marker_name, $val) = each %$genotype) {

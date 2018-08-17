@@ -66,6 +66,19 @@ $trait_ontology_db_name => undef
 $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
+
+#Specific to genotyping protocol detail page
+$protocol_id => undef
+$protocol_name => undef
+$protocol_description => undef
+$markers => {}
+$marker_names => []
+$header_information_lines => []
+$reference_genome_name => undef
+$species_name => undef
+$create_date => undef
+$sample_observation_unit_type_name => undef
+
 </%args>
 
 <div class="row">
@@ -257,6 +270,10 @@ $referer => undef
 % } #End management_factor_details
 % if ($info_section_id eq 'management_factor_design'){
                                 <& /breeders_toolbox/trial/design_section_management_factor.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
+% } #End management_factor_design
+
+% if ($info_section_id eq 'genotyping_protocol_details'){
+                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, markers => $markers, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name &>
 % } #End management_factor_design
 
 % if ($info_section_id eq 'crossingtrial_details'){

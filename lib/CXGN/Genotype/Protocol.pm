@@ -39,6 +39,11 @@ has 'protocol_name' => (
     is => 'rw',
 );
 
+has 'protocol_description' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 has 'markers' => (
     isa => 'HashRef',
     is => 'rw',
@@ -65,6 +70,11 @@ has 'species_name' => (
 );
 
 has 'sample_observation_unit_type_name' => (
+    isa => 'Str',
+    is => 'rw'
+);
+
+has 'create_date' => (
     isa => 'Str',
     is => 'rw'
 );
@@ -97,6 +107,14 @@ sub BUILD {
     $self->reference_genome_name($map_details->{reference_genome_name});
     $self->species_name($map_details->{species_name});
     $self->sample_observation_unit_type_name($map_details->{sample_observation_unit_type_name});
+
+    my $q = "SELECT create_date, description FROM nd_protocol WHERE nd_protocol_id = ?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($self->nd_protocol_id);
+    my ($create_date, $description) = $h->fetchrow_array();
+    $self->create_date($create_date);
+    $self->protocol_description($description);
+
     return;
 }
 
@@ -146,7 +164,7 @@ sub list {
     }
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
 
-    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, project.project_id, project.name, count(nd_protocol.nd_protocol_id) OVER() AS full_count
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name, count(nd_protocol.nd_protocol_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         JOIN nd_experiment_stock USING(stock_id)
@@ -157,7 +175,7 @@ sub list {
         LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
         JOIN project USING(project_id)
         $where_clause
-        GROUP BY (nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, project.project_id, project.name)
+        GROUP BY (nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name)
         ORDER BY nd_protocol.nd_protocol_id ASC
         $limit_clause
         $offset_clause;";
@@ -167,7 +185,7 @@ sub list {
     $h->execute();
     
     my @results;
-    while (my ($protocol_id, $protocol_name, $protocolprop_json, $project_id, $project_name, $full_count) = $h->fetchrow_array()) {
+    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name, $full_count) = $h->fetchrow_array()) {
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : undef;
         my $all_protocol_marker_names = $protocol ? $protocol->{'marker_names'} : undef;
         my $marker_set = $protocol ? $protocol->{markers} : undef;
@@ -179,6 +197,7 @@ sub list {
         push @results, {
             protocol_id => $protocol_id,
             protocol_name => $protocol_name,
+            protocol_description => $protocol_description,
             markers => $marker_set,
             marker_names => $marker_names,
             header_information_lines => $header_information_lines,
@@ -186,7 +205,8 @@ sub list {
             species_name => $species_name,
             sample_observation_unit_type_name => $sample_observation_unit_type_name,
             project_name => $project_name,
-            project_id => $project_id
+            project_id => $project_id,
+            create_date => $create_date
         };
     }
     #print STDERR Dumper \@results;
