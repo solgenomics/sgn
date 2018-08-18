@@ -606,7 +606,7 @@ sub genotypes_list_genotype_file {
    
     my $data_dir  = $c->stash->{solgs_lists_dir};
    
-    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $list_pop_id);
+    my $files = SGN::Controller::solGS::List->create_list_pop_data_tempfiles($data_dir, $list_pop_id);
     my $geno_file = $files->{geno_file};
     
     my $args = {

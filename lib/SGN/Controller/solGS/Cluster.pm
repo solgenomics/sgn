@@ -150,7 +150,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
     $c->stash->{cluster_type} = $cluster_type;
     
-    my $pop_id;
     my $file_id;
 
     if ($referer =~ /solgs\/selection\//)
@@ -167,14 +166,12 @@ sub cluster_result :Path('/cluster/result/') Args() {
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	$c->stash->{pop_id} = $combo_pops_id;
 	$file_id = $combo_pops_id;
-	$pop_id = $combo_pops_id;
 	$c->stash->{data_set_type} = 'combined_populations';
     } 
     else 
     {
 	$c->stash->{pop_id} = $training_pop_id;
 	$file_id = $training_pop_id;
-	$pop_id  = $training_pop_id;
     }
 
     $c->stash->{training_pop_id}  = $training_pop_id;
@@ -226,7 +223,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	$host =~ s/:\d+//; 
 	$host =~ s/http\w?/https/;
     }
-    
+
+    my $pop_id = $c->stash->{pop_id};
     my $output_link = $host . 'cluster/analysis/' . $pop_id;
 
     if ($kcluster_plot)
@@ -325,7 +323,6 @@ sub cluster_list_genotype_data {
 	if ($list_type eq 'accessions')
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
-	    $c->stash->{genotype_file} = $c->stash->{genotypes_list_genotype_file};
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
