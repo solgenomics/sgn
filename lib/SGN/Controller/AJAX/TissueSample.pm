@@ -93,6 +93,9 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
             $folder_string,
             $_->{year},
             $_->{location_name},
+            $_->{genotyping_facility},
+            $_->{genotyping_plate_format},
+            $_->{genotyping_plate_sample_type},
             "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
           ];
     }
