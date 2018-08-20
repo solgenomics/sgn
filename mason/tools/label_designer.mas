@@ -47,6 +47,17 @@
             <div class="col-md-4">
                 <div id="label_designer_data_level_select_div"></div>
             </div>
+            <div class="col-md-2">
+                <label>Labels to Print:</label>
+            </div>
+            <div class="col-md-4">
+                <select class="form-control" id="label_designer_labels_to_print" >
+                    <option value="100000000000000000">All</option>
+                    <option value="1">First 1</option>
+                    <option value="5">First 5</option>
+                    <option value="10">First 10</option>
+                </select>
+            </div>
         </div>
         <div class="col-md-12" id="d3-custom-dimensions-div" style="display:none;">
             <div class="col-md-6" id="d3-page-custom-dimensions-div" style="visibility:hidden">
