@@ -835,31 +835,6 @@ solGS.getPopulationDetails = function () {
 }
 
 
-solGS.getDatasetsMenu = function (dType) {
-    
-    var dataset = new CXGN.Dataset();
-
-    var allDatasets = dataset.getDatasets();
-    
-    var sp = ' ----------- ';
-    var dMenu = '<option disabled>' + sp +  'DATASETS' + sp + '</option>';
-	
-    for (var i =0; i <allDatasets.length; i++) {
-	console.log(allDatasets[i][0] + ' ' + allDatasets[i][1]);
-	var id = allDatasets[i][0];
-	var name = allDatasets[i][1];
-
-	var d = dataset.getDataset(id);
-	console.log(d.categories)
-	console.log(d.categories[dType].length)
-	if (d.categories[dType].length){	  
-	    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';
-	}	   	    
-    }
-
-    return dMenu;
-    
-}
 
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function(a, b) {
