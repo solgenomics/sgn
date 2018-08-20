@@ -10,6 +10,7 @@ $trial_id
         <tr>
             <th>Cross Name</th>
             <th>Number of Progenies</th>
+            <th>Family Name</th>
         </tr>
     </thead>
 </table>
