@@ -83,6 +83,7 @@ use CXGN::Stock;
 use CXGN::Chado::Stock;
 use CXGN::Chado::Organism;
 use JSON;
+use utf8;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -552,7 +553,8 @@ sub search {
         $h->execute();
         while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
             for my $s (0 .. scalar(@stockprop_view)-1){
-                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
+                # my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
+                my $stockprop_vals = $stockprop_select_return[$s] ? JSON->new->utf8(0)->decode($stockprop_select_return[$s]) : {};
                 my @stockprop_vals_string;
                 foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
                     push @stockprop_vals_string, $_;
