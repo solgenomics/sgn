@@ -220,6 +220,7 @@ has 'search_type' => (isa => 'Str', is => 'rw');
 has 'treatment_project_ids' => (isa => 'ArrayRef[Int]|Undef', is => 'rw');
 has 'selected_columns' => (isa => 'HashRef|Undef', is => 'rw');
 has 'selected_trait_names' => (isa => 'ArrayRef|Undef', is => 'rw');
+has 'include_notes' => (isa => 'Str', is => 'rw');
 
 has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',
