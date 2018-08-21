@@ -35,6 +35,7 @@ geolocation_property	adm3	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	region	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	alternative_name	From BrAPI	03/27/2017	nm529	00076
+list_types	identifier_generation		08/21/2018	nm529	00102
 list_types	genotyping_trials		03/23/2018	nm529	00092
 list_types	tissue_samples		02/15/2018	nm529	00091
 list_types	seedlots		07/20/2017	nm529	00081

@@ -239,6 +239,9 @@ $referer => undef
 % if ($info_section_id eq 'genotyping_data_project_data'){
                                 <& /breeders_toolbox/genotyping_data_project/genotype_data.mas, trial_id=>$trial_id &>
 % } #End genotyping_data_project_data
+% if ($info_section_id eq 'identifier_generation_list'){
+                                <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
+% } #End identifier_generation_list
 % if ($info_section_id eq 'management_factor_details'){
                                 <table class="table table-hover table-bordered" >
                                     <tr>
