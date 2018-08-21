@@ -63,10 +63,13 @@ sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation')
         $c->detach();
     }
 
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd('/')."_".$time->hms();
     my $identifier = {
         identifier_prefix => $identifier_prefix,
         num_digits => $num_digits,
-        current_number => $current_number
+        current_number => $current_number,
+        records => [{'timestamp' => $timestamp, 'username' => $c->user()->get_object->get_username(), 'next_number' => '0', 'type' => 'identifier_instantiation' }]
     };
     my $identifier_json = encode_json $identifier;
 
@@ -99,8 +102,9 @@ sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list
         my $current_number = $identifier_generator->{current_number};
         my $num = sprintf '%0'.$num_digits.'d', $current_number;
         my $next_identifier = $prefix.$num;
+        my $history_button = '<button class="btn btn-primary" name="identifier_generation_history" data-list_id="'.$_->[0].'">View</button>';
         my $button = '<div class="form-group"><label class="col-sm-6 control-label">Next Count: </label><div class="col-sm-6"> <input type="number" class="form-control" id="identifier_generation_next_numbers_'.$_->[0].'" placeholder="EG: 100" /></div></div><button class="btn btn-primary" name="identifier_generation_download" data-list_id="'.$_->[0].'">Download Next</button>';
-        push @data, [$_->[1], $_->[2], $prefix, $num_digits, $current_number, $next_identifier, $button];
+        push @data, [$_->[1], $_->[2], $prefix, $num_digits, $current_number, $next_identifier, $history_button, $button];
     }
     my $available_public_lists = CXGN::List::available_public_lists($schema->storage->dbh, 'identifier_generation');
     foreach (@$available_public_lists){
@@ -112,8 +116,9 @@ sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list
         my $current_number = $identifier_generator->{current_number};
         my $num = sprintf '%0'.$num_digits.'d', $current_number;
         my $next_identifier = $prefix.$num;
+        my $history_button = '<button class="btn btn-primary" name="identifier_generation_history" data-list_id="'.$_->[0].'">View</button>';
         my $button = '<div class="form-group"><label class="col-sm-6 control-label">Next Count: </label><div class="col-sm-6"> <input type="number" class="form-control" id="identifier_generation_next_numbers_'.$_->[0].'" placeholder="EG: 100" /></div></div><button class="btn btn-primary" name="identifier_generation_download" data-list_id="'.$_->[0].'">Download Next</button>';
-        push @data, [$_->[1], $_->[2], $prefix, $num_digits, $current_number, $next_identifier, $button];
+        push @data, [$_->[1], $_->[2], $prefix, $num_digits, $current_number, $next_identifier, $history_button, $button];
     }
 
     $c->stash->{rest} = { data => \@data };
@@ -153,6 +158,7 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
     my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
     my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
 
+    my @new_identifiers;
     open(my $fh, '>', $tempfile);
     my $num = 0;
     while ($num < $next_number){
@@ -160,12 +166,13 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
         my $identifier = $prefix.$number;
         print $fh "$identifier\n";
         $num++;
+        push @new_identifiers, $identifier;
     }
     close $fh;
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd('/')."_".$time->hms();
-    push @$previous_records, {'timestamp' => $timestamp, 'username' => $c->user()->get_object->get_username(), 'next_number' => $next_number };
+    push @$previous_records, {'timestamp' => $timestamp, 'username' => $c->user()->get_object->get_username(), 'next_number' => $next_number, 'type' => 'identifier_download' };
 
     my $identifier = {
         identifier_prefix => $prefix,
@@ -177,7 +184,31 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
     $list->remove_element($element);
     $list->add_element($identifier_json);
 
-    $c->stash->{rest} = { success => 1, filename => $urlencode{$rel_file.".csv"} };
+    $c->stash->{rest} = { success => 1, identifiers => \@new_identifiers, filename => $urlencode{$rel_file.".csv"} };
+}
+
+sub identifier_generation_history : Path('/ajax/breeders/identifier_generation_history') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if(!$c->user){
+        $c->stash->{rest} = { error => "You must be logged in first!"};
+        $c->detach();
+    }
+
+    my $list_id = $c->req->param('list_id');
+    if(!$list_id){
+        $c->stash->{rest} = { error => "List id is required!"};
+        $c->detach();
+    }
+
+    my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $list_id });
+    my $element = $list->elements()->[0];
+    my $identifier_generator = decode_json $element;
+    my $previous_records = $identifier_generator->{records} || [];
+
+    $c->stash->{rest} = { success => 1, records => $previous_records };
 }
 
 1;
