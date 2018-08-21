@@ -78,7 +78,7 @@ sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation')
     $list->add_element($identifier_json);
     $list->type('identifier_generation');
 
-    $c->stash->{rest} = { success => "Stored $identifier_name!" };
+    $c->stash->{rest} = { new_list_id => $new_list_id, success => "Stored $identifier_name!" };
 }
 
 sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list') Args(0) {
