@@ -7,6 +7,14 @@
 
 <& /page/page_title.mas, title=>"Manage Identifier Generation" &>
 
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <p>It is often necessary to pre-create identifiers. This is used in ACAI and the Banana Agronomy project for pre-printing barcode identifiers that are later assigned to trials in the field. This can also be used for pre-printing barcode identifiers that are later assigned to samples in the lab.</p>
+        </div>
+    </div>
+</div>
+
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Available Identifiers</h4>", info_section_subtitle => 'View, add, and dowload identifiers.', buttons_html => '<button class="btn btn-primary btn-sm" id="add_new_identifier_button" style="margin:3px">Add New Identifier</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "identifier_generation_list" &>
 
 <div class="modal fade" id="add_new_identifier_dialog" name="add_new_identifier_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewIdentifierDialog">
