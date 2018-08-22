@@ -136,10 +136,9 @@ sub _parse_with_plugin {
             next;
         }
 
-        my %cross_family_name = (
-            cross_name => $cross_name,
-            family_name => $family_name
-        );
+        my %cross_family_name;
+        $cross_family_name{$cross_name} = $family_name;
+
     }
 
     $self->_set_parsed_data(\%cross_family_name);

@@ -2,7 +2,7 @@ package CXGN::Pedigree::AddCrossInfo;
 
 =head1 NAME
 
-CXGN::Pedigree::AddCrossInfo - a module to add information such as number of seeds or number of flowers to cross experiments.
+CXGN::Pedigree::AddCrossInfo - a module to add information such as number of seeds or number of flowers as well as family name as stock properties for cross.
 
 =head1 USAGE
 
@@ -41,6 +41,7 @@ has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', req
 #has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value', required => 1,);
 has 'key' => (isa =>'Str', is => 'rw', predicate => 'has_key',);
 has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value',);
+has 'family_name' => (isa =>'Str', is => 'rw', predicate => 'has_family_name');
 
 sub add_info {
   my $self = shift;
@@ -59,6 +60,7 @@ sub add_info {
     }
 
     my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property');
+	my $family_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_property');
 
     my $cross_json_string;
     my $cross_json_hash = {};
@@ -74,6 +76,11 @@ sub add_info {
     } else {
       $cross_json_string = _generate_property_hash($self->get_key, $self->get_value, $cross_json_hash);
       $cross_stock->create_stockprops({$cross_info_cvterm->name() => $cross_json_string});
+    }
+
+	my $family_name = $self->family_name();
+    if ($family_name){
+		$cross_stock->create_stockprops({$family_name_cvterm->name() => $family_name});
     }
 
 };

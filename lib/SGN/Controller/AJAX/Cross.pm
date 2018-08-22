@@ -1495,7 +1495,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     comment => $message_hash->{id}
                 });
             $file_row->insert();
-    
+
             $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
         } else {
             $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
@@ -1869,6 +1869,128 @@ sub upload_info_POST : Args(0) {
 
     $c->stash->{rest} = {success => "1",};
 }
+
+
+sub upload_family_names : Path('/ajax/cross/upload_family_names') : ActionClass('REST'){ }
+
+sub upload_family_names_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('family_name_upload_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "cross_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+#   my $upload_file_type = "crosses excel";#get from form when more options are added
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload family names!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload family names!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('FamilyNameExcel');
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->detach();
+    }
+
+    #add the progeny
+    if ($parsed_data){
+        my %family_name_hash = %{$parsed_data};
+        foreach my $cross_name(keys %family_name_hash){
+            my $family_name = $family_name_hash{$cross_name};
+
+            my $family_name_add = CXGN::Pedigree::AddCrossInfo->new({
+                chado_schema => $chado_schema,
+                dbh => $dbh,
+                cross_name => $cross_name,
+                family_name => $family_name,
+            });
+            if (!$family_name_add->add_family_name()){
+                $c->stash->{rest} = {error_string => "Error adding family name",};
+                return;
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
+
 
 
 ###
