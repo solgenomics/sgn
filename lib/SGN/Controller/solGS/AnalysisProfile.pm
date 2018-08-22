@@ -189,30 +189,31 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     }
     else  
     { 
-	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-	my $output_details_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, 'analysis_report_args');
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	my $output_details_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis_report_args');
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
 	my $cmd = 'mx-run solGS::AnalysisReport '
 	    . '--output_details_file ' . $output_details_file;
 
-	my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $tmp_dir, $out_temp_file, $err_temp_file);
 
-	eval 
-	{
-	    my $job = CXGN::Tools::Run->new($config);
-	    $job->do_not_cleanup(1);	 
-	    $job->is_async(1);
-	    $job->run_async($cmd);
-	   
+	my $config_args = {
+	    'temp_dir' => $temp_dir,
+	    'out_file' => $out_temp_file,
+	    'err_file' => $err_temp_file
 	};
 
-	if ($@) {
-	    print STDERR "An error occurred! $@\n";
-	    $c->stash->{status} = $@;
-	}
-	
+	my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+
+	my $job_args = {
+	    'cmd' => $cmd,
+	    'config' => $config,
+	    'background_job'=> $c->stash->{background_job},
+	    'temp_dir' => $temp_dir,
+	};
+    
+	my $job = $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);	
     }
  
     my $ret->{result} = $c->stash->{status}; 	
@@ -450,7 +451,7 @@ sub structure_output_details {
 	if ($pop_id =~ /list/) {
 	    my $tmp_dir = $c->stash->{solgs_lists_dir};;	   
 
-	    my $files   = $c->controller('solGS::List')->create_list_pop_data_tempfiles($tmp_dir, $pop_id);
+	    my $files   = $c->controller('solGS::List')->create_list_pop_data_files($tmp_dir, $pop_id);
 	    $pheno_file = $files->{pheno_file};
 	    $geno_file  = $files->{geno_file};
 
