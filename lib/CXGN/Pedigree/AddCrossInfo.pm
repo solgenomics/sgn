@@ -94,30 +94,6 @@ sub _generate_property_hash {
   my $cross_json_string = encode_json $cross_json_hash;
   return $cross_json_string;
 }
-    #get experiment
-
-    #my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-    #  ->find({
-	  #    'nd_experiment_stocks.stock_id' => $cross_stock->stock_id,
-	  #   },
-	  #   {
-	  #    join => 'nd_experiment_stocks',
-	  #   });
-    #if (!$experiment) {
-    #  print STDERR "Cross experiment could not be found\n";
-    #  return;
-    #}
-
-		#print STDERR "Adding info type: " . $self->get_info_type() . " value: " . $self->get_value() . "\n";
-    #my $info_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $self->get_info_type(), 'nd_experiment_property');
-
-		#$experiment->find_or_create_related('nd_experimentprops' , {
-	  #    nd_experiment_id => $experiment->nd_experiment_id(),
-	  #    type_id  =>  $info_type_cvterm->cvterm_id(),
-	  #    value  =>  $self->get_value(),
-		#});
-
-
 
   #try to add all cross info in a transaction
   try {
@@ -133,7 +109,6 @@ sub _generate_property_hash {
 
   return 1;
 }
-
 
 
 sub _get_cross {
