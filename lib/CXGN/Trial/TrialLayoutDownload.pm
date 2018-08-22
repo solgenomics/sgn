@@ -252,7 +252,7 @@ sub get_layout_output {
         print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
         return {output => \%hash, rows => \@rows, cols => \@cols};
     }
-    else {
+    else{
         foreach my $key (sort { $a <=> $b} keys %$design) {
             my $design_info = $design->{$key};
             if ($self->data_level eq 'plots' ) {
