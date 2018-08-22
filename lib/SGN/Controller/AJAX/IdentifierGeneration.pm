@@ -77,6 +77,7 @@ sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation')
     my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $new_list_id });
     $list->add_element($identifier_json);
     $list->type('identifier_generation');
+    $list->make_public();
 
     $c->stash->{rest} = { new_list_id => $new_list_id, success => "Stored $identifier_name!" };
 }
@@ -92,20 +93,6 @@ sub identifier_generation_list : Path('/ajax/breeders/identifier_generation_list
     }
 
     my @data;
-    my $available_lists = CXGN::List::available_lists($schema->storage->dbh, $c->user()->get_object->get_sp_person_id(), 'identifier_generation');
-    foreach (@$available_lists){
-        my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $_->[0] });
-        my $element = $list->elements()->[0];
-        my $identifier_generator = decode_json $element;
-        my $prefix = $identifier_generator->{identifier_prefix};
-        my $num_digits = $identifier_generator->{num_digits};
-        my $current_number = $identifier_generator->{current_number};
-        my $num = sprintf '%0'.$num_digits.'d', $current_number;
-        my $next_identifier = $prefix.$num;
-        my $history_button = '<button class="btn btn-primary" name="identifier_generation_history" data-list_id="'.$_->[0].'">View</button>';
-        my $button = '<div class="form-group"><label class="col-sm-6 control-label">Next Count: </label><div class="col-sm-6"> <input type="number" class="form-control" id="identifier_generation_next_numbers_'.$_->[0].'" placeholder="EG: 100" /></div></div><button class="btn btn-primary" name="identifier_generation_download" data-list_id="'.$_->[0].'">Download Next</button>';
-        push @data, [$_->[1], $_->[2], $prefix, $num_digits, $current_number, $next_identifier, $history_button, $button];
-    }
     my $available_public_lists = CXGN::List::available_public_lists($schema->storage->dbh, 'identifier_generation');
     foreach (@$available_public_lists){
         my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $_->[0] });
