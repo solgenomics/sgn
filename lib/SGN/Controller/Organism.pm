@@ -322,8 +322,7 @@ sub view_organism :Chained('find_organism') :PathPart('view') :Args(0) {
     $c->stash->{genome_size} = $organism->get_genome_size() || $na;
     $c->stash->{chromosome_number} = $organism->get_chromosome_number() || $na;
     my @image_ids = $organism->get_image_ids();
-    my @image_objects = map { SGN::Image->new($c->dbc->dbh, $_, $c ) } @image_ids;
-    $c->stash->{image_objects} = \@image_objects;
+    $c->stash->{images} = \@image_ids;
     $self->map_data($c);
     $self->transcript_data($c);
     $self->phenotype_data($c);

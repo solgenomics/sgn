@@ -311,10 +311,20 @@ sub _get_design_from_trial {
 
     #Try to retrieve layout from cached json
     my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id;
+    my $trial_has_plants_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property')->cvterm_id;
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_cvterm_id });
+    my $trial_has_plants = $project->projectprops->find({ 'type_id' => $trial_has_plants_cvterm_id });
     if ($trial_layout_json) {
-        print STDERR "TrialLayout from cache ".localtime."\n";
-        return decode_json $trial_layout_json->value;
+        my $design = $trial_layout_json->value;
+        if ($trial_has_plants){
+            my @plot_values = values %$design;
+            if (!exists($plot_values[0]->{plant_index_number})) {
+                $self->generate_and_cache_layout();
+            }
+        } else {
+            print STDERR "TrialLayout from cache ".localtime."\n";
+            return decode_json $design;
+        }
     } else {
         $self->generate_and_cache_layout();
     }
