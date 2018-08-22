@@ -108,6 +108,12 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         }
         my $lt = CXGN::List::Transform->new();
         @selected_traits = @{$lt->transform($schema, "traits_2_trait_ids", \@trait_list)->{transform}};
+
+        for (my $i=0; $i < scalar @selected_traits; $i++) {
+            my $cvterm = CXGN::Chado::Cvterm->new( $c->dbc->dbh, $selected_traits[$i] );
+            my $synonym = $cvterm->get_uppercase_synonym();
+            $trait_list[$i] = $synonym || $trait_list[$i]; # use uppercase synonym if defined, otherwise use full trait name
+        }
     }
 
   my $dir = $c->tempfiles_subdir('/other');
