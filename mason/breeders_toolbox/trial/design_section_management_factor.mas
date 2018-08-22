@@ -9,8 +9,8 @@ $design_name
 
 <div class="well well-sm">
 
-    <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions Planted", is_subsection => 1, collapsible=>1, collapsed=>1 &>
-        <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
+    <&| /page/info_section.mas, id => "trial_accessions_or_crosses", title=>"Accessions or Crosses Planted", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_accessions_or_crosses.mas, trial_id => $trial_id &>
     </&>
     <&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>

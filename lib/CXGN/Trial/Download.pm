@@ -26,7 +26,7 @@ my $create_spreadsheet = CXGN::Trial::Download->new({
     format => "ExcelBasic",
     data_level => $data_level,
     sample_number => $sample_number,
-    predefined_columns => $predefined_columns,
+    predefined_columns => $predefined_columns #for postcomposing terms on the fly
 });
 $create_spreadsheet->download();
 $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
@@ -201,7 +201,7 @@ has 'trial_download_logfile' => (
 has 'format' => (isa => 'Str', is => 'ro', required => 1);
 has 'data_level' => (isa => 'Str | Undef', is => 'ro', default => 'plots');
 has 'sample_number' => (isa => 'Int | Undef', is => 'ro', default => 0);
-has 'predefined_columns' => (isa => 'ArrayRef[HashRef] | Undef', is => 'ro');
+has 'predefined_columns' => (isa => 'ArrayRef[HashRef] | Undef', is => 'ro'); #for postcomposing terms on the fly
 has 'trait_list' => (isa => 'ArrayRef[Int|Str]|Undef', is => 'rw', predicate => 'has_trait_list' );
 has 'trait_component_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'trial_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );

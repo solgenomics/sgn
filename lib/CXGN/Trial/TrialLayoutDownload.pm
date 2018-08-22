@@ -178,25 +178,25 @@ sub get_layout_output {
 
     my @possible_cols = ();
     if ($self->data_level eq 'plots') {
-        @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('plot_name','plot_id','accession_name','accession_id','cross_name','cross_id','accession_or_cross_uniquename','accession_or_cross_stock_id','accession_or_cross_type_name','accession_or_cross_type_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plots() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plants') {
-        @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','cross_name','cross_id','accession_or_cross_uniquename','accession_or_cross_stock_id','accession_or_cross_type_name','accession_or_cross_type_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plants() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'subplots') {
-        @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','cross_name','cross_id','accession_or_cross_uniquename','accession_or_cross_stock_id','accession_or_cross_type_name','accession_or_cross_type_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_subplots() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'field_trial_tissue_samples') {
-        @possible_cols = ('tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+        @possible_cols = ('tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','cross_name','cross_id','accession_or_cross_uniquename','accession_or_cross_stock_id','accession_or_cross_type_name','accession_or_cross_type_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_tissue_samples() : [];
             push @treatment_units_array, $treatment_units;

@@ -288,6 +288,12 @@ rect.bordered {
                                         <div class="col-sm-5" id="list_of_rep_accession" >
                                         </div>
                                     </div>
+
+                                    <div class="form-group form-group-sm" id="show_list_of_accession_or_cross_section" style="display:none">
+                                        <label class="col-sm-7 control-label">List of accession OR crosses to include (required):</label>
+                                        <div class="col-sm-5" id="select_accession_or_cross_list" name="select_accession_or_cross_list">
+                                        </div>
+                                    </div>
                                     <center>Need to create a list of accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="lists_link" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></center>
                                 </div>
 

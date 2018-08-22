@@ -101,7 +101,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 	  format => $format,
       data_level => $data_level,
       sample_number => $sample_number,
-      predefined_columns => $predefined_columns,
+      predefined_columns => $predefined_columns, #for postcomposing terms on the fly
       });
 
      $create_spreadsheet->download();

@@ -155,7 +155,7 @@ sub design_layout_map_view {
     
     my $plot_popUp;
 	foreach my $hash (@layout_info){
-		$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
+		$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nplanted_accession_name:".$hash->{'accession_name'}."\nplanted_cross_name:".$hash->{'cross_name'};
         push @$result,  {plotname => $hash->{'plot_name'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
     }
     
@@ -206,7 +206,7 @@ sub design_layout_view {
     $design_result_html .= '<table class="table table-bordered table-hover">';
 
     if ($design_type eq 'greenhouse') {
-        $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession or Cross Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
     } elsif ($design_type eq 'splitplot') {
         $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
     } else {

@@ -311,24 +311,25 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         my $subplots = $c->stash->{trial}->get_subplots();
         $total_complete_number = scalar (@$subplots);
     }
-    my $stocks_per_accession;
+    my $stocks_per_accession_or_cross;
     if ($display eq 'plots_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-        $select_clause_additional = ', accession.uniquename, accession.stock_id';
-        $group_by_additional = ', accession.stock_id, accession.uniquename';
-        $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
-        $order_by_additional = ' ,accession.uniquename DESC';
+        $select_clause_additional = ', accession_or_cross.uniquename, accession_or_cross.stock_id, accession_or_cross_type.name';
+        $group_by_additional = ', accession_or_cross.stock_id, accession_or_cross.uniquename, accession_or_cross_type.name';
+        $stocks_per_accession_or_cross = $c->stash->{trial}->get_plots_per_accession_or_cross();
+        $order_by_additional = ' ,accession_or_cross.uniquename DESC';
     }
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-        $select_clause_additional = ', accession.uniquename, accession.stock_id';
-        $group_by_additional = ', accession.stock_id, accession.uniquename';
-        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
-        $order_by_additional = ' ,accession.uniquename DESC';
+        $select_clause_additional = ', accession_or_cross.uniquename, accession_or_cross.stock_id, accession_or_cross_type.name';
+        $group_by_additional = ', accession_or_cross.stock_id, accession_or_cross.uniquename, accession_or_cross_type.name';
+        $stocks_per_accession_or_cross = $c->stash->{trial}->get_plants_per_accession_or_cross();
+        $order_by_additional = ' ,accession_or_cross.uniquename DESC';
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -345,23 +346,24 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             JOIN nd_experiment_stock USING(nd_experiment_id)
             JOIN stock as plot USING(stock_id)
             JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
-            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
+            JOIN stock as accession_or_cross on (accession_or_cross.stock_id = stock_relationship.object_id)
+            JOIN cvterm as accession_or_cross_type on (accession_or_cross_type.cvterm_id = accession_or_cross.type_id)
             JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
         WHERE project_id=?
             AND phenotype.value~?
             AND stock_relationship.type_id=?
             AND plot.type_id=?
-            AND accession.type_id=?
+            AND accession_or_cross.type_id IN (?,?)
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
         $order_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id, $cross_type_id);
 
     my @phenotype_data;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $stock_type) = $h->fetchrow_array()) {
 
         my $cv = 0;
         if ($stddev && $average != 0) {
@@ -375,8 +377,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         my @return_array;
         if ($stock_name && $stock_id) {
-            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
-            push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
+            $total_complete_number = scalar (@{$stocks_per_accession_or_cross->{$stock_id}});
+            push @return_array, ( qq{<a href="/stock/$stock_id/view">$stock_name</a>}, $stock_type);
         }
         my $percent_missing = '';
         if ($total_complete_number){
@@ -433,6 +435,18 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_accessions_or_crosses : Chained('trial') PathPart('accessions_or_crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my $data = $trial->get_accessions_or_crosses();
+
+    $c->stash->{rest} = { stocks => $data };
 }
 
 sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {

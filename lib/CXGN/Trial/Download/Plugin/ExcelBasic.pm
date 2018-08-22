@@ -23,7 +23,7 @@ my $create_spreadsheet = CXGN::Trial::Download->new({
     format => "ExcelBasic",
     data_level => $data_level,
     sample_number => $sample_number,
-    predefined_columns => $predefined_columns,
+    predefined_columns => $predefined_columns, #for postcomposing terms on the fly
 });
 $create_spreadsheet->download();
 $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
@@ -103,16 +103,16 @@ sub download {
     my @column_headers;
     if ($self->data_level eq 'plots') {
         $num_col_before_traits = 9;
-        @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("plot_name", "accession_name_or_cross_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants') {
         $num_col_before_traits = 10;
-        @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("plant_name", "plot_name", "accession_name_or_cross_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'subplots') {
         $num_col_before_traits = 10;
-        @column_headers = ("subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("subplot_name", "plot_name", "accession_name_or_cross_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants_subplots') {
         $num_col_before_traits = 11;
-        @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name_or_cross_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     }
 
     my $num_col_b = $num_col_before_traits;
@@ -143,9 +143,9 @@ sub download {
             my @ordered_plots = sort { $a <=> $b} keys(%design);
             for(my $n=0; $n<@ordered_plots; $n++) {
                 my %design_info = %{$design{$ordered_plots[$n]}};
-
+                my $stock_name = $design_info{accession_name} ? $design_info{accession_name} : $design_info{cross_name};
                 $ws->write($line, 0, $design_info{plot_name});
-                $ws->write($line, 1, $design_info{accession_name});
+                $ws->write($line, 1, $stock_name);
                 $ws->write($line, 2, $design_info{plot_number});
                 $ws->write($line, 3, $design_info{block_number});
                 $ws->write($line, 4, $design_info{is_a_control});
@@ -190,9 +190,10 @@ sub download {
                 }
 
                 foreach (@$sampled_plant_names) {
+                    my $stock_name = $design_info{accession_name} ? $design_info{accession_name} : $design_info{cross_name};
                     $ws->write($line, 0, $_);
                     $ws->write($line, 1, $design_info{plot_name});
-                    $ws->write($line, 2, $design_info{accession_name});
+                    $ws->write($line, 2, $stock_name);
                     $ws->write($line, 3, $design_info{plot_number});
                     $ws->write($line, 4, $design_info{block_number});
                     $ws->write($line, 5, $design_info{is_a_control});
@@ -238,9 +239,10 @@ sub download {
                 }
 
                 foreach (@$sampled_subplot_names) {
+                    my $stock_name = $design_info{accession_name} ? $design_info{accession_name} : $design_info{cross_name};
                     $ws->write($line, 0, $_);
                     $ws->write($line, 1, $design_info{plot_name});
-                    $ws->write($line, 2, $design_info{accession_name});
+                    $ws->write($line, 2, $stock_name);
                     $ws->write($line, 3, $design_info{plot_number});
                     $ws->write($line, 4, $design_info{block_number});
                     $ws->write($line, 5, $design_info{is_a_control});
@@ -274,10 +276,11 @@ sub download {
                     my $plant_names = $subplot_plant_names->{$s};
 
                     foreach (sort @$plant_names) {
+                        my $stock_name = $design_info{accession_name} ? $design_info{accession_name} : $design_info{cross_name};
                         $ws->write($line, 0, $_);
                         $ws->write($line, 1, $s);
                         $ws->write($line, 2, $design_info{plot_name});
-                        $ws->write($line, 3, $design_info{accession_name});
+                        $ws->write($line, 3, $stock_name);
                         $ws->write($line, 4, $design_info{plot_number});
                         $ws->write($line, 5, $design_info{block_number});
                         $ws->write($line, 6, $design_info{is_a_control});

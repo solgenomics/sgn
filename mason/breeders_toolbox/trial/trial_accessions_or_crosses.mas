@@ -1,0 +1,87 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ "CXGN.List", "CXGN.BreederSearch" ] &>
+
+
+<div id="trial_accessions_or_crosses_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_accessions_or_crosses_onswitch').one("click",  function() {
+
+    jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions_or_crosses',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                // console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="accessions_or_crosses_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+
+                html += '<tr><td><button class="btn btn-default btn-sm" id="accessions_or_crosses_select_all" name="1">Select All</button><br><br>'
+                html += '<div class="well well-sm"><div id="accessions_or_crosses_data_count" name="1">No Selection</div></div>'
+                html += '<div id="accessions_or_crosses_to_list_menu"></div><td><tr></table>'
+
+                jQuery('#trial_accessions_or_crosses_html').html(html);
+
+                var stocks = [];
+                for (var i=0; i<response.stocks.length; i++){
+                    var uniquename = response.stocks[i].stock_uniquename;
+                    var stock_id = response.stocks[i].stock_id;
+                    var t = [stock_id, uniquename];
+                    stocks.push(t);
+                }
+
+                var stock = stocks.sort() || [];
+
+                var stocks_html = format_options_list(stock);
+                jQuery('#accessions_or_crosses_data').html(stocks_html);
+ 
+                var data = jQuery('#accessions_or_crosses_data').val() || [];
+                show_list_counts('accessions_or_crosses_data_count', stocks.length, data.length);
+ 
+                if (jQuery('#accessions_or_crosses_data').length) {
+                      addToListMenu('accessions_or_crosses_to_list_menu', 'accessions_or_crosses_data', {
+                      selectText: true,
+                    });
+                }
+
+                jQuery('#accessions_or_crosses_select_all').click( function() { // select all
+                    var data_id = "accessions_or_crosses_data";
+                    selectAllOptions(document.getElementById(data_id));
+
+                    var data = jQuery("#"+data_id).val() || [];
+                    var count_id = "accessions_or_crosses_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('#accessions_or_crosses_data').change( function() { // update count when data selections change
+                    var data_id = jQuery(this).attr('id');
+                    var data = jQuery('#'+data_id).val() || [];
+                    var count_id = "accessions_or_crosses_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('select').dblclick( function() { // open detail page
+                    window.open("../../stock/"+this.value+"/view");
+                });
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving accessions or crosses.");
+            }
+        });
+    });
+
+});
+
+</script>
