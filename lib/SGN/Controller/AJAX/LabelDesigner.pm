@@ -76,7 +76,7 @@ __PACKAGE__->config(
 
        my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
        my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
-       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+       if ($design_value eq "genotyping_plate") { # for genotyping plates, get "Genotyping Facility" and "Genotyping Project Name"
            my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
            my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
            my $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
@@ -207,7 +207,7 @@ __PACKAGE__->config(
        my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
 
        my ($genotyping_facility, $genotyping_project_name);
-       if ($design_value eq "genotyping_plate") { # for genotyping trials, get "Genotyping Facility" and "Genotyping Project Name"
+       if ($design_value eq "genotyping_plate") { # for genotyping plates, get "Genotyping Facility" and "Genotyping Project Name"
            my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
            my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
            $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
@@ -503,7 +503,7 @@ sub get_plot_data {
         }
 
     }
-    elsif ($data_type =~ m/Genotyping Trial/) {
+    elsif ($data_type =~ m/Genotyping Plate/) {
         $trial_id = $value;
         $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
     }

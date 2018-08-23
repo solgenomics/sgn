@@ -398,7 +398,7 @@ my $trial_create = CXGN::Trial::TrialCreate
      	trial_year => '2016',
 	trial_location => 'test_location',
 	program => 'test',
-	trial_description => "Test Genotyping Trial Upload",
+	trial_description => "Test Genotyping Plate Upload",
 	design_type => 'genotyping_plate',
 	design => $design,
 	trial_name => "test_genotyping_trial_upload",
@@ -419,7 +419,7 @@ my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, {
 ok($project_name == "test_genotyping_trial_upload", "check that trial_create really worked for igd trial");
 
 my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, {order_by => { -desc => 'project_id' }})->first()->description();
-ok($project_desc == "Test Genotyping Trial Upload", "check that trial_create really worked for igd trial");
+ok($project_desc == "Test Genotyping Plate Upload", "check that trial_create really worked for igd trial");
 
 
 $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
@@ -927,7 +927,7 @@ is_deeply($message_hash, {
                                  }
                       },
           'success' => '1'
-        }, 'test upload parse of coordinate genotyping trial');
+      }, 'test upload parse of coordinate genotyping plate');
 
 my $plate_data = {
     design => $message_hash->{design},
@@ -1023,7 +1023,7 @@ is_deeply($columns, [
             'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
             'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB'
           ]
-        ], 'test intertek genotyping trial download');
+        ], 'test intertek genotyping plate download');
 
 $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=dartseqxls&dataLevel=plate");
 my $intertek_download = $mech->content;
@@ -1119,6 +1119,6 @@ is_deeply($columns, [
             'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
             'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB'
           ]
-        ], 'test dartseq genotyping trial download');
+        ], 'test dartseq genotyping plate download');
 
 done_testing();

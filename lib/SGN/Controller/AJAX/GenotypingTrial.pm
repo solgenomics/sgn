@@ -25,7 +25,7 @@ sub generate_genotype_trial_POST : Args(0) {
     my $c = shift;
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
+        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping plate.' };
         $c->detach();
     }
 
@@ -121,7 +121,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         return;
     }
     if (!$upload_xls && !$upload_coordinate && !$upload_coordinate_custom){
-        $c->stash->{rest} = {error => "You must upload a genotyping trial file!" };
+        $c->stash->{rest} = {error => "You must upload a genotyping plate file!" };
         return;
     }
     my $parser;
@@ -169,7 +169,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping trial!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping plate!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -178,7 +178,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping trial!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -187,7 +187,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping trial." };
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
         $c->detach();
     }
 
@@ -274,7 +274,7 @@ sub store_genotype_trial_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping trial!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping plate!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -283,7 +283,7 @@ sub store_genotype_trial_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping trial!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -292,7 +292,7 @@ sub store_genotype_trial_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping trial." };
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
         $c->detach();
     }
 
@@ -327,7 +327,7 @@ sub store_genotype_trial_POST : Args(0) {
     }
     my @source_stock_names = keys %source_stock_names;
 
-    #If plots or plants or tissue samples are provided as the source, we can get the field trial and use it to save the link between genotyping trial and field trial directly.
+    #If plots or plants or tissue samples are provided as the source, we can get the field trial and use it to save the link between genotyping plate and field trial directly.
     my %field_trial_ids;
     my $plant_rs = $schema->resultset('Stock::Stock')->search({'me.uniquename' => {-in => \@source_stock_names}, 'me.type_id' => {-in => [$plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id]}, 'nd_experiment_stocks.type_id'=>$field_nd_experiment_type_id, 'nd_experiment.type_id'=>$field_nd_experiment_type_id}, {'join' => {'nd_experiment_stocks' => {'nd_experiment' => 'nd_experiment_projects'}}, '+select'=>['nd_experiment_projects.project_id'], '+as'=>['trial_id']});
     while(my $r=$plant_rs->next){
@@ -336,7 +336,7 @@ sub store_genotype_trial_POST : Args(0) {
     my @field_trial_ids = keys %field_trial_ids;
     #print STDERR Dumper \@field_trial_ids;
 
-    print STDERR "Creating the genotyping trial...\n";
+    print STDERR "Creating the genotyping plate...\n";
 
     my $message;
     my $coderef = sub {
@@ -370,7 +370,7 @@ sub store_genotype_trial_POST : Args(0) {
         $schema->txn_do($coderef);
     } catch {
         print STDERR "Transaction Error: $_\n";
-        $c->stash->{rest} = {error => "Error saving genotyping trial in the database: $_"};
+        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $_"};
         $c->detach;
     };
 
@@ -379,7 +379,7 @@ sub store_genotype_trial_POST : Args(0) {
         $error = $message->{'error'};
     }
     if ($error){
-        $c->stash->{rest} = {error => "Error saving genotyping trial in the database: $error"};
+        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $error"};
         $c->detach;
     }
     #print STDERR Dumper(%message);
@@ -420,7 +420,7 @@ sub store_genotype_trial_POST : Args(0) {
     };
 
     $c->stash->{rest} = {
-        message => "Successfully stored the genotyping trial.",
+        message => "Successfully stored the genotyping plate.",
         trial_id => $message->{trial_id},
         plate_data => $brapi_plate_data
     };

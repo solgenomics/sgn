@@ -6,16 +6,16 @@
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
-<& /breeders_toolbox/folder/folder_set.mas, project_type=>'Genotyping Trial' &>
-<& /breeders_toolbox/folder/folder_new.mas, project_type=>'Genotyping Trial' &>
-<& /breeders_toolbox/folder/folder_move.mas, project_type=>'Genotyping Trial' &>
-<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Genotyping Trial', folder_tree_identifier => 'genotyping_trial_list', folder_tree_refresh_name => 'refresh_genotyping_trial_jstree_html' &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type=>'Genotyping Plate' &>
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'Genotyping Plate' &>
+<& /breeders_toolbox/folder/folder_move.mas, project_type=>'Genotyping Plate' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Genotyping Plate', folder_tree_identifier => 'genotyping_trial_list', folder_tree_refresh_name => 'refresh_genotyping_trial_jstree_html' &>
 
 <table class="table table-bordered">
     <thead>
         <tr>
             <th>Information</th>
-            <th>Breeding Programs -- Folders -- Genotyping Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_genotyping_trial_jstree_html_trialtree_button" name="refresh_genotyping_trial_jstree_html">Refresh</button></th>
+            <th>Breeding Programs -- Folders -- Genotyping Plates&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_genotyping_trial_jstree_html_trialtree_button" name="refresh_genotyping_trial_jstree_html">Refresh</button></th>
         </tr>
     </thead>
     <tbody>
@@ -25,13 +25,13 @@
                 <input type="text" class="form-control input-sm" id="genotyping_trial_tree_search" placeholder="Search" />
                 <hr>
 
-                <h5><i>Double click<br />genotyping trial (&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+                <h5><i>Double click<br />genotyping plate (&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
                 <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
                 <hr>
 
                 <h4>Folders</h4>
                 <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move genotyping trial(s) to folder</button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move genotyping plate(s) to folder</button><br/><br/>
                 <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
 
                 <div id="folder_edit_options" style="display:none">
