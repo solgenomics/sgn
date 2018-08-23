@@ -493,7 +493,7 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_family_name_submit").click(function(){
         var uploadFile = jQuery("#family_name_upload_file").val();
-        jQuery('#upload_family_name_form').attr("action", "/ajax/cross/upload_progenies");
+        jQuery('#upload_family_name_form').attr("action", "/ajax/cross/upload_family_names");
         if (uploadFile === ''){
             alert("Please select a file");
             return;

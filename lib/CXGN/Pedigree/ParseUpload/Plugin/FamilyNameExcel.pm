@@ -118,6 +118,7 @@ sub _parse_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
 
+    my %cross_family_name;
 
     for my $row (1 .. $row_max){
         my $cross_name;
@@ -136,7 +137,6 @@ sub _parse_with_plugin {
             next;
         }
 
-        my %cross_family_name;
         $cross_family_name{$cross_name} = $family_name;
 
     }

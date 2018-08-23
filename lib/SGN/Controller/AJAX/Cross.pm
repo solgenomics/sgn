@@ -1981,7 +1981,7 @@ sub upload_family_names_POST : Args(0) {
                 cross_name => $cross_name,
                 family_name => $family_name,
             });
-            if (!$family_name_add->add_family_name()){
+            if (!$family_name_add->add_info()){
                 $c->stash->{rest} = {error_string => "Error adding family name",};
                 return;
             }
