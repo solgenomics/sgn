@@ -134,7 +134,7 @@ jQuery(document).ready(function ($) {
       var plot_prefix = $('#plot_prefix_multi').val();
       var start_number = $('#start_number_multi').val();
       var increment = $('#increment_multi').val();
-alert(westcott_col);
+
       $.ajax({
           type: 'POST',
           timeout: 3000000,
@@ -221,7 +221,6 @@ alert(westcott_col);
             alert('Accession list is not valid!');
             return;
         }
-
   });
 
   $(document).on('change', '#select_multi-design_method', function () {
