@@ -151,9 +151,9 @@ sub get_trials_by_breeding_program {
 	}
 	if ($propvalue) {
 	if ($propvalue eq "genotyping_plate") {
-	    #print STDERR "$id IS GENOTYPING TRIAL\n";
+	    #print STDERR "$id IS GENOTYPING PLATE\n";
 	    $projects_that_are_genotyping_trials{$id} =1;
-		#print STDERR Dumper "Genotyping Trial: ".$name;
+		#print STDERR Dumper "Genotyping Plate: ".$name;
 	}
 	}
       }

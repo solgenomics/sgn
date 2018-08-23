@@ -265,7 +265,7 @@ $plate_id=> ''
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Generate genotyping trial barcode.
+                        Generate genotyping plate barcode.
                     </p>
                     <center>
                         <div class="well">

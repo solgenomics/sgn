@@ -13,7 +13,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds cvterm for differentiating folder for genotyping trial
+This patch adds cvterm for differentiating folder for genotyping plate trial
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR

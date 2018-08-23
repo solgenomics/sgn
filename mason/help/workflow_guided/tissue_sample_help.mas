@@ -21,7 +21,7 @@
                             <p>Many tissue samples can be created for each plant.</p>
                             <p>Each tissue sample has a globally unique name.</p>
                             <br/>
-                            <p>A unique tissue sample is present in each well of a genotyping trial (96 or 384 well plates).</p>
+                            <p>A unique tissue sample is present in each well of a genotyping plate (96 or 384 well plates).</p>
                             <p>The tissue sample in a 96 well plate can originate from another tissue sample name, plant name, plot name, or accession name.</p>
 
                             <br/><br/>
@@ -174,11 +174,11 @@
                             <br/>
 
                             <ul>
-                                <li>After you have finished sampling, you can use these entities as source material for a genotyping trial (96 or 384 well plate). Click the button below to create a genotyping trial now, if you will create a 96 or 384 well plate.</li>
+                                <li>After you have finished sampling, you can use these entities as source material for a genotyping plate (96 or 384 well plate). Click the button below to create a genotyping plate now, if you will create a 96 or 384 well plate.</li>
                                 <li>The Android Coordinate application can help you create 96 or 384 well plates. Alternatively you can create your plate layout in Excel and upload it.</li>
                             </ul>
                             <center>
-                                <button class="btn btn-primary" name="create_genotyping_trial_link">Create Genotyping Trial Now!</button>
+                                <button class="btn btn-primary" name="create_genotyping_trial_link">Create Genotyping Plate Now!</button>
                             </center>
                         </&>
                     </&>

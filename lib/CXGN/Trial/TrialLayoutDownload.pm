@@ -202,7 +202,7 @@ sub get_layout_output {
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plate') {
-        #to make the download in the header for genotyping trials more easily understood, the terms change here
+        #to make the download in the header for genotyping plates more easily understood, the terms change here
         if (exists($selected_cols{'plot_name'})){
             $selected_cols{'tissue_sample_name'} = 1;
             delete $selected_cols{'plot_name'};
