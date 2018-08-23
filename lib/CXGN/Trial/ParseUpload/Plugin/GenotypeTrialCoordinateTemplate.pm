@@ -109,6 +109,7 @@ sub _validate_with_plugin {
             push @error_messages, 'The sixth column must contain Date on row: '.$row;
         }
 
+        $columns[1] = sprintf("%02d", $columns[1]);
         my $sample_name = $genotyping_plate_id."_".$columns[2].$columns[1];
         if ($seen_sample_ids{$sample_name}){
             push @error_messages, "Duplicate Sample Name $sample_name in your file on row: ".$row;
@@ -217,6 +218,7 @@ sub _parse_with_plugin {
         my $dna_person = $columns[4];
         my $date = $columns[5];
         $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $col_number = sprintf("%02d", $col_number);
 
         my $sample_id = $genotyping_plate_id."_".$row_number.$col_number;
 
