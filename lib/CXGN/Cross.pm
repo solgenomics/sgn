@@ -334,21 +334,26 @@ sub get_cross_progenies_trial {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
-    my $member_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_property")->cvterm_id();
 
-    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename, COUNT (stock_relationship.subject_id) AS progeny_number
+    my $q = "SELECT progeny_count_table.cross_id, progeny_count_table.cross_name, progeny_count_table.progeny_number, stockprop.value
+        FROM
+        (SELECT DISTINCT stock.stock_id AS cross_id, stock.uniquename AS cross_name, COUNT (stock_relationship.subject_id) AS progeny_number
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
-        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id =?
-        WHERE nd_experiment_project.project_id = ? GROUP BY stock.stock_id";
+        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        WHERE nd_experiment_project.project_id = ? GROUP BY cross_id)
+        AS progeny_count_table
+        LEFT JOIN stockprop ON (progeny_count_table.cross_id = stockprop.stock_id) AND stockprop.type_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($member_of_typeid, $trial_id);
+    $h->execute($member_of_type_id, $trial_id, $family_name_type_id);
 
     my @data =();
-    while(my($cross_id, $cross_name, $progeny_number) = $h->fetchrow_array()){
-        push @data, [$cross_id, $cross_name, $progeny_number]
+    while(my($cross_id, $cross_name, $progeny_number, $family_name) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $progeny_number, $family_name]
     }
 
     return \@data;
