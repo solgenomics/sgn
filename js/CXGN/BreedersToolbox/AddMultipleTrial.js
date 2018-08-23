@@ -215,7 +215,8 @@ jQuery(document).ready(function ($) {
 
         if (stock_list_verified == 1){
             if (method_to_use == "create_with_design_tool") {
-              generate_multi_experimental_design();
+                $('#add_multilocation_project_dialog').modal("hide");
+                generate_multi_experimental_design();
             }
         } else {
             alert('Accession list is not valid!');
@@ -671,9 +672,14 @@ jQuery(document).ready(function ($) {
           }
       });
   }
+  
+  jQuery('#trial_saved_dialog_message_ok_button').click(function (){
+     location.reload(); 
+  });
 
   jQuery('#new_multi_trial_confirm_submit').click(function () {
-          save_experimental_design(design_json);
+        $('#multi_trial_design_confirm').modal("hide");
+        save_experimental_design(design_json);
   });
 
   $('#view_multi_trial_layout_button').click(function () {
