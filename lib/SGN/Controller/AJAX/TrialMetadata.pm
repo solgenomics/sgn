@@ -1505,6 +1505,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   my $old_accession = $c->req->param('old_accession');
   my $new_accession = $c->req->param('new_accession');
   my $old_plot_id = $c->req->param('old_plot_id');
+  my $old_plot_name = $c->req->param('old_plot_name');
   my $trial_id = $c->stash->{trial_id};
 
   if ($self->privileges_denied($c)) {
@@ -1523,6 +1524,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     new_accession => $new_accession,
     old_accession => $old_accession,
     old_plot_id => $old_plot_id,
+    old_plot_name => $old_plot_name,
 
   });
 
@@ -1533,7 +1535,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
      }
 
   print "Calling Replace Function...............\n";
-  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap(); 
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
