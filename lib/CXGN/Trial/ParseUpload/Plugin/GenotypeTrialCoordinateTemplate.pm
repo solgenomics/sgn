@@ -84,7 +84,7 @@ sub _validate_with_plugin {
         }
 
         if (!$columns[0] || $columns[0] eq ''){
-            push @error_messages, 'The first column must contain a Value on row: '.$row;
+            next;
         } else {
             my $source_name = $columns[0];
             $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -207,6 +207,10 @@ sub _parse_with_plugin {
         }
 
         my $source_name = $columns[0];
+        if (!$source_name || $source_name eq ''){
+            next;
+        }
+
         my $col_number = $columns[1];
         my $row_number = $columns[2];
         my $notes = $columns[3];
