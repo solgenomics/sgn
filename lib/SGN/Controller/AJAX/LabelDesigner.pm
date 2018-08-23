@@ -51,7 +51,7 @@ __PACKAGE__->config(
 
 
        print STDERR "Num plants 3: " . scalar(keys %{$design});
-       print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
+       #print STDERR "AFTER SUB: \nTrial_id is $trial_id and design is ". Dumper($design) ."\n";
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
            return;
@@ -265,7 +265,7 @@ __PACKAGE__->config(
                 $design_info{'genotyping_facility'} = $genotyping_facility;
                 $design_info{'genotyping_project_name'} = $genotyping_project_name;
                 $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
-                print STDERR "Design info: " . Dumper(%design_info);
+                #print STDERR "Design info: " . Dumper(%design_info);
 
                 if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
 
@@ -505,7 +505,7 @@ sub get_plot_data {
     }
     elsif ($data_type =~ m/Genotyping Plate/) {
         $trial_id = $value;
-        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'genotyping_layout' })->get_design();
     }
     elsif ($data_type =~ m/Field Trials/) {
         $trial_id = $value;
