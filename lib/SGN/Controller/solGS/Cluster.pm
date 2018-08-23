@@ -144,6 +144,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
+
+    my $dataset_id  =  $c->req->param('dataset_id');
+    my $data_structure =  $c->req->param('data_structure');
     
     my $cluster_type = $c->req->param('cluster_type');
     my $referer      = $c->req->referer;
@@ -177,17 +180,23 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
 
-    if ($list_id) 
+    if ($data_structure =~ /list/) 
     {
-	$c->stash->{data_set_type} = 'list';
+	$c->stash->{data_structure} = 'list';
 	$c->stash->{list_id}       = $list_id;
 	$c->stash->{list_type}     = $list_type;
     }
-   
+    elsif ($data_structure =~ /dataset/) 
+    {
+    	$c->stash->{data_structure} = 'dataset';
+	$c->stash->{dataset_id}       = $dataset_id;
+	$file_id = "dataset_${dataset_id}";
+    } 
+
+
+    $c->stash->{file_id} = $file_id;
     $self->create_cluster_genotype_data($c);
  
-    $c->stash->{file_id} = $file_id;
-
     my $cluster_result_file;
     if ($cluster_type =~ /k-means/)
     {
@@ -257,7 +266,7 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
     $c->stash->{pop_id}    = $pop_id;
     $c->stash->{list_type} = $list_type;
 
-    $c->stash->{data_set_type} = 'list';
+    $c->stash->{data_structure} = 'list';
     $self->create_cluster_genotype_data($c);
 
     my $geno_file = $c->stash->{genotype_file};
@@ -278,11 +287,15 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 sub create_cluster_genotype_data {    
     my ($self, $c) = @_;
    
-    my $data_set_type = $c->stash->{data_set_type};
+    my $data_structure = $c->stash->{data_structure};
 
-    if ($data_set_type =~ /list/) 
+    if ($data_structure =~ /list/) 
     {
 	$self->cluster_list_genotype_data($c);	
+    }
+    elsif ($data_structure =~ /dataset/) 
+    {
+	$c->controller('solGS::Dataset')->get_dataset_genotypes_genotype_data($c);	
     }
     else 
     {
@@ -298,7 +311,8 @@ sub cluster_list_genotype_data {
     my $list_id       = $c->stash->{list_id};
     my $list_type     = $c->stash->{list_type};
     my $pop_id        = $c->stash->{pop_id};
-    my $data_set_type = $c->stash->{data_set_type};
+    my $data_structure = $c->stash->{data_structure};
+    my $data_set_type  = $c->stash->{data_set_type};
     my $referer       = $c->req->referer;
     my $geno_file;
     
