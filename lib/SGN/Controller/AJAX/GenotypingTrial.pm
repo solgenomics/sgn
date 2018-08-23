@@ -105,6 +105,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $genotyping_plate_name = $c->req->param('genotyping_trial_name');
     my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
     my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
     my $upload_coordinate_custom = $c->req->upload('genotyping_trial_layout_upload_coordinate_template');
@@ -122,6 +123,10 @@ sub parse_genotype_trial_file_POST : Args(0) {
     }
     if (!$upload_xls && !$upload_coordinate && !$upload_coordinate_custom){
         $c->stash->{rest} = {error => "You must upload a genotyping plate file!" };
+        return;
+    }
+    if (!$genotyping_plate_name){
+        $c->stash->{rest} = {error => 'Genotyping plate id must be given!'};
         return;
     }
     my $parser;
@@ -209,10 +214,15 @@ sub parse_genotype_trial_file_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    #Parse of Coordinate Template formatted file requires the plate name to be passed, so that a unique sample name can be created by concatenating the plate name to the well position.
+    my %parse_args = (
+        genotyping_plate_id => $genotyping_plate_name
+    );
+
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
-    $parsed_data = $parser->parse();
+    $parsed_data = $parser->parse(\%parse_args);
 
     if (!$parsed_data) {
         my $return_error = '';

@@ -51,7 +51,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"<br/>-This is the unique name of the plate</small></label>
+                                    <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"<br/>-This is the globally unique name of the plate</small></label>
                                     <div class="col-sm-7">
                                         <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" placeholder=" e.g. 18DNA00001"/>
                                     </div>
@@ -462,7 +462,7 @@
                     <li>sample_id (the unique identifier for the sample in the well. e.g. 18DNA00001_A01)</li>
                     <li>well_A01 (the position of the sample in the plate in this format A01)</li>
                     <li>well_01A (the position of the sample in the plate in this format 01A)</li>
-                    <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name.)</li>
+                    <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
                     <li>dna_person (the name of the person who plated the individual sample. can be any name.)</li>
                     </ul>
 
@@ -517,10 +517,10 @@
 
                     <b>Required fields:</b>
                     <ul>
-                        <li>Value (the unique identifier for the sample in the well. e.g. 18DNA00001_A01)</li>
+                        <li>Value (the identifier of the origin material. e.g. 2018MyPlant0001. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. This can also say 'exclude' to indicate a BLANK)</li>
                         <li>Column (the column position of the sample e.g. 10)</li>
                         <li>Row (the row position of the sample e.g. A)</li>
-                        <li>Identification (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name.)</li>
+                        <li>Identification (free text)</li>
                         <li>Person (the name of the person who plated the individual sample. can be any name.)</li>
                         <li>Date (should be YYYY-MM-DD)</li>
                     </ul>
