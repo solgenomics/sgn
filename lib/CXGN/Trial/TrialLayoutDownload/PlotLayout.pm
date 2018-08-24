@@ -31,11 +31,6 @@ use CXGN::Stock::Accession;
 
 extends 'CXGN::Trial::TrialLayoutDownload';
 
-has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
-    is => 'rw',
-    required => 1,
-);
-
 #This is a hashref of the cached trial_layout_json that comes from CXGN::Trial::TrialLayout
 has 'design' => (
     isa => 'HashRef[Str]',
@@ -43,8 +38,8 @@ has 'design' => (
     required => 1
 );
 
-has 'selected_cols' => (
-    isa => 'HashRef[Str]',
+has 'trial' => (
+    isa => 'CXGN::Trial',
     is => 'rw',
     required => 1
 );
@@ -67,8 +62,9 @@ has 'phenotype_performance_hash' => (
 sub retrieve {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my %selected_cols = %{$self->selected_cols};
+    my %selected_cols = %{$self->selected_columns};
     my %design = %{$self->design};
+    my $trial = $self->trial;
     my $treatment_info_hash = $self->treatment_info_hash || {};
     my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
     my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
@@ -92,6 +88,10 @@ sub retrieve {
         push @header, $_;
     }
     push @output, \@header;
+
+    my $trial_name = $trial->get_name ? $trial->get_name : '';
+    my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
+    my $trial_year = $trial->get_year ? $trial->get_year : '';
 
     foreach my $key (sort { $a <=> $b} keys %design) {
         my $design_info = $design{$key};
@@ -121,8 +121,8 @@ sub retrieve {
                 }
             }
         }
-        $line = $self->_add_treatment_to_line($treatment_stock_hashes, $line, $design_info->{'plot_name'});
-        $line = $self->_add_trait_performance_to_line($selected_trait_names, $line, $fieldbook_trait_hash, $design_info);
+        $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{'plot_name'});
+        $line = $self->_add_trait_performance_to_line(\@trait_names, $line, $phenotype_performance_hash, $design_info);
         push @output, $line;
     }
 

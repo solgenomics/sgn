@@ -54,6 +54,7 @@ use CXGN::Stock;
 use CXGN::Stock::Accession;
 use JSON;
 use CXGN::Phenotypes::Summary;
+use CXGN::Trial::TrialLayoutDownload::PlotLayout;
 
 has 'schema' => (
     is       => 'rw',
@@ -120,28 +121,12 @@ sub get_layout_output {
     my $has_subplots = $selected_trial->has_subplot_entries();
     my $has_tissue_samples = $selected_trial->has_tissue_sample_entries();
 
-    my $location_name = $selected_trial->get_location ? $selected_trial->get_location->[1] : '';
-    my $trial_year = $selected_trial->get_year ? $selected_trial->get_year : '';
     my $accessions = $selected_trial->get_accessions();
     my @accession_ids;
     foreach (@$accessions){
         push @accession_ids, $_->{stock_id};
     }
 
-    my $treatments = $self->treatment_project_ids();
-    my @treatment_trials;
-    my @treatment_names;
-    my @treatment_units_array;
-    if ($treatments){
-        foreach (@$treatments){
-            my $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_});
-            my $treatment_name = $treatment_trial->get_name();
-            push @treatment_trials, $treatment_trial;
-            push @treatment_names, $treatment_name;
-        }
-    }
-
-    my $trial_name =  $trial_layout->get_trial_name();
     my $design = $trial_layout->get_design();
     if (!$design){
         push @error_messages, "Trial does not have valid field design. Please contact us.";
@@ -151,10 +136,7 @@ sub get_layout_output {
 
     #print STDERR Dumper $design;
 
-    my %selected_cols = %{$self->selected_columns};
-    my @selected_col_keys = keys %selected_cols;
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
-    my @selected_trait_names = $self->selected_trait_names() ? @{$self->selected_trait_names} : ();
     my $summary_values = [];
     if (scalar(@selected_traits)>0){ 
         my $summary = CXGN::Phenotypes::Summary->new({
@@ -170,27 +152,37 @@ sub get_layout_output {
     }
     #print STDERR Dumper \%fieldbook_trait_hash;
 
-    my @possible_cols = ();
+    my $treatments = $self->treatment_project_ids();
+    my @treatment_trials;
+    my @treatment_names;
+    my @treatment_units_array;
+    if ($treatments){
+        foreach (@$treatments){
+            my $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_});
+            my $treatment_name = $treatment_trial->get_name();
+            push @treatment_trials, $treatment_trial;
+            push @treatment_names, $treatment_name;
+        }
+    }
+
+    my %selected_cols = %{$self->selected_columns};
+
     if ($self->data_level eq 'plots') {
-        @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plots() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'plants') {
-        @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plants() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'subplots') {
-        @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_subplots() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($self->data_level eq 'field_trial_tissue_samples') {
-        @possible_cols = ('tissue_sample_name','tissue_sample_id','plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','tissue_sample_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_tissue_samples() : [];
             push @treatment_units_array, $treatment_units;
@@ -206,19 +198,9 @@ sub get_layout_output {
             delete $selected_cols{'plot_number'};
         }
         $selected_cols{'exported_tissue_sample_name'} = 1;
-        @possible_cols = ('trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank');
     }
 
-    my @header;
-    foreach (@possible_cols){
-        if ($selected_cols{$_}){
-            push @header, $_;
-        }
-    }
     my @treatment_stock_hashes;
-    foreach (@treatment_names){
-        push @header, "ManagementFactor:".$_;
-    }
     foreach my $u (@treatment_units_array){
         my %treatment_stock_hash;
         foreach (@$u){
@@ -227,577 +209,23 @@ sub get_layout_output {
         push @treatment_stock_hashes, \%treatment_stock_hash;
     }
 
-    foreach (@selected_trait_names){
-        push @header, $_;
-    }
-    push @output, \@header; 
-    my (@rows, @cols);
-    if ($self->data_level eq 'plot_fieldMap' ) {
-        my %hash;
-        foreach my $key (keys %$design) {
-            my $design_info = $design->{$key};
-            my $row_num = $design_info->{row_number};
-            my $col_num = $design_info->{col_number};
-            my $accession = $design_info->{accession_name};
-            $hash{$row_num}->{$col_num} = $accession; 
-            push @rows, $row_num;
-            push @cols, $col_num;     
-        }
-        print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
-        return {output => \%hash, rows => \@rows, cols => \@cols};
-    }
-    else {
-        foreach my $key (sort { $a <=> $b} keys %$design) {
-            my $design_info = $design->{$key};
-            if ($self->data_level eq 'plots' ) {
-                push @output, _construct_ouput_for_plots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-            }
-            if ($self->data_level eq 'subplots' && $has_subplots) {
-                push @output, _construct_ouput_for_subplots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-            }
-            if ($self->data_level eq 'plants' && $has_plants) {
-                if ($has_subplots){
-                    push @output, _construct_ouput_for_plants_with_subplots($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-                } else {
-                    push @output, _construct_ouput_for_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-                }
-            }
-            if ($self->data_level eq 'field_trial_tissue_samples' && $has_tissue_samples) {
-                #Tissue samples require that trial has plants before tissues sample can be created, so this should always be true.
-                if ($has_plants){
-                    if ($has_subplots){
-                        push @output, _construct_ouput_for_tissue_samples_with_subplots_and_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-                    } else {
-                        push @output, _construct_ouput_for_tissue_samples_with_plants($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name, $trial_year, \@treatment_stock_hashes, \@selected_trait_names, \%fieldbook_trait_hash);
-                    }
-                }
-            }
-            if ($self->data_level eq 'plate') {
-                push @output, _construct_ouput_for_wells_in_plate($schema, $design_info, \@possible_cols, \%selected_cols, $location_name, $trial_name);
-            }
-        }
+    my %treatment_info_hash = (
+        treatment_trial_list => \@treatment_trials,
+        treatment_trial_names_list => \@treatment_names,
+        treatment_units_hash_list => \@treatment_stock_hashes
+    );
+
+    if ($self->data_level eq 'plots' ) {
+        my $layout_output = CXGN::Trial::TrialLayoutDownload::PlotLayout->new({
+            design => $design,
+            trial => $selected_trial,
+            treatment_info_hash => \%treatment_info_hash,
+            phenotype_performance_hash => \%fieldbook_trait_hash
+        });
     }
 
     print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
     return {output => \@output};
-}
-
-sub _construct_ouput_for_plots {
-    my $schema = shift;
-    my $design_info = shift;
-    my $possible_cols = shift;
-    my $selected_cols = shift;
-    my $location_name = shift;
-    my $trial_name = shift;
-    my $trial_year = shift;
-    my $treatment_stock_hashes = shift;
-    my $selected_trait_names = shift;
-    my $fieldbook_trait_hash = shift;
-
-    my $line;
-    foreach (@$possible_cols){
-        if ($selected_cols->{$_}){
-            if ($_ eq 'location_name'){
-                push @$line, $location_name;
-            } elsif ($_ eq 'plot_geo_json'){
-                push @$line, $design_info->{"plot_geo_json"} ? encode_json $design_info->{"plot_geo_json"} : '';
-            } elsif ($_ eq 'trial_name'){
-                push @$line, $trial_name;
-            } elsif ($_ eq 'year'){
-                push @$line, $trial_year;
-            } elsif ($_ eq 'tier'){
-                my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
-                my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
-                push @$line, $row."/".$col;
-            } elsif ($_ eq 'synonyms'){
-                my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                push @$line, join ',', @{$accession->synonyms}
-            } elsif ($_ eq 'pedigree'){
-                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                push @$line, $accession->get_pedigree_string('Parents');
-            } else {
-                push @$line, $design_info->{$_};
-            }
-        }
-    }
-    $line = _add_treatment_to_line($treatment_stock_hashes, $line, $design_info->{'plot_name'});
-    $line = _add_trait_performance_to_line($selected_trait_names, $line, $fieldbook_trait_hash, $design_info);
-    return $line;
-}
-
-sub _construct_ouput_for_plants {
-    my $schema = shift;
-    my $design_info = shift;
-    my $possible_cols = shift;
-    my $selected_cols = shift;
-    my $location_name = shift;
-    my $trial_name = shift;
-    my $trial_year = shift;
-    my $treatment_stock_hashes = shift;
-    my $selected_trait_names = shift;
-    my $fieldbook_trait_hash = shift;
-
-    my $plant_names = $design_info->{'plant_names'};
-    my $plant_ids = $design_info->{'plant_ids'};
-    my $plant_index_numbers = $design_info->{'plant_index_numbers'};
-    my $i = 0;
-    my %plant_id_hash;
-    my %plant_index_number_hash;
-    foreach (@$plant_names){
-        $plant_id_hash{$_} = $plant_ids->[$i];
-        $plant_index_number_hash{$_} = $plant_index_numbers->[$i];
-        $i++;
-    }
-
-    my $acc_synonyms = '';
-    if (exists($selected_cols->{'synonyms'})){
-        my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_synonyms = join ',', @{$accession->synonyms};
-    }
-    my $acc_pedigree = '';
-    if (exists($selected_cols->{'pedigree'})){
-        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_pedigree = $accession->get_pedigree_string('Parents');
-    }
-    my @lines;
-    foreach (sort @$plant_names) {
-        my $line;
-        foreach my $c (@$possible_cols){
-            if ($selected_cols->{$c}){
-                if ($c eq 'plant_name'){
-                    push @$line, $_;
-                } elsif ($c eq 'plant_id'){
-                    push @$line, $plant_id_hash{$_};
-                } elsif ($c eq 'plant_number'){
-                    push @$line, $plant_index_number_hash{$_};
-                } elsif ($c eq 'location_name'){
-                    push @$line, $location_name;
-                } elsif ($c eq 'plot_geo_json'){
-                    push @$line, $design_info->{"plot_geo_json"} ? encode_json $design_info->{"plot_geo_json"} : '';
-                } elsif ($c eq 'trial_name'){
-                    push @$line, $trial_name;
-                } elsif ($c eq 'year'){
-                    push @$line, $trial_year;
-                } elsif ($c eq 'tier'){
-                    my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
-                    my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
-                    push @$line, $row."/".$col;
-                } elsif ($c eq 'synonyms'){
-                    push @$line, $acc_synonyms;
-                } elsif ($c eq 'pedigree'){
-                    push @$line, $acc_pedigree;
-                } else {
-                    push @$line, $design_info->{$c};
-                }
-            }
-        }
-        $line = _add_treatment_to_line($treatment_stock_hashes, $line, $_);
-        $line = _add_trait_performance_to_line($selected_trait_names, $line, $fieldbook_trait_hash, $design_info);
-        push @lines, $line;
-    }
-    return @lines;
-}
-
-sub _construct_ouput_for_subplots {
-    my $schema = shift;
-    my $design_info = shift;
-    my $possible_cols = shift;
-    my $selected_cols = shift;
-    my $location_name = shift;
-    my $trial_name = shift;
-    my $trial_year = shift;
-    my $treatment_stock_hashes = shift;
-    my $selected_trait_names = shift;
-    my $fieldbook_trait_hash = shift;
-    my $subplot_names = $design_info->{'subplot_names'};
-    my $subplot_ids = $design_info->{'subplot_ids'};
-    my $subplot_index_numbers = $design_info->{'subplot_index_numbers'};
-    my $i = 0;
-    my %subplot_id_hash;
-    my %subplot_index_number_hash;
-    foreach (@$subplot_names){
-        $subplot_id_hash{$_} = $subplot_ids->[$i];
-        $subplot_index_number_hash{$_} = $subplot_index_numbers->[$i];
-        $i++;
-    }
-    my $subplot_num = 1;
-    my $acc_synonyms = '';
-    if (exists($selected_cols->{'synonyms'})){
-        my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_synonyms = join ',', @{$accession->synonyms};
-    }
-    my $acc_pedigree = '';
-    if (exists($selected_cols->{'pedigree'})){
-        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_pedigree = $accession->get_pedigree_string('Parents');
-    }
-    my @lines;
-    foreach (sort @$subplot_names) {
-        my $line;
-        foreach my $c (@$possible_cols){
-            if ($selected_cols->{$c}){
-                if ($c eq 'subplot_name'){
-                    push @$line, $_;
-                } elsif ($c eq 'subplot_id'){
-                    push @$line, $subplot_id_hash{$_};
-                } elsif ($c eq 'subplot_number'){
-                    push @$line, $subplot_index_number_hash{$_};
-                } elsif ($c eq 'location_name'){
-                    push @$line, $location_name;
-                } elsif ($c eq 'plot_geo_json'){
-                    push @$line, $design_info->{"plot_geo_json"} ? encode_json $design_info->{"plot_geo_json"} : '';
-                } elsif ($c eq 'trial_name'){
-                    push @$line, $trial_name;
-                } elsif ($c eq 'year'){
-                    push @$line, $trial_year;
-                } elsif ($c eq 'tier'){
-                    my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
-                    my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
-                    push @$line, $row."/".$col;
-                } elsif ($c eq 'synonyms'){
-                    push @$line, $acc_synonyms;
-                } elsif ($c eq 'pedigree'){
-                    push @$line, $acc_pedigree;
-                } else {
-                    push @$line, $design_info->{$c};
-                }
-            }
-        }
-        $line = _add_treatment_to_line($treatment_stock_hashes, $line, $_);
-        $line = _add_trait_performance_to_line($selected_trait_names, $line, $fieldbook_trait_hash, $design_info);
-        push @lines, $line;
-    }
-    return @lines;
-}
-
-sub _construct_ouput_for_plants_with_subplots {
-    my $schema = shift;
-    my $design_info = shift;
-    my $possible_cols = shift;
-    my $selected_cols = shift;
-    my $location_name = shift;
-    my $trial_name = shift;
-    my $trial_year = shift;
-    my $treatment_stock_hashes = shift;
-    my $selected_trait_names = shift;
-    my $fieldbook_trait_hash = shift;
-
-    my $subplot_plant_names = $design_info->{'subplots_plant_names'};
-    my $plant_names = $design_info->{'plant_names'};
-    my $plant_ids = $design_info->{'plant_ids'};
-    my $plant_index_numbers = $design_info->{'plant_index_numbers'};
-    my $i = 0;
-    my %plant_id_hash;
-    my %plant_index_number_hash;
-    foreach (@$plant_names){
-        $plant_id_hash{$_} = $plant_ids->[$i];
-        $plant_index_number_hash{$_} = $plant_index_numbers->[$i];
-        $i++;
-    }
-    my $subplot_names = $design_info->{'subplot_names'};
-    my $subplot_ids = $design_info->{'subplot_ids'};
-    my $subplot_index_numbers = $design_info->{'subplot_index_numbers'};
-    my $j = 0;
-    my %subplot_id_hash;
-    my %subplot_index_number_hash;
-    foreach (@$subplot_names){
-        $subplot_id_hash{$_} = $subplot_ids->[$j];
-        $subplot_index_number_hash{$_} = $subplot_index_numbers->[$j];
-        $j++;
-    }
-
-    my $acc_synonyms = '';
-    if (exists($selected_cols->{'synonyms'})){
-        my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_synonyms = join ',', @{$accession->synonyms};
-    }
-    my $acc_pedigree = '';
-    if (exists($selected_cols->{'pedigree'})){
-        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_pedigree = $accession->get_pedigree_string('Parents');
-    }
-    my @lines;
-    foreach my $s (sort keys %$subplot_plant_names) {
-        my $plants = $subplot_plant_names->{$s};
-        foreach my $p (sort @$plants){
-            my $line;
-            foreach my $c (@$possible_cols){
-                if ($selected_cols->{$c}){
-                    if ($c eq 'plant_name'){
-                        push @$line, $p;
-                    } elsif ($c eq 'plant_id'){
-                        push @$line, $plant_id_hash{$p};
-                    } elsif ($c eq 'subplot_name'){
-                        push @$line, $s;
-                    } elsif ($c eq 'subplot_id'){
-                        push @$line, $subplot_id_hash{$s};
-                    } elsif ($c eq 'subplot_number'){
-                        push @$line, $subplot_index_number_hash{$s};
-                    } elsif ($c eq 'plant_number'){
-                        push @$line, $plant_index_number_hash{$p};
-                    } elsif ($c eq 'location_name'){
-                        push @$line, $location_name;
-                    } elsif ($c eq 'plot_geo_json'){
-                        push @$line, $design_info->{"plot_geo_json"} ? encode_json $design_info->{"plot_geo_json"} : '';
-                    } elsif ($c eq 'trial_name'){
-                        push @$line, $trial_name;
-                    } elsif ($c eq 'year'){
-                        push @$line, $trial_year;
-                    } elsif ($c eq 'tier'){
-                        my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
-                        my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
-                        push @$line, $row."/".$col;
-                    } elsif ($c eq 'synonyms'){
-                        push @$line, $acc_synonyms;
-                    } elsif ($c eq 'pedigree'){
-                        push @$line, $acc_pedigree;
-                    } else {
-                        push @$line, $design_info->{$c};
-                    }
-                }
-            }
-            $line = _add_treatment_to_line($treatment_stock_hashes, $line, $p);
-            $line = _add_trait_performance_to_line($selected_trait_names, $line, $fieldbook_trait_hash, $design_info);
-            push @lines, $line;
-        }
-    }
-    return @lines;
-}
-
-sub _construct_ouput_for_tissue_samples_with_subplots_and_plants {
-    my $schema = shift;
-    my $design_info = shift;
-    my $possible_cols = shift;
-    my $selected_cols = shift;
-    my $location_name = shift;
-    my $trial_name = shift;
-    my $trial_year = shift;
-    my $treatment_stock_hashes = shift;
-    my $selected_trait_names = shift;
-    my $fieldbook_trait_hash = shift;
-
-    my $subplot_plant_names = $design_info->{'subplots_plant_names'};
-    my $plant_tissue_names = $design_info->{'plants_tissue_sample_names'};
-    my $plant_names = $design_info->{'plant_names'};
-    my $plant_ids = $design_info->{'plant_ids'};
-    my $plant_index_numbers = $design_info->{'plant_index_numbers'};
-    my $i = 0;
-    my %plant_id_hash;
-    my %plant_index_number_hash;
-    foreach (@$plant_names){
-        $plant_id_hash{$_} = $plant_ids->[$i];
-        $plant_index_number_hash{$_} = $plant_index_numbers->[$i];
-        $i++;
-    }
-    my $subplot_names = $design_info->{'subplot_names'};
-    my $subplot_ids = $design_info->{'subplot_ids'};
-    my $subplot_index_numbers = $design_info->{'subplot_index_numbers'};
-    my $j = 0;
-    my %subplot_id_hash;
-    my %subplot_index_number_hash;
-    foreach (@$subplot_names){
-        $subplot_id_hash{$_} = $subplot_ids->[$j];
-        $subplot_index_number_hash{$_} = $subplot_index_numbers->[$j];
-        $j++;
-    }
-    my $tissue_sample_names = $design_info->{'tissue_sample_names'};
-    my $tissue_sample_ids = $design_info->{'tissue_sample_ids'};
-    my $tissue_sample_index_numbers = $design_info->{'tissue_sample_index_numbers'};
-    my $k = 0;
-    my %tissue_sample_id_hash;
-    my %tissue_sample_index_number_hash;
-    foreach (@$tissue_sample_names){
-        $tissue_sample_id_hash{$_} = $tissue_sample_ids->[$k];
-        $tissue_sample_index_number_hash{$_} = $tissue_sample_index_numbers->[$k];
-        $k++;
-    }
-
-    my $acc_synonyms = '';
-    if (exists($selected_cols->{'synonyms'})){
-        my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_synonyms = join ',', @{$accession->synonyms};
-    }
-    my $acc_pedigree = '';
-    if (exists($selected_cols->{'pedigree'})){
-        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_pedigree = $accession->get_pedigree_string('Parents');
-    }
-    my @lines;
-    foreach my $s (sort keys %$subplot_plant_names) {
-        my $plants = $subplot_plant_names->{$s};
-        foreach my $p (sort @$plants){
-            my $tissues = $plant_tissue_names->{$p};
-            foreach my $t (sort @$tissues){
-                my $line;
-                foreach my $c (@$possible_cols){
-                    if ($selected_cols->{$c}){
-                        if ($c eq 'tissue_sample_name'){
-                            push @$line, $t;
-                        } elsif ($c eq 'tissue_sample_id'){
-                            push @$line, $tissue_sample_id_hash{$t};
-                        } elsif ($c eq 'plant_name'){
-                            push @$line, $p;
-                        } elsif ($c eq 'plant_id'){
-                            push @$line, $plant_id_hash{$p};
-                        } elsif ($c eq 'subplot_name'){
-                            push @$line, $s;
-                        } elsif ($c eq 'subplot_id'){
-                            push @$line, $subplot_id_hash{$s};
-                        } elsif ($c eq 'subplot_number'){
-                            push @$line, $subplot_index_number_hash{$s};
-                        } elsif ($c eq 'plant_number'){
-                            push @$line, $plant_index_number_hash{$p};
-                        } elsif ($c eq 'tissue_sample_number'){
-                            push @$line, $tissue_sample_index_number_hash{$t};
-                        } elsif ($c eq 'location_name'){
-                            push @$line, $location_name;
-                        } elsif ($c eq 'plot_geo_json'){
-                            push @$line, $design_info->{"plot_geo_json"} ? encode_json $design_info->{"plot_geo_json"} : '';
-                        } elsif ($c eq 'trial_name'){
-                            push @$line, $trial_name;
-                        } elsif ($c eq 'year'){
-                            push @$line, $trial_year;
-                        } elsif ($c eq 'tier'){
-                            my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
-                            my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
-                            push @$line, $row."/".$col;
-                        } elsif ($c eq 'synonyms'){
-                            push @$line, $acc_synonyms;
-                        } elsif ($c eq 'pedigree'){
-                            push @$line, $acc_pedigree;
-                        } else {
-                            push @$line, $design_info->{$c};
-                        }
-                    }
-                }
-                $line = _add_treatment_to_line($treatment_stock_hashes, $line, $t);
-                $line = _add_trait_performance_to_line($selected_trait_names, $line, $fieldbook_trait_hash, $design_info);
-                push @lines, $line;
-            }
-        }
-    }
-    return @lines;
-}
-
-sub _construct_ouput_for_tissue_samples_with_plants {
-    my $schema = shift;
-    my $design_info = shift;
-    my $possible_cols = shift;
-    my $selected_cols = shift;
-    my $location_name = shift;
-    my $trial_name = shift;
-    my $trial_year = shift;
-    my $treatment_stock_hashes = shift;
-    my $selected_trait_names = shift;
-    my $fieldbook_trait_hash = shift;
-
-    my $plant_tissue_names = $design_info->{'plants_tissue_sample_names'};
-    my $plant_names = $design_info->{'plant_names'};
-    my $plant_ids = $design_info->{'plant_ids'};
-    my $plant_index_numbers = $design_info->{'plant_index_numbers'};
-    my $i = 0;
-    my %plant_id_hash;
-    my %plant_index_number_hash;
-    foreach (@$plant_names){
-        $plant_id_hash{$_} = $plant_ids->[$i];
-        $plant_index_number_hash{$_} = $plant_index_numbers->[$i];
-        $i++;
-    }
-    my $tissue_sample_names = $design_info->{'tissue_sample_names'};
-    my $tissue_sample_ids = $design_info->{'tissue_sample_ids'};
-    my $tissue_sample_index_numbers = $design_info->{'tissue_sample_index_numbers'};
-    my $k = 0;
-    my %tissue_sample_id_hash;
-    my %tissue_sample_index_number_hash;
-    foreach (@$tissue_sample_names){
-        $tissue_sample_id_hash{$_} = $tissue_sample_ids->[$k];
-        $tissue_sample_index_number_hash{$_} = $tissue_sample_index_numbers->[$k];
-        $k++;
-    }
-
-    my $acc_synonyms = '';
-    if (exists($selected_cols->{'synonyms'})){
-        my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_synonyms = join ',', @{$accession->synonyms};
-    }
-    my $acc_pedigree = '';
-    if (exists($selected_cols->{'pedigree'})){
-        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-        $acc_pedigree = $accession->get_pedigree_string('Parents');
-    }
-    my @lines;
-    foreach my $p (sort keys %$plant_tissue_names) {
-        my $tissues = $plant_tissue_names->{$p};
-        foreach my $t (sort @$tissues){
-            my $line;
-            foreach my $c (@$possible_cols){
-                if ($selected_cols->{$c}){
-                    if ($c eq 'tissue_sample_name'){
-                        push @$line, $t;
-                    } elsif ($c eq 'tissue_sample_id'){
-                        push @$line, $tissue_sample_id_hash{$t};
-                    } elsif ($c eq 'plant_name'){
-                        push @$line, $p;
-                    } elsif ($c eq 'plant_id'){
-                        push @$line, $plant_id_hash{$p};
-                    } elsif ($c eq 'plant_number'){
-                        push @$line, $plant_index_number_hash{$p};
-                    } elsif ($c eq 'tissue_sample_number'){
-                        push @$line, $tissue_sample_index_number_hash{$t};
-                    } elsif ($c eq 'location_name'){
-                        push @$line, $location_name;
-                    } elsif ($c eq 'plot_geo_json'){
-                        push @$line, $design_info->{"plot_geo_json"} ? encode_json $design_info->{"plot_geo_json"} : '';
-                    } elsif ($c eq 'trial_name'){
-                        push @$line, $trial_name;
-                    } elsif ($c eq 'year'){
-                        push @$line, $trial_year;
-                    } elsif ($c eq 'tier'){
-                        my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
-                        my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
-                        push @$line, $row."/".$col;
-                    } elsif ($c eq 'synonyms'){
-                        push @$line, $acc_synonyms;
-                    } elsif ($c eq 'pedigree'){
-                        push @$line, $acc_pedigree;
-                    } else {
-                        push @$line, $design_info->{$c};
-                    }
-                }
-            }
-            $line = _add_treatment_to_line($treatment_stock_hashes, $line, $t);
-            $line = _add_trait_performance_to_line($selected_trait_names, $line, $fieldbook_trait_hash, $design_info);
-            push @lines, $line;
-        }
-    }
-    return @lines;
-}
-
-sub _construct_ouput_for_wells_in_plate {
-    my $schema = shift;
-    my $design_info = shift;
-    my $possible_cols = shift;
-    my $selected_cols = shift;
-    my $location_name = shift;
-    my $trial_name = shift;
-
-    my $line;
-    foreach (@$possible_cols){
-        if ($selected_cols->{$_}){
-            if ($_ eq 'trial_name'){
-                push @$line, $trial_name;
-            } elsif ($_ eq 'tissue_sample_name'){
-                push @$line, $design_info->{'plot_name'};
-            } elsif ($_ eq 'well_A01'){
-                push @$line, $design_info->{'plot_number'};
-            } elsif ($_ eq 'exported_tissue_sample_name'){
-                push @$line, $design_info->{'plot_name'}.'|||'.$design_info->{'accession_name'};
-            } else {
-                push @$line, $design_info->{$_};
-            }
-        }
-    }
-    return $line;
 }
 
 sub _add_treatment_to_line {
