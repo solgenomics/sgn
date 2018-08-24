@@ -96,7 +96,7 @@ sub get_layout_output {
     my $schema = $self->schema();
     my %errors;
     my @error_messages;
-    my @output;
+    my $output;
 
     print STDERR "TrialLayoutDownload for Trial id: ($trial_id) ".localtime()."\n";
 
@@ -222,10 +222,11 @@ sub get_layout_output {
             treatment_info_hash => \%treatment_info_hash,
             phenotype_performance_hash => \%fieldbook_trait_hash
         });
+        $output = $layout_output->retrieve();
     }
 
     print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
-    return {output => \@output};
+    return {output => $output};
 }
 
 sub _add_treatment_to_line {
