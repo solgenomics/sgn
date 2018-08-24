@@ -101,7 +101,7 @@ $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
 
 A trial's layout can optionally include treatment and phenotype summary
-information, mapping to treatment_project_ids and trait_list, selected_trait_names.
+information, mapping to treatment_project_ids and trait_list.
 These keys can be ignored if you don't need them in the layout.
 
 As a XLS:
@@ -119,7 +119,6 @@ my $download = CXGN::Trial::Download->new({
     data_level => $data_level,
     treatment_project_ids => \@treatment_project_ids,
     selected_columns => $selected_cols,
-    selected_trait_names => \@selected_trait_names,
 });
 my $error = $download->download();
 my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -219,7 +218,6 @@ has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 has 'search_type' => (isa => 'Str', is => 'rw');
 has 'treatment_project_ids' => (isa => 'ArrayRef[Int]|Undef', is => 'rw');
 has 'selected_columns' => (isa => 'HashRef|Undef', is => 'rw');
-has 'selected_trait_names' => (isa => 'ArrayRef|Undef', is => 'rw');
 
 has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',

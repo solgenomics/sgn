@@ -19,7 +19,6 @@ my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
     treatment_project_ids => [1,2],
     selected_columns => {"plot_name"=>1,"plot_number"=>1,"block_number"=>1},
     selected_trait_ids => [1,2,3],
-    selected_trait_names => ['trait1|CO:00001', 'trait2|CO:000002']
 });
 my $output = $trial_layout_download->get_layout_output();
 
@@ -88,11 +87,6 @@ has 'selected_columns' => (
 has 'selected_trait_ids'=> (
     is => 'ro',
     isa => 'ArrayRef[Int]|Undef',
-);
-
-has 'selected_trait_names'=> (
-    is => 'ro',
-    isa => 'ArrayRef[Str]|Undef',
 );
 
 sub get_layout_output { 
@@ -807,6 +801,7 @@ sub _construct_ouput_for_wells_in_plate {
 }
 
 sub _add_treatment_to_line {
+    my $self = shift;
     my $treatment_stock_hashes = shift;
     my $line = shift;
     my $design_unit_name = shift;
@@ -821,6 +816,7 @@ sub _add_treatment_to_line {
 }
 
 sub _add_trait_performance_to_line {
+    my $self = shift;
     my $selected_trait_names = shift;
     my $line = shift;
     my $fieldbook_trait_hash = shift;

@@ -245,11 +245,10 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
     }
     my $selected_trait_list_id = $c->req->param('trait_list_id');
-    my @selected_trait_names;
     my @trait_list;
     if ($selected_trait_list_id){
         my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $selected_trait_list_id });
-        @selected_trait_names = @{$list->elements()};
+        my @selected_trait_names = @{$list->elements()};
         my $validator = CXGN::List::Validate->new();
         my @absent_traits = @{$validator->validate($schema, 'traits', \@selected_trait_names)->{'missing'}};
         if (scalar(@absent_traits)>0){
@@ -315,7 +314,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
-        selected_trait_names => \@selected_trait_names,
     });
 
     my $error = $download->download();
