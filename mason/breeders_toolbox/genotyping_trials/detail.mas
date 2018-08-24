@@ -25,7 +25,7 @@ $genotyping_plate_sample_type => undef
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' , 'jquery.iframe-post-form', 'CXGN.Trial', 'CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.BreedersToolbox.HTMLSelect', 'jstree/dist/jstree' ] &>
 
-<& /page/page_title.mas, title=>"Genotyping trial $trial_name" &>
+<& /page/page_title.mas, title=>"Genotyping plate $trial_name" &>
 
 <br/>
 
@@ -38,7 +38,7 @@ $genotyping_plate_sample_type => undef
                     <table class="table table-bordered table-hover">
                     <tbody>
                     <tr><td><b>Breeding Program</b></td><td><div id="breeding_programs"></div></td></tr>
-                    <tr><td><b>Trial Type</b></td><td>Genotyping Trial</td></tr>
+                    <tr><td><b>Trial Type</b></td><td>Genotyping Plate</td></tr>
                     <tr><td><b>Plate Format</b></td><td><% $genotyping_plate_format %></td></tr>
                     <tr><td><b>Plate Sample Type</b></td><td><% $genotyping_plate_sample_type %></td></tr>
                     <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
@@ -168,7 +168,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                     <div class="col-sm-11">
                         <h4>Trial Linkage</h4>
 
-                        <&| /page/info_section.mas, title => 'Field Trial to Genotyping Trial Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                        <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                             <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'genotyping_trial' &>
                         </&>
                     </div>

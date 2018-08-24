@@ -155,7 +155,7 @@ has 'volume' => (
 
 =head2 Accessor is_blank()
 
-A string specifying is_blank. Used in genotyping trial well tissue samples
+A string specifying is_blank. Used in genotyping plate well tissue samples
 
 =cut
 
@@ -437,7 +437,7 @@ sub _retrieve_plate_sample_type {
 
 =head2 store()
 
-# Store currently handled when creating or uploading genotyping trial in CXGN::Trial::TrialDesignStore
+# Store currently handled when creating or uploading genotyping plate in CXGN::Trial::TrialDesignStore
 # AND when creating tissue_samples in existing trial in CXGN::Trial->create_tissue_samples
 
  Usage:        my $tissue_sample_id = $t->store();
