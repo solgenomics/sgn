@@ -397,6 +397,9 @@ sub replace_plot_accession_fieldMap {
     
     my $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET uniquename = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
 	$h_replace_accessionName_in_plotName->execute($old_plot_id);
+    
+    $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET name = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
+	$h_replace_accessionName_in_plotName->execute($old_plot_id);
 
     $self->_regenerate_trial_layout_cache();
 
