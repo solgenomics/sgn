@@ -1851,8 +1851,8 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $progeny_number) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number];
+        my ($cross_id, $cross_name, $progeny_number, $family_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number, $family_name];
     }
 
     $c->stash->{rest} = { data => \@crosses };
