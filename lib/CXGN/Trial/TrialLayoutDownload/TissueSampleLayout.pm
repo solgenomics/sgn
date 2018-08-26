@@ -167,7 +167,7 @@ sub retrieve {
                 }
             }
         }
-        $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{plant_name});
+        $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{tissue_sample_name});
         $line = $self->_add_trait_performance_to_line(\@trait_names, $line, $phenotype_performance_hash, $design_info);
         push @output, $line;
     }
