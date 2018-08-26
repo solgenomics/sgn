@@ -89,6 +89,22 @@ sub retrieve {
         $design_info->{synonyms} = $acc_synonyms;
         $design_info->{pedigree} = $acc_pedigree;
 
+        my $subplot_plant_names = $design_info->{'subplots_plant_names'};
+        my $subplot_names = $design_info->{'subplot_names'};
+        my $subplot_ids = $design_info->{'subplot_ids'};
+        my $subplot_index_numbers = $design_info->{'subplot_index_numbers'};
+        my $j = 0;
+        my %plant_subplot_hash;
+        foreach my $subplot_name (@$subplot_names){
+            my $plant_names = $subplot_plant_names->{$subplot_name};
+            foreach my $plant_name (@$plant_names){
+                $plant_subplot_hash{$plant_name}->{subplot_id} = $subplot_ids->[$j];
+                $plant_subplot_hash{$plant_name}->{subplot_number} = $subplot_index_numbers->[$j];
+                $plant_subplot_hash{$plant_name}->{subplot_name} = $subplot_name;
+            }
+            $j++;
+        }
+
         my $plant_names = $design_info->{'plant_names'};
         my $plant_ids = $design_info->{'plant_ids'};
         my $plant_index_numbers = $design_info->{'plant_index_numbers'};
@@ -98,13 +114,16 @@ sub retrieve {
             $plant_design{plant_name} = $plant_name;
             $plant_design{plant_id} = $plant_ids->[$i];
             $plant_design{plant_number} = $plant_index_numbers->[$i];
+            $plant_design{subplot_name} = $plant_subplot_hash{$plant_name}->{subplot_name};
+            $plant_design{subplot_id} = $plant_subplot_hash{$plant_name}->{subplot_id};
+            $plant_design{subplot_number} = $plant_subplot_hash{$plant_name}->{subplot_number};
             push @plant_design, \%plant_design;
             $i++;
         }
     }
     #print STDERR Dumper \@plant_design;
 
-    @plant_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{plant_number} <=> $b->{plant_number} } @plant_design;
+    @plant_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{subplot_number} <=> $b->{subplot_number} || $a->{plant_number} <=> $b->{plant_number} } @plant_design;
 
     foreach my $design_info (@plant_design) {
         my $line;
