@@ -160,6 +160,23 @@ sub get_layout_output {
     }
     #print STDERR Dumper $design;
 
+    if ($data_level eq 'plot_fieldMap' ) {
+        my %hash;
+        my @rows;
+        my @cols;
+        foreach my $key (keys %$design) {
+            my $design_info = $design->{$key};
+            my $row_num = $design_info->{row_number};
+            my $col_num = $design_info->{col_number};
+            my $accession = $design_info->{accession_name};
+            $hash{$row_num}->{$col_num} = $accession;
+            push @rows, $row_num;
+            push @cols, $col_num;
+        }
+        print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
+        return {output => \%hash, rows => \@rows, cols => \@cols};
+    }
+
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $has_plants = $selected_trial->has_plant_entries();
     my $has_subplots = $selected_trial->has_subplot_entries();
