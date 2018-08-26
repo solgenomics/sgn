@@ -7,14 +7,22 @@ CXGN::Trial::TrialLayoutDownload::PlotLayout - an object to handle downloading a
 =head1 USAGE
 
 my $trial_plot_layout = CXGN::Trial::TrialLayoutDownload::PlotLayout->new({
-    bcs_schema=>$schema,
-    treatment_trial_list=>\@treatment_trials,
+    schema => $schema,
+    trial_id => $trial_id,
+    data_level => $data_level,
+    selected_columns => \%selected_cols,
+    selected_trait_ids => \@selected_traits,
+    treatment_project_ids => $treatments,
+    design => $design,
+    trial => $selected_trial,
+    treatment_info_hash => \%treatment_info_hash,
+    phenotype_performance_hash => \%fieldbook_trait_hash
 });
 my $result = $trial_plot_layout->retrieve();
 
 =head1 DESCRIPTION
 
-Will output an array of arrays, where each row is a plot in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments (management factors) that are part of the trial.
+Will output an array of arrays, where each row is a plot in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments (management factors) that are part of the trial. additionally, trait performance can be included in column using the phenotype_performance_hash. this should only be called from CXGN::Trial::TrialLayoutDownload
 
 =head1 AUTHORS
 
@@ -31,37 +39,9 @@ use CXGN::Stock::Accession;
 
 extends 'CXGN::Trial::TrialLayoutDownload';
 
-#This is a hashref of the cached trial_layout_json that comes from CXGN::Trial::TrialLayout
-has 'design' => (
-    isa => 'HashRef[Str]',
-    is => 'rw',
-    required => 1
-);
-
-has 'trial' => (
-    isa => 'CXGN::Trial',
-    is => 'rw',
-    required => 1
-);
-
-#This treatment_info_hash contains all the info needed to make and fill the columns for the various treatments (management factors). All of these lists are in the same order.
-#A key called treatment_trial_list that is a arrayref of the CXGN::Trial entries that represent the treatments (management factors) in this trial
-#A key called treatment_trial_names_list that is an arrayref of just the treatment (management factor) names
-#A key called treatment_units_hash_list that is a arrayref of hashrefs where the hashrefs indicate the stocks that the treatment was applied to.
-has 'treatment_info_hash' => (
-    isa => 'HashRef',
-    is => 'rw',
-);
-
-#This phenotype_performance_hash is a hashref of hashref where the top key is the trait name, subsequent key is the stock id, and subsequent object contains mean, mix, max, stdev, count, etc for that trait and stock
-has 'phenotype_performance_hash' => (
-    isa => 'HashRef',
-    is => 'rw',
-);
-
 sub retrieve {
     my $self = shift;
-    my $schema = $self->bcs_schema();
+    my $schema = $self->schema();
     my %selected_cols = %{$self->selected_columns};
     my %design = %{$self->design};
     my $trial = $self->trial;

@@ -315,19 +315,19 @@ sub _get_design_from_trial {
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_cvterm_id });
     my $trial_has_plants = $project->projectprops->find({ 'type_id' => $trial_has_plants_cvterm_id });
     if ($trial_layout_json) {
-        my $design = $trial_layout_json->value;
-        #Plant index number needs to be in the cached layout of trials that have plants. this servers a check to assure this.
+        my $design = decode_json $trial_layout_json->value;
+        #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
         if ($trial_has_plants){
             my @plot_values = values %$design;
-            if (!exists($plot_values[0]->{plant_index_number})) {
+            if (!exists($plot_values[0]->{plant_index_numbers})) {
                 $self->generate_and_cache_layout();
             } else {
                 print STDERR "TrialLayout from cache ".localtime."\n";
-                return decode_json $design;
+                return $design;
             }
         } else {
             print STDERR "TrialLayout from cache ".localtime."\n";
-            return decode_json $design;
+            return $design;
         }
     } else {
         $self->generate_and_cache_layout();

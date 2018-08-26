@@ -55,6 +55,7 @@ use CXGN::Stock::Accession;
 use JSON;
 use CXGN::Phenotypes::Summary;
 use CXGN::Trial::TrialLayoutDownload::PlotLayout;
+use CXGN::Trial::TrialLayoutDownload::PlantLayout;
 
 has 'schema' => (
     is       => 'rw',
@@ -90,10 +91,43 @@ has 'selected_trait_ids'=> (
     isa => 'ArrayRef[Int]|Undef',
 );
 
+#The attributes below are populated when get_layout_output is run, so should not be instantiatied
+#----------------------
+
+#This is a hashref of the cached trial_layout_json that comes from CXGN::Trial::TrialLayout
+has 'design' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
+has 'trial' => (
+    isa => 'CXGN::Trial',
+    is => 'rw',
+);
+
+#This treatment_info_hash contains all the info needed to make and fill the columns for the various treatments (management factors). All of these lists are in the same order.
+#A key called treatment_trial_list that is a arrayref of the CXGN::Trial entries that represent the treatments (management factors) in this trial
+#A key called treatment_trial_names_list that is an arrayref of just the treatment (management factor) names
+#A key called treatment_units_hash_list that is a arrayref of hashrefs where the hashrefs indicate the stocks that the treatment was applied to.
+has 'treatment_info_hash' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
+#This phenotype_performance_hash is a hashref of hashref where the top key is the trait name, subsequent key is the stock id, and subsequent object contains mean, mix, max, stdev, count, etc for that trait and stock
+has 'phenotype_performance_hash' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
 sub get_layout_output { 
     my $self = shift;
     my $trial_id = $self->trial_id();
     my $schema = $self->schema();
+    my $data_level = $self->data_level();
+    my %selected_cols = %{$self->selected_columns};
+    my $treatments = $self->treatment_project_ids();
+    my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my %errors;
     my @error_messages;
     my $output;
@@ -103,7 +137,7 @@ sub get_layout_output {
     my $trial_layout;
     try {
         my %param = ( schema => $schema, trial_id => $trial_id );
-        if ($self->data_level eq 'plate'){
+        if ($data_level eq 'plate'){
             $param{experiment_type} = 'genotyping_layout';
         } else {
             $param{experiment_type} = 'field_layout';
@@ -115,6 +149,13 @@ sub get_layout_output {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
+    my $design = $trial_layout->get_design();
+    if (!$design){
+        push @error_messages, "Trial does not have valid field design. Please contact us.";
+        $errors{'error_messages'} = \@error_messages;
+        return \%errors;
+    }
+    #print STDERR Dumper $design;
 
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $has_plants = $selected_trial->has_plant_entries();
@@ -127,16 +168,6 @@ sub get_layout_output {
         push @accession_ids, $_->{stock_id};
     }
 
-    my $design = $trial_layout->get_design();
-    if (!$design){
-        push @error_messages, "Trial does not have valid field design. Please contact us.";
-        $errors{'error_messages'} = \@error_messages;
-        return \%errors;
-    }
-
-    #print STDERR Dumper $design;
-
-    my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my $summary_values = [];
     if (scalar(@selected_traits)>0){ 
         my $summary = CXGN::Phenotypes::Summary->new({
@@ -152,7 +183,6 @@ sub get_layout_output {
     }
     #print STDERR Dumper \%fieldbook_trait_hash;
 
-    my $treatments = $self->treatment_project_ids();
     my @treatment_trials;
     my @treatment_names;
     my @treatment_units_array;
@@ -165,29 +195,27 @@ sub get_layout_output {
         }
     }
 
-    my %selected_cols = %{$self->selected_columns};
-
-    if ($self->data_level eq 'plots') {
+    if ($data_level eq 'plots') {
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plots() : [];
             push @treatment_units_array, $treatment_units;
         }
-    } elsif ($self->data_level eq 'plants') {
+    } elsif ($data_level eq 'plants') {
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plants() : [];
             push @treatment_units_array, $treatment_units;
         }
-    } elsif ($self->data_level eq 'subplots') {
+    } elsif ($data_level eq 'subplots') {
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_subplots() : [];
             push @treatment_units_array, $treatment_units;
         }
-    } elsif ($self->data_level eq 'field_trial_tissue_samples') {
+    } elsif ($data_level eq 'field_trial_tissue_samples') {
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_tissue_samples() : [];
             push @treatment_units_array, $treatment_units;
         }
-    } elsif ($self->data_level eq 'plate') {
+    } elsif ($data_level eq 'plate') {
         #to make the download in the header for genotyping trials more easily understood, the terms change here
         if (exists($selected_cols{'plot_name'})){
             $selected_cols{'tissue_sample_name'} = 1;
@@ -215,15 +243,27 @@ sub get_layout_output {
         treatment_units_hash_list => \@treatment_stock_hashes
     );
 
-    if ($self->data_level eq 'plots' ) {
-        my $layout_output = CXGN::Trial::TrialLayoutDownload::PlotLayout->new({
-            design => $design,
-            trial => $selected_trial,
-            treatment_info_hash => \%treatment_info_hash,
-            phenotype_performance_hash => \%fieldbook_trait_hash
-        });
-        $output = $layout_output->retrieve();
+    my $layout_build = {
+        schema => $schema,
+        trial_id => $trial_id,
+        data_level => $data_level,
+        selected_columns => \%selected_cols,
+        selected_trait_ids => \@selected_traits,
+        treatment_project_ids => $treatments,
+        design => $design,
+        trial => $selected_trial,
+        treatment_info_hash => \%treatment_info_hash,
+        phenotype_performance_hash => \%fieldbook_trait_hash
+    };
+    my $layout_output;
+    if ($data_level eq 'plots' ) {
+        $layout_output = CXGN::Trial::TrialLayoutDownload::PlotLayout->new($layout_build);
     }
+    if ($data_level eq 'plants' ) {
+        $layout_output = CXGN::Trial::TrialLayoutDownload::PlantLayout->new($layout_build);
+    }
+    $output = $layout_output->retrieve();
+    #print STDERR Dumper $output;
 
     print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
     return {output => $output};
