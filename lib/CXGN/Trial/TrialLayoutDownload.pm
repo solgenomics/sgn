@@ -57,6 +57,7 @@ use CXGN::Phenotypes::Summary;
 use CXGN::Trial::TrialLayoutDownload::PlotLayout;
 use CXGN::Trial::TrialLayoutDownload::PlantLayout;
 use CXGN::Trial::TrialLayoutDownload::SubplotLayout;
+use CXGN::Trial::TrialLayoutDownload::TissueSampleLayout;
 
 has 'schema' => (
     is       => 'rw',
@@ -280,6 +281,9 @@ sub get_layout_output {
     }
     if ($data_level eq 'subplots' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::SubplotLayout->new($layout_build);
+    }
+    if ($data_level eq 'field_trial_tissue_samples' ) {
+        $layout_output = CXGN::Trial::TrialLayoutDownload::TissueSampleLayout->new($layout_build);
     }
     $output = $layout_output->retrieve();
     #print STDERR Dumper $output;

@@ -123,6 +123,7 @@ sub retrieve {
     }
     #print STDERR Dumper \@plant_design;
 
+    no warnings 'uninitialized';
     @plant_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{subplot_number} <=> $b->{subplot_number} || $a->{plant_number} <=> $b->{plant_number} } @plant_design;
 
     foreach my $design_info (@plant_design) {

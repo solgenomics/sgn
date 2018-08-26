@@ -73,7 +73,7 @@ sub retrieve {
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
 
-    #Turn plot level design into a plant level design that can be sorted on plot_number and then plant index number..
+    #Turn plot level design into a subplot level design that can be sorted on plot_number and then subplot index number..
     my @subplot_design;
     while (my($plot_number, $design_info) = each %design){
         my $acc_synonyms = '';
