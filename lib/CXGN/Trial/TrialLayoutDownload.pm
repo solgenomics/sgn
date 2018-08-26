@@ -56,6 +56,7 @@ use JSON;
 use CXGN::Phenotypes::Summary;
 use CXGN::Trial::TrialLayoutDownload::PlotLayout;
 use CXGN::Trial::TrialLayoutDownload::PlantLayout;
+use CXGN::Trial::TrialLayoutDownload::SubplotLayout;
 
 has 'schema' => (
     is       => 'rw',
@@ -201,16 +202,31 @@ sub get_layout_output {
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'plants') {
+        if (!$has_plants){
+            push @error_messages, "Trial does not have plants, so you should not try to download a plant level layout.";
+            $errors{'error_messages'} = \@error_messages;
+            return \%errors;
+        }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_plants() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'subplots') {
+        if (!$has_subplots){
+            push @error_messages, "Trial does not have subplots, so you should not try to download a subplot level layout.";
+            $errors{'error_messages'} = \@error_messages;
+            return \%errors;
+        }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_subplots() : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'field_trial_tissue_samples') {
+        if (!$has_tissue_samples){
+            push @error_messages, "Trial does not have tissue samples, so you shold not try to download a tissue sample level layout.";
+            $errors{'error_messages'} = \@error_messages;
+            return \%errors;
+        }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_tissue_samples() : [];
             push @treatment_units_array, $treatment_units;
@@ -261,6 +277,9 @@ sub get_layout_output {
     }
     if ($data_level eq 'plants' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::PlantLayout->new($layout_build);
+    }
+    if ($data_level eq 'subplots' ) {
+        $layout_output = CXGN::Trial::TrialLayoutDownload::SubplotLayout->new($layout_build);
     }
     $output = $layout_output->retrieve();
     #print STDERR Dumper $output;
