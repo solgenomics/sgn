@@ -2563,7 +2563,6 @@ sub create_tissue_samples {
                 foreach my $tissue_name (@$tissue_names){
                     my $tissue_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
                     print STDERR "... ... creating tissue $tissue_name...\n";
-                    $tissue_index_number++;
 
                     my $tissue = $chado_schema->resultset("Stock::Stock")->create({
                         organism_id => $parent_plant_organism,
@@ -2577,6 +2576,7 @@ sub create_tissue_samples {
                         type_id => $tissue_index_number_cvterm,
                         value => $tissue_index_number,
                     });
+                    $tissue_index_number++;
 
                     #the tissue has a relationship to the plant
                     my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
