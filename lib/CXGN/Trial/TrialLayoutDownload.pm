@@ -133,7 +133,6 @@ sub get_layout_output {
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my %errors;
     my @error_messages;
-    my $output;
 
     print STDERR "TrialLayoutDownload for Trial id: ($trial_id) ".localtime()."\n";
 
@@ -242,7 +241,7 @@ sub get_layout_output {
         }
     } elsif ($data_level eq 'field_trial_tissue_samples') {
         if (!$has_tissue_samples){
-            push @error_messages, "Trial does not have tissue samples, so you shold not try to download a tissue sample level layout.";
+            push @error_messages, "Trial does not have tissue samples, so you should not try to download a tissue sample level layout.";
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
@@ -306,7 +305,7 @@ sub get_layout_output {
     if ($data_level eq 'plate' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::GenotypingPlateLayout->new($layout_build);
     }
-    $output = $layout_output->retrieve();
+    my $output = $layout_output->retrieve();
     #print STDERR Dumper $output;
 
     print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";

@@ -189,9 +189,9 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 17, "check number of col in created file.");
+ok(scalar(@$columns) == 15, "check number of col in created file.");
 
-#print STDERR Dumper $columns;
+print STDERR Dumper $columns;
 is_deeply ($columns,[
           [],
           [
@@ -414,14 +414,6 @@ is_deeply ($columns,[
             '/',
             '/',
             '/'
-          ],
-          [
-            undef,
-            'fresh root weight|CO_334:0000012'
-          ],
-          [
-            undef,
-            'harvest index variable|CO_334:0000015'
           ]
         ], "check selectable fieldbook cols");
 
