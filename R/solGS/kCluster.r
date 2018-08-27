@@ -97,6 +97,9 @@ if (is.null(filteredGenoFile) == TRUE) {
 }
 
 genoData <- data.frame(genoData)
+
+set.seed(235)
+
 kmeansOut <- kmeansruns(genoData)
 
 recK <- paste0('Recommended number of clusters (k) for this data set is: ', kmeansOut$bestk)
