@@ -1,6 +1,6 @@
 
 <%args>
-$project_type => 'Trial' #Trial or Cross or Genotyping Trial
+$project_type => 'Trial' #Trial or Cross or Genotyping Plate
 $parent_folder_id => undef
 $parent_folder_name => undef
 $breeding_program_id => undef
@@ -13,7 +13,7 @@ $breeding_program_name => undef
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;
 % if ($project_type eq 'Trial') { $folder_for_trials = 1; }
-% if ($project_type eq 'Genotyping Trial') { $folder_for_genotyping_trials = 1; }
+% if ($project_type eq 'Genotyping Plate') { $folder_for_genotyping_trials = 1; }
 % if ($project_type eq 'Cross') { $folder_for_crosses = 1; }
 
 <div class="modal fade" id="new_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="newFolderDialog">
@@ -72,7 +72,7 @@ $breeding_program_name => undef
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Folder For Genotyping Trials: </label>
+                <label class="col-sm-3 control-label">Folder For Genotyping Plates: </label>
                 <div class="col-sm-9" >
                     <input name="new_folder_for_genotyping_trials" id="new_folder_for_genotyping_trials" type="checkbox"/>
                 </div>

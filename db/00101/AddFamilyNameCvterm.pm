@@ -3,21 +3,22 @@
 
 =head1 NAME
 
- AddFolderForGenotypingTrialCvterm
+ AddFamilyNameCvterm
 
 =head1 SYNOPSIS
 
-mx-run AddFolderForGenotypingTrialCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddFamilyNameCvterm [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds cvterm for differentiating folder for genotyping plate trial
+This patch adds family_name cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
+Titima Tantikanjana <tt15@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -29,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddFolderForGenotypingTrialCvterm;
+package AddFamilyNameCvterm;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -38,14 +39,14 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'folder_for_genotyping_trials' projectprop cvterm
+This patch adds the 'crossing_block_trial' project_type cvterm
 
 has '+prereq' => (
 	default => sub {
         [],
     },
 
-  );
+);
 
 sub patch {
     my $self=shift;
@@ -61,8 +62,8 @@ sub patch {
     print STDERR "INSERTING CV TERMS...\n";
 
     my $terms = {
-        'project_property' => [
-            'folder_for_genotyping_trials',
+        'stock_property' => [
+            'family_name',
         ]
     };
 
@@ -76,7 +77,7 @@ sub patch {
 	}
 
 
-print "You're done!\n";
+    print "You're done!\n";
 }
 
 

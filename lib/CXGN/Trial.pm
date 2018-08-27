@@ -456,7 +456,7 @@ sub get_field_trials_sourced_from_field_trials {
 =head2 function set_genotyping_trials_from_field_trial()
 
  Usage:
- Desc:         sets associated genotyping trials for the current field trial
+ Desc:         sets associated genotyping plates for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:         an arrayref [genotyping_trial_id1, genotyping_trial_id2]
  Side Effects:
@@ -486,7 +486,7 @@ sub set_genotyping_trials_from_field_trial {
 =head2 function get_genotyping_trials_from_field_trial()
 
  Usage:
- Desc:         return associated genotyping trials for the current field trial
+ Desc:         return associated genotyping plates for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:
  Side Effects:
@@ -516,7 +516,7 @@ sub get_genotyping_trials_from_field_trial {
 =head2 function set_source_field_trials_for_genotyping_trial()
 
  Usage:
- Desc:         sets associated field trials for the current genotyping trial
+ Desc:         sets associated field trials for the current genotyping plate
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:         an arrayref [field_trial_id1, field_trial_id2]
  Side Effects:
@@ -1068,7 +1068,7 @@ sub set_phenotypes_fully_uploaded {
 
 =head2 accessors get_genotyping_facility(), set_genotyping_facility()
 
- Usage: For genotyping trials, a genotyping facility can be set as a projectprop value e.g. 'igd'
+ Usage: For genotyping plates, a genotyping facility can be set as a projectprop value e.g. 'igd'
  Desc:
  Ret:
  Args:
@@ -1090,7 +1090,7 @@ sub set_genotyping_facility {
 
 =head2 accessors get_genotyping_facility_submitted(), set_genotyping_facility_submitted()
 
- Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility and the plate is stored in out system, this stockprop can be set to 'yes'
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility and the plate is stored in out system, this stockprop can be set to 'yes'
  Desc:
  Ret:
  Args:
@@ -1112,7 +1112,7 @@ sub set_genotyping_facility_submitted {
 
 =head2 accessors get_genotyping_facility_status(), set_genotyping_facility_status()
 
- Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility, the status of that plate can be set here
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility, the status of that plate can be set here
  Desc:
  Ret:
  Args:
@@ -1134,7 +1134,7 @@ sub set_genotyping_facility_status {
 
 =head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
 
- Usage: For genotyping trials, this records if it is 96 wells or 384 or other
+ Usage: For genotyping plates, this records if it is 96 wells or 384 or other
  Desc:
  Ret:
  Args:
@@ -1156,7 +1156,7 @@ sub set_genotyping_plate_format {
 
 =head2 accessors get_genotyping_plate_sample_type(), set_genotyping_plate_sample_type()
 
- Usage: For genotyping trials, this records sample type of plate e.g. DNA
+ Usage: For genotyping plates, this records sample type of plate e.g. DNA
  Desc:
  Ret:
  Args:
@@ -3053,7 +3053,7 @@ sub get_plots_per_accession {
     my $self = shift;
     my %return;
 
-    # note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
+    # note: this function also retrieves stocks of type tissue_sample (for genotyping plates).
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
     my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');

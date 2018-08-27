@@ -20,7 +20,7 @@
                             <p>Tissue samples are linked to a single plant, which is in turn linked to a single plot.</p>
                             <p>Many tissue samples can be created for each plant.</p>
                             <p>Each tissue sample needs a globally unique name.</p>
-                            <p>Tissue samples can then be transferred into genotyping trials (96 or 384 well plates).</p>
+                            <p>Tissue samples can then be transferred into genotyping plates (96 or 384 well plates).</p>
 
                             <br/><br/>
                             <center>
@@ -129,7 +129,7 @@
                             <ul>
                                 <li>You may want to go to the trial detail page for the trial now that it has plants.</li>
                                 <li>You can print barcodes for the new tissue samples.</li>
-                                <li>You can use these tissue samples as source material for a genotyping trial (96 or 384 well plate)</li>
+                                <li>You can use these tissue samples as source material for a genotyping plates (96 or 384 well plate)</li>
                             </ul>
                             <br/>
                         </&>

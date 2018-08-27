@@ -203,6 +203,24 @@ is_deeply($response, {'data'=> [
 ]}, 'crossing experiment info');
 
 
+# test uploading family names
+$file = $f->config->{basepath}."/t/data/cross/family_name_upload.xls";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_family_names',
+    Content_Type => 'form-data',
+    Content => [
+        family_name_upload_file => [ $file, 'family_name_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is_deeply($message_hash, {'success' => 1});
+
+
 # remove added crossing trials after test so that they don't affect downstream tests
 $crossing_trial_rs->delete();
 $crossing_trial2_rs->delete();

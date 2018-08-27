@@ -243,7 +243,7 @@ sub _get_unique_accession_names_from_trial {
     my %design = %{$self->get_design()};
     my @acc_names;
     my %unique_acc;
-    no warnings 'numeric'; #for genotyping trial so that wells don't give warning
+    no warnings 'numeric'; #for genotyping plate so that wells don't give warning
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
@@ -262,7 +262,7 @@ sub _get_unique_control_accession_names_from_trial {
     my %design = %{$self->get_design()};
     my @control_names;
     my %unique_controls;
-    no warnings 'numeric'; #for genotyping trial so that wells don't give warning
+    no warnings 'numeric'; #for genotyping plate so that wells don't give warning
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         my $is_a_control = $design_info{"is_a_control"};
