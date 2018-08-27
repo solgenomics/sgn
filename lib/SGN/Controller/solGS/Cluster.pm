@@ -37,7 +37,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 	$c->stash->{data_set_type} = 'combined_populations';	
     }
     
-    $c->stash->{template} = '/cluster/analysis.mas';
+    $c->stash->{template} = '/solgs/cluster/analysis.mas';
 
 }
 
