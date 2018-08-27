@@ -73,8 +73,10 @@ sub retrieve {
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
 
-    foreach my $key (sort { $a <=> $b} keys %design) {
-        my $design_info = $design{$key};
+    my @plot_design = values %design;
+    @plot_design = sort { $a->{plot_number} <=> $b->{plot_number} } @plot_design;
+
+    foreach my $design_info (@plot_design) {
         my $line;
         foreach (@possible_cols){
             if ($selected_cols{$_}){

@@ -33,7 +33,7 @@ jQuery(document).ready(function () {
 
                 jQuery('#trial_plots_html').html(html);
 
-                var plot = response.plots[0].sort() || [];
+                var plot = response.plots[0] || [];
 
                 plot_html = format_options_list(plot);
                 jQuery('#plot_data').html(plot_html);
