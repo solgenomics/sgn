@@ -24,13 +24,13 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("hide");
                 var html1 = '';
 % if ($trial_type eq 'field_trial'){
-                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Genotyping Trial(s) From This Field Trial</th></tr></thead><tbody>';
+                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Genotyping Plates(s) From This Field Trial</th></tr></thead><tbody>';
                 for (var i=0; i<response.genotyping_trials_from_field_trial.length; i++){
                     html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.genotyping_trials_from_field_trial[i][0]+'">'+response.genotyping_trials_from_field_trial[i][1]+'</a></td></tr>';
                 }
 % }
 % if ($trial_type eq 'genotyping_trial'){
-                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) That Are Source of This Genotyping Trial</th></tr></thead><tbody>';
+                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) That Are Source of This Genotyping Plate</th></tr></thead><tbody>';
                 for (var i=0; i<response.field_trials_source_of_genotyping_trial.length; i++){
                     html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.field_trials_source_of_genotyping_trial[i][0]+'">'+response.field_trials_source_of_genotyping_trial[i][1]+'</a></td></tr>';
                 }
@@ -40,7 +40,7 @@ jQuery(document).ready(function () {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert("Error retrieving genotyping trial to field trial linkage.");
+                alert("Error retrieving genotyping plate to field trial linkage.");
             }
         });
     });

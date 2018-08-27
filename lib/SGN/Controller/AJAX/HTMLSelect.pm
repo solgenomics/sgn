@@ -416,7 +416,7 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $trial (@field_trials) {
         push @choices, $trial;
     }
-    push @choices, '__Genotyping Trials';
+    push @choices, '__Genotyping Plates';
     @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
     foreach my $trial (@genotyping_trials) {
         push @choices, $trial;

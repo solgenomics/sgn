@@ -185,6 +185,12 @@ sub search {
     my $harvest_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_harvest_date', 'project_property')->cvterm_id();
     my $planting_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_planting_date', 'project_property')->cvterm_id();
     my $project_has_tissue_sample_entries = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id();
+    my $genotyping_facility_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property')->cvterm_id();
+    my $genotyping_facility_submitted_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility_submitted', 'project_property')->cvterm_id();
+    my $genotyping_facility_status_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility_status', 'project_property')->cvterm_id();
+    my $genotyping_plate_format_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_plate_format', 'project_property')->cvterm_id();
+    my $genotyping_plate_sample_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_plate_sample_type', 'project_property')->cvterm_id();
+    my $genotyping_facility_plate_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility_plate_id', 'project_property')->cvterm_id();
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $project_type_cv_id = $schema->resultset("Cv::Cv")->find( { name => "project_type" } )->cv_id();
@@ -300,7 +306,7 @@ sub search {
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
-    my $q = "SELECT study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, count(study.project_id) OVER() AS full_count
+    my $q = "SELECT study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, genotyping_facility.value, genotyping_facility_submitted.value, genotyping_facility_status.value, genotyping_plate_format.value, genotyping_plate_sample_type.value, genotyping_facility_plate_id.value, count(study.project_id) OVER() AS full_count
         FROM project AS study
         JOIN project_relationship AS bp_rel ON(study.project_id=bp_rel.subject_project_id AND bp_rel.type_id=$breeding_program_trial_relationship_id)
         JOIN project AS breeding_program ON(bp_rel.object_project_id=breeding_program.project_id)
@@ -315,10 +321,16 @@ sub search {
         LEFT JOIN projectprop AS planting_date ON(study.project_id=planting_date.project_id AND planting_date.type_id=$planting_cvterm_id)
         LEFT JOIN projectprop AS design ON(study.project_id=design.project_id AND design.type_id=$design_cvterm_id)
         LEFT JOIN projectprop AS trial_has_tissue_samples ON(study.project_id=trial_has_tissue_samples.project_id AND trial_has_tissue_samples.type_id=$project_has_tissue_sample_entries)
+        LEFT JOIN projectprop AS genotyping_facility ON(study.project_id=genotyping_facility.project_id AND genotyping_facility.type_id=$genotyping_facility_cvterm_id)
+        LEFT JOIN projectprop AS genotyping_facility_submitted ON(study.project_id=genotyping_facility_submitted.project_id AND genotyping_facility_submitted.type_id=$genotyping_facility_submitted_cvterm_id)
+        LEFT JOIN projectprop AS genotyping_facility_status ON(study.project_id=genotyping_facility_status.project_id AND genotyping_facility_status.type_id=$genotyping_facility_status_cvterm_id)
+        LEFT JOIN projectprop AS genotyping_plate_format ON(study.project_id=genotyping_plate_format.project_id AND genotyping_plate_format.type_id=$genotyping_plate_format_cvterm_id)
+        LEFT JOIN projectprop AS genotyping_plate_sample_type ON(study.project_id=genotyping_plate_sample_type.project_id AND genotyping_plate_sample_type.type_id=$genotyping_plate_sample_type_cvterm_id)
+        LEFT JOIN projectprop AS genotyping_facility_plate_id ON(study.project_id=genotyping_facility_plate_id.project_id AND genotyping_facility_plate_id.type_id=$genotyping_facility_plate_id_cvterm_id)
         $accession_join
         $trait_join
         $where_clause
-        GROUP BY(study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value)
+        GROUP BY(study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, genotyping_facility.value, genotyping_facility_submitted.value, genotyping_facility_status.value, genotyping_plate_format.value, genotyping_plate_sample_type.value, genotyping_facility_plate_id.value)
         ORDER BY study.name;";
 
     print STDERR Dumper $q;
@@ -328,7 +340,7 @@ sub search {
     my @result;
     my $total_count = 0;
     my $subtract_count = 0;
-    while (my ($study_name, $study_id, $study_description, $folder_name, $folder_id, $folder_description, $trial_type_id, $trial_type_name, $year, $location_id, $breeding_program_name, $breeding_program_id, $breeding_program_description, $harvest_date, $planting_date, $design, $full_count) = $h->fetchrow_array()) {
+    while (my ($study_name, $study_id, $study_description, $folder_name, $folder_id, $folder_description, $trial_type_id, $trial_type_name, $year, $location_id, $breeding_program_name, $breeding_program_id, $breeding_program_description, $harvest_date, $planting_date, $design, $genotyping_facility, $genotyping_facility_submitted, $genotyping_facility_status, $genotyping_plate_format, $genotyping_plate_sample_type, $genotyping_facility_plate_id, $full_count) = $h->fetchrow_array()) {
         my $location_name = $location_id ? $locations{$location_id} : '';
         my $project_harvest_date = $harvest_date ? $calendar_funcs->display_start_date($harvest_date) : '';
         my $project_planting_date = $planting_date ? $calendar_funcs->display_start_date($planting_date) : '';
@@ -365,7 +377,13 @@ sub search {
             breeding_program_description => $breeding_program_description,
             project_harvest_date => $project_harvest_date,
             project_planting_date => $project_planting_date,
-            design => $design
+            design => $design,
+            genotyping_facility => $genotyping_facility,
+            genotyping_facility_submitted => $genotyping_facility_submitted,
+            genotyping_facility_status => $genotyping_facility_status,
+            genotyping_plate_format => $genotyping_plate_format,
+            genotyping_plate_sample_type => $genotyping_plate_sample_type,
+            genotyping_facility_plate_id => $genotyping_facility_plate_id,
         };
         $total_count = $full_count;
     }

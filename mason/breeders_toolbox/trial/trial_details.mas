@@ -2,6 +2,7 @@
 $trial_id
 $trial_name
 $breeding_program_name
+$breeding_program_id
 $location_name
 $year
 $trial_type
@@ -41,7 +42,7 @@ $field_trial_is_planned_to_cross
                 <td>
                     <span id="breeding_program">
 % if ($breeding_program_name) {
-%  print "$breeding_program_name";
+                    <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
 % }
 % else {
 %  print "<span class='text-danger'>[No Breeding Program]</span>";

@@ -10,140 +10,136 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
 );
 
 has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
+    isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+    required => 1,
 );
 
 has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
-	is => 'rw',
-	required => 1,
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+    required => 1,
 );
 
 has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
 );
 
 has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
 );
 
 has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
+    isa => 'ArrayRef[Maybe[HashRef]]',
+    is => 'rw',
+    required => 1,
 );
 
 sub markerprofiles_search {
-	my $self = shift;
-	my $inputs = shift;
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
-	my @germplasm_ids = $inputs->{stock_ids} ? @{$inputs->{stock_ids}} : ();
-	my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
-	my @extract_ids = $inputs->{extract_ids} ? @{$inputs->{extract_ids}} : ();
-	my @sample_ids = $inputs->{sample_ids} ? @{$inputs->{sample_ids}} : ();
-	my $method = $inputs->{protocol_id};
-	
-	if (scalar(@extract_ids)>0){
-		push @$status, { 'error' => 'Search parameter extractDbId not supported' };
-	}
-	if (scalar(@sample_ids)>0){
-		push @$status, { 'error' => 'Search parameter sampleDbId not supported' };
-	}
+    my $self = shift;
+    my $inputs = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my @germplasm_ids = $inputs->{stock_ids} ? @{$inputs->{stock_ids}} : ();
+    my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
+    my @extract_ids = $inputs->{extract_ids} ? @{$inputs->{extract_ids}} : ();
+    my @sample_ids = $inputs->{sample_ids} ? @{$inputs->{sample_ids}} : ();
+    my $method = $inputs->{protocol_id};
 
-	my $genotypes_search = CXGN::Genotype::Search->new({
-		bcs_schema=>$self->bcs_schema,
-		accession_list=>\@germplasm_ids,
-		trial_list=>\@study_ids,
-		protocol_id=>$method,
-		offset=>$page_size*$page,
-		limit=>$page_size*($page+1)-1
-	});
-	my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+    if (scalar(@extract_ids)>0){
+        push @$status, { 'error' => 'Search parameter extractDbId not supported' };
+    }
+    if (scalar(@sample_ids)>0){
+        push @$status, { 'error' => 'Search parameter sampleDbId not supported' };
+    }
 
-	my @data;
-	foreach (@$genotypes){
-		push @data, {
-			markerprofileDbId => qq|$_->{markerProfileDbId}|,
-			germplasmDbId => qq|$_->{germplasmDbId}|,
-			uniqueDisplayName => $_->{genotypeUniquename},
-			extractDbId => $_->{genotypeUniquename},
-			sampleDbId => $_->{genotypeUniquename},
-			analysisMethod => $_->{analysisMethod},
-			resultCount => $_->{resultCount}
-		};
-	}
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        accession_list=>\@germplasm_ids,
+        trial_list=>\@study_ids,
+        protocol_id_list=>[$method],
+        offset=>$page_size*$page,
+        limit=>$page_size
+    });
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
-	my %result = (data => \@data);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles-search result constructed');
+    my @data;
+    foreach (@$genotypes){
+        push @data, {
+            markerprofileDbId => qq|$_->{markerProfileDbId}|,
+            germplasmDbId => qq|$_->{germplasmDbId}|,
+            uniqueDisplayName => $_->{genotypeUniquename},
+            extractDbId => qq|$_->{stock_id}|,
+            sampleDbId => qq|$_->{stock_id}|,
+            analysisMethod => $_->{analysisMethod},
+            resultCount => $_->{resultCount}
+        };
+    }
+
+    my %result = (data => \@data);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles-search result constructed');
 }
 
 sub markerprofiles_detail {
-	my $self = shift;
-	my $inputs = shift;
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
-	my $genotypeprop_id = $inputs->{markerprofile_id};
-	my $sep_phased = $inputs->{sep_phased};
-	my $sep_unphased = $inputs->{sep_unphased};
-	my $unknown_string = $inputs->{unknown_string};
-	my $expand_homozygotes = $inputs->{expand_homozygotes};
+    my $self = shift;
+    my $inputs = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $genotypeprop_id = $inputs->{markerprofile_id};
+    my $sep_phased = $inputs->{sep_phased};
+    my $sep_unphased = $inputs->{sep_unphased};
+    my $unknown_string = $inputs->{unknown_string};
+    my $expand_homozygotes = $inputs->{expand_homozygotes};
 
-	if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
-		push @$status, {'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased'};
-	}
+    if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
+        push @$status, {'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased'};
+    }
 
-	my $total_count = 0;
-	my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
-		{'genotypeprops.genotypeprop_id' => $genotypeprop_id },
-		{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-		select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename', 'genotype.uniquename'],
-		as=> ['value', 'protocol_name', 'stock_id', 'uniquename', 'genotype_uniquename'],
-		}
-	);
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        markerprofile_id_list=>[$genotypeprop_id]
+    });
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
-	my @data;
-	my %result;
-	my @data_files;
-	my $pagination;
-	if ($rs) {
-		my $genotype_json = $rs->get_column('value');
-		my $genotype = JSON::Any->decode($genotype_json);
-		$total_count = scalar keys %$genotype;
+    my $detail = $genotypes->[0];
+    my $genotype = $detail->{full_genotype_hash};
 
-		foreach my $m (sort genosort keys %$genotype) {
-			push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
-		}
-
-		#my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
-		%result = (
-			germplasmDbId=>$rs->get_column('stock_id'),
-			uniqueDisplayName=>$rs->get_column('uniquename'),
-			extractDbId=>$rs->get_column('genotype_uniquename'),
-			markerprofileDbId=>$genotypeprop_id,
-			analysisMethod=>$rs->get_column('protocol_name'),
-			#encoding=>"AA,BB,AB",
-			data => \@data
-		);
-	}
-
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles detail result constructed');
+    my @data;
+    foreach my $m (sort genosort keys %$genotype) {
+        if (exists($genotype->{$m}->{'GT'})){
+            push @data, { $m => $genotype->{$m}->{'GT'} };
+        }
+        if (exists($genotype->{$m}->{'DS'})){
+            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}->{'DS'}) };
+        }
+    }
+    my %result = (
+        germplasmDbId=>qq|$detail->{germplasmDbId}|,
+        uniqueDisplayName=>$detail->{genotypeUniquename},
+        extractDbId=>qq|$detail->{stock_id}|,
+        sampleDbId=>qq|$detail->{stock_id}|,
+        markerprofileDbId=>qq|$detail->{markerProfileDbId}|,
+        analysisMethod=>$detail->{analysisMethod},
+        #encoding=>"AA,BB,AB",
+        data => \@data
+    );
+    my $pagination;
+    my @data_files;
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles detail result constructed');
 }
 
 sub markerprofiles_methods {
@@ -168,110 +164,114 @@ sub markerprofiles_methods {
 }
 
 sub markerprofiles_allelematrix {
-	my $self = shift;
-	my $inputs = shift;
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $status = $self->status;
-	my @markerprofile_ids = $inputs->{markerprofile_ids} ? @{$inputs->{markerprofile_ids}} : ();
-	my @marker_ids = $inputs->{marker_ids} ? @{$inputs->{marker_ids}} : ();
-	my $sep_phased = $inputs->{sep_phased};
-	my $sep_unphased = $inputs->{sep_unphased};
-	my $unknown_string = $inputs->{unknown_string};
-	my $expand_homozygotes = $inputs->{expand_homozygotes};
-	my $data_format = $inputs->{format};
-	my $file_path = $inputs->{file_path};
-	my $uri = $inputs->{file_uri};
+    my $self = shift;
+    my $inputs = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my @markerprofile_ids = $inputs->{markerprofile_ids} ? @{$inputs->{markerprofile_ids}} : ();
+    my @marker_ids = $inputs->{marker_ids} ? @{$inputs->{marker_ids}} : ();
+    my $sep_phased = $inputs->{sep_phased};
+    my $sep_unphased = $inputs->{sep_unphased};
+    my $unknown_string = $inputs->{unknown_string};
+    my $expand_homozygotes = $inputs->{expand_homozygotes};
+    my $data_format = $inputs->{format};
+    my $file_path = $inputs->{file_path};
+    my $uri = $inputs->{file_uri};
 
-	if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
-		push @$status, { 'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased' };
-	}
+    if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
+        push @$status, { 'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased' };
+    }
 
-	my @data_files;
-	my %result;
+    my @data_files;
+    my %result;
 
-	if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
-		push @$status, { 'error' => 'Unsupported Format Given. Supported values are: json, tsv, csv' };
-	}
+    if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
+        push @$status, { 'error' => 'Unsupported Format Given. Supported values are: json, tsv, csv' };
+    }
 
-	my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@markerprofile_ids }});
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        markerprofile_id_list=>\@markerprofile_ids,
+    });
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+    #print STDERR Dumper $genotypes;
 
-	my @scores;
-	my $total_pages;
-	my $total_count;
-	my @ordered_refmarkers;
-	my $markers;
-	if ($rs->count() > 0) {
-		while (my $profile = $rs->next()) {
-			my $profile_json = $profile->value();
-			my $refmarkers = JSON::Any->decode($profile_json);
-			#print STDERR Dumper($refmarkers);
-			push @ordered_refmarkers, sort genosort keys(%$refmarkers);
-		}
-		#print Dumper(\@ordered_refmarkers);
-		my %unique_markers;
-		foreach (@ordered_refmarkers) {
-			$unique_markers{$_} = 1;
-		}
+    my @data;
+    my %marker_names_all;
+    my @ordered_refmarkers;
+    foreach (@$genotypes){
+        my $genotype_hash = $_->{full_genotype_hash};
+        push @ordered_refmarkers, sort keys(%$genotype_hash);
+    }
 
-		my $json = JSON->new();
-		$rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@markerprofile_ids }});
-		while (my $profile = $rs->next()) {
-			my $markers_json = $profile->value();
-			$markers = $json->decode($markers_json);
-			my $genotypeprop_id = $profile->genotypeprop_id();
-			foreach my $m (sort keys %unique_markers) {
-				push @scores, [qq|$m|, qq|$genotypeprop_id|, $self->convert_dosage_to_genotype($markers->{$m})];
-			}
-		}
-	}
+    my @scores;
+    foreach (@$genotypes){
+        my $genotype_hash = $_->{full_genotype_hash};
+        my $genotypeprop_id = $_->{markerProfileDbId};
+        foreach my $m (@ordered_refmarkers) {
+            my $score;
+            if (exists($genotype_hash->{$m}->{'GT'})){
+                $score = $genotype_hash->{$m}->{'GT'};
+            }
+            if (exists($genotype_hash->{$m}->{'DS'})){
+                $score = $self->convert_dosage_to_genotype($genotype_hash->{$m}->{'DS'});
+            }
+            push @scores, [
+                qq|$m|,
+                qq|$genotypeprop_id|,
+                $score
+            ];
+        }
+    }
+    #print STDERR Dumper \@scores;
 
-	#print STDERR Dumper \@scores;
+    my @scores_seen;
+    if (!$data_format || $data_format eq 'json' ){
 
-	my @scores_seen;
-	if (!$data_format || $data_format eq 'json' ){
+        for (my $n = $page_size*$page; $n<= ($page_size*($page+1)-1); $n++) {
+            if ($scores[$n]){
+                push @scores_seen, $scores[$n];
+            }
+        }
+        %result = (data=>\@scores_seen);
 
-		for (my $n = $page_size*$page; $n< ($page_size*($page+1)-1); $n++) {
-			push @scores_seen, $scores[$n];
-		}
-		%result = (data=>\@scores_seen);
+    } elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
 
-	} elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
+        my @header_row;
+        push @header_row, 'markerprofileDbIds';
+        foreach (@markerprofile_ids){
+            push @header_row, $_;
+        }
 
-		my @header_row;
-		push @header_row, 'markerprofileDbIds';
-		foreach (@markerprofile_ids){
-			push @header_row, $_;
-		}
+        my %markers;
+        foreach (@scores){
+            $markers{$_->[0]}->{$_->[1]} = $_->[2];
+        }
+        #print STDERR Dumper \%markers;
 
-		my %markers;
-		foreach (@scores){
-			$markers{$_->[0]}->{$_->[1]} = $_->[2];
-		}
-		#print STDERR Dumper \%markers;
+        my @data_out;
+        push @data_out, \@header_row;
+        foreach (keys %markers){
+            my @data_row;
+            push @data_row, $_;
+            foreach my $profile_id (@markerprofile_ids) {
+                push @data_row, $markers{$_}->{$profile_id};
+            }
+            push @data_out, \@data_row;
+        }
+        my $file_response = CXGN::BrAPI::FileResponse->new({
+            absolute_file_path => $file_path,
+            absolute_file_uri => $inputs->{main_production_site_url}.$uri,
+            format => $data_format,
+            data => \@data_out
+        });
+        @data_files = $file_response->get_datafiles();
+    }
 
-		my @data_out;
-		push @data_out, \@header_row;
-		foreach (keys %markers){
-			my @data_row;
-			push @data_row, $_;
-			foreach my $profile_id (@markerprofile_ids) {
-				push @data_row, $markers{$_}->{$profile_id};
-			}
-			push @data_out, \@data_row;
-		}
-		my $file_response = CXGN::BrAPI::FileResponse->new({
-			absolute_file_path => $file_path,
-			absolute_file_uri => $inputs->{main_production_site_url}.$uri,
-			format => $data_format,
-			data => \@data_out
-		});
-		@data_files = $file_response->get_datafiles();
-	}
-
-	$total_count = scalar(@scores);
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles allelematrix result constructed');
+    $total_count = scalar(@scores);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles allelematrix result constructed');
 }
 
 

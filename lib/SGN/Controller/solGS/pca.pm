@@ -318,7 +318,7 @@ sub _pca_list_genotype_data {
     
     my $list_id = $c->stash->{list_id};
     my $list_type = $c->stash->{list_type};
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $data_set_type = $c->stash->{data_set_type};
     my $referer = $c->req->referer;
     my $geno_file;
@@ -352,18 +352,7 @@ sub _pca_list_genotype_data {
     {
 	if ($list_type eq 'accessions') 
 	{
-	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	    my @genotypes_list = @{$list->elements};
-
-	    $c->stash->{genotypes_list} = \@genotypes_list;	   
-	    my $geno_data = $c->model('solGS::solGS')->genotypes_list_genotype_data(\@genotypes_list);
-	    
-	    my $tmp_dir = $c->stash->{solgs_lists_dir};
-	    my $file = "genotype_data_list_${list_id}";     
-	    $file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file);    
-	    
-	    write_file($file, $geno_data);
-	    $c->stash->{genotype_file} = $file; 	    
+	    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
 	} 
 	elsif ( $list_type eq 'trials') 
 	{

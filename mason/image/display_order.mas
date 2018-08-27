@@ -1,0 +1,35 @@
+
+<%args>
+$image_id
+$type
+$id
+$display_order
+</%args>
+
+<center>
+<h4>Change display order for image</h4>
+
+
+Display order: <input id="display_order" value="<% $display_order %>" >
+
+<br />
+<button id="submit_display_order">change</button>
+
+<script>
+  jQuery(window).ready( function() {
+  
+  
+     jQuery('#submit_display_order').click( function() { 
+        var display_order = jQuery('#display_order').val();
+        jQuery.ajax( { 
+           url: '/ajax/image/<% $image_id %>/<% $type %>/<% $id %>/display_order/'+display_order,
+           error: function(e) { alert('an error occurred'); },
+           success: function(r) {
+             if (r.error) { alert(r.error); return; }
+             alert('Successfully changed display_order');
+           }
+        });
+     });
+  });
+
+</script>
