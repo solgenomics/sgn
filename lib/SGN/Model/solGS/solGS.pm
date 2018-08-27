@@ -2065,8 +2065,9 @@ sub get_genotypes_from_dataset {
 	sp_dataset_id =>$dataset_id});
 
     my  $genotypes_ids  = $dataset->retrieve_accessions();
-    
-    return $genotypes_ids;
+    my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
+   
+    return \@genotypes_ids;
 }
 
 
