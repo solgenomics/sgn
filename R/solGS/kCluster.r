@@ -27,7 +27,7 @@ outputFiles <- scan(outputFile, what = "character")
 inputFile  <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFile, what = "character")
 
-kResultFile <- grep("kcluster_result_file", outputFiles, value = TRUE)
+kResultFile <- grep("result_file", outputFiles, value = TRUE)
 reportFile  <- grep("report", outputFiles, value = TRUE)
 errorFile   <- grep("error", outputFiles, value = TRUE)
 
@@ -38,6 +38,7 @@ plotKmeansFile   <- grep("plot_kmeans", outputFiles, value = TRUE)
 
 message("k means result file: ", kResultFile)
 message("k means plot file: ", plotKmeansFile)
+
 
 if (is.null(kResultFile))
 {
