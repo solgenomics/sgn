@@ -44,99 +44,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 
 sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my ($self, $c) = @_;
-
-    my $training_pop_id  = $c->req->param('training_pop_id');
-    my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $list_id          = $c->req->param('list_id');
-    my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $cluster_type     = $c->req->param('cluster_type');
-    my $referer          = $c->req->referer;
-    my $file_id;
-
-    if ($referer =~ /solgs\/selection\//)
-    {
-	if ($training_pop_id && $selection_pop_id) 
-	{
-	    $c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
-	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	    $file_id = $c->stash->{combo_pops_id};
-	}
-    } 
-    elsif ($list_id)
-    {
-	$c->stash->{pop_id} = $list_id;
-	$file_id = $list_id;
-	
-	$list_id =~ s/list_//;		   	
-	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	my $list_type = $list->type();
-	$c->stash->{list_id}   = $list_id;
-	$c->stash->{list_type} = $list_type;
-
-	if ($list_type =~ /trials/)
-	{
-	    $c->controller('solGS::List')->get_trials_list_ids($c);
-	    my $trials_ids = $c->stash->{trials_ids};
-	    
-	    $c->stash->{pops_ids_list} = $trials_ids;
-	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-	    $file_id = $c->stash->{combo_pops_id};
-	}	
-    }
-    elsif ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\//  && $combo_pops_id)
-    {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	$file_id = $combo_pops_id;
-    }
-    else 
-    {
-	$c->stash->{pop_id} = $training_pop_id;
-	$file_id = $training_pop_id;	
-    }
-
-    $c->stash->{file_id} = $file_id;
-
-    my $cluster_result_file;
-
-    if ($cluster_type =~ /k-means/)
-    {
-	$self->kcluster_result_file($c);
-	$cluster_result_file = $c->stash->{kcluster_result_file};
-    }
-    else
-    {
-	$self->hierarchical_result_file($c);
-	$cluster_result_file = $c->stash->{hierarchical_result_file};	
-    }
-    
-    my $ret->{result} = undef;
-   
-    if (-s $cluster_result_file && $file_id =~ /\d+/) 
-    {
-	$ret->{result} = 1;
-	$ret->{list_id} = $list_id;
-	$ret->{cluster_type} = $cluster_type;
-	$ret->{combo_pops_id} = $combo_pops_id;
-	# $c->stash->{rest}{result} = 1;
-	# $c->stash->{rest}{list_id} = $list_id;
-	# $c->stash->{rest}{combo_pops_id} = $combo_pops_id;
-	# $c->stash->{rest}{cluster_type} = $cluster_type;    
-    }
-
-    $ret = to_json($ret);
-        
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-    
-}
-
-
-sub cluster_result :Path('/cluster/result/') Args() {
-    my ($self, $c) = @_;
-    
+ 
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
@@ -149,12 +57,81 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $data_structure =  $c->req->param('data_structure');
     
     my $cluster_type = $c->req->param('cluster_type');
-    my $referer      = $c->req->referer;
+    $cluster_type = 'k-means' if !$cluster_type;
+  
+    $c->stash->{training_pop_id}  = $training_pop_id;
+    $c->stash->{selection_pop_id} = $selection_pop_id;
+    $c->stash->{data_structure}   = $data_structure;
+    $c->stash->{list_id}          = $list_id;
+    $c->stash->{list_type}        = $list_type;
+    $c->stash->{dataset_id}       = $dataset_id;
+    $c->stash->{cluster_type}     = $cluster_type;
+    $c->stash->{combo_pops_id}    = $combo_pops_id;
 
-    $c->stash->{cluster_type} = $cluster_type;
+    $self->check_cluster_files($c);
+    my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
+  
+    my $ret->{result} = undef;
+      
+    if ($cluster_plot_exists)
+    {
+	my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
+
+	$self->format_cluster_output_url($c);
+	my $output_link = $c->stash->{formatted_cluster_output_url};
+	
+	$ret->{result} = 1;
+	$ret->{list_id} = $list_id;
+	$ret->{cluster_type} = $cluster_type;
+	$ret->{combo_pops_id} = $combo_pops_id;
+	$ret->{kcluster_plot} = $cluster_plot_file;
+	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
+	#$ret->{trials_names} = $c->stash->{trials_names};
+	$ret->{output_link}  = $output_link;   
+    }
+
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
     
-    my $file_id;
+}
 
+
+sub format_cluster_output_url {
+    my ($self, $c) = @_;
+
+    my $host = $c->req->base;
+
+    if ( $host !~ /localhost/)
+    {
+	$host =~ s/:\d+//; 
+	$host =~ s/http\w?/https/;
+    }
+
+    my $pop_id = $c->stash->{pop_id};
+    my $output_link = $host . 'cluster/analysis/' . $pop_id;
+
+    $c->stash->{formatted_cluster_output_url};
+  
+}
+
+
+sub check_cluster_files {
+    my ($self, $c) = @_;
+
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $data_structure   = $c->stash->{data_structure};
+    my $list_id          = $c->stash->{list_id};
+    my $list_type        = $c->stash->{list_type};
+    my $dataset_id       = $c->stash->{dataset_id};
+    my $cluster_type     = $c->stash->{cluster_type};
+    my $combo_pops_id    = $c->stash->{combo_pops_id};
+
+    my $file_id;
+    my $referer = $c->req->referer;
+    
     if ($referer =~ /solgs\/selection\//)
     {
 	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
@@ -177,31 +154,29 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	$file_id = $training_pop_id;
     }
 
-    $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{selection_pop_id} = $selection_pop_id;
-
     if ($data_structure =~ /list/) 
     {
-	$c->stash->{data_structure} = 'list';
-	$c->stash->{list_id}       = $list_id;
-	$c->stash->{list_type}     = $list_type;
+	$file_id = "list_${list_id}";
     }
     elsif ($data_structure =~ /dataset/) 
     {
-    	$c->stash->{data_structure} = 'dataset';
-	$c->stash->{dataset_id}       = $dataset_id;
 	$file_id = "dataset_${dataset_id}";
     } 
 
 
     $c->stash->{file_id} = $file_id;
-    $self->create_cluster_genotype_data($c);
+    #$self->create_cluster_genotype_data($c);
  
     my $cluster_result_file;
+    my $cluster_plot_file;
+    
     if ($cluster_type =~ /k-means/)
     {
 	$self->kcluster_result_file($c);
-	$cluster_result_file = $c->stash->{kcluster_result_file};
+	$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
+
+	$self->kcluster_plot_kmeans_file($c);
+	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
     }
     else
     {
@@ -209,10 +184,52 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	$cluster_result_file = $c->stash->{hierarchical_result_file};
     }
 
+  
+    if ($cluster_plot_file)
+    {
+	$c->stash->{"${cluster_type}_plot_exists"} = 1;
+    }
+
+    
+}
+
+
+
+sub cluster_result :Path('/cluster/result/') Args() {
+    my ($self, $c) = @_;
+    
+    my $training_pop_id  = $c->req->param('training_pop_id');
+    my $selection_pop_id = $c->req->param('selection_pop_id');
+    my $combo_pops_id    = $c->req->param('combo_pops_id');
+
+    my $list_id     = $c->req->param('list_id');
+    my $list_type   = $c->req->param('list_type');
+    my $list_name   = $c->req->param('list_name');
+
+    my $dataset_id  =  $c->req->param('dataset_id');
+    my $data_structure =  $c->req->param('data_structure');
+    
+    my $cluster_type = $c->req->param('cluster_type');
+    $cluster_type = 'k-means' if !$cluster_type;
+       
+    my $file_id;
+
+    $c->stash->{training_pop_id}  = $training_pop_id;
+    $c->stash->{selection_pop_id} = $selection_pop_id;
+    $c->stash->{data_structure}   = $data_structure;
+    $c->stash->{list_id}          = $list_id;
+    $c->stash->{list_type}        = $list_type;
+    $c->stash->{dataset_id}       = $dataset_id;
+    $c->stash->{cluster_type}     = $cluster_type;
+    $c->stash->{combo_pops_id}    = $combo_pops_id;
+    
+    $self->check_cluster_files($c);
+    my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
+
     my $ret->{status} = 'Cluster analysis failed.';
-   
-    if( !-s $cluster_result_file)
+    if ( !$cluster_plot_exists)
     {	
+	$self->create_cluster_genotype_data($c);
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{	  
 	    $ret->{status} = 'There is no genotype data. Aborted Cluster analysis.';                
@@ -224,21 +241,15 @@ sub cluster_result :Path('/cluster/result/') Args() {
     }
     
     #my $cluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $cluster_result_file);
-    my $kcluster_plot = $self->copy_kmeans_plot_to_images_dir($c);
-    my $host = $c->req->base;
+    
+    my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
 
-    if ( $host !~ /localhost/)
+    $self->format_cluster_output_url($c);
+    my $output_link = $c->stash->{formatted_cluster_output_url};
+
+    if ($cluster_plot_file)
     {
-	$host =~ s/:\d+//; 
-	$host =~ s/http\w?/https/;
-    }
-
-    my $pop_id = $c->stash->{pop_id};
-    my $output_link = $host . 'cluster/analysis/' . $pop_id;
-
-    if ($kcluster_plot)
-    {
-        $ret->{kcluster_plot} = $kcluster_plot;
+        $ret->{kcluster_plot} = $cluster_plot_file;
         $ret->{status} = 'success';  
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	#$ret->{trials_names} = $c->stash->{trials_names};
@@ -342,7 +353,7 @@ sub cluster_list_genotype_data {
 	{
 	    $c->controller('solGS::List')->get_trials_list_ids($c);
 	    my $trials_ids = $c->stash->{trials_ids};
-	    print STDERR "\n trials ids: @$trials_ids\n";
+	  
 	    $c->stash->{pops_ids_list} = $trials_ids;
 	    $c->controller('solGS::List')->process_trials_list_details($c);
 	}
@@ -359,17 +370,16 @@ sub combined_cluster_trials_data_file {
     my $cluster_type = $c->stash->{cluster_type};
 
     my $file_name;
-    my $tmp_dir;
+    my $tmp_dir = $c->stash->{cluster_temp_dir};
     
     if ($cluster_type =~ /k-means/)
     {
-	$file_name = "combined_kcluster_data_file_${file_id}";
-	$tmp_dir = $c->stash->{kcluster_temp_dir};
+	$file_name = "combined_${cluster_type}_data_file_${file_id}";
+	
     }
     else
     {
 	$file_name = "combined_hierarchical_data_file_${file_id}";
-	$tmp_dir = $c->stash->{hierarchical_temp_dir};
     }
     
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file_name);
@@ -383,12 +393,12 @@ sub kcluster_result_file {
     my ($self, $c) = @_;
     
     my $file_id = $c->stash->{file_id};
-   
+    my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
-    my $cache_data = {key       => "kcluster_result_${file_id}",
-                      file      => "kcluster_result_${file_id}.txt",
-                      stash_key => 'kcluster_result_file'
+    my $cache_data = {key       => "${cluster_type}_result_${file_id}",
+                      file      => "${cluster_type}_result_${file_id}.txt",
+                      stash_key => "${cluster_type}_result_file"
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -400,12 +410,12 @@ sub kcluster_plot_kmeans_file {
     my ($self, $c) = @_;
     
     my $file_id = $c->stash->{file_id};
-  
+    my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
-     my $cache_data = {key       => "kcluster_plot_kmeans_${file_id}",
-                      file      => "kcluster_plot_kmeans_${file_id}.png",
-                      stash_key => 'kcluster_plot_kmeans_file'
+     my $cache_data = {key      => "${cluster_type}_plot_kmeans_${file_id}",
+                      file      => "${cluster_type}_plot_kmeans_${file_id}.png",
+                      stash_key => "${cluster_type}_plot_kmeans_file"
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -418,12 +428,12 @@ sub kcluster_plot_pam_file {
     
     my $file_id = $c->stash->{file_id};
     my $cluster_dir = $c->stash->{cluster_cache_dir};
-
+    my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $cluster_dir;
 
-    my $cache_data = {key       => "kcluster_plot_pam_${file_id}",
-                      file      => "kcluster_plot_pam_${file_id}.png",
-                      stash_key => 'kcluster_plot_pam_file'
+    my $cache_data = {key       => "${cluster_type}_plot_pam_${file_id}",
+                      file      => "${cluster_type}_plot_pam_${file_id}.png",
+                      stash_key => "${cluster_type}_plot_pam_file"
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -454,10 +464,11 @@ sub copy_kmeans_plot_to_images_dir {
 
     my $images_dir = catfile($c->tempfiles_subdir, 'temp_images');
     my $fpath_images_dir = catfile($c->config->{basepath}, $images_dir);
-  
-    $self->kcluster_plot_kmeans_file($c);   
-    my $plot = $c->stash->{kcluster_plot_kmeans_file};
 
+    my $cluster_type = $c->stash->{cluster_type};
+   
+    $self->kcluster_plot_kmeans_file($c);   
+    my $plot = $c->stash->{"${cluster_type}_plot_kmeans_file"};
 
     $c->controller('solGS::Files')->copy_file($plot, $fpath_images_dir);
 
@@ -481,13 +492,13 @@ sub cluster_output_files {
     if ($cluster_type =~ 'k-means')	
     {
 	$self->kcluster_result_file($c);
-	$result_file = $c->stash->{kcluster_result_file};
+	$result_file = $c->stash->{"${cluster_type}_result_file"};
 
 	$self->kcluster_plot_kmeans_file($c);
-	$plot_kmeans_file = $c->stash->{kcluster_plot_kmeans_file};
+	$plot_kmeans_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
 
 	$self->kcluster_plot_pam_file($c);
-	$plot_pam_file = $c->stash->{kcluster_plot_pam_file};
+	$plot_pam_file = $c->stash->{"${cluster_type}_plot_pam_file"};
     }
     else
     {
@@ -574,7 +585,7 @@ sub run_cluster {
 
     if ($cluster_type = ~/k-means/)
     {
-	$c->stash->{r_temp_file}  = "kcluster-${file_id}";
+	$c->stash->{r_temp_file}  = "${cluster_type}-${file_id}";
 	$c->stash->{r_script}     = 'R/solGS/kCluster.r';
     }
     else
