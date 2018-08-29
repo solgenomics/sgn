@@ -113,6 +113,10 @@ $plate_id=> ''
                                    jQuery('#custom_barcode_page_link').click(function () {
                                        location.href = '/tools/label_designer';
                                    });
+                                   
+                                   jQuery('#custom_barcode_geno_link').click(function () {
+                                       location.href = '/tools/label_designer';
+                                   });
 
                                    jQuery(document).on('change', '#select_print_format', function () {
                                        var format = jQuery("#select_print_format").val();
@@ -272,6 +276,7 @@ $plate_id=> ''
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         Generate genotyping plate barcode.
                     </p>
+                    OR  <button type="button" class="btn btn-primary" name="custom_barcode_geno_link" id="custom_barcode_geno_link">Design Custom Barcode</button>  ON LABEL DESIGNER PAGE!
                     <center>
                         <div class="well">
                             <& /util/barcode.mas, identifier => "$identifier $trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
