@@ -34,7 +34,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
 </%perl>
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.cluster", "solGS.Dataset"] &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.cluster", "solGS.Dataset", "jquery.blockUI", "CXGN.List", "solGS.solGS"] &>
 
 <style>
 
@@ -91,5 +91,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
   <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
   <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
   <input type="hidden"  id="cluster_type" value="" />
+  <input type="hidden"  id="dataset_id" value="" />
+  <input type="hidden"  id="list_id" value="" />
   
 </div>

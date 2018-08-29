@@ -124,6 +124,11 @@ $referer => undef
                                 <!-- Population structure analysis PCA -->
                                 <& /solgs/model/pca.mas,
                                     trial_id => $trial_id
+                                  &>
+
+				<!-- Clustering -->
+                                <& /solgs/model/cluster.mas,
+                                    trial_id => $trial_id
                                 &>
 
 % if ($hidap_enabled) {
