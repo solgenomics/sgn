@@ -13,13 +13,10 @@ solGS.cluster = {
     checkClusterResult: function() {
 
 	var listId = jQuery('#list_id').val();
-	console.log('checkclusterresult list id: ' + listId)
 	var clusterType = 'k-means';
-	console.log('cluster type: ' + clusterType);
 	var popDetails = solGS.getPopulationDetails();
 	
 	var comboPopsId = jQuery('#combo_pops_id').val();
-	console.log('combo ' + comboPopsId)
 	
 	jQuery.ajax({
             type: 'POST',
@@ -31,15 +28,20 @@ solGS.cluster = {
 		   'cluster_type': clusterType
 		  },
             url: '/cluster/check/result/',
-            success: function(response) {
-		if (response.result) {
+            success: function(res) {
+		if (res.result) {
 		    
-		    if (response.list_id) {		    
-			this.setListId(response.list_id);
-		    }
-		    console.log('calling kcluster combo id ' + response.combo_pops_id)
-		    console.log('calling kcluster result ' + response.result)
-		    this.clusterResult();
+		    //if (response.list_id) {		    
+		//	this.setListId(response.list_id);
+		 //   }
+
+		    var plot = '<img src= "' + res.kcluster_plot + '">'
+		    
+		    jQuery('#cluster_plot').append(plot);
+		    // plotKCluster(plotData);
+		    jQuery("#cluster_message").empty();
+		    jQuery("#run_cluster").hide();
+		   
 		} else { 
 		    jQuery("#run_cluster").show();	
 		}
@@ -57,7 +59,6 @@ solGS.cluster = {
 	    var selectName = genoList.name;
 	    //	dataStructureType = genoList.listType + ' list';
 	} else if (dataStructureType == 'dataset') {
-
 	    var dataset = solGS.getDatasetData(selectId);
 	    var selectName = dataset.name;
 	}
@@ -67,8 +68,7 @@ solGS.cluster = {
 
 
     loadClusterGenotypesList: function(selectId, dataStructureType) {     
-	
-	
+		
 	if ( selectId.length === 0) {       
             alert('The list is empty. Please select a list with content.' );
 	} else {
@@ -79,11 +79,9 @@ solGS.cluster = {
             var tableId = "list_cluster_populations_table";
             var clusterTable = jQuery('#' + tableId).doesExist();
             
-            if (clusterTable == false) {
-	
+            if (clusterTable == false) {	
 		clusterTable = this.getClusterPopsTable(tableId);	
-		jQuery("#list_cluster_populations").append(clusterTable).show();
-		
+		jQuery("#list_cluster_populations").append(clusterTable).show();		
             }
 	    
 	    var addRow = this.selectRow(selectId, dataStructureType);
@@ -97,20 +95,28 @@ solGS.cluster = {
                    
 	    jQuery.unblockUI();                                
 	}
+    },
 
+    selectRowId: function (selectId) {
+	
+	var rowId = 'cluster_row_select_' + selectId;
+	return rowId;
     },
    
     selectRow: function(selectId, dataStructureType) {
 
 	var selectName = this.getSelectName(selectId, dataStructureType);
+	var rowId = this.selectRowId(selectId);
+
+	var kMeans = '<label class="radio-inline"><input  type="radio" name="analysis_select"'
+	    + '  id="k_means_select" value="k-means">K-Means</label>';
 	
-	var kMeans = '<label class="radio-inline"><input  type="radio" name="analysis_select" id="k_means_select" value="k-means">K-Means</label>';
-	
-	var hierarchical= '<label class="radio-inline"><input type="radio"  name="analysis_select" id="heirarchical_select" value="heirarchical">Hierarchical</lable>';
+	var hierarchical= '<label class="radio-inline"><input type="radio"  name="analysis_select"'
+	    + ' id="heirarchical_select" value="heirarchical">Hierarchical</lable>';
 
 	var formGroup =  '<div class="form-group">' + kMeans + hierarchical + '</div>';
 	
-	var row = '<tr name="' + dataStructureType + '"' + ' id="cluster_row_select_' + selectId +  '">'
+	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
 	    + '<td>'
             + '<a href="#"  onclick="solGS.cluster.runCluster(' + selectId + ",'" + dataStructureType + "'" + '); return false;">' 
             + selectName + '</a>'
@@ -122,8 +128,6 @@ solGS.cluster = {
             + '[ Run Cluster ] </a>'                                     
             + '</td><tr>';
 	
-	console.log('row ' + row)
-
 	return row;
     },
 
@@ -144,11 +148,8 @@ solGS.cluster = {
     },
 
     clusterResult: function(selectId, dataStructureType, clusterType) {
-	console.log('clusterResult dataStructureType: ' + dataStructureType)
 	var popDetails  = solGS.getPopulationDetails();
-	console.log('clusterResult dataStructureType: popdetails ' + dataStructureType)
-	//var listId = this.getSelectId(dataStructureType);
-	console.log('clusterResult dataStructureType: ' + dataStructureType + ' cluster type ' + clusterType)
+
 	if (clusterType === 'undefined') {
 	    clusterType = 'k-means';
 	}
@@ -226,18 +227,14 @@ solGS.cluster = {
     },
 
     runCluster: function(selectId, dataStructureType) {
-    	this.setListId(selectId, dataStructureType);
-	var clusterType = this.registerAnalysisType(selectId, dataStructureType);
-	
+	//	this.setListId(selectId, dataStructureType);
+	var clusterType = this.registerClusterType(selectId, dataStructureType);	
     	this.clusterResult(selectId, dataStructureType, clusterType);		
     },
 
     registerClusterType: function(selectId, dataStructureType) {
-
-	var analysisRowId = '#cluster_row_select_' + selectId;	
-	var clusterType = jQuery('input[name=analysis_select]:checked', analysisRowId).val();
-	//console.log('selected cluster type ' + clusterType)
-
+	var analysisRowId = this.selectRowId(selectId);
+	var clusterType = jQuery('input[name=analysis_select]:checked', '#' + analysisRowId).val();
 	return clusterType;
     },
 
@@ -255,43 +252,51 @@ solGS.cluster = {
 		   };
 	} else {
 	    return;
-	}
-	
+	}	
     },
 
 
+    // setListId: function(selectId, dataStructureType) {
+    // 	console.log('setting list id: ' + selectId + ' ' + dataStructureType)
+    // 	var rowId = this.selectRowId(selectId)
+    // 	var inputId = dataStructureType + '_id';
+    // 	console.log('setting list inputid: ' + inputId)
+    // 	var existingInputId = jQuery('#'+rowId + ' > #'+inputId).val();
+    // 	console.log('settinglist id   existingInputId: ' + existingInputId)
+    // 	if (existingInputId) {
+    // 	    jQuery(inputId).val('');
+    // 	}
 
-    setListId: function(selectId, dataStructureType) {
-	console.log('setting list id: ' + selectId + ' ' + dataStructureType)
-	var inputId = '#' + dataStructureType + '_id';
-	console.log('setting list inputid: ' + inputId)
-	var existingInputId = jQuery(inputId).length;
-	console.log('settinglist id   existingInputId: ' + existingInputId)
-	if (existingInputId) {
-	    jQuery(inputId).remove();
-	}
+    // 	inputId = dataStructureType + '_id';
 
-	var inputId = dataStructureType + '_id';
+    // 	console.log('inputId ' + inputId)
+    // 	//jQuery('#' + rowId + ' > #' + inputId).val(selectId);
 
-	jQuery('<input>').attr({
-	    type: 'hidden',
-	    id: inputId,
-	    name: dataStructureType,
-	    value: selectId,
-	}).appendTo('#cluster_canvas');
+    // 	console.log('#' + rowId + ' > #' + inputId)
+
+
 	
-    },
+    // 	jQuery('<input>').attr({
+    // 	    type: 'hidden',
+    // 	    id: rowId,
+    // 	    name: dataStructureType,
+    // 	    value: selectId,
+    // 	}).appendTo('#cluster_canvas');
 
-    getSelectId: function(dataStructureType) {
-
-	var inputId = '#' + dataStructureType + '_id';
-	var existingInputId = jQuery(inputId).length;
-	console.log('getting list id   existingInputId: ' + existingInputId)
-	var selectId = jQuery(inputId).val();
-	console.log('getSelectId val ' + selectId)
-	return selectId;  
+    // 	console.log('inputId ' + inputId + ' val ' + jQuery('#'+rowId + ' > #' + inputId).val() )	
 	
-    },
+    // },
+
+    // // getSelectId: function(dataStructureType) {
+
+    // // 	var inputId = '#' + dataStructureType + '_id';
+    // // 	var existingInputId = jQuery(inputId).length;
+    // // 	console.log('getting list id   existingInputId: ' + existingInputId)
+    // // 	var selectId = jQuery(inputId).val();
+    // // 	console.log('getSelectId val ' + selectId)
+    // // 	return selectId;  
+	
+    // // },
 
 
     plotKCluster: function(plotData){
@@ -341,26 +346,23 @@ jQuery(document).ready( function() {
     if (url.match(/cluster\/analysis/)) {  
         
         jQuery("<option>", {value: '', selected: true}).prependTo("#cluster_genotypes_list_select");
-        
+     
         jQuery("#cluster_genotypes_list_select").change(function() {        
             var selectId = jQuery(this).find("option:selected").val();
             var dataStructureType  = jQuery(this).find("option:selected").attr('name');
 
-	    if (typeof dataStructureType == 'undefined') { dataStructureType = 'list';}
+	    if (typeof dataStructureType == 'undefined') {
+		dataStructureType = 'list';
+	    }
 	    
-            console.log('selected list id: ' + selectId)
-	    console.log('selected dataset: ' + dataStructureType)
             if (selectId) {                
-                jQuery(".go_btn").click(function() {
-		    console.log('GO: load selection: ' + selectId)
-			    console.log('loading type: ' + dataStructureType)
-			    solGS.cluster.loadClusterGenotypesList(selectId, dataStructureType);
-			//}
+                jQuery(".go_btn").click(function() {		    
+		    solGS.cluster.loadClusterGenotypesList(selectId, dataStructureType);
                 });
             }
         });
 
-//	checkClusterResult();
+	//checkClusterResult();
     }      
 });
 
@@ -382,57 +384,4 @@ jQuery(document).ready( function() {
         solGS.cluster.clusterResult();
     }); 
   
-});
-
-
-jQuery(document).ready( function() {
-
-
-    jQuery("#k_means_select").click(function(){
-
-	//if (jQuery("#list_cluster_populations_table #k_means_select").prop("checked", true)) {
-	   //jQuery("#list_cluster_populations_table #k_means_select").attr("checked", false) 
-	//} else {
-            jQuery("#k_means_select").prop("checked", true);
-//	}
-    });
-    
-    jQuery("#list_cluster_populations_table #hierarchical_select").click(function(){
-        jQuery("#list_cluster_populations_table #hierarchical_select").prop("checked", true);
-    });
-
-
-    
-
-  //   jQuery(document).on('click', '#list_cluster_populations_table input:radio', function(){
-// console.log('clicked tst')	
-// 	var clk = jQuery('#list_cluster_populations_table input:radio').prop("checked", true);
-
-
-// 	jQuery(clk).each(function(i,v) {
-
-// 	    var selected = jQuery(v).val();
-// 	    console.log('checked ' + selected);
-
-// 	    var clkVal = jQuery(clk).text();
-// 	    console.log('text ' + clkVal)
-
-
-// 	    if (clk) {
-// 		jQuery('#list_cluster_populations_table input:radio').attr("checked", false);
-// 	    }
-
-// 	    console.log('clicked ' + clk)
-	    
-// 	});
-// 	var clkVal = jQuery(clk).();
-// 	console.log(clkVal)
-
-
-        
-//     });
-    
-							
-
-
 });
