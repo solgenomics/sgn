@@ -29,8 +29,10 @@ message('pheno file: ', phenoDataFile)
 traitsFile <- grep("traits", inputFiles, value = TRUE)
 message('traits file: ', traitsFile)
 
+#phenoDataFile = '/export/prod/tmp/localhost/GBSApeKIgenotypingv4/anova/cache/phenotype_data_3639.txt';
+#phenoDataFile = '/mnt/hgfs/cxgn/phenotype-3639.txt';
 
-phenoData <- fread(phenoDataFile,
+phenoData <- fread(phenoDataFile, sep="\t",
                    na.strings=c("NA", "-", " ", ".", ".."))
 
 phenoData <- data.frame(phenoData)
@@ -44,6 +46,7 @@ traits  <- strsplit(traits, "\t")
 #needs more work for multi traits anova
 for (trait in traits) {
 
+    trait <- 'dry.matter.content.percentage.CO_334.0000092';
     message('trait: ', trait)
     anovaFiles     <- grep("anova_table",
                            outputFiles,

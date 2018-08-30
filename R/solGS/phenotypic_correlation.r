@@ -48,7 +48,7 @@ if ( length(refererQtl) != 0 ) {
                                    )
 } else {
 
-  phenoData <- as.data.frame(fread(phenoDataFile,
+  phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
                                    na.strings = c("NA", " ", "--", "-", ".", "..")
                                    ))
 } 
