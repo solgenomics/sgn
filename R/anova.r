@@ -45,8 +45,7 @@ traits  <- strsplit(traits, "\t")
 
 #needs more work for multi traits anova
 for (trait in traits) {
-
-    trait <- 'dry.matter.content.percentage.CO_334.0000092';
+    
     message('trait: ', trait)
     anovaFiles     <- grep("anova_table",
                            outputFiles,
