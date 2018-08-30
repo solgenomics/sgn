@@ -776,8 +776,7 @@ sub list_population_summary {
 	#my $model_id = $c->stash->{model_id};
 	#my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
  
-	my $protocol = $c->config->{default_genotyping_protocol};
-	$protocol = 'N/A' if !$protocol;
+        my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c);
 
 	if ($list_pop_id) 
 	{
