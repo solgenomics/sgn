@@ -68,7 +68,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
 
-    $self->check_cluster_files($c);
+    $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
   
     my $ret->{result} = undef;
@@ -76,9 +76,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     if ($cluster_plot_exists)
     {
 	my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
-
-	$self->format_cluster_output_url($c);
-	my $output_link = $c->stash->{formatted_cluster_output_url};
+	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 	
 	$ret->{result} = 1;
 	$ret->{list_id} = $list_id;
@@ -90,83 +88,23 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	$ret->{output_link}  = $output_link;   
     }
 
-    $ret = to_json($ret);
-        
+    $ret = to_json($ret);        
     $c->res->content_type('application/json');
     $c->res->body($ret);
     
 }
 
 
-sub format_cluster_output_url {
+sub check_cluster_output_files {
     my ($self, $c) = @_;
 
-    my $host = $c->req->base;
-
-    if ( $host !~ /localhost/)
-    {
-	$host =~ s/:\d+//; 
-	$host =~ s/http\w?/https/;
-    }
-
-    my $pop_id = $c->stash->{pop_id};
-    my $output_link = $host . 'cluster/analysis/' . $pop_id;
-
-    $c->stash->{formatted_cluster_output_url};
-  
-}
+    $c->controller('solGS::Files')->create_file_id($c);
+    my $file_id = $c->stash->{file_id};
 
 
-sub check_cluster_files {
-    my ($self, $c) = @_;
-
-    my $training_pop_id  = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $data_structure   = $c->stash->{data_structure};
-    my $list_id          = $c->stash->{list_id};
-    my $list_type        = $c->stash->{list_type};
-    my $dataset_id       = $c->stash->{dataset_id};
-    my $cluster_type     = $c->stash->{cluster_type};
-    my $combo_pops_id    = $c->stash->{combo_pops_id};
-
-    my $file_id;
-    my $referer = $c->req->referer;
-    
-    if ($referer =~ /solgs\/selection\//)
-    {
-	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
-	$c->controller('solGS::List')->register_trials_list($c);
-	$combo_pops_id =  $c->stash->{combo_pops_id};
-	$c->stash->{pop_id} =  $combo_pops_id;
-	$file_id = $combo_pops_id;
-    }
-    elsif ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
-    {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	$c->stash->{pop_id} = $combo_pops_id;
-	$file_id = $combo_pops_id;
-	$c->stash->{data_set_type} = 'combined_populations';
-    } 
-    else 
-    {
-	$c->stash->{pop_id} = $training_pop_id;
-	$file_id = $training_pop_id;
-    }
-
-    if ($data_structure =~ /list/) 
-    {
-	$file_id = "list_${list_id}";
-    }
-    elsif ($data_structure =~ /dataset/) 
-    {
-	$file_id = "dataset_${dataset_id}";
-    } 
-
-
-    $c->stash->{file_id} = $file_id;
+    #$c->stash->{file_id} = $file_id;
     #$self->create_cluster_genotype_data($c);
- 
+    my $cluster_type = $c->stash->{cluster_type};
     my $cluster_result_file;
     my $cluster_plot_file;
     
@@ -181,18 +119,17 @@ sub check_cluster_files {
     else
     {
 	$self->hierarchical_result_file($c);
-	$cluster_result_file = $c->stash->{hierarchical_result_file};
+	$cluster_plot_file = $c->stash->{hierarchical_dendrogram_file};	
     }
 
   
-    if ($cluster_plot_file)
+    if (-s $cluster_plot_file)
     {
 	$c->stash->{"${cluster_type}_plot_exists"} = 1;
     }
 
     
 }
-
 
 
 sub cluster_result :Path('/cluster/result/') Args() {
@@ -212,8 +149,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $cluster_type = $c->req->param('cluster_type');
     $cluster_type = 'k-means' if !$cluster_type;
        
-    my $file_id;
-
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -222,8 +157,10 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{dataset_id}       = $dataset_id;
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
+
+    $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     
-    $self->check_cluster_files($c);
+    $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
 
     my $ret->{status} = 'Cluster analysis failed.';
@@ -244,11 +181,10 @@ sub cluster_result :Path('/cluster/result/') Args() {
     
     my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
 
-    $self->format_cluster_output_url($c);
-    my $output_link = $c->stash->{formatted_cluster_output_url};
-
-    if ($cluster_plot_file)
+    if (-s $cluster_plot_file)
     {
+	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
+      
         $ret->{kcluster_plot} = $cluster_plot_file;
         $ret->{status} = 'success';  
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
