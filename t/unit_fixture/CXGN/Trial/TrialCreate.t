@@ -39,7 +39,7 @@ for (my $i = 1; $i <= 10; $i++) {
     push(@stock_names, "test_stock_for_trial".$i);
 }
 
-#create stocks for genotyping trial
+#create stocks for genotyping plate
 my @genotyping_stock_names;
 for (my $i = 1; $i <= 10; $i++) {
     push(@genotyping_stock_names, "test_stock_for_genotyping_trial".$i);
@@ -307,7 +307,7 @@ is_deeply($geno_design, {
                      'is_blank' => 0,
                      'plot_number' => 'A03'
                    }
-        }, 'check genotyping trial design');
+        }, 'check genotyping plate design');
 
 my $genotyping_trial_create;
 ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
@@ -329,22 +329,22 @@ ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     genotyping_facility => $plate_info->{genotyping_facility},
     genotyping_plate_format => $plate_info->{plate_format},
     genotyping_plate_sample_type => $plate_info->{sample_type},
-    }), "create genotyping trial");
+}), "create genotyping plate");
                                    
 my $save = $genotyping_trial_create->save_trial();
-ok($save->{'trial_id'}, "save genotyping trial");
+ok($save->{'trial_id'}, "save genotyping plate");
 
 ok(my $genotyping_trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
     trial_name => "test_genotyping_trial_name",
-						    }), "lookup genotyping trial");
-ok(my $genotyping_trial = $genotyping_trial_lookup->get_trial(), "retrieve genotyping trial");
-ok(my $genotyping_trial_id = $genotyping_trial->project_id(), "retrive genotyping trial id");
+}), "lookup genotyping plate");
+ok(my $genotyping_trial = $genotyping_trial_lookup->get_trial(), "retrieve genotyping plate");
+ok(my $genotyping_trial_id = $genotyping_trial->project_id(), "retrive genotyping plate id");
 ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,
     trial_id => $genotyping_trial_id,
     experiment_type => 'genotyping_layout'
-						    }), "create trial layout object for genotyping trial");
+}), "create trial layout object for genotyping plate");
 ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names3");
 my %genotyping_stocks = map { $_ => 1 } @genotyping_stock_names;
 $genotyping_stocks{'BLANK'} = 1;

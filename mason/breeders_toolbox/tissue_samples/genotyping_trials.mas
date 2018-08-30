@@ -4,7 +4,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<h4>Genotyping Trials</h4>
+<h4>Genotyping Plates</h4>
 
 <div class="well well-sm">
     <div class="panel panel-default">

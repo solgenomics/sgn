@@ -100,7 +100,7 @@ In the Manage menu, the options are:
 | Seedlots            | Manage and search different seedlots                                                               |
 | Crosses             | Create new crosses in the database                                                                 |
 | Field Trials        | Manage field trials. Create trials using different field layouts.                                  |
-| Genotyping Trials   | Manage genotyping trials. Create trials using different breeding programs, locations, and years.   |
+| Genotyping Plates   | Manage genotyping plates. Create 96 or 384 well plates.                                            |
 | Phenotyping         | Upload phenotyping files from the Tablet Field Book application                                    |
 | Field Book App      | Manage the field book app data (download files to tablet)                                          |
 | Barcodes            | Refers to the old barcode system, mainly historical                                                |

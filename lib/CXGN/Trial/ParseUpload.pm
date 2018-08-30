@@ -37,8 +37,9 @@ has '_parsed_data' => (
 
 sub parse {
   my $self = shift;
+  my $args = shift;
 
-  if (!$self->_validate_with_plugin()) {
+  if (!$self->_validate_with_plugin($args)) {
 		my $errors = $self->get_parse_errors();
     #print STDERR "\nCould not validate trial file: ".$self->get_filename()."\nError:".Dumper($errors)."\n";
     return;
@@ -46,7 +47,7 @@ sub parse {
 
   print STDERR "Check 3.1: ".localtime();
 
-  if (!$self->_parse_with_plugin()) {
+  if (!$self->_parse_with_plugin($args)) {
 		my $errors = $self->get_parse_errors();
     #print STDERR "\nCould not parse trial file: ".$self->get_filename()."\nError:".Dumper($errors)."\n";
     return;

@@ -96,10 +96,9 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
     my $selected_trait_list_id = $c->req->param('trait_list');
     my @selected_traits;
-    my @trait_list;
     if ($selected_trait_list_id){
         my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $selected_trait_list_id });
-        @trait_list = @{$list->elements()};
+        my @trait_list = @{$list->elements()};
         my $validator = CXGN::List::Validate->new();
         my @absent_traits = @{$validator->validate($schema, 'traits', \@trait_list)->{'missing'}};
         if (scalar(@absent_traits)>0){
@@ -126,7 +125,6 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         treatment_project_ids => $treatment_project_ids,
         selected_columns => $selected_columns,
         selected_trait_ids => \@selected_traits,
-        selected_trait_names => \@trait_list
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
