@@ -1,0 +1,44 @@
+<%args>
+$protocol_id
+$markers
+</%args>
+
+
+<table id="protocol_markers_table" class="table table-hover table-bordered">
+    <thead>
+        <tr>
+            <th>Marker Name</th>
+            <th>Chromosome</th>
+            <th>Position</th>
+            <th>Alternate</th>
+            <th>Reference</th>
+            <th>Quality</th>
+            <th>Filter</th>
+            <th>Info</th>
+            <th>Format</th>
+        </tr>
+    </thead>
+    <tbody>
+%  foreach (values %$markers){
+        <tr>
+            <td><% $_->{name} %></td>
+            <td><% $_->{chrom} %></td>
+            <td><% $_->{pos} %></td>
+            <td><% $_->{alt} %></td>
+            <td><% $_->{ref} %></td>
+            <td><% $_->{qual} %></td>
+            <td><% $_->{filter} %></td>
+            <td><% $_->{info} %></td>
+            <td><% $_->{format} %></td>
+        </tr>
+%  }
+    </tbody>
+</table>
+
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('#protocol_markers_table').DataTable();
+});
+
+</script>

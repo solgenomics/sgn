@@ -1,0 +1,39 @@
+
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/trial.mas - a mason component to display a genotyping protocol detail page
+
+=head1 AUTHOR
+
+=cut
+
+</%doc>
+
+<%args>
+$protocol_id
+$protocol_name
+$protocol_description
+$markers
+$marker_names
+$header_information_lines
+$reference_genome_name
+$species_name
+$sample_observation_unit_type_name
+$create_date
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+
+<br/>
+
+<& /page/page_title.mas, title=>"Genotyping Protocol Detail for ".$protocol_name &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Protocol Details</h4>", info_section_subtitle => 'View basic information about the genotyping protocol.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_protocol_details", protocol_name => $protocol_name, protocol_description => $protocol_description, markers => $markers, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name &>
+
+<& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_protocol_markers", markers => $markers &>
+
+<& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this protocol.', icon_class => "glyphicon glyphicon-save-file", info_section_id => "genotyping_protocol_genotype_data" &>

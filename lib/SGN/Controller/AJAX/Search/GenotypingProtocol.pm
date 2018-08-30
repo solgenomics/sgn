@@ -56,9 +56,11 @@ sub genotyping_protocol_search_GET : Args(0) {
             "<a href=\"/breeders_toolbox/trial/$_->{project_id}\">$_->{project_name}</a>",
             $description,
             $num_markers,
+            $_->{protocol_description},
             $_->{reference_genome_name},
             $_->{species_name},
-            $_->{sample_observation_unit_type_name}
+            $_->{sample_observation_unit_type_name},
+            $_->{create_date}
           ];
     }
     #print STDERR Dumper \@result;
