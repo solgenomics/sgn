@@ -12,7 +12,7 @@ $table_only => undef
 
 % if (!$table_only){
 
-<h1>GENOTYPING TRIAL</h1>
+<h1>GENOTYPING PLATE</h1>
 <h1>Breeding program: <% $breeding_program_name %></h1>
 <h2>Trial name: <a href='/breeders/trial/<% $trial_id %>'><% $trial_name %></a></h2>
 <br/>

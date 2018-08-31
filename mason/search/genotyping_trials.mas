@@ -5,7 +5,7 @@ $nd_geolocation => 'not_provided'
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title => "Genotyping Trial Search" &>
+<& /page/page_title.mas, title => "Genotyping Plate Search" &>
 
 <div class="well well-sm">
     <div class="panel panel-default">

@@ -134,7 +134,7 @@ jQuery(document).ready(function ($) {
       var plot_prefix = $('#plot_prefix_multi').val();
       var start_number = $('#start_number_multi').val();
       var increment = $('#increment_multi').val();
-alert(westcott_col);
+
       $.ajax({
           type: 'POST',
           timeout: 3000000,
@@ -215,13 +215,13 @@ alert(westcott_col);
 
         if (stock_list_verified == 1){
             if (method_to_use == "create_with_design_tool") {
-              generate_multi_experimental_design();
+                $('#add_multilocation_project_dialog').modal("hide");
+                generate_multi_experimental_design();
             }
         } else {
             alert('Accession list is not valid!');
             return;
         }
-
   });
 
   $(document).on('change', '#select_multi-design_method', function () {
@@ -672,9 +672,14 @@ alert(westcott_col);
           }
       });
   }
+  
+  jQuery('#trial_saved_dialog_message_ok_button').click(function (){
+     location.reload(); 
+  });
 
   jQuery('#new_multi_trial_confirm_submit').click(function () {
-          save_experimental_design(design_json);
+        $('#multi_trial_design_confirm').modal("hide");
+        save_experimental_design(design_json);
   });
 
   $('#view_multi_trial_layout_button').click(function () {

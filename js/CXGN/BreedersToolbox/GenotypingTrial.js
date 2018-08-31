@@ -4,7 +4,7 @@
 
 =head1 Trial.js
 
-Display for managing genotyping trials
+Display for managing genotyping plates
 
 
 =head1 AUTHOR

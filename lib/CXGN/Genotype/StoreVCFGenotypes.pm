@@ -130,6 +130,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_name=>'VCF2018',
     project_description=>'description',
     protocol_name=>'SNP2018',
+    protocol_description=>'protocol description',
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
@@ -153,6 +154,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_location_id=>$location_id,
     project_id=>123,
     protocol_name=>'SNP2018',
+    protocol_description=>'protocol description',
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
@@ -317,6 +319,11 @@ has 'protocol_id' => (
 );
 
 has 'protocol_name' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
+has 'protocol_description' => (
     isa => 'Str|Undef',
     is => 'rw',
 );
@@ -534,6 +541,7 @@ sub store {
     my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
+    my $map_protocol_description = $self->protocol_description;
     my $location_id = $self->project_location_id;
     my $igd_numbers_included = $self->igd_numbers_included;
     my $stock_type = $self->observation_unit_type_name;
@@ -612,6 +620,10 @@ sub store {
             type_id => $geno_cvterm_id
         });
         $protocol_id = $protocol_row->nd_protocol_id();
+
+        my $q = "UPDATE nd_protocol SET description = ? WHERE nd_protocol_id = ?;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($map_protocol_description, $protocol_id);
 
         #Save the protocolprop. This json string contains the details for the maarkers used in the map.
         my $json_string = encode_json $self->protocol_info;

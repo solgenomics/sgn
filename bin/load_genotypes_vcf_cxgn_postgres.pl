@@ -26,6 +26,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -e breeding program name (required) e.g. "IITA"
  -s include igd numbers in sample names
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
+ -k protocol description (required)
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
  -q organism species name (required) e.g. "Manihot esculenta".
  -f reference genome name (required) e.g. "Mesculenta_511_v7"
@@ -73,12 +74,12 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
+our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
 
-getopts('H:U:i:r:u:tD:p:y:g:axsm:l:q:zf:d:b:n:se:h:j:');
+getopts('H:U:i:r:u:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:');
 
-if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
+if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
 }
 
 my $file = $opt_i;
@@ -226,6 +227,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
     project_name=>$opt_p, #project_attr
     project_description=>$opt_d, #project_attr
     protocol_name=>$opt_m,
+    protocol_description=>$opt_k,
     organism_id=>$organism_id,
     igd_numbers_included=>$include_igd_numbers,
     user_id=>$sp_person_id,

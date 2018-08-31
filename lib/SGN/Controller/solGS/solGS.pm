@@ -560,15 +560,34 @@ sub get_markers_count {
 }
 
 
+sub create_protocol_url {
+    my ($self, $c, $protocol) = @_;
+   
+    $protocol = $c->config->{default_genotyping_protocol} if !$protocol;
+
+    my $protocol_url;
+    if ($protocol) 
+    {
+	my $protocol_id = $c->model('solGS::solGS')->protocol_id($protocol);
+	$protocol_url = '<a href="/breeders_toolbox/protocol/' . $protocol_id . '">' . $protocol . '</a>';
+    }
+    else
+    {
+	 $protocol_url = 'N/A';
+    }
+
+    return $protocol_url;
+}
+
+
 sub project_description {
     my ($self, $c, $pr_id) = @_;
 
     $c->stash->{pop_id} = $pr_id;
     $c->stash->{list_reference} = 1 if ($pr_id =~ /list/);
 
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
-
+    my $protocol = $self->create_protocol_url($c);
+    
     if(!$c->stash->{list_reference}) {
         my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
 
@@ -734,8 +753,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{training_markers_cnt} = $tr_pop_mr_cnt;
     $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
 
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
+    my $protocol = $self->create_protocol_url($c);
     $c->stash->{protocol} = $protocol;
 
     my $identifier    = $training_pop_id . '_' . $selection_pop_id; 

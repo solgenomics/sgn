@@ -541,7 +541,7 @@ sub get_jstree_html {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif ($local_type_of_interest eq 'design' && $children{$child}->{'genotyping_plate'}){
-                next; #skip genotyping trials in field trial tree
+                next; #skip genotyping plates in field trial tree
             }
             elsif ($children{$child}->{$local_type_of_interest}) { #Only display $project of interest types.
                 $html .= _jstree_li_html($schema, $project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";

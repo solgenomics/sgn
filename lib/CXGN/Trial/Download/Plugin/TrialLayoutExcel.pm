@@ -14,7 +14,7 @@ This plugin module is loaded from CXGN::Trial::Download
 For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
 
 A trial's layout can optionally include treatment and phenotype summary
-information, mapping to treatment_project_ids and trait_list, selected_trait_names.
+information, mapping to treatment_project_ids and trait_list.
 These keys can be ignored if you don't need them in the layout.
 
 As a XLS:
@@ -32,7 +32,6 @@ my $download = CXGN::Trial::Download->new({
     data_level => $data_level,
     treatment_project_ids => \@treatment_project_ids,
     selected_columns => $selected_cols,
-    selected_trait_names => \@selected_trait_names,
 });
 my $error = $download->download();
 my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -72,7 +71,6 @@ sub download {
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
         selected_trait_ids => $self->trait_list,
-        selected_trait_names => $self->selected_trait_names
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){
