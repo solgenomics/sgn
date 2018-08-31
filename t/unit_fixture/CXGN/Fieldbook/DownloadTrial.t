@@ -39,12 +39,12 @@ my $create_fieldbook_return = $create_fieldbook->download();
 print STDERR Dumper $create_fieldbook_return;
 ok($create_fieldbook_return, "check that download trial fieldbook returns something.");
 
-my @contents = ReadData ($create_fieldbook_return->{'file'});
+my $contents = ReadData $create_fieldbook_return->{'file'};
 #print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 9, "check number of col in created file.");
 
@@ -182,12 +182,12 @@ my $create_fieldbook_return = $create_fieldbook->download();
 print STDERR Dumper $create_fieldbook_return;
 ok($create_fieldbook_return, "check that download trial fieldbook returns something.");
 
-my @contents = ReadData ($create_fieldbook_return->{'file'});
+my $contents = ReadData $create_fieldbook_return->{'file'};
 #print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 15, "check number of col in created file.");
 

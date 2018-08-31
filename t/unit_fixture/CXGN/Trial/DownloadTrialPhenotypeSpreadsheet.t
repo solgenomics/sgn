@@ -28,19 +28,19 @@ my $create_spreadsheet = CXGN::Trial::Download->new({
 });
 
 $create_spreadsheet->download();
-my @contents = ReadData ($tempfile);
+my $contents = ReadData $tempfile;
 
-#print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+#print STDERR Dumper $contents->[0];
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 12, "check number of columns in created pheno spreadsheet.");
 
-#print STDERR Dumper @contents->[0]->[1];
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
-is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
+#print STDERR Dumper $contents->[1];
+#print STDERR Dumper $contents->[1]->{'cell'}->[1];
+is_deeply($contents->[1]->{'cell'}->[1], [
                         undef,
                         'Spreadsheet ID',
                         'Trial name(s)',
@@ -67,7 +67,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
                       ], "check contents of first column in created pheno spreadsheet."
 );
 
-my $contents_col_2 = @contents->[0]->[1]->{'cell'}->[2];
+my $contents_col_2 = $contents->[1]->{'cell'}->[2];
 #remove unique ID number from test...
 splice @$contents_col_2, 0, 2;
 #print STDERR Dumper $contents_col_2;
@@ -96,8 +96,8 @@ is_deeply($contents_col_2, [
         ], "check contents of second col in created pheno spreadsheet"
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[3];
-is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[3];
+is_deeply($contents->[1]->{'cell'}->[3], [
           undef,
           'Spreadsheet format',
           'Operator',
@@ -124,8 +124,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
         ], "check contents of third column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[4];
-is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[4];
+is_deeply($contents->[1]->{'cell'}->[4], [
           undef,
           'BasicExcel',
           'Enter operator here',
@@ -152,8 +152,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
         ], "check contents of fourth column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[5];
-is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[5];
+is_deeply($contents->[1]->{'cell'}->[5], [
           undef,
           undef,
           undef,
@@ -165,8 +165,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
         ], "check contents of fifth column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[6];
-is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[6];
+is_deeply($contents->[1]->{'cell'}->[6], [
           undef,
           undef,
           undef,
@@ -193,8 +193,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
         ], "check contents of sixth column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[7];
-is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[7];
+is_deeply($contents->[1]->{'cell'}->[7], [
           undef,
           undef,
           undef,
@@ -221,8 +221,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
         ], "check contents of 7column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
-is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[8];
+is_deeply($contents->[1]->{'cell'}->[8], [
           undef,
           undef,
           undef,
@@ -249,8 +249,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
         ], "check contents of 8 column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
-is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[9];
+is_deeply($contents->[1]->{'cell'}->[9], [
           undef,
           undef,
           undef,
@@ -277,8 +277,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
         ], "check contents of 9 column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
-is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[10];
+is_deeply($contents->[1]->{'cell'}->[10], [
           undef,
           undef,
           undef,
@@ -290,8 +290,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
         ], "check contents of 10 column in created pheno spreadsheet."
 );
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[11];
-is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[11];
+is_deeply($contents->[1]->{'cell'}->[11], [
           undef,
           undef,
           undef,
