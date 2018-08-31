@@ -30,9 +30,16 @@ traitsFile <- grep("traits", inputFiles, value = TRUE)
 message('traits file: ', traitsFile)
 
 #phenoDataFile = '/export/prod/tmp/localhost/GBSApeKIgenotypingv4/anova/cache/phenotype_data_3639.txt';
-#phenoDataFile = '/mnt/hgfs/cxgn/phenotype-3639.txt';
+                                        #phenoDataFile = '/mnt/hgfs/cxgn/phenotype-3639.txt';
 
-phenoData <- fread(phenoDataFile, sep="\t",
+dropCols <- c('programDbId','programName', 'programDescription', 'studyDbId', 'studyDescription', 'plotWidth', 'plotLength')
+dropCols <- c(dropCols, 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate')
+dropCols <- c(dropCols,'entryType', 'plantNumber', 'plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename')
+dropCols <- c(dropCols, 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName')
+dropCols <- c(dropCols, 'plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight')
+dropCols <- c(dropCols,  'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames')
+
+phenoData <- fread(phenoDataFile, sep="\t", drop=dropCols,
                    na.strings=c("NA", "-", " ", ".", ".."))
 
 phenoData <- data.frame(phenoData)
@@ -84,7 +91,7 @@ for (trait in traits) {
 
     anovaOut <- runAnova(phenoData, trait)
     
-    if (class(anovaOut)[1] == 'lmerModLmerTest') {
+    if (class(anovaOut)[1] == 'lmerModLmerTest' || class(anovaOut)[1] == 'merModLmerTest') {
     
         png(diagnosticsFile, 960, 480)
         par(mfrow=c(1,2))
