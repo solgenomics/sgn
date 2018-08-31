@@ -31,7 +31,7 @@ use GD;
 use GD::Graph::bars;
 use GD::Graph::lines;
 use GD::Graph::points;
-BEGIN { local $SIG{__WARN__} = sub {}; require GD::Graph::Map }
+#BEGIN { local $SIG{__WARN__} = sub {}; require GD::Graph::Map }
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Number::Format;
