@@ -332,20 +332,20 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     if ($format eq "csv") {
         $plugin = "TrialPhenotypeCSV";
     }
-    
+
     my $temp_file_name;
     my $dir = $c->tempfiles_subdir('download');
     if ($data_level eq 'metadata'){
         $temp_file_name = "metadata" . "XXXX";
     }else{
         $temp_file_name = "phenotype" . "XXXX";
-    }    
+    }
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
     print STDERR "TEMPFILE : $tempfile\n";
-
+    print STDERR "Plugin is $plugin\n";
     #List arguments should be arrayrefs of integer ids
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
@@ -441,7 +441,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $dl_token = $c->req->param("metadata_download_token") || "no_token";
     }
     my $format            = $c->req->param("format");
-    if (!$format){ 
+    if (!$format){
         $format            = $c->req->param("metadata_format");
     }
     my $datalevel         = $c->req->param("phenotype_datalevel");
@@ -503,7 +503,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		bcs_schema=>$schema,
     		search_type=>'MetaData',
     		data_level=>$datalevel,
-    		trial_list=>$trial_id_data->{transform},,    		
+    		trial_list=>$trial_id_data->{transform},,
     	);
     	@data = $metadata_search->get_metadata_matrix();
     }
@@ -520,7 +520,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
     }
-    
+
     if ($format eq "html") { #dump html in browser
         $output = "";
         my @header = @{$data[0]};
@@ -546,7 +546,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     } else {
         # if xls or csv, create tempfile name and place to save it
-        
+
         my $what;
         if ($datalevel eq 'metadata'){$what = "metadata_download";}
         else{$what = "phenotype_download"; }
@@ -744,7 +744,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $c->res->body($error);
     return;
   }
-  
+
   # find accession synonyms
   my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
   my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
@@ -758,7 +758,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
           $synonym_string.= (join ", ", @{$synonym_list}).")";
       }
   }
-  
+
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
   print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
