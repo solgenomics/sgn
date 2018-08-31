@@ -90,8 +90,11 @@ for (trait in traits) {
                        value = TRUE)
 
     anovaOut <- runAnova(phenoData, trait)
-    
-    if (class(anovaOut)[1] == 'lmerModLmerTest' || class(anovaOut)[1] == 'merModLmerTest') {
+    if (class(anovaOut) == 'character') {
+        cat(anovaOut, file=errorFile)
+    } else if (is.null(anovaOut)) {
+        cat('Error occured fitting anova model to this trait data. Please check the trait data and design factors.', file=errorFile) 
+    } else if (class(anovaOut)[1] == 'lmerModLmerTest' || class(anovaOut)[1] == 'merModLmerTest') {
     
         png(diagnosticsFile, 960, 480)
         par(mfrow=c(1,2))
@@ -126,8 +129,6 @@ for (trait in traits) {
         sink(modelSummFile)
         print(anovaOut)
         sink()
-    } else {
-        cat(anovaOut, file=errorFile)        
     }
   
 }
