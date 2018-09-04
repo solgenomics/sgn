@@ -1,0 +1,47 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch' ] &>
+
+<div class="modal fade" id="upload_drone_imagery_dialog" name="upload_drone_imagery_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadDroneImageryDialog">Upload Drone Imagery</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_form" name="upload_drone_imagery_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" />
+                    </div>
+                </div>
+
+                <div id="upload_drone_imagery_verify_status"></div>
+            </form><br/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-info" name="upload_drone_imagery_submit" id="upload_drone_imagery_submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery('#upload_drone_imagery_link').click( function() {
+        jQuery('#upload_drone_imagery_dialog').modal("show");
+    });
+
+});
+
+</script>
