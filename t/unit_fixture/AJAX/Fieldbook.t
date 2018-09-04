@@ -36,7 +36,7 @@ my $contents = ReadData ($file_name);
 #print STDERR Dumper $contents;
 
 my $cells = $contents->[1]->{cell};
-#print STDERR Dumper $cells;
+print STDERR Dumper $cells;
 is_deeply($cells, [
           [],
           [
@@ -271,46 +271,6 @@ is_deeply($cells, [
             '/',
             '/',
             '/'
-          ],
-          [
-            undef,
-            'CO_334:0000008'
-          ],
-          [
-            undef,
-            'CO_334:0000009'
-          ],
-          [
-            undef,
-            'CO_334:0000010'
-          ],
-          [
-            undef,
-            'CO_334:0000011'
-          ],
-          [
-            undef,
-            'CO_334:0000012'
-          ],
-          [
-            undef,
-            'CO_334:0000013'
-          ],
-          [
-            undef,
-            'CO_334:0000014'
-          ],
-          [
-            undef,
-            'CO_334:0000015'
-          ],
-          [
-            undef,
-            'CO_334:0000016'
-          ],
-          [
-            undef,
-            'CO_334:0000017'
           ]
         ], 'test fieldbook ajax file contents');
 

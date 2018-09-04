@@ -311,6 +311,7 @@ sub add_element {
 	$ih->execute($self->list_id(), $element);
     };
     if ($@) { 
+        print STDERR Dumper $@;
 	return "An error occurred storing the element $element ($@)";
     }
     

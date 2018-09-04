@@ -93,7 +93,7 @@ for (popPhenoFile in allPhenoFiles) {
 
      cnt <- cnt + 1
  
-     phenoData <- fread(popPhenoFile,
+     phenoData <- fread(popPhenoFile, sep="\t",
                         na.strings = c("NA", " ", "--", "-", "."))
     
      phenoData <- data.frame(phenoData)

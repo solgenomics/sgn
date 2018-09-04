@@ -21,6 +21,7 @@ $identifier => ''
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         Generate barcode for plots and accessions.
                     </p>
+                    OR   <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="custom_barcode_trial_link">Design Custom Barcode</button>   ON LABEL DESIGNER PAGE!
                     <center>
                         <div class="well">
                             <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
@@ -71,6 +72,10 @@ $identifier => ''
                                        else if (barcode_type == "1D") {
                                          jQuery("#2D_fieldbook_option").hide();
                                        }
+                                   });
+                                   
+                                   jQuery('#custom_barcode_trial_link').click(function () {
+                                       location.href = '/tools/label_designer';
                                    });
 
                                    jQuery(document).on('change', '#select_print_format', function () {
@@ -187,7 +192,7 @@ $identifier => ''
                                  </div>
                                </div>
 
-                                <div class="form-group form-group-sm">
+                                <div class="form-group form-group-sm" style="display: none">
                                   <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
                                   <div class="col-sm-8">
                                     <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />

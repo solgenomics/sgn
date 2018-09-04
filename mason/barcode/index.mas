@@ -130,7 +130,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 
 </&>
 
-<&| /page/info_section.mas, title=>'Download Stock Barcodes', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>'Download Stock Barcodes', collapsible=>1, collapsed=>0, subtitle=>'<button type="button" class="btn btn-primary" name="custom_barcode_link" id="custom_barcode_link">Design Custom Barcode</button>'&>
 
 <div class="well well-sm">
 <div class="row">
@@ -161,6 +161,10 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           else if (barcode_type == "1D") {
             jQuery("#2D_fieldbook_option").hide(); 
           }
+      });
+      
+      jQuery('#custom_barcode_link').click(function () {
+          location.href = '/tools/label_designer';
       });
       
       $(document).on('change', '#select_print_format', function () {
@@ -304,12 +308,12 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
       <input type="file" name="stock_names_file" />
     </div>
   </div>
-  <div class="form-group form-group-sm">
+  <div class="form-group form-group-sm" style="display: none">
     <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
     <div class="col-sm-8">
       <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
     </div>
-    </div>
+  </div> 
     <!--<div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Print Field Information For Plots: </label>
     <div class="col-sm-8">

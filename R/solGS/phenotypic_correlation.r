@@ -48,7 +48,7 @@ if ( length(refererQtl) != 0 ) {
                                    )
 } else {
 
-  phenoData <- as.data.frame(fread(phenoDataFile,
+  phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
                                    na.strings = c("NA", " ", "--", "-", ".", "..")
                                    ))
 } 
@@ -69,7 +69,13 @@ if (length(refererQtl) != 0) {
   nonTraitNames <- c('studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName')
   nonTraitNames <- c(nonTraitNames, 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel')
   nonTraitNames <- c(nonTraitNames, 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber')
-  
+  nonTraitNames <- c(nonTraitNames, 'programDbId', 'programName', 'programDescription', 'studyDescription', 'plotWidth', 'plotLength')
+  nonTraitNames <- c(nonTraitNames, 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate')
+  nonTraitNames <- c(nonTraitNames, 'harvestDate', 'entryType', 'plantNumber', 'plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename')
+  nonTraitNames <- c(nonTraitNames, 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight');
+  nonTraitNames <- c(nonTraitNames, 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames')
+  nonTraitNames <- c(nonTraitNames, 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'rowNumber', 'colNumber')
+
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
 }
 
