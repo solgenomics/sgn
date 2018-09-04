@@ -154,8 +154,8 @@ sub process_image {
     elsif ( $type eq "cvterm" ) {
 	$self->associate_cvterm($type_id);
     }
-    elsif ( $type eq "nd_experiment" ) {
-        $self->associate_nd_experiment($type_id);
+    elsif ( $type eq "project" ) {
+        $self->associate_project($type_id);
     }
 
     elsif ( $type eq "test") { 
@@ -363,7 +363,7 @@ sub upload_drone_imagery_zipfile {
     my $self = shift;
     my $image_zip = shift;
     my $user_id = shift;
-    my $nd_experiment_id = shift;
+    my $project_id = shift;
     my $c = $self->config();
     my $error_status;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -390,7 +390,7 @@ sub upload_drone_imagery_zipfile {
             $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
         } else {
             $image->set_sp_person_id($user_id);
-            my $ret = $image->process_image($temp_file, 'nd_experiment', $nd_experiment_id);
+            my $ret = $image->process_image($temp_file, 'project', $project_id);
             if (!$ret ) {
                 $error_status .= "Image processing for $temp_file did not work. Image not associated to nd_experiment_id $nd_experiment_id.<br/><br/>";
             }
@@ -601,10 +601,10 @@ sub get_experiments {
     return @experiments;
 }
 
-=head2 associate_nd_experiment
+=head2 associate_project
 
- Usage: $image->associate_nd_experiment($nd_experiment_id);
- Desc:  associate and image with an nd_experiment entry via the phenome.nd_experiment_md_files table
+ Usage: $image->associate_project($project_id);
+ Desc:  associate an image with an project entry via the phenome.project_md_image table
  Ret:   a database id
  Args:  experiment_id
  Side Effects:
@@ -612,15 +612,15 @@ sub get_experiments {
 
 =cut
 
-sub associate_nd_experiment {
+sub associate_project {
     my $self = shift;
-    my $nd_experiment_id = shift;
-    my $query = "INSERT INTO phenome.nd_experiment_md_image
-                 (image_id, nd_experiment_id)
+    my $project_id = shift;
+    my $query = "INSERT INTO phenome.project_md_image
+                 (image_id, project_id)
                  VALUES (?, ?)";
     my $sth = $self->get_dbh()->prepare($query);
-    $sth->execute($self->get_image_id(), $nd_experiment_id);
-    my $id= $self->get_currval("pheonme.nd_experiment_md_image_nd_experiment_md_image_id_seq");
+    $sth->execute($self->get_image_id(), $project_id);
+    my $id= $self->get_currval("phenome.project_md_image_project_md_image_id_seq");
     return $id;
 }
 
