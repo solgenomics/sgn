@@ -6,7 +6,7 @@
 
 <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button>", icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button>", icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
 
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 

@@ -42,6 +42,37 @@ jQuery(document).ready(function() {
         jQuery('#upload_drone_imagery_dialog').modal("show");
     });
 
+    jQuery('#upload_drone_imagery_submit').click(function(){
+        upload_drone_imagery_form();
+    })
+
+    function upload_drone_imagery_form() {
+        jQuery('#upload_drone_imagery_form').attr("action", "/ajax/drone_imagery/upload_drone_imagery");
+        jQuery("#upload_drone_imagery_form").submit();
+    }
+
+    jQuery('#upload_drone_imagery_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedDroneImageryFile = jQuery("#upload_drone_images_zipfile").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedDroneImageryFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+                return;
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+        }
+    });
+
 });
 
 </script>

@@ -154,6 +154,9 @@ sub process_image {
     elsif ( $type eq "cvterm" ) {
 	$self->associate_cvterm($type_id);
     }
+    elsif ( $type eq "nd_experiment" ) {
+        $self->associate_nd_experiment($type_id);
+    }
 
     elsif ( $type eq "test") { 
 	# need to return something to make this function happy
@@ -350,6 +353,46 @@ sub upload_fieldbook_zipfile {
             my $ret = $image->process_image($temp_file, 'stock', $stock_id);
             if (!$ret ) {
                 $error_status .= "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>";
+            }
+        }
+    }
+    return $error_status;
+}
+
+sub upload_drone_imagery_zipfile {
+    my $self = shift;
+    my $image_zip = shift;
+    my $user_id = shift;
+    my $nd_experiment_id = shift;
+    my $c = $self->config();
+    my $error_status;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $schema->storage->dbh;
+    my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
+    my $file_members = $archived_zip->file_members();
+    if (!$file_members){
+        $error_status = 'Could not read your zipfile. Is is .zip format?</br></br>';
+        return $error_status;
+    }
+
+    foreach (@$file_members) {
+        my $image = SGN::Image->new( $dbh, undef, $c );
+        #print STDERR Dumper $_;
+        my $temp_file = $image->upload_zipfile_images($_);
+
+        #Check if image already stored in database
+        my $md5checksum = $image->calculate_md5sum($temp_file);
+        #print STDERR "MD5: $md5checksum\n";
+        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
+        #print STDERR "Count: $md_image\n";
+        if ($md_image > 0) {
+            $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
+        } else {
+            $image->set_sp_person_id($user_id);
+            my $ret = $image->process_image($temp_file, 'nd_experiment', $nd_experiment_id);
+            if (!$ret ) {
+                $error_status .= "Image processing for $temp_file did not work. Image not associated to nd_experiment_id $nd_experiment_id.<br/><br/>";
             }
         }
     }
@@ -556,6 +599,29 @@ sub get_experiments {
         push @experiments, CXGN::Insitu::Experiment->new($self->get_dbh(), $experiment_id);
     }
     return @experiments;
+}
+
+=head2 associate_nd_experiment
+
+ Usage: $image->associate_nd_experiment($nd_experiment_id);
+ Desc:  associate and image with an nd_experiment entry via the phenome.nd_experiment_md_files table
+ Ret:   a database id
+ Args:  experiment_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub associate_nd_experiment {
+    my $self = shift;
+    my $nd_experiment_id = shift;
+    my $query = "INSERT INTO phenome.nd_experiment_md_image
+                 (image_id, nd_experiment_id)
+                 VALUES (?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id(), $nd_experiment_id);
+    my $id= $self->get_currval("pheonme.nd_experiment_md_image_nd_experiment_md_image_id_seq");
+    return $id;
 }
 
 =head2 associate_fish_result
