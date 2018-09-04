@@ -72,16 +72,6 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->detach();
     }
 
-    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $selected_trial_id });
-    my $nd_experiment_id_info = $trial->get_nd_experiment_id();
-    my $nd_experiment_id;
-    if ($nd_experiment_id_info->{error}) {
-        $c->stash->{rest} = { error => $nd_experiment_id_info->{error} };
-        $c->detach();
-    } else {
-        $nd_experiment_id = $nd_experiment_id_info->{nd_experiment_id};
-    }
-
     my $upload_original_name = $images_zip->filename();
     my $upload_tempfile = $images_zip->tempname;
     my $time = DateTime->now();
@@ -106,7 +96,7 @@ sub upload_drone_imagery_POST : Args(0) {
     print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
     my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-    my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $nd_experiment_id);
+    my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_trial_id);
     if ($image_error) {
         $c->stash->{rest} = { error => "Problem saving images!".$image_error };
         $c->detach();

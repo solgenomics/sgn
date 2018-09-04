@@ -49,6 +49,7 @@ use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::Tag;
 use CXGN::Metadata::Metadbdata;
+use SGN::Model::Cvterm;
 
 use CatalystX::GlobalContext '$c';
 
@@ -128,7 +129,7 @@ sub get_image_url {
 
 sub process_image {
     my $self = shift;
-    my ($filename, $type, $type_id) = @_;
+    my ($filename, $type, $type_id, $linking_table_type_id) = @_;
 
     $self->SUPER::process_image($filename);
 
@@ -155,7 +156,7 @@ sub process_image {
 	$self->associate_cvterm($type_id);
     }
     elsif ( $type eq "project" ) {
-        $self->associate_project($type_id);
+        $self->associate_project($type_id, $linking_table_type_id);
     }
 
     elsif ( $type eq "test") { 
@@ -376,6 +377,7 @@ sub upload_drone_imagery_zipfile {
         return $error_status;
     }
 
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );
         #print STDERR Dumper $_;
@@ -390,9 +392,9 @@ sub upload_drone_imagery_zipfile {
             $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
         } else {
             $image->set_sp_person_id($user_id);
-            my $ret = $image->process_image($temp_file, 'project', $project_id);
+            my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
             if (!$ret ) {
-                $error_status .= "Image processing for $temp_file did not work. Image not associated to nd_experiment_id $nd_experiment_id.<br/><br/>";
+                $error_status .= "Image processing for $temp_file did not work. Image not associated to project $project_id.<br/><br/>";
             }
         }
     }
@@ -615,11 +617,12 @@ sub get_experiments {
 sub associate_project {
     my $self = shift;
     my $project_id = shift;
+    my $linking_table_type_id = shift;
     my $query = "INSERT INTO phenome.project_md_image
-                 (image_id, project_id)
-                 VALUES (?, ?)";
+                 (image_id, project_id, type_id)
+                 VALUES (?, ?, ?)";
     my $sth = $self->get_dbh()->prepare($query);
-    $sth->execute($self->get_image_id(), $project_id);
+    $sth->execute($self->get_image_id(), $project_id, $linking_table_type_id);
     my $id= $self->get_currval("phenome.project_md_image_project_md_image_id_seq");
     return $id;
 }
