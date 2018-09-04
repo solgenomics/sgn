@@ -1,0 +1,111 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<& /util/import_css.mas, paths => [ ] &>
+
+<& /page/page_title.mas, title=>"Manage Identifier Generation" &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <p>It is often necessary to pre-create identifiers. This is used in ACAI and the Banana Agronomy project for pre-printing barcode identifiers that are later assigned to trials in the field. This can also be used for pre-printing barcode identifiers that are later assigned to samples in the lab.</p>
+        </div>
+    </div>
+</div>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Available Identifiers</h4>", info_section_subtitle => 'View, add, and dowload identifiers.', buttons_html => '<button class="btn btn-primary btn-sm" id="add_new_identifier_button" style="margin:3px">Add New Identifier</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "identifier_generation_list" &>
+
+<div class="modal fade" id="add_new_identifier_dialog" name="add_new_identifier_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewIdentifierDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addNewIdentifierDialog">Add New Identifier</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" id="create_new_identifier_form" name="create_new_identifier_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_identifier_list_name" name="new_identifier_list_name" type="text" placeholder="For example: ACTLNG_Identifiers"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Prefix: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_identifier_prefix" name="new_identifier_prefix" type="text" placeholder="For example: ACTLNG"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Number of digits: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_identifier_num_digits" name="new_identifier_num_digits" type="number" placeholder="For example: 6. Given the examples, the first identifier would be ACTLNG000001" value="6"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Current Identifier Number: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_identifier_current_num" name="new_identifier_current_num" type="number" placeholder="For example: 101. Given the examples, the next identifier would be ACTLNG000101" value="1"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Description: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_identifier_description" name="new_identifier_description" type="text" placeholder="A description of what the identifier is used for" />
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="new_identifier_submit_button">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('#add_new_identifier_button').click(function(){
+        jQuery('#add_new_identifier_dialog').modal('show');
+    });
+
+    jQuery('#new_identifier_submit_button').click(function(){
+        var identifier_list_name = jQuery('#new_identifier_list_name').val();
+        var identifier_prefix = jQuery('#new_identifier_prefix').val();
+        var num_digits = jQuery('#new_identifier_num_digits').val();
+        var current_number = jQuery('#new_identifier_current_num').val();
+        var description = jQuery('#new_identifier_description').val();
+        jQuery.ajax({
+            url : '/ajax/breeders/new_identifier_generation',
+            data : {
+                'identifier_name':identifier_list_name,
+                'identifier_prefix':identifier_prefix,
+                'num_digits':num_digits,
+                'current_number':current_number,
+                'description':description
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error){
+                    alert(response.error);
+                }
+                if(response.success){
+                    alert(response.success);
+                }
+            },
+            error: function(response){
+                alert('Error submitting new identifier!');
+            }
+        });
+    });
+});
+
+</script>
