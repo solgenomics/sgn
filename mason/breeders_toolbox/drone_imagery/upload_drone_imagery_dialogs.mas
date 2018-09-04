@@ -4,7 +4,7 @@
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch' ] &>
 
 <div class="modal fade" id="upload_drone_imagery_dialog" name="upload_drone_imagery_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -13,6 +13,12 @@
       <div class="modal-body">
         <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_form" name="upload_drone_imagery_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Field Trial: </label>
+                    <div class="col-sm-9" >
+                        <div id="upload_drone_image_trial_select_div"></div>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label>
                     <div class="col-sm-9" >
@@ -37,6 +43,8 @@
 <script defer="defer">
 
 jQuery(document).ready(function() {
+
+    get_select_box('trials', 'upload_drone_image_trial_select_div', { 'name' : 'upload_drone_images_field_trial_id', 'id' : 'upload_drone_images_field_trial_id', 'empty':1, 'multiple':0 });
 
     jQuery('#upload_drone_imagery_link').click( function() {
         jQuery('#upload_drone_imagery_dialog').modal("show");

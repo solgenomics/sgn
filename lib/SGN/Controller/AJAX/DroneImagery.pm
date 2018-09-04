@@ -34,6 +34,7 @@ sub upload_drone_imagery : Path('/ajax/drone_imagery/upload_drone_imagery') : Ac
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user_id;
     my $user_name;
     my $user_role;
@@ -65,6 +66,21 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->stash->{rest} = { error => "Please provide a drone image zipfile!" };
         $c->detach();
     }
+    my $selected_trial_id = $c->req->param('upload_drone_images_field_trial_id');
+    if (!$selected_trial_id) {
+        $c->stash->{rest} = { error => "Please select a field trial!" };
+        $c->detach();
+    }
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $selected_trial_id });
+    my $nd_experiment_id_info = $trial->get_nd_experiment_id();
+    my $nd_experiment_id;
+    if ($nd_experiment_id_info->{error}) {
+        $c->stash->{rest} = { error => $nd_experiment_id_info->{error} };
+        $c->detach();
+    } else {
+        $nd_experiment_id = $nd_experiment_id_info->{nd_experiment_id};
+    }
 
     my $upload_original_name = $images_zip->filename();
     my $upload_tempfile = $images_zip->tempname;
@@ -90,9 +106,9 @@ sub upload_drone_imagery_POST : Args(0) {
     print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
     my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-    my $image_error = $image->upload_fieldbook_zipfile($archived_filename_with_path, $user_id);
+    my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $nd_experiment_id);
     if ($image_error) {
-        $c->stash->{rest} = { error => "Problem saving images!" };
+        $c->stash->{rest} = { error => "Problem saving images!".$image_error };
         $c->detach();
     }
 
