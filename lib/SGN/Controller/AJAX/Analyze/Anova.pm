@@ -298,21 +298,12 @@ sub prep_download_files {
   $self->anova_error_file($c);    
   my $error_file = $c->stash->{anova_error_file};
   
-  copy($anova_txt_file, $base_tmp_dir)  
-      or die "could not copy $anova_txt_file to $base_tmp_dir";
-
-  copy($model_file, $base_tmp_dir)  
-      or die "could not copy $model_file to $base_tmp_dir";
-  
-  copy($means_file, $base_tmp_dir)  
-      or die "could not copy $means_file to $base_tmp_dir";
-
-  copy($diagnostics_file, $base_tmp_dir)  
-      or die "could not copy $diagnostics_file to $base_tmp_dir";
-
-  copy($error_file, $base_tmp_dir)  
-      or die "could not copy $error_file to $base_tmp_dir";
-
+  $c->controller('solGS::Files')->copy_file($anova_txt_file, $base_tmp_dir);					     
+  $c->controller('solGS::Files')->copy_file($model_file, $base_tmp_dir); 
+  $c->controller('solGS::Files')->copy_file($means_file, $base_tmp_dir);  
+  $c->controller('solGS::Files')->copy_file($diagnostics_file, $base_tmp_dir);
+  $c->controller('solGS::Files')->copy_file($error_file, $base_tmp_dir);
+										     
   $anova_txt_file = fileparse($anova_txt_file);
   $anova_txt_file = catfile($tmp_dir, $anova_txt_file);
 

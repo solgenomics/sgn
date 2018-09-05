@@ -121,13 +121,11 @@ sub check_cluster_output_files {
 	$self->hierarchical_result_file($c);
 	$cluster_plot_file = $c->stash->{hierarchical_dendrogram_file};	
     }
-
   
     if (-s $cluster_plot_file)
     {
 	$c->stash->{"${cluster_type}_plot_exists"} = 1;
     }
-
     
 }
 
@@ -180,8 +178,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
     #my $cluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $cluster_result_file);
     
     my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
-
-    if (-s $cluster_plot_file)
+    
+    if ($cluster_plot_file)
     {
 	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
       
