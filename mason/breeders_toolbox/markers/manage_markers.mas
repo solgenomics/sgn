@@ -11,7 +11,7 @@
 
 <&| /page/info_section.mas, title=>'Add new marker set'&>
 
-<div class="row" id="new_markers_form" >
+<div class="row">
     <div class="col-sm-1">
     </div>
     <div class="col-sm-12 well">
@@ -45,9 +45,9 @@
 
 </&>
 
-<&| /page/info_section.mas, title=>'Add markers in marker set'&>
+<&| /page/info_section.mas, title=>'Add markers in marker set', collapsible=>1, collapsed=>0 &>
 
-<div class="row" id="new_markers_form" >
+<div class="row">
     <div class="col-sm-1">
     </div>
     <div class="col-sm-12 well">
@@ -64,17 +64,15 @@
                                 </div>
                             </div>
                     </div>
-                    <div class="form-horizontal">
-                        <div class="form-group">
-                            <label class="control-label col-sm-4">Genotyping protocol:</label>
-                                <div class="col-sm-8">
-                                    <div class="input-group">
-                                        <select class="form-control" id="selected_protocol">
-                                        </select>
-                                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Genotyping protocol:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_protocol">
+                                    </select>
                                 </div>
-                        </div>
-                <div class="form-horizontal">
+                            </div>
+                    </div>
                     <div class="form-group">
                         <label class="control-label col-sm-4">Marker Name:</label>
                             <div class="col-sm-8">
@@ -93,13 +91,12 @@
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                     </select>
-                                        <div class="input-group-btn">
-                                            <button class="btn btn-info" id="add_marker" name="add_marker">Add marker</button>
-                                        </div>
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="add_marker" name="add_marker">Add marker</button>
+                                    </div>
                                 </div>
                             </div>
                     </div>
-                </div>
                 </div>
             </div>
         </div>
@@ -107,6 +104,7 @@
 </div>
 
 </&>
+
 
 
 <&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0&>
