@@ -268,8 +268,8 @@ sub available_public_lists : Path('/list/available_public') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-	$c->stash->{rest} = { error => "You must be logged in to use lists.", };
-	return;
+        $c->stash->{rest} = { error => "You must be logged in to use lists." };
+        $c->detach();
     }
 
     my $lists = CXGN::List::available_public_lists($c->dbc->dbh(), $requested_type);
@@ -323,8 +323,8 @@ sub toggle_public_list : Path('/list/public/toggle') Args(0) {
 
     my $error = $self->check_user($c, $list_id);
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        $c->detach();
     }
 
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
@@ -868,11 +868,10 @@ sub check_user : Private {
     my $error = "";
 
     if (!$user_id) {
-	$error = "You must be logged in to manipulate this list.";
+        $error = "You must be logged in to manipulate this list.";
     }
-
-    elsif ($self->get_list_owner($c, $list_id) != $user_id) {
-	$error = "You have insufficient privileges to manipulate this list.";
+    elsif ($c->user->get_object->get_user_type() ne 'curator' && $self->get_list_owner($c, $list_id) != $user_id) {
+        $error = "You have insufficient privileges to manipulate this list.";
     }
     return $error;
 }
