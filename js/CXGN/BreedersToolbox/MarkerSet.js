@@ -46,14 +46,15 @@ jQuery(document).ready(function (){
         }
 
         var dosage = $('#allele_dosage').val();
-        if (!dosage) {
-            alert("Allele dosage is required");
-            return;
-        }
 
         var markerDosage = {};
-        markerDosage[protocol] = {};
-        markerDosage[protocol][markerName] = dosage;
+
+        markerDosage.genotyping_protocol = protocol;
+        markerDosage.marker_name = markerName;
+
+        if (dosage){
+            markerDosage.allele_dosage = dosage;
+        }
 
         var markerDosageString = JSON.stringify(markerDosage);
 
