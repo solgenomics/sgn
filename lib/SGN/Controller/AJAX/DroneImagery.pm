@@ -105,4 +105,14 @@ sub upload_drone_imagery_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
+sub raw_drone_imagery_summary : Path('/ajax/drone_imagery/raw_drone_imagery') : ActionClass('REST') { }
+
+sub raw_drone_imagery_summary_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 1;

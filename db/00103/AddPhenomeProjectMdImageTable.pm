@@ -59,9 +59,24 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
+    my $terms = {
+        'project_md_image' => [
+            'raw_drone_imagery',
+        ]
+    };
+
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
+
     my $coderef = sub {
         my $sql = <<SQL;
-CREATE TABLE phenome.project_md_image (
+CREATE TABLE if not exists phenome.project_md_image (
     project_md_image_id serial PRIMARY KEY,
     project_id integer NOT NULL,
     image_id integer NOT NULL,
