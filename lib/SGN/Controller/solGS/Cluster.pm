@@ -75,7 +75,12 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
       
     if ($cluster_plot_exists)
     {
-	my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
+	#my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
+
+	$self->prep_cluster_download_files($c);
+	my $cluster_plot_file = $c->stash->{download_plot};
+	my $clusters_file = $c->stash->{download_clusters};
+	
 	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 	
 	$ret->{result} = 1;
@@ -83,6 +88,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	$ret->{cluster_type} = $cluster_type;
 	$ret->{combo_pops_id} = $combo_pops_id;
 	$ret->{kcluster_plot} = $cluster_plot_file;
+	$ret->{clusters} = $clusters_file;
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	#$ret->{trials_names} = $c->stash->{trials_names};
 	$ret->{output_link}  = $output_link;   
@@ -175,15 +181,16 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	}	
     }
     
-    #my $cluster_result = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $cluster_result_file);
-    
-    my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
+    $self->prep_cluster_download_files($c);
+    my $cluster_plot_file = $c->stash->{download_plot};
+    my $clusters_file = $c->stash->{download_clusters};
     
     if ($cluster_plot_file)
     {
 	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
       
         $ret->{kcluster_plot} = $cluster_plot_file;
+	$ret->{clusters} = $clusters_file;
         $ret->{status} = 'success';  
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	#$ret->{trials_names} = $c->stash->{trials_names};
@@ -393,25 +400,31 @@ sub hierarchical_result_file {
 }
 
 
-sub copy_kmeans_plot_to_images_dir {
-    my ($self, $c) = @_;
-
-    my $images_dir = catfile($c->tempfiles_subdir, 'temp_images');
-    my $fpath_images_dir = catfile($c->config->{basepath}, $images_dir);
-
-    my $cluster_type = $c->stash->{cluster_type};
+sub prep_cluster_download_files {
+  my ($self, $c) = @_; 
+  
+  my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'cluster');
+  my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
    
-    $self->kcluster_plot_kmeans_file($c);   
-    my $plot = $c->stash->{"${cluster_type}_plot_kmeans_file"};
+  mkpath ([$base_tmp_dir], 0, 0755);
 
-    $c->controller('solGS::Files')->copy_file($plot, $fpath_images_dir);
+  my $cluster_type = $c->stash->{cluster_type};   
+  $self->kcluster_plot_kmeans_file($c);   
+  my $plot_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
 
-    my $image_dir_file = catfile($images_dir, basename($plot));
+  $c->controller('solGS::Files')->copy_file($plot_file, $base_tmp_dir);
+  $plot_file = catfile($tmp_dir, basename($plot_file));
 
-    return $image_dir_file;
-    
+  $self->kcluster_result_file($c);
+  my $clusters_file = $c->stash->{"${cluster_type}_result_file"};
+
+  $c->controller('solGS::Files')->copy_file($clusters_file, $base_tmp_dir);
+  $clusters_file = catfile($tmp_dir, basename($clusters_file));
+   										     
+  $c->stash->{download_plot}     = $plot_file;
+  $c->stash->{download_clusters} = $clusters_file;
+
 }
-
 
 sub cluster_output_files {
     my ($self, $c) = @_;
@@ -505,29 +518,27 @@ sub run_cluster {
     my $pop_id  = $c->stash->{pop_id};
     my $file_id = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    
+   
     $self->cluster_output_files($c);
     my $output_file = $c->stash->{cluster_output_files};
 
     $self->cluster_input_files($c);
     my $input_file = $c->stash->{cluster_input_files};
-
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
-    
+   
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
 
-    if ($cluster_type = ~/k-means/)
+    if ($cluster_type =~ /k-means/)
     {
-	$c->stash->{r_temp_file}  = "${cluster_type}-${file_id}";
 	$c->stash->{r_script}     = 'R/solGS/kCluster.r';
     }
     else
     {
-	$c->stash->{r_temp_file}  = "hierarchical-${file_id}";
 	$c->stash->{r_script}     = 'R/solGS/hierarchical.r';	
     }
-
+    
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
+    $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";
     $c->controller("solGS::solGS")->run_r_script($c);
     
 }

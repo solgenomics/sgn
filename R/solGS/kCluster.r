@@ -27,7 +27,7 @@ outputFiles <- scan(outputFile, what = "character")
 inputFile  <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFile, what = "character")
 
-kResultFile <- grep("result_file", outputFiles, value = TRUE)
+kResultFile <- grep("result", outputFiles, value = TRUE)
 reportFile  <- grep("report", outputFiles, value = TRUE)
 errorFile   <- grep("error", outputFiles, value = TRUE)
 
@@ -106,8 +106,14 @@ kmeansOut <- kmeansruns(genoData)
 recK <- paste0('Recommended number of clusters (k) for this data set is: ', kmeansOut$bestk)
 cat(recK, file=reportFile, sep="\n", append=TRUE)
 
+kMeansOut        <- kmeans(genoData, centers=kmeansOut$bestk, nstart=5)
+kClusters        <- data.frame(kMeansOut$cluster)
+kClusters        <- rownames_to_column(kClusters)
+names(kClusters) <- c('Genotypes', 'Cluster')
+kClusters        <- kClusters %>% arrange(Cluster)
+
 png(plotKmeansFile)
-autoplot(kmeans(genoData, kmeansOut$bestk), data=genoData, frame = TRUE, frame.type='norm', x=1, y=2)
+autoplot(kMeansOut, data=genoData, frame = TRUE, frame.type='norm', x=1, y=2)
 dev.off()
 
 #png(plotPamFile)
@@ -120,6 +126,16 @@ if (length(inputFiles) > 1) {
        file      = combinedDataFile,
        sep       = "\t",
        row.names = TRUE,
+       quote     = FALSE,
+       )
+
+}
+
+if (!is.null(kResultFile)) {
+    fwrite(kClusters,
+       file      = kResultFile,
+       sep       = "\t",
+       row.names = FALSE,
        quote     = FALSE,
        )
 
