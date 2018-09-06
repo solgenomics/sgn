@@ -109,7 +109,7 @@ is_deeply($response, {'accessions' => [[]]});
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/plots');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'plots' => [[[38857,'test_trial21'],[38858,'test_trial22'],[38859,'test_trial23'],[38860,'test_trial24'],[38861,'test_trial25'],[38862,'test_trial26'],[38863,'test_trial27'],[38864,'test_trial28'],[38865,'test_trial29'],[38866,'test_trial210'],[38867,'test_trial211'],[38868,'test_trial212'],[38869,'test_trial213'],[38870,'test_trial214'],[38871,'test_trial215']]]});
+is_deeply($response, {'plots' => [[[38857,'test_trial21'],[38858,'test_trial22'],[38859,'test_trial23'],[38860,'test_trial24'],[38861,'test_trial25'],[38862,'test_trial26'],[38863,'test_trial27'],[38864,'test_trial28'],[38865,'test_trial29'],[38866,'test_trial210'],[38867,'test_trial211'],[38868,'test_trial212'],[38869,'test_trial213'],[38870,'test_trial214'],[38871,'test_trial215']]]} );
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/plants');
 $response = decode_json $mech->content;
