@@ -168,7 +168,7 @@ sub get_phenotype_matrix {
 
     my ($data, $unique_traits);
     my @info;
-    my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber' );
+    my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
 
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();
@@ -183,6 +183,7 @@ sub get_phenotype_matrix {
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
         }
+        push @line, 'notes';
         push @info, \@line;
 
         foreach my $obs_unit (@$data){
@@ -197,11 +198,11 @@ sub get_phenotype_matrix {
             my $available_germplasm_seedlots_uniquenames = join ' AND ', (keys %available_germplasm_seedlots_uniquenames);
 
 	    my $trial_name = $obs_unit->{trial_name};
-	    my $trial_desc = $obs_unit->{trial_description};	   
-	   
+	    my $trial_desc = $obs_unit->{trial_description};
+
 	    $trial_name =~ s/\s+$//g;
-	    $trial_desc =~ s/\s+$//g;	    
-	 
+	    $trial_desc =~ s/\s+$//g;
+
             my @line = ($obs_unit->{year}, $obs_unit->{breeding_program_id}, $obs_unit->{breeding_program_name}, $obs_unit->{breeding_program_description}, $obs_unit->{trial_id}, $trial_name, $trial_desc, $obs_unit->{design}, $obs_unit->{plot_width}, $obs_unit->{plot_length}, $obs_unit->{field_size}, $obs_unit->{field_trial_is_planned_to_be_genotyped}, $obs_unit->{field_trial_is_planned_to_cross}, $obs_unit->{planting_date}, $obs_unit->{harvest_date}, $obs_unit->{trial_location_id}, $obs_unit->{trial_location_name}, $obs_unit->{germplasm_stock_id}, $obs_unit->{germplasm_uniquename}, $synonym_string, $obs_unit->{observationunit_type_name}, $obs_unit->{observationunit_stock_id}, $obs_unit->{observationunit_uniquename}, $obs_unit->{obsunit_rep}, $obs_unit->{obsunit_block}, $obs_unit->{obsunit_plot_number}, $obs_unit->{obsunit_row_number}, $obs_unit->{obsunit_col_number}, $entry_type, $obs_unit->{obsunit_plant_number}, $obs_unit->{seedlot_stock_id}, $obs_unit->{seedlot_uniquename}, $obs_unit->{seedlot_current_count}, $obs_unit->{seedlot_current_weight_gram}, $obs_unit->{seedlot_box_name}, $obs_unit->{seedlot_transaction_amount}, $obs_unit->{seedlot_transaction_weight_gram}, $obs_unit->{seedlot_transaction_description}, $available_germplasm_seedlots_uniquenames);
 
             my $observations = $obs_unit->{observations};
@@ -212,6 +213,7 @@ sub get_phenotype_matrix {
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
             }
+            push @line, $obs_unit->{notes};
             push @info, \@line;
         }
     } else {
@@ -250,11 +252,11 @@ sub get_phenotype_matrix {
                 my $entry_type = $d->{is_a_control} ? 'check' : 'test';
 
 		my $trial_name = $d->{trial_name};
-		my $trial_desc = $d->{trial_description};	   
-         
+		my $trial_desc = $d->{trial_description};
+
 		$trial_name =~ s/\s+$//g;
-		$trial_desc =~ s/\s+$//g;	    
-     		
+		$trial_desc =~ s/\s+$//g;
+
                 $obsunit_data{$obsunit_id}->{metadata} = [
                     $d->{year},
                     $d->{breeding_program_id},
