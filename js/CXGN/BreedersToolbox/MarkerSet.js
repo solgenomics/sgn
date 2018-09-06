@@ -63,6 +63,69 @@ jQuery(document).ready(function (){
 
     });
 
+    jQuery("#add_parameters").click(function(){
+        var markerSetName = $('#selected_marker_set2').val();
+        if (!markerSetName) {
+            alert("Marker set name is required");
+            return;
+        }
+
+        var protocol = $('#selected_protocol2').val();
+        if (!protocol) {
+            alert("Genotyping protocol is required");
+            return;
+        }
+
+        var chromosomeNumber = $('#chromosome_number').val();
+        var startPosition  = $('#start_position').val();
+        var endPosition = $('#end_position').val();
+        var markerName = $('#marker_name2').val();
+        var snpAllele = $('#snp_allele').val();
+        var quality = $('#quality').val();
+        var filterStatus = $('#filter_status').val();
+
+        var vcfParameters = {};
+
+        if (protocol) {
+            vcfParameters.genotyping_protocol = protocol
+        }
+
+        if (chromosomeNumber) {
+            vcfParameters.chromosome = chromosomeNumber
+        }
+
+        if (startPosition) {
+            vcfParameters.start_position = startPosition
+        }
+
+        if (endPosition) {
+            vcfParameters.end_position = endPosition
+        }
+
+        if (markerName) {
+            vcfParameters.marker_name = markerName
+        }
+
+        if (snpAllele) {
+            vcfParameters.snp_allele = snpAllele
+        }
+
+        if (quality) {
+            vcfParameters.quality_score = quality
+        }
+
+        if (filterStatus) {
+            vcfParameters.filter_status = filterStatus
+        }
+
+        var parametersString = JSON.stringify(vcfParameters);
+
+        var markerAdded = list.addToList(markerSetName, parametersString);
+        alert("Added"+parametersString);
+        return markerSetName;
+
+    });
+
     show_table();
 });
 
