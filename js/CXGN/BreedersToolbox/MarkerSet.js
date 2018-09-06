@@ -1,11 +1,15 @@
 
 jQuery(document).ready(function (){
 
+    get_select_box('genotyping_protocol','selected_protocol1', {'id':'genotyping_protocol_select1', 'name':'genotyping_protocol_select1', 'multiple':0});
+    get_select_box('genotyping_protocol','selected_protocol2', {'id':'genotyping_protocol_select2', 'name':'genotyping_protocol_select2', 'multiple':0});
+
     var lo = new CXGN.List();
+    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a marker set', 'refresh'));
 
-    get_select_box('genotyping_protocol','selected_protocol');
+    var list = new CXGN.List();
+    jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a marker set', 'refresh'));
 
-    jQuery('#selected_marker_set').html(lo.listSelect('selected_marker_set', ['markers']));
 
     jQuery("#save_marker_set").click(function(){
         var name = $('#new_marker_set').val();
@@ -23,13 +27,13 @@ jQuery(document).ready(function (){
     });
 
     jQuery("#add_marker").click(function(){
-        var markerSetName = $('#selected_marker_set').val();
+        var markerSetName = $('#selected_marker_set1').val();
         if (!markerSetName) {
             alert("Marker set name is required");
             return;
         }
 
-        var protocol = $('#selected_protocol').val();
+        var protocol = $('#selected_protocol1').val();
         if (!protocol) {
             alert("Genotyping protocol is required");
             return;
