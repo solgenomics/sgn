@@ -315,6 +315,20 @@ sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_odk_data_collection.mas';
 }
 
+
+sub manage_identifier_generation :Path("/breeders/identifier_generation") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{template} = '/breeders_toolbox/identifier_generation/manage_identifier_generation.mas';
+}
+
+
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {
     my $self =shift;
     my $c = shift;

@@ -87,6 +87,8 @@ sub _validate_with_plugin {
             push @error_messages, "Cell B$row_name: plant_name missing";
         } elsif ($plant_name =~ /\s/ || $plant_name =~ /\// || $plant_name =~ /\\/ ) {
             push @error_messages, "Cell B$row_name: plant_name must not contain spaces or slashes.";
+        } elsif (length($plant_name) <= 6) {
+            push @error_messages, "Cell B$row_name: plant_name must be greater than 6 characters long.";
         } else {
             #file must not contain duplicate plot names
             if ($seen_plant_names{$plant_name}) {
