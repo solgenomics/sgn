@@ -110,6 +110,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
+    my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');
     my $location_id = $c->req->param('upload_genotype_location_select');
     my $year = $c->req->param('upload_genotype_year_select');
@@ -213,6 +214,7 @@ sub upload_genotype_verify_POST : Args(0) {
         project_name=>$project_name, #project_attr
         project_description=>$description, #project_attr
         protocol_name=>$protocol_name,
+        protocol_description=>$protocol_description,
         organism_id=>$organism_id,
         igd_numbers_included=>$include_igd_numbers,
         user_id=>$user_id,
@@ -221,13 +223,13 @@ sub upload_genotype_verify_POST : Args(0) {
     });
     my $verified_errors = $store_genotypes->validate();
     if (scalar(@{$verified_errors->{error_messages}}) > 0){
-        print STDERR Dumper $verified_errors->{error_messages};
+        #print STDERR Dumper $verified_errors->{error_messages};
         my $error_string = join ', ', @{$verified_errors->{error_messages}};
         $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
         $c->detach();
     }
     if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        print STDERR Dumper $verified_errors->{warning_messages};
+        #print STDERR Dumper $verified_errors->{warning_messages};
         my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
         if (!$accept_warnings){
             $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };

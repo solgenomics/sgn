@@ -733,7 +733,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
       bcs_schema=>$schema,
       accession_list=>\@accession_ids,
       trial_list=>\@trial_ids,
-      protocol_id=>$protocol_id
+      protocol_id_list=>[$protocol_id]
   });
   my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -891,7 +891,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
         bcs_schema=>$schema,
         accession_list=>$accession_id_data->{transform},
         trial_list=>$trial_id_data->{transform},
-        protocol_id=>$protocol_id
+        protocol_id_list=>[$protocol_id]
     });
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
     my $data = $genotypes;

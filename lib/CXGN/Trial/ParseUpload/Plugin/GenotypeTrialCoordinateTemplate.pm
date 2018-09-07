@@ -10,12 +10,15 @@ use Scalar::Util qw(looks_like_number);
 
 sub _validate_with_plugin {
     my $self = shift;
+    my $args = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
 
     my $delimiter = ',';
     my @error_messages;
     my %errors;
+
+    my $genotyping_plate_id = $args->{genotyping_plate_id};
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
@@ -81,12 +84,17 @@ sub _validate_with_plugin {
         }
 
         if (!$columns[0] || $columns[0] eq ''){
-            push @error_messages, 'The first column must contain a Value on row: '.$row;
+            next;
         } else {
-            if ($seen_sample_ids{$columns[0]}){
-                push @error_messages, 'Duplicate Value in your file on row: '.$row;
+            my $source_name = $columns[0];
+            $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            if (index($source_name, 'BLANK') != -1) {
+                $source_name = 'BLANK';
             }
-            $seen_sample_ids{$columns[0]}++;
+            if ($source_name eq 'exclude'){
+                $source_name = 'BLANK';
+            }
+            $seen_source_names{$source_name}++;
         }
         if (!$columns[1] || $columns[1] eq ''){
             push @error_messages, 'The second column must contain a Column on row: '.$row;
@@ -94,22 +102,19 @@ sub _validate_with_plugin {
         if (!$columns[2] || $columns[2] eq ''){
             push @error_messages, 'The third column must contain a Row on row: '.$row;
         }
-        if (!$columns[3] || $columns[3] eq ''){
-            push @error_messages, 'The fourth column must contain an Identification on row: '.$row;
-        } else {
-            my $source_name = $columns[3];
-            $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-            if (index($source_name, 'BLANK') != -1) {
-                $source_name = 'BLANK';
-            }
-            $seen_source_names{$source_name}++;
-        }
         if (!$columns[4] || $columns[4] eq ''){
             push @error_messages, 'The fifth column must contain Person on row: '.$row;
         }
         if (!$columns[5] || $columns[5] eq ''){
             push @error_messages, 'The sixth column must contain Date on row: '.$row;
         }
+
+        $columns[1] = sprintf("%02d", $columns[1]);
+        my $sample_name = $genotyping_plate_id."_".$columns[2].$columns[1];
+        if ($seen_sample_ids{$sample_name}){
+            push @error_messages, "Duplicate Sample Name $sample_name in your file on row: ".$row;
+        }
+        $seen_sample_ids{$sample_name}++;
     }
 
     my @sample_ids = keys %seen_sample_ids;
@@ -155,12 +160,15 @@ sub _validate_with_plugin {
 sub _parse_with_plugin {
     print STDERR "Parsing genotype trial file upload\n";
     my $self = shift;
+    my $args = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $delimiter = ',';
     my %parse_result;
     my @error_messages;
     my %errors;
+
+    my $genotyping_plate_id = $args->{genotyping_plate_id};
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
@@ -199,16 +207,26 @@ sub _parse_with_plugin {
             return;
         }
 
-        my $sample_id = $columns[0];
+        my $source_name = $columns[0];
+        if (!$source_name || $source_name eq ''){
+            next;
+        }
+
         my $col_number = $columns[1];
         my $row_number = $columns[2];
-        my $source_name = $columns[3];
+        my $notes = $columns[3];
         my $dna_person = $columns[4];
         my $date = $columns[5];
         $source_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $col_number = sprintf("%02d", $col_number);
+
+        my $sample_id = $genotyping_plate_id."_".$row_number.$col_number;
 
         my $key = $row;
         if (index($source_name, 'BLANK') != -1) {
+            $source_name = 'BLANK';
+            $design{$key}->{is_blank} = 1;
+        } elsif ($source_name eq 'exclude'){
             $source_name = 'BLANK';
             $design{$key}->{is_blank} = 1;
         } else {
@@ -229,7 +247,7 @@ sub _parse_with_plugin {
         $design{$key}->{source_stock_uniquename} = $source_name;
         $design{$key}->{ncbi_taxonomy_id} = 'NA';
         $design{$key}->{dna_person} = $dna_person;
-        $design{$key}->{notes} = 'NA';
+        $design{$key}->{notes} = $notes;
         $design{$key}->{tissue_type} = 'NA';
         $design{$key}->{extraction} = 'NA';
         $design{$key}->{concentration} = 'NA';

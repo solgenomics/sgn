@@ -152,10 +152,6 @@ sub generate_experimental_design_POST : Args(0) {
             $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
             return;
         }
-        if (($num_plants_per_plot%(scalar(@treatments)))!=0){
-            $c->stash->{rest} = {error => "Number of plants per plot needs to divide evenly by the number of treatments. For example: if you have two treatments and there are 3 plants per treatment, that means you have 6 plants per plot." };
-            return;
-        }
     }
 
     my $row_in_design_number = $c->req->param('row_in_design_number');

@@ -130,6 +130,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_name=>'VCF2018',
     project_description=>'description',
     protocol_name=>'SNP2018',
+    protocol_description=>'protocol description',
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
@@ -153,6 +154,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     project_location_id=>$location_id,
     project_id=>123,
     protocol_name=>'SNP2018',
+    protocol_description=>'protocol description',
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
@@ -321,6 +323,11 @@ has 'protocol_name' => (
     is => 'rw',
 );
 
+has 'protocol_description' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 has 'organism_id' => (
     isa => 'Int',
     is => 'rw',
@@ -388,7 +395,7 @@ sub validate {
     my @observation_unit_uniquenames_stripped;
     if ($include_igd_numbers){
         foreach (@$observation_unit_uniquenames) {
-            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
@@ -401,26 +408,43 @@ sub validate {
 
     my $stock_type = $self->observation_unit_type_name;
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-    my $stock_rs = $schema->resultset("Stock::Stock")->search({
-        uniquename => {-in => \@observation_unit_uniquenames_stripped},
-        type_id => $stock_type_id,
-        organism_id => $organism_id
-    });
-    my %found_stock_names;
-    while(my $r = $stock_rs->next){
-        $found_stock_names{$r->uniquename}++;
-    }
-    my %missing_stocks;
-    foreach (@$observation_unit_uniquenames){
-        if (!$found_stock_names{$_}){
-            $missing_stocks{$_}++;
-        }
-    }
-    my @missing_stocks = keys %missing_stocks;
-    my @missing_stocks_return;
+    my @missing_stocks;
+    my $validator = CXGN::List::Validate->new();
+    if ($stock_type eq 'tissue_sample'){
+        @missing_stocks = @{$validator->validate($schema,'tissue_samples',\@observation_unit_uniquenames_stripped)->{'missing'}};
+    } elsif ($stock_type eq 'accession'){
+        @missing_stocks = @{$validator->validate($schema,'accessions',\@observation_unit_uniquenames_stripped)->{'missing'}};
 
-    if (scalar(@missing_stocks_return)>0){
-        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks_return);
+        my %all_names;
+        my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+        my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+        my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stock.is_obsolete = 'F';";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        while (my ($stock_id, $uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
+            $all_names{$uniquename}++;
+            if ($type_id) {
+                if ($type_id == $synonym_type_id) {
+                    if (exists($all_names{$synonym})){
+                        my $previous_use = $all_names{$synonym};
+                        push @error_messages, "DATABASE PROBLEM: The synonym $synonym is being used in $previous_use AND $uniquename. PLEASE RESOLVE THIS NOW OR CONTACT US!";
+                    }
+                    $all_names{$synonym} = $uniquename;
+                }
+            }
+        }
+    } else {
+        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms)!"
+    }
+
+    my %unique_stocks;
+    foreach (@missing_stocks){
+        $unique_stocks{$_}++;
+    }
+
+    @missing_stocks = sort keys %unique_stocks;
+    if (scalar(@missing_stocks)>0){
+        push @error_messages, "The following stocks are not in the database: ".join(',',@missing_stocks);
     }
 
     #check if protocol_info is correct
@@ -501,7 +525,7 @@ sub validate {
     return {
         error_messages => \@error_messages,
         warning_messages => \@warning_messages,
-        missing_stocks => \@missing_stocks_return,
+        missing_stocks => \@missing_stocks,
         previous_genotypes_exist => $previous_genotypes_exist
     };
 }
@@ -517,6 +541,7 @@ sub store {
     my $project_description = $self->project_description;
     my $opt_y = $self->project_year;
     my $map_protocol_name = $self->protocol_name;
+    my $map_protocol_description = $self->protocol_description;
     my $location_id = $self->project_location_id;
     my $igd_numbers_included = $self->igd_numbers_included;
     my $stock_type = $self->observation_unit_type_name;
@@ -596,6 +621,10 @@ sub store {
         });
         $protocol_id = $protocol_row->nd_protocol_id();
 
+        my $q = "UPDATE nd_protocol SET description = ? WHERE nd_protocol_id = ?;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($map_protocol_description, $protocol_id);
+
         #Save the protocolprop. This json string contains the details for the maarkers used in the map.
         my $json_string = encode_json $self->protocol_info;
         my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, value) VALUES (?, ?, ?);";
@@ -619,7 +648,7 @@ sub store {
     my @observation_unit_uniquenames_stripped;
     if ($igd_numbers_included){
         foreach (@$observation_unit_uniquenames) {
-            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
@@ -630,14 +659,21 @@ sub store {
         }
     }
 
-    my $stock_rs = $schema->resultset("Stock::Stock")->search({
-        uniquename => {-in => \@observation_unit_uniquenames_stripped},
-        organism_id => $organism_id,
-        type_id => $stock_type_id
-    });
+    my %all_names;
+    my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN ($accession_type_id,$tissue_sample_type_id) AND stock.is_obsolete = 'F' AND organism_id = $organism_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
     my %stock_lookup;
-    while (my $r=$stock_rs->next){
-        $stock_lookup{$r->uniquename} = $r->stock_id;
+    while (my ($stock_id, $uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
+        $stock_lookup{$uniquename} = $stock_id;
+        if ($type_id) {
+            if ($type_id == $synonym_type_id) {
+                $stock_lookup{$synonym} = $stock_id;
+            }
+        }
     }
 
     foreach (@$observation_unit_uniquenames) {
@@ -646,7 +682,7 @@ sub store {
         my $accession_name;
         my $igd_number;
         if ($igd_numbers_included){
-            ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
+            ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         } else {
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
