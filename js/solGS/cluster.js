@@ -28,16 +28,9 @@ solGS.cluster = {
 		  },
             url: '/cluster/check/result/',
             success: function(res) {
-		if (res.result) {
-		    
-		    //if (response.list_id) {		    
-		//	this.setListId(response.list_id);
-		 //   }
-
-		    var plot = '<img src= "' + res.kcluster_plot + '">'
-		    
-		    jQuery('#cluster_plot').append(plot);
-		    // plotKCluster(plotData);
+		if (res.result) {		   
+		    solGS.cluster.plotClusterOutput(res);
+				    
 		    jQuery("#cluster_message").empty();
 		    jQuery("#run_cluster").hide();
 		   
@@ -202,24 +195,10 @@ solGS.cluster = {
 		    if (res.pop_id) {
 			var popId = res.pop_id;
 		    }
-		    
-		    var plot = '<img src= "' + res.kcluster_plot + '">'
-		    
-		    var filePlot  = res.kcluster_plot.split('/').pop();
 
 		    var resultName = listName || datasetName;
-		    var plotType = 'K-means plot';
-		    var plotLink = "<a href=\"" + res.kcluster_plot +  "\" download=" + filePlot + ">[" + plotType +  "]</a>";
-				   		    
-		    var plotId = resultName.replace(/\s/g, '_');
-		    
-		    var clustersFile = res.clusters;
-		    var fileClusters  = clustersFile.split('/').pop();
-		    var clustersLink = "<a href=\"" + clustersFile +  "\" download=" + fileClusters + ">[Clusters]</a>";
-		    console.log(clustersFile)
-		    jQuery('#cluster_plot').append(plot + ' <strong>Download ' + resultName + ' </strong>: '
-				+ plotLink + ' | ' + clustersLink);
-		    
+		    solGS.cluster.plotClusterOutput(res, resultName);
+				    
 		    jQuery("#cluster_message").empty();
 		    jQuery("#run_cluster").hide();
 
@@ -233,6 +212,47 @@ solGS.cluster = {
 		jQuery("#run_cluser").show();
             }  
 	});
+	
+    },
+
+
+    plotClusterOutput: function(res, resultName) {
+
+	var plot = '<img src= "' + res.kcluster_plot + '">';
+    
+	var filePlot  = res.kcluster_plot.split('/').pop();
+
+	var popDetails = solGS.getPopulationDetails();
+	resultName = resultName || popDetails.population_name;	
+	var plotType = 'K-means plot';
+	
+	var plotLink = "<a href=\""
+	    + res.kcluster_plot
+	    +  "\" download="
+	    + filePlot + ">["
+	    + plotType +  "]</a>";
+
+	var plotId;
+	if(resultName != undefined) {
+	     plotId = resultName.replace(/\s/g, '_');
+	} else {
+	    resultName = '';
+	}
+	
+	var clustersFile = res.clusters;
+	var fileClusters  = clustersFile.split('/').pop();
+		    
+	var clustersLink = "<a href=\""
+	    + clustersFile
+	    +  "\" download="
+	    + fileClusters
+	    + ">[Clusters]</a>";
+
+	jQuery('#cluster_plot').append(plot
+				       + ' <strong>Download '
+				       + resultName + ' </strong>: '
+				       + plotLink + ' | '
+				       + clustersLink);
 	
     },
 
