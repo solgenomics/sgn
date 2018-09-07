@@ -17,12 +17,13 @@ jQuery(document).ready(function (){
             return;
         }
 
-        var protocol = $('#selected_protocol').val();
-        if (!protocol) {
+        var protocol_id = $('#selected_protocol').val();
+        if (!protocol_id) {
             alert("Genotyping protocol is required");
             return;
         }
 
+        var protocol_name = $('#selected_protocol').find(":selected").text();
         var desc = $('#marker_set_desc').val();
 
         var list_id = lo.newList(name, desc);
@@ -30,7 +31,8 @@ jQuery(document).ready(function (){
         alert("Added new marker set");
 
         var markersetProtocol = {};
-        markersetProtocol.genotyping_protocol = protocol;
+        markersetProtocol.genotyping_protocol_name = protocol_name;
+        markersetProtocol.genotyping_protocol_id = protocol_id;
         var markersetProtocolString = JSON.stringify(markersetProtocol);
 
         var protocolAdded = lo.addToList(list_id, markersetProtocolString);
