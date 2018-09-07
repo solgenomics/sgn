@@ -1078,12 +1078,12 @@ ok($response->{trial_id});
 my $geno_trial_id = $response->{trial_id};
 $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=intertekxls&dataLevel=plate");
 my $intertek_download = $mech->content;
-my @contents = ReadData ($intertek_download);
-#print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+my $contents = ReadData $intertek_download;
+print STDERR Dumper $contents;
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 7, "check number of col in created file.");
 
@@ -1154,12 +1154,12 @@ is_deeply($columns, [
 
 $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=dartseqxls&dataLevel=plate");
 my $intertek_download = $mech->content;
-my @contents = ReadData ($intertek_download);
+my $contents = ReadData $intertek_download;
 #print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 9, "check number of col in created file.");
 
