@@ -1,0 +1,32 @@
+<%args>
+</%args>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Trial</th>
+            <th>Image</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery.ajax ({
+        url : '/ajax/drone_imagery/raw_drone_imagery',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving raw images.");
+        }
+    });
+
+});
+</script>

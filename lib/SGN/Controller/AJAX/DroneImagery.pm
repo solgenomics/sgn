@@ -20,6 +20,7 @@ use SGN::Model::Cvterm;
 use DateTime;
 use CXGN::UploadFile;
 use SGN::Image;
+use CXGN::DroneImagery::RawImagesSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -111,6 +112,20 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $images_search = CXGN::DroneImagery::RawImagesSearch->new({
+        bcs_schema=>$schema,
+        # location_list=>\@locations,
+        # program_list=>\@breeding_program_names,
+        # program_id_list=>\@breeding_programs_ids,
+        # year_list=>\@years,
+        # trial_type_list=>\@trial_types,
+        # trial_id_list=>\@trial_ids,
+        # trial_name_list=>\@trial_names,
+        # trial_name_is_exact=>1
+    });
+    my ($result, $total_count) = $images_search->search();
+    print STDERR Dumper $result;
 
     $c->stash->{rest} = { success => 1 };
 }

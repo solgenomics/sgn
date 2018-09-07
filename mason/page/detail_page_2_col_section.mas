@@ -305,6 +305,10 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
 
+% if ($info_section_id eq 'manage_drone_imagery_main'){
+                                <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
+% } #End manage_drone_imagery_main
+
                             </div>
                         </div>
                     </&>
