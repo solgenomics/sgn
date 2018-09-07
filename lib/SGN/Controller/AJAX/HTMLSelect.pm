@@ -884,6 +884,10 @@ sub get_genotyping_protocol_select : Path('/ajax/html/select/genotyping_protocol
         %gtps = map { @$_[1] => @$_[0] } @$gt_protocols;
     }
 
+    if ($empty){
+        unshift@$gt_protocols, ['', "Select a genotyping protocol"]
+    }
+
     my $html = simple_selectbox_html(
         name => $name,
         id => $id,
