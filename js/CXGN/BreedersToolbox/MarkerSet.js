@@ -1,8 +1,7 @@
 
 jQuery(document).ready(function (){
 
-    get_select_box('genotyping_protocol','selected_protocol1', {'id':'genotyping_protocol_select1', 'name':'genotyping_protocol_select1', 'multiple':0});
-    get_select_box('genotyping_protocol','selected_protocol2', {'id':'genotyping_protocol_select2', 'name':'genotyping_protocol_select2', 'multiple':0});
+    get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
 
     var lo = new CXGN.List();
     jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a marker set', 'refresh'));
@@ -18,24 +17,31 @@ jQuery(document).ready(function (){
             return;
         }
 
+        var protocol = $('#selected_protocol').val();
+        if (!protocol) {
+            alert("Genotyping protocol is required");
+            return;
+        }
+
         var desc = $('#marker_set_desc').val();
 
         var list_id = lo.newList(name, desc);
         lo.setListType(list_id, 'markers')
         alert("Added new marker set");
-        return list_id
+
+        var markersetProtocol = {};
+        markersetProtocol.genotyping_protocol = protocol;
+        var markersetProtocolString = JSON.stringify(markersetProtocol);
+
+        var protocolAdded = lo.addToList(list_id, markersetProtocolString);
+        return list_id;
+
     });
 
     jQuery("#add_marker").click(function(){
         var markerSetName = $('#selected_marker_set1').val();
         if (!markerSetName) {
             alert("Marker set name is required");
-            return;
-        }
-
-        var protocol = $('#selected_protocol1').val();
-        if (!protocol) {
-            alert("Genotyping protocol is required");
             return;
         }
 
@@ -49,7 +55,6 @@ jQuery(document).ready(function (){
 
         var markerDosage = {};
 
-        markerDosage.genotyping_protocol = protocol;
         markerDosage.marker_name = markerName;
 
         if (dosage){
@@ -71,12 +76,6 @@ jQuery(document).ready(function (){
             return;
         }
 
-        var protocol = $('#selected_protocol2').val();
-        if (!protocol) {
-            alert("Genotyping protocol is required");
-            return;
-        }
-
         var chromosomeNumber = $('#chromosome_number').val();
         var startPosition  = $('#start_position').val();
         var endPosition = $('#end_position').val();
@@ -86,10 +85,6 @@ jQuery(document).ready(function (){
         var filterStatus = $('#filter_status').val();
 
         var vcfParameters = {};
-
-        if (protocol) {
-            vcfParameters.genotyping_protocol = protocol
-        }
 
         if (chromosomeNumber) {
             vcfParameters.chromosome = chromosomeNumber
@@ -135,7 +130,7 @@ function show_table() {
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
             {title: "Marker Set Name", "data": "markerset_name"},
-            {title: "Number of Markers", "data": "number_of_markers"},
+            {title: "Number of Items", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
         ]
     });
