@@ -301,13 +301,13 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
 my $create_fieldbook_return = $create_fieldbook->download();
 ok($create_fieldbook_return, "check that download trial fieldbook returns something.");
 
-my @contents = ReadData ($create_fieldbook_return->{'file'});
+my $contents = ReadData $create_fieldbook_return->{'file'};
 
 #print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 9, "check number of col in created file.");
 
@@ -444,13 +444,13 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
 my $create_fieldbook_return = $create_fieldbook->download();
 ok($create_fieldbook_return, "check that download trial fieldbook returns something.");
 
-my @contents = ReadData ($create_fieldbook_return->{'file'});
+my $contents = ReadData $create_fieldbook_return->{'file'};
 
 #print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 11, "check number of col in created file.");
 
@@ -724,18 +724,18 @@ my $create_spreadsheet = CXGN::Trial::Download->new(
   });
 
 $create_spreadsheet->download();
-my @contents = ReadData ($tempfile);
+my $contents = ReadData $tempfile;
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 12, "check number of col in created file.");
 
-#print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+#print STDERR Dumper $contents->[0];
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
-is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[1];
+is_deeply($contents->[1]->{'cell'}->[1], [
                             undef,
                             'Spreadsheet ID',
                             'Trial name(s)',
@@ -761,7 +761,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
                             'test_trial215'
                           ], "check 1st col");
 
-my $contents_col_2 = @contents->[0]->[1]->{'cell'}->[2];
+my $contents_col_2 = $contents->[1]->{'cell'}->[2];
 #remove unique ID number from test...
 splice @$contents_col_2, 0, 2;
 #print STDERR Dumper $contents_col_2;
@@ -788,8 +788,8 @@ is_deeply($contents_col_2, ['test_trial',
                             'test_accession2'
                           ], "check 2nd col");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[3];
-is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[3];
+is_deeply($contents->[1]->{'cell'}->[3], [
                             undef,
                             'Spreadsheet format',
                             'Operator',
@@ -815,8 +815,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                             '15'
                           ], "check thrid col");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[4];
-is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[4];
+is_deeply($contents->[1]->{'cell'}->[4], [
                             undef,
                             'BasicExcel',
                             'Enter operator here',
@@ -842,7 +842,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
                             '1'
                           ], "check 4th col");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
+is_deeply($contents->[1]->{'cell'}->[5], [
                             undef,
                             undef,
                             undef,
@@ -853,7 +853,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
                             'is_a_control'
                           ], "check 5th col");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
+is_deeply($contents->[1]->{'cell'}->[6], [
                             undef,
                             undef,
                             undef,
@@ -879,8 +879,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
                             '3'
                           ], "check 6th col");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[7];
-is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[7];
+is_deeply($contents->[1]->{'cell'}->[7], [
           undef,
           undef,
           undef,
@@ -906,8 +906,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
           '2017-July-04'
         ], "check 7th col");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
-is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[8];
+is_deeply($contents->[1]->{'cell'}->[8], [
           undef,
           undef,
           undef,
@@ -933,8 +933,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
           '2017-July-21'
         ], "check 8th col");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
-is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[9];
+is_deeply($contents->[1]->{'cell'}->[9], [
           undef,
           undef,
           undef,
@@ -960,7 +960,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
           'test_trial'
         ], "check 9th col");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+is_deeply($contents->[1]->{'cell'}->[10], [
                             undef,
                             undef,
                             undef,
@@ -971,7 +971,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
                             'dry matter content percentage|CO_334:0000092'
                           ], "check 10th col");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
+is_deeply($contents->[1]->{'cell'}->[11], [
                             undef,
                             undef,
                             undef,
@@ -999,18 +999,18 @@ predefined_columns => [{'plant_age' => '2 weeks'}],
 });
 
 $create_spreadsheet->download();
-my @contents = ReadData ($tempfile);
+my $contents = ReadData $tempfile;
 
-my $columns = @contents->[0]->[1]->{'cell'};
+my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 ok(scalar(@$columns) == 14, "check number of col in created file.");
 
 #print STDERR Dumper @contents->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
-is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[1];
+is_deeply($contents->[1]->{'cell'}->[1], [
                           undef,
                           'Spreadsheet ID',
                           'Trial name(s)',
@@ -1051,7 +1051,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
                           'test_trial215_plant_2'
                         ], "check col1");
 
-my $contents_col_2 = @contents->[0]->[1]->{'cell'}->[2];
+my $contents_col_2 = $contents->[1]->{'cell'}->[2];
 #remove unique ID number from test...
 splice @$contents_col_2, 0, 2;
 #print STDERR Dumper $contents_col_2;
@@ -1093,8 +1093,8 @@ is_deeply($contents_col_2, ['test_trial',
                           'test_trial215'
                         ], "check col2");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[3];
-is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[3];
+is_deeply($contents->[1]->{'cell'}->[3], [
                           undef,
                           'Spreadsheet format',
                           'Operator',
@@ -1135,8 +1135,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                           'test_accession2'
                         ], "check col3");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[4];
-is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[4];
+is_deeply($contents->[1]->{'cell'}->[4], [
                           undef,
                           'BasicExcel',
                           'Enter operator here',
@@ -1177,7 +1177,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
                           '15'
                         ], "check col4");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
+is_deeply($contents->[1]->{'cell'}->[5], [
                           undef,
                           undef,
                           undef,
@@ -1218,7 +1218,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
                           '1'
                         ], "check col5");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
+is_deeply($contents->[1]->{'cell'}->[6], [
                           undef,
                           undef,
                           undef,
@@ -1229,7 +1229,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
                           'is_a_control'
                         ], "check col6");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
+is_deeply($contents->[1]->{'cell'}->[7], [
                           undef,
                           undef,
                           undef,
@@ -1270,8 +1270,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
                           '3'
                         ], "check col7");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[8];
-is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[8];
+is_deeply($contents->[1]->{'cell'}->[8], [
           undef,
           undef,
           undef,
@@ -1312,8 +1312,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
           '2017-July-04'
         ], "check col8");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[9];
-is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[9];
+is_deeply($contents->[1]->{'cell'}->[9], [
           undef,
           undef,
           undef,
@@ -1354,8 +1354,8 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
           '2017-July-21'
         ], "check col9");
 
-#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[10];
-is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+#print STDERR Dumper $contents->[1]->{'cell'}->[10];
+is_deeply($contents->[1]->{'cell'}->[10], [
           undef,
           undef,
           undef,
@@ -1396,7 +1396,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
           'test_trial'
         ], "check col10");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
+is_deeply($contents->[1]->{'cell'}->[11], [
                           undef,
                           undef,
                           undef,
@@ -1437,7 +1437,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[11], [
                           '2 weeks'
                         ], "check col11");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[12], [
+is_deeply($contents->[1]->{'cell'}->[12], [
                           undef,
                           undef,
                           undef,
@@ -1448,7 +1448,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[12], [
                           'dry matter content percentage|CO_334:0000092'
                         ], "check col12");
 
-is_deeply(@contents->[0]->[1]->{'cell'}->[13], [
+is_deeply($contents->[1]->{'cell'}->[13], [
                           undef,
                           undef,
                           undef,
