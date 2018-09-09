@@ -1,11 +1,13 @@
 <%args>
 </%args>
 
-<table class="table table-bordered">
+<table class="table table-bordered" id="raw_drone_image_datatable">
     <thead>
         <tr>
             <th>Trial</th>
-            <th>Image</th>
+            <th>Image Username(s)</th>
+            <th>Uploaded Drone Images</th>
+            <th>Stiched Image</th>
         </tr>
     </thead>
 </table>
@@ -13,19 +15,8 @@
 <script>
 jQuery(document).ready(function(){
 
-    jQuery.ajax ({
-        url : '/ajax/drone_imagery/raw_drone_imagery',
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response){
-            console.log(response);
-            jQuery("#working_modal").modal("hide");
-        },
-        error: function(response){
-            jQuery("#working_modal").modal("hide");
-            alert("Error retrieving raw images.");
-        }
+    var raw_drone_imagery_table = jQuery('#raw_drone_image_datatable').DataTable( {
+        'ajax': '/ajax/drone_imagery/raw_drone_imagery',
     });
 
 });

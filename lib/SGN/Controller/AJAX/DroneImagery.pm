@@ -125,9 +125,30 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         # trial_name_is_exact=>1
     });
     my ($result, $total_count) = $images_search->search();
-    print STDERR Dumper $result;
+    #print STDERR Dumper $result;
 
-    $c->stash->{rest} = { success => 1 };
+    my @return;
+    my %unique_trials;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
+        push @{$unique_trials{$_->{trial_id}}->{images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        $unique_trials{$_->{trial_id}}->{usernames}->{$_->{username}}++;
+        $unique_trials{$_->{trial_id}}->{trial_name} = $_->{trial_name};
+    }
+    while (my ($k, $v) = each %unique_trials) {
+        my $images = scalar(@{$v->{images}})." Images<br/><span>";
+        $images .= join '', @{$v->{images}};
+        $images .= "</span>";
+        my $usernames = '';
+        foreach (keys %{$v->{usernames}}){
+            $usernames .= " $_ ";
+        }
+        push @return, ["<a href=\"/breeders_toolbox/trial/$k\">$v->{trial_name}</a>", $usernames, $images, ''];
+    }
+
+    $c->stash->{rest} = { data => \@return };
 }
 
 1;
