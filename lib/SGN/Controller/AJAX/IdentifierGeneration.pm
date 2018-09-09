@@ -171,7 +171,7 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
     };
     my $identifier_json = encode_json $identifier;
     $list->remove_element($element);
-    $list->add_element($identifier_json);
+    $list->add_bulk([$identifier_json]);
 
     $c->stash->{rest} = { success => 1, identifiers => \@new_identifiers, filename => $urlencode{$rel_file.".csv"} };
 }
