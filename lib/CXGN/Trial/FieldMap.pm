@@ -39,19 +39,23 @@ has 'second_accession_selected' => (isa => "Str",
 
 has 'new_accession' => (isa => "Str",
 	is => 'rw',
-	);
+);
 
 has 'old_accession' => (isa => "Str",
-		is => 'rw',
-	);
+	is => 'rw',
+);
 
 has 'old_plot_id' => (isa => "Int",
-			is => 'rw',
-	);
+	is => 'rw',
+);
+
+has 'old_plot_name' => (isa => "Str",
+    is => 'rw',
+);    
 
 has 'old_accession_id' => (isa => "Int",
-				is => 'rw',
-	);
+	is => 'rw',
+);
 
 sub display_fieldmap {
 	my $self = shift;
@@ -380,6 +384,7 @@ sub replace_plot_accession_fieldMap {
 	my $new_accession = $self->new_accession;
 	my $old_accession = $self->old_accession;
 	my $old_plot_id = $self->old_plot_id;
+    my $old_plot_name = $self->old_plot_name;
 
 	print "New Accession: $new_accession, Old Accession: $old_accession, Old Plot Id: $old_plot_id\n";
 
@@ -389,6 +394,12 @@ sub replace_plot_accession_fieldMap {
 
 	my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
 	$h_replace->execute($new_accession_id,$old_accession_id,$old_plot_id);
+    
+    my $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET uniquename = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
+	$h_replace_accessionName_in_plotName->execute($old_plot_id);
+    
+    $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET name = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
+	$h_replace_accessionName_in_plotName->execute($old_plot_id);
 
     $self->_regenerate_trial_layout_cache();
 
