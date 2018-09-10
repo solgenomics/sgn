@@ -65,9 +65,6 @@ solGS.cluster = {
             alert('The list is empty. Please select a list with content.' );
 	} else {
 	    
-	    jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-            jQuery.blockUI({message: 'Please wait..'});
-	    
             var tableId = "list_cluster_populations_table";
             var clusterTable = jQuery('#' + tableId).doesExist();
             
@@ -85,7 +82,6 @@ solGS.cluster = {
                 jQuery('#' + tableId + ' tr:last').after(addRow);
 	    }                          
                    
-	    jQuery.unblockUI();                                
 	}
     },
 
@@ -100,13 +96,13 @@ solGS.cluster = {
 	var selectName = this.getSelectName(selectId, dataStructureType);
 	var rowId = this.selectRowId(selectId);
 
-	var kMeans = '<label class="radio-inline"><input  type="radio" name="analysis_select"'
-	    + '  id="k_means_select" value="k-means">K-Means</label>';
+	var kMeans = '<div class="checkbox-inline"><label><input type="checkbox"  name="analysis_select"'
+	    + '  id="k_means_select" value="k-means">K-Means</label></div>';
 	
-	var hierarchical= '<label class="radio-inline"><input type="radio"  name="analysis_select"'
-	    + ' id="heirarchical_select" value="heirarchical">Hierarchical</lable>';
+	var hierarchical= '<div class="checkbox-inline"><label><input type="checkbox"  name="analysis_select"'
+	    + ' id="heirarchical_select" value="heirarchical">Hierarchical</label></div>';
 
-	var formGroup =  '<div class="form-group">' + kMeans + hierarchical + '</div>';
+	var formGroup = '<form>' + kMeans + hierarchical + '</form>';
 	
 	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
 	    + '<td>'
@@ -126,14 +122,16 @@ solGS.cluster = {
 
     createTable: function(tableId) {
 
-	var table ='<table class="table" id="' + tableId + '" style="width:100%; text-align:left">'
+	var table ='<div>'
+	    + '<table class="table table-striped" id="' + tableId + '" style="width:100%; text-align:left">'
+	    + '<thead>'
 	    + '<tr>'
             + '<th>Name</th>'
             + '<th>Data Structure</th>'
             + '<th>Cluster type</th>'
 	    + '<th>Run</th>'
             + '</tr>'
-            + '</table>';
+            + '</thead></table></div>';
 
 	return table;
 	
@@ -170,7 +168,10 @@ solGS.cluster = {
 	}
 	
 	if (listId || datasetId || popDetails.training_pop_id || popDetails.selection_pop_id) {
+	 
+	    jQuery(".multi-spinner-container").show();
 	    jQuery("#cluster_message").html("Running K-means clustering... please wait...");
+	 
 	    jQuery("#run_cluster").hide();
 	}  
 
@@ -195,7 +196,8 @@ solGS.cluster = {
 		    if (res.pop_id) {
 			var popId = res.pop_id;
 		    }
-
+		    
+		    jQuery(".multi-spinner-container").hide();
 		    var resultName = listName || datasetName;
 		    solGS.cluster.plotClusterOutput(res, resultName);
 				    
@@ -218,7 +220,7 @@ solGS.cluster = {
 
     plotClusterOutput: function(res, resultName) {
 
-	var plot = '<img src= "' + res.kcluster_plot + '">';
+	var plot = '<img  src= "' + res.kcluster_plot + '">';
     
 	var filePlot  = res.kcluster_plot.split('/').pop();
 
@@ -248,7 +250,7 @@ solGS.cluster = {
 	    + fileClusters
 	    + ">[Clusters]</a>";
 
-	jQuery('#cluster_plot').append(plot
+	jQuery('#cluster_plot').prepend(plot
 				       + ' <strong>Download '
 				       + resultName + ' </strong>: '
 				       + plotLink + ' | '
@@ -264,8 +266,8 @@ solGS.cluster = {
 
     runCluster: function(selectId, dataStructureType) {
 	//	this.setListId(selectId, dataStructureType);
-	var clusterType = this.registerClusterType(selectId, dataStructureType);	
-    	this.clusterResult(selectId, dataStructureType, clusterType);		
+	var clusterType = this.registerClusterType(selectId, dataStructureType);
+    	this.clusterResult(selectId, dataStructureType, clusterType);
     },
 
     registerClusterType: function(selectId, dataStructureType) {
@@ -277,7 +279,7 @@ solGS.cluster = {
     getClusterGenotypesListData: function(listId) {   
 	
 	var list = new CXGN.List();
-	console.log('list data  id: ' + listId)
+
 	if (listId) {
 	    console.log('list data  id: ' + listId)
 	    var listName = list.listNameById(listId);

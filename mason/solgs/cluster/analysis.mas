@@ -33,8 +33,8 @@ $pop_id = undef if $list_id || $combo_pops_id;
 
 </%perl>
 
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.cluster", "solGS.Dataset", "jquery.blockUI", "CXGN.List", "solGS.solGS"] &>
+<& /util/import_css.mas, paths => [ '/static/css/spinner3.css', '/static/css/solgs/solgs.css'] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster", "solGS.Dataset", "CXGN.List"] &>
 
 <style>
 
@@ -48,50 +48,63 @@ $pop_id = undef if $list_id || $combo_pops_id;
 <br />
 <br />
 
+
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
     title       => "Select a list of accessions or trials and run cluster analysis using k-means method",
   &>
 
- 
+
  <div class="fileupload-buttonbar">
    
-    <div class="list_upload" id="list_label">
-      <label for="cluster_genotypes_list">Select</label>
-    </div> 
-    <div class="list_upload" id="cluster_genotypes_list">      
-    </div>
-    <div class="list_upload go_btn">
-      <input type="button" value="Go" />
-    </div>
+   <div class="list_upload" id="list_label">
+     <label for="cluster_genotypes_list">Select</label>
+   </div> 
+   <div class="list_upload" id="cluster_genotypes_list">      
+   </div>
+   <div class="list_upload go_btn">
+     <input type="button" value="Go" />
+   </div>
     
-    <div class="list_upload" style="margin-left:5px">     
-      <i class="glyphicon-plus"></i>
-      <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list</a>  
-    </div>
+   <div class="list_upload" style="margin-left:5px">     
+     <i class="glyphicon-plus"></i>
+     <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list</a>  
+   </div>
 
-    <br>
-    <br>
+   <br>
+   <br>
    
     <!-- The container for the list of kcluster populations -->
     <div class="sub_infosectioncontent" id="list_cluster_populations" style="display:none"></div>
-    <br>
+    <br> 
 
+ </div>
+
+ <div class="multi-spinner-container">
+    <div class="multi-spinner">
+        <div class="multi-spinner">
+            <div class="multi-spinner">
+               <div class="multi-spinner">
+                    <div class="multi-spinner">
+                        <div class="multi-spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+ </div>
+   
+ <div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"> </div>
+
+ <div id="cluster_plot"></div>
+
+ <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
+ <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
+ <input type="hidden"  id="cluster_type" value="" />
+ <input type="hidden"  id="dataset_id" value="" />
+ <input type="hidden"  id="list_id" value="" />
+ 
 </div>
 
 </&>
-
-
-<div id="cluster_canvas">
-  <div id="cluster_plot">
-    <div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"></div>
-  </div>
-
-  <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
-  <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
-  <input type="hidden"  id="cluster_type" value="" />
-  <input type="hidden"  id="dataset_id" value="" />
-  <input type="hidden"  id="list_id" value="" />
-  
-</div>
