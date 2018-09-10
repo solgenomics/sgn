@@ -12,7 +12,7 @@ CXGN::List - class that deals with website lists
  my $owner_id = $list->owner();
  my $type = $list->type();
  $list->remove_element('blabla');
- $list->add_element('blabla');
+ $list->add_bulk(['blabla', 'bla']);
 
 
 Class function (without instantiation):
