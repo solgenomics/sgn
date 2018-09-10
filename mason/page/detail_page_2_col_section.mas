@@ -27,6 +27,7 @@ $trial_phenotype_files => undef
 $hidap_enabled => undef
 $location_name => undef
 $breeding_program_name => undef
+$breeding_program_id => undef
 $year => undef
 $trial_type => undef
 $design_name => undef
@@ -41,6 +42,7 @@ $field_size => undef
 $field_trial_is_planned_to_be_genotyped => undef
 $field_trial_is_planned_to_cross => undef
 $identifier_prefix => undef
+$genotyping_facility => undef
 
 #Specific to stock detail page
 $type_name => undef
@@ -64,6 +66,19 @@ $trait_ontology_db_name => undef
 $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
+
+#Specific to genotyping protocol detail page
+$protocol_id => undef
+$protocol_name => undef
+$protocol_description => undef
+$markers => {}
+$marker_names => []
+$header_information_lines => []
+$reference_genome_name => undef
+$species_name => undef
+$create_date => undef
+$sample_observation_unit_type_name => undef
+
 </%args>
 
 <div class="row">
@@ -125,7 +140,7 @@ $referer => undef
                                 &>
 
 % if ($hidap_enabled) {
-                                <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
+                                <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
 % } #End trial_analysis_tools
 % if ($info_section_id eq 'trial_weather_data'){
@@ -138,7 +153,7 @@ $referer => undef
                                 <&| /page/info_section.mas, title => 'Field Trial to Field Trial Linkage', id => 'field_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id &>
                                 </&>
-                                <&| /page/info_section.mas, title => 'Field Trial to Genotyping Trial Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
                                 <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
@@ -164,18 +179,8 @@ $referer => undef
                                 <& /stock/traits.mas, stock_id => $stock_id &>
 % } #End stock_traits_section
 % if ($info_section_id eq 'stock_genotypes_section'){
-
-% print $map_html;
-% foreach my $project (keys %$direct_genotypes) {
-%     my $genotypes = $direct_genotypes->{$project} ;
-                                <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
-%     foreach my $genotype (@$genotypes) {
-%                                   print $genotype->description . "\n";
-%     }
-                                </&>
-% }
-
-%} #End stock_genotypes_section
+                                <& /stock/direct_genotypes.mas, stock_id => $stock_id, map_html => $map_html, direct_genotypes => $direct_genotypes &>
+% } #End stock_genotypes_section
 % if ($info_section_id eq 'stock_pedigree_section'){
                                 <&| /page/info_section.mas, title=>"Pedigree and Descendants" , collapsible=> 1, collapsed=>0 &>
                                     <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
@@ -233,11 +238,23 @@ $referer => undef
                                 <& /breeders_toolbox/tissue_samples/genotyping_trials.mas &>
 % } #End manage_tissue_samples_genotyping_trials
 % if ($info_section_id eq 'trial_details'){
-                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross &>
+                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross &>
 % } #End trial_details
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
 % } #End stocks_search_graphical_filtering
+% if ($info_section_id eq 'genotyping_data_project_details'){
+                                <& /breeders_toolbox/genotyping_data_project/details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, genotyping_facility => $genotyping_facility &>
+% } #End genotyping_data_project_details
+% if ($info_section_id eq 'genotyping_data_project_protocols'){
+                                <& /breeders_toolbox/genotyping_data_project/protocols.mas, trial_id=>$trial_id &>
+% } #End genotyping_data_project_protocols
+% if ($info_section_id eq 'genotyping_data_project_data'){
+                                <& /breeders_toolbox/genotyping_data_project/genotype_data.mas, trial_id=>$trial_id &>
+% } #End genotyping_data_project_data
+% if ($info_section_id eq 'identifier_generation_list'){
+                                <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
+% } #End identifier_generation_list
 % if ($info_section_id eq 'management_factor_details'){
                                 <table class="table table-hover table-bordered" >
                                     <tr>
@@ -256,6 +273,16 @@ $referer => undef
 % } #End management_factor_details
 % if ($info_section_id eq 'management_factor_design'){
                                 <& /breeders_toolbox/trial/design_section_management_factor.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
+% } #End management_factor_design
+
+% if ($info_section_id eq 'genotyping_protocol_details'){
+                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, markers => $markers, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name &>
+% } #End management_factor_design
+% if ($info_section_id eq 'genotyping_protocol_markers'){
+                                <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id, markers => $markers &>
+% } #End management_factor_design
+% if ($info_section_id eq 'genotyping_protocol_genotype_data'){
+                                <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>
 % } #End management_factor_design
 
 % if ($info_section_id eq 'crossingtrial_details'){

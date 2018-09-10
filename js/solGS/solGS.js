@@ -54,7 +54,14 @@ solGS.waitPage = function (page, args) {
 			askUser(page, args);
 			
 		    } else {
-			checkTrainingPopRequirement(page, args);		
+
+			if (page.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
+			    args = JSON.parse(args);
+			    askUser(page, args);
+
+			} else {
+			    checkTrainingPopRequirement(page, args);
+			}
 		    }
 		}
 		

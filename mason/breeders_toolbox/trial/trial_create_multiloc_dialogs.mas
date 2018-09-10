@@ -394,12 +394,16 @@ $breeding_programs
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The trial was saved successfully
+                        The trial was saved successfully. 
+                    </p>
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Click "OK" to refresh the trial tree.
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="trial_saved_dialog_message_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="trial_saved_dialog_message_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Refresh Page</button>
             </div>
         </div>
     </div>

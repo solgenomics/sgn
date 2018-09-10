@@ -119,9 +119,9 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database)
+                    plot_name (must exist in the database already)
                     <br />
-                    plant_name (must be unique)
+                    plant_name (must be globally unique. usually this is a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
                 </div>
             </div>
             <div class="modal-footer">
@@ -212,13 +212,105 @@ $trial_name => undef
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must exist in the database)
+                    plot_name (must exist in the database already)
                     <br />
-                    plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number)
+                    plant_index_number (must be a number. the saved plant name will be a concatenation of plot_name + plant_index_number, such as MyTrial_plot101_plant1.)
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="close_upload_plants_with_index_number_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_plants_with_number_of_plants_number_dialog" name="upload_plants_with_number_of_plants_number_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPlantsWithNumPlantsPerPlotDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsWithNumPlantsPerPlotDialog">Upload plants to <% $trial_name %> with number of plants per plot</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="trial_upload_plants_with_num_plants_spreadsheet_info_format">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_plants_with_num_plants_dialog_form" name="upload_plants_with_num_plants_dialog_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File (.xls): </label>
+                            <div class="col-sm-8" >
+                                <input type="file" name="trial_upload_plants_with_number_of_plants_file" id="trial_upload_plants_with_number_of_plants_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Maximum number of plants per plot: </label>
+                            <div class="col-sm-8" >
+                                <input name="upload_plants_with_num_plants_per_plot_number" id="upload_plants_with_num_plants_per_plot_number" class="form-control" type="number" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Inherits Management Factor(s) From Plots: </label>
+                            <div class="col-sm-8" >
+                                <input name="upload_plants_with_num_plants_inherit_treatments" id="upload_plants_with_num_plants_inherit_treatments" type="checkbox" checked disabled/>
+                            </div>
+                        </div>
+                    </form><br/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="upload_plants_with_num_plants_cancel_button" id="upload_plants_with_num_plants_cancel_button" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_plants_with_num_plants_save_button" id="upload_plants_with_num_plants_save_button" title="Upload">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_plants_with_num_plants_spreadsheet_info_dialog" name="upload_plants_with_num_plants_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPlantsWithNumPlantsInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadPlantsWithNumPlantsInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for recording individual plants in a plot. The plant name will be saved as a concatenation of plot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_plot</b>
+                    <br/>
+                    <b>May be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>plot_name</td>
+                                <td>num_plants_per_plot</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <br/>
+                    plot_name (must exist in the database already)
+                    <br />
+                    num_plants_per_plot (must be a number. the number of plants in the plot. the saved plant name will be a concatenation of plot_name + plant_number, such as MyTrial_plot101_plant1)
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_plants_with_number_plants_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -249,6 +341,14 @@ jQuery(document).ready(function() {
         jQuery('#upload_plants_with_index_number_spreadsheet_info_dialog').modal("show");
     });
 
+    jQuery('#trial_upload_plants_with_num_plants_button').click( function () {
+        jQuery('#upload_plants_with_number_of_plants_number_dialog').modal("show");
+    });
+
+    jQuery('#trial_upload_plants_with_num_plants_spreadsheet_info_format').click( function () {
+        jQuery('#upload_plants_with_num_plants_spreadsheet_info_dialog').modal("show");
+    });
+
     jQuery('#add_plants_save_button').click( function () {
         add_plants_to_trial();
     });
@@ -259,6 +359,10 @@ jQuery(document).ready(function() {
 
     jQuery('#upload_plants_with_index_number_save_button').click( function () {
         upload_plants_with_index_number_to_trial();
+    });
+
+    jQuery('#upload_plants_with_num_plants_save_button').click( function () {
+        upload_plants_with_num_plants_to_trial();
     });
 
     function upload_plants_to_trial() {
@@ -310,6 +414,41 @@ jQuery(document).ready(function() {
         json: true,
         post: function () {
             var uploadedPlantsFile = jQuery("#trial_upload_plants_with_index_number_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedPlantsFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                alert("File uploaded successfully");
+                window.location.replace('/breeders/trial/'+<% $trial_id %>);
+            }
+        }
+    });
+
+    function upload_plants_with_num_plants_to_trial() {
+        var uploadFile = jQuery("#trial_upload_plants_with_number_of_plants_file").val();
+        jQuery('#upload_plants_with_num_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_number_of_plants");
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_plants_with_num_plants_dialog_form").submit();
+    }
+
+    jQuery('#upload_plants_with_num_plants_dialog_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedPlantsFile = jQuery("#trial_upload_plants_with_number_of_plants_file").val();
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");

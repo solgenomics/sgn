@@ -25,7 +25,7 @@ jQuery(document).ready(function () {
                 //console.log(response);
                 jQuery("#working_modal").modal("hide");
 
-                html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="plot_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+                var html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="plot_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
 
                 html += '<tr><td><button class="btn btn-default btn-sm" id="plot_select_all" name="1">Select All</button><br><br>'
                 html += '<div class="well well-sm"><div id="plot_data_count" name="1">No Selection</div></div>'
@@ -33,7 +33,7 @@ jQuery(document).ready(function () {
 
                 jQuery('#trial_plots_html').html(html);
 
-                var plot = response.plots[0].sort() || [];
+                var plot = response.plots[0] || [];
 
                 plot_html = format_options_list(plot);
                 jQuery('#plot_data').html(plot_html);
