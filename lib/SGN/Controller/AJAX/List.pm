@@ -494,7 +494,7 @@ sub insert_element : Private {
 
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
 
-    $list->add_element($element);
+    $list->add_bulk([$element]);
 }
 
 sub delete_list_action :Path('/list/delete') Args(0) {
