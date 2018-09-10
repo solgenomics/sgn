@@ -889,7 +889,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh;
-    
+
     my $list = CXGN::List->new( { dbh => $dbh, list_id => $list_id } );
     my $flat_list = $list->retrieve_elements_with_ids($list_id);
     my @name_list = map {@{$_}[1]} @{$flat_list};
@@ -901,3 +901,35 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
 
     $c->stash->{rest} = $results;
 }
+
+
+sub available_marker_sets : Path('/marker_sets/available') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        return;
+    }
+
+    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'markers');
+    my @marker_sets;
+    foreach my $list (@$lists){
+        my ($id, $name, $desc, $item_count, $type_id, $type, $public) = @$list;
+#        push @marker_sets, [$name, $item_count, $desc];
+        push @marker_sets, {
+            markerset_name => $name,
+            number_of_markers => $item_count,
+            description => $desc,
+        }
+    }
+
+    $c->stash->{rest} = {data => \@marker_sets};
+}
+
+
+
+#########
+1;
+#########

@@ -1,0 +1,216 @@
+
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables','CXGN.BreedersToolbox.MarkerSet'] &>
+
+<& /page/page_title.mas, title=>'Manage Marker Sets' &>
+
+
+<&| /page/info_section.mas, title=>'Add new marker set'&>
+
+<div class="row">
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Set Name:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Genotyping protocol:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_protocol">
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Description:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="marker_set_desc" placeholder="Enter description">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-info" id="save_marker_set" name="save_marker_set"> Add new marker set </button>
+                                        </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Add markers and allele dosages in marker set', collapsible=>1, collapsed=>0 &>
+
+<div class="row">
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Set Name:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_marker_set1">
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Name:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="marker_name" placeholder="Enter marker name">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Allele Dosage:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="allele_dosage">
+                                        <option value="">Select Allele Dosage</option>
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4"></label>
+                            <div class="col-sm-8" >
+                                <button class="btn btn-info" id="add_marker" name="add_marker">Add marker</button>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</&>
+
+<&| /page/info_section.mas, title=>'Add filtering parameters based on VCF fields in marker set', collapsible=>1, collapsed=>0 &>
+
+<div class="row">
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Set Name:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_marker_set2">
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Chromosome:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="chromosome_number" placeholder="Enter chromosome no.">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Start Position:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="start_position" placeholder="Enter an integer value">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">End Position:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="end_position" placeholder="Enter an integer value">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker Name:</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="marker_name2" placeholder="Enter marker name">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">SNP allele:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="snp_allele">
+                                        <option value="">Select SNP Allele</option>
+                                        <option value="A">A</option>
+                                        <option value="T">T</option>
+                                        <option value="G">G</option>
+                                        <option value="C">C</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Quality (greater than):</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="quality" placeholder="Enter an integer value">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">FILTER:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="filter_status">
+                                        <option value="">Select filter status</option>
+                                        <option value="PASS">PASS</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4"></label>
+                            <div class="col-sm-8" >
+                                <button class="btn btn-info" id="add_parameters" name="add_parameters">Add Parameters</button>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</&>
+
+
+
+<&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0&>
+
+    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+    <table id="marker_sets" width="100%" class="table table-hover table-striped">
+
+    </table>
+</&>
