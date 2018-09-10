@@ -20,7 +20,8 @@ use SGN::Model::Cvterm;
 use DateTime;
 use CXGN::UploadFile;
 use SGN::Image;
-use CXGN::DroneImagery::RawImagesSearch;
+use CXGN::DroneImagery::ImagesSearch;
+use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -113,18 +114,20 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $images_search = CXGN::DroneImagery::RawImagesSearch->new({
+    my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
-        # location_list=>\@locations,
-        # program_list=>\@breeding_program_names,
-        # program_id_list=>\@breeding_programs_ids,
-        # year_list=>\@years,
-        # trial_type_list=>\@trial_types,
-        # trial_id_list=>\@trial_ids,
-        # trial_name_list=>\@trial_names,
-        # trial_name_is_exact=>1
+        project_image_type_id=>$raw_drone_images_cvterm_id
     });
     my ($result, $total_count) = $images_search->search();
+    #print STDERR Dumper $result;
+
+    my $stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$stitched_drone_images_cvterm_id
+    });
+    my ($stitched_result, $stitched_total_count) = $stitched_images_search->search();
     #print STDERR Dumper $result;
 
     my @return;
@@ -137,6 +140,13 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_trials{$_->{trial_id}}->{usernames}->{$_->{username}}++;
         $unique_trials{$_->{trial_id}}->{trial_name} = $_->{trial_name};
     }
+    foreach (@$stitched_result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_source_tag_small = $image->get_img_src_tag("small");
+        $unique_trials{$_->{trial_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+        $unique_trials{$_->{trial_id}}->{stitched_image_username} = $_->{username};
+    }
     while (my ($k, $v) = each %unique_trials) {
         my $images = scalar(@{$v->{images}})." Images<br/><span>";
         $images .= join '', @{$v->{images}};
@@ -145,10 +155,44 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         foreach (keys %{$v->{usernames}}){
             $usernames .= " $_ ";
         }
-        push @return, ["<a href=\"/breeders_toolbox/trial/$k\">$v->{trial_name}</a>", $usernames, $images, ''];
+        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image} : '<button class="btn btn-primary" id="project_drone_imagery_stitch" data-project_id="'.$k.'">Stitch Uploaded Images</button>';
+        push @return, ["<a href=\"/breeders_toolbox/trial/$k\">$v->{trial_name}</a>", $usernames, $images, $stitched_image];
     }
 
     $c->stash->{rest} = { data => \@return };
+}
+
+sub raw_drone_imagery_stitch : Path('/ajax/drone_imagery/raw_drone_imagery_stitch') : ActionClass('REST') { }
+
+sub raw_drone_imagery_stitch_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->req->param('trial_id');
+
+    my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        trial_id_list=>[$trial_id],
+        project_image_type_id=>$raw_drone_images_cvterm_id
+    });
+    my ($result, $total_count) = $images_search->search();
+    #print STDERR Dumper $result;
+
+    my @image_urls;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        push @image_urls, $image_url;
+    }
+    print STDERR Dumper \@image_urls;
+
+use Inline Python => <<'END';
+        
+END
+
+    $c->stash->{rest} = { data => \@image_urls };
 }
 
 1;

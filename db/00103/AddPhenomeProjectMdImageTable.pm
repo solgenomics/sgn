@@ -62,6 +62,7 @@ sub patch {
     my $terms = {
         'project_md_image' => [
             'raw_drone_imagery',
+            'stitched_drone_imagery'
         ]
     };
 

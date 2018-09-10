@@ -1,13 +1,14 @@
-package CXGN::DroneImagery::RawImagesSearch;
+package CXGN::DroneImagery::ImagesSearch;
 
 =head1 NAME
 
-CXGN::DroneImagery::RawImagesSearch - an object to handle searching for raw drone imagery uploaded
+CXGN::DroneImagery::ImagesSearch - an object to handle searching for raw drone imagery uploaded
 
 =head1 USAGE
 
-my $images_search = CXGN::DroneImagery::RawImagesSearch->new({
+my $images_search = CXGN::DroneImagery::ImagesSearch->new({
     bcs_schema=>$schema,
+    project_image_type_id=>$project_image_type_id,
     location_list=>\@locations,
     program_list=>\@breeding_program_names,
     program_id_list=>\@breeding_programs_ids,
@@ -37,6 +38,11 @@ use CXGN::Calendar;
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1,
+);
+
+has 'project_image_type_id' => (
+    isa => 'Int|Undef',
+    is => 'rw',
 );
 
 has 'program_list' => (
@@ -150,6 +156,7 @@ has 'offset' => (
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
+    my $project_image_type_id = $self->project_image_type_id();
     my $program_list = $self->program_list;
     my $program_id_list = $self->program_id_list;
     my $location_list = $self->location_list;
@@ -209,6 +216,10 @@ sub search {
 
     if ($trial_has_tissue_samples){
         push @where_clause, "trial_has_tissue_samples.value IS NOT NULL";
+    }
+
+    if ($project_image_type_id){
+        push @where_clause, "project_image.type_id = $project_image_type_id";
     }
 
     if ($program_id_list && scalar(@$program_id_list)>0) {
@@ -359,6 +370,7 @@ sub search {
         };
         $total_count = $full_count;
     }
+    #print STDERR Dumper \@result;
 
     return (\@result, $total_count);
 }
