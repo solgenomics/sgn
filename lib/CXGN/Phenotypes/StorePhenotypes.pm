@@ -579,7 +579,7 @@ sub store_stock_note {
 
     $note = $note ." (Operator: $operator, Time: $timestamp)";
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-    $stock->create_stockprops( { 'notes' => $note }, { autocreate => 1 } );
+    $stock->create_stockprops( { 'notes' => $note } );
 }
 
 sub delete_previous_phenotypes {
