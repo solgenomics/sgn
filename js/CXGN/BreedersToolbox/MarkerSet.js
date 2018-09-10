@@ -38,6 +38,7 @@ jQuery(document).ready(function (){
         if (protocolAdded){
             alert ("Added new marker set: " + name + " for genotyping protocol: " + protocol_name);
         }
+        location.reload();
         return list_id;
 
     });
@@ -68,7 +69,10 @@ jQuery(document).ready(function (){
         var markerDosageString = JSON.stringify(markerDosage);
 
         var markerAdded = lo.addToList(markerSetName, markerDosageString);
-        alert("Added"+markerDosageString);
+        if (markerAdded){
+            alert("Added "+markerDosageString);
+        }
+        location.reload()
         return markerSetName;
 
     });
@@ -121,7 +125,10 @@ jQuery(document).ready(function (){
         var parametersString = JSON.stringify(vcfParameters);
 
         var markerAdded = list.addToList(markerSetName, parametersString);
-        alert("Added"+parametersString);
+        if (markerAdded) {
+            alert("Added "+parametersString);
+        }
+        location.reload();
         return markerSetName;
 
     });
