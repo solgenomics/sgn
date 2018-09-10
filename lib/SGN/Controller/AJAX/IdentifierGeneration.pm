@@ -75,7 +75,7 @@ sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation')
         }
     }
     if (exists($used_prefixes{$identifier_prefix})) {
-        $c->stash->{rest} = { error => "That identifier prefix has already been used! Please use the identifier already in use"};
+        $c->stash->{rest} = { error => "That identifier prefix has already been used and so nothing was saved! Please use the identifier already in use"};
         $c->detach();
     }
 
