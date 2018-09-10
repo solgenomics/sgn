@@ -27,8 +27,7 @@ jQuery(document).ready(function (){
         var desc = $('#marker_set_desc').val();
 
         var list_id = lo.newList(name, desc);
-        lo.setListType(list_id, 'markers')
-        alert("Added new marker set");
+        lo.setListType(list_id, 'markers');
 
         var markersetProtocol = {};
         markersetProtocol.genotyping_protocol_name = protocol_name;
@@ -36,6 +35,9 @@ jQuery(document).ready(function (){
         var markersetProtocolString = JSON.stringify(markersetProtocol);
 
         var protocolAdded = lo.addToList(list_id, markersetProtocolString);
+        if (protocolAdded){
+            alert ("Added new marker set: " + name + " for genotyping protocol: " + protocol_name);
+        }
         return list_id;
 
     });
