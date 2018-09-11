@@ -21,7 +21,7 @@ use DateTime;
 use CXGN::UploadFile;
 use SGN::Image;
 use CXGN::DroneImagery::ImagesSearch;
-use Inline::Python;
+#use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -188,9 +188,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     }
     print STDERR Dumper \@image_urls;
 
-use Inline Python => <<'END';
-        
-END
+    system('python /home/nmorales/Downloads/panorama-stitching/stitch.py --first /home/nmorales/Downloads/panorama-stitching/images/bryce_left_01.png --second /home/nmorales/Downloads/panorama-stitching/images/bryce_right_01.png');
 
     $c->stash->{rest} = { data => \@image_urls };
 }
