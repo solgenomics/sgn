@@ -28,6 +28,16 @@
                             </div>
                     </div>
                     <div class="form-group">
+                        <label class="control-label col-sm-4">Marker set:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_markerset">
+                                    <option value="">Select a marker set</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
                         <label class="control-label col-sm-4">Marker Name:</label>
                             <div class="col-sm-8">
                                 <div class="input-group">
@@ -80,9 +90,11 @@
 
 jQuery(document).ready(function (){
 
-    var list = new CXGN.Dataset();
+    var data_set = new CXGN.Dataset();
+    var lo = new CXGN.List();
 
     get_select_box('datasets','selected_dataset');
+    jQuery('#selected_markerset').html(lo.listSelect('selected_markerset', ['markers']));
 
     $("#search_genotypes_accessions").click(function(){
 
