@@ -342,7 +342,7 @@ sub get_cross_progenies_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id =?
         WHERE nd_experiment_project.project_id = ? GROUP BY stock.stock_id";
-
+    
     my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($member_of_type_id, $trial_id);
@@ -430,7 +430,7 @@ sub delete {
 sub cross_properties { 
     my $self = shift;
 
-    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), "cross", "stock_type")->cvterm_id();
     
     print STDERR "sub cross_deletion_possible...\n";
     my $q = "SELECT subject.stock_id, subject.uniquename, cvterm.name from stock join stock_relationship on (stock.stock_id=stock_relationship.object_id) join stock as subject on(stock_relationship.subject_id=subject.stock_id) join cvterm on (stock_relationship.type_id=cvterm.cvterm_id) where stock.stock_id = ? and stock.type_id=?";
