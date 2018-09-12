@@ -1,7 +1,7 @@
 #install.packages("rrBLUP")
 #install.packages("corrplot")
 #install.packages("dplyr")
-
+library("methods")
 library("dplyr")
 
 ########################################
@@ -47,7 +47,7 @@ study_trait_read <- gsub(".", " ", study_trait, fixed=TRUE)
 hist(pheno_mod$pheno_vector, col="black",xlab=study_trait_read,ylab="Frequency",
      border="white",breaks=10,main="Phenotype Histogram (Unfiltered)")
 dev.off()
-write.table(pheno_mod, "pheno_mod_temp_file.csv", sep = ",", col.names = TRUE)
+# write.table(pheno_mod, "pheno_mod_temp_file.csv", sep = ",", col.names = TRUE)
 # Shapiro-Wilk test for normality
 shapiro.test(pheno[,18])
 
