@@ -526,6 +526,33 @@ sub get_image_ids {
     return @ids;
 }
 
+
+=head2 get_genotypes
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotypeprop_ids { 
+    my $self = shift;
+    
+    my $q = "SELECT genotypeprop_id FROM stock JOIN nd_experiment_stock using(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN nd_experimentprop USING(genotype_id) WHERE stock.stock_id=?";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+    my @genotypeprop_ids;
+    while (my ($genotypeprop_id) = $h->fetchrow_array()) { 
+	push @genotypeprop_ids, $genotypeprop_id;
+    }
+
+    return \@genotypeprop_ids;
+
+}
+
 =head2 associate_allele
 
  Usage: $self->associate_allele($allele_id, $sp_person_id)

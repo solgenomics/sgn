@@ -79,9 +79,9 @@ sub get_cross_info {
     my $female_parent = shift;
     my $male_parent = shift;
 
-    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 
     my $where_female = "";
     if ($female_parent){
@@ -103,16 +103,16 @@ sub get_cross_info {
     my $h = $schema->storage->dbh()->prepare($q);
 
     if ($female_parent && $male_parent) {
-        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent, $male_parent);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $female_parent, $male_parent);
     }
     elsif ($female_parent) {
-        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $female_parent);
     }
     elsif ($male_parent) {
-        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $male_parent);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $male_parent);
     }
     else {
-        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id);
     }
 
     my @cross_info = ();
@@ -142,10 +142,10 @@ sub get_cross_info_for_progeny {
     my $male_parent_id = shift;
     my $progeny_id = shift;
 
-    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
-    my $member_typeid =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $member_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
     my $cross_experiment_type_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
     my $project_year_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
 
@@ -163,7 +163,7 @@ sub get_cross_info_for_progeny {
         ORDER BY female_stock_relationship.value, male_stock_relationship.subject_id";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($cross_typeid, $female_parent_typeid, $female_parent_id, $male_parent_typeid, $male_parent_id, $member_typeid, $progeny_id, $cross_experiment_type_cvterm_id, $project_year_cvterm_id);
+    $h->execute($cross_type_id, $female_parent_type_id, $female_parent_id, $male_parent_type_id, $male_parent_id, $member_type_id, $progeny_id, $cross_experiment_type_cvterm_id, $project_year_cvterm_id);
 
     my @cross_info = ();
     while (my ($cross_entry_id, $cross_name, $cross_type, $year) = $h->fetchrow_array()){
@@ -198,10 +198,10 @@ sub get_progeny_info {
     my $female_parent = shift;
     my $male_parent = shift;
 
-    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $accession_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-    my $member_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $member_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
 
     my $where_female = "";
     if ($female_parent){
@@ -226,16 +226,16 @@ sub get_progeny_info {
     my $h = $schema->storage->dbh()->prepare($q);
 
     if($female_parent && $male_parent){
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid, $female_parent, $male_parent);
+        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id, $female_parent, $male_parent);
     }
     elsif ($female_parent) {
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid, $female_parent);
+        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id, $female_parent);
     }
     elsif ($male_parent) {
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid, $male_parent);
+        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id, $male_parent);
     }
     else {
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid);
+        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id);
     }
 
     my @progeny_info = ();
@@ -257,12 +257,12 @@ sub get_crosses_in_trial {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
-    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $female_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
-    my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
-    my $female_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
-    my $male_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $female_plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+    my $male_plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
+    my $female_plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
+    my $male_plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
 
     my $q = "SELECT stock1.stock_id, stock1.uniquename, stock_relationship1.value, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock7.stock_id, stock7.uniquename
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -283,7 +283,7 @@ sub get_crosses_in_trial {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $female_plant_of_typeid, $male_plant_of_typeid, $trial_id);
+    $h->execute($female_parent_type_id, $male_parent_type_id, $female_plot_of_type_id, $male_plot_of_type_id, $female_plant_of_type_id, $male_plant_of_type_id, $trial_id);
 
     my @data =();
     while(my($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) = $h->fetchrow_array()){
@@ -302,7 +302,7 @@ sub get_cross_properties_trial {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
-    my $cross_props_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
+    my $cross_props_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
 
     my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -312,7 +312,7 @@ sub get_cross_properties_trial {
 
     my $h = $schema->storage->dbh()->prepare ($q);
 
-    $h->execute($cross_props_typeid, $trial_id);
+    $h->execute($cross_props_type_id, $trial_id);
 
     my @data = ();
     while(my($cross_id, $cross_name, $cross_props) = $h->fetchrow_array()){
@@ -335,7 +335,7 @@ sub get_cross_progenies_trial {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
-    my $member_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename, COUNT (stock_relationship.subject_id) AS progeny_number
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -345,7 +345,7 @@ sub get_cross_progenies_trial {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($member_of_typeid, $trial_id);
+    $h->execute($member_of_type_id, $trial_id);
 
     my @data =();
     while(my($cross_id, $cross_name, $progeny_number) = $h->fetchrow_array()){
@@ -381,29 +381,40 @@ sub delete {
 
 	$dbh->begin_work();
 
-	if ($self->cross_deletion_possible()) {
-	    return "Cross has associated data. Cannot delete...\n";
+	my $properties = $self->cross_properties();
+
+	my $can_delete = 
+	    ($properties->{trials} == 0) && 
+	    ($properties->{traits} == 0) && 
+	    ($properties->{genotypes} == 0) && 
+	    ($properties->{images} == 0);
+
+	if (! $can_delete) {
+	    return "Cross has associated data. ($properties->{trials} trials, $properties->{traits} traits and $properties->{genoytpes} genotypes. Cannot delete...\n";
 	}
-	my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+	else { 
+	    print STDERR "This cross has no associated data that would prevent deletion.";
+	}
+	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 	# delete the project entries
 	#
 	print STDERR "Deleting project entry for cross...\n";
 #	    my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
 #	my $h1 = $dbh->prepare($q1);
-#	$h1->execute($self->cross_stock_id(), $cross_typeid);
+#	$h1->execute($self->cross_stock_id(), $cross_type_id);
 
 	# delete the nd_experiment entries
 	#
 	print STDERR "Deleting nd_experiment entry for cross...\n";
 #	my $q2= ""; #"delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
 #	my $h2 = $dbh->prepare($q2);
-#	$h2->execute($self->cross_stock_id(), $cross_typeid);
+#	$h2->execute($self->cross_stock_id(), $cross_type_id);
 
 	# delete the stock entries
 	#
 #	my $q3 = "delete from stock where stock.stock_id=523823 and stock.type_id = ?";
 #	my $h3 = $dbh->prepare($q3);
-#	$h3->execute($self->cross_stock_id(), $cross_typeid);
+#	$h3->execute($self->cross_stock_id(), $cross_type_id);
     };
 
     if ($@) {
@@ -416,17 +427,24 @@ sub delete {
     }
 }
 
-sub cross_deletion_possible { 
+sub cross_properties { 
     my $self = shift;
+
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     
     print STDERR "sub cross_deletion_possible...\n";
-    my $q = "SELECT subject.stock_id, subject.uniquename, cvterm.name from stock join stock_relationship on (stock.stock_id=stock_relationship.object_id) join stock as subject on(stock_relationship.subject_id=subject.stock_id) join cvterm on (stock_relationship.type_id=cvterm.cvterm_id) where stock.stock_id = ? ";
+    my $q = "SELECT subject.stock_id, subject.uniquename, cvterm.name from stock join stock_relationship on (stock.stock_id=stock_relationship.object_id) join stock as subject on(stock_relationship.subject_id=subject.stock_id) join cvterm on (stock_relationship.type_id=cvterm.cvterm_id) where stock.stock_id = ? and stock.type_id=?";
 
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
     
-    $h->execute($self->cross_stock_id());
+    $h->execute($self->cross_stock_id(), $cross_type_id);
 
     my @subjects = ();
+    my $has_trials = 0;
+    my $has_traits = 0;
+    my $has_genotypes = 0;
+    my $has_images;
+
     while (my($stock_id, $name, $type) = $h->fetchrow_array()) { 
 	print STDERR "ID $stock_id NAME $name TYPE $type\n";
 	push @subjects, [$stock_id, $name, $type];
@@ -435,12 +453,29 @@ sub cross_deletion_possible {
 	    my $s = CXGN::Stock->new( { schema => $self->bcs_schema(),  stock_id => $stock_id });
 	    if (my @traits = $s->get_trait_list()) { 
 		print STDERR "Associated traits: ".Dumper(\@traits);
+		$has_traits += scalar(@traits);
+	    }
+	    if (my @trials = $s->get_trials()) { 
+		print STDERR "Associated trials: ".Dumper(\@trials);
+		$has_trials += scalar(@trials);
+	    }
+	    if (my $genotypeprop_ids = $s->get_genotypeprop_ids()) { 
+		print STDERR "Associated genotypes: ".Dumper($genotypeprop_ids);
+		$has_genotypes += scalar(@$genotypeprop_ids);
+	    }
+	    if (my @image_ids = $s->get_image_ids()) { 
+		print STDERR "Associated images: ".Dumper(\@image_ids);
+		$has_images += scalar(\@image_ids);
 	    }
 	}
-		
-
     }
-    return 0;
+    return { 
+	traits => $has_traits,
+	trials => $has_trials,
+	genotypes => $has_genotypes,
+	images => $has_images,
+	subjects => @subjects,
+    };
 }
 
 1;
