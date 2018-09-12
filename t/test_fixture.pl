@@ -119,7 +119,7 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} -d $dbname -e janedoe");
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe");
 
 # run the materialized views creation script
 #
