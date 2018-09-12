@@ -136,6 +136,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    $ds-> @$trials_ref = retrieve_genotypes();
     my $newtrait = $trait_id;
     $newtrait =~ s/\s/\_/g;
+    $newtrait =~ s/\//\_/g;
     print STDERR $newtrait . "\n";
     my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
     my $figure2file = "." . $tempfile . "_" . $newtrait . "_figure2.png";
