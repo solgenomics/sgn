@@ -145,7 +145,7 @@ $sample_observation_unit_type_name => undef
                                 &>
 
 % if ($hidap_enabled) {
-                                <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
+                                <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
 % } #End trial_analysis_tools
 % if ($info_section_id eq 'trial_weather_data'){

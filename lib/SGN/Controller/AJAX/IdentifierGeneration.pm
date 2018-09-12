@@ -63,6 +63,22 @@ sub new_identifier_generation : Path('/ajax/breeders/new_identifier_generation')
         $c->detach();
     }
 
+    my %used_prefixes;
+    my $available_public_lists = CXGN::List::available_public_lists($schema->storage->dbh, 'identifier_generation');
+    foreach (@$available_public_lists){
+        my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $_->[0] });
+        my $element = $list->elements()->[0];
+        if($element){
+            my $identifier_generator = decode_json $element;
+            my $prefix = $identifier_generator->{identifier_prefix};
+            $used_prefixes{$prefix}++;
+        }
+    }
+    if (exists($used_prefixes{$identifier_prefix})) {
+        $c->stash->{rest} = { error => "That identifier prefix has already been used and so nothing was saved! Please use the identifier already in use"};
+        $c->detach();
+    }
+
     my $time = DateTime->now();
     my $timestamp = $time->ymd('/')."_".$time->hms();
     my $identifier = {
@@ -171,7 +187,7 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
     };
     my $identifier_json = encode_json $identifier;
     $list->remove_element($element);
-    $list->add_element($identifier_json);
+    $list->add_bulk([$identifier_json]);
 
     $c->stash->{rest} = { success => 1, identifiers => \@new_identifiers, filename => $urlencode{$rel_file.".csv"} };
 }
