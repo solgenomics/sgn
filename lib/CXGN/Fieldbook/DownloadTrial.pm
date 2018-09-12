@@ -21,7 +21,6 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     treatment_project_ids => [1],
     selected_columns => {"plot_name"=>1,"block_number"=>1,"plot_number"=>1},
     selected_trait_ids => [2,3],
-    selected_trait_names => ["harvest index|CO:0000001", "x|CO:00000002"]
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
@@ -126,11 +125,6 @@ has 'selected_trait_ids'=> (
     isa => 'ArrayRef[Int]|Undef',
 );
 
-has 'selected_trait_names'=> (
-    is => 'ro',
-    isa => 'ArrayRef[Str]|Undef',
-);
-
 sub download { 
     my $self = shift;
     my %errors;
@@ -153,8 +147,7 @@ sub download {
         data_level => $self->data_level,
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
-        selected_trait_ids => $self->selected_trait_ids,
-        selected_trait_names => $self->selected_trait_names
+        selected_trait_ids => $self->selected_trait_ids
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){

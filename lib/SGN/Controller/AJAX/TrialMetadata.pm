@@ -1505,6 +1505,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   my $old_accession = $c->req->param('old_accession');
   my $new_accession = $c->req->param('new_accession');
   my $old_plot_id = $c->req->param('old_plot_id');
+  my $old_plot_name = $c->req->param('old_plot_name');
   my $trial_id = $c->stash->{trial_id};
 
   if ($self->privileges_denied($c)) {
@@ -1523,6 +1524,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     new_accession => $new_accession,
     old_accession => $old_accession,
     old_plot_id => $old_plot_id,
+    old_plot_name => $old_plot_name,
 
   });
 
@@ -1533,7 +1535,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
      }
 
   print "Calling Replace Function...............\n";
-  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap(); 
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
@@ -1707,21 +1709,38 @@ sub privileges_denied {
 sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
 
-    if (!$c->user()) {
-    	print STDERR "User not logged in... not uploading coordinates.\n";
-    	$c->stash->{rest} = {error => "You need to be logged in to upload coordinates." };
-    	return;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload plot coordinates (row and column number)!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload plot coordinates (row and column number)!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    	$c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates." };
-    	return;
+    if ($user_role ne 'curator' && $user_role ne 'submitter') {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates (row and column numbers)." };
+        $c->detach();
     }
 
     my $time = DateTime->now();
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $user_name = $c->user()->get_object()->get_username();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'trial_coords_upload';
     my $upload = $c->req->upload('trial_coordinates_uploaded_file');
@@ -1740,7 +1759,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $c->user()->roles
+        user_role => $user_role
     });
     my $archived_filename_with_path = $uploader->archive();
 
@@ -1765,7 +1784,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     	if ($rs->count()== 1) {
       	my $r =  $rs->first();
       	print STDERR "The plots $plot was found.\n Loading row $row col $col\n";
-      	$r->create_stockprops({row_number => $row, col_number => $col}, {autocreate => 1});
+      	$r->create_stockprops({row_number => $row, col_number => $col});
       }
       else {
       	print STDERR "WARNING! $plot was not found in the database.\n";
@@ -1851,8 +1870,8 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $progeny_number) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number];
+        my ($cross_id, $cross_name, $progeny_number, $family_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number, $family_name];
     }
 
     $c->stash->{rest} = { data => \@crosses };

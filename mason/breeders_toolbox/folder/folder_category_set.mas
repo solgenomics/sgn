@@ -27,7 +27,7 @@ $folder_name => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Folder for Genotyping Trials:</label>
+                            <label class="col-sm-3 control-label">Folder for Genotyping Plates:</label>
                             <div class="col-sm-9" >
                                 <input name="edit_folder_for_genotyping_trials" id="edit_folder_for_genotyping_trials" type="checkbox"/>
                             </div>
