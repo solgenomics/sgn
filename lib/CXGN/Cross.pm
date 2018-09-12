@@ -3,6 +3,7 @@ package CXGN::Cross;
 
 use Moose;
 use SGN::Model::Cvterm;
+use CXGN::Stock;
 use Data::Dumper;
 use JSON;
 
@@ -385,36 +386,66 @@ sub delete {
 
 	$dbh->begin_work();
 
+	if ($self->cross_deletion_possible()) {
+	    return "Cross has associated data. Cannot delete...\n";
+	}
 	my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 	# delete the project entries
 	#
 	print STDERR "Deleting project entry for cross...\n";
-	my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
-	my $h1 = $dbh->prepare($q1);
-	$h1->execute($self->cross_stock_id(), $cross_typeid);
+#	    my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
+#	my $h1 = $dbh->prepare($q1);
+#	$h1->execute($self->cross_stock_id(), $cross_typeid);
 
 	# delete the nd_experiment entries
 	#
 	print STDERR "Deleting nd_experiment entry for cross...\n";
-	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
-	my $h2 = $dbh->prepare($q2);
-	$h2->execute($self->cross_stock_id(), $cross_typeid);
+#	my $q2= ""; #"delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
+#	my $h2 = $dbh->prepare($q2);
+#	$h2->execute($self->cross_stock_id(), $cross_typeid);
 
 	# delete the stock entries
 	#
-	my $q3 = "delete from stock where stock.stock_id=523823 and stock.type_id = ?";
-	my $h3 = $dbh->prepare($q3);
-	$h3->execute($self->cross_stock_id(), $cross_typeid);
+#	my $q3 = "delete from stock where stock.stock_id=523823 and stock.type_id = ?";
+#	my $h3 = $dbh->prepare($q3);
+#	$h3->execute($self->cross_stock_id(), $cross_typeid);
     };
 
     if ($@) {
-	print STDERR "An error occurred while deleting cross id ".$self->cross_stock_id()."\n";
+	print STDERR "An error occurred while deleting cross id ".$self->cross_stock_id()."$@\n";
 	$dbh->rollback();
 	return $@;
     }
     else {
 	$dbh->commit();
     }
+}
+
+sub cross_deletion_possible { 
+    my $self = shift;
+    
+    print STDERR "sub cross_deletion_possible...\n";
+    my $q = "SELECT subject.stock_id, subject.uniquename, cvterm.name from stock join stock_relationship on (stock.stock_id=stock_relationship.object_id) join stock as subject on(stock_relationship.subject_id=subject.stock_id) join cvterm on (stock_relationship.type_id=cvterm.cvterm_id) where stock.stock_id = ? ";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    
+    $h->execute($self->cross_stock_id());
+
+    my @subjects = ();
+    while (my($stock_id, $name, $type) = $h->fetchrow_array()) { 
+	print STDERR "ID $stock_id NAME $name TYPE $type\n";
+	push @subjects, [$stock_id, $name, $type];
+	
+	if ($type eq "member_of") { # child
+	    my $s = CXGN::Stock->new( { schema => $self->bcs_schema(),  stock_id => $stock_id });
+	    if (my @traits = $s->get_trait_list()) { 
+		print STDERR "Associated traits: ".Dumper(\@traits);
+	    }
+	}
+		
+
+    }
+    return 0;
 }
 
 1;
