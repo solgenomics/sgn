@@ -101,6 +101,11 @@ has 'offset' => (
     is => 'rw',
 );
 
+has 'protocol_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
 has 'marker_name' => (
     isa => 'Str',
     is => 'rw',

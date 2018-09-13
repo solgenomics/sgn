@@ -94,17 +94,25 @@ jQuery(document).ready(function (){
     var lo = new CXGN.List();
 
     get_select_box('datasets','selected_dataset');
-    jQuery('#selected_markerset').html(lo.listSelect('selected_markerset', ['markers']));
+    jQuery('#selected_markerset').html(lo.listSelect('selected_markerset', ['markers'], 'Select a marker set'));
 
-    $("#search_genotypes_accessions").click(function(){
+    jQuery("#search_genotypes_accessions").click(function(){
+
+        var dataset_id = jQuery('#selected_dataset').val();
+        var markerset_id = jQuery('#selected_markerset').val();
+        var marker_name = jQuery('#input_marker').val();
+        var allele_dosage = jQuery('#selected_dosage').val();
 
         var table = jQuery('#genotype_search_results').DataTable({
 
             'destroy' : true,
             'ajax':{'url':'/ajax/search/get_selected_accessions',
-            data:{'dataset_id':$('#selected_dataset').val(),
-                'marker_name':$('#input_marker').val(),
-                'allele_dosage':$('#selected_dosage').val()}
+            data:{
+                'dataset_id': dataset_id,
+                'markerset_id': markerset_id,
+                'marker_name': marker_name,
+                'allele_dosage': allele_dosage,
+                }
             }
         });
     });
