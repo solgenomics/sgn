@@ -9,6 +9,7 @@ use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
 use CXGN::Genotype::Search;
+use CXGN::List;
 
 
 __PACKAGE__->config(
@@ -22,6 +23,7 @@ sub get_selected_accessions :Path('/ajax/search/get_selected_accessions') :Args(
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param("dataset_id");
+    my $markerset_id = $c->req->param("markerset_id");
     my $marker_name = $c->req->param("marker_name");
     my $allele_dosage = $c->req->param("allele_dosage");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
@@ -47,16 +49,21 @@ sub get_selected_accessions :Path('/ajax/search/get_selected_accessions') :Args(
 #    print STDERR "ACCESSIONS =" .Dumper(@genotype_accessions). "\n";
 #    print "type of ACCESSIONS: " . ref(@genotype_accessions). "\n";
 
-#    print STDERR "PROTOCOL =" .Dumper($protocol_id). "\n";
-#    print "type of PROTOCOL: " . ref($protocol_id). "\n";
+    my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
+    my $markerset_items_ref = $markerset->retrieve_elements_with_ids($markerset_id);
+    my @markerset_items = @{$markerset_items_ref};
 
+    my @parameters;
+    foreach my $item (@markerset_items){
+        my $param = $item->[1];
+        push @parameters, $param;
+    }
 
     my $genotypes_accessions_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
         accession_list=>\@genotype_accessions,
         protocol_id=>$protocol_id,
-        marker_name=>$marker_name,
-        allele_dosage=>$allele_dosage,
+        filtering_parameters=>\@parameters,
     });
 
     my $result = $genotypes_accessions_search->get_selected_accessions();
