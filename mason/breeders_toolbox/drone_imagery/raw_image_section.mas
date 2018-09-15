@@ -19,7 +19,7 @@ jQuery(document).ready(function(){
         'ajax': '/ajax/drone_imagery/raw_drone_imagery',
     });
 
-    jQuery(document).on('click', '#project_drone_imagery_stitch', function(){
+    jQuery(document).on('click', 'button[name="project_drone_imagery_stitch"]', function(){
         var trial_id = jQuery(this).data('project_id');
         jQuery.ajax({
             url : '/ajax/drone_imagery/raw_drone_imagery_stitch?trial_id='+trial_id,

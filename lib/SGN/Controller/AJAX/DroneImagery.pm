@@ -155,7 +155,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         foreach (keys %{$v->{usernames}}){
             $usernames .= " $_ ";
         }
-        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image} : '<button class="btn btn-primary" id="project_drone_imagery_stitch" data-project_id="'.$k.'">Stitch Uploaded Images</button>';
+        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-project_id="'.$k.'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-project_id="'.$k.'">Stitch Uploaded Images</button>';
         push @return, ["<a href=\"/breeders_toolbox/trial/$k\">$v->{trial_name}</a>", $usernames, $images, $stitched_image];
     }
 
@@ -170,6 +170,32 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $trial_id = $c->req->param('trial_id');
 
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
     my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -179,16 +205,29 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
 
+    my $main_production_site = $c->config->{main_production_site_url};
+
     my @image_urls;
     foreach (@$result) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
-        push @image_urls, $image_url;
+        push @image_urls, $main_production_site.$image_url;
     }
     print STDERR Dumper \@image_urls;
+    my $image_urls_string = join ',', @image_urls;
 
-    system('python /home/nmorales/Downloads/panorama-stitching/stitch.py --first /home/nmorales/Downloads/panorama-stitching/images/bryce_left_01.png --second /home/nmorales/Downloads/panorama-stitching/images/bryce_right_01.png');
+    my $dir = $c->tempfiles_subdir('/stitched_drone_imagery');
+    my $archive_stitched_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'stitched_drone_imagery/imageXXXX');
+    $archive_stitched_temp_image .= '.png';
+    print STDERR $archive_stitched_temp_image."\n";
+
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls '.$image_urls_string.' --outfile_path '.$archive_stitched_temp_image);
+
+    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archive_stitched_temp_image, 'project', $trial_id, $linking_table_type_id);
 
     $c->stash->{rest} = { data => \@image_urls };
 }
