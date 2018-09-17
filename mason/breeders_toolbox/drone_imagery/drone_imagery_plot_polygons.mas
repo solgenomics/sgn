@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery' ] &>
 
 <div class="modal fade" id="drone_imagery_plot_polygons_dialog" name="drone_imagery_plot_polygons_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryPlotPolygonsDialog">
   <div class="modal-dialog modal-xl" role="document">
@@ -12,6 +12,39 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+            <form class="form-horizontal">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Number of Rows: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_plot_polygon_num_rows" name="drone_image_plot_polygon_num_rows" type="number" placeholder="10" value=10 />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Width: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_plot_polygon_width" name="drone_image_plot_polygon_width" type="number" placeholder="50" value=50 />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Number of Columns: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_plot_polygon_num_cols" name="drone_image_plot_polygon_num_cols" type="number" placeholder="10" value=10 />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Height: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_plot_polygon_height" name="drone_image_plot_polygon_height" type="number" placeholder="50" value=50 />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div id="grid_layout_overlay_div"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -23,12 +56,29 @@
 
 
 
-<script defer="defer">
+<script>
 
 jQuery(document).ready(function() {
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function() {
+        var trial_id = jQuery(this).data('project_id');
+        var stitched_image = jQuery(this).data('stitched_image');
+        var html = '<div id="grid_layout_overlay" style="background-image:url('+decodeURI(stitched_image)+'); background-repeat:no-repeat;"></div>';
+        jQuery('#grid_layout_overlay_div').html(html);
+
+        var gridData = gridDataGenerate(50, 50, 10, 10, '#grid_layout_overlay');
+
         jQuery('#drone_imagery_plot_polygons_dialog').modal("show");
+    });
+
+    jQuery('#drone_image_plot_polygon_num_rows,#drone_image_plot_polygon_num_cols,#drone_image_plot_polygon_width,#drone_image_plot_polygon_height').change(function(){
+        var gridData = gridDataGenerate(
+            parseInt(jQuery('#drone_image_plot_polygon_width').val()),
+            parseInt(jQuery('#drone_image_plot_polygon_height').val()),
+            parseInt(jQuery('#drone_image_plot_polygon_num_rows').val()),
+            parseInt(jQuery('#drone_image_plot_polygon_num_cols').val()),
+            '#grid_layout_overlay'
+        );
     });
 
 });

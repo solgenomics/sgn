@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<table class="table table-bordered" id="raw_drone_image_datatable">
+<table class="table table-bordered table-hover" id="raw_drone_image_datatable">
     <thead>
         <tr>
             <th>Trial</th>

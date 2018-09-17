@@ -21,6 +21,7 @@ use DateTime;
 use CXGN::UploadFile;
 use SGN::Image;
 use CXGN::DroneImagery::ImagesSearch;
+use URI::Encode qw(uri_encode uri_decode);
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -144,8 +145,10 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_source_tag_small = $image->get_img_src_tag("small");
+        my $image_original = $image->get_image_url("original");
         $unique_trials{$_->{trial_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
         $unique_trials{$_->{trial_id}}->{stitched_image_username} = $_->{username};
+        $unique_trials{$_->{trial_id}}->{stitched_image_original} = $image_original;
     }
     while (my ($k, $v) = each %unique_trials) {
         my $images = scalar(@{$v->{images}})." Images<br/><span>";
@@ -155,7 +158,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         foreach (keys %{$v->{usernames}}){
             $usernames .= " $_ ";
         }
-        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-project_id="'.$k.'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-project_id="'.$k.'">Stitch Uploaded Images</button>';
+        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-project_id="'.$k.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-project_id="'.$k.'">Stitch Uploaded Images</button>';
         push @return, ["<a href=\"/breeders_toolbox/trial/$k\">$v->{trial_name}</a>", $usernames, $images, $stitched_image];
     }
 
@@ -224,10 +227,10 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
 
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls '.$image_urls_string.' --outfile_path '.$archive_stitched_temp_image);
 
-    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $ret = $image->process_image($archive_stitched_temp_image, 'project', $trial_id, $linking_table_type_id);
+    # my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    # $image->set_sp_person_id($user_id);
+    # my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    # my $ret = $image->process_image($archive_stitched_temp_image, 'project', $trial_id, $linking_table_type_id);
 
     $c->stash->{rest} = { data => \@image_urls };
 }
