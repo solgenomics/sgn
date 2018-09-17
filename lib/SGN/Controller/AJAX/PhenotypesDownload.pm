@@ -61,6 +61,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
   #print STDERR Dumper \@trial_ids;
   my $format = $c->req->param('format') || "ExcelBasic";
+  my $include_notes = $c->req->param('include_notes');
   my $data_level = $c->req->param('data_level') || "plots";
   my $file_format = $c->req->param('create_spreadsheet_phenotype_file_format') || "detailed";
   my $sample_number = $c->req->param('sample_number');
@@ -100,6 +101,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 	  filename => $tempfile,
 	  format => $format,
       data_level => $data_level,
+      include_notes => $include_notes,
       sample_number => $sample_number,
       predefined_columns => $predefined_columns,
       });
