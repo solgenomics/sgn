@@ -831,7 +831,6 @@ sub add_crossingtrial_POST :Args(0){
     }
 }
 
-
 sub upload_progenies : Path('/ajax/cross/upload_progenies') : ActionClass('REST'){ }
 
 sub upload_progenies_POST : Args(0) {
@@ -1199,6 +1198,31 @@ sub upload_family_names_POST : Args(0) {
     $c->stash->{rest} = {success => "1",};
 }
 
+
+sub delete_cross : Path('/ajax/cross/delete') : ActionClass('REST'){ }
+
+sub delete_cross_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $cross_stock_id = $c->req->param("cross_id");
+
+    my $cross = CXGN::Cross->new( { bcs_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+
+    if (!$cross->cross_stock_id()) { 
+	$c->stash->{rest} = { error => "No such cross exists. Cannot delete." };
+	return;
+    }
+
+    my $error = $cross->delete();
+    
+    if ($error) { 
+	$c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 ###
