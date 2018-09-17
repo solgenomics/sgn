@@ -22,10 +22,20 @@ has 'female_parent' => (isa => 'Str',
     required => 0,
 );
 
+has 'female_parent_id' => (isa => 'Int',
+    is => 'rw',
+    required => 0,
+);			   
+
 has 'male_parent' => (isa => 'Str',
     is => 'rw',
     required => 0,
 );
+
+has 'male_parent_id' => (isa => 'Int',
+    is => 'rw',
+    required => 0,
+);			   
 
 has 'trial_id' => (isa => "Int",
     is => 'rw',
@@ -37,6 +47,21 @@ has 'trial_id' => (isa => "Int",
 sub BUILD {
     my $self = shift;
     my $args = shift;
+    my @data = $self->get_cross_relationships();
+    
+    print STDERR "Data:".Dumper(\@data);
+
+    if (exists($data[0]) && exists($data[0]->[0])) { 
+	$self->female_parent($data[0]->[0]); print STDERR "FP: $data[0]->[0]\n";
+	if (exists($data[0]->[1])) { $self->female_parent_id($data[0]->[1]); }
+    }
+
+    if (exists($data[1]) && exists($data[1]->[0])) { 
+	$self->male_parent($data[1]->[0]);
+	if (exists($data[0]->[1])) { 
+	    $self->male_parent_id($data[1]->[1]);    
+	}
+    }
 }
 
 sub get_cross_relationships {
@@ -44,11 +69,13 @@ sub get_cross_relationships {
 
     my $crs = $self->bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $self->cross_stock_id } );
 
-    my $maternal_parent = "";
-    my $paternal_parent = "";
+    my $maternal_parent = [];
+    my $paternal_parent = [];
     my @progeny = ();
 
     foreach my $child ($crs->all()) {
+
+	print "looking at ".$child->subject->uniquename()."\n";
         if ($child->type->name() eq "female_parent") {
           $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
         }
@@ -395,31 +422,48 @@ sub delete {
 	    ($properties->{images} == 0);
 
 	if (! $can_delete) {
-	    return "Cross has associated data. ($properties->{trials} trials, $properties->{traits} traits and $properties->{genoytpes} genotypes. Cannot delete...\n";
+	    return "Cross has associated data. ($properties->{trials} trials, $properties->{traits} traits, $properties->{genoytpes} genotypes and $properties->{images} images. Cannot delete. Please remove these associated data and attempt deletion again.\n";
 	}
 	else { 
-	    print STDERR "This cross has no associated data that would prevent deletion.";
+	    print STDERR "This cross has no associated data that would prevent deletion.\n";
 	}
 	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
 	# delete the project entries
 	#
 	print STDERR "Deleting project entry for cross...\n";
-#	    my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
-#	my $h1 = $dbh->prepare($q1);
-#	$h1->execute($self->cross_stock_id(), $cross_type_id);
+	
+	# check if project entry has multiple nd_experiment_project links. Only delete if it has only 1 link...
+	my $q = "select count(*) from nd_experiment_project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock.stock_id=? and stock.type_id = ?)";
+	my $h = $dbh->prepare($q);
+	$h->execute($self->cross_stock_id(), $cross_type_id);
+	my ($count) = $h->fetchrow_array();
+	print STDERR "Project links: $count\n";
 
+	if ($count == 1)  { 
+	    my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock.stock_id=? and stock.type_id = ?)";
+	    my $h1 = $dbh->prepare($q1);
+	    $h1->execute($self->cross_stock_id(), $cross_type_id);
+	}
 	# delete the nd_experiment entries
 	#
 	print STDERR "Deleting nd_experiment entry for cross...\n";
-#	my $q2= ""; #"delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
-#	my $h2 = $dbh->prepare($q2);
-#	$h2->execute($self->cross_stock_id(), $cross_type_id);
+	my $q2="delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
+	my $h2 = $dbh->prepare($q2);
+	$h2->execute($self->cross_stock_id(), $cross_type_id);
+
+	# delete stock owner entries...
+	print STDERR "Delete stock_owner entries...\n";
+	my $q3 = "delete from phenome.stock_owner where stock_id=?";
+	my $h3 = $dbh->prepare($q3);
+	$h3->execute($self->cross_stock_id());
 
 	# delete the stock entries
 	#
-#	my $q3 = "delete from stock where stock.stock_id=523823 and stock.type_id = ?";
-#	my $h3 = $dbh->prepare($q3);
-#	$h3->execute($self->cross_stock_id(), $cross_type_id);
+	print STDERR "Deleting stock entry for the cross...\n";
+	my $q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
+	my $h4 = $dbh->prepare($q4);
+	$h4->execute($self->cross_stock_id(), $cross_type_id);
     };
 
     if ($@) {
@@ -479,7 +523,7 @@ sub cross_properties {
 	trials => $has_trials,
 	genotypes => $has_genotypes,
 	images => $has_images,
-	subjects => @subjects,
+	subjects => \@subjects,
     };
 }
 

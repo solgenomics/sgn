@@ -48,7 +48,7 @@ if(@prove_args){
 
 #Change cwd to `sgn/` (or parent of wherever this script is located)
 my $sgn_dir = abs_path(dirname(abs_path($0))."/../");
-print STDERR "####### ".$sgn_dir." #######";
+#print STDERR "####### ".$sgn_dir." #######";
 chdir($sgn_dir);
 @prove_args = ( 't' ) unless @prove_args;
 
@@ -66,12 +66,12 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-print STDERR Dumper($cfg);
+#print STDERR Dumper($cfg);
 my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost} || 'localhost';
 my $dbport = $config->{dbport} || '5432';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
-print STDERR "Using $dbhost:$dbport\n";
+#print STDERR "Using $dbhost:$dbport\n";
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
 
@@ -117,17 +117,21 @@ my $new_conf = hash2config($config);
 open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf for writing";
 print $NEWCONF $new_conf;
 close($NEWCONF);
+print STDERR "Done.\n";
 
+print STDERR "# Running dbpatches on the fixture...\n";
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe");
+my $hide_db_patches_output = "";
+if (!$verbose) { $hide_db_patches_output = " > /dev/null 2>&1"; }
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe $hide_db_patches_output");
 
 # run the materialized views creation script
 #
-print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview\n";
+print STDERR "# Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview\n";
 system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview");
 
 if ($dumpupdatedfixture){
-    print STDERR "Dumping new updated fixture with all patches run on it to t/data/fixture/cxgn_fixture.sql\n";
+    print STDERR "# Dumping new updated fixture with all patches run on it to t/data/fixture/cxgn_fixture.sql\n";
     system("pg_dump -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
 }
 

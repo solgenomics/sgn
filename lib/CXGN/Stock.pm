@@ -527,7 +527,7 @@ sub get_image_ids {
 }
 
 
-=head2 get_genotypes
+=head2 get_genotypeprop_ids
 
  Usage:
  Desc:
@@ -541,7 +541,7 @@ sub get_image_ids {
 sub get_genotypeprop_ids { 
     my $self = shift;
     
-    my $q = "SELECT genotypeprop_id FROM stock JOIN nd_experiment_stock using(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN nd_experimentprop USING(genotype_id) WHERE stock.stock_id=?";
+    my $q = "SELECT genotypeprop_id FROM stock JOIN nd_experiment_stock using(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN genotypeprop USING(genotype_id) WHERE stock.stock_id=?";
     my $h = $self->schema->storage->dbh()->prepare($q);
     $h->execute($self->stock_id());
     my @genotypeprop_ids;
