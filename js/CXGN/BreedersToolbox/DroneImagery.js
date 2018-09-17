@@ -21,7 +21,7 @@ function gridDataGenerate(width, height, num_rows, num_cols, div_id) {
         xpos = 1;
         ypos += height;	
     }
-    console.log(data);
+    //console.log(data);
 
     d3.select(div_id).html("");
     var total_width = width*num_cols;

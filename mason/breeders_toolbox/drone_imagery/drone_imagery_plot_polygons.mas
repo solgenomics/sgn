@@ -45,6 +45,7 @@
                 </div>
             </form>
             <div id="grid_layout_overlay_div"></div>
+            <div id="drone_imagery_trial_layout_div"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -60,19 +61,36 @@
 
 jQuery(document).ready(function() {
 
+    var gridData = new Array();
+
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function() {
         var trial_id = jQuery(this).data('project_id');
         var stitched_image = jQuery(this).data('stitched_image');
         var html = '<div id="grid_layout_overlay" style="background-image:url('+decodeURI(stitched_image)+'); background-repeat:no-repeat;"></div>';
         jQuery('#grid_layout_overlay_div').html(html);
 
-        var gridData = gridDataGenerate(50, 50, 10, 10, '#grid_layout_overlay');
+        gridData = gridDataGenerate(50, 50, 10, 10, '#grid_layout_overlay');
 
         jQuery('#drone_imagery_plot_polygons_dialog').modal("show");
+
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+trial_id+'/design',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving trial layout and design!')
+            }
+        });
     });
 
     jQuery('#drone_image_plot_polygon_num_rows,#drone_image_plot_polygon_num_cols,#drone_image_plot_polygon_width,#drone_image_plot_polygon_height').change(function(){
-        var gridData = gridDataGenerate(
+        gridData = gridDataGenerate(
             parseInt(jQuery('#drone_image_plot_polygon_width').val()),
             parseInt(jQuery('#drone_image_plot_polygon_height').val()),
             parseInt(jQuery('#drone_image_plot_polygon_num_rows').val()),
