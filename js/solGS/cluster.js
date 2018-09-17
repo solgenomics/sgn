@@ -100,7 +100,7 @@ solGS.cluster = {
 	    + '  id="k_means_select" value="k-means">K-Means</label></div>';
 	
 	var hierarchical= '<div class="checkbox-inline"><label><input type="checkbox"  name="analysis_select"'
-	    + ' id="heirarchical_select" value="heirarchical">Hierarchical</label></div>';
+	    + ' id="heirarchical_select" value="heirarchical" disabled>Hierarchical</label></div>';
 
 	var formGroup = '<form>' + kMeans + hierarchical + '</form>';
 	

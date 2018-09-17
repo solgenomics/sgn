@@ -16,6 +16,7 @@ library(dplyr)
 library(fpc)
 library(cluster)
 library(ggfortify)
+#library(factoextra)
 
 
 
@@ -101,19 +102,45 @@ genoData <- data.frame(genoData)
 
 set.seed(235)
 
-kmeansOut <- kmeansruns(genoData)
 
-recK <- paste0('Recommended number of clusters (k) for this data set is: ', kmeansOut$bestk)
+pca    <- prcomp(genoData, retx=TRUE)
+pca    <- summary(pca)
+
+variances <- data.frame(pca$importance)
+
+varProp        <- variances[3, ]
+varProp        <- data.frame(t(varProp))
+names(varProp) <- c('cumVar')
+
+selectPcs <- varProp %>% filter(cumVar <= 0.9) 
+pcsCnt    <- nrow(selectPcs)
+
+pcsNote <- paste0('Before clustering this dataset, principal component analysis (PCA) was done on it. ')
+pcsNote <- paste0(pcsNote, 'Based on the PCA, ', pcsCnt, ' PCs are used to cluster this dataset. ')
+pcsNote <- paste0(pcsNote, 'They explain 90% of the variance in the original dataset.')
+cat(pcsNote, file=reportFile, sep="\n", append=TRUE)
+
+scores   <- data.frame(pca$x)
+scores   <- scores[, 1:pcsCnt]
+scores   <- round(scores, 3)
+
+variances <- variances[2, 1:pcsCnt]
+variances <- round(variances, 4) * 100
+variances <- data.frame(t(variances))
+
+kMeansOut <- kmeansruns(scores, runs=10)
+recK <- paste0('Recommended number of clusters (k) for this data set is: ', kMeansOut$bestk)
 cat(recK, file=reportFile, sep="\n", append=TRUE)
 
-kMeansOut        <- kmeans(genoData, centers=kmeansOut$bestk, nstart=5)
+kCenters         <- kMeansOut$bestk
+kMeansOut        <- kmeans(scores, centers=kCenters, nstart=10)
 kClusters        <- data.frame(kMeansOut$cluster)
 kClusters        <- rownames_to_column(kClusters)
 names(kClusters) <- c('Genotypes', 'Cluster')
 kClusters        <- kClusters %>% arrange(Cluster)
 
 png(plotKmeansFile)
-autoplot(kMeansOut, data=genoData, frame = TRUE, frame.type='norm', x=1, y=2)
+autoplot(kMeansOut, data=scores, frame = TRUE,  x=1, y=2)
 dev.off()
 
 #png(plotPamFile)
