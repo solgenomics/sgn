@@ -1,6 +1,7 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
+
 /solgs/model/cluster.mas - cluster analysis template
 
 =AUTHOR
@@ -23,28 +24,15 @@ my $pop_id = $trial_id if $trial_id;
 </%perl>
 
 
-<style>
-
-.axis path, .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-</style>
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-<& /util/import_javascript.mas, classes => ["solGS.cluster"] &>
-
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
   title       => "K-Means Clustering (Using Marker Data)" 
 &> 
 
-<input id="run_cluster" class="button" type="button" value="Run Cluster" /> 
-<div id="cluster_canvas"></div>
-<div id="cluster_plot"></div> 
-<div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"></div>
-<input type="hidden" id="training_pop_id" value="<% $pop_id %>" /> 
+  <input id="run_cluster" class="button" type="button" value="Run Cluster" />
+  
+  <& /solgs/cluster/plot.mas,
+     pop_id => $pop_id &>
 
 </&>
