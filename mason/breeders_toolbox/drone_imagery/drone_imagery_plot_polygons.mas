@@ -45,6 +45,7 @@
                 </div>
             </form>
             <div id="grid_layout_overlay_div"></div>
+            <hr>
             <div id="drone_imagery_trial_layout_div"></div>
         </div>
       </div>
@@ -74,12 +75,29 @@ jQuery(document).ready(function() {
         jQuery('#drone_imagery_plot_polygons_dialog').modal("show");
 
         jQuery.ajax({
-            url : '/ajax/breeders/trial/'+trial_id+'/design',
+            url : '/ajax/breeders/trial/'+trial_id+'/layout_table',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
                 console.log(response);
+                var output = response.output;
+                var header = output[0];
+                var html = '<table class="table table-borders table-hover" id="drone_imagery_layout_table"><thead><tr>';
+                for (var i=0; i<header.length; i++){
+                    html = html + '<td>'+header[i]+'</td>';
+                }
+                html = html + '</tr></thead><tbody>';
+                for (var i=1; i<output.length; i++){
+                    html = html + '<tr>';
+                    for (var j=0; j<output[i].length; j++){
+                        html = html + '<td>'+output[i][j]+'</td>';
+                    }
+                    html = html + '</tr>';
+                }
+                html = html + '</tbody></table>';
+                jQuery('#drone_imagery_trial_layout_div').html(html);
+                jQuery('#drone_imagery_layout_table').DataTable();
                 jQuery("#working_modal").modal("hide");
             },
             error: function(response){
