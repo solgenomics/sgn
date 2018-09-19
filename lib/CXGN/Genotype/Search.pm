@@ -319,7 +319,6 @@ sub get_selected_accessions {
     my %param_hash;
     my $marker_name;
     my $allele_dosage;
-    my $q;
     my @selected_accessions = ();
     my $param_ref;
     my %params;
@@ -329,8 +328,9 @@ sub get_selected_accessions {
         %params = %{$param_ref};
         $marker_name = $params{marker_name};
         $allele_dosage = $params{allele_dosage};
+    }
 
-        $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
         JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
@@ -342,10 +342,8 @@ sub get_selected_accessions {
 
 
     while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
-        push @selected_accessions, [$selected_id, $selected_uniquename, $allele_dosage]
+        push @selected_accessions, [$selected_id, $selected_uniquename]
     }
-}
-
 
 #    print STDERR DUmper (\@selected_accessions);
 
