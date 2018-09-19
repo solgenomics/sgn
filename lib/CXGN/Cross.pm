@@ -408,11 +408,19 @@ sub delete {
 	my $h2 = $dbh->prepare($q2);
 	$h2->execute($self->cross_stock_id(), $cross_type_id);
 
+	# delete stock owner entries
+	#
+	print STDERR "Deleting associated stock_owners...\n";
+	my $q3 = "delete from phenome.stock_owner where stock_id=?";
+	my $h3 = $dbh->prepare($q3);
+	$h3->execute($self->cross_stock_id());
+
 	# delete the stock entries
 	#
-	my $q3 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
-	my $h3 = $dbh->prepare($q3);
-	$h3->execute($self->cross_stock_id(), $cross_type_id);
+	print STDERR "Deleting the stock entry...\n";
+	my $q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
+	my $h4 = $dbh->prepare($q4);
+	$h4->execute($self->cross_stock_id(), $cross_type_id);
     };
 
     if ($@) {
@@ -422,6 +430,7 @@ sub delete {
     }
     else {
 	$dbh->commit();
+	return 0;
     }
 }
 
