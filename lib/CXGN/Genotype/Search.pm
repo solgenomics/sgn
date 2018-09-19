@@ -340,7 +340,7 @@ sub get_selected_accessions {
         JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
         WHERE genotypeprop.value @> ?
-        AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ')';
+        AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $marker_dosage_string, @accessions);
