@@ -316,36 +316,38 @@ sub get_selected_accessions {
 
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
 
-    my %param_hash;
-    my $marker_name;
-    my $allele_dosage;
     my @selected_accessions = ();
-    my $param_ref;
-    my %params;
+    my $marker_dosage;
+
 
     foreach my $param (@parameters){
-        $param_ref = decode_json$param;
-        %params = %{$param_ref};
-        $marker_name = $params{marker_name};
-        $allele_dosage = $params{allele_dosage};
+        my $param_ref = decode_json$param;
+        my %params = %{$param_ref};
+        my $marker_name = $params{marker_name};
+        my $allele_dosage = $params{allele_dosage};
+
+        if ($marker_name){
+            $marker_dosage->{$marker_name} = $allele_dosage;
+        }
     }
+
+    my $marker_dosage_string = encode_json$marker_dosage;
+
+#    print STDERR "MARKER DOSAGE JSON=" .Dumper($marker_dosage_string). "\n";
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
         JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-        where genotypeprop.value->>? = ?
+        WHERE genotypeprop.value @> ?
         AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ')';
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $marker_name, $allele_dosage, @accessions);
-
+    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $marker_dosage_string, @accessions);
 
     while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
         push @selected_accessions, [$selected_id, $selected_uniquename]
     }
-
-#    print STDERR DUmper (\@selected_accessions);
 
     return \@selected_accessions;
 
