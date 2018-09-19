@@ -74,6 +74,43 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->stash->{rest} = { error => "Please select a field trial!" };
         $c->detach();
     }
+    my $selected_drone_run_id = $c->req->param('upload_drone_images_drone_run_id');
+    my $new_drone_run_name = $c->req->param('drone_image_upload_drone_run_name');
+    my $new_drone_run_date = $c->req->param('drone_image_upload_drone_run_date');
+    my $new_drone_run_desc = $c->req->param('drone_image_upload_drone_run_desc');
+    if (!$selected_drone_run_id && !$new_drone_run_name) {
+        $c->stash->{rest} = { error => "Please select a drone run or create a new drone run!" };
+        $c->detach();
+    }
+    if ($selected_drone_run_id && $new_drone_run_name){
+        $c->stash->{rest} = { error => "Please select a drone run OR create a new drone run, not both!" };
+        $c->detach();
+    }
+    if ($new_drone_run_name && !$new_drone_run_date){
+        $c->stash->{rest} = { error => "Please give a new drone run date!" };
+        $c->detach();
+    }
+    if ($new_drone_run_name && $new_drone_run_date !~ /^\d{2}\/\d{2}\/\d{4}$/){
+        $c->stash->{rest} = { error => "Please give a new drone run date in the format MM/DD/YYYY!" };
+        $c->detach();
+    }
+    if ($new_drone_run_name && !$new_drone_run_desc){
+        $c->stash->{rest} = { error => "Please give a new drone run description!" };
+        $c->detach();
+    }
+
+    if (!$selected_drone_run_id) {
+        my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
+        my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
+        my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+        my $project_rs = $schema->resultset("Project::Project")->create({
+            name => $new_drone_run_name,
+            description => $new_drone_run_desc,
+            projectprops => [{type_id => $project_start_date_type_id, value => $new_drone_run_date}, {type_id => $design_cvterm_id, value => 'drone_run'}],
+            project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_trial_id}]
+        });
+        $selected_drone_run_id = $project_rs->project_id();
+    }
 
     my $upload_original_name = $images_zip->filename();
     my $upload_tempfile = $images_zip->tempname;
@@ -99,7 +136,7 @@ sub upload_drone_imagery_POST : Args(0) {
     print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
     my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-    my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_trial_id);
+    my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
     if ($image_error) {
         $c->stash->{rest} = { error => "Problem saving images!".$image_error };
         $c->detach();
@@ -132,25 +169,29 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     #print STDERR Dumper $result;
 
     my @return;
-    my %unique_trials;
+    my %unique_drone_runs;
     foreach (@$result) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        push @{$unique_trials{$_->{trial_id}}->{images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        $unique_trials{$_->{trial_id}}->{usernames}->{$_->{username}}++;
-        $unique_trials{$_->{trial_id}}->{trial_name} = $_->{trial_name};
+        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        $unique_drone_runs{$_->{drone_run_project_id}}->{usernames}->{$_->{username}}++;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
     }
     foreach (@$stitched_result) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_source_tag_small = $image->get_img_src_tag("small");
         my $image_original = $image->get_image_url("original");
-        $unique_trials{$_->{trial_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_trials{$_->{trial_id}}->{stitched_image_username} = $_->{username};
-        $unique_trials{$_->{trial_id}}->{stitched_image_original} = $image_original;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+        $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_username} = $_->{username};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_original} = $image_original;
     }
-    while (my ($k, $v) = each %unique_trials) {
+    while (my ($k, $v) = each %unique_drone_runs) {
         my $images = scalar(@{$v->{images}})." Images<br/><span>";
         $images .= join '', @{$v->{images}};
         $images .= "</span>";
@@ -158,8 +199,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         foreach (keys %{$v->{usernames}}){
             $usernames .= " $_ ";
         }
-        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-project_id="'.$k.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-project_id="'.$k.'">Stitch Uploaded Images</button>';
-        push @return, ["<a href=\"/breeders_toolbox/trial/$k\">$v->{trial_name}</a>", $usernames, $images, $stitched_image];
+        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'">Stitch Uploaded Images</button>';
+        push @return, ["<a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a>", $v->{drone_run_project_name}, $v->{drone_run_project_description}, $v->{drone_run_date}, $usernames, $images, $stitched_image];
     }
 
     $c->stash->{rest} = { data => \@return };
@@ -171,7 +212,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $trial_id = $c->req->param('trial_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
 
     my $user_id;
     my $user_name;
@@ -202,7 +243,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
-        trial_id_list=>[$trial_id],
+        drone_run_project_id_list=>[$drone_run_project_id],
         project_image_type_id=>$raw_drone_images_cvterm_id
     });
     my ($result, $total_count) = $images_search->search();
@@ -227,10 +268,10 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
 
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls '.$image_urls_string.' --outfile_path '.$archive_stitched_temp_image);
 
-    # my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    # $image->set_sp_person_id($user_id);
-    # my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    # my $ret = $image->process_image($archive_stitched_temp_image, 'project', $trial_id, $linking_table_type_id);
+    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archive_stitched_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
 
     $c->stash->{rest} = { data => \@image_urls };
 }

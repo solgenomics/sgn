@@ -63,6 +63,12 @@ sub patch {
         'project_md_image' => [
             'raw_drone_imagery',
             'stitched_drone_imagery'
+        ],
+        'project_property' => [
+            'project_start_date'
+        ],
+        'project_relationship' => [
+            'drone_run_on_field_trial'
         ]
     };
 

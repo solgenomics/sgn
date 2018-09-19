@@ -4,7 +4,10 @@
 <table class="table table-bordered table-hover" id="raw_drone_image_datatable">
     <thead>
         <tr>
-            <th>Trial</th>
+            <th>Field Trial</th>
+            <th>Drone Run</th>
+            <th>Drone Run Description</th>
+            <th>Drone Run Date</th>
             <th>Image Username(s)</th>
             <th>Uploaded Drone Images</th>
             <th>Stiched Image</th>
@@ -20,9 +23,9 @@ jQuery(document).ready(function(){
     });
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_stitch"]', function(){
-        var trial_id = jQuery(this).data('project_id');
+        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
         jQuery.ajax({
-            url : '/ajax/drone_imagery/raw_drone_imagery_stitch?trial_id='+trial_id,
+            url : '/ajax/drone_imagery/raw_drone_imagery_stitch?drone_run_project_id='+drone_run_project_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
