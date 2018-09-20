@@ -313,7 +313,7 @@ sub get_genotype_info {
     if (scalar(@found_genotypeprop_ids)>0) {
         my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
-        my $genotypeprop_q = "SELECT genotypeprop_id, s.key $genotypeprop_hash_select_sql from genotypeprop, jsonb_each(genotypeprop.value) as s WHERE genotypeprop_id = ?;";
+        my $genotypeprop_q = "SELECT genotypeprop_id, s.key $genotypeprop_hash_select_sql from genotypeprop, jsonb_each(genotypeprop.value) as s WHERE genotypeprop_id = ? and type_id = $vcf_snp_genotyping_cvterm_id;";
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
         foreach (@found_genotypeprop_ids){
             $genotypeprop_h->execute($_);
@@ -339,7 +339,7 @@ sub get_genotype_info {
     my %selected_protocol_top_key_info;
     if (scalar(@found_protocolprop_ids)>0){
         my $protocolprop_id_sql = join ("," , @found_protocolprop_ids);
-        my $protocolprop_where_sql = "nd_protocolprop_id in ($protocolprop_id_sql)";
+        my $protocolprop_where_sql = "nd_protocolprop_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_cvterm_id";
         my $protocolprop_hash_select_sql = scalar(@protocolprop_marker_hash_select_arr) > 0 ? ', '.join ',', @protocolprop_marker_hash_select_arr : '';
         my $protocolprop_q = "SELECT nd_protocolprop_id, s.key $protocolprop_hash_select_sql from nd_protocolprop, jsonb_each(nd_protocolprop.value->'markers') as s WHERE $protocolprop_where_sql;";
         my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
