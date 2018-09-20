@@ -452,12 +452,18 @@ Retrieves genotypes as a listref of hashrefs.
 sub retrieve_genotypes {
     my $self = shift;
     my $protocol_id = shift;
+    my $genotypeprop_hash_select = shift || ['DS'];
+    my $protocolprop_top_key_select = shift || [];
+    my $protocolprop_marker_hash_select = shift || [];
 
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
         accession_list => $self->accessions(),
         trial_list => $self->trials(),
-        protocol_id_list => [$protocol_id]
+        protocol_id_list => [$protocol_id],
+        genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
+        protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
+        protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
     );
     my ($total_count, $dataref) = $genotypes_search->get_genotype_info();
     return $dataref;
