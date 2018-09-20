@@ -302,6 +302,7 @@ sub get_genotype_info {
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
     }
+    print STDERR "CXGN::Genotype::Search has genotypeprop_ids\n";
 
     my @found_genotypeprop_ids = keys %genotypeprop_hash;
     my @genotypeprop_hash_select_arr;
@@ -323,6 +324,7 @@ sub get_genotype_info {
             }
         }
     }
+    print STDERR "CXGN::Genotype::Search has genotypeprops\n";
 
     my @found_protocolprop_ids = keys %protocolprop_hash;
     my @protocolprop_marker_hash_select_arr;
@@ -364,6 +366,7 @@ sub get_genotype_info {
             }
         }
     }
+    print STDERR "CXGN::Genotype::Search has protocolprops\n";
 
     foreach (@genotypeprop_array) {
         my $selected_genotype = $selected_genotype_info{$_->{markerProfileDbId}};
