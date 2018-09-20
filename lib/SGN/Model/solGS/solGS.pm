@@ -832,8 +832,7 @@ sub structure_genotype_data {
 
 	    if ($cnt > 1)
 	    {
-		$duplicate_stock = $stock ~~ @stocks; #grep(/^$stock$/, @stocks);
-	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
+		$duplicate_stock =  grep(/^$stock$/, @stocks); #$stock ~~ @stocks;
 	    }
 	    
 	    if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
@@ -1666,7 +1665,9 @@ sub structure_phenotype_data {
     my $round = Math::Round::Var->new(0.001);
 
     my $formatted_data;
-
+    
+    no warnings 'uninitialized';
+    
     for (my $i =0; $i < @$data; $i++) 
     {
 	my $row = $data->[$i];
