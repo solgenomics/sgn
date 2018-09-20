@@ -18,6 +18,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     protocolprop_top_key_select=>['reference_genome_name', 'header_information_lines', 'marker_names', 'markers'], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
     protocolprop_marker_hash_select=>['name', 'chrom', 'pos', 'alt', 'ref'], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
+    return_only_first_genotypeprop_for_stock=>0, #THIS IS TO CONSERVE MEMORY USAGE
     # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}], NOT IMPLEMENTED
     # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}], NOT IMPLEMENTED
 });
@@ -103,6 +104,12 @@ has 'protocolprop_marker_hash_select' => (
     default => sub {['name', 'chrom', 'pos', 'alt', 'ref', 'qual', 'filter', 'info', 'format']} #THESE ARE ALL POSSIBLE PROTOCOLPROP MARKER HASH KEYS BASED ON VCF LOADING
 );
 
+has 'return_only_first_genotypeprop_for_stock' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 #NOT IMPLEMENTED
 has 'marker_search_hash_list' => (
     isa => 'ArrayRef[HashRef]|Undef',
@@ -145,6 +152,7 @@ sub get_genotype_info {
     my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
     my $marker_search_hash_list = $self->marker_search_hash_list;
     my $marker_score_search_hash_list = $self->marker_score_search_hash_list;
+    my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
     my $limit = $self->limit;
     my $offset = $self->offset;
     my @data;
@@ -227,7 +235,14 @@ sub get_genotype_info {
         $offset_clause = " OFFSET $offset ";
     }
 
-    my $q = "SELECT distinct on (stock.stock_id) stock.stock_id, genotype_values.genotypeprop_id, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
+    my $stock_select = '';
+    if ($return_only_first_genotypeprop_for_stock) {
+        $stock_select = 'distinct on (stock.stock_id) stock.stock_id';
+    } else {
+        $stock_select = 'stock.stock_id';
+    }
+
+    my $q = "SELECT $stock_select, genotype_values.genotypeprop_id, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
@@ -256,7 +271,6 @@ sub get_genotype_info {
     my @genotypeprop_array;
     my %genotypeprop_hash;
     my %protocolprop_hash;
-    my %uniquename_check;
     while (my ($stock_id, $genotypeprop_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
@@ -293,19 +307,12 @@ sub get_genotype_info {
             genotypingDataProjectDbId => $project_id,
             genotypingDataProjectName => $project_name,
             genotypingDataProjectDescription => $project_description,
-            # genotype_hash => \%dosage_hash,
-            # full_genotype_hash => $genotype,
-            # full_protocol_hash => $protocol,
-            # all_protocol_marker_names => $all_protocol_marker_names,
             igd_number => $igd_number,
-            # resultCount => scalar(keys(%$genotype))
         };
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
-        $uniquename_check{$germplasmName}++;
     }
     print STDERR "CXGN::Genotype::Search has genotypeprop_ids $total_count\n";
-    print STDERR Dumper \%uniquename_check;
 
     my @found_genotypeprop_ids = keys %genotypeprop_hash;
     my @genotypeprop_hash_select_arr;
