@@ -302,7 +302,7 @@ sub get_genotype_info {
         };
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
-        $uniquename_check{$genotype_uniquename}++;
+        $uniquename_check{$germplasmName}++;
     }
     print STDERR "CXGN::Genotype::Search has genotypeprop_ids $total_count\n";
     print STDERR Dumper \%uniquename_check;
