@@ -309,6 +309,7 @@ sub get_genotype_info {
     foreach (@$genotypeprop_hash_select){
         push @genotypeprop_hash_select_arr, "s.value->>'$_'";
     }
+    my $count = 1;
     if (scalar(@found_genotypeprop_ids)>0) {
         my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
@@ -321,6 +322,8 @@ sub get_genotype_info {
                     $genotypeprop_hash{$genotypeprop_id}->{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
                 }
             }
+            print STDERR $count."\n";
+            $count++;
         }
     }
     print STDERR "CXGN::Genotype::Search has genotypeprops\n";
