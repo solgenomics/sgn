@@ -847,8 +847,8 @@ sub structure_genotype_data {
 		$geno_data .= "\n";
 	    }
 	}
-    }
     print STDERR scalar(@stocks)."\n";
+    }
 
     return \$geno_data;
 
