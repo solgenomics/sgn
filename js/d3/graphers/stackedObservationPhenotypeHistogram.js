@@ -35,7 +35,7 @@
     }
     var histLoc = d3.select(loc);
     var header = data[0];
-    var traitName = header[header.length-1];
+    var traitName = header[header.length-(header[header.length-1]!="notes"?1:2)];
     
     var observations = data.slice(1).map(function(d){
       var o = {};
