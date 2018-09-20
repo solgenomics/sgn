@@ -814,7 +814,7 @@ sub structure_genotype_data {
    
     if (@$dataref)
     {
-	my $geno_row  = @$dataref[0]->{genotype_hash};
+	my $geno_row  = @$dataref[0]->{selected_genotype_hash};
 	my $markers   = $self->_get_dataset_markers($geno_row);
 	my $headers   = $self->_create_genotype_dataset_headers($markers);
 	
@@ -840,7 +840,7 @@ sub structure_genotype_data {
 	    {
 		push @stocks, $stock;
 		
-		my $geno_hash = $dg->{genotype_hash}; 
+		my $geno_hash = $dg->{selected_genotype_hash}; 
 		
 		$geno_data .= $stock . "\t";
 		$geno_data .= $self->_create_genotype_row($headers, $geno_hash);
@@ -1136,7 +1136,7 @@ sub _create_genotype_row {
     {   
 	no warnings 'uninitialized';
 	
-	$geno_values .= $genotype_hash->{$marker};
+	$geno_values .= $genotype_hash->{$marker}->{'DS'};
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }
 

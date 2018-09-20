@@ -733,7 +733,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
       bcs_schema=>$schema,
       accession_list=>\@accession_ids,
       trial_list=>\@trial_ids,
-      protocol_id_list=>[$protocol_id]
+      protocol_id_list=>[$protocol_id],
+      genotypeprop_hash_select=>['DS'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
+      protocolprop_top_key_select=>[], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
+      protocolprop_marker_hash_select=>[], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
   });
   my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -773,7 +776,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
     my ($name,$batch_id) = split(/\|/, $genotypes->[$i]->{genotypeUniquename});
     print $TEMP $genotypes->[$i]->{germplasmName} . "|" . $batch_id . "\t";
-    push(@accession_genotypes, $genotypes->[$i]->{genotype_hash});
+    push(@accession_genotypes, $genotypes->[$i]->{selected_genotype_hash});
   }
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
   print $TEMP "\n";
@@ -808,10 +811,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
     for my $i ( 0 .. $#accession_genotypes ) {
       if($i == $#accession_genotypes ) {                              # print last accession genotype value and move onto new line
-        print $TEMP "$accession_genotypes[$i]{$markers[$j]}\n";
+        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\n";
       }
-      elsif (exists($accession_genotypes[$i]{$markers[$j]})) {        # print genotype and tab
-        print $TEMP "$accession_genotypes[$i]{$markers[$j]}\t";
+      elsif (exists($accession_genotypes[$i]->{$markers[$j]}->{'DS'})) {        # print genotype and tab
+        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\t";
       }
     }
   }
