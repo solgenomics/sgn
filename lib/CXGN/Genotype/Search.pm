@@ -227,7 +227,7 @@ sub get_genotype_info {
         $offset_clause = " OFFSET $offset ";
     }
 
-    my $q = "SELECT distinct stock.stock_id, genotype_values.genotypeprop_id, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
+    my $q = "SELECT distinct on (stock.stock_id) stock.stock_id, genotype_values.genotypeprop_id, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
@@ -244,7 +244,7 @@ sub get_genotype_info {
         JOIN genotypeprop AS genotype_values ON(genotype_values.genotype_id = genotype.genotype_id AND genotype_values.type_id = $vcf_snp_genotyping_cvterm_id)
         JOIN project USING(project_id)
         $where_clause
-        ORDER BY genotype_values.genotypeprop_id ASC
+        ORDER BY stock.stock_id, genotype_values.genotypeprop_id ASC
         $limit_clause
         $offset_clause;";
 
@@ -309,7 +309,6 @@ sub get_genotype_info {
     foreach (@$genotypeprop_hash_select){
         push @genotypeprop_hash_select_arr, "s.value->>'$_'";
     }
-    my $count = 1;
     if (scalar(@found_genotypeprop_ids)>0) {
         my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
@@ -322,8 +321,6 @@ sub get_genotype_info {
                     $genotypeprop_hash{$genotypeprop_id}->{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
                 }
             }
-            print STDERR $count."\n";
-            $count++;
         }
     }
     print STDERR "CXGN::Genotype::Search has genotypeprops\n";
