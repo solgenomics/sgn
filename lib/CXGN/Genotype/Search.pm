@@ -256,6 +256,7 @@ sub get_genotype_info {
     my @genotypeprop_array;
     my %genotypeprop_hash;
     my %protocolprop_hash;
+    my %uniquename_check;
     while (my ($stock_id, $genotypeprop_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
@@ -301,8 +302,10 @@ sub get_genotype_info {
         };
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
+        $uniquename_check{$genotype_uniquename}++;
     }
     print STDERR "CXGN::Genotype::Search has genotypeprop_ids $total_count\n";
+    print STDERR Dumper \%uniquename_check;
 
     my @found_genotypeprop_ids = keys %genotypeprop_hash;
     my @genotypeprop_hash_select_arr;
