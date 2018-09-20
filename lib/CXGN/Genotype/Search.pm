@@ -346,7 +346,7 @@ sub get_selected_accessions {
     $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $marker_dosage_string, @accessions);
 
     while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
-        push @selected_accessions, [$selected_id, $selected_uniquename]
+        push @selected_accessions, [$selected_id, $selected_uniquename, $marker_dosage_string]
     }
 
     return \@selected_accessions;

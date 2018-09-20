@@ -71,8 +71,8 @@ sub get_selected_accessions :Path('/ajax/search/get_selected_accessions') :Args(
     my @selected_accessions;
 
     foreach my $r(@$result){
-        my ($selected_id, $selected_uniquename) = @$r;
-        push @selected_accessions, [qq{<a href="/stock/$selected_id/view">$selected_uniquename</a>}];
+        my ($selected_id, $selected_uniquename, $marker_dosage_string) = @$r;
+        push @selected_accessions, [qq{<a href="/stock/$selected_id/view">$selected_uniquename</a>}, $marker_dosage_string];
     }
 
     $c->stash->{rest}={data=> \@selected_accessions};
