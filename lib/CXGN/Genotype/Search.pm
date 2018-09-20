@@ -311,14 +311,15 @@ sub get_genotype_info {
     my %selected_genotype_info;
     if (scalar(@found_genotypeprop_ids)>0) {
         my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
-        my $genotypeprop_where_sql = "genotypeprop_id in ($genotypeprop_id_sql)";
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
-        my $genotypeprop_q = "SELECT genotypeprop_id, s.key $genotypeprop_hash_select_sql from genotypeprop, jsonb_each(genotypeprop.value) as s WHERE $genotypeprop_where_sql;";
+        my $genotypeprop_q = "SELECT genotypeprop_id, s.key $genotypeprop_hash_select_sql from genotypeprop, jsonb_each(genotypeprop.value) as s WHERE genotypeprop_id = ?;";
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
-        $genotypeprop_h->execute();
-        while (my ($genotypeprop_id, $marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
-            for my $s (0 .. scalar(@genotypeprop_hash_select_arr)-1){
-                $selected_genotype_info{$genotypeprop_id}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
+        foreach (@found_genotypeprop_ids){
+            $genotypeprop_h->execute($_);
+            while (my ($genotypeprop_id, $marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
+                for my $s (0 .. scalar(@genotypeprop_hash_select_arr)-1){
+                    $selected_genotype_info{$genotypeprop_id}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
+                }
             }
         }
     }
