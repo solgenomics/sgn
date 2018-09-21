@@ -428,8 +428,7 @@ sub get_selected_accessions {
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
 
     my @selected_accessions = ();
-    my $marker_dosage;
-
+    my %vcf_params;
 
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
@@ -438,13 +437,13 @@ sub get_selected_accessions {
         my $allele_dosage = $params{allele_dosage};
 
         if ($marker_name){
-            $marker_dosage->{$marker_name} = $allele_dosage;
+            $vcf_params{$marker_name} = {'DS' => $allele_dosage};
         }
     }
 
-    my $marker_dosage_string = encode_json$marker_dosage;
+    my $vcf_params_string = encode_json \%vcf_params;
 
-#    print STDERR "MARKER DOSAGE JSON=" .Dumper($marker_dosage_string). "\n";
+    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
@@ -454,10 +453,10 @@ sub get_selected_accessions {
         AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $marker_dosage_string, @accessions);
+    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $vcf_params_string, @accessions);
 
     while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
-        push @selected_accessions, [$selected_id, $selected_uniquename, $marker_dosage_string]
+        push @selected_accessions, [$selected_id, $selected_uniquename, $vcf_params_string]
     }
 
     return \@selected_accessions;
