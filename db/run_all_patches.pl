@@ -56,6 +56,14 @@ for (my $i = 0; $i < (scalar @folders); $i++) {
         my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
         for (my $j = 0; $j < (scalar @patches); $j++) {
             my $patch = $patches[$j];
+	    
+	    if ($patch =~ /\~$/) { 
+		print STDERR "Ignoring $patch...\n";
+		next;
+	    }
+
+
+
             my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');
             print STDERR $cmd."\n";
             system("bash -c '$cmd'");

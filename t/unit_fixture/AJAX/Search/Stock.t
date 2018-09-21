@@ -107,7 +107,7 @@ $mech->post_ok('http://localhost:3010/ajax/search/stocks',['length'=>10, 'start'
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'recordsFiltered' => 341,'draw' => undef,'recordsTotal' => 341,'data' => [['<a href="/stock/41284/view">CASS_6Genotypes_103</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41285/view">CASS_6Genotypes_205</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41295/view">CASS_6Genotypes_104</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41296/view">CASS_6Genotypes_105</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41297/view">CASS_6Genotypes_106</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41298/view">CASS_6Genotypes_107</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41299/view">CASS_6Genotypes_201</a>','plot',undef,'','',''],['<a href="/stock/41300/view">CASS_6Genotypes_202</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41301/view">CASS_6Genotypes_203</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41302/view">CASS_6Genotypes_204</a>','plot','Manihot esculenta','','','']]}, 'test stock search 14');
+is_deeply($response, {'recordsFiltered' => 326,'draw' => undef,'recordsTotal' => 326,'data' => [['<a href="/stock/41284/view">CASS_6Genotypes_103</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41285/view">CASS_6Genotypes_205</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41295/view">CASS_6Genotypes_104</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41296/view">CASS_6Genotypes_105</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41297/view">CASS_6Genotypes_106</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41298/view">CASS_6Genotypes_107</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41299/view">CASS_6Genotypes_201</a>','plot',undef,'','',''],['<a href="/stock/41300/view">CASS_6Genotypes_202</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41301/view">CASS_6Genotypes_203</a>','plot','Manihot esculenta','','',''],['<a href="/stock/41302/view">CASS_6Genotypes_204</a>','plot','Manihot esculenta','','','']]}, 'test stock search 14');
 
 $mech->post_ok('http://localhost:3010/ajax/search/stocks',['length'=>10, 'start'=>0, "stock_type"=>"plot", "location"=>"test_location", "extra_stockprop_columns_view" => encode_json({"organization"=>1}), "stockprop_extra_columns_view_array"=> encode_json(["organization"]) ] );
 $response = decode_json $mech->content;
@@ -123,13 +123,13 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 $mech->post_ok('http://localhost:3010/stock/prop/add',["stock_id"=>"38842", "prop"=>"organization_name_1", "prop_type"=>"organization"] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-$mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>"organization_name_1"})] );
+$mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>{"matchtype"=>"contains", "value"=>"organization_name_1"}})] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 is_deeply($response, {'data' => [['<a href="/stock/38842/view">test_accession3</a>','accession','Solanum lycopersicum','test_accession3_synonym1','<a href="/solpeople/personal-info.pl?sp_person_id=41">Jane Doe</a>']],'recordsFiltered' => 1,'draw' => undef,'recordsTotal' => 1}, 'test stock search 16');
 
-$mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>"organization_name_1"}), "extra_stockprop_columns_view" => encode_json({"organization"=>1}), "stockprop_extra_columns_view_array"=> encode_json(["organization"]) ] );
+$mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>{"matchtype"=>"contains", "value"=>"organization_name_1"}}), "extra_stockprop_columns_view" => encode_json({"organization"=>1}), "stockprop_extra_columns_view_array"=> encode_json(["organization"]) ] );
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 

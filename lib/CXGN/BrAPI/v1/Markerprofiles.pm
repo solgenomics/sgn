@@ -116,14 +116,13 @@ sub markerprofiles_detail {
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
     my $detail = $genotypes->[0];
-    my $genotype = $detail->{full_genotype_hash};
+    my $genotype = $detail->{selected_genotype_hash};
 
     my @data;
     foreach my $m (sort genosort keys %$genotype) {
-        if (exists($genotype->{$m}->{'GT'})){
+        if (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
             push @data, { $m => $genotype->{$m}->{'GT'} };
-        }
-        if (exists($genotype->{$m}->{'DS'})){
+        } elsif (exists($genotype->{$m}->{'DS'})){
             push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}->{'DS'}) };
         }
     }
@@ -201,13 +200,13 @@ sub markerprofiles_allelematrix {
     my %marker_names_all;
     my @ordered_refmarkers;
     foreach (@$genotypes){
-        my $genotype_hash = $_->{full_genotype_hash};
+        my $genotype_hash = $_->{selected_genotype_hash};
         push @ordered_refmarkers, sort keys(%$genotype_hash);
     }
 
     my @scores;
     foreach (@$genotypes){
-        my $genotype_hash = $_->{full_genotype_hash};
+        my $genotype_hash = $_->{selected_genotype_hash};
         my $genotypeprop_id = $_->{markerProfileDbId};
         foreach my $m (@ordered_refmarkers) {
             my $score;
