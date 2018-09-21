@@ -711,5 +711,13 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 }
 
 
+sub manage_markers : Path("/breeders/markers") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
+}
+
+
 
 1;

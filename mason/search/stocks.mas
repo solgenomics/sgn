@@ -335,8 +335,13 @@ jQuery(document).ready(function () {
      });
 
     var editable_stockprops_search = {};
+    var params = {};
+    var matchtype = {};
     jQuery('#editable_stockprop_search_add').click( function(){
-        editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = '';
+        // console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
+        // console.log("Value is "+jQuery('#editable_stockprop_search_term').val());
+        editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = {"matchtype": "contains"};
+        console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
         _draw_editable_stockprops_search_fields();
     });
 
@@ -347,14 +352,24 @@ jQuery(document).ready(function () {
 
     jQuery(document).on("keyup", 'input[name="editable_stockprop_search_inputs"]', function(){
         //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
-        editable_stockprops_search[jQuery(this).data('property')] = jQuery(this).val();
+        editable_stockprops_search[jQuery(this).data('property')]["value"] = jQuery(this).val();
+        console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
+    });
+
+    jQuery(document).on("change", 'select[name="editable_stockprop_matchtype"]', function(){
+
+    // jQuery(document).on("change", 'input[name="editable_stockprop_matchtype"]', function(){
+        //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
+        console.log("prop is "+jQuery(this).data('property'));
+        editable_stockprops_search[jQuery(this).data('property')]["matchtype"] = jQuery(this).val();
+        console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
     function _draw_editable_stockprops_search_fields(){
         jQuery('#editable_stockprop_search_div').html('');
         for (var property in editable_stockprops_search) {
             if (editable_stockprops_search.hasOwnProperty(property)) {
-                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-6 control-label">'+property+': </label><div class="col-sm-6" ><div class="form-group"><div class="input-group"><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete" value="'+editable_stockprops_search[property]+'"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
+                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-3 control-label">'+property+': </label><div class="col-sm-9" ><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+property+'"><option title="contains" value="contains" selected="selected">contains</option><option title="starts with" value="starts_with">starts with</option><option title="ends with" value="ends_with">ends with</option><option title="exactly" value="exactly">exactly</option><option title="one of" value="one of">one of (separate multiple possibilities with commas)</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
 
                 jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
                    source: '/ajax/stock/stockproperty_autocomplete?property='+property,
@@ -474,6 +489,7 @@ jQuery(document).ready(function () {
 
 function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
     console.log(stock_type);
+    console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
     stock_table = jQuery('#stock_search_results').DataTable({
         'destroy' : true,
         'searching' : false,

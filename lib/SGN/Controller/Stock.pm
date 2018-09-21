@@ -350,8 +350,8 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
         my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
         foreach my $g (@$genotypes ) {
-            my $genotype_full = $g->{full_genotype_hash};
-            my $protocol_full = $g->{full_protocol_hash};
+            my $genotype_full = $g->{selected_genotype_hash};
+            my $protocol_full = $g->{selected_protocol_hash};
             my $project_name = $g->{genotypingDataProjectName};
             my $marker_info = $protocol_full->{markers};
             my $stock_name = $g->{stock_name};

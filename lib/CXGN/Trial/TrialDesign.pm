@@ -476,10 +476,10 @@ sub _get_westcott_design {
     $r_block->add_command('nc <- '.$westcott_col); 
     if ($westcott_col_between_check){
         $r_block->add_command('ncb <- '.$westcott_col_between_check);
-        $r_block->add_command('westcott<-cd.w(geno, ch1, ch2, nc, ncb=ncb)');
+        $r_block->add_command('westcott<-cr.w(geno, ch1, ch2, nc, ncb=ncb)');
     }
     else{
-        $r_block->add_command('westcott<-cd.w(geno, ch1, ch2, nc)');
+        $r_block->add_command('westcott<-cr.w(geno, ch1, ch2, nc)');
     }
     $r_block->add_command('westcott<-westcott$book');
     $r_block->add_command('westcott<-as.matrix(westcott)');
