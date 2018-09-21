@@ -48,7 +48,13 @@ override('retrieve_phenotypes',
 	     my $self = shift;
 	     my $file = shift || $self->file_name()."_phenotype.txt";
 	     my $phenotypes = $self->SUPER::retrieve_phenotypes();
-	     my $phenotype_string = join "\n", @$phenotypes;
+	     my $phenotype_string = "";
+	     foreach my $line (@$phenotypes) {
+			 my $s = join "\t", @$line;
+			 $s =~ s/\n//g;
+			 $s =~ s/\r//g;
+			 $phenotype_string .= $s."\n";
+	     }
 	     write_file($file, $phenotype_string);
 	     return $phenotypes;
 	 });
