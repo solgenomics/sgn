@@ -3,7 +3,13 @@
 $data => 'Default'
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
 <h2>Hello <% $data %></h2>
+
+<button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotype QC</button>
+
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
 
 <script>
 jQuery(document).ready(function(){

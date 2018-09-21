@@ -187,7 +187,18 @@
                                 <& /page/page_title.mas, title=>"Provide genotype information" &>
                                 <br/><br/>
 
-                                <div class="well well-sm">
+
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Select type of genotyping data: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="upload_genotype_data_format_select" name="upload_genotype_data_format_select">
+                                            <option value="vcf">VCF</option>
+                                            <option value="intertek">Intertek</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="well well-sm" id="upload_genotype_data_format_vcf">
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <&| /page/explanation.mas, title=>'Template information' &>
@@ -210,7 +221,43 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
 
+                                <div class="well well-sm" id="upload_genotype_data_format_intertek" style="display:none">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_genotype_intertek_spreadsheet_info_format">Intertek format</a>
+                                                </p>
+                                            </&>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select Intertek SNP Result Grid File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_genotype_intertek_file_input" id="upload_genotype_intertek_file_input" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select Intertek SNP Information File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="upload_genotype_intertek_snp_file_input" id="upload_genotype_intertek_snp_file_input" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -288,7 +335,7 @@
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadGenotypeVCFDialog">Upload Template Information</h4>
+                <h4 class="modal-title" id="uploadGenotypeVCFDialog">Upload VCF Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -380,6 +427,43 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="upload_genotype_intertek_spreadsheet_info_format_dialog" name="upload_genotype_intertek_spreadsheet_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypeIntertekDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeIntertekDialog">Upload Intertek Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading Intertek genotype data.</b>
+                    <br/>
+                    <b>Please use CSV formatted files</b>
+                    <p>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>COLUMN1</td>
+                                <td>COLUMN2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_intertek_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <style>
 
@@ -477,6 +561,22 @@ jQuery(document).ready(function(){
     jQuery('#upload_genotype_vcf_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_vcf_spreadsheet_info_format_dialog').modal('show');
     });
+
+    jQuery('#upload_genotype_data_format_select').change(function(){
+        var selected_option = jQuery(this).val();
+        if (selected_option == 'vcf') {
+            jQuery('#upload_genotype_data_format_vcf').show();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+        } else if(selected_option == 'intertek') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').show();
+        }
+    });
+
+    jQuery('#upload_genotype_intertek_spreadsheet_info_format').click(function(){
+        jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal('show');
+    });
+
 
 });
 </script>
