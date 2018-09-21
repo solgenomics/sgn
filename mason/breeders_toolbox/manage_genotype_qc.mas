@@ -1,0 +1,12 @@
+
+<%args>
+$data => 'Default'
+</%args>
+
+<h2>Hello <% $data %></h2>
+
+<script>
+jQuery(document).ready(function(){
+    //alert('Hello');
+});
+</script>
