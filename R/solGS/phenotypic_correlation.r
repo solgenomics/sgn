@@ -31,12 +31,14 @@ refererQtl <- grep("qtl", inputFiles, value=TRUE)
 
 phenoDataFile      <- grep("\\/phenotype_data", inputFiles, value=TRUE)
 formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, fixed = FALSE, value = TRUE)
+metadataFile       <-  grep("metadata", inputFiles, value=TRUE)
 
 correCoefficientsFile     <- grep("corre_coefficients_table", outputFiles, value=TRUE)
 correCoefficientsJsonFile <- grep("corre_coefficients_json", outputFiles, value=TRUE)
 
 formattedPhenoData <- c()
 phenoData          <- c()
+
 
 if ( length(refererQtl) != 0 ) {
    phenoDataFile      <- grep("\\/phenodata", inputFiles, value=TRUE)    
@@ -51,7 +53,9 @@ if ( length(refererQtl) != 0 ) {
   phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
                                    na.strings = c("NA", " ", "--", "-", ".", "..")
                                    ))
-} 
+}
+
+metaData <- scan(metadataFile, what="character")
 
 allTraitNames <- c()
 nonTraitNames <- c()
@@ -65,19 +69,12 @@ if (length(refererQtl) != 0) {
 
 } else {
   allNames <- names(phenoData)
-
-  nonTraitNames <- c('studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName')
-  nonTraitNames <- c(nonTraitNames, 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel')
-  nonTraitNames <- c(nonTraitNames, 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber')
-  nonTraitNames <- c(nonTraitNames, 'programDbId', 'programName', 'programDescription', 'studyDescription', 'plotWidth', 'plotLength')
-  nonTraitNames <- c(nonTraitNames, 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate')
-  nonTraitNames <- c(nonTraitNames, 'harvestDate', 'entryType', 'plantNumber', 'plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename')
-  nonTraitNames <- c(nonTraitNames, 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight');
-  nonTraitNames <- c(nonTraitNames, 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames')
-  nonTraitNames <- c(nonTraitNames, 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'rowNumber', 'colNumber')
+  nonTraitNames <- metaData
 
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
 }
+
+print(allTraitNames)
 
 if (!is.null(phenoData) && length(refererQtl) == 0) {
   
@@ -121,7 +118,10 @@ if (length(refererQtl) == 0  ) {
                         data.frame
                              
 }
- 
+
+
+print(formattedPhenoData[1:2, ])
+
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
                          use="pairwise"
@@ -129,6 +129,8 @@ coefpvalues <- rcor.test(formattedPhenoData,
 
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat
+
+print(allcordata)
 
 allcordata[lower.tri(allcordata)] <- coefpvalues$p.values[, 3]
 diag(allcordata) <- 1.00

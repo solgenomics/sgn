@@ -449,6 +449,22 @@ sub traits_list_file {
 }
 
 
+sub trial_metadata_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+   # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+
+    my $cache_data = {key       => 'trial_metadata' . $pop_id,
+                      file      => 'trial_metadata_' . $pop_id,
+                      stash_key => 'trial_metadata_file'
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
 sub rrblup_selection_gebvs_file {    
     my ($self, $c, $identifier, $trait_id) = @_;
 
