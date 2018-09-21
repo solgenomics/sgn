@@ -389,7 +389,7 @@ sub upload_drone_imagery_zipfile {
         my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
         #print STDERR "Count: $md_image\n";
         if ($md_image > 0) {
-            $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
+            #$error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
         } else {
             $image->set_sp_person_id($user_id);
             my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
