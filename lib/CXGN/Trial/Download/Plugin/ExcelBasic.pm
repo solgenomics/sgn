@@ -322,6 +322,11 @@ sub download {
         $cvinfo{$trait->display_name()} = $trait;
         #print STDERR "**** Trait = " . $trait->display_name . "\n\n";
     }
+    
+    #print STDERR "Self include notes is ".$self->include_notes."\n";
+    if ( $self->include_notes()) {
+        push @trait_list, 'notes';
+    }
 
     for (my $i = 0; $i < @trait_list; $i++) {
         #if (exists($cvinfo{$trait_list[$i]})) {

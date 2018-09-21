@@ -2387,48 +2387,35 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      }
     
      $c->stash->{model_id} = $pop_id; 
-     $self->analyzed_traits($c);
-
-     my @analyzed_traits = @{$c->stash->{analyzed_traits}};
-    
-     if (!@analyzed_traits) 
-     { 
-         $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
-         $c->detach(); 
-     }
-   
+     
      my @trait_pages;
-     foreach my $tr (@analyzed_traits)
+          
+     $self->traits_with_valid_models($c);
+     my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
+     
+     if (!@traits_with_valid_models)
      {
-         my $acronym_pairs = $self->get_acronym_pairs($c);
-         my $trait_name;
-         if ($acronym_pairs)
-         {
-             foreach my $r (@$acronym_pairs) 
-             {
-                 if ($r->[0] eq $tr) 
-                 {
-                     $trait_name = $r->[1];
-                     $trait_name =~ s/\n//g;
-                     $c->stash->{trait_name} = $trait_name;
-                     $c->stash->{trait_abbr} = $r->[0];
-                 }
-             }
-         }
-                 
-	 my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
-         my $trait_abbr = $c->stash->{trait_abbr}; 
-        
-         $self->get_model_accuracy_value($c, $pop_id, $trait_abbr);        
-         my $accuracy_value = $c->stash->{accuracy_value};
-
-         $c->controller("solGS::Heritability")->get_heritability($c);
-         my $heritability = $c->stash->{heritability};
-
-         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id">$trait_abbr</a>|, $accuracy_value, $heritability];
-       
+	 $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
+	 $c->detach();
      }
-  
+
+    foreach my $trait_abbr (@traits_with_valid_models)
+    {
+	$c->stash->{trait_abbr} = $trait_abbr;
+        $self->get_trait_details_of_trait_abbr($c);
+
+	my $trait_id = $c->stash->{trait_id};
+	
+	$self->get_model_accuracy_value($c, $pop_id, $trait_abbr);        
+	my $accuracy_value = $c->stash->{accuracy_value};
+	
+	$c->controller("solGS::Heritability")->get_heritability($c);
+	my $heritability = $c->stash->{heritability};
+
+	push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id">$trait_abbr</a>|, $accuracy_value, $heritability];
+       
+    }
+
      $self->project_description($c, $pop_id);
      my $project_name = $c->stash->{project_name};
      my $project_desc = $c->stash->{project_desc};
@@ -3092,7 +3079,7 @@ sub analyzed_traits {
     readdir($dh); 
 
     closedir $dh;
-   
+    
     my @traits_files = map { catfile($dir, $_)} 
                        grep {/($training_pop_id)/} 
                        @all_files;
@@ -3101,10 +3088,11 @@ sub analyzed_traits {
     my @traits_ids;
     my @si_traits;
     my @valid_traits_files;
-   
+    my @analyzed_traits_files;
+
     foreach my $trait_file  (@traits_files) 
     {  
-        if (-s $trait_file > 1) 
+        if (-s $trait_file) 
         { 
             my $trait = basename($trait_file);	   
             $trait =~ s/rrblup_training_gebvs_//;	   
@@ -3117,7 +3105,7 @@ sub analyzed_traits {
             if ($acronym_pairs)
             {
                 foreach my $r (@$acronym_pairs) 
-                {                    
+                {    
                     if ($r->[0] eq $trait) 
                     {
                         my $trait_name =  $r->[1];
@@ -3128,10 +3116,10 @@ sub analyzed_traits {
                     }
                 }
             }
-            
+
             $self->get_model_accuracy_value($c, $training_pop_id, $trait);
             my $av = $c->stash->{accuracy_value};
-                      
+
             if ($av && $av =~ m/\d+/ && $av > 0) 
             { 
               push @si_traits, $trait;
@@ -3139,16 +3127,14 @@ sub analyzed_traits {
             }
                            
             push @traits, $trait;
+	    push @analyzed_traits_files, $trait_file;
         }      
-        else 
-        {
-            @traits_files = grep { $_ ne $trait_file } @traits_files;
-        }
+
     }
         
     $c->stash->{analyzed_traits}        = \@traits;
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
-    $c->stash->{analyzed_traits_files}  = \@traits_files;
+    $c->stash->{analyzed_traits_files}  = \@analyzed_traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
     $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;   
 }
