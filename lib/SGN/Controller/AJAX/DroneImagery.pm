@@ -190,8 +190,10 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
         $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_username} = $_->{username};
         $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_original} = $image_original;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_id} = $image_id;
     }
-    while (my ($k, $v) = each %unique_drone_runs) {
+    foreach my $k (sort keys %unique_drone_runs) {
+        my $v = $unique_drone_runs{$k};
         my $images = scalar(@{$v->{images}})." Images<br/><span>";
         $images .= join '', @{$v->{images}};
         $images .= "</span>";
@@ -199,7 +201,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         foreach (keys %{$v->{usernames}}){
             $usernames .= " $_ ";
         }
-        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'">Stitch Uploaded Images</button>';
+        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'">Stitch Uploaded Images</button>';
         push @return, ["<a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a>", $v->{drone_run_project_name}, $v->{drone_run_project_description}, $v->{drone_run_date}, $usernames, $images, $stitched_image];
     }
 
@@ -223,7 +225,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to stitch drone imagery!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -232,7 +234,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to stitch drone imagery!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -274,6 +276,56 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my $ret = $image->process_image($archive_stitched_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
 
     $c->stash->{rest} = { data => \@image_urls };
+}
+
+sub drone_imagery_get_contours : Path('/ajax/drone_imagery/get_contours') : ActionClass('REST') { }
+
+sub drone_imagery_get_contours_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to get image contour info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to get image contour info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_contours');
+    my $archive_contours_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_contours/imageXXXX');
+    $archive_contours_temp_image .= '.png';
+    print STDERR $archive_contours_temp_image."\n";
+
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageContours/GetContours.py --image_url '.$image_url.' --outfile_path '.$archive_contours_temp_image);
+    print STDERR Dumper $status;
+
+    $c->stash->{rest} = { data => $image_url };
 }
 
 1;
