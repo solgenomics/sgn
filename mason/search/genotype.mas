@@ -38,27 +38,6 @@
                             </div>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-sm-4">Marker Name:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="input_marker" placeholder="Enter marker name">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Allele Dosage:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="selected_dosage">
-                                        <option value="">Select Allele Dosage</option>
-                                        <option value="0">0</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
                         <label class="control-label col-sm-4"></label>
                             <div class="col-sm-8" >
                                 <button class="btn btn-info" id="search_genotypes_accessions"><i class="glyphicon glyphicon-search"></i> Accessions</button>
@@ -79,7 +58,7 @@
         <thead>
             <tr>
                 <th>Accession</th>
-                <th>Genotype</th>                
+                <th>Genotype</th>
             </tr>
         </thead>
     </table>
