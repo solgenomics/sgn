@@ -220,7 +220,7 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
 
     foreach my $tr (@$traits) 
     {
-	foreach my $k (keys $tr) 
+	foreach my $k (keys %$tr) 
 	{
 	    $c->stash->{$k} = $tr->{$k};	   
 	}

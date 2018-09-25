@@ -560,15 +560,34 @@ sub get_markers_count {
 }
 
 
+sub create_protocol_url {
+    my ($self, $c, $protocol) = @_;
+   
+    $protocol = $c->config->{default_genotyping_protocol} if !$protocol;
+
+    my $protocol_url;
+    if ($protocol) 
+    {
+	my $protocol_id = $c->model('solGS::solGS')->protocol_id($protocol);
+	$protocol_url = '<a href="/breeders_toolbox/protocol/' . $protocol_id . '">' . $protocol . '</a>';
+    }
+    else
+    {
+	 $protocol_url = 'N/A';
+    }
+
+    return $protocol_url;
+}
+
+
 sub project_description {
     my ($self, $c, $pr_id) = @_;
 
     $c->stash->{pop_id} = $pr_id;
     $c->stash->{list_reference} = 1 if ($pr_id =~ /list/);
 
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
-
+    my $protocol = $self->create_protocol_url($c);
+    
     if(!$c->stash->{list_reference}) {
         my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
 
@@ -734,8 +753,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{training_markers_cnt} = $tr_pop_mr_cnt;
     $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
 
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
+    my $protocol = $self->create_protocol_url($c);
     $c->stash->{protocol} = $protocol;
 
     my $identifier    = $training_pop_id . '_' . $selection_pop_id; 
@@ -2369,48 +2387,35 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      }
     
      $c->stash->{model_id} = $pop_id; 
-     $self->analyzed_traits($c);
-
-     my @analyzed_traits = @{$c->stash->{analyzed_traits}};
-    
-     if (!@analyzed_traits) 
-     { 
-         $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
-         $c->detach(); 
-     }
-   
+     
      my @trait_pages;
-     foreach my $tr (@analyzed_traits)
+          
+     $self->traits_with_valid_models($c);
+     my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
+     
+     if (!@traits_with_valid_models)
      {
-         my $acronym_pairs = $self->get_acronym_pairs($c);
-         my $trait_name;
-         if ($acronym_pairs)
-         {
-             foreach my $r (@$acronym_pairs) 
-             {
-                 if ($r->[0] eq $tr) 
-                 {
-                     $trait_name = $r->[1];
-                     $trait_name =~ s/\n//g;
-                     $c->stash->{trait_name} = $trait_name;
-                     $c->stash->{trait_abbr} = $r->[0];
-                 }
-             }
-         }
-                 
-	 my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
-         my $trait_abbr = $c->stash->{trait_abbr}; 
-        
-         $self->get_model_accuracy_value($c, $pop_id, $trait_abbr);        
-         my $accuracy_value = $c->stash->{accuracy_value};
-
-         $c->controller("solGS::Heritability")->get_heritability($c);
-         my $heritability = $c->stash->{heritability};
-
-         push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id">$trait_abbr</a>|, $accuracy_value, $heritability];
-       
+	 $c->res->redirect("/solgs/population/$pop_id/selecttraits/");
+	 $c->detach();
      }
-  
+
+    foreach my $trait_abbr (@traits_with_valid_models)
+    {
+	$c->stash->{trait_abbr} = $trait_abbr;
+        $self->get_trait_details_of_trait_abbr($c);
+
+	my $trait_id = $c->stash->{trait_id};
+	
+	$self->get_model_accuracy_value($c, $pop_id, $trait_abbr);        
+	my $accuracy_value = $c->stash->{accuracy_value};
+	
+	$c->controller("solGS::Heritability")->get_heritability($c);
+	my $heritability = $c->stash->{heritability};
+
+	push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$pop_id">$trait_abbr</a>|, $accuracy_value, $heritability];
+       
+    }
+
      $self->project_description($c, $pop_id);
      my $project_name = $c->stash->{project_name};
      my $project_desc = $c->stash->{project_desc};
@@ -3074,7 +3079,7 @@ sub analyzed_traits {
     readdir($dh); 
 
     closedir $dh;
-   
+    
     my @traits_files = map { catfile($dir, $_)} 
                        grep {/($training_pop_id)/} 
                        @all_files;
@@ -3083,10 +3088,11 @@ sub analyzed_traits {
     my @traits_ids;
     my @si_traits;
     my @valid_traits_files;
-   
+    my @analyzed_traits_files;
+
     foreach my $trait_file  (@traits_files) 
     {  
-        if (-s $trait_file > 1) 
+        if (-s $trait_file) 
         { 
             my $trait = basename($trait_file);	   
             $trait =~ s/rrblup_training_gebvs_//;	   
@@ -3099,7 +3105,7 @@ sub analyzed_traits {
             if ($acronym_pairs)
             {
                 foreach my $r (@$acronym_pairs) 
-                {                    
+                {    
                     if ($r->[0] eq $trait) 
                     {
                         my $trait_name =  $r->[1];
@@ -3110,10 +3116,10 @@ sub analyzed_traits {
                     }
                 }
             }
-            
+
             $self->get_model_accuracy_value($c, $training_pop_id, $trait);
             my $av = $c->stash->{accuracy_value};
-                      
+
             if ($av && $av =~ m/\d+/ && $av > 0) 
             { 
               push @si_traits, $trait;
@@ -3121,36 +3127,16 @@ sub analyzed_traits {
             }
                            
             push @traits, $trait;
+	    push @analyzed_traits_files, $trait_file;
         }      
-        else 
-        {
-            @traits_files = grep { $_ ne $trait_file } @traits_files;
-        }
+
     }
         
     $c->stash->{analyzed_traits}        = \@traits;
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
-    $c->stash->{analyzed_traits_files}  = \@traits_files;
+    $c->stash->{analyzed_traits_files}  = \@analyzed_traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
     $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;   
-}
-
-
-sub filter_phenotype_header {
-    my ($self, $c) = @_;
-       
-    my @headers =   ('studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate',    'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber' ,  'colNumber',  'entryType', 'plantNumber', 'plantedSeedlotStockDbId',  'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames');
-
-    my $meta_headers = join("\t", @headers);
-    if ($c) 
-    {
-	$c->stash->{filter_phenotype_header} = $meta_headers;
-    }
-    else 
-    {    	
-	return $meta_headers;
-    }
-
 }
 
 
@@ -3498,6 +3484,9 @@ sub phenotype_file {
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
+    $c->controller('solGS::Files')->trial_metadata_file($c);
+    my $metadata_file = $c->stash->{trial_metadata_file};
+
     no warnings 'uninitialized';
     
     unless ( -s $pheno_file)
@@ -3509,6 +3498,7 @@ sub phenotype_file {
 	    'population_id'    => $pop_id,
 	    'phenotype_file'   => $pheno_file,
 	    'traits_list_file' => $traits_file,
+	    'metadata_file'    => $metadata_file,
 	};
 	   
 	if (!$c->stash->{list_reference}) 
@@ -3525,12 +3515,12 @@ sub phenotype_file {
 
 
 sub format_phenotype_dataset {
-    my ($self, $data_ref, $traits_file) = @_;
+    my ($self, $data_ref, $metadata, $traits_file) = @_;
    
     my $data = $$data_ref;
     my @rows = split (/\n/, $data);
    
-    my $formatted_headers = $self->format_phenotype_dataset_headers($rows[0], $traits_file);   
+    my $formatted_headers = $self->format_phenotype_dataset_headers($rows[0], $metadata, $traits_file);   
     $rows[0] = $formatted_headers;
 
     my $formatted_dataset = $self->format_phenotype_dataset_rows(\@rows);   
@@ -3550,16 +3540,14 @@ sub format_phenotype_dataset_rows {
 
 
 sub format_phenotype_dataset_headers {
-    my ($self, $raw_headers, $traits_file) = @_;
+    my ($self, $all_headers, $meta_headers,  $traits_file) = @_;
 
-    $raw_headers =~ s/\|\w+:\d+//g;
-    $raw_headers =~ s/\n//g; 
+    $all_headers =~ s/\|\w+:\d+//g;
+    $all_headers =~ s/\n//g; 
     
-    my $traits = $raw_headers;
-  
-    my $meta_headers=  $self->filter_phenotype_header();
-    my @mh = split("\t", $meta_headers);
-    foreach my $mh (@mh) {
+    my $traits = $all_headers;
+     
+    foreach my $mh (@$meta_headers) {
        $traits =~ s/($mh)//g;
     }
 
@@ -3567,10 +3555,25 @@ sub format_phenotype_dataset_headers {
 
     write_file($traits_file, $traits) if $traits_file;   
     my  @filtered_traits = split(/\t/, $traits);
+         
+    my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);   
+    my $acronym_table = $acronymized_traits->{acronym_table};
 
-    $raw_headers =~ s/$traits//g;
-    my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);
-    my $formatted_headers = $raw_headers . $acronymized_traits->{acronymized_traits}; 
+    my $formatted_headers;
+    my @headers = split("\t", $all_headers);
+    
+    foreach my $hd (@headers) 
+    {
+	my $acronym;
+	foreach my $acr (keys %$acronym_table) 
+	{ 
+	    $acronym =  $acr if $acronym_table->{$acr} =~ /$hd/;			             
+	    last if $acronym;
+	}
+
+	$formatted_headers .= $acronym ? $acronym : $hd;
+	$formatted_headers .= "\t" unless ($headers[-1] eq $hd);	
+    }
    
     return $formatted_headers;
     

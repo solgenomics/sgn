@@ -319,11 +319,13 @@ $error = $list->update_element_by_id($items->[0]->[0], 'updated name');
 ok(!$error, 'test update item');
 $items = $list->retrieve_elements_with_ids($list_id);
 #print STDERR Dumper $items;
-is_deeply($items, [
-          [
-            725,
+my @items_stripped;
+foreach (@$items){
+    ok($_->[0]);
+    push @items_stripped, $_->[1];
+}
+is_deeply(\@items_stripped, [
             'updated name'
-          ]
         ], 'check updated list item');
 
 my $space1 = $list->add_element(" bla1");

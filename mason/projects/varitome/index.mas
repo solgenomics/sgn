@@ -101,6 +101,11 @@ my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
 
 </&>
 
+<&| /page/info_section.mas, title => 'Resources' &>
+ <ul>
+    <li>Download the current version of  <a href="ftp://ftp.solgenomics.net/programs/tomato_analyzer_4.0/">Tomato Analyzer</a></li>
+  </ul>
+</&>
 
 
 <&| /page/info_section.mas, title => 'Funding' &>

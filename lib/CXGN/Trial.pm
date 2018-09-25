@@ -25,6 +25,7 @@ use Try::Tiny;
 use Data::Dumper;
 use CXGN::Trial::Folder;
 use CXGN::Trial::TrialLayout;
+use CXGN::Trial::TrialLayoutDownload;
 use SGN::Model::Cvterm;
 use Time::Piece;
 use Time::Seconds;
@@ -455,7 +456,7 @@ sub get_field_trials_sourced_from_field_trials {
 =head2 function set_genotyping_trials_from_field_trial()
 
  Usage:
- Desc:         sets associated genotyping trials for the current field trial
+ Desc:         sets associated genotyping plates for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:         an arrayref [genotyping_trial_id1, genotyping_trial_id2]
  Side Effects:
@@ -485,7 +486,7 @@ sub set_genotyping_trials_from_field_trial {
 =head2 function get_genotyping_trials_from_field_trial()
 
  Usage:
- Desc:         return associated genotyping trials for the current field trial
+ Desc:         return associated genotyping plates for the current field trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:
  Side Effects:
@@ -515,7 +516,7 @@ sub get_genotyping_trials_from_field_trial {
 =head2 function set_source_field_trials_for_genotyping_trial()
 
  Usage:
- Desc:         sets associated field trials for the current genotyping trial
+ Desc:         sets associated field trials for the current genotyping plate
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:         an arrayref [field_trial_id1, field_trial_id2]
  Side Effects:
@@ -1067,7 +1068,7 @@ sub set_phenotypes_fully_uploaded {
 
 =head2 accessors get_genotyping_facility(), set_genotyping_facility()
 
- Usage: For genotyping trials, a genotyping facility can be set as a projectprop value e.g. 'igd'
+ Usage: For genotyping plates, a genotyping facility can be set as a projectprop value e.g. 'igd'
  Desc:
  Ret:
  Args:
@@ -1089,7 +1090,7 @@ sub set_genotyping_facility {
 
 =head2 accessors get_genotyping_facility_submitted(), set_genotyping_facility_submitted()
 
- Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility and the plate is stored in out system, this stockprop can be set to 'yes'
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility and the plate is stored in out system, this stockprop can be set to 'yes'
  Desc:
  Ret:
  Args:
@@ -1111,7 +1112,7 @@ sub set_genotyping_facility_submitted {
 
 =head2 accessors get_genotyping_facility_status(), set_genotyping_facility_status()
 
- Usage: For genotyping trials, if a genotyping plate has been submitted to genotyping facility, the status of that plate can be set here
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility, the status of that plate can be set here
  Desc:
  Ret:
  Args:
@@ -1133,7 +1134,7 @@ sub set_genotyping_facility_status {
 
 =head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
 
- Usage: For genotyping trials, this records if it is 96 wells or 384 or other
+ Usage: For genotyping plates, this records if it is 96 wells or 384 or other
  Desc:
  Ret:
  Args:
@@ -1155,7 +1156,7 @@ sub set_genotyping_plate_format {
 
 =head2 accessors get_genotyping_plate_sample_type(), set_genotyping_plate_sample_type()
 
- Usage: For genotyping trials, this records sample type of plate e.g. DNA
+ Usage: For genotyping plates, this records sample type of plate e.g. DNA
  Desc:
  Ret:
  Args:
@@ -2563,7 +2564,6 @@ sub create_tissue_samples {
                 foreach my $tissue_name (@$tissue_names){
                     my $tissue_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
                     print STDERR "... ... creating tissue $tissue_name...\n";
-                    $tissue_index_number++;
 
                     my $tissue = $chado_schema->resultset("Stock::Stock")->create({
                         organism_id => $parent_plant_organism,
@@ -2577,6 +2577,7 @@ sub create_tissue_samples {
                         type_id => $tissue_index_number_cvterm,
                         value => $tissue_index_number,
                     });
+                    $tissue_index_number++;
 
                     #the tissue has a relationship to the plant
                     my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
@@ -2915,27 +2916,21 @@ sub get_tissue_sources {
 =cut
 
 sub get_plants {
-	my $self = shift;
-	my @plants;
+    my $self = shift;
+    my @plants;
 
-	my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type' )->cvterm_id();
-	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
-
-	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id}, {order_by=>{'-asc'=>'uniquename'}});
-
-	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
-
-	my %unique_plants;
-	while(my $rs = $trial_plant_rs->next()) {
-		$unique_plants{$rs->uniquename} = $rs->stock_id;
-	}
-	foreach (keys %unique_plants) {
-		my $combine = [$unique_plants{$_}, $_ ];
-		push @plants, $combine;
-	}
-
-	return \@plants;
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $self->bcs_schema,
+        trial_id => $self->get_trial_id(),
+        data_level => 'plants',
+        selected_columns => {"plant_name"=>1,"plant_id"=>1},
+    });
+    my $output = $trial_layout_download->get_layout_output()->{output};
+    my $header = shift @$output;
+    foreach (@$output) {
+        push @plants, [$_->[1], $_->[0]];
+    }
+    return \@plants;
 }
 
 =head2 get_plants_per_accession
@@ -3026,25 +3021,21 @@ sub get_seedlots {
 =cut
 
 sub get_plots {
-	my $self = shift;
-	my @plots;
+    my $self = shift;
+    my @plots;
 
-	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
-
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plot_cvterm_id});
-
-	my %unique_plots;
-	while(my $rs = $trial_plot_rs->next()) {
-		$unique_plots{$rs->uniquename} = $rs->stock_id;
-	}
-	foreach (sort keys %unique_plots) {
-		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ;
-		my $combine = [$unique_plots{$_}, $_ ];
-		push @plots, $combine;
-	}
-
-	return \@plots;
-
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $self->bcs_schema,
+        trial_id => $self->get_trial_id(),
+        data_level => 'plots',
+        selected_columns => {"plot_name"=>1,"plot_id"=>1},
+    });
+    my $output = $trial_layout_download->get_layout_output()->{output};
+    my $header = shift @$output;
+    foreach (@$output) {
+        push @plots, [$_->[1], $_->[0]];
+    }
+    return \@plots;
 }
 
 =head2 get_plots_per_accession
@@ -3062,7 +3053,7 @@ sub get_plots_per_accession {
     my $self = shift;
     my %return;
 
-    # note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
+    # note: this function also retrieves stocks of type tissue_sample (for genotyping plates).
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
     my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
@@ -3099,25 +3090,21 @@ sub get_plots_per_accession {
 =cut
 
 sub get_subplots {
-	my $self = shift;
-	my @plots;
+    my $self = shift;
+    my @subplots;
 
-	my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot', 'stock_type' )->cvterm_id();
-
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$subplot_cvterm_id});
-
-	my %unique_plots;
-	while(my $rs = $trial_plot_rs->next()) {
-		$unique_plots{$rs->uniquename} = $rs->stock_id;
-	}
-	foreach (sort keys %unique_plots) {
-		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ;
-		my $combine = [$unique_plots{$_}, $_ ];
-		push @plots, $combine;
-	}
-
-	return \@plots;
-
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $self->bcs_schema,
+        trial_id => $self->get_trial_id(),
+        data_level => 'subplots',
+        selected_columns => {"subplot_name"=>1,"subplot_id"=>1},
+    });
+    my $output = $trial_layout_download->get_layout_output()->{output};
+    my $header = shift @$output;
+    foreach (@$output) {
+        push @subplots, [$_->[1], $_->[0]];
+    }
+    return \@subplots;
 }
 
 =head2 get_tissue_samples
@@ -3135,17 +3122,16 @@ sub get_tissue_samples {
     my $self = shift;
     my @tissues;
 
-    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id;
-
-    my $trial_tissues_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$tissue_sample_cvterm_id});
-
-    my %unique_t;
-    while(my $rs = $trial_tissues_rs->next()) {
-        $unique_t{$rs->uniquename} = $rs->stock_id;
-    }
-    foreach (sort keys %unique_t) {
-        my $combine = [$unique_t{$_}, $_ ];
-        push @tissues, $combine;
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $self->bcs_schema,
+        trial_id => $self->get_trial_id(),
+        data_level => 'field_trial_tissue_samples',
+        selected_columns => {"tissue_sample_name"=>1,"tissue_sample_id"=>1},
+    });
+    my $output = $trial_layout_download->get_layout_output()->{output};
+    my $header = shift @$output;
+    foreach (@$output) {
+        push @tissues, [$_->[1], $_->[0]];
     }
     return \@tissues;
 }

@@ -84,26 +84,25 @@ function getListTypeTrainingPopDetail(listId) {
     var listData;
     var listType;
     var listName;
-    var listElements;
-    var listElementsNames;
-    var listElementsIds;
+    //var listElements;
+   // var listElementsNames;
+   // var listElementsIds;
 
     if (listId) {
         listData      = list.getListData(listId);
 	listType      = list.getListType(listId);
 	listName      = list.listNameById(listId);
-	listElements  = listData.elements;
+	//listElements  = listData.elements;
 
-	listElementsNames = getTrainingListElementsNames(listElements);
-	listElementsIds   = getTrainingListElementsIds(listElements);
+	//listElementsNames = getTrainingListElementsNames(listElements);
+	//listElementsIds   = getTrainingListElementsIds(listElements);
     }
   
-    return {'name'          : listName,
-            'list'          : listElements,	    
+    return {'name'          : listName,	    
 	    'type'          : listType,
-	    'elementsIds'   : listElementsIds,
-	    'elementsNames' : listElementsNames,
+	    'list_id'       : listId
            };
+    
 }
 
 
@@ -148,7 +147,6 @@ function createTrainingReqArgs (listId) {
 
     var args = {
 	'list_name'       : listName,
-	'list'            : list,
 	'list_id'         : listId,
 	'analysis_type'   : 'population download',
 	'data_set_type'   : 'single population',
