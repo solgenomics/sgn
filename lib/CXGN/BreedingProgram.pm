@@ -139,7 +139,7 @@ sub get_accession_cvterm_id {
 =head2 get_trials
 
  Usage: $self->get_trials
- Desc:  find the trials (projects) associated with the breeding program
+ Desc:  find the trials (projects) associated with the breeding program. Will fetch only trials that have a design. This is to avoid printing crosses etc.
  Ret:   BCS Project resultset 
  Args:  none
  Side Effects: none
@@ -155,11 +155,16 @@ sub get_trials {
     my $trial_rel_rs = $project_obj->project_relationship_object_projects;
 
     if ($trial_rel_rs) {
-	$trials_rs = $trial_rel_rs->search_related('subject_project');
+	my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'design', 'project_property');
+	
+	$trials_rs = $trial_rel_rs->search_related('subject_project', {
+	    'projectprop.type_id' => $design_cvterm_id }, {
+		join => 'projectprop' }
+	    );
     }
-    
     return $trials_rs;
 }
+
 
 =head2 function get_traits_assayed()
  Usage:
