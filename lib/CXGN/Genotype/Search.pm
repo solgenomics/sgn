@@ -417,10 +417,7 @@ sub get_genotype_info {
 sub get_selected_accessions {
     my $self = shift;
     my $schema = $self->bcs_schema;
-    my $protocol_id = $self->protocol_id;
     my $accession_list = $self->accession_list;
-#    my $marker_name = $self->marker_name;
-#    my $allele_dosage = $self->allele_dosage;
     my $filtering_parameters = $self->filtering_parameters;
     my @accessions = @{$accession_list};
     my @parameters = @{$filtering_parameters};
@@ -429,12 +426,18 @@ sub get_selected_accessions {
 
     my @selected_accessions = ();
     my %vcf_params;
+    my $protocol_id;
 
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
         my %params = %{$param_ref};
         my $marker_name = $params{marker_name};
         my $allele_dosage = $params{allele_dosage};
+        my $genotyping_protocol_id = $params{genotyping_protocol_id};
+
+        if ($genotyping_protocol_id){
+            $protocol_id = $genotyping_protocol_id
+        }
 
         if ($marker_name){
             $vcf_params{$marker_name} = {'DS' => $allele_dosage};
@@ -443,7 +446,9 @@ sub get_selected_accessions {
 
     my $vcf_params_string = encode_json \%vcf_params;
 
-    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
+#    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
+#    print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
+
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
