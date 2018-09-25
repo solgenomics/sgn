@@ -4,8 +4,8 @@
   "description": "node package containing all importable CXGN/SGN JavaScript files.",
   "main": "webpack.config.js",
   "scripts": {
-    "build": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack",
-    "build-watch": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack -w"
+    "build": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack --config build.config.webpack.js",
+    "build-watch": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack --config build.config.webpack.js -w"
   },
   "private": true,
   "author": "",
