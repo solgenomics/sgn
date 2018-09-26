@@ -66,7 +66,7 @@ jQuery(document).ready(function() {
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function() {
         var trial_id = jQuery(this).data('field_trial_id');
-        var stitched_image_id = jQuery(this).data('stitched_image_id');
+        var stitched_image_id = jQuery(this).data('image_id');
         var stitched_image = jQuery(this).data('stitched_image');
         var html = '<div id="grid_layout_overlay" style="background-image:url('+decodeURI(stitched_image)+'); background-repeat:no-repeat; height:100%; background-size: auto 100%;"></div>';
         jQuery('#grid_layout_overlay_div').html(html);
@@ -76,7 +76,7 @@ jQuery(document).ready(function() {
         jQuery('#drone_imagery_plot_polygons_dialog').modal("show");
 
         jQuery.ajax({
-            url : 'ajax/drone_imagery/get_contours?image_id='+stitched_image_id,
+            url : '/ajax/drone_imagery/get_contours?image_id='+stitched_image_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },

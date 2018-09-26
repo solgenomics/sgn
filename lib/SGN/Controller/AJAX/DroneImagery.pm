@@ -322,7 +322,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     $archive_contours_temp_image .= '.png';
     print STDERR $archive_contours_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageContours/GetContours.py --image_url '.$image_url.' --outfile_path '.$archive_contours_temp_image);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageContours/GetContours.py --image_url '.$main_production_site.$image_url.' --outfile_path '.$archive_contours_temp_image);
     print STDERR Dumper $status;
 
     $c->stash->{rest} = { data => $image_url };
