@@ -152,17 +152,22 @@ sub get_trials {
     my $project_obj = $self->get_project_object;
     
     my $trials_rs;
+    my $trials_fetched;
     my $trial_rel_rs = $project_obj->project_relationship_object_projects;
 
     if ($trial_rel_rs) {
-	my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'design', 'project_property');
-	
-	$trials_rs = $trial_rel_rs->search_related('subject_project', {
-	    'projectprop.type_id' => $design_cvterm_id }, {
-		join => 'projectprop' }
+	my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'design', 'project_property');
+	$trials_rs = $trial_rel_rs->search_related('subject_project');
+	$trials_fetched = $trials_rs->search(
+	    {
+		'projectprops.type_id' => $design_cvterm->cvterm_id 
+	    },
+	    {
+		join => 'projectprops' 
+	    }
 	    );
     }
-    return $trials_rs;
+    return $trials_fetched;
 }
 
 
