@@ -216,22 +216,12 @@ sub analysis_error_file {
 sub analysis_report_file {
     my ($self, $c) = @_;
    
-    my $model_id  = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id};
-    my $trait_id  = $c->stash->{trait_id};
     my $type      = $c->stash->{analysis_type};
     my $cache_dir = $c->stash->{cache_dir};
-    
-    my $name;
-
-    if ($trait_id) 
-    {    
-	$name = "${type}_report_${trait_id}_${model_id}";
-    }
-    else
-    {
-	$name = "${type}_report_${model_id}"
-    }    
-  
+    my $file_id   = $c->stash->{file_id};
+   
+    my	$name = "${type}_report_${file_id}";
+   
     my $cache_data = { key       => $name, 
 		       file      => $name . '.txt',
 		       cache_dir => $cache_dir,
@@ -578,12 +568,7 @@ sub cache_file {
     my ($self, $c, $cache_data) = @_;
   
     my $cache_dir = $cache_data->{cache_dir} || $c->stash->{cache_dir};
-    
-    unless ($cache_dir) 
-    {
-	$cache_dir = $c->stash->{solgs_cache_dir};
-    }
-   
+      
     my $file_cache  = Cache::File->new(cache_root => $cache_dir, 
 				       lock_level => Cache::File::LOCK_NFS()
 	);
@@ -602,7 +587,7 @@ sub cache_file {
     }
 
     $c->stash->{$cache_data->{stash_key}} = $file;
-    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+   # $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
 }
 
 
@@ -779,6 +764,7 @@ sub get_solgs_dirs {
 	      anova_temp_dir              => $anova_temp,
 	      solqtl_cache_dir            => $solqtl_cache,
               solqtl_tempfiles_dir        => $solqtl_tempfiles,
+	      cache_dir                   => $solgs_cache,
 
         );
 

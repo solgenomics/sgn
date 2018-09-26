@@ -211,6 +211,7 @@ solGS.cluster = {
 	    },
             error: function(res) {                    
 		jQuery("#cluster_message").html('Error occured running the clustering.');
+		jQuery(".multi-spinner-container").hide();
 		jQuery("#run_cluser").show();
             }  
 	});
@@ -250,11 +251,21 @@ solGS.cluster = {
 	    + fileClusters
 	    + ">[Clusters]</a>";
 
+	var reportFile = res.cluster_report;
+	var report  = reportFile.split('/').pop();
+
+	var reportLink = "<a href=\""
+	    + reportFile
+	    +  "\" download="
+	    + report
+	    + ">[Analysis Report]</a>";
+
 	jQuery('#cluster_plot').prepend(plot
-				       + ' <strong>Download '
-				       + resultName + ' </strong>: '
-				       + plotLink + ' | '
-				       + clustersLink);
+					+ ' <strong>Download '
+					+ resultName + ' </strong>: '
+					+ plotLink + ' | '
+					+ clustersLink + ' | '
+					+ reportLink);
 	
     },
 

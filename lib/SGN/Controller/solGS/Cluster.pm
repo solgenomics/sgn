@@ -68,6 +68,9 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
 
+    
+    $c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
   
@@ -75,11 +78,10 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
       
     if ($cluster_plot_exists)
     {
-	#my $cluster_plot_file = $self->copy_kmeans_plot_to_images_dir($c);
-
 	$self->prep_cluster_download_files($c);
 	my $cluster_plot_file = $c->stash->{download_plot};
 	my $clusters_file = $c->stash->{download_clusters};
+	my $report_file = $c->stash->{download_cluster_report};
 	
 	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 	
@@ -88,6 +90,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	$ret->{cluster_type} = $cluster_type;
 	$ret->{combo_pops_id} = $combo_pops_id;
 	$ret->{kcluster_plot} = $cluster_plot_file;
+	$ret->{cluster_report_file} = $report_file; 
 	$ret->{clusters} = $clusters_file;
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	#$ret->{trials_names} = $c->stash->{trials_names};
@@ -163,6 +166,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
 
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    $c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
@@ -180,17 +184,19 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	    $self->run_cluster($c);	    
 	}	
     }
-    
-    $self->prep_cluster_download_files($c);
-    my $cluster_plot_file = $c->stash->{download_plot};
-    my $clusters_file = $c->stash->{download_clusters};
-    
-    if ($cluster_plot_file)
+        
+    if ($cluster_plot_exists)
     {
+	$self->prep_cluster_download_files($c);
+	my $cluster_plot_file = $c->stash->{download_plot};
+	my $clusters_file     = $c->stash->{download_clusters};
+	my $report            = $c->stash->{download_cluster_report};
+	
 	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
-      
+	
         $ret->{kcluster_plot} = $cluster_plot_file;
 	$ret->{clusters} = $clusters_file;
+	$ret->{cluster_report} = $report;
         $ret->{status} = 'success';  
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	#$ret->{trials_names} = $c->stash->{trials_names};
@@ -402,7 +408,10 @@ sub hierarchical_result_file {
 
 sub prep_cluster_download_files {
   my ($self, $c) = @_; 
-  
+
+  $c->stash->{cache_dir}      = $c->stash->{cluster_cache_dir}; 
+  $c->stash->{analysis_type}  = $c->stash->{cluster_type};
+
   my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'cluster');
   my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
    
@@ -420,11 +429,19 @@ sub prep_cluster_download_files {
 
   $c->controller('solGS::Files')->copy_file($clusters_file, $base_tmp_dir);
   $clusters_file = catfile($tmp_dir, basename($clusters_file));
-   										     
+
+  $c->controller('solGS::Files')->analysis_report_file($c);
+  my $report_file = $c->stash->{"${cluster_type}_report_file"};
+
+  $c->controller('solGS::Files')->copy_file($report_file, $base_tmp_dir);
+  $report_file = catfile($tmp_dir, basename($report_file));
+   
   $c->stash->{download_plot}     = $plot_file;
   $c->stash->{download_clusters} = $clusters_file;
+  $c->stash->{download_cluster_report}= $report_file;
 
 }
+
 
 sub cluster_output_files {
     my ($self, $c) = @_;
