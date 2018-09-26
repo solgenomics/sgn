@@ -3,9 +3,26 @@
 $data => 'Default'
 </%args>
 
+
+<& /page/page_title.mas, title=>"Quality Control Genotyping" &>
+
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
-<h2>Hello <% $data %></h2>
+<div class="container-fluid">
+
+    <&| /page/info_section.mas, title=>"About Quality Control Genotyping",  collapsible => 1, collapsed=>1 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                    <b><p>What is quality control genotyping?</p></b>
+                    <ul>
+                    <li>Quality control genotyping is a procedure targeted towards identifying mismatch or errors in our breeding materials or germplasm</li>
+                    
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </&>
+
 
 <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotype QC</button>
 
