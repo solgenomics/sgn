@@ -31,6 +31,9 @@ sub BUILD {
     if ($args->{format} eq "vcf_new") { 
         $plugin->load_plugin("VCFNew");
     }
+    if ($args->{format} eq "intertek_grid") { 
+        $plugin->load_plugin("IntertekGrid");
+    }
     elsif ($args->{format} eq "dosage") { 
 	$plugin->load_plugin("Dosage");
     }

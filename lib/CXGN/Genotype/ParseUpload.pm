@@ -20,6 +20,11 @@ has 'filename' => (
     required => 1,
 );
 
+has 'filename_intertek_marker_info' => (
+    is => 'ro',
+    isa => 'Str',
+);
+
 has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample
     isa => 'Str',
     is => 'ro',
