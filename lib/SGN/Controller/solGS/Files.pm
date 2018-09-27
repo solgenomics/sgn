@@ -188,23 +188,16 @@ sub phenotype_file_name {
 sub analysis_error_file {
     my ($self, $c) = @_;
    
-    my $model_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id};
-    my $trait_id = $c->stash->{trait_id};
-    my $type     = $c->stash->{analysis_type};
-
-    my $name;
- 
-    if ($trait_id) 
-    {    
-	$name = "${type}_error_file_${trait_id}_${model_id}";
-    }
-    else
-    {
-	$name = "${type}_error_${model_id}"
-    }
+    my $type      = $c->stash->{analysis_type};
+    my $cache_dir = $c->stash->{cache_dir};
+    my $file_id   = $c->stash->{file_id};
+   
+    my $name = "${type}_error_${file_id}";
+   
   
     my $cache_data = { key       => $name, 
 		       file      => $name . '.txt',
+		       cache_dir => $cache_dir,
 		       stash_key => "${type}_error_file",
     };
     

@@ -15,13 +15,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $pop_id => undef
+$list_id => undef
+$dataset_id => undef
 $data_set_type => undef
+$data_structure_type => undef
 
 </%args>
 
 <%perl>
 
-my $list_id = $pop_id if $pop_id =~ /list/;
+$list_id = $pop_id if $pop_id =~ /list/;
 
 my $combo_pops_id;
 
@@ -62,12 +65,13 @@ $pop_id = undef if $list_id || $combo_pops_id;
    
  <div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"> </div>
 
- <div id="cluster_plot"></div>
+ <div id="cluster_plot">
 
  <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
  <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
  <input type="hidden"  id="cluster_type" value="" />
- <input type="hidden"  id="dataset_id" value="" />
- <input type="hidden"  id="list_id" value="" />
-
+ <input type="hidden"  id="dataset_id" value= "<% $dataset_id %>" />
+ <input type="hidden"  id="list_id" value="<% $list_id %>" />
+ <input type="hidden"  id="data_structure_type" value="<% $data_structure_type %>" />
+</div>
 

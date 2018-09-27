@@ -175,8 +175,8 @@ function runAnovaAnalysis(traits) {
 				.append('<br /> <strong>Download:</strong> '
 					+ anovaFile + ' | '
 					+ modelFile + ' | '
-					+ meansFile + ' | '
-					+ diagnosticsFile)
+					+ diagnosticsFile + ' | '
+					+ meansFile)
 				.show();
 			    
 			    jQuery("#anova_message").empty();

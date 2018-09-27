@@ -13,13 +13,24 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$trial_id => ''
+$trial_id => undef
+$list_id => undef
+$dataset_id => undef
+$data_structure_type => undef
 
 </%args>
 
 <%perl>
 
 my $pop_id = $trial_id if $trial_id;
+
+if (!$data_structure_type) {
+   if ($dataset_id) {
+      $data_structure_type = 'dataset';
+   } elsif ($list_id) {
+     $data_structure_type = 'list';
+   }
+}
 
 </%perl>
 
@@ -33,6 +44,10 @@ my $pop_id = $trial_id if $trial_id;
   <input id="run_cluster" class="button" type="button" value="Run Cluster" />
   
   <& /solgs/cluster/plot.mas,
-     pop_id => $pop_id &>
+     pop_id => $pop_id,
+    list_id => $list_id,
+    dataset_id => $dataset_id,
+    data_structure_type => $data_structure_type,
+    &>
 
 </&>

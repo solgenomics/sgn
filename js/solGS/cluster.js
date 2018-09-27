@@ -16,7 +16,7 @@ solGS.cluster = {
 	var popDetails = solGS.getPopulationDetails();
 	
 	var comboPopsId = jQuery('#combo_pops_id').val();
-	
+
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
@@ -28,13 +28,15 @@ solGS.cluster = {
 		  },
             url: '/cluster/check/result/',
             success: function(res) {
-		if (res.result) {		   
+		if (res.result) {
+		   
 		    solGS.cluster.plotClusterOutput(res);
 				    
 		    jQuery("#cluster_message").empty();
 		    jQuery("#run_cluster").hide();
 		   
-		} else { 
+		} else {
+		    
 		    jQuery("#run_cluster").show();	
 		}
 	    },
@@ -138,6 +140,7 @@ solGS.cluster = {
     },
 
     clusterResult: function(selectId, dataStructureType, clusterType) {
+	
 	var popDetails  = solGS.getPopulationDetails();
 
 	if (clusterType === 'undefined') {
@@ -220,13 +223,14 @@ solGS.cluster = {
 
 
     plotClusterOutput: function(res, resultName) {
-
+	
 	var plot = '<img  src= "' + res.kcluster_plot + '">';
     
 	var filePlot  = res.kcluster_plot.split('/').pop();
 
 	var popDetails = solGS.getPopulationDetails();
-	resultName = resultName || popDetails.population_name;	
+	resultName = resultName || popDetails.population_name;
+	
 	var plotType = 'K-means plot';
 	
 	var plotLink = "<a href=\""
@@ -253,7 +257,7 @@ solGS.cluster = {
 
 	var reportFile = res.cluster_report;
 	var report  = reportFile.split('/').pop();
-
+	
 	var reportLink = "<a href=\""
 	    + reportFile
 	    +  "\" download="
@@ -292,7 +296,7 @@ solGS.cluster = {
 	var list = new CXGN.List();
 
 	if (listId) {
-	    console.log('list data  id: ' + listId)
+	   
 	    var listName = list.listNameById(listId);
             var listType = list.getListType(listId);
 	    
@@ -387,7 +391,16 @@ jQuery(document).ready( function() {
 jQuery(document).ready( function() { 
 
     jQuery("#run_cluster").click(function() {
-        solGS.cluster.clusterResult();
+	var dataStructureType = jQuery('#data_structure_type').val();
+	var selectId;
+
+	if (dataStructureType == 'dataset') {
+	    selectId = jQuery('#dataset_id').val();
+	} else if (dataStructureType == 'list') {
+	     selectId = jQuery('#list_id').val();
+	}
+
+        solGS.cluster.clusterResult(selectId, dataStructureType);
     }); 
   
 });

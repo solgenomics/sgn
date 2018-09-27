@@ -67,13 +67,13 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{dataset_id}       = $dataset_id;
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
-
     
     $c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
-  
+    
     my $ret->{result} = undef;
       
     if ($cluster_plot_exists)
@@ -82,7 +82,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	my $cluster_plot_file = $c->stash->{download_plot};
 	my $clusters_file = $c->stash->{download_clusters};
 	my $report_file = $c->stash->{download_cluster_report};
-	
+
 	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 	
 	$ret->{result} = 1;
@@ -90,7 +90,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
 	$ret->{cluster_type} = $cluster_type;
 	$ret->{combo_pops_id} = $combo_pops_id;
 	$ret->{kcluster_plot} = $cluster_plot_file;
-	$ret->{cluster_report_file} = $report_file; 
+	$ret->{cluster_report} = $report_file; 
 	$ret->{clusters} = $clusters_file;
 	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
 	#$ret->{trials_names} = $c->stash->{trials_names};
