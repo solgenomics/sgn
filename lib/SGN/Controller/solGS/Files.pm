@@ -194,7 +194,6 @@ sub analysis_error_file {
    
     my $name = "${type}_error_${file_id}";
    
-  
     my $cache_data = { key       => $name, 
 		       file      => $name . '.txt',
 		       cache_dir => $cache_dir,
@@ -683,7 +682,7 @@ sub copy_file {
     mkpath($dir, 0, 755);
     
     copy($file, $dir) 
-	or die "could not copy $file to $dir: @!";    
+	or die "could not copy $file to $dir";    
 }
 
 

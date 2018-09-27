@@ -115,7 +115,6 @@ sub create_anova_phenodata_file {
     $c->stash->{pop_id} = $c->stash->{trial_id};
     $c->controller('solGS::solGS')->phenotype_file($c);
       
-    $self->copy_pheno_file_to_anova_dir($c);
     my $pheno_file =  $c->stash->{phenotype_file};
       
     if (!-s $pheno_file) {
@@ -261,7 +260,6 @@ sub check_anova_output {
 	return 1;
 
     } else {
-	 
 	$self->anova_error_file($c);
 	my $error_file = $c->stash->{anova_error_file};
 
@@ -362,8 +360,7 @@ sub copy_pheno_file_to_anova_dir {
 
     my $anova_cache = $c->stash->{anova_cache_dir};
 
-    copy($pheno_file, $anova_cache) or 
-	die "could not copy $pheno_file to $anova_cache";
+    $c->controller('solGS::Files')->copy_file($pheno_file, $anova_cache);
 
     my $file = basename($pheno_file);
     $c->stash->{phenotype_file} = catfile($anova_cache, $file);
@@ -517,20 +514,15 @@ sub anova_model_file {
 
 }
 
+
 sub anova_error_file {
     my ($self, $c) = @_;
 
-    my $trial_id = $c->stash->{trial_id};
-    my $trait_id = $c->stash->{trait_id};
-    
-    $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};;
+    $c->stash->{file_id} = $c->stash->{trait_id} . '_' . $c->stash->{trial_id}; 
+    $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
+    $c->stash->{analysis_type} = 'anova';
 
-    my $cache_data = {key       => "anova_error_${trial_id}_${trait_id}",
-                      file      => "anova_error_${trial_id}_${trait_id}.txt",
-                      stash_key => "anova_error_file"
-    };
-
-    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->analysis_error_file($c);
 
 }
 

@@ -196,10 +196,6 @@ solGS.cluster = {
             success: function(res) {
 		if (res.status === 'success') {
 		    
-		    if (res.pop_id) {
-			var popId = res.pop_id;
-		    }
-		    
 		    jQuery(".multi-spinner-container").hide();
 		    var resultName = listName || datasetName;
 		    solGS.cluster.plotClusterOutput(res, resultName);
@@ -209,7 +205,9 @@ solGS.cluster = {
 
 		} else {                
 		    jQuery("#cluster_message").html(res.status);
+		    jQuery(".multi-spinner-container").hide();
 		    jQuery("#run_cluster").show();
+		    
 		}
 	    },
             error: function(res) {                    

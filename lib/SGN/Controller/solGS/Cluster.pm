@@ -185,13 +185,13 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	}	
     }
         
-    if ($cluster_plot_exists)
+    if (!$cluster_plot_exists)
     {
 	$self->prep_cluster_download_files($c);
 	my $cluster_plot_file = $c->stash->{download_plot};
 	my $clusters_file     = $c->stash->{download_clusters};
 	my $report            = $c->stash->{download_cluster_report};
-	
+
 	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 	
         $ret->{kcluster_plot} = $cluster_plot_file;
