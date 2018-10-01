@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/cluster/analysis.mas - K-means cluster analysis using a list of trials or genotypes with genotype or phenotype 
+/cluster/index.mas - a template with menu for selecting list or dataset to run the cluster on. 
 
 =AUTHOR
 

@@ -2,10 +2,10 @@
 
 =head1 NAME
 
-/solgs/model/cluster.mas - cluster analysis template
+/solgs/cluster/analysis.mas - cluster analysis template
 
 To add the cluster analysis interface any where on the website
-add the template '/solgs/model/cluster.mas' in your mason template
+add the template '/solgs/cluster/analysis.mas' in your mason template
 and pass any of the arguments listed below.
 Adding the 'data_structure_type' argument is also recommended.
 A data structure can any of this: 'list', if of list type; 'dataset',if of dataset type;
