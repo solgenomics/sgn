@@ -3468,8 +3468,8 @@ sub phenotype_file {
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
-    $c->controller('solGS::Files')->trial_metadata_file($c);
-    my $metadata_file = $c->stash->{trial_metadata_file};
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
 
     no warnings 'uninitialized';
     

@@ -451,7 +451,7 @@ sub structure_output_details {
 	if ($pop_id =~ /list/) {
 	    my $tmp_dir = $c->stash->{solgs_lists_dir};;	   
 
-	    my $files   = $c->controller('solGS::List')->create_list_pop_data_files($tmp_dir, $pop_id);
+	    my $files   = $c->controller('solGS::List')->create_list_pop_data_files($c, $tmp_dir, $pop_id);
 	    $pheno_file = $files->{pheno_file};
 	    $geno_file  = $files->{geno_file};
 

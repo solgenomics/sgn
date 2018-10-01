@@ -268,7 +268,7 @@ sub create_list_pop_data_files {
 
     $file_id = $c->stash->{file_id} if !$file_id;
 
-    $file_id = 'list_' . $file_id if $file_id !~ /list|datset/;
+    $file_id = 'list_' . $file_id if $file_id !~ /list|dataset/;
     
     my $pheno_name = "phenotype_data_${file_id}.txt";
     my $geno_name  = "genotype_data_${file_id}.txt";  
@@ -586,7 +586,7 @@ sub transform_plots_genotypes_names {
     $self->get_plots_list_elements_ids($c);
     $c->stash->{plots_ids} = $c->stash->{list_elements_ids};
 
-    $self->map_plot_genotypes($c);
+    $self->map_plots_genotypes($c);
     
 }
     
@@ -714,16 +714,20 @@ sub plots_list_phenotype_file {
     my $temp_data_files = $self->create_list_pop_data_files($c, $data_dir, $list_id);
     my $pheno_file = $temp_data_files->{pheno_file};
     $c->stash->{plots_list_phenotype_file} = $pheno_file;
+
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
     
     my $status;
 
      my $args = {
-	'list_id'       => $list_id,
-	'plots_names'   => $plots_names,
-	'plots_ids'     => $plots_ids,
-	'traits_file'   => $traits_file,
-	'list_data_dir' => $data_dir,
-	'phenotype_file'=> $pheno_file,
+	'list_id'        => $list_id,
+	'plots_names'    => $plots_names,
+	'plots_ids'      => $plots_ids,
+	'traits_file'    => $traits_file,
+	'list_data_dir'  => $data_dir,
+	'phenotype_file' => $pheno_file,
+	'metadata_file'  => $metadata_file
     };
     
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
