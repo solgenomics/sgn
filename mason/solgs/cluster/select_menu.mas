@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/cluster/select_menu.mas - cluster analysis select menu of list of trials or genotypes with genotype or phenotype 
+/solgs/cluster/select_menu.mas - cluster analysis select menu of datasets or lists of trials or genotypes with genotype or phenotype 
 
 =AUTHOR
 
