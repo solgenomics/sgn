@@ -37,7 +37,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 	$c->stash->{data_set_type} = 'combined_populations';	
     }
     
-    $c->stash->{template} = '/solgs/cluster/analysis.mas';
+    $c->stash->{template} = '/solgs/cluster/index.mas';
 
 }
 
@@ -78,23 +78,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
       
     if ($cluster_plot_exists)
     {
-	$self->prep_cluster_download_files($c);
-	my $cluster_plot_file = $c->stash->{download_plot};
-	my $clusters_file = $c->stash->{download_clusters};
-	my $report_file = $c->stash->{download_cluster_report};
-
-	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
-	
-	$ret->{result} = 1;
-	$ret->{list_id} = $list_id;
-	$ret->{cluster_type} = $cluster_type;
-	$ret->{combo_pops_id} = $combo_pops_id;
-	$ret->{kcluster_plot} = $cluster_plot_file;
-	$ret->{cluster_report} = $report_file; 
-	$ret->{clusters} = $clusters_file;
-	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
-	#$ret->{trials_names} = $c->stash->{trials_names};
-	$ret->{output_link}  = $output_link;   
+	$ret = $self->_jsonize_output($c);
     }
 
     $ret = to_json($ret);        
@@ -110,9 +94,6 @@ sub check_cluster_output_files {
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
 
-
-    #$c->stash->{file_id} = $file_id;
-    #$self->create_cluster_genotype_data($c);
     my $cluster_type = $c->stash->{cluster_type};
     my $cluster_result_file;
     my $cluster_plot_file;
@@ -130,7 +111,7 @@ sub check_cluster_output_files {
 	$self->hierarchical_result_file($c);
 	$cluster_plot_file = $c->stash->{hierarchical_dendrogram_file};	
     }
-  
+
     if (-s $cluster_plot_file)
     {
 	$c->stash->{"${cluster_type}_plot_exists"} = 1;
@@ -171,37 +152,21 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
 
-    my $ret->{status} = 'Cluster analysis failed.';
-    if ( !$cluster_plot_exists)
+    my $ret->{result} = 'Cluster analysis failed.';
+
+    if (!$cluster_plot_exists)
     {	
 	$self->create_cluster_genotype_data($c);
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{	  
-	    $ret->{status} = 'There is no genotype data. Aborted Cluster analysis.';                
+	    $ret->{result} = 'There is no genotype data. Aborted Cluster analysis.';                
 	}
 	else 
 	{	    
-	    $self->run_cluster($c);	    
+	    $self->run_cluster($c);
+	    $ret = $self->_jsonize_output($c);
 	}	
     }
-        
-    if (!$cluster_plot_exists)
-    {
-	$self->prep_cluster_download_files($c);
-	my $cluster_plot_file = $c->stash->{download_plot};
-	my $clusters_file     = $c->stash->{download_clusters};
-	my $report            = $c->stash->{download_cluster_report};
-
-	my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
-	
-        $ret->{kcluster_plot} = $cluster_plot_file;
-	$ret->{clusters} = $clusters_file;
-	$ret->{cluster_report} = $report;
-        $ret->{status} = 'success';  
-	$ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
-	#$ret->{trials_names} = $c->stash->{trials_names};
-	$ret->{output_link}  = $output_link;
-    }  
 
     $ret = to_json($ret);
         
@@ -239,6 +204,35 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
         
     $c->res->content_type('application/json');
     $c->res->body($ret);         
+}
+
+
+sub _jsonize_output {
+    my ($self, $c) = @_;
+
+    my $ret;
+    
+    $self->prep_cluster_download_files($c);
+    my $cluster_plot_file = $c->stash->{download_plot};
+    my $clusters_file     = $c->stash->{download_clusters};
+    my $report            = $c->stash->{download_cluster_report};
+
+    my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
+    
+    $ret->{kcluster_plot} = $cluster_plot_file;
+    $ret->{clusters} = $clusters_file;
+    $ret->{cluster_report} = $report;
+    $ret->{result} = 'success';  
+    $ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
+    $ret->{combo_pops_id} = $c->stash->{combo_pops_id};
+    $ret->{list_id}       = $c->stash->{list_id};
+    $ret->{cluster_type}  = $c->stash->{cluster_type};
+    $ret->{dataset_id}    = $c->stash->{dataset_id};
+    #$ret->{trials_names} = $c->stash->{trials_names};
+    $ret->{output_link}  = $output_link;
+
+    return $ret;
+    
 }
 
 

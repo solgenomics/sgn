@@ -170,7 +170,7 @@ solGS.cluster = {
 	    datasetName = dataset.name;
 	}
 	
-	if (listId || datasetId || popDetails.training_pop_id || popDetails.selection_pop_id) {
+	if (listId || datasetId || popDetails.training_pop_id || popDetails.selection_pop_id || popDetails.combo_pops_id) {
 	 
 	    jQuery(".multi-spinner-container").show();
 	    jQuery("#cluster_message").html("Running K-means clustering... please wait...");
@@ -194,7 +194,7 @@ solGS.cluster = {
 		  },
             url: '/cluster/result',
             success: function(res) {
-		if (res.status === 'success') {
+		if (res.result === 'success') {
 		    
 		    jQuery(".multi-spinner-container").hide();
 		    var resultName = listName || datasetName;
@@ -204,7 +204,7 @@ solGS.cluster = {
 		    jQuery("#run_cluster").hide();
 
 		} else {                
-		    jQuery("#cluster_message").html(res.status);
+		    jQuery("#cluster_message").html(res.result);
 		    jQuery(".multi-spinner-container").hide();
 		    jQuery("#run_cluster").show();
 		    
@@ -379,7 +379,7 @@ jQuery(document).ready( function() {
    
     var url = window.location.pathname;
 
-    if (url.match(/solgs\/trait|breeders_toolbox\/trial|breeders\/trial\/|solgs\/selection\//)) {
+    if (url.match(/solgs\/trait|breeders_toolbox\/trial|breeders\/trial\/|solgs\/selection\/|solgs\/model\/combined\/populations\//)) {
        solGS.cluster.checkClusterResult();  
     } 
  
