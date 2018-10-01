@@ -421,6 +421,16 @@ sub delete {
 	my $q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
 	my $h4 = $dbh->prepare($q4);
 	$h4->execute($self->cross_stock_id(), $cross_type_id);
+
+	# delete the progeny...
+	#
+	print STDERR "Deleting the progeny...\n";
+	my $q5 = "delete from stock where stock_id =?";
+	my $h5 = $dbh->prepare();
+	foreach my $progeny (@{$properties->{subjects}}) { 
+	    print STDERR "...Deleting progeny with stock_id $progeny->[0], name $progeny->[1], type $progeny->[2]...\n";
+	    $h5->execute($progeny->[0]);
+	}
     };
 
     if ($@) {
