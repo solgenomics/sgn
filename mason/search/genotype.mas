@@ -55,12 +55,6 @@
     <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
     <table id="genotype_search_results" width="100%" class="table table-hover table-striped">
-        <thead>
-            <tr>
-                <th>Accession</th>
-                <th>Genotype</th>
-            </tr>
-        </thead>
     </table>
 </&>
 
@@ -83,16 +77,19 @@ jQuery(document).ready(function (){
         var allele_dosage = jQuery('#selected_dosage').val();
 
         var table = jQuery('#genotype_search_results').DataTable({
-
             'destroy' : true,
-            'ajax':{'url':'/ajax/search/get_selected_accessions',
-            data:{
-                'dataset_id': dataset_id,
-                'markerset_id': markerset_id,
-                'marker_name': marker_name,
-                'allele_dosage': allele_dosage,
+            'ajax': { 'url':'/ajax/search/get_selected_accessions',
+                'data':{
+                    'dataset_id': dataset_id,
+                    'markerset_id': markerset_id,
+                    'marker_name': marker_name,
+                    'allele_dosage': allele_dosage,
                 }
-            }
+            },
+            columns: [
+                {title: "Accessions", "data": null, "render": function(data, type, row){return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>";}},
+                {title: "Genotypes", "data": "genotypes"},
+            ],
         });
     });
 
