@@ -1,5 +1,5 @@
 
-package SGN::Controller::AJAX::Search::Genotypes;
+package SGN::Controller::AJAX::Search::StocksUsingGenotypes;
 
 use Moose;
 
@@ -8,7 +8,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
-use CXGN::Genotype::Search;
+use CXGN::Genotype::SearchStocks;
 use CXGN::List;
 
 
@@ -59,9 +59,9 @@ sub get_selected_accessions :Path('/ajax/search/get_selected_accessions') :Args(
         push @parameters, $param;
     }
 
-    my $genotypes_accessions_search = CXGN::Genotype::Search->new({
+    my $genotypes_accessions_search = CXGN::Genotype::SearchStocks->new({
         bcs_schema=>$schema,
-        accession_list=>\@genotype_accessions,
+        stock_list=>\@genotype_accessions,
         protocol_id=>$protocol_id,
         filtering_parameters=>\@parameters,
     });
