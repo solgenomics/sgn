@@ -40,7 +40,7 @@ is_a: TIME:0000001
 [Term]
 id: TIME:0000005
 name: time of year
-def: "Days, weeks and months." []
+def: "Minutes, hours, days, weeks and months." []
 is_a: TIME:0000000
 
 [Term]
@@ -930,3 +930,35 @@ name: hour 24
 synonym: "H24" EXACT []
 def: "" []
 is_a: TIME:0000005
+
+[Term]
+id: TIME:0000137
+name: minute 15
+synonym: "Min15" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000138
+name: minute 30
+synonym: "Min30" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000139
+name: minute 45
+synonym: "Min45" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000140
+name: minute 60
+synonym: "Min60" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+
+
+
