@@ -40,7 +40,7 @@ is_a: TIME:0000001
 [Term]
 id: TIME:0000005
 name: time of year
-def: "Minutes, hours, days, weeks and months." []
+def: "minutes, hours, days, weeks and months." []
 is_a: TIME:0000000
 
 [Term]
