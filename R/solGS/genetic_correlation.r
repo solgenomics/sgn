@@ -23,10 +23,14 @@ outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
 inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                     what = "character")
 
-correTableFile <- grep("corre_coefficients_table", outputFiles, value=TRUE)
-correJsonFile  <- grep("corre_coefficients_json", outputFiles, value=TRUE)
+correTableFile <- grep("genetic_corre_table", outputFiles, value=TRUE)
+correJsonFile  <- grep("genetic_corre_json", outputFiles, value=TRUE)
+
+message('corre table file: ', correTableFile)
+message('corre json file: ', correJsonFile)
 
 geneticDataFile <- grep("combined_gebvs", inputFiles, value=TRUE)
+message('genetic data file: ', geneticDataFile)
 
 geneticData <- read.table(geneticDataFile,
                           header = TRUE,
@@ -110,6 +114,7 @@ write.table(coefficients,
       quote=FALSE,
       dec="."
       )
+
 
 write.table(correlationJson,
       file=correJsonFile,

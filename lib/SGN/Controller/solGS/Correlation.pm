@@ -101,13 +101,13 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my $model_id    = $c->req->param('model_id');
     
     my $index_file  = $c->req->param('index_file');
-      
+   $c->stash->{selection_index_file} = $index_file;   
     $c->stash->{model_id} = $model_id;
     $c->stash->{pop_id}   = $model_id;
 
     $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
  
-    $c->stash->{selection_index_file} = $index_file;
+   # $c->controller('solGS::Files')->selection_index_file($c);
     $self->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
 
@@ -117,6 +117,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     {
         $ret->{status} = 'success'; 
         $ret->{gebvs_file} = $combined_gebvs_file;
+	$ret->{index_file} = $index_file;
     }
 
     $ret = to_json($ret);
@@ -140,16 +141,16 @@ sub combine_gebvs_of_traits {
 
     $c->controller('solGS::solGS')->get_gebv_files_of_traits($c);  
     my $gebvs_files = $c->stash->{gebv_files_of_valid_traits};
-    
+
     if (!-s $gebvs_files) 
     {
 	$gebvs_files = $c->stash->{gebv_files_of_traits};
     }
    
     my $index_file  = $c->stash->{selection_index_file};
-   
+
     my @files_no = map { split(/\t/) } read_file($gebvs_files);
- 
+
     if (scalar(@files_no) > 1 ) 
     {    
         if ($index_file) 
@@ -171,7 +172,7 @@ sub combine_gebvs_of_traits {
 	$c->stash->{analysis_tempfiles_dir} = $tmp_dir;
 	
         $c->controller("solGS::solGS")->run_r_script($c);
-        $c->stash->{combined_gebvs_file} = $combined_gebvs_file;
+	$c->stash->{combined_gebvs_file} = $combined_gebvs_file;
     }
     else 
     {
@@ -340,7 +341,7 @@ sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/out
     }
     
     my $ret->{status} = 'failed';
-    my $corre_json_file = $c->stash->{genetic_corre_coefficients_json_file};
+    my $corre_json_file = $c->stash->{genetic_corre_json_file};
     
     if (-s $corre_json_file)
     { 
@@ -454,10 +455,14 @@ sub temp_pheno_corre_input_file {
    
     $c->controller("solGS::Files")->formatted_phenotype_file($c);
     my $formatted_pheno_file = $c->stash->{formatted_phenotype_file};
+
+    $c->controller("solGS::Files")->trial_metadata_file($c);
+    my $metadata_file = $c->stash->{trial_metadata_file};
    
     my $files = join ("\t",
 		      $pheno_file,
 		      $formatted_pheno_file,
+		      $metadata_file,
 		      $c->req->referer,              
 	);
      
@@ -477,8 +482,8 @@ sub temp_geno_corre_output_file {
     $self->genetic_correlation_output_files($c);
    
     my $files = join ("\t",
-			  $c->stash->{genetic_corre_coefficients_table_file},
-			  $c->stash->{genetic_corre_coefficients_json_file},			  
+			  $c->stash->{genetic_corre_table_file},
+			  $c->stash->{genetic_corre_json_file},			  
 	);
      
     my $tmp_dir = $c->stash->{correlation_temp_dir};

@@ -158,12 +158,10 @@ background: white;
        success: function(r)  { 
           if (r.error) { alert('Error: '+r.error); return; }
           var html = "";
-          //alert(JSON.stringify(r));
           for (var i=0; i<r.display_order.length; i++) { 
 	    html += r.display_order[i]['name']+'&nbsp;<b>'+r.display_order[i]['display_order']+'</b>&nbsp;<a href="/image/display_order?image_id='+r.display_order[i].image_id+'&amp;type='+r.display_order[i].type+'&amp;id='+r.display_order[i].id+'&amp;display_order='+r.display_order[i].display_order+'">change</button></a><br />';
 	    
           }
-	  //alert(html);
           jQuery('#display_properties_div').html(html);
 	  
        }
