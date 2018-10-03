@@ -34,34 +34,34 @@ sub _validate_with_plugin {
 
     # Check that the columns in the marker info file are what we expect
     if ($header_info[0] ne 'IntertekSNPID'){
-        push @error_messages, 'Column 1 header must be "IntertekSNPID".';
+        push @error_messages, 'Column 1 header must be "IntertekSNPID" in the SNP Info File.';
     }
     if ($header_info[1] ne 'CustomerSNPID'){
-        push @error_messages, 'Column 2 header must be "CustomerSNPID".';
+        push @error_messages, 'Column 2 header must be "CustomerSNPID" in the SNP Info File.';
     }
     if ($header_info[2] ne 'Reference'){
-        push @error_messages, 'Column 3 header must be "Reference".';
+        push @error_messages, 'Column 3 header must be "Reference" in the SNP Info File.';
     }
     if ($header_info[3] ne 'Alternate'){
-        push @error_messages, 'Column 4 header must be "Alternate".';
+        push @error_messages, 'Column 4 header must be "Alternate" in the SNP Info File.';
     }
     if ($header_info[4] ne 'Chromosome'){
-        push @error_messages, 'Column 5 header must be "Chromosome".';
+        push @error_messages, 'Column 5 header must be "Chromosome" in the SNP Info File.';
     }
     if ($header_info[5] ne 'Position'){
-        push @error_messages, 'Column 6 header must be "Position".';
+        push @error_messages, 'Column 6 header must be "Position" in the SNP Info File.';
     }
     if ($header_info[6] ne 'Quality'){
-        push @error_messages, 'Column 7 header must be "Quality".';
+        push @error_messages, 'Column 7 header must be "Quality" in the SNP Info File.';
     }
     if ($header_info[7] ne 'Filter'){
-        push @error_messages, 'Column 8 header must be "Filter".';
+        push @error_messages, 'Column 8 header must be "Filter" in the SNP Info File.';
     }
     if ($header_info[8] ne 'Info'){
-        push @error_messages, 'Column 9 header must be "Info".';
+        push @error_messages, 'Column 9 header must be "Info" in the SNP Info File.';
     }
     if ($header_info[9] ne 'Format'){
-        push @error_messages, 'Column 10 header must be "Format".';
+        push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
     }
 
     # Open GRID FILE and parse
@@ -82,19 +82,23 @@ sub _validate_with_plugin {
 
         my @observation_unit_names;
         # Iterate over all rows to get the sample ID and labID
-        while my $line (<$F>) {
+        while (my $line = <$F>) {
             my @line_info;
             if ($csv->parse($line)) {
                 @line_info = $csv->fields();
             }
-            push @observation_unit_names, $line_info[0];
+            my $sample_name = $line_info[0];
+            chomp $sample_name;
+            $sample_name =~ s/^\s+|\s+$//g;
+            push @observation_unit_names, $sample_name;
         }
 
     close($F);
+    print STDERR Dumper \@observation_unit_names;
 
     # Check that the first column in the header is equal to 'SampleName.LabID'
     if ($fields[0] ne 'SampleName.LabID'){
-        push @error_messages, 'Column 1 header must be "SampleName.LabID".';
+        push @error_messages, 'Column 1 header must be "SampleName.LabID" in the Grid File.';
     }
 
     my $number_observation_units = scalar(@observation_unit_names);
@@ -103,11 +107,13 @@ sub _validate_with_plugin {
     my @observation_units_names_trim;
     # Separates sample name from lab id
     foreach (@observation_unit_names) {
-        my ($observation_unit_name_with_accession_name, $lab_id) = split(/./, $_);
+        my ($observation_unit_name_with_accession_name, $lab_id) = split(/\./, $_);
+        $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
         my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         push @observation_units_names_trim, $observation_unit_name;
     }
     my $observation_unit_names = \@observation_units_names_trim;
+    print STDERR Dumper $observation_unit_names;
 
     my $organism_id = $self->get_organism_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -176,6 +182,8 @@ sub _parse_with_plugin {
     $protocolprop_info{'header_information_lines'} = [];
     $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
 
+    my $csv = Text::CSV->new({ sep_char => ',' });
+
     my $F;
     # Open Marker Info File and parse into the %marker_info for later use
     open($F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
@@ -191,7 +199,7 @@ sub _parse_with_plugin {
         my %marker_info;
         my %marker_info_lookup;
         # Iterate over all rows to get all the marker's info
-        while my $line (<$F>) {
+        while (my $line = <$F>) {
             my @line_info;
             if ($csv->parse($line)) {
                 @line_info = $csv->fields();
@@ -211,7 +219,7 @@ sub _parse_with_plugin {
                 alt => $alt,
                 intertek_name => $intertek_snp_id,
                 chrom => $chromosome,
-                pos => $position
+                pos => $position,
                 name => $customer_snp_id,
                 qual => $quality,
                 filter => $filter,
@@ -226,18 +234,14 @@ sub _parse_with_plugin {
         }
 
     close($F);
-
+    print STDERR Dumper \%marker_info_lookup;
     $protocolprop_info{'markers'} = \%marker_info;
 
-
-    my $csv = Text::CSV->new({ sep_char => ',' });
-
-    my $F;
     # Open GRID FILE and parse
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
-        my $header_row = <$F>;
-        my @header_info;
+        $header_row = <$F>;
+        @header_info;
 
         # Get first row, which is the header
         if ($csv->parse($header_row)) {
@@ -252,7 +256,7 @@ sub _parse_with_plugin {
         my %genotype_info;
         my @observation_unit_names;
         # Iterate over all rows in file
-        while my $line (<$F>) {
+        while (my $line = <$F>) {
             my @line_info;
             if ($csv->parse($line)) {
                 @line_info = $csv->fields();
@@ -260,6 +264,8 @@ sub _parse_with_plugin {
 
             # Get sample id and collect then in an array
             my $sample_id_with_lab_id = shift @line_info;
+            chomp $sample_id_with_lab_id;
+            $sample_id_with_lab_id =~ s/^\s+|\s+$//g;
             push @observation_unit_names, $sample_id_with_lab_id;
 
             my $counter = 0;
@@ -267,6 +273,8 @@ sub _parse_with_plugin {
                 my $genotype = $line_info[$counter];
                 $counter++;
                 my @alleles = split ":", $genotype;
+                #print STDERR Dumper \@alleles;
+                #print STDERR Dumper $marker_info_lookup{$intertek_snp_id};
 
                 my $ref = $marker_info_lookup{$intertek_snp_id}->{ref};
                 my $alt = $marker_info_lookup{$intertek_snp_id}->{alt};
@@ -274,10 +282,10 @@ sub _parse_with_plugin {
 
                 my @vcf_genotype; # should look like the vcf genotype call e.g. 0/1 or 0/0 or ./. or missing data
                 foreach my $a (@alleles){
-                    if ($a == $ref) {
+                    if ($a eq $ref) {
                         push @vcf_genotype, '0';
                     }
-                    if ($a == $alt) {
+                    if ($a eq $alt) {
                         push @vcf_genotype, '1';
                     }
                 }
