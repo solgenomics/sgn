@@ -17,6 +17,8 @@ sub _validate_with_plugin {
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
+    my $F;
+
     # Open Marker Info File and get headers
     open($F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
 
@@ -62,12 +64,11 @@ sub _validate_with_plugin {
         push @error_messages, 'Column 10 header must be "Format".';
     }
 
-    my $F;
     # Open GRID FILE and parse
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
-        my $header_row = <$F>;
-        my @header_info;
+        $header_row = <$F>;
+        @header_info;
 
         # Get first row, which is the header
         if ($csv->parse($header_row)) {
@@ -106,7 +107,7 @@ sub _validate_with_plugin {
         my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         push @observation_units_names_trim, $observation_unit_name;
     }
-    $observation_unit_names = \@observation_units_names_trim;
+    my $observation_unit_names = \@observation_units_names_trim;
 
     my $organism_id = $self->get_organism_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
