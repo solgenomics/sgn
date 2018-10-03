@@ -1,0 +1,91 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery' ] &>
+
+<div class="modal fade" id="drone_imagery_crop_dialog" name="drone_imagery_crop_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCropDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCropDialog">Crop Image</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Top Margin: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_crop_top_margin" name="drone_image_crop_top_margin" type="number" placeholder="20" value=20 />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Left Margin: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_crop_left_margin" name="drone_image_crop_left_margin" type="number" placeholder="30" value=30 />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Cropped Width: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_crop_width" name="drone_image_crop_width" type="number" placeholder="400" value=400 />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-5 control-label">Cropped Height: </label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="drone_image_crop_height" name="drone_image_crop_height" type="number" placeholder="500" value=500 />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div id="drone_imagery_rectangle_crop_div">
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+
+jQuery(document).ready(function() {
+
+    var rectangleOverlayData = new Array();
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_crop_image"]', function() {
+        var trial_id = jQuery(this).data('field_trial_id');
+        var stitched_image_id = jQuery(this).data('image_id');
+        var stitched_image = jQuery(this).data('stitched_image');
+        var html = '<div id="drone_imagery_crop_div" style="background-image:url('+decodeURI(stitched_image)+'); background-repeat:no-repeat; height:100%; background-size: auto 100%;"></div>';
+        console.log(html);
+        jQuery('#drone_imagery_rectangle_crop_div').html(html);
+
+        rectangleOverlayData = rectangleOverlayGenerate(30, 20, 400, 500, '#drone_imagery_crop_div');
+
+        jQuery('#drone_imagery_crop_dialog').modal("show");
+    });
+
+    jQuery('#drone_image_crop_left_margin,#drone_image_crop_top_margin,#drone_image_crop_width,#drone_image_crop_height').change(function(){
+        rectangleOverlayData = rectangleOverlayGenerate(
+            parseInt(jQuery('#drone_image_crop_left_margin').val()),
+            parseInt(jQuery('#drone_image_crop_top_margin').val()),
+            parseInt(jQuery('#drone_image_crop_width').val()),
+            parseInt(jQuery('#drone_image_crop_height').val()),
+            '#drone_imagery_crop_div'
+        );
+    });
+
+});
+
+</script>

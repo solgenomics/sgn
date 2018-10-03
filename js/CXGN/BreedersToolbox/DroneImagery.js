@@ -57,3 +57,21 @@ function gridDataGenerate(width, height, num_rows, num_cols, div_id) {
 
     return data;
 }
+
+function rectangleOverlayGenerate (margin_left, margin_top, rectangle_width, rectangle_height, div_id) {
+    
+    d3.select(div_id).html("");
+    var svg = d3.select(div_id)
+        .append("svg")
+        .attr("width", rectangle_width + margin_left)
+        .attr("height", rectangle_height + margin_top)
+        .append("g")
+
+    var g = svg.append("g")
+        .attr("transform", "translate(" + margin_left + "," + margin_top + ")");
+    g.append("rect")
+        .attr("class", "inner")
+        .attr("width", rectangle_width)
+        .attr("height", rectangle_height)
+        .style("opacity", 0.5);;
+}
