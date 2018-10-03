@@ -94,7 +94,6 @@ sub _validate_with_plugin {
         }
 
     close($F);
-    print STDERR Dumper \@observation_unit_names;
 
     # Check that the first column in the header is equal to 'SampleName.LabID'
     if ($fields[0] ne 'SampleName.LabID'){
@@ -113,7 +112,6 @@ sub _validate_with_plugin {
         push @observation_units_names_trim, $observation_unit_name;
     }
     my $observation_unit_names = \@observation_units_names_trim;
-    print STDERR Dumper $observation_unit_names;
 
     my $organism_id = $self->get_organism_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -197,7 +195,6 @@ sub _parse_with_plugin {
         }
 
         my %marker_info;
-        my %marker_info_lookup;
         # Iterate over all rows to get all the marker's info
         while (my $line = <$F>) {
             my @line_info;
@@ -230,11 +227,10 @@ sub _parse_with_plugin {
             push @{$protocolprop_info{'markers_array'}}, \%marker;
 
             $marker_info{$customer_snp_id} = \%marker;
-            $marker_info_lookup{$intertek_snp_id} = \%marker;
         }
 
     close($F);
-    print STDERR Dumper \%marker_info_lookup;
+    #print STDERR Dumper \%marker_info_lookup;
     $protocolprop_info{'markers'} = \%marker_info;
 
     # Open GRID FILE and parse
@@ -269,16 +265,14 @@ sub _parse_with_plugin {
             push @observation_unit_names, $sample_id_with_lab_id;
 
             my $counter = 0;
-            foreach my $intertek_snp_id (@markers){
+            foreach my $customer_snp_id (@markers){
                 my $genotype = $line_info[$counter];
                 $counter++;
                 my @alleles = split ":", $genotype;
-                #print STDERR Dumper \@alleles;
-                #print STDERR Dumper $marker_info_lookup{$intertek_snp_id};
 
-                my $ref = $marker_info_lookup{$intertek_snp_id}->{ref};
-                my $alt = $marker_info_lookup{$intertek_snp_id}->{alt};
-                my $marker_name = $marker_info_lookup{$intertek_snp_id}->{name};
+                my $ref = $marker_info{$customer_snp_id}->{ref};
+                my $alt = $marker_info{$customer_snp_id}->{alt};
+                my $marker_name = $marker_info{$customer_snp_id}->{name};
 
                 my @vcf_genotype; # should look like the vcf genotype call e.g. 0/1 or 0/0 or ./. or missing data
                 foreach my $a (@alleles){

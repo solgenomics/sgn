@@ -342,7 +342,7 @@ sub get_genotype_info {
     }
     my @protocolprop_top_key_select_arr;
     foreach (@$protocolprop_top_key_select){
-        push @protocolprop_top_key_select_arr, "value->'$_'";
+        push @protocolprop_top_key_select_arr, qq| value->'$_' |;
     }
     my %selected_protocol_marker_info;
     my %selected_protocol_top_key_info;
@@ -358,11 +358,19 @@ sub get_genotype_info {
                 $selected_protocol_marker_info{$protocolprop_id}->{$marker_name}->{$protocolprop_marker_hash_select->[$s]} = $protocolprop_info_return[$s];
             }
         }
+        print STDERR Dumper \@protocolprop_top_key_select_arr;
         my $protocolprop_top_key_select_sql = scalar(@protocolprop_top_key_select_arr) > 0 ? ', '.join ',', @protocolprop_top_key_select_arr : '';
+        print STDERR Dumper $protocolprop_top_key_select_sql;
         my $protocolprop_top_key_q = "SELECT nd_protocolprop_id $protocolprop_top_key_select_sql from nd_protocolprop WHERE $protocolprop_where_sql;";
+        print STDERR Dumper $protocolprop_top_key_q;
+        $protocolprop_top_key_q=$schema->storage->dbh()->quote("$protocolprop_top_key_q"); 
+        print STDERR Dumper $protocolprop_top_key_q;
+        
+        
         my $protocolprop_top_key_h = $schema->storage->dbh()->prepare($protocolprop_top_key_q);
         $protocolprop_top_key_h->execute();
         while (my ($protocolprop_id, @protocolprop_top_key_return) = $protocolprop_top_key_h->fetchrow_array()) {
+            print STDERR Dumper \@protocolprop_top_key_return;
             for my $s (0 .. scalar(@protocolprop_top_key_select_arr)-1){
                 my $protocolprop_i = $protocolprop_top_key_select->[$s];
                 my $val;
@@ -375,6 +383,7 @@ sub get_genotype_info {
             }
         }
     }
+    print STDERR Dumper \%selected_protocol_top_key_info;
     print STDERR "CXGN::Genotype::Search has protocolprops\n";
 
     foreach (@genotypeprop_array) {
