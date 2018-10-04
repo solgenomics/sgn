@@ -14,7 +14,7 @@ sub _validate_with_plugin {
     my @error_messages;
     my %missing_accessions;
 
-    print STDERR "Reading VCF to validate during parse...\n";
+    print STDERR "Reading IntertekCSV to validate during parse...\n";
     my $gtio = CXGN::GenotypeIO->new({
         file => $filename,
         format => "intertek_grid"
