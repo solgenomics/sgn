@@ -101,6 +101,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $upload_tempfile;
     my $subdirectory;
     my $parser_plugin;
+    my $include_lab_numbers;
     if ($upload_vcf) {
         $upload_original_name = $upload_vcf->filename();
         $upload_tempfile = $upload_vcf->tempname;
@@ -114,6 +115,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $upload_tempfile = $upload_intertek_genotypes->tempname;
         $subdirectory = "genotype_intertek_upload";
         $parser_plugin = 'IntertekCSV';
+        $include_lab_numbers = 1;
 
         my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
         my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();
@@ -268,6 +270,7 @@ sub upload_genotype_verify_POST : Args(0) {
         protocol_description=>$protocol_description,
         organism_id=>$organism_id,
         igd_numbers_included=>$include_igd_numbers,
+        lab_numbers_included=>$include_lab_numbers,
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
         archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
