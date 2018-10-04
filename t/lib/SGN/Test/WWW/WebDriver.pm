@@ -101,20 +101,28 @@ sub login {
     my $username = shift;
     my $password = shift;
     
+    $self->get("/user/login");
     my $d = $self->driver();
-    $self->get("/solpeople/login.pl");
-    $d->find_element("username", "name");
-    my $username_field = $d->find_element("username", "name");
+    sleep(2);
+    print STDERR "finding element username (for $username)\n";
+    my $username_field = $d->find_element("username", "id");
+    $username_field->click();
+    sleep(2);
     $username_field->send_keys($username);
-    $d->find_element("pd", "name");
-    my $password_field = $d->find_element("pd", "name");
+    print STDERR "Done entering username\n";
+    sleep(2);
+    my $password_field = $d->find_element("password", "name");
+    $password_field->click();
     $password_field->send_keys($password);
-    $password_field->submit();
+
+    my $login_button = $d->find_element("submit_password", "id");
+    $login_button->click();
+    sleep(5);
 }
 
 sub logout { 
     my $self = shift;
-    return $self->get("/solpeople/login.pl?logout=yes");
+    return $self->get("/user/logout");
 }
 
 sub logout_ok { 
@@ -145,6 +153,7 @@ sub base_url {
 sub get { 
     my $self = shift;
     my $url = shift;
+    print STDERR "Retrieving URL $url...\n";
     return $self->driver->get(catfile($self->base_url(), $url));
 }
 
