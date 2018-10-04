@@ -45,6 +45,7 @@
                 </div>
             </form>
             <div id="grid_layout_overlay_div"></div>
+            <div id="canvasInput"></div>
             <canvas id="canvasOutput">
             <hr>
             <div id="drone_imagery_trial_layout_div"></div>
@@ -84,8 +85,9 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-
-                let src = cv.imread(response.image_fullpath);
+                var html = '<img id="canvasInputImage" src="'+response.image_url+'">';
+                jQuery('#canvasInput').html(html);
+                let src = cv.imread("canvasInputImage");
                 let dst = new cv.Mat();
                 cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
                 cv.imshow('canvasOutput', dst);
