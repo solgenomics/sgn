@@ -103,21 +103,14 @@ sub login {
     
     $self->get("/user/login");
     my $d = $self->driver();
-    sleep(2);
-    print STDERR "finding element username (for $username)\n";
     my $username_field = $d->find_element("username", "id");
     $username_field->click();
-    sleep(2);
     $username_field->send_keys($username);
-    print STDERR "Done entering username\n";
-    sleep(2);
     my $password_field = $d->find_element("password", "name");
     $password_field->click();
     $password_field->send_keys($password);
-
     my $login_button = $d->find_element("submit_password", "id");
     $login_button->click();
-    sleep(5);
 }
 
 sub logout { 
@@ -153,7 +146,6 @@ sub base_url {
 sub get { 
     my $self = shift;
     my $url = shift;
-    print STDERR "Retrieving URL $url...\n";
     return $self->driver->get(catfile($self->base_url(), $url));
 }
 
@@ -205,8 +197,7 @@ sub download_linked_file {
 	    $token = $cookie->{value};
 	}
     }
-    #my $url = $self->host()."/".$href;
-    #print STDERR "Fetching URL $url\n"; 
+
     system("wget --header \"Cookie: sgn_session_id=$token\" --directory-prefix=/tmp $href");
 
 
