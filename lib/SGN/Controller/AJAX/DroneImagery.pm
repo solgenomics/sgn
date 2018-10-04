@@ -316,6 +316,9 @@ sub drone_imagery_get_contours_GET : Args(0) {
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_contours');
     my $archive_contours_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_contours/imageXXXX');
@@ -325,7 +328,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageContours/GetContours.py --image_url '.$main_production_site.$image_url.' --outfile_path '.$archive_contours_temp_image);
     print STDERR Dumper $status;
 
-    $c->stash->{rest} = { data => $image_url };
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
 }
 
 1;

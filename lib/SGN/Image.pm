@@ -202,7 +202,7 @@ sub get_img_src_tag {
     my $self = shift;
     my $size = shift;
     my $url  = $self->get_image_url($size);
-    my $name = $self->get_name();
+    my $name = $self->get_name() || '';
     if ( $size && $size eq "original" ) {
 
         my $static = $self->config()->get_conf("static_datasets_url");
