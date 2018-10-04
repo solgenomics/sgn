@@ -18,9 +18,23 @@ if(length(args)==0){
 
 library(lme4)
 
-data = read.csv(datafile)
+pd = read.csv(datafile, sep="\t")
 source(paramfile)  # should give us dependent_variable, fixed_factors, and random_factors
 
-model = lmer(as.formula(paste(dependent_variable, '~', paste(fixed_factors, collapse='+'), '+', paste(random_factors, collapse='+'))), data=data)
+pd$studyYear = as.factor(pd$studyYear)
+print(paste(dependent_variable, fixed_factors, random_factors))
 
-write(summary(model), file=paste(datafile, ".out", sep=""));
+print(head(pd))
+dependent_variable = gsub(" ", "\\.", dependent_variable) # replace space with "." in variable name
+dependent_variable = gsub("\\|", "\\.", dependent_variable) # replace | with .
+dependent_variable = gsub("\\:", "\\.", dependent_variable)
+dependent_variable = gsub("\\-", "\\.", dependent_variable)
+dependent_variable = gsub("\\/", "\\.", dependent_variable)
+print(paste("Dependent variable : ", dependent_variable))
+model_string = paste(dependent_variable, '~', paste(fixed_factors, collapse='+'), '+', paste(random_factors, collapse='+'))
+
+print(paste('MODEL STRING:', model_string));
+model = lmer(as.formula(model_string), data=pd)
+
+model_summary = summary(model)
+write(model_summary), file=paste(datafile, ".results", sep=""));

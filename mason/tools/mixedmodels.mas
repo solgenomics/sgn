@@ -1,0 +1,105 @@
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<& /page/page_title.mas, title=>"Mixed Model Analysis" &>
+
+<div style="width:300px">
+Choose a dataset: 
+<span style="width:240px" id="mixed_model_dataset_select">
+</span>
+<button class="btn btn-main" id="mixed_model_analysis_prepare_button">Go!</button>
+</div>
+
+<br />
+<br />
+Choose dependent variable:<br />
+<div id="dependent_variable">
+</div>
+
+<br />
+Choose fixed factors:
+<br />
+<div id="fixed_factors">
+</div>
+<br />
+Choose random factors
+<br />
+<div id="random_factors">
+</div>
+<br />
+<div id="tempfile" style="display:none" >
+</div>
+
+<button id="run_mixed_model_button" class="btn btn-main">Go!</button>
+
+<div id="mixed_models_results_div">
+</div>
+
+<script>
+
+  jQuery(document).ready(function() { 
+
+     get_select_box("datasets", "mixed_model_dataset_select", {});
+  
+     jQuery('#mixed_model_analysis_prepare_button').click( function() { 
+       var dataset_id=jQuery('#available_datasets').val();
+       jQuery.ajax({
+         url: '/ajax/mixedmodels/prepare',
+         data: { 'dataset_id' : dataset_id },
+         success: function(r) { 
+           if (r.error) { 
+             alert(r.error);
+           }
+           else { 
+             alert(JSON.stringify(r));
+             jQuery('#dependent_variable').html(r.dependent_variable);
+             jQuery('#fixed_factors').html(r.fixed_factors);
+             jQuery('#random_factors').html(r.random_factors);
+             jQuery('#tempfile').html(r.tempfile);
+           }
+        },
+        error: function(r) { 
+          alert("ERROR!!!!!");
+        }
+     });
+   });
+
+   jQuery('#run_mixed_model_button').click( function() { 
+      var dependent_variable = jQuery('#dependent_variable_select').val();
+      var fixed_factors = jQuery('#fixed_factors_select').val();
+      var random_factors = jQuery('#random_factors_select').val();
+      var tempfile = jQuery('#tempfile').html();
+
+      alert('Dependent variable: '+ dependent_variable +' Fixed Factors: '+ fixed_factors +' Random Factors: '+ random_factors +' Tempfile: '+tempfile);
+      alert(JSON.stringify(fixed_factors));
+      jQuery.ajax( {
+        url: '/ajax/mixedmodels/run',
+        data: { 
+          'dependent_variable': dependent_variable, 
+          'fixed_factors': fixed_factors.join(","), 
+          'random_factors': random_factors.join(","), 
+          'tempfile' : tempfile 
+        },
+        success: function(r) { 
+          if (r.error) { alert(r.error);}
+          else{ 
+            alert('success...');
+            jQuery('#mixed_models_results_div').html(r.html);
+          }
+        },
+        error: function(r) { 
+          alert(r);
+        }
+      });      
+    });
+
+  });
+
+</script>
+
+
+
