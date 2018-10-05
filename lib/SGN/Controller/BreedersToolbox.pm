@@ -121,7 +121,8 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
-    my $breeding_programs = $person_roles->get_breeding_program_roles();
+    my $ascii_chars = 1;
+    my $breeding_programs = $person_roles->get_breeding_program_roles($ascii_chars);
 
     $c->stash->{roles} = $breeding_programs;
     $c->stash->{template} = '/breeders_toolbox/manage_roles.mas';
