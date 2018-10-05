@@ -157,6 +157,7 @@ my $build = SGN::Build->new(
         'Test::WWW::Mechanize'                     => 1.3,
         'Test::WWW::Mechanize::Catalyst'           => 0,
         'Text::ParseWords'                         => 0,
+	'Text::Unidecode'                          => 0,
         'Tie::Function'                            => 0,
         'Tie::UrlEncoder'                          => 0,
         'Time::HiRes'                              => 0,
