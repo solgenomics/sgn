@@ -44,8 +44,7 @@
                     </div>
                 </div>
             </form>
-            <div id="grid_layout_overlay_div"></div>
-            <div id="canvasInput"></div>
+            <div id="original_stitched_image"></div>
             <canvas id="canvasOutput">
             <hr>
             <div id="drone_imagery_trial_layout_div"></div>
@@ -70,10 +69,8 @@ jQuery(document).ready(function() {
         var trial_id = jQuery(this).data('field_trial_id');
         var stitched_image_id = jQuery(this).data('image_id');
         var stitched_image = jQuery(this).data('stitched_image');
-        var html = '<div id="grid_layout_overlay" style="background-image:url('+decodeURI(stitched_image)+'); background-repeat:no-repeat; height:100%; background-size: auto 100%;"></div>';
-        jQuery('#grid_layout_overlay_div').html(html);
 
-        gridData = gridDataGenerate(50, 50, 10, 10, '#grid_layout_overlay');
+        gridData = gridDataGenerate(50, 50, 10, 10, '#original_stitched_image');
 
         jQuery('#drone_imagery_plot_polygons_dialog').modal("show");
 
@@ -85,14 +82,14 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-                var html = '<img id="canvasInputImage" src="'+response.image_url+'">';
-                jQuery('#canvasInput').html(html);
-                let src = cv.imread("canvasInputImage");
-                let dst = new cv.Mat();
-                cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-                cv.imshow('canvasOutput', dst);
-                src.delete();
-                dst.delete();
+                var html = '<img id="originalCanvasInputImage" src="'+response.image_url+'">';
+                jQuery('#original_stitched_image').html(html);
+                // let src = cv.imread("originalCanvasInputImage");
+                // let dst = new cv.Mat();
+                // cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+                // cv.imshow('canvasOutput', dst);
+                // src.delete();
+                // dst.delete();
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -139,7 +136,7 @@ jQuery(document).ready(function() {
             parseInt(jQuery('#drone_image_plot_polygon_height').val()),
             parseInt(jQuery('#drone_image_plot_polygon_num_rows').val()),
             parseInt(jQuery('#drone_image_plot_polygon_num_cols').val()),
-            '#grid_layout_overlay'
+            '#original_stitched_image'
         );
     });
 

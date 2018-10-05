@@ -38,31 +38,7 @@ sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $user_id;
-    my $user_name;
-    my $user_role;
-    my $session_id = $c->req->param("sgn_session_id");
-
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $images_zip = $c->req->upload('upload_drone_images_zipfile');
     if (!$images_zip) {
@@ -201,7 +177,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         foreach (keys %{$v->{usernames}}){
             $usernames .= " $_ ";
         }
-        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Create/View Plot Polygons</button><br/><br/><button class="btn btn-primary" name="project_drone_imagery_crop_image" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Crop Stitched Image</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'">Stitch Uploaded Images</button>';
+        my $stitched_image = $v->{stitched_image} ? $v->{stitched_image}.'<br/><br/><button class="btn btn-primary" name="project_drone_imagery_crop_image" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Crop Stitched Image</button><br/><br/><button class="btn btn-primary" name="project_drone_imagery_denoise" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Denoise</button><br/><br/><button class="btn btn-primary" name="project_drone_imagery_fourier_transform" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Apply Fourier Transform</button><br/><br/><button class="btn btn-primary" name="project_drone_imagery_plot_polygons" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'">Create/View Plot Polygons</button>' : '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'">Stitch Uploaded Images</button>';
         push @return, ["<a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a>", $v->{drone_run_project_name}, $v->{drone_run_project_description}, $v->{drone_run_date}, $usernames, $images, $stitched_image];
     }
 
@@ -215,32 +191,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
-
-    my $user_id;
-    my $user_name;
-    my $user_role;
-    my $session_id = $c->req->param("sgn_session_id");
-
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to stitch drone imagery!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to stitch drone imagery!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
@@ -285,32 +236,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
-
-    my $user_id;
-    my $user_name;
-    my $user_role;
-    my $session_id = $c->req->param("sgn_session_id");
-
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to get image contour info!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to get image contour info!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $main_production_site = $c->config->{main_production_site_url};
 
@@ -329,6 +255,92 @@ sub drone_imagery_get_contours_GET : Args(0) {
     print STDERR Dumper $status;
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+}
+
+sub drone_imagery_fourier_transform : Path('/ajax/drone_imagery/fourier_transform') : ActionClass('REST') { }
+
+sub drone_imagery_fourier_transform_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_fourier_transform');
+    my $archive_fourier_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_fourier_transform/imageXXXX');
+    $archive_fourier_temp_image .= '.png';
+    print STDERR $archive_fourier_temp_image."\n";
+
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '.$image_fullpath.' --outfile_path '.$archive_fourier_temp_image);
+    print STDERR Dumper $status;
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+}
+
+sub drone_imagery_denoise : Path('/ajax/drone_imagery/denoise') : ActionClass('REST') { }
+
+sub drone_imagery_denoise_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
+    my $archive_denoise_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_denoise/imageXXXX');
+    $archive_denoise_temp_image .= '.png';
+    print STDERR $archive_denoise_temp_image."\n";
+
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/Denoise.py --image_path '.$image_fullpath.' --outfile_path '.$archive_denoise_temp_image);
+    print STDERR Dumper $status;
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+}
+
+sub _check_user_login {
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to get image fourier transform!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to get image fourier transform!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    return ($user_id, $user_name, $user_role);
 }
 
 1;

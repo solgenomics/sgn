@@ -11,6 +11,8 @@
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_plot_polygons.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_crop_dialogs.mas &>
+<& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
+<& /breeders_toolbox/drone_imagery/drone_imagery_denoise_dialogs.mas &>
 
 <script>
 
