@@ -31,7 +31,6 @@ jQuery(document).ready( function() {
                
 });
 
-
 jQuery(document).ready( function() { 
    
     var url = window.location.pathname;
@@ -494,7 +493,7 @@ function plotPca(plotData){
     }
 
     var pcaDownload;
-    if (plotData.pop_id)  {
+    if (id)  {
 	pcaDownload = "/download/pca/scores/population/" + id;
     }
 

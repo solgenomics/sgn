@@ -20,12 +20,15 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 
     $c->stash->{pop_id} = $id;
 
-    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $id); 
-    my $combo_pops_list = $c->stash->{combined_pops_list};
-
-    if ($combo_pops_list) 
+    unless($id =~ /dataset|list/) 
     {
-	$c->stash->{data_set_type} = 'combined_populations';	
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $id); 
+	my $combo_pops_list = $c->stash->{combined_pops_list};
+
+	if ($combo_pops_list) 
+	{
+	    $c->stash->{data_set_type} = 'combined_populations';	
+	}
     }
     
     $c->stash->{template} = '/solgs/pca/index.mas';
@@ -218,9 +221,9 @@ sub pca_result :Path('/pca/result/') Args() {
 
 sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
     my ($self, $c, $file_id) = @_;
-    
+   
     my $pca_dir = $c->stash->{pca_cache_dir};
-    my $pca_file = catfile($pca_dir,  "pca_scores_${file_id}");
+    my $pca_file = catfile($pca_dir,  "pca_scores_${file_id}.txt");
   
     unless (!-e $pca_file || -s $pca_file <= 1) 
     {
