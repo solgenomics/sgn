@@ -42,6 +42,8 @@ GetOptions(
     "test" => \$test
 );
 
+print STDERR "Using pw $dbpass\n";
+
 my $fxtr_patch_path = dirname(abs_path($0));
 chdir($fxtr_patch_path);
 my $db_patch_path = abs_path('../../../../db/');
@@ -94,6 +96,14 @@ sub run_patches {
     my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
     for (my $j = 0; $j < (scalar @patches); $j++) {
         my $patch = $patches[$j];
+	
+	# ignore emacs backup files
+	if ($patch =~ /\~$/) { 
+	    print STDERR "Ignoring $patch...\n";
+	    next;
+	}
+
+	
         my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');
         print STDERR $cmd."\n";
         system("bash -c '$cmd'");

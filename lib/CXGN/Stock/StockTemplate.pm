@@ -178,7 +178,7 @@ sub parse {
         my $surv_plants = $worksheet->get_cell ($row , $headers{'NOSV'})->value;
         foreach my $header (keys %headers) {
 	      print STDERR "header loop header: $header\n";
-            if ($header =~ m/^CO_\d{1-4}:\d{7}/ ) {
+            if ($header =~ m/^CO_\d\{1-4\}:\d{7}/ ) {
 	      print STDERR "has header: $header row: $row col: ".$headers{$header}."\n";
 	      my $value = $worksheet->get_cell( $row , $headers{$header} )->value();
 	      print STDERR "has value: $value\n";

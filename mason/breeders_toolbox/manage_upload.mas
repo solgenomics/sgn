@@ -68,7 +68,7 @@ $editable_stock_props => {}
 <& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
 
 <div class="well well-sm">
-<h1>Genotyping Trials</h1><br/>
+<h1>Genotyping Plates</h1><br/>
 <table class="table table-bordered">
 <thead>
 <tr><th>Add</th><th>Manage</th><th>Search</th></tr>
@@ -76,10 +76,10 @@ $editable_stock_props => {}
 <tbody>
 <tr>
 <td>
-<a id="create_igd_genotyping_trial_link"><p>Create An IGD Genotyping Trial</p></a>
+<a id="create_igd_genotyping_trial_link"><p>Create An IGD Genotyping Plate</p></a>
 </td>
 <td>
-<a href="/breeders/genotyping"><p>Go To Manage Genotyping Trials</p></a>
+<a href="/breeders/genotyping"><p>Go To Manage Genotyping Plates</p></a>
 </td>
 <td>
 <a href="/search/trials"><p>Go To Trial Search</p></a>

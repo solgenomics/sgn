@@ -121,7 +121,8 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
-    my $breeding_programs = $person_roles->get_breeding_program_roles();
+    my $ascii_chars = 1;
+    my $breeding_programs = $person_roles->get_breeding_program_roles($ascii_chars);
 
     $c->stash->{roles} = $breeding_programs;
     $c->stash->{template} = '/breeders_toolbox/manage_roles.mas';
@@ -314,6 +315,20 @@ sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
     $c->stash->{odk_phenotyping_data_service_url} = $c->config->{odk_phenotyping_data_service_url};
     $c->stash->{template} = '/breeders_toolbox/manage_odk_data_collection.mas';
 }
+
+
+sub manage_identifier_generation :Path("/breeders/identifier_generation") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{template} = '/breeders_toolbox/identifier_generation/manage_identifier_generation.mas';
+}
+
 
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {
     my $self =shift;
@@ -666,6 +681,15 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
+
+sub manage_markers : Path("/breeders/markers") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
+
+}
+
 
 
 1;

@@ -92,26 +92,29 @@ sub trait_phenodata_file {
     my $data_set_type = $c->stash->{data_set_type};
    
     my $cache_data;
-
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
+    
+    if ($trait)
     {
-        my $combo_identifier = $c->stash->{combo_pops_id}; 
-        $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
-                       file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
-    else 
-    {
-        $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
-                       file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
-                       stash_key => 'trait_phenodata_file'
-        };
-    }
+	no warnings 'uninitialized';
 
-    $self->cache_file($c, $cache_data);
+	if ($data_set_type =~ /combined populations/)
+	{
+	    my $combo_identifier = $c->stash->{combo_pops_id}; 
+	    $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
+			   file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
+			   stash_key => 'trait_phenodata_file'
+	    };
+	}
+	else 
+	{
+	    $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
+			   file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
+			   stash_key => 'trait_phenodata_file'
+	    };
+	}
+
+	$self->cache_file($c, $cache_data);
+    }
 }
 
 
@@ -179,6 +182,45 @@ sub phenotype_file_name {
     
 	$self->cache_file($c, $cache_data);
     }
+}
+
+
+sub modeling_error_file {
+    my ($self, $c) = @_;
+   
+    my $model_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id};
+    my $trait_id = $c->stash->{trait_id};
+
+    my $name = "modeling_error_file_${trait_id}_${model_id}";
+    
+  
+    my $cache_data = { key       => $name, 
+		       file      => $name . '.txt',
+		       stash_key => 'modeling_error_file',
+    };
+    
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub analysis_report_file {
+    my ($self, $c) = @_;
+   
+    my $model_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $type     = $c->stash->{analysis_type};
+    
+    my $name = "${type}_report_${trait_id}_${model_id}";
+    
+  
+    my $cache_data = { key       => $name, 
+		       file      => $name . '.txt',
+		       stash_key => "${type}_report_file",
+    };
+    
+    $self->cache_file($c, $cache_data);
+
 }
 
 
@@ -277,127 +319,6 @@ sub blups_file {
     
     my $blups_file = $c->stash->{rrblup_training_gebvs_file};
     $c->controller('solGS::solGS')->top_blups($c, $blups_file);
-}
-
-
-sub get_solgs_dirs {
-    my ($self, $c) = @_;
-        
-    my $geno_version    = $c->config->{default_genotyping_protocol}; 
-    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
-    $geno_version       =~ s/\s+//g;
-    my $tmp_dir         = $c->site_cluster_shared_dir;    
-    $tmp_dir            = catdir($tmp_dir, $geno_version);
-    my $solgs_dir       = catdir($tmp_dir, "solgs");
-    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
-    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');
-    my $solqtl_cache    = catdir($tmp_dir, 'solqtl', 'cache');
-    my $solqtl_tempfiles = catdir($tmp_dir, 'solqtl', 'tempfiles');  
-    my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
-    my $log_dir         = catdir($tmp_dir, 'log', 'cache');
-    my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
-    my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
-    my $corre_cache     = catdir($tmp_dir, 'correlation', 'cache');
-    my $corre_temp      = catdir($tmp_dir, 'correlation', 'tempfiles');
-    my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
-    my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
-
-
-    mkpath (
-	[
-	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists, 
-	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
-	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
-	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
-	], 
-	0, 0755
-	);
-   
-    $c->stash(solgs_dir                   => $solgs_dir, 
-              solgs_cache_dir             => $solgs_cache, 
-              solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_lists_dir             => $solgs_lists,
-	      pca_cache_dir               => $pca_cache,
-	      pca_temp_dir                => $pca_temp,
-              correlation_cache_dir       => $corre_cache,
-	      correlation_temp_dir        => $corre_temp,
-	      histogram_dir               => $histogram_dir,
-	      analysis_log_dir            => $log_dir,
-              anova_cache_dir             => $anova_cache,
-	      anova_temp_dir              => $anova_temp,
-	      solqtl_cache_dir            => $solqtl_cache,
-              solqtl_tempfiles_dir        => $solqtl_tempfiles,
-
-        );
-
-}
-
-
-sub cache_file {
-    my ($self, $c, $cache_data) = @_;
-  
-    my $cache_dir = $c->stash->{cache_dir};
-   
-    unless ($cache_dir) 
-    {
-	$cache_dir = $c->stash->{solgs_cache_dir};
-    }
-   
-    my $file_cache  = Cache::File->new(cache_root => $cache_dir, 
-				       lock_level => Cache::File::LOCK_NFS()
-	);
-
-    $file_cache->purge();
-
-    my $file  = $file_cache->get($cache_data->{key});
-    
-    no warnings 'uninitialized';
-    
-    unless (-s $file > 1)
-    {      
-        $file = catfile($cache_dir, $cache_data->{file});
-        write_file($file);
-        $file_cache->set($cache_data->{key}, $file, '30 days');
-    }
-
-    $c->stash->{$cache_data->{stash_key}} = $file;
-    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
-}
-
-
-sub create_tempfile {
-    my ($self, $dir, $name, $ext) = @_;
-    
-    $ext = '.' . $ext if $ext;
-    
-    my ($fh, $file) = tempfile($name . "-XXXXX", 
-			       SUFFIX => $ext,
-                               DIR => $dir,
-        );
-    
-    $fh->close; 
-    
-    return $file;
-
-}
-
-
-sub grep_file {
-    my ($self, $dir, $exp) = @_;
-
-    opendir my $dh, $dir 
-        or die "can't open $dir: $!\n";
-
-    my ($file)  = grep { /^$exp/ && -f "$dir/$_" }  readdir($dh);
-    close $dh;
-   
-    if ($file)    
-    {
-        $file = catfile($dir, $file);
-    }
- 
-    return $file;
 }
 
 
@@ -502,6 +423,22 @@ sub traits_list_file {
     my $cache_data = {key       => 'traits_list_pop' . $pop_id,
                       file      => 'traits_list_pop_' . $pop_id,
                       stash_key => 'traits_list_file'
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub trial_metadata_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id};
+   # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+
+    my $cache_data = {key       => 'trial_metadata' . $pop_id,
+                      file      => 'trial_metadata_' . $pop_id,
+                      stash_key => 'trial_metadata_file'
     };
 
     $self->cache_file($c, $cache_data);
@@ -614,6 +551,127 @@ sub template {
     my $dir = '/solgs';
  
     return  catfile($dir, $file);
+
+}
+
+
+sub cache_file {
+    my ($self, $c, $cache_data) = @_;
+  
+    my $cache_dir = $c->stash->{cache_dir};
+   
+    unless ($cache_dir) 
+    {
+	$cache_dir = $c->stash->{solgs_cache_dir};
+    }
+   
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir, 
+				       lock_level => Cache::File::LOCK_NFS()
+	);
+
+    $file_cache->purge();
+
+    my $file  = $file_cache->get($cache_data->{key});
+    
+    no warnings 'uninitialized';
+    
+    unless (-s $file > 1)
+    {      
+        $file = catfile($cache_dir, $cache_data->{file});
+        write_file($file);
+        $file_cache->set($cache_data->{key}, $file, '30 days');
+    }
+
+    $c->stash->{$cache_data->{stash_key}} = $file;
+    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+}
+
+
+sub create_tempfile {
+    my ($self, $dir, $name, $ext) = @_;
+    
+    $ext = '.' . $ext if $ext;
+    
+    my ($fh, $file) = tempfile($name . "-XXXXX", 
+			       SUFFIX => $ext,
+                               DIR => $dir,
+        );
+    
+    $fh->close; 
+    
+    return $file;
+
+}
+
+
+sub grep_file {
+    my ($self, $dir, $exp) = @_;
+
+    opendir my $dh, $dir 
+        or die "can't open $dir: $!\n";
+
+    my ($file)  = grep { /^$exp/ && -f "$dir/$_" }  readdir($dh);
+    close $dh;
+   
+    if ($file)    
+    {
+        $file = catfile($dir, $file);
+    }
+ 
+    return $file;
+}
+
+
+sub get_solgs_dirs {
+    my ($self, $c) = @_;
+        
+    my $geno_version    = $c->config->{default_genotyping_protocol}; 
+    $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
+    $geno_version       =~ s/\s+//g;
+    my $tmp_dir         = $c->site_cluster_shared_dir;    
+    $tmp_dir            = catdir($tmp_dir, $geno_version);
+    my $solgs_dir       = catdir($tmp_dir, "solgs");
+    my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
+    my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');
+    my $solqtl_cache    = catdir($tmp_dir, 'solqtl', 'cache');
+    my $solqtl_tempfiles = catdir($tmp_dir, 'solqtl', 'tempfiles');  
+    my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
+    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
+    my $log_dir         = catdir($tmp_dir, 'log', 'cache');
+    my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
+    my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
+    my $corre_cache     = catdir($tmp_dir, 'correlation', 'cache');
+    my $corre_temp      = catdir($tmp_dir, 'correlation', 'tempfiles');
+    my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
+    my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
+
+
+    mkpath (
+	[
+	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists, 
+	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
+	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
+	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
+	], 
+	0, 0755
+	);
+   
+    $c->stash(solgs_dir                   => $solgs_dir, 
+              solgs_cache_dir             => $solgs_cache, 
+              solgs_tempfiles_dir         => $solgs_tempfiles,
+              solgs_lists_dir             => $solgs_lists,
+	      pca_cache_dir               => $pca_cache,
+	      pca_temp_dir                => $pca_temp,
+              correlation_cache_dir       => $corre_cache,
+	      correlation_temp_dir        => $corre_temp,
+	      histogram_dir               => $histogram_dir,
+	      analysis_log_dir            => $log_dir,
+              anova_cache_dir             => $anova_cache,
+	      anova_temp_dir              => $anova_temp,
+	      solqtl_cache_dir            => $solqtl_cache,
+              solqtl_tempfiles_dir        => $solqtl_tempfiles,
+
+        );
 
 }
 

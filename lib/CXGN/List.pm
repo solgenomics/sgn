@@ -12,7 +12,7 @@ CXGN::List - class that deals with website lists
  my $owner_id = $list->owner();
  my $type = $list->type();
  $list->remove_element('blabla');
- $list->add_element('blabla');
+ $list->add_bulk(['blabla', 'bla']);
 
 
 Class function (without instantiation):
@@ -135,21 +135,20 @@ sub available_public_lists {
     my $dbh = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute();
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
-	if ($requested_type) {
-	    if ($type && ($type eq $requested_type)) { 
-		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
-	    }
-	}
-	else { 
-	    
-	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
-	}
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username) = $h->fetchrow_array()) {
+        if ($requested_type) {
+            if ($type && ($type eq $requested_type)) { 
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+            }
+        }
+        else { 
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+        }
     }
     return \@lists;
 }
@@ -193,7 +192,7 @@ around 'BUILDARGS' => sub {
     my $class = shift;
     my $args = shift;
     
-    my $q = "SELECT content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=?";
+    my $q = "SELECT content from sgn_people.list join sgn_people.list_item using(list_id) WHERE list_id=? ORDER BY list_item_id ASC;";
 
     my $h = $args->{dbh}->prepare($q);
     $h->execute($args->{list_id});
@@ -311,6 +310,7 @@ sub add_element {
 	$ih->execute($self->list_id(), $element);
     };
     if ($@) { 
+        print STDERR Dumper $@;
 	return "An error occurred storing the element $element ($@)";
     }
     
@@ -506,7 +506,7 @@ sub retrieve_elements_with_ids {
     my $self = shift;
     my $list_id = shift;
 
-    my $q = "SELECT list_item_id, content from sgn_people.list_item  WHERE list_id=?";
+    my $q = "SELECT list_item_id, content from sgn_people.list_item  WHERE list_id=? ORDER BY list_item_id ASC;";
 
     my $h = $self->dbh()->prepare($q);
     $h->execute($list_id);

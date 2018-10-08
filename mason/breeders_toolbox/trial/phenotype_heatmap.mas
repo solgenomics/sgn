@@ -670,8 +670,7 @@ jQuery(document).ready( function() {
                                                             .attr("height", gridSize)
                                                             .style("fill", colors[0]); 
                                                             
-                                                            cards.transition().duration(1000)
-                                                                .style("fill", function(d) { return colorScale(d.pheno); }) ;                          
+                                                            cards.style("fill", function(d) { return colorScale(d.pheno); }) ;                          
 
                                                             cards.select("title").text(function(d) { return d.plot_msg; }) ;
                                                             
@@ -679,8 +678,8 @@ jQuery(document).ready( function() {
                                                             //console.log('out');
                                                             });
 
-                      cards.transition().duration(1000)
-                          .style("fill", function(d) { return colorScale(d.pheno); }) ;                          
+                      //cards.transition().duration(1000)
+                      cards.style("fill", function(d) { return colorScale(d.pheno); }) ;                          
 
                       cards.select("title").text(function(d) { return d.plot_msg; }) ;
                       
@@ -1115,8 +1114,7 @@ jQuery(document).ready( function() {
                                                             .style("stroke", strokes)
                                                             .style("fill", colors); 
                                                             
-                                                            cards.transition().duration(1000)
-                                                                .style("fill", colors) ;                          
+                                                            cards.style("fill", colors) ;                          
 
                                                             cards.select("title").text(function(d) { return d.plot_msg; }) ;
                                                             
@@ -1177,8 +1175,8 @@ jQuery(document).ready( function() {
                                                        
                                                           });
                                                           
-                      cards.transition().duration(1000)
-                          .style("fill", colors) ;  
+                      //cards.transition().duration(1000)
+                      cards.style("fill", colors) ;  
 
                       cards.select("title").text(function(d) { return d.plot_msg; }) ;
                       
@@ -1240,6 +1238,7 @@ jQuery(document).ready( function() {
       var new_accession = jQuery('#hm_accession').val();
       var old_accession = jQuery('#hm_edit_plot_accession').html();
       var old_plot_id = jQuery('#hm_edit_plot_id').html();
+      var old_plot_name = jQuery('#hm_edit_plot_name').html();
 
       new jQuery.ajax({
         type: 'POST',
@@ -1249,6 +1248,7 @@ jQuery(document).ready( function() {
                 'new_accession': new_accession,
                 'old_accession': old_accession,
                 'old_plot_id': old_plot_id,
+                'old_plot_name': old_plot_name,
         },
 
         success: function (response) {

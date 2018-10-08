@@ -35,5 +35,5 @@ dodeny@arc.agric.za<br />
 </&>
 
 <&| /page/info_section.mas, title=>"Images of <a href=\"/organism/23894/view/\">Solanum retroflexum</a>, an African Solanaceae species" &>
-<& /image/print_images.mas, images=>[29059 ,29060, 29061] &>
+<& /image/print_images.mas, images=>[ [29059, 'organism'] ,[29060, 'organism'], [29061, 'organism'] ] &>
 </&>

@@ -1,6 +1,6 @@
 
 <%args>
-$project_type => undef #Trial or Cross or Genotyping Trial
+$project_type => undef #Trial or Cross or Genotyping Plate
 $trial_id => undef
 $trial_name => undef
 $folder_id => undef
@@ -17,8 +17,8 @@ $folder_for_genotyping_trials => undef
 % my $get_genotyping_trials = $folder_for_genotyping_trials ? 1 : 0;
 % my $dialog_type;
 % if ($project_type eq 'Trial') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial(s)'}
-% if ($project_type eq 'Genotyping Trial') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Trial(s)'}
-% if ($project_type eq 'Cross') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Trial(s)' }
+% if ($project_type eq 'Genotyping Plate') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Plate(s)'}
+% if ($project_type eq 'Cross') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Experiment(s)' }
 % if (!$project_type) { $dialog_type = 'Trial(s)' }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
@@ -197,7 +197,7 @@ function set_trial_folder() {
                     refreshTrailJsTree(0);
 %  } elsif ($project_type eq 'Cross') {
                     refreshCrossJsTree(0);
-%  } elsif ($project_type eq 'Genotyping Trial') {
+%  } elsif ($project_type eq 'Genotyping Plate') {
                     refreshGenotypingTrialJsTree(0);
 %  }
         jQuery('#folder_set_success_dialog_message').modal("show");

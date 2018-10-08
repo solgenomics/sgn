@@ -18,8 +18,8 @@
                         <&| /util/workflow.mas, id=> "upload_genotypes_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
                                 <& /page/page_title.mas, title=>"This workflow will guide you through uploading genotypes into the database" &>
-                                <p>Select a genotyping project on the next screen. This project can represent a series of genotyping trials sent to a genotyping facilty.</p>
-                                <p>Ideally the sample names in your VCF file will match sample names in genotyping trials in the database; however, the sample names in your file can also match accession names in the database.</p>
+                                <p>Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.</p>
+                                <p>Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.</p>
                                 <p>Curently we support the VCF format for upload.</p>
 
                                 <br/><br/>
@@ -40,6 +40,7 @@
                                             <th>Breeding program</th>
                                             <th>Year</th>
                                             <th>Location</th>
+                                            <th>Genotyping Facility</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -106,11 +107,13 @@
                                         <tr>
                                             <th>Select</th>
                                             <th>Protocol Name</th>
-                                            <th>Description</th>
+                                            <th>Header Description</th>
                                             <th>Number of Markers</th>
+                                            <th>Protocol Description</th>
                                             <th>Reference Genome</th>
                                             <th>Species</th>
                                             <th>Sample Unit</th>
+                                            <th>Create Date</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -144,12 +147,17 @@
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Sample Unit: </label>
+                                            <label class="col-sm-5 control-label">Description:</label>
                                             <div class="col-sm-7">
-                                                <select class="form-control" id="upload_genotype_vcf_observation_type" name="upload_genotype_vcf_observation_type">
-                                                    <option value="tissue_sample">Tissue Sample: The sample names are tissue_sample names in genotyping trials in the database</option>
-                                                    <option value="accession">Accession: The sample names are of accession names</option>
-                                                </select>
+                                                <input class="form-control" id="upload_genotypes_protocol_description_input" name="upload_genotypes_protocol_description_input" type="text" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Choose Sample Unit: </label>
+                                            <div class="col-sm-7">
+                                                <input type="radio" name="upload_genotype_vcf_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well.
+                                                <br/><br/>
+                                                <input type="radio" name="upload_genotype_vcf_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
                                             </div>
                                         </div>
                                     </div>
@@ -157,13 +165,13 @@
 
                                 <div class="well">
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">Location: </label>
+                                        <label class="col-sm-5 control-label">Location of Data Generation: </label>
                                         <div class="col-sm-7">
                                             <span id="upload_genotype_location_select_div"></span>
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">Sample Names Include IGD Numbers (e.g. sample_name:IGD1001:09): </label>
+                                        <label class="col-sm-5 control-label">Exported Tissue Sample Names Include Numbers Generated by Genotyping Facility (e.g. sample_name:IGD1001:09):<br/><small>The generated number is separated from the tissue sample name in the database by a ':' separating character.</small> </label>
                                         <div class="col-sm-7">
                                             <input type="checkbox" id="upload_genotype_vcf_include_igd_numbers" name="upload_genotype_vcf_include_igd_numbers" >
                                         </div>
@@ -223,11 +231,14 @@
                                         <label class="col-sm-5 control-label">Add these missing stocks as new accessions?: </label>
                                         <div class="col-sm-7">
                                             <select class="form-control" id="upload_genotype_add_new_accessions" name="upload_genotype_add_new_accessions">
-                                                <option value="">No</option>
-                                                <option value="1">Yes</option>
+                                                <option value="">No (currently disabled for safety)</option>
+                                                <!--option value="1">Yes</option-->
                                             </select>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div id="upload_genotypes_errors_div">
                                 </div>
 
                                 <div id="upload_genotypes_warnings_div" style="display:none">

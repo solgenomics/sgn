@@ -228,6 +228,8 @@ sub save_ona_cross_info {
                 if ($activity_category eq 'field'){
                     #MISSING
                     if ($a->{'FieldActivities/fieldActivity'} eq 'status'){
+                        #print STDERR Dumper $a;
+
                         my $status_identifier;
                         my $attachment_identifier;
                         my $status_message_identifier = 'FieldActivities/plantstatus/plant_status';
@@ -262,6 +264,22 @@ sub save_ona_cross_info {
                             $status_user_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_reporter';
                             $status_trial_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocTrialName';
                             $status_accession_identifier = 'FieldActivities/plantstatus/stolen_bunch/stolen_statusLocAccName';
+                        } elsif ($a->{'FieldActivities/plantstatus/Unusual/plant_unusualLocPlotName'}){
+                            $status_identifier = 'FieldActivities/plantstatus/Unusual/plant_unusualLocPlotName';
+                            $attachment_identifier = 'FieldActivities/plantstatus/Unusual/unusual_image';
+                            $status_note_identifier = 'FieldActivities/plantstatus/Unusual/unusual_comments';
+                            $status_date_identifier = 'FieldActivities/plantstatus/Unusual/unusual_Date';
+                            $status_user_identifier = 'FieldActivities/plantstatus/Unusual/unusual_reporter';
+                            $status_trial_identifier = 'FieldActivities/plantstatus/Unusual/plant_unusualLocTrialName';
+                            $status_accession_identifier = 'FieldActivities/plantstatus/Unusual/plant_unusualLocAccName';
+                        } elsif ($a->{'FieldActivities/plantstatus/Disease/plant_diseaseLocPlotName'}){
+                            $status_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseLocPlotName';
+                            $attachment_identifier = 'FieldActivities/plantstatus/Disease/disease_image';
+                            $status_note_identifier = 'FieldActivities/plantstatus/Disease/disease_comments';
+                            $status_date_identifier = 'FieldActivities/plantstatus/Disease/plant_disease_date';
+                            $status_user_identifier = 'FieldActivities/plantstatus/Disease/disease_reporter';
+                            $status_trial_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseLocTrialName';
+                            $status_accession_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseLocAccName';
                         }
                         my $image_temp_file_info = $attachment_lookup{$a->{$attachment_identifier}};
                         my $image_temp_file = $image_temp_file_info->[0];

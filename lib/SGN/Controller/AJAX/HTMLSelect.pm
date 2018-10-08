@@ -416,7 +416,7 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $trial (@field_trials) {
         push @choices, $trial;
     }
-    push @choices, '__Genotyping Trials';
+    push @choices, '__Genotyping Plates';
     @genotyping_trials = sort { $a->[1] cmp $b->[1] } @genotyping_trials;
     foreach my $trial (@genotyping_trials) {
         push @choices, $trial;
@@ -863,6 +863,36 @@ sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protoco
       id => $id,
       choices => $gt_protocols,
       selected => $gtps{$default_gtp}
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_genotyping_protocol_select : Path('/ajax/html/select/genotyping_protocol') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "gtp_select";
+    my $name = $c->req->param("name") || "genotyping_protocol_select";
+    my $empty = $c->req->param("empty") || "";
+    my $default_gtp;
+    my %gtps;
+
+    my $gt_protocols = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_gt_protocols();
+
+    if (@$gt_protocols) {
+        $default_gtp = $c->config->{default_genotyping_protocol};
+        %gtps = map { @$_[1] => @$_[0] } @$gt_protocols;
+    }
+
+    if ($empty){
+        unshift@$gt_protocols, ['', "Select a genotyping protocol"]
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => $gt_protocols,
+        selected => $gtps{$default_gtp}
     );
     $c->stash->{rest} = { select => $html };
 }

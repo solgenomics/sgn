@@ -175,7 +175,7 @@ CXGN.List.prototype = {
         return html;
     },
 
-    newList: function(name) {
+    newList: function(name, desc) {
         var oldListId = this.existsList(name);
         var newListId = 0;
 
@@ -188,7 +188,7 @@ CXGN.List.prototype = {
             jQuery.ajax( {
                 url: '/list/new',
                 async: false,
-                data: { 'name': name },
+                data: { 'name': name, 'desc': desc },
                 success: function(response) {
                     if (response.error) {
                         alert(response.error);
@@ -400,15 +400,19 @@ CXGN.List.prototype = {
         var html = '';
 
         html += '<table id="public_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Download</th><th>Copy To Your Lists</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Download</th><th>Copy To Your Lists</th><th>Owner</th><th>Make Private</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
-            html += '<tr><td><b>'+lists[i][1]+'</b></td>';
+            html += '<tr>';
+            html += '<td><b>'+lists[i][1]+'</b></td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
             html += '<td><a onclick="(new CXGN.List()).validate(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
             html += '<td><a title="View" id="view_public_list_'+lists[i][1]+'" href="javascript:showPublicListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_public_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
             html += '<td><a title="Copy to Your Lists" id="copy_public_list_'+lists[i][1]+'" href="javascript:copyPublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-plus"></span></a></td>';
+            html += '<td>'+lists[i][6]+'</td>';
+            html += '<td><a title="Make Private" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td>';
+            html += '</tr>';
         }
         html = html + '</tbody></table>';
 
@@ -986,7 +990,7 @@ CXGN.List.prototype = {
                 break;
             case "trials":
             case "breeding_programs":
-                new_type = 'projects_2_project_ids'; 
+                new_type = 'projects_2_project_ids';
                 break;
             case "accessions":
                 new_type = 'accessions_2_accession_ids';
@@ -1061,7 +1065,7 @@ function pasteList(div_name) {
 function refreshListSelect(div_name, types) {
     var lo = new CXGN.List();
     var types = types.split(",");
-    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh')); 
+    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh'));
     //console.log("List options refreshed!");
 }
 

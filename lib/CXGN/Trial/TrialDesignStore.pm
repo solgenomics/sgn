@@ -7,7 +7,7 @@ CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (b
 This is used when storing a new design completely (plots and possibly plants and possibly subplots).
 - Used from CXGN::Trial::TrialCreate for saving newly designed field trials in SGN::Controller::AJAX::Trial->save_experimental_design_POST
 - Used from CXGN::Trial::TrialCreate for saving uploaded field trials in SGN::Controller::AJAX::Trial->upload_trial_file_POST
-- Used from CXGN::Trial::TrialCreate for saving newly designed genotyping trial OR saving uploaded genotyping trial in SGN::Controller::AJAX::GenotypingTrial->store_genotype_trial
+- Used from CXGN::Trial::TrialCreate for saving newly designed genotyping plate OR saving uploaded genotyping plate in SGN::Controller::AJAX::GenotypingTrial->store_genotype_trial
 
 This is used for storing new treatment (field management factor) trials.
 - Used from CXGN::Trial::TrialCreate for saving or uploading field trials with treatments in SGN::Controller::AJAX::Trial->save_experimental_design_POST and SGN::Controller::AJAX::Trial->upload_trial_file_POST
@@ -295,11 +295,11 @@ sub validate_design {
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $stocks = $chado_schema->resultset('Stock::Stock')->search({
-        #type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
+        type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= "Name $s already exists in the database.";
+        $error .= "Name $s->uniquename already exists in the database.";
     }
 
     my $seedlot_validator = CXGN::List::Validate->new();
@@ -661,7 +661,7 @@ sub store {
                 my $parent_stock;
                 push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $stock_id_checked };
 
-                # For genotyping trial, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
+                # For genotyping plate, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $plot_cvterm_id){
                     my $parent_plot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -675,7 +675,7 @@ sub store {
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_accession_rs->first->object_id };
                     }
                 }
-                # For genotyping trial, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
+                # For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
                 if ($stock_type_checked == $plant_cvterm_id){
                     my $parent_plant_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -700,7 +700,7 @@ sub store {
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_of_plant_rs->first->object_id };
                     }
                 }
-                # For genotyping trial, if the well tissue_sample is sourced from another tissue_sample, then we store relationships between the new tissue_sample and the source tissue_sample, and the new tissue_sample and the tissue_sample's plant if it exists, and the new tissue_sample and the tissue_sample's plot if it exists, and the new tissue sample and the tissue_sample's accession if it exists.
+                # For genotyping plate, if the well tissue_sample is sourced from another tissue_sample, then we store relationships between the new tissue_sample and the source tissue_sample, and the new tissue_sample and the tissue_sample's plant if it exists, and the new tissue_sample and the tissue_sample's plot if it exists, and the new tissue sample and the tissue_sample's accession if it exists.
                 if ($stock_type_checked == $tissue_sample_cvterm_id){
                     my $parent_tissue_sample_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,

@@ -11,11 +11,7 @@ This plugin module is loaded from CXGN::Trial::Download
 
 ------------------------------------------------------------------
 
-For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
-
-A trial's layout can optionally include treatment and phenotype summary
-information, mapping to treatment_project_ids and trait_list, selected_trait_names.
-These keys can be ignored if you don't need them in the layout.
+For downloading a genotyping plate's layout (as used from CXGN::Trial::Download->trial_download):
 
 my $plugin = "GenotypingTrialLayoutIntertekXLS";
 
@@ -66,13 +62,16 @@ sub download {
     my $design = $trial_layout->get_design();
     #print STDERR Dumper $design;
     my $row_count = 1;
-    while (my ($key, $val) = each (%$design)){
-        $ws->write($row_count, 0, $val->{plot_name});
+    foreach my $key (sort keys %$design){
+        my $val = $design->{$key};
+        my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
+        my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
+        $ws->write($row_count, 0, $sample_name);
         $ws->write($row_count, 1, $trial_name);
         $ws->write($row_count, 2, $val->{plot_number});
         $ws->write($row_count, 3, $val->{source_observation_unit_name});
         $ws->write($row_count, 4, $trial_name);
-        $ws->write($row_count, 5, $val->{notes});
+        $ws->write($row_count, 5, $comments);
         $row_count++;
     }
 
