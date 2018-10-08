@@ -364,7 +364,7 @@ jQuery(document).ready( function() {
 	    }
 	    
             if (selectId) {                
-                jQuery(".go_btn").click(function() {		    
+                jQuery("#cluster_go_btn").click(function() {		    
 		    solGS.cluster.loadClusterGenotypesList(selectId, dataStructureType);
                 });
             }

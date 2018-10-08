@@ -47,31 +47,21 @@ $pop_id = undef if $list_id || $combo_pops_id;
   shape-rendering: crispEdges;
 }
 </style>
- 
 
- <div class="multi-spinner-container">
-    <div class="multi-spinner">
-        <div class="multi-spinner">
-            <div class="multi-spinner">
-               <div class="multi-spinner">
-                    <div class="multi-spinner">
-                        <div class="multi-spinner"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
- </div>
+
+<div id="cluster_canvas">
+  <& /solgs/spinner.mas &>
    
- <div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"> </div>
+  <div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"> </div>
 
- <div id="cluster_plot">
+  <div id="cluster_plot">
 
- <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
- <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
- <input type="hidden"  id="cluster_type" value="" />
- <input type="hidden"  id="dataset_id" value= "<% $dataset_id %>" />
- <input type="hidden"  id="list_id" value="<% $list_id %>" />
- <input type="hidden"  id="data_structure_type" value="<% $data_structure_type %>" />
+    <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
+    <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
+    <input type="hidden"  id="cluster_type" value="" />
+    <input type="hidden"  id="dataset_id" value= "<% $dataset_id %>" />
+    <input type="hidden"  id="list_id" value="<% $list_id %>" />
+    <input type="hidden"  id="data_structure_type" value="<% $data_structure_type %>" />
+  </div>
 </div>
 

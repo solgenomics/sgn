@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/solgs/cluster/select_menu.mas - cluster analysis select menu of datasets or lists of trials or genotypes with genotype or phenotype 
+/solgs/pca/select_menu.mas - pca analysis select menu of datasets or lists of trials or genotypes with genotype or phenotype 
 
 =AUTHOR
 
@@ -20,11 +20,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <div class="fileupload-buttonbar">
    
   <div class="list_upload" id="list_label">
-    <label for="cluster_genotypes_list">Select</label>
+    <label for="pca_genotypes_list">Select</label>
   </div> 
-  <div class="list_upload" id="cluster_genotypes_list">      
+  <div class="list_upload" id="pca_genotypes_list">      
   </div>
-  <div class="list_upload" id="cluster_go_btn">
+  <div class="list_upload" id="pca_go_btn">
     <input type="button" value="Go" />
   </div>
     
@@ -37,7 +37,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <br>
    
     <!-- The container for the list of kcluster populations -->
-    <div class="sub_infosectioncontent" id="list_cluster_populations" style="display:none"></div>
+    <div class="sub_infosectioncontent" id="list_pca_populations" style="display:none"></div>
     <br> 
 
 </div>

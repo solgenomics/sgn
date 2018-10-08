@@ -28,7 +28,7 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 	$c->stash->{data_set_type} = 'combined_populations';	
     }
     
-    $c->stash->{template} = '/pca/analysis.mas';
+    $c->stash->{template} = '/solgs/pca/index.mas';
 
 }
 

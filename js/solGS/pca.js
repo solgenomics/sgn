@@ -50,7 +50,7 @@ function checkPcaResult () {
     var popDetails = solGS.getPopulationDetails();
     
     var comboPopsId = jQuery('#combo_pops_id').val();
-    console.log('combo ' + comboPopsId + ' listId: ' + listId)
+    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -65,8 +65,6 @@ function checkPcaResult () {
 		if (response.list_id) {		    
 		    setListId(response.list_id);
 		}
-		console.log('calling pcaResult combo id ' + response.combo_pops_id)
-		console.log('calling pcaResult result ' + response.result)
 		pcaResult();
 	    } else { 
 		jQuery("#run_pca").show();	
@@ -81,7 +79,7 @@ function checkPcaResult () {
 jQuery(document).ready( function() { 
 
     jQuery("#run_pca").click(function() {
-        pcaResult();
+	pcaResult();
     }); 
   
 });
@@ -100,7 +98,7 @@ jQuery(document).ready( function() {
             listId = jQuery(this).find("option:selected").val();              
                                 
             if (listId) {                
-                jQuery("#pca_genotypes_list_upload").click(function() {
+                jQuery("#pca_go_btn").click(function() {
                     loadPcaGenotypesList(listId);
                 });
             }
@@ -158,7 +156,7 @@ function pcaResult () {
 
     var popDetails  = solGS.getPopulationDetails();
     var listId = getListId();
- 
+
     if (listId) {
 	popDetails['training_pop_id'] = 'list_' + listId;
     }
@@ -194,7 +192,7 @@ function pcaResult () {
 		if (response.pop_id) {
 		    var popId = response.pop_id;
 		}
-		
+
 		var plotData = { 'scores': response.pca_scores, 
 				 'variances': response.pca_variances, 
 				 'pop_id': popId, 
@@ -276,9 +274,7 @@ function getPcaGenotypesListData(listId) {
 function setListId (listId) {
      
     var existingListId = jQuery("#list_id").doesExist();
-    console.log(listId)
-    //listId = listId.replace('list_', '');
-     console.log(listId)
+ 
     if (existingListId) {
 	jQuery("#list_id").remove();
     }

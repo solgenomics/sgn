@@ -165,7 +165,9 @@
 
 #list_type_selection_pop_load input, 
 #list_type_training_pop_load input,
-.go_btn input {
+#pca_go_btn input,
+#cluster_go_btn input
+{
     color: #ffffff;
     border: 1px solid #ffffff;
     background: #5cb85c;
@@ -173,7 +175,8 @@
 
 #list_type_selection_pop_load input:hover,
 #list_type_training_pop_load input:hover,
-.go_btn input:hover {
+#pca_go_btn input:hover,
+#cluster_go_btn input:hover {
     background-color: #c6e6c6; 
 }
 

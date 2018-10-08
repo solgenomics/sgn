@@ -135,7 +135,7 @@ $sample_observation_unit_type_name => undef
                                 &>
 
                                 <!-- Population structure analysis PCA -->
-                                <& /solgs/model/pca.mas,
+                                <& /solgs/pca/analysis.mas,
                                     trial_id => $trial_id
                                   &>
 

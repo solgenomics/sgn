@@ -77,7 +77,7 @@ $model_parameters
 
 </&>
 
-<& /solgs/model/pca.mas &>
+<& /solgs/pca/analysis.mas &>
 <& /solgs/cluster/analysis.mas &>  
 
 <& /solgs/model/accuracy.mas, 
