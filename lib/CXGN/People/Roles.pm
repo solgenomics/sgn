@@ -23,7 +23,7 @@ use Moose;
 use Try::Tiny;
 use SGN::Model::Cvterm;
 use Data::Dumper;
-
+use Text::Unidecode;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -55,12 +55,16 @@ sub add_sp_role {
 
 sub get_breeding_program_roles {
 	my $self = shift;
+	my $ascii_chars = shift;
 	my $dbh = $self->bcs_schema->storage->dbh;
 	my @breeding_program_roles;
 	my $q="SELECT username, sp_person_id, name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id)";
 	my $sth = $dbh->prepare($q);
 	$sth->execute();
 	while (my ($username, $sp_person_id, $sp_role) = $sth->fetchrow_array ) {
+	    if ($ascii_chars) {
+		$username = unidecode($username);
+	    }
 		push(@breeding_program_roles, [$username, $sp_person_id, $sp_role] );
 	}
 
