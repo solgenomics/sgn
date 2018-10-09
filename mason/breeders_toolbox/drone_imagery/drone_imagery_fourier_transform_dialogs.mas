@@ -39,11 +39,12 @@ jQuery(document).ready(function() {
         var trial_id = jQuery(this).data('field_trial_id');
         var stitched_image_id = jQuery(this).data('image_id');
         var stitched_image = jQuery(this).data('stitched_image');
+        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
 
         jQuery('#drone_imagery_fourier_transform_dialog').modal("show");
 
         jQuery.ajax({
-            url : '/ajax/drone_imagery/fourier_transform?image_id='+stitched_image_id,
+            url : '/ajax/drone_imagery/fourier_transform?image_id='+stitched_image_id+'&drone_run_project_id='+drone_run_project_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },

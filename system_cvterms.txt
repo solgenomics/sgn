@@ -251,3 +251,4 @@ project_md_image	raw_drone_imagery	Raw images uploaded as drone imagery	9/6/2018
 project_md_image	stitched_drone_imagery	Stitched image from uploaded drone imagery	9/6/2018	nm529	00103
 project_md_image	denoised_stitched_drone_imagery	Denoised stitched image	10/5/2018	nm529	00103
 project_md_image	cropped_stitched_drone_imagery	Cropped stitched image	10/5/2018	nm529	00103
+project_md_image	fourier_transform_stitched_drone_imagery	Stitched image with fourier transform applied	10/5/2018	nm529	00103

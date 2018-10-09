@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'CXGN.Trial', 'moment_min', 'daterangepicker' ] &>
 
 <div class="modal fade" id="upload_drone_imagery_dialog" name="upload_drone_imagery_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryDialog">
   <div class="modal-dialog modal-xl" role="document">
@@ -17,11 +17,12 @@
 
                 <&| /util/workflow.mas, id=> "drone_imagery_upload_workflow" &>
                     <&| /util/workflow.mas:step, title=> "Intro" &>
-                        <& /page/page_title.mas, title=>"This workflow will guide you through uploading raw drone images to the database" &>
+                        <& /page/page_title.mas, title=>"This workflow will guide you through uploading drone images to the database" &>
                         <p>Your field trial must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</p>
                         <p>A field trial represents plots in the field where each plot has a globally unique <i>plot_name</i>, a sequential <i>plot_number</i> that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an <i>accession_name</i> representing the genotype being tested in that plot. Each plot can belong to different blocks (<i>block_number</i>) and reps (<i>rep_number</i>) depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a <i>row_number</i> and <i>col_number</i> indicating the relative position of the plot in the field. A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
                         <p>The <i>row_number</i> and <i>col_number</i> are important for drone image uploads because this is what the image plot polygons are linked by.</p>
-                        <p>Your drone images should be uploaded using a zipfile (.zip) into a field trial and under a drone run in the database. You can have several drone runs for a single field trial. For an individual drone run, once you have uploaded all photos, you can stitch an ortho-image together. Afterwards you can cut the ortho-image into plot polygons and extract phenotypes for those plots into the database.</p>
+                        <p>If you only have raw drone images that have not been stitched into an ortho mosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip) into a field trial and under a drone run in the database. You can have several drone runs for a single field trial. For an individual drone run, once you have uploaded all photos, you can stitch an ortho-image together. Afterwards, you will have options to cut the ortho image into plot polygons and extract phenotypes for those plots into the database.</p>
+                        <p>If you already have an ortho mosaic image of your entire field, you can upload that image under a field trial and a drone run. Afterwards,  you will have options to cut the ortho-image into plot polygons and extract phenotypes for those plots into the database.</p>
                         <br/><br/>
                         <center>
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -44,7 +45,21 @@
                     <&| /util/workflow.mas:step, title=> "Drone Run" &>
                         <& /page/page_title.mas, title=>"Select or create new drone run" &>
 
-                        <div id="drone_image_upload_drone_runs_div"></div>
+                        <table class="table table-bordered table-hover" id="drone_image_upload_drone_runs_table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Drone Run Name</th>
+                                    <th>Drone Run Description</th>
+                                    <th>Drone Run Date</th>
+                                    <th>Field Trial Name</th>
+                                    <th>Field Trial Description</th>
+                                </tr>
+                            </thead>
+                        </table>
+
+                        <!-- If drone run is selected above, the drone_run_project_id is passed to controller, negating need to create new drone run -->
+                        <input id="drone_image_upload_drone_run_id" name="drone_image_upload_drone_run_id" type="hidden" />
 
                         <center>
                         <button class="btn btn-primary" id="drone_image_upload_create_drone_run">Create new drone run if not present in table</button>
@@ -65,16 +80,16 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Drone Run Date: (MM/DD/YYYY)</label>
+                                <label class="col-sm-3 control-label">Drone Run Date:</label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="drone_image_upload_drone_run_date" name="drone_image_upload_drone_run_date" type="text" />
+                                    <input class="form-control" id="drone_image_upload_drone_run_date" name="drone_image_upload_drone_run_date" title="drone_image_upload_drone_run_date" type="text" />
                                 </div>
                             </div>
                         </div>
                         <br/>
 
                         <center>
-                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                        <button class="btn btn-primary" id="drone_image_upload_drone_run_continue">Go to Next Step</button>
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Raw Image Zipfile" &>
@@ -117,8 +132,60 @@ jQuery(document).ready(function() {
         jQuery('#upload_drone_imagery_dialog').modal("show");
     });
 
+    jQuery(document).on('change', '#upload_drone_images_field_trial_id', function() {
+        var field_trial_id = jQuery(this).val();
+        jQuery('#drone_image_upload_drone_runs_table').DataTable({
+            destroy : true,
+            ajax : '/ajax/drone_imagery/drone_runs?select_checkbox_name=upload_drone_imagery_drone_run_select&field_trial_id='+field_trial_id
+        });
+    });
+
+    var drone_run_date_element = jQuery("#drone_image_upload_drone_run_date");
+    set_daterangepicker_default (drone_run_date_element);
+    jQuery('input[title="drone_image_upload_drone_run_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            drone_run_date_element.val(start.format('YYYY/MM/DD HH:mm:ss'));
+        }
+    );
+
     jQuery('#drone_image_upload_create_drone_run').click(function(){
         jQuery('#drone_image_upload_create_drone_inputs').show();
+        return false;
+    });
+
+    jQuery('#drone_image_upload_drone_run_continue').click(function(){
+        selected = [];
+        jQuery('input[name="upload_drone_imagery_drone_run_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1){
+            alert('Only select one drone run!');
+        } else {
+            if (selected.length == 0 && jQuery('#drone_image_upload_drone_run_name').val() == ''){
+                alert('Select a drone run or create a new one!');
+            } else if (selected.length == 1 && jQuery('#drone_image_upload_drone_run_name').val() != ''){
+                alert('If you selected a drone run, do not try to make a new one at the same time!');
+            } else if (selected.length == 1 && jQuery('#drone_image_upload_drone_run_name').val() == ''){
+                jQuery('#drone_image_upload_drone_run_id').val(selected[0]);
+                Workflow.complete('#drone_image_upload_drone_run_continue');
+                Workflow.focus('#drone_imagery_upload_workflow', 3);
+            } else if (selected.length == 0 && jQuery('#drone_image_upload_drone_run_name').val() != '') {
+                if (jQuery('#drone_image_upload_drone_run_desc').val() == ''){
+                    alert('Please give a drone run description.');
+                } else if (jQuery('#drone_image_upload_drone_run_date').val() == ''){
+                    alert('Please give a drone run date.');
+                } else {
+                    jQuery('#drone_image_upload_drone_run_id').val(undefined);
+                    Workflow.complete('#drone_image_upload_drone_run_continue');
+                    Workflow.focus('#drone_imagery_upload_workflow', 3);
+                }
+            }
+        }
         return false;
     });
 
