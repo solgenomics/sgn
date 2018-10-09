@@ -87,8 +87,18 @@ jQuery(document).ready(function (){
                 }
             },
             columns: [
-                {title: "Accessions", "data": null, "render": function(data, type, row){return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>";}},
-                {title: "Genotypes", "data": "genotypes"},
+                {
+                    title: "Accessions",
+                    data: null,
+                    render: function(data, type, row){return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>";}},
+                {
+                    title: "Genotypes",
+                    data: "genotypes",
+                    render: function(data, type,row){
+                        var newFormat = data.split(",").join("&nbsp &nbsp &nbsp &nbsp &nbsp");
+                        return newFormat;
+                    }
+                },
             ],
         });
     });

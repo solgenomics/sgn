@@ -46,9 +46,6 @@ sub get_selected_accessions :Path('/ajax/search/get_selected_accessions') :Args(
 
     my $protocol_id = $genotype_protocol_ref-> [0];
 
-#    print STDERR "ACCESSIONS =" .Dumper(@genotype_accessions). "\n";
-#    print "type of ACCESSIONS: " . ref(@genotype_accessions). "\n";
-
     my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
     my $markerset_items_ref = $markerset->retrieve_elements_with_ids($markerset_id);
     my @markerset_items = @{$markerset_items_ref};
@@ -72,7 +69,6 @@ sub get_selected_accessions :Path('/ajax/search/get_selected_accessions') :Args(
 
     foreach my $r(@$result){
         my ($selected_id, $selected_uniquename, $marker_dosage_string) = @$r;
-#        push @selected_accessions, [qq{<a href="/stock/$selected_id/view">$selected_uniquename</a>}, $marker_dosage_string];
         push @selected_accessions, {
             stock_id => $selected_id,
             stock_name => $selected_uniquename,

@@ -88,7 +88,6 @@ sub get_selected_accessions {
 #    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
 #    print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
 
-
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
         JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
