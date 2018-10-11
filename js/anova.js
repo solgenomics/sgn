@@ -165,11 +165,11 @@ function runAnovaAnalysis(traits) {
 			    var fileNameDiagnostics = diagnosticsFile.split('/').pop()
 			    
 			    anovaFile = "<a href=\"" + anovaFile +  "\" download=" + fileNameAnova + ">[Anova table]</a>";
-			    modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">[Model Summary]</a>";
-			    meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">[Adjusted Means]</a>";
+			    modelFile = "<a href=\"" + modelFile +  "\" download=" + fileNameModel + ">[Model summary]</a>";
+			    meansFile = "<a href=\"" + meansFile +  "\" download=" + fileNameMeans + ">[Adjusted means]</a>";
 			    
 			    diagnosticsFile = "<a href=\"" + diagnosticsFile
-				+  "\" download=" + fileNameDiagnostics + ">[Model Diagnostics]</a>";
+				+  "\" download=" + fileNameDiagnostics + ">[Model diagnostics]</a>";
 			    
 			    jQuery("#anova_table")
 				.append('<br /> <strong>Download:</strong> '
