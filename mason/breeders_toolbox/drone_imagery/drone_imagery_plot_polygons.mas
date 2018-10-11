@@ -67,35 +67,13 @@ jQuery(document).ready(function() {
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function() {
         var trial_id = jQuery(this).data('field_trial_id');
-        var stitched_image_id = jQuery(this).data('image_id');
+        var cropped_stitched_image_id = jQuery(this).data('cropped_stitched_image_id');
+        var denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         var stitched_image = jQuery(this).data('stitched_image');
 
         gridData = gridDataGenerate(50, 50, 10, 10, '#original_stitched_image');
 
         jQuery('#drone_imagery_plot_polygons_dialog').modal("show");
-
-        jQuery.ajax({
-            url : '/ajax/drone_imagery/get_contours?image_id='+stitched_image_id,
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                console.log(response);
-                jQuery("#working_modal").modal("hide");
-                var html = '<img id="originalCanvasInputImage" src="'+response.image_url+'">';
-                jQuery('#original_stitched_image').html(html);
-                // let src = cv.imread("originalCanvasInputImage");
-                // let dst = new cv.Mat();
-                // cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-                // cv.imshow('canvasOutput', dst);
-                // src.delete();
-                // dst.delete();
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert('Error retrieving contours for image!')
-            }
-        });
 
         jQuery.ajax({
             url : '/ajax/breeders/trial/'+trial_id+'/layout_table',

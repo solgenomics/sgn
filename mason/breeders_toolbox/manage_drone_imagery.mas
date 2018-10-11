@@ -28,10 +28,24 @@
     <canvas id="drone_imagery_crop_original_stitched_div"></canvas>
 </div>
 
+<div id="manage_drone_imagery_plot_polygons_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery : Define Plot Polygons" &>
+    
+    <div class="well well-sm">
+        <ul>
+            <li>Here you can cut and assign the observation units (plots, plants, etc) that you want to phenotype</li>
+            <li>Click on five points in the image to make a four-sided polygon.</li>
+        </ul>
+        <button class="btn btn-primary" id="drone_imagery_plot_polygons_submit">Assign Plots To Selected Polygons</button>
+    </div>
+
+    <canvas id="drone_imagery_plot_polygons_original_stitched_div"></canvas>
+    <div id="drone_imagery_trial_layout_div"></div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
-<& /breeders_toolbox/drone_imagery/drone_imagery_plot_polygons.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
-<& /breeders_toolbox/drone_imagery/drone_imagery_denoise_dialogs.mas &>
 
 <script>
 
@@ -47,7 +61,7 @@ jQuery(document).ready(function() {
     var drone_run_project_id;
     jQuery(document).on('click', 'button[name="project_drone_imagery_crop_image"]', function() {
         trial_id = jQuery(this).data('field_trial_id');
-        stitched_image_id = jQuery(this).data('image_id');
+        stitched_image_id = jQuery(this).data('stitched_image_id');
         stitched_image = jQuery(this).data('stitched_image');
         drone_run_project_id = jQuery(this).data('drone_run_project_id');
 
@@ -81,6 +95,7 @@ jQuery(document).ready(function() {
 
         jQuery('#manage_drone_imagery_crop_div').show();
         jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
     });
 
     var crop_points = [];
@@ -177,6 +192,112 @@ jQuery(document).ready(function() {
 
     });
 
+});
+
+// Denoising JS
+jQuery(document).ready(function() {
+
+    var gridData = new Array();
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_denoise"]', function() {
+        var trial_id = jQuery(this).data('field_trial_id');
+        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        var cropped_stitched_image_id = jQuery(this).data('cropped_stitched_image_id');
+        var stitched_image = jQuery(this).data('stitched_image');
+        var cropped_stitched_image = jQuery(this).data('cropped_stitched_image');
+
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/denoise?image_id='+cropped_stitched_image_id+'&drone_run_project_id='+drone_run_project_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");       
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error denoising image!')
+            }
+        });
+
+    });
+
+});
+
+//Define Plot Polygons JS
+jQuery(document).ready(function(){
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function(){
+        var trial_id = jQuery(this).data('field_trial_id');
+        var cropped_stitched_image_id = jQuery(this).data('cropped_stitched_image_id');
+        var denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
+        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
+    
+        jQuery('#manage_drone_imagery_crop_div').hide();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').show();
+    
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/get_contours?image_id='+denoised_stitched_image_id+'&drone_run_project_id='+drone_run_project_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                var canvas = document.getElementById('drone_imagery_plot_polygons_original_stitched_div');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = drawImageActualSize;
+                image.src = response.image_url;
+
+                function drawImageActualSize() {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving contours for image!')
+            }
+        });
+    
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+trial_id+'/layout_table',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                var output = response.output;
+                var header = output[0];
+                var html = '<table class="table table-borders table-hover" id="drone_imagery_layout_table"><thead><tr>';
+                for (var i=0; i<header.length; i++){
+                    html = html + '<td>'+header[i]+'</td>';
+                }
+                html = html + '</tr></thead><tbody>';
+                for (var i=1; i<output.length; i++){
+                    html = html + '<tr>';
+                    for (var j=0; j<output[i].length; j++){
+                        html = html + '<td>'+output[i][j]+'</td>';
+                    }
+                    html = html + '</tr>';
+                }
+                html = html + '</tbody></table>';
+                jQuery('#drone_imagery_trial_layout_div').html(html);
+                jQuery('#drone_imagery_layout_table').DataTable();
+                jQuery("#working_modal").modal("hide");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving trial layout and design!')
+            }
+        });
+
+    });
 });
 
 </script>

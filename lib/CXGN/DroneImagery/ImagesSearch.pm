@@ -314,6 +314,7 @@ sub search {
         push @where_clause, "phenotype.cvalue_id in ($sql)";
         $trait_join = " JOIN nd_experiment_project ON(study.project_id=nd_experiment_project.project_id) JOIN nd_experiment AS trial_experiment ON(trial_experiment.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_stock ON(trial_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock AS obs_unit ON(nd_experiment_stock.stock_id=obs_unit.stock_id) JOIN nd_experiment_stock AS nd_experiment_stock_obs ON(nd_experiment_stock_obs.stock_id=obs_unit.stock_id) JOIN nd_experiment AS phenotype_experiment ON(nd_experiment_stock_obs.nd_experiment_id=phenotype_experiment.nd_experiment_id AND phenotype_experiment.type_id=$phenotyping_experiment_cvterm_id) JOIN nd_experiment_phenotype ON(nd_experiment_phenotype.nd_experiment_id=phenotype_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) ";
     }
+    push @where_clause, "md_image.obsolete = 'f'";
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 

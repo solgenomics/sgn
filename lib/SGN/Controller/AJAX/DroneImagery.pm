@@ -239,27 +239,29 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
         my $cell_html = '';
         if ($v->{stitched_image}) {
-            $cell_html .= '<center><h5>Stitched</h5></center>'.$v->{stitched_image}.'<br/><br/>';
+            $cell_html .= '<center><h5>Stitched&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$v->{stitched_image_id}.'"></span></h5></center>'.$v->{stitched_image}.'<br/><br/>';
 
             if ($v->{cropped_stitched_image}) {
-                $cell_html .= '<center><h5>Cropped</h5></center>'.$v->{cropped_stitched_image}.'<br/><br/>';
+                $cell_html .= '<center><h5>Cropped&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$v->{cropped_stitched_image_id}.'"></span></h5></center>'.$v->{cropped_stitched_image}.'<br/><br/>';
 
                 if ($v->{denoised_stitched_image}) {
-                    $cell_html .= $v->{denoised_stitched_image}.'<br/><br/>';
+                    $cell_html .= '<center><h5>Denoised&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$v->{denoised_stitched_image_id}.'"></span></h5></center>'.$v->{denoised_stitched_image}.'<br/><br/>';
 
-                    if ($v->{ft_stitched_image}) {
-                        $cell_html .= $v->{ft_stitched_image}.'<br/><br/>';
-                        $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Create/View Plot Polygons</button>';
-                    } else {
-                        $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Apply Fourier Transform</button><br/><br/>';
-                    }
+                    $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$v->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$v->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$v->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Create/View Plot Polygons</button>';
+
+                    # if ($v->{ft_stitched_image}) {
+                    #     $cell_html .= '<center><h5>FT High Pass</h5></center>'.$v->{ft_stitched_image}.'<br/><br/>';
+                    #     $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Create/View Plot Polygons</button>';
+                    # } else {
+                    #     $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Apply FT Low Pass</button><br/><br/>';
+                    # }
 
                 } else {
-                    $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_denoise" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-cropped_stitched_image="'.uri_encode($v->{cropped_stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Denoise</button><br/><br/>';
+                    $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_denoise" data-cropped_stitched_image_id="'.$v->{cropped_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-cropped_stitched_image="'.uri_encode($v->{cropped_stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Denoise</button><br/><br/>';
                 }
 
             } else {
-                $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_crop_image" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Crop Stitched Image</button><br/><br/>';
+                $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_crop_image" data-stitched_image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Crop Stitched Image</button><br/><br/>';
             }
         } else {
             $cell_html .= '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'">Stitch Uploaded Images</button>';
@@ -324,6 +326,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $main_production_site = $c->config->{main_production_site_url};
@@ -342,7 +345,14 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageContours/GetContours.py --image_url '.$main_production_site.$image_url.' --outfile_path '.$archive_contours_temp_image);
     print STDERR Dumper $status;
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contours_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archive_contours_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
+    my $contours_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $contours_image_url = $image->get_image_url('original');
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath };
 }
 
 sub drone_imagery_fourier_transform : Path('/ajax/drone_imagery/fourier_transform') : ActionClass('REST') { }
@@ -408,8 +418,10 @@ sub drone_imagery_denoise_GET : Args(0) {
     $image->set_sp_person_id($user_id);
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $ret = $image->process_image($archive_denoise_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
+    my $denoised_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $denoised_image_url = $image->get_image_url('original');
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_url => $denoised_image_url, denoised_image_dullpath => $denoised_image_fullpath };
 }
 
 sub get_drone_run_projects : Path('/ajax/drone_imagery/drone_runs') : ActionClass('REST') { }
@@ -479,6 +491,23 @@ sub drone_imagery_get_image_GET : Args(0) {
     print STDERR Dumper $image_fullpath;
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+}
+
+sub drone_imagery_remove_image : Path('/ajax/drone_imagery/remove_image') : ActionClass('REST') { }
+
+sub drone_imagery_remove_image_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $resp = $image->delete(); #Sets to obsolete
+
+    $c->stash->{rest} = { status => $resp };
 }
 
 sub drone_imagery_crop_image : Path('/ajax/drone_imagery/crop_image') : ActionClass('REST') { }
