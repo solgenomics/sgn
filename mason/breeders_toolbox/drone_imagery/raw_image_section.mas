@@ -8,9 +8,8 @@
             <th>Drone Run</th>
             <th>Drone Run Description</th>
             <th>Drone Run Date</th>
-            <th>Image Username(s)</th>
             <th>Uploaded Drone Images</th>
-            <th>Stiched Image</th>
+            <th>Field Image(s)</th>
         </tr>
     </thead>
 </table>

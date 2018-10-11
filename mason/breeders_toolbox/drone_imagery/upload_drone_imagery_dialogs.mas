@@ -217,6 +217,7 @@ jQuery(document).ready(function() {
                 alert(response.error);
                 return;
             }
+            location.reload();
         }
     });
 

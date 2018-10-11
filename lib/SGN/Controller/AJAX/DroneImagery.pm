@@ -239,10 +239,10 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
         my $cell_html = '';
         if ($v->{stitched_image}) {
-            $cell_html .= $v->{stitched_image}.'<br/><br/>';
+            $cell_html .= '<center><h5>Stitched</h5></center>'.$v->{stitched_image}.'<br/><br/>';
 
             if ($v->{cropped_stitched_image}) {
-                $cell_html .= $v->{cropped_stitched_image}.'<br/><br/>';
+                $cell_html .= '<center><h5>Cropped</h5></center>'.$v->{cropped_stitched_image}.'<br/><br/>';
 
                 if ($v->{denoised_stitched_image}) {
                     $cell_html .= $v->{denoised_stitched_image}.'<br/><br/>';
@@ -255,7 +255,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                     }
 
                 } else {
-                    $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_denoise" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Denoise</button><br/><br/>';
+                    $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_denoise" data-image_id="'.$v->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-cropped_stitched_image="'.uri_encode($v->{cropped_stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Denoise</button><br/><br/>';
                 }
 
             } else {
@@ -266,7 +266,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         }
 
         my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
-        push @return, ["<a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a>", $v->{drone_run_project_name}, $v->{drone_run_project_description}, $drone_run_date, $usernames, $images, $cell_html];
+        push @return, ["<a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a>", $v->{drone_run_project_name}, $v->{drone_run_project_description}, $drone_run_date, $images, $cell_html];
     }
 
     $c->stash->{rest} = { data => \@return };
@@ -461,6 +461,71 @@ sub get_drone_run_projects_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
+sub drone_imagery_get_image : Path('/ajax/drone_imagery/get_image') : ActionClass('REST') { }
+
+sub drone_imagery_get_image_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+}
+
+sub drone_imagery_crop_image : Path('/ajax/drone_imagery/crop_image') : ActionClass('REST') { }
+
+sub drone_imagery_crop_image_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $polygon = $c->req->param('polygon');
+    my $polygon_obj = decode_json $polygon;
+    if (scalar(@$polygon_obj) != 4){
+        $c->stash->{rest} = {error=>'Polygon should be 4 long!'};
+        $c->detach();
+    }
+    $polygon = encode_json $polygon_obj;
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
+    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
+    $archive_temp_image .= '.png';
+    print STDERR $archive_temp_image."\n";
+
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/ImageCropping/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_temp_image --polygon '$polygon'";
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+    print STDERR Dumper $status;
+
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
+    my $cropped_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $cropped_image_url = $image->get_image_url('original');
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath };
+}
+
 sub _check_user_login {
     my $c = shift;
     my $user_id;
@@ -472,7 +537,7 @@ sub _check_user_login {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to get image fourier transform!'};
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -481,7 +546,7 @@ sub _check_user_login {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to get image fourier transform!'};
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();

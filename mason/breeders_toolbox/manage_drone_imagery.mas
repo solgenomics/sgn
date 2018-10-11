@@ -4,19 +4,178 @@
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<& /page/page_title.mas, title=>"Manage Drone Imagery" &>
+<div id="manage_drone_imagery_top_div">
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button>", icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
+    <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
+
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button>", icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
+
+</div>
+
+<div id="manage_drone_imagery_crop_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery : Crop Stitched Image To Field Experiment" &>
+    
+    <div class="well well-sm">
+        <ul>
+            <li>Here you can do a rough cropping of the stitched ortho image to focus only of the actual field experiment.</li>
+            <li>Click on five points in the image to make a four-sided polygon.</li>
+            <li>Only the last polygon that you draw will be used for the cropping.</li>
+        </ul>
+        <button class="btn btn-primary" id="drone_imagery_crop_stitched_submit">Crop Image To Selected Polygon</button>
+    </div>
+
+    <canvas id="drone_imagery_crop_original_stitched_div"></canvas>
+</div>
 
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_plot_polygons.mas &>
-<& /breeders_toolbox/drone_imagery/drone_imagery_crop_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_denoise_dialogs.mas &>
 
 <script>
 
+// Image Cropping JS
 jQuery(document).ready(function() {
+
+    var rectangleOverlayData = new Array();
+
+    var ctx;
+    var trial_id;
+    var stitched_image_id;
+    var stitched_image;
+    var drone_run_project_id;
+    jQuery(document).on('click', 'button[name="project_drone_imagery_crop_image"]', function() {
+        trial_id = jQuery(this).data('field_trial_id');
+        stitched_image_id = jQuery(this).data('image_id');
+        stitched_image = jQuery(this).data('stitched_image');
+        drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/get_image?image_id='+stitched_image_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var canvas = document.getElementById('drone_imagery_crop_original_stitched_div');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = drawImageActualSize;
+                image.src = response.image_url;
+
+                function drawImageActualSize() {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                }
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving image!')
+            }
+        });
+
+        jQuery('#manage_drone_imagery_crop_div').show();
+        jQuery('#manage_drone_imagery_top_div').hide();
+    });
+
+    var crop_points = [];
+    var crop_display_points = [];
+
+    function FindPosition(oElement) {
+        if(typeof( oElement.offsetParent ) != "undefined") {
+            for(var posX = 0, posY = 0; oElement; oElement = oElement.offsetParent) {
+                posX += oElement.offsetLeft;
+                posY += oElement.offsetTop;
+            }
+            return [ posX, posY ];
+        } else {
+            return [ oElement.x, oElement.y ];
+        }
+    }
+
+    function GetCoordinates(e) {
+        var PosX = 0;
+        var PosY = 0;
+        var ImgPos;
+        ImgPos = FindPosition(myImg);
+        if (!e) var e = window.event;
+        if (e.pageX || e.pageY) {
+            PosX = e.pageX;
+            PosY = e.pageY;
+        }
+        else if (e.clientX || e.clientY) {
+            PosX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            PosY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        PosX = PosX - ImgPos[0];
+        PosY = PosY - ImgPos[1];
+        if (crop_points.length < 4){
+            crop_points.push({x:PosX, y:PosY});
+            crop_display_points.push({x:PosX, y:PosY});
+        } else {
+            crop_display_points.push({x:PosX, y:PosY});
+        }
+        if (crop_display_points.length > 5){
+            crop_points = [];
+            crop_display_points = [];
+        }
+        drawPolyline(crop_display_points);
+        drawWaypoints(crop_display_points);
+    }
+
+    var myImg = document.getElementById("drone_imagery_crop_original_stitched_div");
+    myImg.onmousedown = GetCoordinates;
+
+    function drawPolyline(points){
+        for(var i=0;i<points.length;i++){
+            ctx.beginPath();
+            ctx.moveTo(points[0].x,points[0].y);
+            for(var i=1;i<points.length;i++){
+                ctx.lineTo(points[i].x,points[i].y);
+            }
+            ctx.strokeStyle='blue';
+            ctx.lineWidth=5;
+            ctx.stroke();    
+        }
+    }
+
+    function drawWaypoints(points){
+        for(var i=0;i<points.length;i++){
+            ctx.beginPath();
+            ctx.arc(points[i].x,points[i].y,4,0,Math.PI*2);
+            ctx.closePath();
+            ctx.strokeStyle='black';
+            ctx.lineWidth=1;
+            ctx.stroke();
+            ctx.fillStyle='white';
+            ctx.fill();
+        }
+    }
+
+    jQuery(document).on('click', '#drone_imagery_crop_stitched_submit', function(){
+
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/crop_image?image_id='+stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_project_id='+drone_run_project_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error cropping image!')
+            }
+        });
+
+    });
 
 });
 
