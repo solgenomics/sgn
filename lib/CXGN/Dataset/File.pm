@@ -4,6 +4,7 @@ package CXGN::Dataset::File;
 use Moose;
 use File::Slurp qw | write_file |;
 use JSON::Any;
+use Data::Dumper;
 
 extends 'CXGN::Dataset';
 
@@ -18,17 +19,19 @@ override('retrieve_genotypes',
 	     my $protocol_id = shift;
 	     my $file = shift || $self->file_name()."_genotype.txt";
 	     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id);
+
+
 	     my $genotype_string = "";
 	     my $genotype_example = $genotypes->[0];
-	     foreach my $key (sort keys %{$genotype_example->{genotype_hash}}) {
+	     foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
 		 $genotype_string .= $key."\t";
 	     }
 	     $genotype_string .= "\n";
 	     foreach my $element (@$genotypes) {
 		 my $genotype_id = $element->{germplasmDbId};
 		 my $genotype_data_string = "";
-		 foreach my $key (sort keys %{$element->{genotype_hash}}) {
-		     my $value = $element->{genotype_hash}->{$key};
+		 foreach my $key (sort keys %{$element->{selected_genotype_hash}}) {
+		     my $value = $element->{selected_genotype_hash}->{$key}->{DS};
 		     my $current_genotype = $value;
 		     $genotype_data_string .= $current_genotype."\t";
 		 }
