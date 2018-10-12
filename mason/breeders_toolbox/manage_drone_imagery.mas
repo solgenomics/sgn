@@ -267,6 +267,7 @@ jQuery(document).ready(function() {
     var plot_polygons_ind_points = [];
     var plot_polygons_ind_4_points = [];
     var drone_imagery_plot_polygons = {};
+    var field_trial_layout_response = {};
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function(){
         var trial_id = jQuery(this).data('field_trial_id');
@@ -278,6 +279,7 @@ jQuery(document).ready(function() {
         plot_polygons_ind_points = [];
         plot_polygons_ind_4_points = [];
         drone_imagery_plot_polygons = {};
+        field_trial_layout_response = {};
 
         jQuery('#manage_drone_imagery_crop_div').hide();
         jQuery('#manage_drone_imagery_top_div').hide();
@@ -317,23 +319,8 @@ jQuery(document).ready(function() {
             },
             success: function(response){
                 console.log(response);
-                var output = response.output;
-                var header = output[0];
-                var html = '<table class="table table-borders table-hover" id="drone_imagery_layout_table"><thead><tr>';
-                for (var i=0; i<header.length; i++){
-                    html = html + '<td>'+header[i]+'</td>';
-                }
-                html = html + '</tr></thead><tbody>';
-                for (var i=1; i<output.length; i++){
-                    html = html + '<tr>';
-                    for (var j=0; j<output[i].length; j++){
-                        html = html + '<td>'+output[i][j]+'</td>';
-                    }
-                    html = html + '</tr>';
-                }
-                html = html + '</tbody></table>';
-                jQuery('#drone_imagery_trial_layout_div').html(html);
-                jQuery('#drone_imagery_layout_table').DataTable();
+                field_trial_layout_response = response;
+                droneImageryDrawLayoutTable(response, {});
                 jQuery("#working_modal").modal("hide");
             },
             error: function(response){
@@ -395,6 +382,7 @@ jQuery(document).ready(function() {
         drone_imagery_plot_polygons[plot_name] = plot_polygons_ind_4_points;
         jQuery('#drone_imagery_assign_plot_dialog').modal('hide');
         console.log(drone_imagery_plot_polygons);
+        droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
     });
 
     jQuery('#drone_imagery_assign_plot_form').on('keyup keypress', function(e) {
@@ -405,6 +393,32 @@ jQuery(document).ready(function() {
             return false;
         }
     });
+
+    function droneImageryDrawLayoutTable(response, plot_polygons) {
+        var output = response.output;
+        var header = output[0];
+        var html = '<table class="table table-borders table-hover" id="drone_imagery_layout_table"><thead><tr>';
+        for (var i=0; i<header.length; i++){
+            html = html + '<td>'+header[i]+'</td>';
+        }
+        html = html + '<td>Polygon Assigned</td>';
+        html = html + '</tr></thead><tbody>';
+        for (var i=1; i<output.length; i++){
+            html = html + '<tr>';
+            for (var j=0; j<output[i].length; j++){
+                html = html + '<td>'+output[i][j]+'</td>';
+            }
+            if (output[i][0] in plot_polygons){
+                html = html + '<td>Yes</td>';
+            } else {
+                html = html + '<td></td>';
+            }
+            html = html + '</tr>';
+        }
+        html = html + '</tbody></table>';
+        jQuery('#drone_imagery_trial_layout_div').html(html);
+        jQuery('#drone_imagery_layout_table').DataTable();
+    }
 
 });
 
