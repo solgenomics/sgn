@@ -82,8 +82,7 @@ sub get_crossing_available_forms_GET {
             $message_hash = decode_json $message;
         }
     } else {
-        $c->stash->{rest} = { error => 'Error: We only support ONA as an ODK crossing service for now.' };
-        $c->detach();
+        $message_hash = [];
     }
     $c->stash->{rest} = { success => 1, forms=>$message_hash };
 }

@@ -155,7 +155,7 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Push Cross Wishlist for ODK Use</button>
+                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Create Wishlist</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -227,7 +227,6 @@ function draw_cross_grid(female_accessions, male_accessions){
 
 jQuery(document).ready(function($) {
 
-%  if ($c->config->{odk_crossing_data_service_name} ne 'NULL'){
     jQuery('#show_cross_wishlists_select_submits').click(function(){
         jQuery('#show_cross_wishlists_response_dialog').modal('show');
 
@@ -259,11 +258,6 @@ jQuery(document).ready(function($) {
         });
 
     });
-%  } else {
-    jQuery("#create_cross_wishlist").click(function() {
-        alert('Cross wishlist is not enabled for this database. Please contact us.');
-    });
-%  }
 
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
@@ -285,7 +279,7 @@ jQuery(document).ready(function($) {
                     alert(response.error);
                 }
                 if (response.success){
-                    var form_dropdown_select_html = '<select class="form-control" id="cross_wishlist_availabe_odk_crossing_forms">';
+                    var form_dropdown_select_html = '<select class="form-control" id="cross_wishlist_availabe_odk_crossing_forms"><option value="">Not Using ONA</option>';
                     var allowed_forms_string = '<% $c->config->{odk_crossing_data_form_name} %>';
                     var allowed_forms = allowed_forms_string.split(',');
                     allowed_forms.push('<% $c->config->{odk_crossing_data_test_form_name} %>');
