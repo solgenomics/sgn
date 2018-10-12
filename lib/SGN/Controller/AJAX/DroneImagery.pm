@@ -42,10 +42,26 @@ sub upload_drone_imagery_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $images_zip = $c->req->upload('upload_drone_images_zipfile');
-    if (!$images_zip) {
-        $c->stash->{rest} = { error => "Please provide a drone image zipfile!" };
+    my $stitched_image = $c->req->upload('upload_drone_images_stitched_ortho');
+
+    my $upload_file;
+    my $is_stitched_image;
+    if (!$images_zip && !$stitched_image) {
+        $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
         $c->detach();
     }
+    if ($images_zip && $stitched_image) {
+        $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image! Not both" };
+        $c->detach();
+    }
+    if ($images_zip) {
+        $upload_file = $images_zip;
+    }
+    if ($stitched_image) {
+        $upload_file = $stitched_image;
+        $is_stitched_image = 1;
+    }
+
     my $selected_trial_id = $c->req->param('upload_drone_images_field_trial_id');
     if (!$selected_trial_id) {
         $c->stash->{rest} = { error => "Please select a field trial!" };
@@ -91,8 +107,8 @@ sub upload_drone_imagery_POST : Args(0) {
         $selected_drone_run_id = $project_rs->project_id();
     }
 
-    my $upload_original_name = $images_zip->filename();
-    my $upload_tempfile = $images_zip->tempname;
+    my $upload_original_name = $upload_file->filename();
+    my $upload_tempfile = $upload_file->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
@@ -114,11 +130,18 @@ sub upload_drone_imagery_POST : Args(0) {
     unlink $upload_tempfile;
     print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
-    my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-    my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
-    if ($image_error) {
-        $c->stash->{rest} = { error => "Problem saving images!".$image_error };
-        $c->detach();
+    if ($is_stitched_image) {
+        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        $image->set_sp_person_id($user_id);
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_id, $linking_table_type_id);
+    } else {
+        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+        my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
+        if ($image_error) {
+            $c->stash->{rest} = { error => "Problem saving images!".$image_error };
+            $c->detach();
+        }
     }
 
     $c->stash->{rest} = { success => 1 };
@@ -194,6 +217,13 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_username} = $_->{username};
         $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_original} = $image_original;
         $unique_drone_runs{$_->{drone_run_project_id}}->{stitched_image_id} = $image_id;
+
+        $unique_drone_runs{$_->{drone_run_project_id}}->{usernames}->{$_->{username}}++;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
     }
     foreach (@$cropped_stitched_result) {
         my $image_id = $_->{image_id};
@@ -229,9 +259,14 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my $calendar_funcs = CXGN::Calendar->new({});
     foreach my $k (sort keys %unique_drone_runs) {
         my $v = $unique_drone_runs{$k};
-        my $images = scalar(@{$v->{images}})." Images<br/><span>";
-        $images .= join '', @{$v->{images}};
-        $images .= "</span>";
+        my $images = '';
+        if ($v->{images}) {
+            $images = scalar(@{$v->{images}})." Images<br/><span>";
+            $images .= join '', @{$v->{images}};
+            $images .= "</span>";
+        } else {
+            $images = 'None';
+        }
         my $usernames = '';
         foreach (keys %{$v->{usernames}}){
             $usernames .= " $_ ";

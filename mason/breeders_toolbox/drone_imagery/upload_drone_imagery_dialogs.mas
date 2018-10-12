@@ -102,6 +102,17 @@
                             </div>
                         </div>
 
+                        <hr>
+                        <center><h2>OR</h2></center>
+                        <hr>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Stitched Ortho Image: (.jpeg, .png)</label>
+                            <div class="col-sm-9" >
+                                <input type="file" id="upload_drone_images_stitched_ortho" name="upload_drone_images_stitched_ortho" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
                         <center>
                         <button type="button" class="btn btn-info" name="upload_drone_imagery_submit" id="upload_drone_imagery_submit">Submit</button>
                         </center>
@@ -202,8 +213,9 @@ jQuery(document).ready(function() {
         json: true,
         post: function () {
             var uploadedDroneImageryFile = jQuery("#upload_drone_images_zipfile").val();
+            var uploadedStitchedImageFile = jQuery('#upload_drone_images_stitched_ortho').val();
             jQuery('#working_modal').modal("show");
-            if (uploadedDroneImageryFile === '') {
+            if (uploadedDroneImageryFile === '' && uploadedStitchedImageFile === '') {
                 jQuery('#working_modal').modal("hide");
                 alert("No file selected");
                 return;
