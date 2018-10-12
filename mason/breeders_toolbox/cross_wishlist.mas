@@ -283,12 +283,8 @@ jQuery(document).ready(function($) {
                 
                     jQuery.ajax ({
                         url : '/ajax/odk/get_crossing_saved_ona_forms',
-                        beforeSend: function() {
-                            jQuery("#working_modal").modal("show");
-                        },
                         success: function(response_forms){
                             console.log(response_forms);
-                            jQuery("#working_modal").modal("hide");
 
                             if (response_forms.error){
                                 alert(response.error);
@@ -309,7 +305,6 @@ jQuery(document).ready(function($) {
                             }
                         },
                         error: function(response_forms){
-                            jQuery("#working_modal").modal("hide");
                             alert("Error retrieving saved ODK ONA forms");
                         }
                     });
