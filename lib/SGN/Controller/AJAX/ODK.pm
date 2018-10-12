@@ -26,6 +26,7 @@ use CXGN::ODK::Crosses;
 use Carp;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw(make_path);
+use CXGN::List;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -451,6 +452,52 @@ sub get_odk_cross_summary_cached_GET {
 
     #print STDERR Dumper $summary;
     $c->stash->{rest} = { summary => $summary, plant_status_summary => $plant_status_summary };
+}
+
+sub get_crossing_saved_ona_forms : Path('/ajax/odk/get_crossing_saved_ona_forms') : ActionClass('REST') { }
+
+sub get_crossing_saved_ona_forms_GET {
+    my ( $self, $c ) = @_;
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to see your saved odk ona forms!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to see your saved odk ona forms!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $bcs_schema->storage->dbh;
+    
+    my $odk_ona_lists = CXGN::List::available_public_lists($dbh, 'odk_ona_forms');
+    my %odk_ona_forms_unique;
+    foreach (@$odk_ona_lists) {
+        my $list = CXGN::List->new({ dbh => $dbh, list_id => $_->[0] });
+        my $elements = $list->elements();
+        foreach (@$elements) {
+            $odk_ona_forms_unique{$_}++;
+        }
+    }
+    my @odk_ona_forms = keys %odk_ona_forms_unique;
+
+    $c->stash->{rest} = {success => 1, odk_ona_forms => \@odk_ona_forms};
 }
 
 1;
