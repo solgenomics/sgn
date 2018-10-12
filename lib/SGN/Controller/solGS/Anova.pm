@@ -343,7 +343,7 @@ sub run_anova {
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "anova-${trial_id}-${trait_id}";
-    $c->stash->{r_script}     = 'R/anova.r';
+    $c->stash->{r_script}     = 'R/solGS/anova.r';
 
     $c->controller("solGS::solGS")->run_r_script($c);
 

@@ -16,7 +16,7 @@ jQuery(document).ready( function() {
 
 
 function allowAnova () {
-  
+    console.log('list anova traits');
     checkDesign();
   
 }
@@ -25,7 +25,7 @@ function allowAnova () {
 function checkDesign () {
     
     var trialId = getTrialId();  
-    
+   
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -36,7 +36,8 @@ function checkDesign () {
 	    if (response.Error) {
 		showMessage(response.Error);
 		jQuery("#run_anova").hide();
-	    } else {		  
+	    } else {
+	
 		listAnovaTraits();
 	    }
         },
@@ -52,14 +53,14 @@ function checkDesign () {
 jQuery(document).ready(function () {
     jQuery(document).on("click", "#run_anova", function() {        
    
-	var traitId    =  jQuery("#anova_selected_trait_id").val();
+	var traitId = jQuery("#anova_selected_trait_id").val();
 	
 	if (traitId) {
 
 	    queryPhenoData(traitId);
    
 	    jQuery("#run_anova").hide();
-
+	    //jQuery(".multi-spinner-container").show();
 	    showMessage("Running anova analysis...");
 	} else {
 	    var msg = 'You need to select a trait first.'
@@ -104,6 +105,7 @@ function queryPhenoData(traitId) {
 	    if (response.Error) {
 		showMessage(response.Error);
 		jQuery("#run_anova").show();
+		jQuery(".multi-spinner-container").hide();
 	    } else {
 		var traitsAbbrs = response.traits_abbrs;
 		runAnovaAnalysis(traitsAbbrs);
@@ -193,7 +195,10 @@ function runAnovaAnalysis(traits) {
 		    showMessage("Error occured running the anova analysis.");	    	
 		    jQuery("#run_anova").show();
 		    clearTraitSelection();
-		}                
+		}
+
+		jQuery(".multi-spinner-container").hide();	
+		
 	    });
 	} else {
 	    jQuery("#anova_message").empty();

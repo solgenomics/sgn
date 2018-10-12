@@ -130,7 +130,7 @@ $sample_observation_unit_type_name => undef
                                     trial_id => $trial_id
                                 &>
 
-                                <& /anova.mas,
+                                <& /solgs/anova/analysis.mas,
                                     trial_id => $trial_id
                                 &>
 
