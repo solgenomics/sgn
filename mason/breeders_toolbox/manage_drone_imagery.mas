@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery' ] &>
 
 <div id="manage_drone_imagery_top_div">
 
@@ -41,7 +41,10 @@
     </div>
 
     <canvas id="drone_imagery_plot_polygons_original_stitched_div"></canvas>
-    <div id="drone_imagery_trial_layout_div"></div>
+    <hr>
+    <div class="well well-sm">
+        <div id="drone_imagery_trial_layout_div"></div>
+    </div>
 </div>
 
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
@@ -49,8 +52,11 @@
 
 <script>
 
-// Image Cropping JS
 jQuery(document).ready(function() {
+
+    //
+    // Image Cropping JS
+    //
 
     var rectangleOverlayData = new Array();
 
@@ -59,11 +65,17 @@ jQuery(document).ready(function() {
     var stitched_image_id;
     var stitched_image;
     var drone_run_project_id;
+    var crop_points = [];
+    var crop_display_points = [];
+
     jQuery(document).on('click', 'button[name="project_drone_imagery_crop_image"]', function() {
         trial_id = jQuery(this).data('field_trial_id');
         stitched_image_id = jQuery(this).data('stitched_image_id');
         stitched_image = jQuery(this).data('stitched_image');
         drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        crop_points = [];
+        crop_display_points = [];
 
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_image?image_id='+stitched_image_id,
@@ -98,9 +110,6 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_plot_polygons_div').hide();
     });
 
-    var crop_points = [];
-    var crop_display_points = [];
-
     function FindPosition(oElement) {
         if(typeof( oElement.offsetParent ) != "undefined") {
             for(var posX = 0, posY = 0; oElement; oElement = oElement.offsetParent) {
@@ -113,11 +122,11 @@ jQuery(document).ready(function() {
         }
     }
 
-    function GetCoordinates(e) {
+    function GetCoordinatesCroppedImage(e) {
         var PosX = 0;
         var PosY = 0;
         var ImgPos;
-        ImgPos = FindPosition(myImg);
+        ImgPos = FindPosition(dronecroppingImg);
         if (!e) var e = window.event;
         if (e.pageX || e.pageY) {
             PosX = e.pageX;
@@ -143,8 +152,8 @@ jQuery(document).ready(function() {
         drawWaypoints(crop_display_points);
     }
 
-    var myImg = document.getElementById("drone_imagery_crop_original_stitched_div");
-    myImg.onmousedown = GetCoordinates;
+    var dronecroppingImg = document.getElementById("drone_imagery_crop_original_stitched_div");
+    dronecroppingImg.onmousedown = GetCoordinatesCroppedImage;
 
     function drawPolyline(points){
         for(var i=0;i<points.length;i++){
@@ -192,10 +201,9 @@ jQuery(document).ready(function() {
 
     });
 
-});
-
-// Denoising JS
-jQuery(document).ready(function() {
+    //
+    // Denoising JS
+    //
 
     var gridData = new Array();
 
@@ -224,17 +232,24 @@ jQuery(document).ready(function() {
 
     });
 
-});
+    //
+    //Define Plot Polygons JS
+    //
 
-//Define Plot Polygons JS
-jQuery(document).ready(function(){
+    var plot_polygons_display_points = [];
+    var plot_polygons_ind_points = [];
+    var plot_polygons_points = [];
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function(){
         var trial_id = jQuery(this).data('field_trial_id');
         var cropped_stitched_image_id = jQuery(this).data('cropped_stitched_image_id');
         var denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         var drone_run_project_id = jQuery(this).data('drone_run_project_id');
-    
+
+        plot_polygons_display_points = [];
+        plot_polygons_ind_points = [];
+        plot_polygons_points = [];
+
         jQuery('#manage_drone_imagery_crop_div').hide();
         jQuery('#manage_drone_imagery_top_div').hide();
         jQuery('#manage_drone_imagery_plot_polygons_div').show();
@@ -251,13 +266,14 @@ jQuery(document).ready(function(){
                 ctx = canvas.getContext('2d');
                 var image = new Image();
                 image.onload = drawImageActualSize;
-                image.src = response.image_url;
+                image.src = response.contours_image_url;
 
                 function drawImageActualSize() {
                     canvas.width = this.naturalWidth;
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
                 }
+
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -298,6 +314,47 @@ jQuery(document).ready(function(){
         });
 
     });
+
+    function GetCoordinatesPlotPolygons(e) {
+        var PosX = 0;
+        var PosY = 0;
+        var ImgPos;
+        ImgPos = FindPosition(plotpolygonsImg);
+        if (!e) var e = window.event;
+        if (e.pageX || e.pageY) {
+            PosX = e.pageX;
+            PosY = e.pageY;
+        }
+        else if (e.clientX || e.clientY) {
+            PosX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            PosY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        PosX = PosX - ImgPos[0];
+        PosY = PosY - ImgPos[1];
+        if (plot_polygons_ind_points.length < 4){
+            plot_polygons_ind_points.push({x:PosX, y:PosY});
+            plot_polygons_display_points.push({x:PosX, y:PosY});
+        } else if (plot_polygons_ind_points.length == 4) {
+            plot_polygons_display_points.push({x:PosX, y:PosY});
+            plot_polygons_points.push(plot_polygons_ind_points);
+        } else {
+            plot_polygons_ind_points = [];
+            plot_polygons_display_points = [];
+        }
+        console.log('plot_polygons_ind_points');
+        console.log(plot_polygons_ind_points);
+        console.log('plot_polygons_points');
+        console.log(plot_polygons_points);
+        console.log('plot_polygons_display_points');
+        console.log(plot_polygons_display_points);
+        drawPolyline(plot_polygons_display_points);
+        drawWaypoints(plot_polygons_display_points);
+    }
+
+    var plotpolygonsImg = document.getElementById("drone_imagery_plot_polygons_original_stitched_div");
+    plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
+
+
 });
 
 </script>
