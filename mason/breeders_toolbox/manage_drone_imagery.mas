@@ -60,7 +60,7 @@
                 <div class="form-group">
                     <label class="col-sm-5 control-label">Plot Name:</label>
                     <div class="col-sm-7">
-                        <input class="form-control" id="drone_imagery_plot_polygon_assign_plot_name" name="drone_imagery_plot_polygon_assign_plot_name" type="text" placeholder="Autocompletes plot name..."/>
+                        <input class="form-control" id="drone_imagery_plot_polygon_assign_plot_name" name="drone_imagery_plot_polygon_assign_plot_name" type="text" placeholder="Auto-completes plot name..." />
                     </div>
                 </div>
             </form>
@@ -382,6 +382,9 @@ jQuery(document).ready(function() {
     var plotpolygonsImg = document.getElementById("drone_imagery_plot_polygons_original_stitched_div");
     plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
 
+    jQuery('#drone_imagery_assign_plot_dialog').on('shown.bs.modal', function (e) {
+        jQuery("#drone_imagery_plot_polygon_assign_plot_name").focus();
+    });
 
 });
 
