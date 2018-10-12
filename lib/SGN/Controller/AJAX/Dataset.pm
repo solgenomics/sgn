@@ -55,7 +55,7 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     $dataset->description($dataset_description);
 
     foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols trial_types trial_designs category_order |) {
-	print STDERR "Storing data: $type. $data{$type}\n";
+#	print STDERR "Storing data: $type. $data{$type}\n";
 
 	my $json = $c->req->param($type);
 	if ($json) {
@@ -123,7 +123,7 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
 	    sp_dataset_id=> $dataset_id,
 	});
 
-    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+#    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
     if ($dataset->sp_person_id() != $logged_in_user) {
 	$c->stash->{rest} = { error => "Only the owner can delete a dataset" };
 	return;
