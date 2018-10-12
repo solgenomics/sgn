@@ -47,6 +47,33 @@
     </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_assign_plot_dialog" name="drone_imagery_assign_plot_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAssignPlotDialog">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryAssignPlotDialog">Assign Plot</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Plot Name:</label>
+                    <div class="col-sm-7">
+                        <input class="form-control" id="drone_imagery_plot_polygon_assign_plot_name" name="drone_imagery_plot_polygon_assign_plot_name" type="text" placeholder="Autocompletes plot name..."/>
+                    </div>
+                </div>
+            </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Assign Plot</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
 
@@ -331,22 +358,23 @@ jQuery(document).ready(function() {
         }
         PosX = PosX - ImgPos[0];
         PosY = PosY - ImgPos[1];
-        if (plot_polygons_ind_points.length < 4){
+        if (plot_polygons_ind_points.length <= 4){
             plot_polygons_ind_points.push({x:PosX, y:PosY});
             plot_polygons_display_points.push({x:PosX, y:PosY});
-        } else if (plot_polygons_ind_points.length == 4) {
-            plot_polygons_display_points.push({x:PosX, y:PosY});
-            plot_polygons_points.push(plot_polygons_ind_points);
-        } else {
+
+            if (plot_polygons_ind_points.length == 4) {
+                console.log(plot_polygons_ind_points);
+                var plot_polygons_ind_points_sep = plot_polygons_ind_points;
+                plot_polygons_points.push(plot_polygons_ind_points_sep);
+            }
+        } else if (plot_polygons_ind_points.length > 4) {
+            if (plot_polygons_display_points.length == 5) {
+                plot_polygons_display_points = [];
+
+                jQuery('#drone_imagery_assign_plot_dialog').modal('show');
+            }
             plot_polygons_ind_points = [];
-            plot_polygons_display_points = [];
         }
-        console.log('plot_polygons_ind_points');
-        console.log(plot_polygons_ind_points);
-        console.log('plot_polygons_points');
-        console.log(plot_polygons_points);
-        console.log('plot_polygons_display_points');
-        console.log(plot_polygons_display_points);
         drawPolyline(plot_polygons_display_points);
         drawWaypoints(plot_polygons_display_points);
     }
