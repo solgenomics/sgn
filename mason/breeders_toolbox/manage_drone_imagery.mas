@@ -47,7 +47,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="drone_imagery_assign_plot_dialog" name="drone_imagery_assign_plot_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAssignPlotDialog">
+<div class="modal fade" id="drone_imagery_assign_plot_dialog" name="drone_imagery_assign_plot_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAssignPlotDialog" data-backdrop="static">
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -56,7 +56,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-            <form class="form-horizontal">
+            <form class="form-horizontal" id="drone_imagery_assign_plot_form">
                 <div class="form-group">
                     <label class="col-sm-5 control-label">Plot Name:</label>
                     <div class="col-sm-7">
@@ -68,7 +68,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Assign Plot</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_plot_polygon_assign_add">Assign Plot</button>
       </div>
     </div>
   </div>
@@ -265,7 +265,8 @@ jQuery(document).ready(function() {
 
     var plot_polygons_display_points = [];
     var plot_polygons_ind_points = [];
-    var plot_polygons_points = [];
+    var plot_polygons_ind_4_points = [];
+    var drone_imagery_plot_polygons = {};
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function(){
         var trial_id = jQuery(this).data('field_trial_id');
@@ -275,7 +276,8 @@ jQuery(document).ready(function() {
 
         plot_polygons_display_points = [];
         plot_polygons_ind_points = [];
-        plot_polygons_points = [];
+        plot_polygons_ind_4_points = [];
+        drone_imagery_plot_polygons = {};
 
         jQuery('#manage_drone_imagery_crop_div').hide();
         jQuery('#manage_drone_imagery_top_div').hide();
@@ -364,8 +366,7 @@ jQuery(document).ready(function() {
 
             if (plot_polygons_ind_points.length == 4) {
                 console.log(plot_polygons_ind_points);
-                var plot_polygons_ind_points_sep = plot_polygons_ind_points;
-                plot_polygons_points.push(plot_polygons_ind_points_sep);
+                plot_polygons_ind_4_points = plot_polygons_ind_points;
             }
         } else if (plot_polygons_ind_points.length > 4) {
             if (plot_polygons_display_points.length == 5) {
@@ -384,6 +385,25 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_assign_plot_dialog').on('shown.bs.modal', function (e) {
         jQuery("#drone_imagery_plot_polygon_assign_plot_name").focus();
+    });
+
+    jQuery('#drone_imagery_plot_polygon_assign_add').click(function(){
+        var plot_name = jQuery('#drone_imagery_plot_polygon_assign_plot_name').val();
+        if (plot_name == ''){
+            alert('Please give a plot name');
+        }
+        drone_imagery_plot_polygons[plot_name] = plot_polygons_ind_4_points;
+        jQuery('#drone_imagery_assign_plot_dialog').modal('hide');
+        console.log(drone_imagery_plot_polygons);
+    });
+
+    jQuery('#drone_imagery_assign_plot_form').on('keyup keypress', function(e) {
+        var keyCode = e.keyCode || e.which;
+        if (keyCode === 13) {
+            e.preventDefault();
+            jQuery("#drone_imagery_plot_polygon_assign_add").trigger( "click" );
+            return false;
+        }
     });
 
 });
