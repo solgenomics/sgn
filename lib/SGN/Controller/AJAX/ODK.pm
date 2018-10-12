@@ -281,15 +281,17 @@ sub get_crossing_data_cronjobs_GET {
 
     my @entries;
     my $crontab_file = $c->config->{crontab_file};
-    open(my $fh, '<:encoding(UTF-8)', $crontab_file)
-        or die "Could not open file '$crontab_file' $!";
- 
-    while (my $row = <$fh>) {
-        chomp $row;
-        my @c = split 'export', $row;
-        push @entries, $c[0];
+    if ($crontab_file ne 'NULL') {
+        open(my $fh, '<:encoding(UTF-8)', $crontab_file)
+            or die "Could not open file '$crontab_file' $!";
+     
+        while (my $row = <$fh>) {
+            chomp $row;
+            my @c = split 'export', $row;
+            push @entries, $c[0];
+        }
+        close $fh;
     }
-    close $fh;
 
     $c->stash->{rest} = { success => 1, entries=>\@entries };
     $c->detach();
@@ -379,13 +381,13 @@ sub get_odk_cross_progress_cached_GET {
     my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
+    open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = decode_json <$fh>;
+        $contents = <$fh> ? decode_json <$fh> : undef;
     }
     close($fh);
-    my $json = $contents->{top_level_json};
+    my $json = $contents->{top_level_json} || {};
 
     my $top_level_id = $c->req->param('id');
     print STDERR "ODK Cross Tree Progress Node: ".$top_level_id."\n";
@@ -441,10 +443,10 @@ sub get_odk_cross_summary_cached_GET {
     my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
+    open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = decode_json <$fh>;
+        $contents = <$fh> ? decode_json <$fh> : undef;
     }
     close($fh);
     my $summary = $contents->{summary_info};
