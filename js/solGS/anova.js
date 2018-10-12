@@ -8,15 +8,15 @@
 jQuery(document).ready( function() { 
   
     var url = document.URL;
- 
+
     if (url.match(/\/breeders_toolbox\/trial|breeders\/trial|\/solgs\/population\//)) {
-	    allowAnova();  
+	allowAnova();  
     } 
 });
 
 
 function allowAnova () {
-    console.log('list anova traits');
+   
     checkDesign();
   
 }
@@ -60,7 +60,7 @@ jQuery(document).ready(function () {
 	    queryPhenoData(traitId);
    
 	    jQuery("#run_anova").hide();
-	    //jQuery(".multi-spinner-container").show();
+	    jQuery(".multi-spinner-container").show();
 	    showMessage("Running anova analysis...");
 	} else {
 	    var msg = 'You need to select a trait first.'
@@ -148,6 +148,7 @@ function runAnovaAnalysis(traits) {
 		success: function(response) {
 		   
 		    if(response.Error) {
+			jQuery(".multi-spinner-container").hide();
 			jQuery("#anova_message").empty();
 			showMessage(response.Error);
 			jQuery("#run_anova").show();
@@ -180,24 +181,27 @@ function runAnovaAnalysis(traits) {
 					+ diagnosticsFile + ' | '
 					+ meansFile)
 				.show();
-			    
+
+			    jQuery(".multi-spinner-container").hide();
 			    jQuery("#anova_message").empty();
 			    
 			    jQuery("#run_anova").show();
 			}  else {
+			    jQuery(".multi-spinner-container").hide();
 			    showMessage("There is no anova output for this dataset."); 		
 			    jQuery("#run_anova").show();
+			    
 			}
 		    }
 		    clearTraitSelection();		    
 		},
-		error: function(response) {                          
+		error: function(response) {
+                    jQuery(".multi-spinner-container").hide();
 		    showMessage("Error occured running the anova analysis.");	    	
 		    jQuery("#run_anova").show();
 		    clearTraitSelection();
-		}
-
-		jQuery(".multi-spinner-container").hide();	
+		    
+		}	
 		
 	    });
 	} else {

@@ -4,7 +4,7 @@ Isaak Y Tecle <iyt2@cornell.edu>
 
 =head1 Name
 
-SGN::Controller::AJAX::Analyze::Anova - a controller for ANOVA. For now, this implements a one-way
+SGN::Controller::solGS::Anova - a controller for ANOVA. For now, this implements a one-way
 single trial ANOVA with a possibility for simultanously running anova for multiple traits.
  
 =cut
