@@ -7,17 +7,17 @@ legacy JavaScript modules or legacy JSAN class names, including any necessary de
 
 =head1 ARGS
 
-=head2 C<modules> - single class name, or arrayref of JavaScript modules to import
+=head2 C<entries> - single class name, or arrayref of JavaScript entry modules to import
 
 =head1 EXAMPLES
 
-  <& /import_javascript, modules => [], legacy => [] &>
+  <& /import_javascript, entries => [], legacy => [] &>
   
 =cut
 
 </%doc>
 <%args>
- $modules => []
+ $entries => []
  $classes => []
  $legacy => []
 </%args>
@@ -27,6 +27,6 @@ legacy JavaScript modules or legacy JSAN class names, including any necessary de
   push @$legacy, @$classes;
   push @{ $c->stash->{jsan_classes} }, @$legacy;
 
-  $modules = [ $modules ] unless ref $modules; #< coerce to arrayref
-  push @{ $c->stash->{js_modules} }, @$modules;
+  $entries = [ $entries ] unless ref $entries; #< coerce to arrayref
+  push @{ $c->stash->{js_modules} }, @$entries;
 </%perl>
