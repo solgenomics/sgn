@@ -135,7 +135,6 @@ sub genotypes_list_genotype_data {
 					      });
 
     my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids);
-   
     write_file($geno_file, $geno_data);
 
 }
@@ -151,16 +150,17 @@ sub plots_list_phenotype_data {
     my $plots_ids   = $args->{plots_ids};
     my $traits_file = $args->{traits_file};
     my $data_dir    = $args->{list_data_dir};
+    my $pheno_file  = $args->{phenotype_file};
+    my $metadata_file = $args->{metadata_file};
    
     my $model = SGN::Model::solGS::solGS->new({schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
     my $pheno_data = $model->plots_list_phenotype_data($plots_names);
+    my $metadata = $model->trial_metadata();
   
-    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
-    
-    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $model_id);
-    my $pheno_file = $files->{pheno_file};
-    
+    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
+        
     write_file($pheno_file, $pheno_data);
+    write_file($metadata_file, join("\t", @$metadata));
       
 }
 

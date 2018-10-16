@@ -2056,11 +2056,6 @@ sub protocol_id {
     {
 	$protocol = $self->context->config->{default_genotyping_protocol};
     }
-
-    #my $protocol_id = $self->schema->resultset("NaturalDiversity::NdProtocol")
-    #->search({'name'=>$protocol})
-    #->first
-    #->nd_protocol_id();
    
     my $q = 'SELECT nd_protocol_id FROM nd_protocol WHERE name = ?';
     my $sth = $self->context->dbc->dbh->prepare($q);
@@ -2072,6 +2067,21 @@ sub protocol_id {
     return $protocol_id;
 
     
+}
+
+
+sub get_genotypes_from_dataset {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my  $genotypes_ids  = $dataset->retrieve_accessions();
+    my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
+   
+    return \@genotypes_ids;
 }
 
 
