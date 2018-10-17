@@ -205,7 +205,7 @@ function jqueryStuff() {
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' href='/phenome/qtl_form.pl'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' href='/search/stocks/'>Back to stock search</button>"  &>
+<&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' name='stock_new_qtl_link'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' name='stock_go_to_stock_search'>Back to stock search</button>"  &>
 
     <div class="panel panel-default">
         <div class="panel-body">
@@ -347,6 +347,14 @@ function jqueryStuff() {
 <script>
     jQuery(document).ready(function() {
         stock_detail_page_init_dialogs();
+
+        jQuery('[name="stock_new_qtl_link"]').click(function(){
+            window.location.href = '/phenome/qtl_form.pl';
+        });
+
+        jQuery('[name="stock_go_to_stock_search"]').click(function(){
+            window.location.href = '/search/stocks/';
+        });
 
         jQuery('#stock_add_synonym').click(function(){
             synonyms_addPropDialog();
