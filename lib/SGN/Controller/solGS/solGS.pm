@@ -3347,14 +3347,12 @@ sub submit_cluster_phenotype_query {
     
     $c->stash->{r_temp_file} = "phenotype-data-query-${pop_id}";
     $self->create_cluster_accesible_tmp_files($c);
-    my $out_file = $c->stash->{out_file_temp};
-    my $err_file = $c->stash->{err_file_temp};
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
-
-    my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
-    
+   
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "pheno-data-args_file-${pop_id}");
     
     nstore $args, $args_file 
@@ -3364,30 +3362,24 @@ sub submit_cluster_phenotype_query {
 	. ' --data_type phenotype '
 	. ' --population_type trial '
 	. ' --args_file ' . $args_file;
+
+    my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_temp_file,
+	'err_file' => $err_temp_file
+     };
     
-    eval 
-    {
-	my $pheno_job = CXGN::Tools::Run->new($config);
-	$pheno_job->do_not_cleanup(1);
+    my $config = $self->create_cluster_config($c, $config_args);
 
-	if ($background_job) {
-	    $pheno_job->is_async(1);
-	    $pheno_job->run_cluster($cmd);
-	    $c->stash->{r_job_tempdir} = $pheno_job->job_tempdir();
-	    $c->stash->{r_job_id} = $pheno_job->jobid();
-	    $c->stash->{cluster_job} = $pheno_job;
-	} else {
-	    $pheno_job->is_cluster(1);
-	    $pheno_job->run_cluster($cmd);
-	    $pheno_job->wait;
-	}	
+    my $job_args = {
+	'cmd' => $cmd,
+	'config' => $config,
+	'background_job'=> $background_job,
+	'temp_dir' => $temp_dir,
     };
-
-    if ($@) {
-	print STDERR "An error occurred! $@\n";
-	$c->stash->{Error} = $@ ;
-    }
-
+    
+    my $job = $self->submit_job_cluster($c, $job_args);
+  
 }
 
 
@@ -3398,13 +3390,11 @@ sub submit_cluster_genotype_query {
 
     $c->stash->{r_temp_file} = "genotype-data-query-${pop_id}";
     $self->create_cluster_accesible_tmp_files($c);
-    my $out_file = $c->stash->{out_file_temp};
-    my $err_file = $c->stash->{err_file_temp};
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
-
-    my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
 
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
 
@@ -3415,30 +3405,24 @@ sub submit_cluster_genotype_query {
 	. ' --data_type genotype '
 	. ' --population_type trial '
 	. ' --args_file ' . $args_file;
+
+
+    my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_temp_file,
+	'err_file' => $err_temp_file
+     };
     
-   eval 
-   {
-       my $geno_job = CXGN::Tools::Run->new($config);
-       $geno_job->do_not_cleanup(1);
+    my $config = $self->create_cluster_config($c, $config_args);
 
-       if ($background_job) {
-	   $geno_job->is_async(1);
-	   $geno_job->run_cluster($cmd);
-
-	   $c->stash->{r_job_tempdir} = $geno_job->job_tempdir();
-	   $c->stash->{r_job_id}      = $geno_job->jobid();
-	   $c->stash->{cluster_job}   = $geno_job;
-	} else {
-	    $geno_job->is_cluster(1);
-	    $geno_job->run_cluster($cmd);
-	    $geno_job->wait;
-	}	
-   };
-
-    if ($@) {
-	print STDERR "An error occurred! $@\n";
-	$c->stash->{Error} =  $@;
-    }
+    my $job_args = {
+	'cmd' => $cmd,
+	'config' => $config,
+	'background_job'=> $background_job,
+	'temp_dir' => $temp_dir,
+    };
+    
+    my $job = $self->submit_job_cluster($c, $job_args);
 
 }
 
@@ -3484,8 +3468,8 @@ sub phenotype_file {
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
-    $c->controller('solGS::Files')->trial_metadata_file($c);
-    my $metadata_file = $c->stash->{trial_metadata_file};
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
 
     no warnings 'uninitialized';
     
@@ -3944,6 +3928,12 @@ sub run_async {
     my $model_file          = $c->stash->{gs_model_args_file};
     my $combine_pops_job_id = $c->stash->{combine_pops_job_id};
     my $solgs_tmp_dir       = "'" . $c->stash->{solgs_tempfiles_dir} . "'";
+
+    $c->stash->{r_temp_file} = 'run-async';
+    $self->create_cluster_accesible_tmp_files($c);
+    my $err_temp_file = $c->stash->{err_file_temp};
+    my $out_temp_file = $c->stash->{out_file_temp};
+    
   
     my $r_script      = $c->stash->{r_commands_file};
     my $r_script_args =  $c->stash->{r_script_args};
@@ -3966,11 +3956,13 @@ sub run_async {
     my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
-    my $job_config = {
-	backend => $c->config->{backend},
-	web_cluster_queue => $c->config->{web_cluster_queue}
+    my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_temp_file,
+	'err_file' => $err_temp_file
     };
-
+    
+    my $job_config = $self->create_cluster_config($c, $config_args);
     my $job_config_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'job_config_file');
     
     nstore $job_config, $job_config_file 
@@ -3992,13 +3984,7 @@ sub run_async {
 	     .  ' --gs_model_args_file ' . $model_file;	
      }
 
-    $c->stash->{r_temp_file} = 'run-async';
-    $self->create_cluster_accesible_tmp_files($c);
-    my $err_file = $c->stash->{err_file_temp};
-    my $out_file = $c->stash->{out_file_temp};
-
-    #my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
-
+    
     eval 
     {
 	my $job = CXGN::Tools::Run->new();
@@ -4027,8 +4013,8 @@ sub run_r_script {
 
     $self->create_cluster_accesible_tmp_files($c);
     my $in_file   = $c->stash->{in_file_temp};
-    my $out_file  = $c->stash->{out_file_temp};
-    my $err_file  = $c->stash->{err_file_temp};
+    my $out_temp_file  = $c->stash->{out_file_temp};
+    my $err_temp_file  = $c->stash->{err_file_temp};
 
     my $dependency      = $c->stash->{dependency};
     my $dependency_type = $c->stash->{dependency_type};
@@ -4063,8 +4049,8 @@ sub run_r_script {
 		'r_command_file' => $in_file,
 		'input_files'    => $input_files,
 		'output_files'   => $output_files,
-		'r_output_file'  => $out_file,
-		'err_temp_file'  => $err_file,
+		'r_output_file'  => $out_temp_file,
+		'err_temp_file'  => $err_temp_file,
 	    };
 
 	    my $model_file = $c->stash->{gs_model_args_file};
@@ -4080,62 +4066,53 @@ sub run_r_script {
     }  
     else 
     {
-	my $config = $self->create_cluster_config($c, $temp_dir, $out_file, $err_file);
+	my $config_args = {
+	    'temp_dir' => $temp_dir,
+	    'out_file' => $out_temp_file,
+	    'err_file' => $err_temp_file
+	};
+    
+	my $config = $self->create_cluster_config($c, $config_args);
 	
 	my $cmd = 'Rscript --slave ' 
-	    . "$in_file $out_file " 
+	    . "$in_file $out_temp_file " 
 	    . '--args ' .  $input_files 
 	    . ' ' . $output_files;
+	
 
-	eval 
-	{
-	    my $job = CXGN::Tools::Run->new($config);
-	    $job->do_not_cleanup(1);
-	 
-	    if ($r_script =~ /combine_populations/) 
-	    {	    
-		#$c->stash->{job_type} = 'combine_populations'; 	   
-		$c->stash->{combine_pops_job_id} = $job->jobid();
+	my $job_args = {
+	    	'cmd' => $cmd,
+	    	'background_job' => $background_job,
+	    	'config' => $config,
+		'temp_dir' => $temp_dir,
+	    	'r_script' => $r_script
+	    };
+
+	my $job = $self->submit_job_cluster($c, $job_args);
+
+	
+	if ($r_script =~ /combine_populations/) 
+	{	    	   
+	    $c->stash->{combine_pops_job_id} = $job->jobid();
 	       
-		my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-		$c->stash->{gs_model_args_file} = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'gs_model_args');
-		#$self->run_async($c);
-	    }
-
-	   if ($background_job) {
-	       $job->is_async(1);
-	       $job->run_cluster($cmd);
-	   
-	       $c->stash->{r_job_tempdir} = $job->job_tempdir();
-	       $c->stash->{r_job_id} = $job->jobid();
-	       $c->stash->{cluster_job} = $job;
-	   } else {
-	       $job->is_cluster(1);
-	       $job->run_cluster($cmd);
-	       $job->wait;
-	   }	
-	};
-
-	if ($@) {
-	    print STDERR "An error occurred! $@\n";
-	    $c->stash->{Error} = $@ ;
-	    $c->stash->{script_error} = "$r_script";
+	    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	    $c->stash->{gs_model_args_file} = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'gs_model_args');
 	}
     }
-   
+	  
 }
 
 
 sub create_cluster_config {
-    my ($self, $c, $temp_dir, $out_file, $err_file) = @_;
+    my ($self, $c, $args) = @_;
 
     my $config = {
 	backend          => $c->config->{backend},
-	temp_base        => $temp_dir,
+	temp_base        => $args->{temp_dir},
 	queue            => $c->config->{'web_cluster_queue'},
 	max_cluster_jobs => 1_000_000_000,
-	out_file         => $out_file,
-	err_file         => $err_file,
+	out_file         => $args->{out_file},
+	err_file         => $args->{err_file},
 	is_async         => 0,
 	do_cleanup       => 0,
     };
@@ -4144,6 +4121,49 @@ sub create_cluster_config {
     return $config;
 }
 
+
+sub submit_job_cluster {
+    my ($self, $c, $args) = @_;
+
+    my $job;
+    
+    eval 
+    {
+	$job = CXGN::Tools::Run->new($args->{config});
+	$job->do_not_cleanup(1);
+
+	if ($args->{background_job}) 
+	{
+	    $job->is_async(1),
+	    $job->run_cluster($args->{cmd});
+	    
+	    $c->stash->{r_job_tempdir} = $job->job_tempdir();
+	    #$c->stash->{r_job_tempdir} = catfile($args->{temp_dir}, $job->{jobid});
+	    $c->stash->{r_job_id}      = $job->jobid();
+	    $c->stash->{cluster_job}   = $job;
+
+	    
+	} 
+	else 
+	{
+	    $job->is_cluster(1);
+	    $job->run_cluster($args->{cmd});
+	    $job->wait;
+	}
+	
+    };
+
+    if ($@) 
+    {
+	print STDERR "An error occurred! $@\n";
+	$c->stash->{Error} =  $@;
+	$c->stash->{status} = 'Error occured submitting the job';
+	$c->stash->{script_error} = $args->{r_script};
+    }
+
+    return $job;
+
+}
 
 # sub default :Path {
 #     my ( $self, $c ) = @_; 

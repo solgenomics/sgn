@@ -834,6 +834,8 @@ solGS.getPopulationDetails = function () {
     };        
 }
 
+
+
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function(a, b) {
     return this.each(function() {
