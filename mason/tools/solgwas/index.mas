@@ -26,9 +26,11 @@
   <div class="form-group form-inline">
     <label for="dataset_select">Available Datasets: </label>
     <div id="dataset_select"></div>
+    <br>
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
 
 
-<br>
+    <br>
 
     </div>
 
@@ -113,7 +115,7 @@ jQuery(document).ready(function() {
   else {
     alert('You must be logged in to use SolGWAS');
     }
-  jQuery('#dataset_select').change(function() {
+  jQuery('#selectDataset').click(function() {
     var dataset_id = jQuery('#available_datasets').val();
 //    alert("Dataset ID: "+dataset_id);
     $.ajax({
