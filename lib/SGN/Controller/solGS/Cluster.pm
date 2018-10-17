@@ -167,7 +167,11 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	    $ret = $self->_jsonize_output($c);
 	}	
     }
-
+    else
+    {   
+	$ret = $self->_jsonize_output($c);
+    }
+    
     $ret = to_json($ret);
         
     $c->res->content_type('application/json');
