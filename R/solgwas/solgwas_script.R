@@ -122,7 +122,6 @@ dev.off()
 pheno_mod[1:5,1:18]
 # NOTA BENE: Currently extracting unique phenotype values, also need to exclude NAs, I think...
 # Ultimately, it may be better to take an average? TBD...
-# Maybe RRblup can handle multiple phenotypes per genotype? I doubt this, don't see how it would work...
 dim(pheno_mod)
 pheno_mod=pheno_mod[which(pheno_mod$pheno_vector != "NA"),]
 print("Filtering out NAs...")
@@ -210,13 +209,14 @@ alpha_bonferroni=-log10(0.05/length(gwasresults$PHENO))
 length(gwasresults$PHENO)
 head(gwasresults)
 alpha_bonferroni
-chromosome_color_vector <- c("forestgreen","darkblue")
-
+#chromosome_color_vector <- c("forestgreen","darkblue")[gwasresults$chr]
+chromosome_ids <- as.factor(gwasresults$chr)
+marker_indicator <- match(unique(gwasresults$chr), gwasresults$chr)
 png(figure3_file_name)
-plot(gwasresults$PHENO,col=chromosome_color_vector,ylab="-log10(pvalue)",
+plot(gwasresults$PHENO,col=chromosome_ids,ylab="-log10(pvalue)",
      main="Manhattan Plot",xaxt="n",xlab="Position",ylim=c(0,14))
+axis(1,at=marker_indicator,labels=gwasresults$chr[marker_indicator])
 #axis(1,at=c(1:length(unique(gwasresults$chr))),labels=unique(gwasresults$chr))
-axis(1,at=c(0,100,200,300,400,500))
 abline(a=NULL,b=NULL,h=alpha_bonferroni,col="red",lwd=2)
 #abline(a=NULL,b=NULL,h=alpha_FDR_Yield,col="red",lwd=2,lty=2)
 legend(1,13.5, c("Bonferroni") ,
@@ -231,7 +231,7 @@ observed.logvalues <- sort( gwasresults$PHENO)
 png(figure4_file_name)
 plot(expected.logvalues , observed.logvalues, main="QQ Plot",
      xlab="Expected -log p-values ",
-     ylab="Observed -log p-values",col.main="blue",col="coral1",pch=20)
+     ylab="Observed -log p-values",col.main="black",col="coral1",pch=20)
 abline(0,1,lwd=3,col="black")
 dev.off()
 
