@@ -34,6 +34,7 @@ package FixTrialPluralTypes;
 use Moose;
 use Bio::Chado::Schema;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -85,7 +86,7 @@ sub patch {
         $h2_update->execute($projectprop_id);
     }
 
-    my $wrong_trial_types_rs = $schema->resultset("Cvterm::Cvterm")->search({
+    my $wrong_trial_types_rs = $schema->resultset("Cv::Cvterm")->search({
         name => {-in => ["Advanced Yeld Trials", "Advanced Yield Trials", "Preliminary Yield Trials"]}
     });
     while (my $r = $wrong_trial_types_rs->next){
