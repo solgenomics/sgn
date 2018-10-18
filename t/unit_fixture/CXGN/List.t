@@ -145,10 +145,14 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
 #print STDERR Dumper($lists);
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-print STDERR Dumper \@lists_sorted;
-is_deeply(\@lists_sorted, [
+my @lists_minus_ids;
+foreach (@lists_sorted){
+    shift(@$_);
+    push @lists_minus_ids, $_;
+}
+print STDERR Dumper \@lists_minus_ids;
+is_deeply(\@lists_minus_ids, [
           [
-            3,
             'test_stocks',
             undef,
             5,
@@ -157,7 +161,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            5,
             'accessions_for_solgs_tests',
             undef,
             374,
@@ -166,7 +169,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            6,
             'accessions_for_trial2',
             undef,
             307,
@@ -175,7 +177,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            7,
             'selection_acc',
             undef,
             20,
@@ -184,7 +185,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            12,
             'desynonymize_test_list',
             undef,
             6,
@@ -193,7 +193,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            13,
             'traits',
             undef,
             10,
@@ -202,7 +201,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            14,
             'new_test_name',
             'new description',
             1,
@@ -211,7 +209,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            809,
             'janedoe_1_public',
             undef,
             2,
@@ -220,7 +217,6 @@ is_deeply(\@lists_sorted, [
             1
           ],
           [
-            811,
             'janedoe_1_private',
             undef,
             2,
@@ -240,11 +236,15 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 #print STDERR Dumper($lists);
 
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-print STDERR Dumper \@lists_sorted;
-
-is_deeply(\@lists_sorted, [
+@lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
+my @lists_minus_ids;
+foreach (@lists_sorted){
+    shift(@$_);
+    push @lists_minus_ids, $_;
+}
+print STDERR Dumper \@lists_minus_ids;
+is_deeply(\@lists_minus_ids, [
           [
-            3,
             'test_stocks',
             undef,
             5,
@@ -253,7 +253,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            6,
             'accessions_for_trial2',
             undef,
             307,
@@ -262,7 +261,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            7,
             'selection_acc',
             undef,
             20,
@@ -271,7 +269,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            12,
             'desynonymize_test_list',
             undef,
             6,
@@ -280,7 +277,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            13,
             'traits',
             undef,
             10,
@@ -289,7 +285,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            14,
             'new_test_name',
             'new description',
             1,
@@ -298,7 +293,6 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            809,
             'janedoe_1_public',
             undef,
             2,
@@ -307,7 +301,6 @@ is_deeply(\@lists_sorted, [
             1
           ],
           [
-            811,
             'janedoe_1_private',
             undef,
             2,
@@ -326,11 +319,13 @@ $error = $list->update_element_by_id($items->[0]->[0], 'updated name');
 ok(!$error, 'test update item');
 $items = $list->retrieve_elements_with_ids($list_id);
 #print STDERR Dumper $items;
-is_deeply($items, [
-          [
-            725,
+my @items_stripped;
+foreach (@$items){
+    ok($_->[0]);
+    push @items_stripped, $_->[1];
+}
+is_deeply(\@items_stripped, [
             'updated name'
-          ]
         ], 'check updated list item');
 
 my $space1 = $list->add_element(" bla1");
@@ -348,6 +343,50 @@ ok(!$list->exists_element(" bla3 "), 'trailing and leading spaces removed from e
 
 my $space4 = $list->add_element("    ");
 ok($space4 eq "Empty list elements are not allowed", 'element with only spaces cannot be added'); 
+
+#test sort
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+ok($list->add_bulk(['item1','item2','item1','item20','item1001','item01','item10','item010','it1num', 'it2num']), 'test add bulk');
+ok($list->sort_items('ASC'), "sort ascending list");
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+$items = $list->elements;
+print STDERR Dumper $items;
+is_deeply($items, [
+          'updated name',
+          'bla1',
+          'item1',
+          'item01',
+          'it1num',
+          'bla2',
+          'item2',
+          'it2num',
+          'bla3',
+          'item10',
+          'item010',
+          'item20',
+          'item1001'
+        ], 'check asc ordered items');
+
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+ok($list->sort_items('DESC'), "sort descending list");
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
+$items = $list->elements;
+print STDERR Dumper $items;
+is_deeply($items, [
+  'item1001',
+  'item20',
+  'item10',
+  'item010',
+  'bla3',
+  'bla2',
+  'item2',
+  'it2num',
+  'bla1',
+  'item1',
+  'item01',
+  'it1num',
+  'updated name'
+], 'check desc ordered items');
 
 
 done_testing();

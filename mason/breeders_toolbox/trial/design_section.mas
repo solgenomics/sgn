@@ -1,0 +1,72 @@
+<%args>
+$trial_id
+$trial_name
+$has_subplot_entries
+$has_plant_entries
+$has_tissue_sample_entries
+</%args>
+
+<div class="well well-sm">
+
+    <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
+
+    <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
+    </&>
+
+    <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
+    </&>
+
+    <&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
+    </&>
+
+    <&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
+    </&>
+
+% if ($has_subplot_entries) {
+    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
+    </&>
+% }
+
+    <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+
+        <div id="plant_entries_section">
+
+% if (!$has_plant_entries) {
+           <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
+           <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries using plant_name</button>
+           <button class="btn btn-default" id="upload_plant_entries_with_index_number_button">Upload plant entries using plant index number</button>
+           <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button">Upload plant entries using number of plants per plot</button>
+% } else {
+            <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
+% }
+
+        </div><!--closes plant_entries_section -->
+
+    </&>
+
+    <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+
+        <div id="tissue_sample_entries_section">
+
+% if (!$has_tissue_sample_entries) {
+           <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
+           <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
+% } else {
+            <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
+% }
+
+        </div><!--closes tissue_sample_entries_section -->
+
+    </&>
+
+    <&| /page/info_section.mas, id => "trial_treatments", title=>"Field Management Factors",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_treatments.mas, trial_id => $trial_id &>
+    </&>
+
+</div><!-- closes well -->
+

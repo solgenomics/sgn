@@ -178,7 +178,8 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
     if ( $locus && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
-    my $dbxrefs = $locus->get_dbxrefs;
+    my $dbxrefs = $self->locus_dbxrefs_by_db( $c );
+    my $pubs = $self->_locus_pubs( $c);
     my $image_ids = $locus->get_figure_ids;
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 
@@ -210,6 +211,7 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             is_owner  => $is_owner,
             owners    => $owner_ids,
             dbxrefs   => $dbxrefs,
+	    pubs      => $pubs,
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
@@ -249,7 +251,11 @@ sub get_locus : Chained('/')  PathPart('locus')  CaptureArgs(1) {
 	    $c->throw_client_error( public_message => 'Locus ID must be a positive integer.' );
 	}
     }
-    $locus_id =~ s/(.*)(\.\d+)/$1/ ;
+    #remove version numbers from locus name locus123.1.2
+    while ( $locus_id =~ m/.*\.\d+/ ) {
+	$locus_id =~ s/(.*)(\.\d+)/$1/ ;
+    }
+
     my $matching_loci = $self->schema->resultset('Locus')->search(
 	{
 	    $identifier_type => $locus_id,
@@ -302,4 +308,29 @@ sub get_locus_dbxrefs : Private {
     $c->stash->{locus_dbxrefs} = $locus_dbxrefs;
 }
 
+sub locus_dbxrefs_by_db : Private {
+    my ( $self, $c ) = @_;
+    my $locus = $c->stash->{locus};
+    my %locus_dbxrefs = $locus->get_all_dbxrefs;
+    $c->stash->{locus_dbxrefs_by_db} = \%locus_dbxrefs;
+}
+
+
+sub _locus_pubs : Private {
+    my ($self, $c ) = @_;
+    my  $dbxrefs  = $c->stash->{locus_dbxrefs_by_db};
+
+    my @sorted_pubs =  ${$dbxrefs}{PMID} ? sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ ${$dbxrefs}{PMID} } : () ;
+    my @sgn_ref =  ${$dbxrefs}{SGN_ref} ? @{ ${$dbxrefs}{SGN_ref} } : () ;
+
+    my @cxgn_pubs;
+    my @pub_dbxrefs = ( @sorted_pubs, @sgn_ref );
+    foreach my $d ( @pub_dbxrefs) {
+	if ( $d->[1] eq '0') { #if the dbxref is not obsolete
+	    my $pub = CXGN::Chado::Publication->new( $c->dbc->dbh, $d->[0]->get_publication()->get_pub_id() );
+	    push @cxgn_pubs, $pub;
+	}
+    }
+    $c->stash->{pubs} = \@cxgn_pubs;
+}
 __PACKAGE__->meta->make_immutable;

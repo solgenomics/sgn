@@ -9,10 +9,15 @@ $trial_type_id
 $planting_date
 $harvest_date
 $trial_description
+$field_size
+$plot_width
+$plot_length
+$field_trial_is_planned_to_be_genotyped
+$field_trial_is_planned_to_cross
 </%args>
 
 <div class="modal fade" id="trial_details_edit_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsEditDialog">
-<div class="modal-dialog" role="document">
+<div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
         <div class="modal-header text-center">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -83,7 +88,107 @@ $trial_description
                     <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5"><%$trial_description%></textarea>
+                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_trial_field_size">Field Size (ha): </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input type="number" class="form-control" id="edit_trial_field_size" title="field_size" value="<% $field_size %>" >
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" >Plot Width (m): </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                          <select class="form-control" id="edit_trial_plot_width" title="plot_width" value="<% $plot_width %>">
+                              <option value="">NA</option>
+                              <option value="0.5">0.5</option>
+                              <option value="1">1.0</option>
+                              <option value="1.5">1.5</option>
+                              <option value="2">2.0</option>
+                              <option value="2.5">2.5</option>
+                              <option value="3">3.0</option>
+                              <option value="3.5">3.5</option>
+                              <option value="4">4.0</option>
+                              <option value="4.5">4.5</option>
+                              <option value="5">5.0</option>
+                              <option value="5.5">5.5</option>
+                              <option value="6">6.0</option>
+                              <option value="6.5">6.5</option>
+                              <option value="7">7.0</option>
+                              <option value="7.5">7.5</option>
+                              <option value="8">8.0</option>
+                              <option value="8.5">8.5</option>
+                              <option value="9">9.0</option>
+                              <option value="9.5">9.5</option>
+                              <option value="10">10.0</option>
+                              <option value="10.5">10.5</option>
+                              <option value="11">11.0</option>
+                              <option value="11.5">11.5</option>
+                              <option value="12">12.0</option>
+                              <option value="12.5">12.5</option>
+                          </select>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" >Plot Length (m): </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                          <select class="form-control" id="edit_trial_plot_length" title="plot_length" value="<% $plot_length %>">
+                              <option value="">NA</option>
+                              <option value="0.5">0.5</option>
+                              <option value="1">1.0</option>
+                              <option value="1.5">1.5</option>
+                              <option value="2">2.0</option>
+                              <option value="2.5">2.5</option>
+                              <option value="3">3.0</option>
+                              <option value="3.5">3.5</option>
+                              <option value="4">4.0</option>
+                              <option value="4.5">4.5</option>
+                              <option value="5">5.0</option>
+                              <option value="5.5">5.5</option>
+                              <option value="6">6.0</option>
+                              <option value="6.5">6.5</option>
+                              <option value="7">7.0</option>
+                              <option value="7.5">7.5</option>
+                              <option value="8">8.0</option>
+                              <option value="8.5">8.5</option>
+                              <option value="9">9.0</option>
+                              <option value="9.5">9.5</option>
+                              <option value="10">10.0</option>
+                              <option value="10.5">10.5</option>
+                              <option value="11">11.0</option>
+                              <option value="11.5">11.5</option>
+                              <option value="12">12.0</option>
+                              <option value="12.5">12.5</option>
+                          </select>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" >Trial Will Be Genotyped: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                          <select class="form-control" id="edit_trial_plan_to_genotype" title="plan_to_genotype" value="<% $field_trial_is_planned_to_be_genotyped %>">
+                              <option value="no">No</option>
+                              <option value="yes">Yes</option>
+                          </select>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" >Trial Will Be Crossed: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                          <select class="form-control" id="edit_trial_plan_to_cross" title="plan_to_cross" value="<% $field_trial_is_planned_to_cross %>">
+                              <option value="no">No</option>
+                              <option value="yes">Yes</option>
+                          </select>
                       </div>
                     </div>
                 </div>

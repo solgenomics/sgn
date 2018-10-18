@@ -181,7 +181,7 @@ sub get_synonyms : Path('/ajax/cvterm/get_synonyms') Args(0) {
 sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_stocks') Args(0) {
     my ($self, $c) = @_;
     my $cvterm = $c->stash->{cvterm};
-    my $cvterm_id = $cvterm->get_cvterm_id;
+    my $cvterm_id = $cvterm->cvterm_id;
     my $q = <<'';
 SELECT DISTINCT
     type.name,
@@ -224,7 +224,7 @@ ORDER BY stock.uniquename
 sub get_annotated_loci :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_loci') Args(0) {
     my ($self, $c) = @_;
     my $cvterm = $c->stash->{cvterm};
-    my $cvterm_id = $cvterm->get_cvterm_id;
+    my $cvterm_id = $cvterm->cvterm_id;
 
     my $q = "SELECT DISTINCT locus_id, locus_name, locus_symbol, common_name  FROM cvtermpath
              JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id)
@@ -255,7 +255,7 @@ sub get_annotated_loci :Chained('/cvterm/get_cvterm') :PathPart('datatables/anno
 sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/phenotyped_stocks') Args(0) {
     my ($self, $c) = @_;
     my $cvterm =  $c->stash->{cvterm};
-    my $cvterm_id  = $cvterm->get_cvterm_id;
+    my $cvterm_id  = $cvterm->cvterm_id;
 
     my $q = "SELECT DISTINCT stock_id,  stock.uniquename, stock.description, type.name
              FROM cvtermpath
@@ -289,7 +289,7 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
 sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direct_trials') Args(0) {
     my ($self, $c) = @_;
     my $cvterm = $c->stash->{cvterm};
-    my $cvterm_id = $cvterm->get_cvterm_id;
+    my $cvterm_id = $cvterm->cvterm_id;
     my $q = "SELECT DISTINCT project_id, project.name, project.description
              FROM public.project
               JOIN nd_experiment_project USING (project_id)
@@ -314,4 +314,97 @@ sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direc
     $c->stash->{rest} = { data => \@data, count => $count };
 }
 
-1;
+sub get_cvtermprops : Path('/cvterm/prop/get') : ActionClass('REST') { }
+
+sub get_cvtermprops_GET {
+    my ($self, $c) = @_;
+
+    my $cvterm_id = $c->req->param("cvterm_id");
+    my $type_id = $c->req->param("type_id");
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $prop_rs = $schema->resultset("Cv::Cvtermprop")->search(
+	{
+	    'me.cvterm_id' => $cvterm_id,
+	    #type_id => $type_id,
+	}, { join => 'type', order_by => 'cvtermprop_id' } );
+
+    my @propinfo = ();
+    while (my $prop = $prop_rs->next()) {
+	push @propinfo, {cvtermprop_id => $prop->cvtermprop_id, cvterm_id => $prop->cvterm_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() };
+    }
+
+    $c->stash->{rest} = \@propinfo;
+
+
+}
+
+sub add_cvtermprop : Path('/cvterm/prop/add') : ActionClass('REST') { }
+
+sub add_cvtermprop_POST {
+    my ( $self, $c ) = @_;
+    my $response;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (!$c->user()) {
+	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+    }
+
+    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        my $req = $c->req;
+        my $cvterm_id = $c->req->param('cvterm_id');
+        my $prop  = $c->req->param('prop');
+        my $cv_name = $c->req->param('cv_name') || 'trait_property'; 
+	$prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+        my $prop_type = $c->req->param('prop_type');
+
+	my $cvterm = $schema->resultset("Cv::Cvterm")->find( { cvterm_id => $cvterm_id } );
+
+    if ($cvterm && defined($prop) && $prop_type) {
+
+        try {
+            $cvterm->create_cvtermprops( { $prop_type => $prop }, { cv_name => $cv_name , autocreate => 1 } );
+	    
+            my $dbh = $c->dbc->dbh();
+	    $c->stash->{rest} = { message => "cvterm_id $cvterm_id and type_id $prop_type have been associated with value $prop. " };
+	
+	} catch {
+            $c->stash->{rest} = { error => "Failed: $_" }
+        };
+    } else {
+	$c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with cvterm $cvterm_id " };
+	}
+    } else {
+	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+    }
+}
+
+sub delete_cvtermprop : Path('/cvterm/prop/delete') : ActionClass('REST') { }
+
+sub delete_cvtermprop_GET {
+    my $self = shift;
+    my $c = shift;
+    my $cvtermprop_id = $c->req->param("cvtermprop_id");
+    if (! any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+	$c->stash->{rest} = { error => 'Log in required for deletion of stock properties.' };
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $cvtermprop = $schema->resultset("Cv::Cvtermprop")->find( { cvtermprop_id => $cvtermprop_id });
+    if (! $cvtermprop) {
+	$c->stash->{rest} = { error => 'The specified prop does not exist' };
+	return;
+    }
+    eval {
+	$cvtermprop->delete();
+    };
+    if ($@) {
+	$c->stash->{rest} = { error => "An error occurred during deletion: $@" };
+	    return;
+    }
+    $c->stash->{rest} = { message => "The cvterm prop was removed from the database." };
+}
+
+####
+1;##
+####

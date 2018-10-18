@@ -24,19 +24,30 @@
 
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Spreadsheet Format: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
+                            <option value="detailed">Detailed</option>
+                            <option value="simple">Simple</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Timestamps Included: </label>
                     <div class="col-sm-9" >
                         <input type="checkbox" id="upload_spreadsheet_phenotype_timestamp_checkbox" name="upload_spreadsheet_phenotype_timestamp_checkbox" />
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Data Level: </label>
-                    <div class="col-sm-9" >
-                        <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
-                            <option value="plots">Plots</option>
-                            <option value="plants">Plants</option>
-                            <option value="subplots">Subplots</option>
-                        </select>
+                <div id="upload_spreadsheet_phenotype_data_level_div">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Data Level: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
+                                <option value="plots">Plots</option>
+                                <option value="plants">Plants</option>
+                                <option value="subplots">Subplots</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -82,8 +93,7 @@
 
             <h4>Required Data:</h4>
             <ul>
-                <li>plot_name or plant_name (must exist in the database)</li>
-                <li>trait name|trait id (must exist in the trait ontology)</li>
+                <li>Please click the above button to generate the required phenotype spreadsheet</li>
             </ul>
 
             <h4>Notes:</h4>
@@ -91,6 +101,12 @@
                 <li>For <i>"sprouting proportion"</i>, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO_334:0000008"</i>.</li>
                 <li>If spreadsheet file was not generated from the database, </br>consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
                 <li>Two or more traits can be uploaded at the same time.</li>
+            </ul>
+
+            <h4>Simple and Detailed Spreadsheet Format:</h4>
+            <ul>
+                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.</li>
+                <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
             </ul>
 
             <h4>Timestamps:</h4>
@@ -102,13 +118,11 @@
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
-                            <th>plot_name</th>
                             <th>sprouting proportion|CO_334:0000008</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Plot1</td>
                             <td>20,2016-04-28 16:30:40-0500</td>
                         </tr>
                     </tbody>
@@ -118,13 +132,11 @@
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
-                            <th>plot_name</th>
                             <th>sprouting proportion|CO_334:0000008</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Plot1</td>
                             <td>20</td>
                         </tr>
                     </tbody>

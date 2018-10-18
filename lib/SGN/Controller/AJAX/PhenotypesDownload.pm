@@ -52,31 +52,39 @@ sub create_phenotype_spreadsheet_GET : Args(0) {
 sub create_phenotype_spreadsheet_POST : Args(0) {
   print STDERR "phenotype download controller\n";
   my ($self, $c) = @_;
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to download a phenotype spreadsheet." };
+    return;
+  }
+
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $trial_id = $c->req->param('trial_id');
-  my $trait_list_ref = $c->req->param('trait_list');
+  my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
+  #print STDERR Dumper \@trial_ids;
   my $format = $c->req->param('format') || "ExcelBasic";
+  my $include_notes = $c->req->param('include_notes');
   my $data_level = $c->req->param('data_level') || "plots";
+  my $file_format = $c->req->param('create_spreadsheet_phenotype_file_format') || "detailed";
   my $sample_number = $c->req->param('sample_number');
-  my $treatment_project_id = $c->req->param('treatment_project_id');
   if ($sample_number eq '') {$sample_number = undef};
   my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];
 
   #print STDERR Dumper $sample_number;
   #print STDERR Dumper $predefined_columns;
 
-  if ($data_level eq 'plants') {
-      my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
-      if (!$trial->has_plant_entries()) {
-          $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
-          return;
+  foreach (@trial_ids){
+      if ($data_level eq 'plants') {
+          my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
+          if (!$trial->has_plant_entries()) {
+              $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
+              return;
+          }
       }
-  }
-  if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
-      my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
-      if (!$trial->has_subplot_entries()) {
-          $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
-          return;
+      if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+          my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
+          if (!$trial->has_subplot_entries()) {
+              $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
+              return;
+          }
       }
   }
 
@@ -88,14 +96,14 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my $create_spreadsheet = CXGN::Trial::Download->new(
       {
 	  bcs_schema => $schema,
-	  trial_id => $trial_id,
+	  trial_list => \@trial_ids,
 	  trait_list => \@trait_list,
 	  filename => $tempfile,
 	  format => $format,
       data_level => $data_level,
+      include_notes => $include_notes,
       sample_number => $sample_number,
       predefined_columns => $predefined_columns,
-      treatment_project_id => $treatment_project_id
       });
 
      $create_spreadsheet->download();

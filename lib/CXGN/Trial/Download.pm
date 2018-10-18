@@ -13,21 +13,20 @@ Example usage for all plugins is listed here.
 
 ------------------------------------------------------------------
 
-For downloading a trial's xls spreadsheet for collecting phenotypes (as used
+For downloading trial(s) xls spreadsheet for collecting phenotypes (as used
 from SGN::Controller::AJAX::PhenotypesDownload->create_phenotype_spreadsheet):
 
 my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
 my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
 my $create_spreadsheet = CXGN::Trial::Download->new({
     bcs_schema => $schema,
-    trial_id => $trial_id,
+    trial_list => \@trial_id_list,
     trait_list => \@trait_list,
     filename => $tempfile,
     format => "ExcelBasic",
     data_level => $data_level,
     sample_number => $sample_number,
     predefined_columns => $predefined_columns,
-    treatment_project_id => $treatment_project_id
 });
 $create_spreadsheet->download();
 $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
@@ -63,10 +62,10 @@ my $download = CXGN::Trial::Download->new({
     format => $plugin,
     data_level => $data_level,
     include_timestamp => $timestamp_option,
+    exclude_phenotype_outlier => $exclude_phenotype_outlier,
     trait_contains => \@trait_contains_list,
     phenotype_min_value => $phenotype_min_value,
     phenotype_max_value => $phenotype_max_value,
-    search_type=>$search_type,
     has_header=>$has_header
 });
 my $error = $download->download();
@@ -102,7 +101,7 @@ $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
 
 A trial's layout can optionally include treatment and phenotype summary
-information, mapping to treatment_project_ids and trait_list, selected_trait_names.
+information, mapping to treatment_project_ids and trait_list.
 These keys can be ignored if you don't need them in the layout.
 
 As a XLS:
@@ -120,7 +119,6 @@ my $download = CXGN::Trial::Download->new({
     data_level => $data_level,
     treatment_project_ids => \@treatment_project_ids,
     selected_columns => $selected_cols,
-    selected_trait_names => \@selected_trait_names,
 });
 my $error = $download->download();
 my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -212,6 +210,7 @@ has 'plant_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'location_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'year_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
+has 'exclude_phenotype_outlier' => (isa => 'Bool', is => 'ro', default => 0);
 has 'has_header' => (isa => 'Bool', is => 'ro', default => 1);
 has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
 has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
@@ -219,8 +218,7 @@ has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 has 'search_type' => (isa => 'Str', is => 'rw');
 has 'treatment_project_ids' => (isa => 'ArrayRef[Int]|Undef', is => 'rw');
 has 'selected_columns' => (isa => 'HashRef|Undef', is => 'rw');
-has 'selected_trait_names' => (isa => 'ArrayRef|Undef', is => 'rw');
-
+has 'include_notes' => (isa => 'Str', is => 'rw');
 has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',
 		   required => 1,

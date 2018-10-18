@@ -18,17 +18,51 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    $("#create_cross_link").click(function() {
+    $("[name='create_crossingtrial_link']").click(function() {
+        var lo = new CXGN.List();
+        get_select_box('years', 'crosses_add_project_year', {'id':'crosses_add_project_year_select', 'name':'crosses_add_project_year_select', 'auto_generate':1});
+        $("#create_crossingtrial_dialog").modal("show");
+    });
+
+    $('#create_crossingtrial_submit').click(function() {
+        var crossingtrial_name = $("#crossingtrial_name").val();
+        if (!crossingtrial_name) {
+            alert("Crossing Experiment name is required");
+            return;
+        }
+
+        var crossingtrial_program_id = $("#crossingtrial_program").val();
+        if (!crossingtrial_program_id) {
+            alert("Breeding program is required");
+            return;
+        }
+
+        var crossingtrial_location = $("#crossingtrial_location").val();
+        if (!crossingtrial_location) {
+            alert ("Location is required");
+            return;
+        }
+
+        var year = $("#crosses_add_project_year_select").val();
+        if (!year) {
+            alert ("Year is required");
+            return;
+        }
+
+        var project_description = $('textarea#crosses_add_project_description').val();
+        if (!project_description) {
+            alert ("Description is required");
+            return;
+        }
+
+        add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description);
+
+    });
+
+    $("[name='create_cross_link']").click(function() {
 
         $("#cross_type_info").click(function() {
             $("#cross_type_dialog").modal("show");
-        });
-
-        get_select_box('folders', 'add_cross_folder_select_div', {
-            'name': 'add_cross_folder_id',
-            'id': 'add_cross_folder_id',
-            'folder_for_crosses' : 1,
-            'empty': 1
         });
 
         var lo = new CXGN.List();
@@ -36,6 +70,9 @@ jQuery(document).ready(function($) {
         $('#reciprocal_accession_list').html(lo.listSelect('reciprocal_accessions', ['accessions'], 'select'));
         $('#maternal_accession_list').html(lo.listSelect('maternal_accessions', ['accessions'], 'select'));
         $('#paternal_accession_list').html(lo.listSelect('paternal_accessions', ['accessions'], 'select'));
+
+        get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
+        get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
 
         $("#create_cross").modal("show");
 
@@ -63,6 +100,10 @@ jQuery(document).ready(function($) {
 
         $('input[id*="_population"]').autocomplete({
             source: '/ajax/stock/stock_autocomplete'
+        });
+
+        $("#pollination_date_checkbox").change(function() {
+            $("#get_pollination_date").toggle(this.checked); // show if it is checked, otherwise hide
         });
 
         $("#flower_number_checkbox").change(function() {
@@ -112,43 +153,69 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        var breeding_program_id = $("#program").val();
-        if (!breeding_program_id) {
-            alert("A breeding program is required");
-            return;
-        }
+        var crossing_trial_id = $("#crossing_trial").val();
+            if (!crossing_trial_id) {
+                alert("A crossing experiment is required");
+                return;
+            }
 
         var visibleToRole = $("#visible_to_role").val();
         var location = $("#location").val();
-        var folder_name = $("#add_cross_folder_name").val();
-        var folder_id;
-        if (folder_name) {  // get id if folder with this name already exisits
-            folder_id = $('#add_cross_folder_id option').filter(function () { return $(this).html() == folder_name; }).val();
+            if (!location) {
+                alert("A location is required");
+                return;
         }
-        else {
-            folder_id = $("#add_cross_folder_id").val();
-        }
-        add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
+        var female_plot = $("#female_plot").val();
+        var male_plot = $("#male_plot").val();
+
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot);
 
     });
 
-    $("#upload_crosses_link").click(function() {
-
-        $("#cross_upload_spreadsheet_format_info").click(function() {
-            $("#cross_upload_spreadsheet_info_dialog").modal("show");
-        });
-
-        get_select_box('folders', 'cross_folder_select_div', {
-            'name': 'upload_folder_id',
-            'id': 'upload_folder_id',
-            'folder_for_crosses': 1,
-            'empty': 1
-        });
+    $("[name='upload_crosses_link']").click(function() {
+        get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
+        get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
         $("#upload_crosses_dialog").modal("show");
     });
 
+    $("#cross_accession_info_format").click(function() {
+        $("#cross_accession_info_dialog").modal("show");
+    });
+
+    $("#cross_plot_info_format").click(function() {
+        $("#cross_plot_info_dialog").modal("show");
+    });
+
+    $("#cross_plant_info_format").click(function() {
+        $("#cross_plant_info_dialog").modal("show");
+    });
+
+    jQuery("#cross_file_format_option").change(function(){
+        if (jQuery(this).val() == ""){
+            jQuery("#xls_cross_accession_section").hide();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_plant_section").hide();
+      }
+        if (jQuery(this).val() == "xls_cross_accession"){
+            jQuery("#xls_cross_accession_section").show();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_plant_section").hide();
+        }
+        if(jQuery(this).val() == "xls_cross_plot"){
+            jQuery("#xls_cross_plot_section").show();
+            jQuery("#xls_cross_accession_section").hide();
+            jQuery("#xls_cross_plant_section").hide();
+
+        }
+        if (jQuery(this).val() == "xls_cross_plant" ){
+            jQuery("#xls_cross_plant_section").show();
+            jQuery("#xls_cross_plot_section").hide();
+            jQuery("#xls_cross_accession_section").hide();
+        }
+    });
+
+
     $("#upload_crosses_submit").click(function() {
-        $("#upload_crosses_dialog").modal("hide");
         upload_crosses_file();
     });
 
@@ -175,31 +242,22 @@ jQuery(document).ready(function($) {
                 return;
             }
             if (response.success) {
-                $('#cross_saved_dialog_message').modal("show");
+                Workflow.focus("#crosses_upload_workflow", -1); //Go to success page
+                Workflow.check_complete("#crosses_upload_workflow");
             }
         }
     });
 
-    jQuery("#refresh_crosstree_button").click(function() {
-        jQuery.ajax({
-            url: '/ajax/breeders/get_crosses_with_folders',
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response) {
-                jQuery("#working_modal").modal("hide");
-                location.reload();
-            },
-            error: function(response) {
-                jQuery("#working_modal").modal("hide");
-                alert('An error occurred refreshing crosses jstree html');
-            }
-        });
+    jQuery(document).on('click', '[name="upload_crosses_success_complete_button"]', function(){
+        alert('Crosses saved in the database');
+        jQuery('#upload_crosses_dialog').modal('hide');
     });
 
-    function add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
+
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
 
         var progenyNumber = $("#progeny_number").val();
+        var pollinationDate = $("#pollination_date").val();
         var flowerNumber = $("#flower_number").val();
         var fruitNumber = $("#fruit_number").val();
         var seedNumber = $("#seed_number").val();
@@ -263,9 +321,12 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
+            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents +
+                '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&pollination_date=' + pollinationDate +
+                '&flower_number=' + flowerNumber+ '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix +
+                '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&location=' + location + '&female_plot=' + female_plot +
+                '&male_plot=' + male_plot,
             beforeSend: function() {
-                jQuery("#create_cross").modal("hide");
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
@@ -275,11 +336,12 @@ jQuery(document).ready(function($) {
                 alert("A parse error occurred. Please try again." + response);
             },
             success: function(response) {
+                jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery("#working_modal").modal("hide");
-                    $('#cross_saved_dialog_message').modal("show");
+                    Workflow.focus("#add_cross_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_cross_workflow");
                 }
             },
         });
@@ -287,12 +349,32 @@ jQuery(document).ready(function($) {
     }
 
     function upload_crosses_file() {
-        var uploadFile = $("#crosses_upload_file").val();
-        $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
-        if (uploadFile === '') {
-            alert("Please select a file");
+        var crossing_trial_id = $("#cross_upload_crossing_trial").val();
+        if (!crossing_trial_id) {
+            alert("A crossing experiment is required");
             return;
         }
+
+        var location = $("#cross_upload_location").val();
+        if (!location) {
+            alert("A location is required");
+            return;
+        }
+
+        var uploadFileXlsSimple = $("#xls_crosses_simple_file").val();
+        if (uploadFileXlsSimple === ''){
+            var uploadFileXlsPlots = $("#xls_crosses_plots_file").val();
+            if (uploadFileXlsPlots === ''){
+                var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
+                if (uploadFileXlsPlants === '') {
+                    alert("Please select your file format and select a file");
+                    return;
+                }
+            }
+        }
+
+        $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
+
         $("#upload_crosses_form").submit();
     }
 
@@ -323,4 +405,47 @@ jQuery(document).ready(function($) {
         }
         return names;
     }
+
+    function add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description, crossingtrial_folder_name, crossingtrial_folder_id) {
+        $.ajax({
+            url: '/ajax/cross/add_crossingtrial',
+            timeout: 3000000,
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'crossingtrial_name': crossingtrial_name,
+                'crossingtrial_program_id': crossingtrial_program_id,
+                'crossingtrial_location': crossingtrial_location,
+                'year': year,
+                'project_description': project_description,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            error: function(response) {
+                alert("An error occurred!" + JSON.stringify(response));
+                return;
+            },
+            parseerror: function(response) {
+                alert("A parse error occurred!" + response);
+                return;
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#working_modal").modal("hide");
+                    refreshCrossJsTree(0);
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
+                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
+                    Workflow.focus("#add_crossing_trial_workflow", -1); //Go to success page
+                    Workflow.check_complete("#add_crossing_trial_workflow");
+                }
+            },
+        });
+
+  }
+
 });

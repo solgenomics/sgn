@@ -28,9 +28,9 @@
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_wizard_phenotypes_level_option">
+                        <option value="all">All</option>
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
-                        <option value="all">All</option>
                     </select>
                 </div>
             </div>
@@ -41,6 +41,16 @@
                 <label class="col-sm-3 control-label">Include Timestamps: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_wizard_phenotypes_timestamp_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Suppress User Defined Phenotype Outliers: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_wizard_phenotypes_exclude_outliers">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -73,15 +83,6 @@
                 </div>
             </div>
 </&>
-<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Download Type: </label>
-                <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="search_type" id="search_type" value="complete">Complete</label>
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="search_type" id="search_type" value="fast" checked>Fast (plots only)</label>
-                </div>
-            </div>
-</&>
 
         </form><br/>
 
@@ -95,9 +96,51 @@
   </div>
 </div>
 
+<div class="modal fade" id="download_wizard_metadata_dialog" name="download_wizard_metadata_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadWizardMetadataDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadWizardMetadataDialog">Download Metadata</h4>
+        </div>
+        <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" id="wizard_download_metadata_form" role="form" method="post" >
+	        <div class="form-group">
+                <label class="col-sm-3 control-label">Format: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_wizard_metadata_format">
+                        <option value="csv">CSV</option>
+                        <option value="xls">Excel (xls)</option>
+                    </select>
+                </div>
+	        </div>
+        </form><br/>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="download_wizard_metadata_cancel_button" id="download_wizard_metadata_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="download_wizard_metadata_submit_button" id="download_wizard_metadata_submit_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <table class="table borderless" alt="breeder search" border="0" ><tr>
-	<td>
+    <td>
+    <div>
+  <p>Metadata:
+    <button class="btn btn-primary" id="wizard_download_metadata_button" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a filter selected">Download Metadata</button>
+  </div>
+  </td>
+  <td>
+  <div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div id="selected_trials_metadata">No trials selected</div>
+  </td>
+  </tr>
+  <tr>
+  <td>
     <div>
 	<p>Phenotypes:
 		<button class="btn btn-primary" id="wizard_download_phenotypes_button" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a filter selected">Download Phenotypes</button>

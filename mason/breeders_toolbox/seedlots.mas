@@ -1,6 +1,11 @@
 
 <%args>
 $timestamp
+$preferred_species
+$editable_stock_props
+$programs
+$locations
+$crossing_trials
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -11,51 +16,90 @@ $timestamp
 }
 </style>
   
-  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses' ] &>
 
 
-<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <b><p>What are seedlots?</p></b>
+                <ul>
+                <li>Seedlots represent physical seed in packets.</li>
+                <li>This seed can be from crosses or for named accessions.</li>
+                <li>Seedlots can have a specific location, box, weight(g), and count.</li>
+                <li>Seed can be transferred into and out of a seedlot. Such as from a seedlot into a plot.</li>
+                <li>Seedlots can belong to breeding programs and organizations.</li>
+                </ul>
 
-<form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Seedlot Name: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_seedlot_name" type="text" />
+                <b><p>How do I inventory my seed?</p></b>
+                <ul>
+                <li>1) Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
+                <li>2) Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
+                <li>3) Use the "Seed Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Seed Inventory Android Application you can create your own CSV file and upload that.</li>
+                <li><b>For more info about the "Seed Inventory" Android Application go to <a href="http://www.wheatgenetics.org/research/software/35-inventory">Seed Inventory</a>.</b></li>
+                <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
+                </ul>
+            </div>
         </div>
     </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Breeding Program: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_breeding_program" type="text" />
-        </div>
-    </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Contents (Accession): </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_contents" type="text" />
-        </div>
-    </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Location: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_location" type="text" />
-        </div>
-    </div>
-    <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Minimum Count: </label>
-        <div class="col-sm-9" >
-            <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
-        </div>
-    </div>
-</form>
-<center>
-<button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
-</center>
-
 </&>
 
 
-<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add Seedlot</a>]  [<a id="seedlot_bulk_upload">Upload Seedlots</a>]'&>
+<&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="add_seedlot_button">Add New Seedlot</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_bulk_upload">Upload Seedlots</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>'&>
+
+<br/>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>0 &>
+
+<div class="well well-sm">
+    <form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Seedlot Name: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_seedlot_name" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Breeding Program: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_breeding_program" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Contents (Cross Uniquename): </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_contents_cross" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Location: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_location" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Minimum Count: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
+            </div>
+        </div>
+    </form>
+    <center>
+    <button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
+    </center>
+</div>
+</&>
 
 <br/>
 
@@ -69,206 +113,21 @@ $timestamp
 <div id="available_seedlots_add_to_list">
 </div>
 
+        </div>
+    </div>
+</div>
 </&>
 
-<div class="modal fade" id="upload_seedlot_dialog" name="upload_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="seedlot_upload_dialog">Upload Seedlots</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-
-                    <&| /page/explanation.mas, title=>'Template information' &>
-                        <p>
-                            <b>File format information</b>
-                            <br>
-                            <a id="seedlot_upload_spreadsheet_format_info">Spreadsheet format</a>
-                        </p>
-                    </&>
-
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Breeding Program: </label>
-                            <div class="col-sm-9" >
-                                <div id="upload_seedlot_breeding_program_div"></div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Location: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Population Name: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" name="upload_seedlot_population_name" id="upload_seedlot_population_name" placeholder="Optional">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Organization Name: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="Optional">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File (.xls): </label>
-                            <div class="col-sm-9" >
-                                <input type="file" name="seedlot_uploaded_file" id="seedlot_uploaded_file" encoding="multipart/form-data" />
-                            </div>
-                        </div>
-
-                    </form>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="upload_seedlot_button" type="button" class="btn btn-default" >Submit</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="seedlot_dialog">Create New Seedlot</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-            <form class="form-horizontal" role="form" method="post" id="create_new_seedlot_form" name="create_new_seedlot_form">
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Name: </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_name" placeholder="Required">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Breeding Program: </label>
-                    <div class="col-sm-9" >
-                        <div id="seedlot_breeding_program_div"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Location: </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_location" placeholder="Required">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Content (accession): </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_accession_uniquename" placeholder="Required">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Amount (number of seeds): </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_amount" placeholder="Required">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Population: </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_population_name" placeholder="Optional">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Organization: </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_organization" placeholder="Optional">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Timestamp: </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_timestamp" value="<% $timestamp %>" placeholder="<% $timestamp %>">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Description: </label>
-                    <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_description" placeholder="Optional">
-                    </div>
-                </div>
-            </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="create_new_seedlot_button" type="button" class="btn btn-default" >OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="seedlot_upload_spreadsheet_info_dialog" name="seedlot_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
-                    <br />
-                    (.xlsx format not supported)
-                    <br /><br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>seedlot_name</td>
-                                <td>accession_name</td>
-                                <td>amount</td>
-                                <td>description</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <br/>
-                    seedlot_name (must be unique)
-                    <br />
-                    accession_name (must exist in the database)
-                    <br />
-                    <b>Optional fields:</b>
-                    <br />
-                    amount (number of seeds in seedlot. if not given will default to 0)
-                    <br />
-                    description
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_seedlot_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
+<& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
 
 <script>
 jQuery(document).ready(function(){
-
-    jQuery("#upload_seedlot_location").autocomplete({
-       source: '/ajax/stock/geolocation_autocomplete',
-    });
-    jQuery("#seedlot_location").autocomplete({
-       source: '/ajax/stock/geolocation_autocomplete',
-    });
-    jQuery("#seedlot_accession_uniquename").autocomplete({
-       source: '/ajax/stock/accession_autocomplete',
-    });
 
     var seedlots_table = jQuery('#available_seedlots_table').DataTable({
         'searching' : false,
@@ -282,15 +141,20 @@ jQuery(document).ready(function(){
                      d.breeding_program = jQuery('#search_seedlot_form_breeding_program').val();
                      d.minimum_count   = jQuery('#search_seedlot_form_minimum_count').val();
                      d.location     = jQuery('#search_seedlot_form_location').val();
-                     d.contents       = jQuery('#search_seedlot_form_contents').val();
+                     d.contents_accession = jQuery('#search_seedlot_form_contents_accession').val();
+                     d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();
                 }
         },
         columns: [
             { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
             { title: "Breeding Program", "data": "breeding_program_name" },
             { title: "Contents", "data": "contents_html" },
-            { title: "Seedlot Location", "data": "location" },
+            { title: "Location", "data": "location" },
             { title: "Count", "data": "count" },
+            { title: "Weight (g)", "data": "weight_gram" },
+            { title: "Owners", "data": "owners_string" },
+            { title: "Organization", "data": "organization" },
+            { title: "Box", "data": "box" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
@@ -310,117 +174,6 @@ jQuery(document).ready(function(){
                 });
             }
         }
-    });
-
-    jQuery('#add_seedlot_button').click( function() {
-        jQuery('#add_seedlot_dialog').modal('show');
-        get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
-    });
-    jQuery('#seedlot_bulk_upload').click( function() {
-        jQuery('#upload_seedlot_dialog').modal('show');
-        get_select_box('breeding_programs', 'upload_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
-    });
-
-    jQuery("#seedlot_upload_spreadsheet_format_info").click( function () {
-        jQuery("#seedlot_upload_spreadsheet_info_dialog" ).modal("show");
-    });
-
-    jQuery('#upload_seedlot_button').click(function () {
-        upload_seedlot_button();
-    });
-    function upload_seedlot_button() {
-        var uploadFile = jQuery("#seedlot_uploaded_file").val();
-        var location = jQuery("#upload_seedlot_location").val();
-        var breeding_program = jQuery("#upload_seedlot_breeding_program_id").val();
-        jQuery('#upload_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
-        if (breeding_program === '') {
-            alert("Please choose a breeding program");
-            return;
-        }
-        if (location === '') {
-            alert("Please give a location");
-            return;
-        }
-        if (uploadFile === '') {
-            alert("Please select a file");
-            return;
-        }
-        jQuery("#upload_seedlot_form").submit();
-    }
-
-    jQuery('#upload_seedlot_form').iframePostForm({
-        json: true,
-        post: function () {
-            var uploadedSeedlotFile = jQuery("#seedlot_uploaded_file").val();
-            jQuery('#working_modal').modal("show");
-            if (uploadedSeedlotFile === '') {
-                jQuery('#working_modal').modal("hide");
-                alert("No file selected");
-            }
-        },
-        complete: function (response) {
-            console.log(response);
-            jQuery('#working_modal').modal("hide");
-
-            if (response.error_string) {
-                alert(response.error_string);
-                return;
-            }
-            if (response.success) {
-                alert("File uploaded successfully");
-                jQuery('#upload_seedlot_dialog').modal('hide');
-                seedlots_table.ajax.reload();
-            }
-        }
-    });
-
-    jQuery('#create_new_seedlot_button').click( function() {
-        var name = jQuery('#seedlot_name').val();
-        var location = jQuery('#seedlot_location').val();
-        var accession_uniquename = jQuery('#seedlot_accession_uniquename').val();
-        var population_name = jQuery('#seedlot_population_name').val();
-        var organization = jQuery('#seedlot_organization').val();
-        var amount = jQuery('#seedlot_amount').val();
-        var timestamp = jQuery('#seedlot_timestamp').val();
-        var description = jQuery('#seedlot_description').val();
-        var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
-
-        if (name == '') { alert("Please provide a name"); return; }
-        else if (location == '') { alert("Please provide a location"); return; }
-        else if (amount == '') { alert("Please provide an amount"); return; }
-        else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
-        else if (accession_uniquename == '') { alert("Please provide an accession name"); return; }
-        else {
-
-            jQuery.ajax({
-                url: '/ajax/breeders/seedlot-create',
-                data : {
-                    'seedlot_name' : name,
-                    'seedlot_location': location,
-                    'seedlot_accession_uniquename': accession_uniquename,
-                    'seedlot_organization': organization,
-                    'seedlot_population_name': population_name,
-                    'seedlot_amount':amount,
-                    'seedlot_timestamp':timestamp,
-                    'seedlot_description':description,
-                    'seedlot_breeding_program_id':breeding_program_id
-                },
-                success: function(response) { 
-                    if (response.success == 1) { 
-                        alert("The seedlot has been created.");
-                        jQuery('#add_seedlot_dialog').modal('hide');
-                        seedlots_table.ajax.reload();
-                    }
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                },
-                error: function(response){
-                    alert('An error occurred creating seed lot');
-                }
-            });
-        }
-
     });
 
     jQuery('#submit_seedlot_search').click( function() {

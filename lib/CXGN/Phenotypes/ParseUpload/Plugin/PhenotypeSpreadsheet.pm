@@ -1,5 +1,20 @@
 package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheet;
 
+# Validate Returns %validate_result = (
+#   error => 'error message'
+#)
+
+# Parse Returns %parsed_result = (
+#   data => {
+#       plotname1 => {
+#           varname1 => [12, '2015-06-16T00:53:26Z']
+#           varname2 => [120, '']
+#       }
+#   },
+#   units => [plotname1],
+#   variables => [varname1, varname2]
+#)
+
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
@@ -65,8 +80,11 @@ sub validate {
                                     $worksheet->get_cell(6,2)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,3)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'is_a_control' ||
-                                    $worksheet->get_cell(6,5)->value() ne 'rep_number' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: plot_name, accession_name, plot_number, block_number, is_a_control,  rep_number. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+                                    $worksheet->get_cell(6,5)->value() ne 'rep_number' ||
+                                    $worksheet->get_cell(6,6)->value() ne 'planting_date' ||
+                                    $worksheet->get_cell(6,7)->value() ne 'harvest_date' ||
+                                    $worksheet->get_cell(6,8)->value() ne 'trial_name' ) ) {
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control',  'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plots\n";
         return \%parse_result;
     }
@@ -76,8 +94,11 @@ sub validate {
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
-                                    $worksheet->get_cell(6,6)->value() ne 'rep_number' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: plant_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+                                    $worksheet->get_cell(6,6)->value() ne 'rep_number' ||
+                                    $worksheet->get_cell(6,7)->value() ne 'planting_date' ||
+                                    $worksheet->get_cell(6,8)->value() ne 'harvest_date' ||
+                                    $worksheet->get_cell(6,9)->value() ne 'trial_name') ) {
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plants\n";
         return \%parse_result;
     }
@@ -87,15 +108,21 @@ sub validate {
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
-                                    $worksheet->get_cell(6,6)->value() ne 'rep_number' ) && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
+                                    $worksheet->get_cell(6,6)->value() ne 'rep_number' ||
+                                    $worksheet->get_cell(6,7)->value() ne 'planting_date' ||
+                                    $worksheet->get_cell(6,8)->value() ne 'harvest_date' ||
+                                    $worksheet->get_cell(6,9)->value() ne 'trial_name') && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                                                     $worksheet->get_cell(6,1)->value() ne 'subplot_name' ||
                                                                     $worksheet->get_cell(6,2)->value() ne 'plot_name' ||
                                                                     $worksheet->get_cell(6,3)->value() ne 'accession_name' ||
                                                                     $worksheet->get_cell(6,4)->value() ne 'plot_number' ||
                                                                     $worksheet->get_cell(6,5)->value() ne 'block_number' ||
                                                                     $worksheet->get_cell(6,6)->value() ne 'is_a_control' ||
-                                                                    $worksheet->get_cell(6,7)->value() ne 'rep_number' ) ) ) {
-        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) subplot_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number OR 2) plant_name, subplot_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+                                                                    $worksheet->get_cell(6,7)->value() ne 'rep_number' ||
+                                                                    $worksheet->get_cell(6,8)->value() ne 'planting_date' ||
+                                                                    $worksheet->get_cell(6,9)->value() ne 'harvest_date' ||
+                                                                    $worksheet->get_cell(6,10)->value() ne 'trial_name') ) ) {
+        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name' OR 2) 'plant_name', 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is subplots\n";
         return \%parse_result;
     }
@@ -103,26 +130,18 @@ sub validate {
     my @fixed_columns;
     if ($data_level eq 'subplots'){
         if ($name_head eq 'plant_name'){
-            @fixed_columns = qw | plant_name subplot_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | plant_name subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'subplot_name'){
-            @fixed_columns = qw | subplot_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     } else {
         if ($name_head eq 'plot_name') {
-            @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'plant_name') {
-            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     }
     my $num_fixed_col = scalar(@fixed_columns);
-
-    my $treatment_name;
-    if ($worksheet->get_cell(4,3)) {
-        $treatment_name  = $worksheet->get_cell(4,3)->value();
-    }
-    if ($treatment_name){
-        $num_fixed_col += 1;
-    }
 
     my $predefined_columns;
     my $num_predef_col = 0;
@@ -138,28 +157,16 @@ sub validate {
         for (my $col=$num_col_before_traits; $col<=$col_max; $col++) {
             my $value_string = '';
             my $value = '';
+            my $timestamp = '';
             if ($worksheet->get_cell($row,$col)) {
                 $value_string = $worksheet->get_cell($row,$col)->value();
                 #print STDERR $value_string."\n";
-                my ($value, $timestamp) = split /,/, $value_string;
-                if (!$timestamp_included) {
-                    if ($timestamp) {
-                        $parse_result{'error'} = "Timestamp found in value, but 'Timestamps Included' is not selected.";
-                        print STDERR "Timestamp wrongly found in value.\n";
-                        return \%parse_result;
-                    }
-                }
                 if ($timestamp_included) {
-                    if (!$timestamp) {
-                        $parse_result{'error'} = "No timestamp found in value, but 'Timestamps Included' is selected.";
-                        print STDERR "Timestamp not found in value.\n";
+                    ($value, $timestamp) = split /,/, $value_string;
+                    if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                        $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                        print STDERR "value: $timestamp\n";
                         return \%parse_result;
-                    } else {
-                        if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                            $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-                            print STDERR "value: $timestamp\n";
-                            return \%parse_result;
-                        }
                     }
                 }
             }
@@ -212,28 +219,18 @@ sub parse {
     my @fixed_columns;
     if ($data_level eq 'subplots'){
         if ($name_head eq 'plant_name'){
-            @fixed_columns = qw | plant_name subplot_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | plant_name subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'subplot_name'){
-            @fixed_columns = qw | subplot_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | subplot_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     } else {
         if ($name_head eq 'plot_name') {
-            @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'plant_name') {
-            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     }
     my $num_fixed_col = scalar(@fixed_columns);
-
-    my $treatment_name;
-    my $treatment_col;
-    if ($worksheet->get_cell(4,3)) {
-        $treatment_name  = $worksheet->get_cell(4,3)->value();
-    }
-    if ($treatment_name){
-        $treatment_col = $num_fixed_col;
-        $num_fixed_col += 1;
-    }
 
     my $predefined_columns;
     my $num_predef_col = 0;
@@ -253,18 +250,6 @@ sub parse {
             if (defined($plot_name)){
                 if ($plot_name ne ''){
                     $plots_seen{$plot_name} = 1;
-
-                    my @treatments;
-                    if($treatment_name){
-                        if($worksheet->get_cell($row,$treatment_col)){
-                            if($worksheet->get_cell($row,$treatment_col)->value()){
-                                my $val = $worksheet->get_cell($row,$treatment_col)->value();
-                                if ($val){
-                                    push @treatments, $treatment_name;
-                                }
-                            }
-                        }
-                    }
 
                     for my $col ($num_col_before_traits .. $col_max) {
                         my $trait_name;
@@ -295,15 +280,21 @@ sub parse {
                                     if ($worksheet->get_cell($row, $col)){
                                         $value_string = $worksheet->get_cell($row, $col)->value();
                                     }
-                                    my ($trait_value, $timestamp) = split /,/, $value_string;
-                                    if (!$timestamp) {
+                                    my $timestamp = '';
+                                    my $trait_value = '';
+                                    if ($timestamp_included){
+                                        ($trait_value, $timestamp) = split /,/, $value_string;
+                                    } else {
+                                        $trait_value = $value_string;
+                                    }
+                                    if (!defined($timestamp)){
                                         $timestamp = '';
                                     }
                                     #print STDERR $trait_value." : ".$timestamp."\n";
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
-                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp, \@treatments];
+                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
                                         }
                                     }
                                 }
@@ -323,9 +314,9 @@ sub parse {
     }
 
     $parse_result{'data'} = \%data;
-    $parse_result{'plots'} = \@plots;
-    $parse_result{'traits'} = \@traits;
-    #print STDERR Dumper \%parse_result;
+    $parse_result{'units'} = \@plots;
+    $parse_result{'variables'} = \@traits;
+    print STDERR Dumper \%parse_result;
 
     return \%parse_result;
 }

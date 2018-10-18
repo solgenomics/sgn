@@ -1,0 +1,398 @@
+<%args>
+$preferred_species => ""
+$editable_stock_props => {}
+</%args>
+
+<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addAccessionsDialog">Add Accessions</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <ul class="nav nav-pills nav-justified" id="add_new_accessions_tab_select">
+                <li class="active" id="add_new_accessions_list_tab"><a data-toggle="tab" href="#with_list_tab">Using Lists</a></li>
+                <li id="add_new_accessions_file_tab"><a data-toggle="tab" href="#with_file_tab">Uploading a File</a></li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div id="with_list_tab" class="tab-pane fade in active">
+                    <hr>
+                    <form class="form-horizontal" role="form" name="new_accessions_form" id="new_accessions_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
+                            <div class="col-sm-8" id="list_div" name="list_div">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label"></label>
+                            <div class="col-sm-8">
+                                <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
+                            <div class="col-sm-8">
+                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked></input>
+                                <br/>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="with_file_tab" class="tab-pane fade">
+                    <hr>
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="accessions_upload_spreadsheet_format_info">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_new_accessions_form" name="upload_new_accessions_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="new_accessions_upload_file" id="new_accessions_upload_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="accessions_upload_spreadsheet_format_modal" name="accessions_upload_spreadsheet_format_modal" tabindex="-1" role="dialog" aria-labelledby="uploadAccessionsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadAccessionsInfoDialog">Upload Accessions Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Accessions may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>accession_name</td>
+                                <td>species_name</td>
+                                <td>population_name</td>
+                                <td>organization_name(s)</td>
+                                <td>synonym(s)</td>
+% if (exists($editable_stock_props->{'location_code'})){
+                                <td>location_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'ploidy_level'})){
+                                <td>ploidy_level(s)</td>
+% }
+% if (exists($editable_stock_props->{'genome_structure'})){
+                                <td>genome_structure(s)</td>
+% }
+% if (exists($editable_stock_props->{'variety'})){
+                                <td>variety(s)</td>
+% }
+% if (exists($editable_stock_props->{'donor'})){
+                                <td>donor(s)</td>
+% }
+% if (exists($editable_stock_props->{'donor institute'})){
+                                <td>donor_institute(s)</td>
+% }
+% if (exists($editable_stock_props->{'donor PUI'})){
+                                <td>donor_PUI(s)</td>
+% }
+% if (exists($editable_stock_props->{'country of origin'})){
+                                <td>country_of_origin(s)</td>
+% }
+% if (exists($editable_stock_props->{'state'})){
+                                <td>state(s)</td>
+% }
+% if (exists($editable_stock_props->{'institute code'})){
+                                <td>institute_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'institute name'})){
+                                <td>institute_name(s)</td>
+% }
+% if (exists($editable_stock_props->{'biological status of accession code'})){
+                                <td>biological_status_of_accession_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'notes'})){
+                                <td>notes(s)</td>
+% }
+% if (exists($editable_stock_props->{'accession number'})){
+                                <td>accession_number(s)</td>
+% }
+% if (exists($editable_stock_props->{'PUI'})){
+                                <td>PUI(s)</td>
+% }
+% if (exists($editable_stock_props->{'seed source'})){
+                                <td>seed_source(s)</td>
+% }
+% if (exists($editable_stock_props->{'type of germplasm storage code'})){
+                                <td>type_of_germplasm_storage_code(s)</td>
+% }
+% if (exists($editable_stock_props->{'acquisition date'})){
+                                <td>acquisition_date(s)</td>
+% }
+% if (exists($editable_stock_props->{'transgenic'})){
+                                <td>transgenic</td>
+% }
+% if (exists($editable_stock_props->{'introgression_parent'})){
+                                <td>introgression_parent</td>
+% }
+% if (exists($editable_stock_props->{'introgression_backcross_parent'})){
+                                <td>introgression_backcross_parent</td>
+% }
+% if (exists($editable_stock_props->{'introgression_map_version'})){
+                                <td>introgression_map_version</td>
+% }
+% if (exists($editable_stock_props->{'introgression_chromosome'})){
+                                <td>introgression_chromosome</td>
+% }
+% if (exists($editable_stock_props->{'introgression_start_position_bp'})){
+                                <td>introgression_start_position_bp</td>
+% }
+% if (exists($editable_stock_props->{'introgression_end_position_bp'})){
+                                <td>introgression_end_position_bp</td>
+% }
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>accession_name (must be unique)</li>
+                    <li>species_name (must exist in the database)</li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>population_name (a population is a grouping of accessions. if the population already exists in the database, the accession will be added into it, otherwise, the new population will be created.)</li>
+                    <li>organization_names (the name(s) of the organization(s) which use this accession. multiple organizations can be given with comma separation (e.g. NARO,IITA))</li>
+                    <li>synonyms (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. multiple synonyms can be given with comma separation (e.g. accession_synonym1,accession_synonym001))</li>
+% if (exists($editable_stock_props->{'location_code'})){
+                    <li>location_code(s) (location code(s) for the accession. many can be uploaded at once in comma separated list)</li>
+% }
+% if (exists($editable_stock_props->{'ploidy_level'})){
+                    <li>ploidy_level(s) (a number indicating the ploidy (e.g. 2 for diploid, 3 for triploid), numeric. many values can be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'genome_structure'})){
+                    <li>genome_structure(s) (genome structure(s) for accession which take into account ploidy and ancestral genome info e.g. AAA, AB. many can be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'variety'})){
+                    <li>variety(s) (variety can be defined as a group of individuals or plants having similar traits that can be reproduced "true to type" from generation to generation. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'donor'})){
+                    <li>donor(s) (the accession_name of the donor accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'donor institute'})){
+                    <li>donor_institute(s) (the institute of the donor accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'donor PUI'})){
+                    <li>donor_PUI(s) (the permanent unique identifier of the donor accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'country of origin'})){
+                    <li>country_of_origin(s) (the country of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'state'})){
+                    <li>state(s) (the state of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'institute code'})){
+                    <li>institute_code(s) (the institute code of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'institute name'})){
+                    <li>institute_name(s) (the institute name of origin. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'biological status of accession code'})){
+                    <li>biological_status_of_accession_code(s) (code indicating the state of accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'notes'})){
+                    <li>notes(s) (free text for notes. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'accession number'})){
+                    <li>accession_number(s) (accession number for accession from germplasm bank. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'PUI'})){
+                    <li>PUI(s) (permanent unique identifier of the accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'seed source'})){
+                    <li>seed_source(s) (origin of seed source. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'type of germplasm storage code'})){
+                    <li>type_of_germplasm_storage_code(s) (code indicating the type of germplasm storage. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'acquisition date'})){
+                    <li>acquisition_date(s) (date(s) of acquisition YYYYMMDD for accession. may be uploaded as comma separated list.)</li>
+% }
+% if (exists($editable_stock_props->{'transgenic'})){
+                    <li>transgenic (indicates if accession is transgenic. Please indicate 1 if transgenic and empty if otherwise.)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_parent'})){
+                    <li>introgression_parent (if the accession you are adding has an introgression that originated from one of the parents, you can specify the parent here)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_backcross_parent'})){
+                    <li>introgression_backcross_parent (the backcross parent for introducing an introgression into the accession being added)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_map_version'})){
+                    <li>introgression_map_version (the map version for identifying the start and stop position of the introgression. e.g. AGPv2)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_chromosome'})){
+                    <li>introgression_chromosome (the chromosome number that the introgression is on.)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_start_position_bp'})){
+                    <li>introgression_start_position_bp (the start position of the introgression in base pairs)</li>
+% }
+% if (exists($editable_stock_props->{'introgression_end_position_bp'})){
+                    <li>introgression_start_position_bp (the end position of the introgression in base pairs)</li>
+% }
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewAbsentDialog">Accessions to be Added</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="add_accessions_using_list_inputs" style="display:none">
+                <label for="species_name_input">Species name for added accessions</label>
+                <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
+                <br><br>
+                <label for="population_name_input">Population name for added accessions (optional)</label>
+                <input class="form-control" type="text" id="population_name_input"></input>
+                <br><br>
+                <label for="organization_name_input">Organization name for added accessions (optional)</label>
+                <input class="form-control" type="text" id="organization_name_input"></input>
+                <br><br>
+                <b>The following accessions are new and will be added to the database:</b>
+                <div id="count_of_absent_accessions"></div>
+                <br>
+                <div id="view_absent"></div>
+            </div>
+            <div id="view_infoToAdd"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit">Add Accessions</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <b>Accessions were found with similar names.</b>
+  	  <br/><br/>
+  	  <div id="view_fuzzy_matches"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download">Download Fuzzy Matches</button>
+        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="reviewFoundDialog">Found Accessions</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <b>The following accessions already exist in the database:</b>
+  	  <div id="count_of_found_accessions"></div>
+  	  <br/>
+  	  <div id="view_found_matches"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="add_accessions_saved_message_modal" name="add_accessions_saved_message_modal" tabindex="-1" role="dialog" aria-labelledby="addAccessionsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAccessionsSavedDialog">Accessions Saved</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="add_accessions_saved_message"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_add_accessions_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="add_accession_fuzzy_match_download" method="post" action="/ajax/accession_list/fuzzy_download" target="TheWindow">
+    <input type="hidden" name="fuzzy_response" value="" />
+</form>
+
+<style>
+.ui-autocomplete {
+  max-height: 100px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 100px;
+}
+</style>

@@ -12,6 +12,8 @@ use Storable qw/ nstore retrieve /;
 use solGS::AnalysisReport;
 use Carp qw/ carp confess croak /;
 
+
+
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
 
@@ -20,37 +22,37 @@ has "dependency_jobs" => (
     is       => 'ro',
     isa      => 'Str',
     required => 1, 
- );
+    );
 
 has "dependency_type" => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 1, 
- );
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1, 
+    );
 
 has "dependent_type" => (
-     is       => 'ro',
-     isa      => 'Str',
+    is       => 'ro',
+    isa      => 'Str',
     required  => 1,
- );
+    );
 
 has "temp_file_template" => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 1, 
- );
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1, 
+    );
 
 has "analysis_report_args_file" => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 1, 
- );
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1, 
+    );
 
 has "temp_dir" => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 1, 
- );
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1, 
+    );
 
 has "r_script"   => (
      is       => 'ro',
@@ -59,17 +61,22 @@ has "r_script"   => (
  );
 
 has "script_args" => (
-     is       => 'ro',
-     isa      => 'ArrayRef',
-     required => 0, 
+    is       => 'ro',
+    isa      => 'ArrayRef',
+    required => 0, 
  );
 
 has "gs_model_args_file" => (
-     is       => 'ro',
-     isa      => 'Str',
-     required => 0, 
- );
+    is       => 'ro',
+    isa      => 'Str',
+    required => 0, 
+    );
 
+has "job_config_file" => (
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+    );
 
 
 sub run {
@@ -105,10 +112,10 @@ sub run {
 	    $all_jobs_done = $self->run_dependent_job();
 	}
     }
-    
+   
     if ($all_jobs_done || $job_type =~ /send_analysis_report/) 
     {
-	$self->send_analysis_report();
+	  $self->send_analysis_report();	  	  
     }
     
 }
@@ -141,16 +148,13 @@ sub check_prerequisite_jobs {
 	no warnings 'uninitialized';
 	foreach my $prerequisite_job (@prerequisite_jobs) 
 	{
-	     my @job_stdout;
-	     my $check;
-
-	     @job_stdout = qx /qstat -f $prerequisite_job 2>&1/;
-	     $check = 'qstat: Unknown Job Id ' . $prerequisite_job;
+	    my $job_stdout = qx /squeue --job=$prerequisite_job 2>&1/;
+	    my $check = "squeue: error: Invalid job id: $prerequisite_job";
 	 
-	     if (@job_stdout && $job_stdout[0] =~ /^($check)/) 
-	     {
-		 @prerequisite_jobs = grep {$_ ne $prerequisite_job} @prerequisite_jobs;
-	     }
+	    if ($job_stdout =~ /^($check)/) 
+	    {
+		@prerequisite_jobs = grep {$_ ne $prerequisite_job} @prerequisite_jobs;
+	    }
 	}
 
 	if (scalar(@prerequisite_jobs) == 0) 
@@ -161,7 +165,7 @@ sub check_prerequisite_jobs {
 	else
 	{
 	    my ($sec, $min, $now_hr) = localtime();
-	    if ($now_hr == $start_hr + 2 ) 
+	    if ($now_hr == $start_hr + 2) 
 	    { 
 		last;
 	    }
@@ -176,20 +180,19 @@ sub check_prerequisite_jobs {
 }
 
 
-sub create_cluster_acccesible_tmp_files {
+sub create_cluster_accesible_tmp_files {
     my ($self, $temp_file_template)  = @_;
 
     $temp_file_template = $self->temp_file_template if !$temp_file_template;
     my $working_dir     = $self->temp_dir;
 
-    CXGN::Tools::Run->temp_base($working_dir);
     my ( $in_file_temp, $out_file_temp, $err_file_temp) =
         map 
     {
         my ( undef, $filename ) =
             tempfile(
                 catfile(
-                    CXGN::Tools::Run->temp_base(),
+                    $working_dir,
                     "${temp_file_template}-$_-XXXXXX",
                 ),
             );
@@ -244,7 +247,8 @@ sub run_dependent_job {
       $modeling_done = 1;          
   } 
   elsif ($dependency_type =~ /download_data/)
-  {
+  {     
+      if ($self->r_script =~ /gs/) {
       sleep 30;
       my $model_job = $self->run_model();
      
@@ -254,7 +258,10 @@ sub run_dependent_job {
 	  sleep 30 if $model_job->alive();
       } 
       
-      $modeling_done = 1;          
+      $modeling_done = 1;  
+      } else {
+	  $self->send_analysis_report();	  
+      }        
   } 
   else
   {
@@ -270,25 +277,33 @@ sub run_dependent_job {
 sub combine_populations {
     my $self = shift;
     
-    my $temp_dir      = $self->temp_dir;  
-    my $cluster_files = $self->create_cluster_acccesible_tmp_files();
+    my $temp_dir      = $self->temp_dir;     
     my $r_script      = $self->r_script;
     my $args          = $self->script_args;
-    my $output_file   = $cluster_files->{out_file_temp};
+    
+    my $cluster_files = $self->create_cluster_accesible_tmp_files();
+    my $out_file      = $cluster_files->{out_file_temp};
+    my $err_file      = $cluster_files->{err_file_temp};
 
-    my $combine_job = CXGN::Tools::Run->run_cluster('R', 'CMD', 'BATCH', 
-						    '--slave', 
-						    "--args $args->[0] $args->[1]", 
-						    $r_script, 
-						    $output_file, 
-						    {
-							temp_base   => $temp_dir,
-							working_dir => $temp_dir,
-							max_cluster_jobs => 1_000_000_000,
-							err_file => $cluster_files->{err_file_temp},
-						    });
+    my $config = $self->create_cluster_config($temp_dir, $out_file, $err_file);
 
-    return $combine_job;
+    my $cmd = "Rscript --slave $r_script $out_file --args $args->[0] $args->[1]";
+
+    my $job;
+    eval 
+    {
+	$job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);	 
+	$job->is_async(1);
+	$job->run_cluster($cmd);
+	   
+    };
+
+    if ($@) {
+	print STDERR "An error occurred! $@\n";
+    }
+  
+    return $job;
 
 }
 
@@ -301,61 +316,101 @@ sub run_model {
     my $gs_args       = retrieve($gs_model_file);
  
     ## add checks for gs-args
+    my $cluster_files = $self->create_cluster_accesible_tmp_files();
+    my $out_file      = $cluster_files->{out_file_temp};
+    my $err_file      = $cluster_files->{err_file_temp};
+    
+    my $config = $self->create_cluster_config($temp_dir, $out_file, $err_file);
 
-    my $model_job = CXGN::Tools::Run->run_cluster('R', 'CMD', 'BATCH', 
-						  '--slave', 
-						  "--args $gs_args->{input_files} $gs_args->{output_files}", 
-						  $gs_args->{r_command_file}, 
-						  $gs_args->{r_output_file}, 
-						  {
-						      temp_base   => $temp_dir,
-						      working_dir => $temp_dir,
-						      max_cluster_jobs => 1_000_000_000,
-						      err_file => $gs_args->{err_file_temp},
-						  });
+    my $script_file  = $gs_args->{r_command_file};
+    my $script_out   = $gs_args->{r_output_file};
+    my $input_files  = $gs_args->{input_files};
+    my $output_files = $gs_args->{output_files};
+    
+    my $cmd = "Rscript --slave  $script_file $script_out "
+	. " --args $input_files $output_files";
+					        
+    my $job; 
+    eval 
+    {
+	$job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);	 
+	$job->is_async(1);
+	$job->run_cluster($cmd);
+	   
+    };
 
-    return $model_job;
+    if ($@) {
+	print STDERR "An error occurred! $@\n";
+    }
+  
+    return $job;
 
 }
 
 
+sub create_cluster_config {
+    my ($self, $temp_dir, $out_file, $err_file) = @_;
+
+    my $job_config_file = $self->job_config_file;
+    my $job_config      = retrieve($job_config_file);
+ 
+    my $config = {
+	backend          => $job_config->{backend},
+	temp_base        => $temp_dir,
+	queue            => $job_config->{web_cluster_queue},
+	max_cluster_jobs => 1_000_000_000,
+	out_file         => $out_file,
+	err_file         => $err_file,
+	is_async         => 0,
+	do_cleanup       => 0,
+    };
+
+    return $config;
+}
+
 
 sub check_analysis_status {
     my $self = shift;
-    
+
     my $temp_dir       = $self->temp_dir;
     my $report_file    = $self->analysis_report_args_file;
-    my $cluster_files  = $self->create_cluster_acccesible_tmp_files('analysis-status');
     my $output_details = retrieve($report_file);   
-   
-    # my $host           = $output_details->{host};
-    # my $analysis_profile = $output_details->{analysis_profile};
-    # my $analysis_page    = $analysis_profile->{analysis_page};
-    # my $async_pid      = $output_details->{async_pid};
-   
-    my $report_job = CXGN::Tools::Run->run_cluster_perl({           
-	method        => ["solGS::AnalysisReport" => "check_analysis_status"],
-	args          => [$output_details],
-	load_packages => ['solGS::AnalysisReport'],
-	run_opts      => {
-	    out_file    => $cluster_files->{out_file_temp},
-	    err_file    => $cluster_files->{err_temp_file},
-	    working_dir => $temp_dir,
-	    temp_base   => $temp_dir,
-	    max_cluster_jobs => 1_000_000_000,
-	}});
 
-    return $report_job;
+    my $cluster_files = $self->create_cluster_accesible_tmp_files('analysis-status');
+    my $out_file      = $cluster_files->{out_file_temp};
+    my $err_file      = $cluster_files->{err_file_temp};
+   
+    #my $config = $self->create_cluster_config($temp_dir, $out_file, $err_file);
+
+    my $cmd = "mx-run solGS::AnalysisReport --output_details_file $report_file";
+    
+    my $job; 
+    eval 
+    {
+    	$job = CXGN::Tools::Run->new();
+    	$job->do_not_cleanup(1);
+	 
+    	$job->is_async(1);
+    	$job->run_async($cmd);
+	   
+    };
+
+    if ($@) {
+    	print STDERR "An error occurred! $@\n";
+    }
+
+    return $job;
 
 }
 
 
 sub send_analysis_report {
     my $self = shift;
-
-    sleep 120;
+   
+    sleep 10;
     my $report_job = $self->check_analysis_status();
-  
+ 
     while (1) 
     {	 
 	last if !$report_job->alive();

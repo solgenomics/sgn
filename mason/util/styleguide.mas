@@ -1,0 +1,683 @@
+<h3>Importing CSS</h3>
+
+<p>
+  To import CSS one should use the <code>/util/import_css.mas</code> 
+  mason component instead of a <code>&lt;link&gt;</code> element. This will 
+  ensure that a link is added to the <code>&lt;head&gt;</code> 
+  instead of being part of the <code>&lt;body&gt;</code>. One provides this 
+  mason componant with a list of strings which are one of the following:
+  <ul>
+    <li>The relative path to the CSS file from the /static/css folder.</li>
+    <li>The absolute site path to the CSS file.</li>
+    <li>A URL starting with the scheme name (i.e. 'http://...').</li>
+  </ul>
+    <pre><%text><& /util/import_css.mas, paths => [
+    'bootstrap/v1.css',
+    '/css/jquery.css',
+    'http://foo.bar/buzz.css'
+] &></%text></pre>
+</p>
+
+<hr>
+
+<h3>Importing JavaScript</h3>
+
+<p>
+  To import JavaScript one should use the <code>/util/import_javascript.mas</code> 
+  mason component. This will ensure that the script is loaded in the 
+  <code>&lt;head&gt;</code> instead of being part of the 
+  <code>&lt;body&gt;</code>. One provides this mason componant with a list of 
+  strings which are the path to the JavaScript file with slashes replaced by 
+  periods (e.g. <code>s/\/\./g</code>) and the file extension removed.
+  <pre><%text><& /util/import_javascript.mas, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &></%text></pre>
+</p>
+
+<hr>
+
+<h3>Info Sections</h3>
+<p>Source:</p>
+<pre><%text>
+&lt;&| /page/info_section.mas, id=&gt;'Example_Info_Section', 
+    title =&gt; 'Example Info Section', subtitle =&gt; 'This is a subtitle', 
+    collapsible=&gt;1, collapsed=&gt;0 &&gt;
+    
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+  
+&lt;/&&gt;
+</%text></pre>
+
+<p>Creates:</p>
+<&| /page/info_section.mas, id=>'Example_Info_Section', 
+    title => 'Example Info Section', subtitle => 'This is a subtitle', 
+    collapsible=>1, collapsed=>0 &>
+    
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+  
+</&>
+
+<hr>
+
+<h3>List Select Menus</h3>
+<p>Source:</p>
+<pre>
+  &lt;& /util/import_javascript.mas, classes => ['CXGN.List'] &&gt;
+  &lt;div id="select_div_id"&gt;&lt;/div&gt;
+  &lt;script type="text/javascript"&gt;
+    var list_obj = new CXGN.List();
+    var listhtml = list_obj.listSelect('select_div_id', ['accessions'], "Select an Accession List");
+    jQuery('#select_div_id').html(listhtml);
+  &lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div id="select_div_id"></div>
+<script type="text/javascript">
+  var lo = new CXGN.List();
+  var listhtml = lo.listSelect('select_div_id', ['accessions'], "Select an Accession List");
+  jQuery('#select_div_id').html(listhtml);
+</script>
+<hr>
+
+<h3>HTML Selects (get_select_box)</h3>
+<p>Source:</p>
+<pre>
+&lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
+&lt;div id="htmlselectexample"&gt;&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    get_select_box("trials", "htmlselectexample")
+&lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div id="htmlselectexample"></div>
+<script type="text/javascript">
+    get_select_box("trials", "htmlselectexample")
+</script>
+
+<hr>
+
+<h3>HTML Muliple Selects (get_select_box has many options e.g. search for trials in breeding_program_name)</h3>
+<p>Source:</p>
+<pre>
+&lt;& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &&gt;
+&lt;div id="htmlselectmultipleexample"&gt;&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    get_select_box("trials", "htmlselectmultipleexample", {'multiple':1, 'size':10, 'breeding_program_name':'test'})
+&lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div id="htmlselectmultipleexample"></div>
+<script type="text/javascript">
+    get_select_box("trials", "htmlselectmultipleexample", {'multiple':1, 'size':10, 'breeding_program_name':'test'})
+</script>
+
+<hr>
+
+<h3>Add to List Menu</h3>
+<p>Source:</p>
+<pre>
+&lt;div id="styleguide_add_to_list_menu"&gt;&lt;/div&gt;
+&lt;div id="styleguide_add_to_list_items" style="display:none"&gt;item1
+    item2
+    item3
+&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+    addToListMenu("styleguide_add_to_list_menu", "styleguide_add_to_list_items", {
+        listType:'accessions'
+    });
+&lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div id="styleguide_add_to_list_menu"></div>
+<div id="styleguide_add_to_list_items" style="display:none">item1
+    item2
+    item3
+</div>
+<script type="text/javascript">
+    addToListMenu("styleguide_add_to_list_menu", "styleguide_add_to_list_items", {
+        listType:'accessions'
+    });
+</script>
+
+<hr>
+
+<h3>jQueryUI autocomplete</h3>
+<p>Source:</p>
+<pre>
+&lt;input type="text" class="form-control" id="popname" value="" placeholder="Populations autocomplete..."&gt;
+&lt;script type="text/javascript"&gt;
+    jQuery('#popname').autocomplete({
+        source: '/ajax/stock/population_autocomplete',
+    });
+&lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<input type="text" class="form-control" id="popname" value="" placeholder="Populations autocomplete...">
+<script type="text/javascript">
+  jQuery('#popname').autocomplete({
+    source: '/ajax/stock/population_autocomplete',
+  });
+</script>
+
+<hr>
+
+<h3>An Example Workflow Explaining Workflows</h3>
+
+<&| /util/workflow.mas , id=> "my_workflow"&>
+
+  <&| /util/workflow.mas:step, title=>"workflow.mas" &>
+    <p>Add a workflow using the <code>/util/workflow.mas</code> mason component</p>
+    <p><pre><%text>&lt;&amp;| /util/workflow.mas, id=> "my_workflow" &amp;&gt;...&lt;/&amp;&gt;</%text></pre></p>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Adding Steps" &>
+    <p>Add steps to the workflow using the <code>/util/workflow.mas:step</code> mason method.</p>
+    <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow" &amp;&gt;
+    &lt;&amp;| /util/workflow.mas:step, title=&gt; "Step A" &amp;&gt;...&lt;/&amp;&gt;
+    &lt;&amp;| /util/workflow.mas:step, title=&gt; "Another Step" &amp;&gt;...&lt;/&amp;&gt;
+    ...
+&lt;/&amp;&gt;</%text></pre>
+    </p>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Completing Steps" &>
+  <p>
+    Use the <code>Workflow.complete(Element)</code> JavaScript function to 
+    complete a step. <code>Element</code> should be any DOM element within the 
+    step you would like to complete.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:step, title=&gt;"workflow.mas" &amp;&gt;
+    ...
+    &lt;button type="button" onclick="Workflow.complete(this);"&gt;Next&lt;/button&gt;
+  &lt;/&amp;&gt;
+  ...
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Skipping Steps" &>
+  <p>
+    Skipping works like completing but marks the step as incomplete. Use
+    <code>Workflow.skip(Element)</code> just like you would 
+    <code>Workflow.complete(Element)</code>.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:step, title=&gt;"workflow.mas" &amp;&gt;
+    ...
+    &lt;button type="button" onclick="Workflow.skip(this);"&gt;Skip&lt;/button&gt;
+  &lt;/&amp;&gt;
+  ...
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button type="button" class="btn btn-default" onclick="Workflow.skip(this);">Skip this Step</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Pending Steps" &>
+  <p>
+    Sometimes a step needs time to complete, such as uploads. You can mark a
+    step as pending using <code>Workflow.pending(Element)</code>. You can later
+    fully complete the step using <code>Workflow.complete(Element)</code>.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:step, title=&gt;"workflow.mas" &amp;&gt;
+    ...
+    &lt;button type="button" onclick="Workflow.pending(this);"&gt;Wait&lt;/button&gt;
+    &lt;button type="button" onclick="Workflow.complete(this,false);"&gt;Complete&lt;/button&gt;
+  &lt;/&amp;&gt;
+  ...
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button id="to_complete" type="button" class="btn btn-primary" onclick="Workflow.pending(this);">Wait and Continue</button>
+  </&>
+  
+  <&| /util/workflow.mas:step, title=>"Endscreens" &>
+  <p>
+    After the final step is completed, an endscreen will be shown. To set the 
+    content of the endscreen, use the <code>/util/workflow.mas:complete</code> 
+    mason method. You can also optionally set a special endscreen which is shown
+    instead while there are pending steps using 
+    <code>/util/workflow.mas:pending</code>.
+  </p>
+  <p>
+<pre><%text>&lt;&amp;| /util/workflow.mas, id=&gt; "my_workflow"&amp;&gt;
+  ...
+  &lt;&amp;| /util/workflow.mas:complete &amp;&gt; ... &lt;/&amp;&gt;
+  &lt;&amp;| /util/workflow.mas:pending &amp;&gt; ... &lt;/&amp;&gt;
+&lt;/&amp;&gt;</%text></pre>
+  </p>
+  <button type="button" class="btn btn-default" onclick="Workflow.complete(this);">Go to endscreen</button>
+  </&>
+  
+  <&| /util/workflow.mas:pending &>
+    <h2>There is still a pending step. Complete it to see the final endscreen.</h2>
+    <button type="button" class="btn btn-default" onclick="Workflow.complete(document.querySelector('#to_complete'),false);">Complete Pending Step</button>
+  </&>
+  <&| /util/workflow.mas:complete &>
+    <h1>Congratulations, you've made it through the workflow!</h1>
+    <h4>Here are some other tips and tricks:</h4>
+    <p>To set the currently visible step of the workflow use</p>
+    <pre>var wf = document.querySelector("#my_workflow");
+Workflow.focus(wf,step_index);</pre>
+    <p>
+      By default, <code>Workflow.complete(...)</code>, 
+      <code>Workflow.skip(...)</code>, and <code>Workflow.pending(...)</code> 
+      also change the focus to the next step. Sometimes, you need to set a step 
+      to complete without changing the focus. To do this, pass 
+      <code>false</code> as the second argument.
+    </p>
+    <pre>Workflow.complete(Element,false);
+Workflow.skip(Element,false);
+Workflow.pending(Element,false);</pre>
+  </&>
+</&>
+
+<hr>
+
+<h3>Vega(-lite) Graphs</h3>
+
+<p>
+    Using <a href="https://vega.github.io/vega-lite/">vega-lite</a> is an easy and quick way to make graphs in the db. Simply include vega-lite:
+    <pre><%text><& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &></%text></pre>
+    set up a div:
+<pre><%text>&lt;div id="vis"&gt;&lt;/div&gt;</%text></pre>
+    and then run vega-lite (you can also use a <a href="https://vega.github.io/vega/">vega</a> graph spec): 
+<pre><%text>&lt;script type="text/javascript"&gt;
+    var yourVlSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
+      "description": "A simple bar chart with embedded data.",
+      "data": {
+        "values": [
+          {"a": "A","b": 28}, {"a": "B","b": 55}, {"a": "C","b": 43},
+          {"a": "D","b": 91}, {"a": "E","b": 81}, {"a": "F","b": 53},
+          {"a": "G","b": 19}, {"a": "H","b": 87}, {"a": "I","b": 52}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "a", "type": "ordinal"},
+        "y": {"field": "b", "type": "quantitative"}
+      }
+    }
+    vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
+  &lt;/script&gt;</%text></pre>
+</p>
+to create:
+<& /util/import_javascript.mas, classes => [qw[ vega.vega3 vega.vega-lite2 vega.vega-embed3 vega.vega-defaults ]] &>
+<div>
+  <div id="vis"></div>
+</div>
+<script type="text/javascript">
+    var yourVlSpec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v2.0.json",
+      "description": "A simple bar chart with embedded data.",
+      "data": {
+        "values": [
+          {"a": "A","b": 28}, {"a": "B","b": 55}, {"a": "C","b": 43},
+          {"a": "D","b": 91}, {"a": "E","b": 81}, {"a": "F","b": 53},
+          {"a": "G","b": 19}, {"a": "H","b": 87}, {"a": "I","b": 52}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "a", "type": "ordinal"},
+        "y": {"field": "b", "type": "quantitative"}
+      }
+    }
+    vegaEmbed("#vis", yourVlSpec, window.VEGA_DEFAULTS);
+</script>
+
+<hr>
+
+<h3>Field Trials Search Datatable</h3>
+<p>Source:</p>
+<pre>
+    &lt;div class="well"&gt;
+    &lt;table id="trial_search_results" width="100%" class="table table-hover table-striped"&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th&gt;Trial name&lt;/th&gt;
+        &lt;th&gt;Description&lt;/th&gt;
+        &lt;th&gt;Breeding program&lt;/th&gt;
+        &lt;th&gt;Folder&lt;/th&gt;
+        &lt;th&gt;Year&lt;/th&gt;
+        &lt;th&gt;Location&lt;/th&gt;
+        &lt;th&gt;Trial type&lt;/th&gt;
+        &lt;th&gt;Design&lt;/th&gt;
+        &lt;th&gt;Planting Date&lt;/th&gt;
+        &lt;th&gt;Harvest Date&lt;/th&gt;
+        &lt;th&gt;Download&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;/table&gt;
+    &lt;/div&gt;
+    &lt;script type="text/javascript"&gt;
+    var trial_table = jQuery('#trial_search_results').DataTable( {
+        'ajax': {
+            'url':'/ajax/search/trials',
+            'data': function(d) {
+                d.select_checkbox_name = 'create_tissue_sample_select_trial';
+            }
+        }
+    });
+    &lt;/script&gt;
+</pre>
+
+<p>Creates:</p>
+<div class="well">
+<table id="styleguide_trial_search_results" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Select</th>
+    <th>Trial name</th>
+    <th>Description</th>
+    <th>Breeding program</th>
+    <th>Folder</th>
+    <th>Year</th>
+    <th>Location</th>
+    <th>Trial type</th>
+    <th>Design</th>
+    <th>Planting Date</th>
+    <th>Harvest Date</th>
+    <th>Download</th>
+</tr>
+</thead>
+</table>
+</div>
+<script type="text/javascript">
+var styleguide_trial_table = jQuery('#styleguide_trial_search_results').DataTable( {
+    'ajax': {
+        'url':'/ajax/search/trials',
+        'data': function(d) {
+            d.select_checkbox_name = 'styleguide_select_trial';
+        }
+    }
+});
+</script>
+
+<hr>
+
+<h3>Use of Symbols</h3>
+
+<p>
+  Below is a table with current usages of symbols in the database. 
+  Please add to this tale when you choose to use a new symbol.
+</p>
+<style media="screen">
+  .symbol-table>tbody>tr>td{
+    vertical-align: middle;
+  }
+  .symbol-table>tbody>tr>td:first-of-type>*{
+    font-size:2.5em;
+  }
+</style>
+<table class="table symbol-table">
+  <tr>
+    <th>Symbol</th>
+    <th>Usages and contexts</th>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-dashboard"></span></td>
+    <td>
+      <ul>
+        <li>Trial Details Top Section[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-align-left"></span></td>
+    <td>
+      <ul>
+        <li>JBrowse[Trial Detail]</li>
+        <li>JBrowse[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-book"></span></td>
+    <td>
+      <ul>
+        <li>Literature Annotation[Stock Detail]</li>
+        <li>Upload Phenotype Data[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-briefcase"></span></td>
+    <td>
+      <ul>
+        <li>Breeding Program Symbol[Manage Trials]</li>
+        <li>Breeding Program Symbol[Manage Crosses]</li>
+        <li>Breeding Program Symbol[Manage Genotyping Plates]</li>
+        <li>Breeding Program Symbol[Folder Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-folder-open"></span></td>
+    <td>
+      <ul>
+        <li>Folder Symbol[Manage Trials]</li>
+        <li>Folder Symbol[Manage Crosses]</li>
+        <li>Folder Symbol[Manage Genotyping Plates]</li>
+        <li>Folder Symbol[Folder Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-camera"></span></td>
+    <td>
+      <ul>
+        <li>Images[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-transfer"></span></td>
+    <td>
+      <ul>
+        <li>Data Transfer[Manage ODK]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-cloud"></span></td>
+    <td>
+      <ul>
+        <li>Weather Data[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-equalizer"></span></td>
+    <td>
+      <ul>
+        <li>Stored Phenotypes[Trial Detail]</li>
+        <li>Traits assayed[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-inbox"></span></td>
+    <td>
+      <ul>
+        <li>Data Agreement[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-info-sign"></span></td>
+    <td>
+      <ul>
+        <li>Additional Information[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-leaf"></span></td>
+    <td>
+      <ul>
+        <li>Experiment Usage[Stock Detail]</li>
+        <li>Trial Symbol[Manage Trials]</li>
+        <li>Trial Symbol[Folder Detail]</li>
+        <li>Field Trial Section[Manage Tissue Samples]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-link"></span></td>
+    <td>
+      <ul>
+        <li>Experiment Linkage[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-list-alt"></span></td>
+    <td>
+      <ul>
+        <li>Experiment Design[Trial Detail]</li>
+        <li>Catalog Seed Inventory[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-flash"></span></td>
+    <td>
+      <ul>
+        <li>Design New Trial[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-cloud-upload"></span></td>
+    <td>
+      <ul>
+        <li>Upload Data Files[Trial Detail]</li>
+        <li>Upload Trial[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-floppy-save"></span></td>
+    <td>
+      <ul>
+        <li>Compute New Phenotypes[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-pencil"></span></td>
+    <td>
+      <ul>
+        <li>Record Phenotypes[Trial Detail]</li>
+        <li>Comments[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-qrcode"></span></td>
+    <td>
+      <ul>
+        <li>Barcode[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-random"></span></td>
+    <td>
+      <ul>
+        <li>Pedigree[Stock Detail]</li>
+        <li>Upload Crosses[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-flag"></span></td>
+    <td>
+      <ul>
+        <li>Plan Tissue Sampling[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-tags"></span></td>
+    <td>
+      <ul>
+        <li>Print Barcode Labels[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-map-marker"></span></td>
+    <td>
+      <ul>
+        <li>Genotype Marker Data[Stock Detail]</li>
+        <li>Upload VCF Genotype Data[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-retweet"></span></td>
+    <td>
+      <ul>
+        <li>Related Stocks[Stock Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-grain"></span></td>
+    <td>
+      <ul>
+        <li>Crosses Symbol[Manage Crosses]</li>
+        <li>Crosses Symbol[Folder Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-signal"></span></td>
+    <td>
+      <ul>
+        <li>Analysis[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-th"></span></td>
+    <td>
+      <ul>
+        <li>Field Layout and Heatmap[Trial Detail]</li>
+        <li>Add Genotyping Plate (96 or 384 well plate)[Homepage Help]</li>
+        <li>Genotyping Plate Symbol(96 or 384 well plate)[Manage Genotyping Plates]</li>
+        <li>Genotyping Plate Symbol(96 or 384 well plate)[Folder Detail]</li>
+        <li>Genotyping Plates Section[Manage Tissue Samples]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-blackboard"></span></td>
+    <td>
+      <ul>
+        <li>Analyze Phenotypes[Homepage Help]</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="glyphicon glyphicon-trash"></span></td>
+    <td>
+      <ul>
+        <li>Deletion[Trial Detail]</li>
+      </ul>
+    </td>
+  </tr>
+</table>

@@ -1,0 +1,283 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+<div class="modal fade" id="field_trial_tissue_sample_dialog" name="field_trial_tissue_sample_dialog" tabindex="-1" role="dialog" aria-labelledby="addFieldTrialTissueSampleDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addFieldTrialTissueSampleDialog">Create Tissue Samples for a Field Trial</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "field_tissue_samples_create_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through creating tissue samples for your field trial" &>
+                            <p>Tissue samples are linked to a single plant, which is in turn linked to a single plot.</p>
+                            <p>Many tissue samples can be created for each plant.</p>
+                            <p>Each tissue sample needs a globally unique name.</p>
+                            <p>Tissue samples can then be transferred into genotyping plates (96 or 384 well plates).</p>
+
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Select a field trial" &>
+                            <& /page/page_title.mas, title=>"Select a field trial" &>
+
+                            <div class="well well-sm">
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <table id="manage_tissue_samples_field_search_results" class="table table-hover table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Select</th>
+                                                    <th>Trial name</th>
+                                                    <th>Description</th>
+                                                    <th>Breeding program</th>
+                                                    <th>Folder</th>
+                                                    <th>Year</th>
+                                                    <th>Location</th>
+                                                    <th>Trial type</th>
+                                                    <th>Design</th>
+                                                    <th>Planting Date</th>
+                                                    <th>Harvest Date</th>
+                                                    <th>Download</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" id="create_tissue_samples_select_trial">Go to Next Step</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Plant Entries" &>
+                            <& /page/page_title.mas, title=>"Plant entries in your field trial" &>
+
+                            <div id="create_tissue_samples_plant_entries_exist_section" style="display:none">
+                                <h4>Plant entries exist for this trial. Go to next step.</h4>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </div>
+                            <div id="create_tissue_samples_plant_entries_dont_exist_section" style="display:none">
+                                <h4>Please create plant entries for this trial.</h4>
+                                <form class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Number of plants per plot: </label>
+                                        <div class="col-sm-9" >
+                                            <input name="create_tissue_samples_plants_per_plot_num" id="create_tissue_samples_plants_per_plot_num" class="form-control" type="number" autofocus/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                        <div class="col-sm-9" >
+                                            <input name="create_tissue_samples_plants_per_plot_inherit_treatments" id="create_tissue_samples_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
+                                        </div>
+                                    </div>
+                                </form><br/>
+                                <center>
+                                    <button type="button" class="btn btn-primary" id="create_tissue_samples_plants_per_plot_submit">Submit</button>
+                                </center>
+                            </div>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Create Tissue Sample Entries" &>
+                            <& /page/page_title.mas, title=>"Create tissue sample entries for this trial" &>
+
+                            <form class="form-horizontal" >
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"><span title="You can use the same tissue name, e.g. root and root, more than once below. The tissue name will still be unique because of a tissue index e.g. 1 and 2 added to the end." </span><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Number of tissue samples per plant: </span></label>
+                                    <div class="col-sm-9" >
+                                        <input name="create_tissue_samples_per_plant_num" id="create_tissue_samples_per_plant_num" class="form-control" type="text" autofocus/>
+                                    </div>
+                                </div>
+
+                                <div id="create_tissue_samples_names_div">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                    <div class="col-sm-9" >
+                                        <input name="create_tissue_samples_per_plant_inherit_treatments" id="create_tissue_samples_per_plant_inherit_treatments" type="checkbox" checked disabled/>
+                                    </div>
+                                </div>
+                            </form><br/>
+                            <center>
+                            <button type="button" class="btn btn-primary" name="create_tissue_samples_plants_per_plant_submit" id="create_tissue_samples_plants_per_plant_submit">Submit</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Complete! Your field trial's tissue samples were saved." &>
+
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                Tissue samples saved successfully
+                            </p>
+
+                            <ul>
+                                <li>You may want to go to the trial detail page for the trial now that it has plants.</li>
+                                <li>You can print barcodes for the new tissue samples.</li>
+                                <li>You can use these tissue samples as source material for a genotyping plates (96 or 384 well plate)</li>
+                            </ul>
+                            <br/>
+                        </&>
+                    </&>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    var create_tissue_sample_trial_table = jQuery('#manage_tissue_samples_field_search_results').DataTable( {
+        'ajax': {
+            'url':'/ajax/search/trials',
+            'data': function(d) {
+                d.select_checkbox_name = 'create_tissue_sample_select_trial';
+            }
+        },
+        "scrollX": true
+    });
+
+    var selected;
+    jQuery('#create_tissue_samples_select_trial').click(function(){
+        selected = [];
+        jQuery('input[name="create_tissue_sample_select_trial"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length !== 1){
+            alert('Only select one trial!');
+        } else {
+            new jQuery.ajax({
+                type: 'POST',
+                url: '/ajax/breeders/trial/'+selected[0]+'/has_plants',
+                dataType: "json",
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function (response) {
+                    jQuery("#working_modal").modal("hide");
+                    if (response.has_plants){
+                        jQuery('#create_tissue_samples_plant_entries_exist_section').show();
+                        jQuery('#create_tissue_samples_plant_entries_dont_exist_section').hide();
+                        Workflow.complete('#create_tissue_samples_select_trial');
+                        Workflow.skip('#create_tissue_samples_plant_entries_exist_section');
+                        Workflow.focus("#field_tissue_samples_create_workflow", 3);
+                    } else {
+                        jQuery('#create_tissue_samples_plant_entries_dont_exist_section').show();
+                        jQuery('#create_tissue_samples_plant_entries_exist_section').hide();
+                        Workflow.complete('#create_tissue_samples_select_trial');
+                        Workflow.focus("#field_tissue_samples_create_workflow", 2);
+                    }
+                },
+                error: function () {
+                    jQuery("#working_modal").modal("hide");
+                    alert('An error occurred checking trial for plants.');
+                }
+            });
+        }
+    });
+
+    jQuery('#create_tissue_samples_plants_per_plot_submit').click(function(){
+        var is_checked;
+        if(jQuery('#create_tissue_samples_plants_per_plot_inherit_treatments').is(":checked")){
+            is_checked = 1;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+selected[0]+'/create_plant_entries/',
+            type: 'POST',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            data: {
+                'plants_per_plot' : jQuery('#create_tissue_samples_plants_per_plot_num').val(),
+                'inherits_plot_treatments' : is_checked
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert("Successfully created plant entries.");
+                    Workflow.complete('#create_tissue_samples_plants_per_plot_submit');
+                    Workflow.focus("#field_tissue_samples_create_workflow", 3);
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert("An error occurred saving plant entries");
+            },
+        });
+    });
+
+    jQuery('#create_tissue_samples_per_plant_num').keyup(function(){
+        var num_tissues = jQuery(this).val();
+        var html = '';
+        for (var i=1; i<=num_tissues; i++){
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label"><span title="The sample names will be a combination of the plant name, the tissue name you give here, and the tissue number."><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Tissue Name '+i+': </span></label><div class="col-sm-9" ><input name="create_tissue_samples_tissue_name" id="create_tissue_samples_tissue_name_'+i+'" class="form-control" type="text" placeholder="examples: leaf or root or stem" /></div></div>';
+        }
+        jQuery('#create_tissue_samples_names_div').html(html);
+    });
+
+    jQuery('#create_tissue_samples_plants_per_plant_submit').click(function(){
+        var is_checked;
+        if(jQuery('#create_tissue_samples_per_plant_inherit_treatments').is(":checked")){
+            is_checked = 1;
+        }
+
+        var tissue_names = [];
+        jQuery('input[name="create_tissue_samples_tissue_name"]').each(function() {
+            tissue_names.push(this.value);
+        });
+
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+selected[0]+'/create_tissue_samples/',
+            type: 'POST',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            data: {
+                'tissue_samples_per_plant' : jQuery('#create_tissue_samples_per_plant_num').val(),
+                'inherits_plot_treatments' : is_checked,
+                'tissue_samples_names' : JSON.stringify(tissue_names)
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert("Successfully created tissue sample entries.");
+                    Workflow.complete('#create_tissue_samples_plants_per_plant_submit');
+                    Workflow.focus("#field_tissue_samples_create_workflow", -1); //go to success
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert("An error occurred creating tissue sample entries");
+            },
+        });
+    });
+
+});
+</script>

@@ -42,6 +42,10 @@ has 'cross_type' => (isa =>'CrossType', is => 'rw', predicate => 'has_cross_type
 has 'female_parent' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_female_parent');
 has 'male_parent' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_male_parent');
 has 'selection_name' => (isa => 'Str',is => 'rw', predicate => 'has_selection_name');
+has 'female_plot' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_female_plot');
+has 'male_plot' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_male_plot');
+has 'female_plant' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_female_plant');
+has 'male_plant' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_male_plant');
 
 
 ###

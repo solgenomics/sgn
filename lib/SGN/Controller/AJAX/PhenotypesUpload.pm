@@ -29,6 +29,7 @@ use Data::Dumper;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -147,6 +148,8 @@ sub upload_phenotype_store_POST : Args(1) {
     }
 
     push @$success_status, "Metadata saved for archived file.";
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => $success_status, error => $error_status};
 }
@@ -173,8 +176,14 @@ sub _prep_upload {
     my $image_zip;
     if ($file_type eq "spreadsheet") {
         print STDERR "Spreadsheet \n";
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed
+        if ($spreadsheet_format eq 'detailed'){
+            $validate_type = "phenotype spreadsheet";
+        }
+        if ($spreadsheet_format eq 'simple'){
+            $validate_type = "phenotype spreadsheet simple";
+        }
         $subdirectory = "spreadsheet_phenotype_upload";
-        $validate_type = "phenotype spreadsheet";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
@@ -301,8 +310,8 @@ sub _prep_upload {
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
-            @plots = @{$parsed_file->{'plots'}};
-            @traits = @{$parsed_file->{'traits'}};
+            @plots = @{$parsed_file->{'units'}};
+            @traits = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -362,6 +371,8 @@ sub update_plot_phenotype_POST : Args(0) {
   $data{$plot_name}->{$trait} = [$trait_value,$timestamp];
 
   my %phenotype_metadata;
+  $phenotype_metadata{'archived_file'} = 'none';
+  $phenotype_metadata{'archived_file_type'}="direct phenotyping";
   $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
   $phenotype_metadata{'date'}="$timestamp";
   my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;

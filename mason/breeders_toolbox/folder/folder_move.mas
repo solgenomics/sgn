@@ -1,5 +1,6 @@
 
 <%args>
+$project_type => 'Trial' #Trial or Cross or Genotyping Plate
 $folder_id => undef
 $folder_name => undef
 $parent_folder_id => undef
@@ -9,6 +10,13 @@ $breeding_program_name => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
+
+% my $folder_for_trials;
+% my $folder_for_crosses;
+% my $folder_for_genotyping_trials;
+% if ($project_type eq 'Trial') { $folder_for_trials = 1; }
+% if ($project_type eq 'Genotyping Plate') { $folder_for_genotyping_trials = 1; }
+% if ($project_type eq 'Cross') { $folder_for_crosses = 1; }
 
 <div class="modal fade" id="move_folder_dialog" name="move_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="moveFolderDialog">
   <div class="modal-dialog" role="document">
@@ -84,7 +92,6 @@ $breeding_program_name => undef
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The folder was moved successfully
                     </p>
-                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
                 </div>
             </div>
             <div class="modal-footer">
@@ -120,16 +127,44 @@ jQuery(document).ready(function() {
     move_folder();
   });
 
+  jQuery('#folder_move_success_dialog_message').on('hidden.bs.modal', function () {
+      location.reload();
+  })
+
 });
 
 function breeding_program_change_move_parent_folders() {
   var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
-  get_select_box('folders', 'move_folder_parent_folder_select_div', { 'name' : 'move_folder_parent_folder_id', 'id' : 'move_folder_parent_folder_id', 'breeding_program_id' : breeding_program_id, 'empty' : 1  });
+  var folder_for_trials;
+  var folder_for_crosses;
+  var folder_for_genotyping_trials;
+% if ($folder_for_trials){
+  folder_for_trials = true;
+% }
+% if ($folder_for_crosses){
+    folder_for_crosses = true;
+% }
+% if ($folder_for_genotyping_trials){
+    folder_for_genotyping_trials = true;
+% }
+  get_select_box('folders', 'move_folder_parent_folder_select_div', { 'name' : 'move_folder_parent_folder_id', 'id' : 'move_folder_parent_folder_id', 'breeding_program_id' : breeding_program_id, 'empty' : 1, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials });
 }
 
 function breeding_program_change_move_folders() {
   var breeding_program_id = jQuery("#move_folder_breeding_program_id").val();
-  get_select_box('folders', 'move_folder_select_div', { 'name' : 'move_folder_id', 'id' : 'move_folder_id', 'breeding_program_id' : breeding_program_id });
+  var folder_for_trials;
+  var folder_for_crosses;
+  var folder_for_genotyping_trials;
+% if ($folder_for_trials){
+  folder_for_trials = true;
+% }
+% if ($folder_for_crosses){
+    folder_for_crosses = true;
+% }
+% if ($folder_for_genotyping_trials){
+    folder_for_genotyping_trials = true;
+% }
+  get_select_box('folders', 'move_folder_select_div', { 'name' : 'move_folder_id', 'id' : 'move_folder_id', 'breeding_program_id' : breeding_program_id, 'folder_for_trials' : folder_for_trials, 'folder_for_crosses' : folder_for_crosses, 'folder_for_genotyping_trials': folder_for_genotyping_trials });
 }
 
 function move_folder() {
@@ -149,9 +184,9 @@ function move_folder() {
         jQuery('#move_folder_dialog').modal("hide");
       }
       else {
+        refreshTrailJsTree(0);
         jQuery('#folder_move_success_dialog_message').modal("show");
         jQuery('#move_folder_dialog').modal("hide");
-        //location.reload();
       }
     },
     error: function(response) {

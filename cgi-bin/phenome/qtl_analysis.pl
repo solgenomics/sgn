@@ -31,7 +31,7 @@ use GD;
 use GD::Graph::bars;
 use GD::Graph::lines;
 use GD::Graph::points;
-BEGIN { local $SIG{__WARN__} = sub {}; require GD::Graph::Map }
+#BEGIN { local $SIG{__WARN__} = sub {}; require GD::Graph::Map }
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Number::Format;
@@ -40,6 +40,7 @@ use File::Copy;
 use File::Spec;
 use File::Path qw / mkpath /;
 use File::Basename;
+use File::Spec::Functions qw / catfile catdir/;
 use File::stat;
 use File::Slurp qw / read_file /;
 use Cache::File;
@@ -389,7 +390,8 @@ qq { Download population: <span><a href="/qtl/download/phenotype/$population_id"
            );
         ( $image_pheno, $title_pheno, $image_map_pheno ) = $self->
           population_distribution();
-        $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
+
+      $plot_html .= qq | <table  cellpadding = 5><tr><td> |;
         $plot_html .= $image_pheno . $image_map_pheno;
         $plot_html .= qq | </td><td> |;
         $plot_html .= $title_pheno . qq | <br/> |;
@@ -563,9 +565,12 @@ sub population_distribution
     my $basepath     = $c->get_conf("basepath");
     my $tempfile_dir = $c->get_conf("tempfiles_subdir");
 
+    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
+    $self->cache_temp_path();
+
     my $cache = CXGN::Tools::WebImageCache->new();
     $cache->set_basedir($basepath);
-    $cache->set_temp_dir( $tempfile_dir . "/temp_images" );
+    $cache->set_temp_dir( $tempfile_dir . '/temp_images');
     $cache->set_expiration_time(259200);
     $cache->set_key( "popluation_distribution" . $pop_id . $term_id );
     $cache->set_map_name("popmap$pop_id$term_id");
@@ -693,11 +698,10 @@ sub qtl_plot
     my $basepath       = $c->get_conf("basepath");
     my $tempfile_dir   = $c->get_conf("tempfiles_subdir");
 
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
+    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) = $self->cache_temp_path();
     my $cache_tempimages = Cache::File->new( cache_root => $tempimages_path );
     $cache_tempimages->purge();
-
+   
     my ( @marker,  @chr,  @pos,   @lod, @chr_qtl, @peak_markers );   
     my ( $qtl_image, $image, $image_t, $image_url, $image_html, $image_t_url,
          $thickbox, $title, $l_m, $p_m, $r_m );
@@ -828,9 +832,10 @@ sub qtl_plot
             }
 
             my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
-            $cache_qtl_plot->set_basedir($basepath);
-            $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
-            $cache_qtl_plot->set_expiration_time(259200);
+	   $cache_qtl_plot->set_basedir($basepath);
+           $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
+#	    $cache_qtl_plot->set_temp_dir( $tempimages_path);  
+          $cache_qtl_plot->set_expiration_time(259200);
             
            
            if ($self->qtl_stat_option() eq 'user params')
@@ -909,7 +914,8 @@ sub qtl_plot
             my $cache_qtl_plot_t = CXGN::Tools::WebImageCache->new();
             $cache_qtl_plot_t->set_basedir($basepath);
             $cache_qtl_plot_t->set_temp_dir( $tempfile_dir . "/temp_images" );
-            $cache_qtl_plot_t->set_expiration_time(259200);
+           # $cache_qtl_plot_t->set_temp_dir( $tempimages_path);
+	    $cache_qtl_plot_t->set_expiration_time(259200);
            
            if ($self->qtl_stat_option() eq 'user params')
            {
@@ -999,7 +1005,8 @@ sub infile_list
     my $gen_dataset_file = $population->genotype_file($c);
     my $phe_dataset_file = $population->phenotype_file($c);
     my $crosstype_file   = $self->crosstype_file();
-  
+    my $stat_file = $self->stat_files();
+
     my $input_file_list_temp =
       File::Temp->new(
                        TEMPLATE => "infile_list_${ac}_$pop_id-XXXXXX",
@@ -1031,7 +1038,7 @@ sub infile_list
     my $file_in_list = join( "\t",
                              $file_cv_in,       $file_popid,
                              $gen_dataset_file, $phe_dataset_file,
-                             $prod_permu_file, $crosstype_file);
+                             $prod_permu_file, $crosstype_file, $stat_file);
 
     open my $fi_fh, ">", $file_in or die "can't open $file_in: $!\n";
     $fi_fh->print ($file_in_list);
@@ -1078,14 +1085,14 @@ sub outfile_list
 
     my $qtl_temp = File::Temp->new(
                                  TEMPLATE => "qtl_summary_${ac}_$pop_id-XXXXXX",
-                                 DIR      => $prod_temp_path,
+                                 DIR      => $prod_cache_path,
                                  UNLINK   => 0
     );
     my $qtl_summary = $qtl_temp->filename;
 
     my $marker_temp = File::Temp->new(
                             TEMPLATE => "peak_markers_${ac}_$pop_id-XXXXXX",
-                            DIR      => $prod_temp_path,
+                            DIR      => $prod_cache_path,
                             UNLINK   => 0
     );
 
@@ -1110,10 +1117,9 @@ sub outfile_list
 
 =head2 cache_temp_path
 
- Usage: my ($rqtl_cache_path, $rqtl_temp_path, $tempimages_path) = $self->cache_temp_path();
- Desc: creates the 'r_qtl/cache' and 'r_qtl/tempfiles' subdirs in the /data/prod/tmp,              
- Ret: /data/prod/tmp/r_qtl/cache, /data/prod/tmp/r_qtl/tempfiles, 
-      /data/local/cxgn/sgn/documents/tempfiles/temp_images
+ Usage: my ($solqtl_cache, $solqtl_tempfiles, $solqtl_temp_images) = $self->cache_temp_path();
+ Desc: creates the 'solqtl/cache', 'solqtl/tempfiles', and 'solqtl/temp_images', subdirs in the /export/prod/tmp,              
+ Ret: returns the dirs above
  Args: none
  Side Effects:
  Example:
@@ -1121,15 +1127,24 @@ sub outfile_list
 =cut
 
 sub cache_temp_path {
+    my $geno_version = $c->config->{default_genotyping_protocol}; 
+    $geno_version    = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;    
+    $geno_version    =~ s/\s+//g;
+    my $tmp_dir      = $c->site_cluster_shared_dir;    
+    $tmp_dir         = catdir($tmp_dir, $geno_version);
     
-    my $prod_rqtl_path  = $c->config->{solqtl};
-    my $tempimages_path = File::Spec->catfile($prod_rqtl_path, "temp_images" );
-    my $rqtl_cache_path = "$prod_rqtl_path/cache"; 
-    my $rqtl_temp_path  = "$prod_rqtl_path/tempfiles";
+    my $solqtl_dir         = catdir($tmp_dir, 'solqtl');
+    my $solqtl_cache       = catdir($tmp_dir, 'solqtl', 'cache'); 
+    my $solqtl_tempfiles   = catdir($tmp_dir, 'solqtl', 'tempfiles');  
+    
+    my $basepath = $c->config->{basepath};
+    my $temp_dir  = $c->config->{tempfiles_subdir};
+    
+    my $tempimages   = catdir($basepath, $temp_dir, "temp_images" );
+
+    mkpath ([$solqtl_cache, $solqtl_tempfiles, $tempimages], 0, 0755);
+    return $solqtl_cache, $solqtl_tempfiles, $tempimages;
   
-    mkpath ([$rqtl_cache_path, $rqtl_temp_path, $tempimages_path], 0, 0755);
-   
-    return $rqtl_cache_path, $rqtl_temp_path, $tempimages_path;
 
 }
 
@@ -1179,8 +1194,6 @@ sub crosstype_file {
     return $cross_temp->filename;
 }
 
-
-
 =head2 run_r
 
  Usage: my ($qtl_summary, $peak_markers) = $self->run_r();
@@ -1193,63 +1206,24 @@ sub crosstype_file {
 
 =cut
 
-sub run_r
-{
+sub run_r {
     my $self = shift;
 
-    my ( $prod_cache_path, $prod_temp_path, $tempimages_path ) =
-      $self->cache_temp_path();
+    my ($solqtl_cache, $solqtl_temp, $solqtl_tempimages) = $self->cache_temp_path();
     my $prod_permu_file = $self->permu_file();
-    my $file_in         = $self->infile_list();
-    my ( $file_out, $qtl_summary, $peak_markers ) = $self->outfile_list();
-    my $stat_file = $self->stat_files();
-
-    CXGN::Tools::Run->temp_base($prod_temp_path);
-
-    my ( $r_in_temp, $r_out_temp ) =
-      map {
-        my ( undef, $filename ) =
-          tempfile(
-                    File::Spec->catfile(
-                                         CXGN::Tools::Run->temp_base(),
-                                         "qtl_analysis.pl-$_-XXXXXX",
-                                       ),
-                  );
-        $filename
-      } qw / in out /;
-
-    #copy our R commands into a cluster-accessible tempfile
-    {
-        my $r_cmd_file = $c->path_to('R/solGS/qtl_analysis.r');
-        copy( $r_cmd_file, $r_in_temp )
-          or die "could not copy '$r_cmd_file' to '$r_in_temp'";
-    }
-
-    try {
-        # now run the R job on the cluster
-        my $r_process = CXGN::Tools::Run->run_cluster(
-            'R', 'CMD', 'BATCH',
-            '--slave',
-            "--args $file_in $file_out $stat_file",
-            $r_in_temp,
-            $r_out_temp,
-            {
-                working_dir => $prod_temp_path,
-
-                # don't block and wait if the cluster looks full
-                max_cluster_jobs => 1_000_000_000,
-            },
-           );
-
-        $r_process->wait;       #< wait for R to finish
-    } catch {
-        my $err = $_;
-        $err =~ s/\n at .+//s; #< remove any additional backtrace
-   #     # try to append the R output
-        try{ $err .= "\n=== R output ===\n".file($r_out_temp)->slurp."\n=== end R output ===\n" };
-        # die with a backtrace
-        Carp::confess $err;
-    };
+    my $input_file      = $self->infile_list();
+    my ($output_file, $qtl_summary, $peak_markers) = $self->outfile_list();
+   
+    my $pop_id = $self->get_object_id();
+    my $trait_id = $self->get_trait_id();
+    
+    $c->stash->{analysis_tempfiles_dir} = $solqtl_temp;
+    $c->stash->{r_temp_file} = "solqtl-${pop_id}-${trait_id}";
+    $c->stash->{input_files}  = $input_file;
+    $c->stash->{output_files} = $output_file;
+    $c->stash->{r_script}    = 'R/solGS/qtl_analysis.r';
+    
+    $c->controller('solGS::solGS')->run_r_script($c);
 
     return $qtl_summary, $peak_markers;
 
@@ -1393,7 +1367,7 @@ sub qtl_images_exist
     my $cache_qtl_plot = CXGN::Tools::WebImageCache->new();
     $cache_qtl_plot->set_basedir($basepath);
     $cache_qtl_plot->set_temp_dir( $tempfile_dir . "/temp_images" );
-    
+
     if ($self->qtl_stat_option eq 'default') 
     {    
         my ( $image, $image_t, $image_url, $image_html, $image_t_url,

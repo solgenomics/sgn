@@ -22,7 +22,7 @@ sub field_book :Path("/fieldbook") Args(0) {
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -159,7 +159,7 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     my $wb = Spreadsheet::WriteExcel->new($tempfile);
     die "Could not create excel file " if !$wb;
     my $ws = $wb->add_worksheet();
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     my $trial_name =  $trial_layout->get_trial_name();
 
     $ws->write(0, 0, 'plot_id');
@@ -188,7 +188,7 @@ sub trial_field_book_download_old : Path('/fieldbook/trial_download_old/') Args(
     $c->res->body($contents);
 }
 
-sub delete_fieldbook_layout : Path('/fieldbook/delete_FB_layout/') Args(1) {
+sub delete_file : Path('/fieldbook/delete_file/') Args(1) {
      my $self  =shift;
      my $c = shift;
      my $json = new JSON;
@@ -200,9 +200,12 @@ sub delete_fieldbook_layout : Path('/fieldbook/delete_FB_layout/') Args(1) {
 	#print STDERR Dumper($file_id);
 	print "File ID: $file_id\n";
      my $dbh = $c->dbc->dbh();
-     my $h = $dbh->prepare("delete from metadata.md_files where file_id=?;");
-     $h->execute($decoded);
-     print STDERR "Layout deleted successfully.\n";
+     my $h_nd_exp_md_files = $dbh->prepare("delete from phenome.nd_experiment_md_files where file_id=?;");
+     $h_nd_exp_md_files->execute($decoded);
+
+     my $h_md_files = $dbh->prepare("delete from metadata.md_files where file_id=?;");
+     $h_md_files->execute($decoded);
+     print STDERR "File successfully deleted.\n";
 	$c->response->redirect('/fieldbook');
 }
 

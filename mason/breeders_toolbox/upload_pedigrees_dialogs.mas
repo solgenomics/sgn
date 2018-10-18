@@ -1,0 +1,134 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="upload_pedigrees_validate_display" name="upload_pedigrees_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesValidateDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadPedigreesValidateDialog">Results From Validation</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" checked id="pedigree_upload_overwrite_pedigrees" /></div>
+ 	  <table class="table table-hover">
+    	    <tbody></tbody>
+  	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="upload_pedigrees_store" id="upload_pedigrees_store" data-dismiss="modal">Store</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="pedigrees_upload_success_dialog_message" name="pedigrees_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesSuccessDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadPedigreesSuccessDialog">Upload Successful</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+ 	  <h2>The Pedigree Upload Finished With No Errors.</h2>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="pedigrees_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="upload_pedigrees_dialog" name="upload_pedigrees_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadPedigreesDialog">Upload Pedigrees</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <&| /page/explanation.mas, title=>'Template Information' &>
+    	  <p>
+      	  <b>File format information</b>
+      	  <br>
+      	  <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet Format</a>
+    	  </p>
+  	  </&>
+
+  	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_pedigrees_form" name="upload_pedigrees_form">
+    	    <label for="pedigrees_uploaded_file" style="display: inline-block; width: 100px;">Upload Pedigree File:</label>
+    	    <input type="file" name="pedigrees_uploaded_file" id="pedigrees_uploaded_file" encoding="multipart/form-data" />
+    	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Validate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="pedigrees_upload_spreadsheet_info_dialog" name="pedigrees_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="pedigreeUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="pedigreeUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+ 	  <b>Pedigrees may be uploaded in tab-delimited text file format</b>
+	  <br>
+	  <p>(.xls or .xlsx formats are <b>NOT</b> supported)</p>
+	  <hr>
+	  <b>Header:</b>
+	  <br>
+	  <p>The first row (header) should contain the following:</p>
+
+	  <table class="table table-hover table-bordered">
+  	  <body>
+	    <tr>
+    	      <td>progeny name</td>
+    	      <td>female parent accession</td>
+    	      <!--<td>male parent accession(s) (if more than one, separate using commas)</td>-->
+              <td>male parent accession</td>
+              <td>type</td>
+
+  	    </tr>
+	  </body>
+	  </table>
+
+	  <h4>Required fields:</h4>
+	  <ul>
+	    <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
+	    <li>female parent accession (must exist in the database)</li>
+        <li>type (biparental, open, self)</li>
+	  </ul>
+
+	  <h4>Optional fields</h4>
+	  <ul>
+	    <!--li>male parent accession (if provided, must exist in the database). Several potential male parents can be given separated by commas. A population entry will be generated in that case, with the listed male parents associated to the population.</li-->
+        <li>male parent accession (can be accession uniquename or accession synonym or population name).</li>
+	  </ul>
+
+	  <h4>Notes</h4>
+	  <ul>
+	    <li>Always specify the type of the cross (biparental, open, or self).</li>
+	    <li>If the type is open and no potential parents are known, leave the male parent field empty
+	  </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

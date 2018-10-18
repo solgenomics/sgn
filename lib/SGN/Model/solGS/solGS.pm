@@ -12,11 +12,10 @@ Isaak Y Tecle, iyt2@cornell.edu
 
 =head1 LICENSE
 
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
+This library is free software. You can redistribute it and/or modifyi
+t under the same terms as Perl itself.
 
 =cut
-
 
 package SGN::Model::solGS::solGS;
 
@@ -657,7 +656,7 @@ sub get_stock_owners {
     
     no warnings 'uninitialized';
 
-    unless ($stock_id =~ /uploaded/) 
+    unless ($stock_id =~ /list/) 
     { 
         my $q = "SELECT sp_person_id, first_name, last_name 
                         FROM phenome.stock_owner 
@@ -739,8 +738,8 @@ sub first_stock_genotype_data {
     
 	my $dataref = $dataset->retrieve_genotypes($protocol_id);
 	$geno_data  = $self->structure_genotype_data($dataref);
-
-	last if $geno_data;
+     
+	last if ${$geno_data};
     }
  
     return $geno_data;
@@ -811,38 +810,43 @@ sub genotype_data {
 sub structure_genotype_data {
     my ($self, $dataref) =@_;
 
-    my $geno_row  = @$dataref[0]->{genotype_hash};
-    my $markers   = $self->_get_dataset_markers($geno_row);
-    my $headers   = $self->_create_genotype_dataset_headers($markers);
+    my $geno_data;
    
-    my $geno_data .= "\t" . $headers . "\n";    
-   
-    my @stocks;
-    my $duplicate_stock;   
-    my $cnt;
-   
-    foreach my $dg (@$dataref)
+    if (@$dataref)
     {
-	$cnt++;
+	my $geno_row  = @$dataref[0]->{selected_genotype_hash};
+	my $markers   = $self->_get_dataset_markers($geno_row);
+	my $headers   = $self->_create_genotype_dataset_headers($markers);
 	
-	my $stock = $dg->{germplasmName};
+	$geno_data = "\t" . $headers . "\n";    
+	
+	my @stocks;
+	my $duplicate_stock;   
+	my $cnt = 0;
+	
+	foreach my $dg (@$dataref)
+	{
+	    $cnt++;
+	    
+	    my $stock = $dg->{germplasmName};
 
-	if ($cnt > 1)
-	{
-	    ($duplicate_stock) = grep(/^$stock$/, @stocks);
-	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
-	}
-	
-	if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
-	{
-	    push @stocks, $stock;
+	    if ($cnt > 1)
+	    {
+		$duplicate_stock =  grep(/^$stock$/, @stocks); #$stock ~~ @stocks;
+	    }
 	    
-	    my $geno_hash = $dg->{genotype_hash}; 
-	    
-	    $geno_data .= $stock . "\t";
-	    $geno_data .= $self->_create_genotype_row($geno_hash);
-	    $geno_data .= "\n";
+	    if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
+	    {
+		push @stocks, $stock;
+		
+		my $geno_hash = $dg->{selected_genotype_hash}; 
+		
+		$geno_data .= $stock . "\t";
+		$geno_data .= $self->_create_genotype_row($headers, $geno_hash);
+		$geno_data .= "\n";
+	    }
 	}
+    print STDERR scalar(@stocks)."\n";
     }
 
     return \$geno_data;
@@ -851,24 +855,16 @@ sub structure_genotype_data {
 
 
 sub genotypes_list_genotype_data {
-    my ($self, $genotypes) = @_;
-   
-    my $st_rs = $self->get_stocks_rs($genotypes);
-    my @acc_ids;
-
-    while (my $row = $st_rs->next)
-    {    
-	push @acc_ids, $row->get_column('stock_id');	
-    }
+    my ($self, $genotypes_ids) = @_;
 
     my $protocol_id = $self->protocol_id();
 	    
     my $dataset = CXGN::Dataset->new({
-	people_schema => $self->people_schema,
-	schema  => $self->schema,
-	accession_list => \@acc_ids});	 
+ 	people_schema => $self->people_schema,
+ 	schema  => $self->schema,
+ 	accessions => $genotypes_ids});	
 
-    my $dataref    = $dataset->retrieve_genotypes($protocol_id);
+    my $dataref = $dataset->retrieve_genotypes($protocol_id);
     my $geno_data  = $self->structure_genotype_data($dataref);	   
 
     return $geno_data;
@@ -955,7 +951,7 @@ sub project_genotype_data_rs {
     my @accessions;
 
     foreach my $st  (@$trial_accessions){
-	push @accessions, $st->{accession_name};
+	push @accessions, $st->{stock_id};
     }
 
     my $genotype_rs = $self->accessions_list_genotypes_rs(\@accessions);
@@ -1003,22 +999,15 @@ sub individual_stock_genotypes_rs {
 
 
 sub accessions_list_genotypes_rs {
-    my ($self, $accessions_list) = @_;
+    my ($self, $genotypes_ids) = @_;
 
-    my $stocks_rs = $self->get_stocks_rs($accessions_list);
-   
-    my @genotypes_ids;    
-    while (my $row = $stocks_rs->next)
-    {
-    	push @genotypes_ids, $row->get_column('stock_id');
-    }
-    
+
     my $protocol = $self->genotyping_protocol();
     my $genotype_rs = $self->schema->resultset('NaturalDiversity::NdExperiment')
 	->search(
 	{ 
 	    'nd_protocol.name' => $protocol,
-	    'stock.stock_id' => {-in =>\@genotypes_ids},
+	    'stock.stock_id' => {-in =>$genotypes_ids},
 	    'type.name'  => 'snp genotyping',
 	    'cv.name' => 'genotype_property',	   
 	},
@@ -1131,33 +1120,23 @@ sub _get_dataset_markers {
 sub _create_genotype_dataset_headers {
     my ($self, $markers) = @_; 
 
-    my $headers;
-    foreach my $marker (@$markers) 
-    {
-	$headers .= $marker;
-	$headers .= "\t" unless $marker eq @$markers[-1];
-    }
- 
+    my $headers = join("\t", @$markers);
+   
     return $headers;  
 }
 
 
 sub _create_genotype_row {
-    my ($self, $genotype_hash) = @_; 
+    my ($self, $headers, $genotype_hash) = @_; 
 
-    my @markers      = keys %$genotype_hash;
-    my $marker_count = scalar(@markers);
- 
+    my @markers = split("\t", $headers);
+
     my $geno_values;
     foreach my $marker (@markers) 
     {   
 	no warnings 'uninitialized';
-
-        my $genotype =  $genotype_hash->{$marker};
-	$genotype =  $genotype_hash->{$marker};
 	
-	$geno_values .= $genotype;
-        #$geno_values .= $self->round_allele_dosage_values($genotype);       
+	$geno_values .= $genotype_hash->{$marker}->{'DS'};
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }
 
@@ -1180,26 +1159,24 @@ sub round_allele_dosage_values {
 
 
 sub stock_genotype_values {
-    my ($self, $geno_row) = @_;
+    my ($self, $header_markers, $geno_row) = @_;
               
     my $json_values  = $geno_row->get_column('value');
     my $values       = JSON::Any->decode($json_values);
-    my @markers      = keys %$values;
-    my $marker_count = scalar(@markers);
+
     
     my $stock_name = $geno_row->get_column('stock_name');
-   
-    my $round = Math::Round::Var->new(0);
+
                       
-    my $geno_values = $geno_row->get_column('stock_name') . "\t";
+    my $geno_values = $stock_name . "\t";
    
-    foreach my $marker (@markers) 
+    foreach my $marker (@$header_markers) 
     {   
 	no warnings 'uninitialized';
 
         my $genotype =  $values->{$marker};
-        $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
-        $geno_values .= "\t" unless $marker eq $markers[-1];
+	$geno_values .= $genotype;
+        $geno_values .= "\t" unless $marker eq $header_markers->[-1];
     }
 
     $geno_values .= "\n";      
@@ -1234,11 +1211,11 @@ sub prediction_pops {
       @tr_pop_markers = split(/\t/, $markers);
       shift(@tr_pop_markers);      
   }
-  elsif( $training_pop_id =~ /uploaded/) 
+  elsif( $training_pop_id =~ /list/) 
   {
      # my $user_id = $self->context->user->id;
       
-      my $dir = $self->context->stash->{solgs_prediction_upload_dir};      
+      my $dir = $self->context->stash->{solgs_lists_dir};      
       opendir my $dh, $dir or die "can't open $dir: $!\n";
     
       my ($geno_file) = grep { /genotype_data_${training_pop_id}/ && -f "$dir/$_" }  readdir($dh); 
@@ -1363,7 +1340,7 @@ sub plots_list_phenotype_data {
 #     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 # 	bcs_schema  =>$self->schema,
 # 	data_level  => 'plot',
-# 	search_type =>'Native',
+# 	search_type =>'MaterializedViewTable',
 # 	plot_list   => $plots_ids,
 # 	);
 
@@ -1654,7 +1631,7 @@ sub phenotype_data {
  
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	bcs_schema=>$self->schema,
-	search_type=>'Native',
+	search_type=>'MaterializedViewTable',
 	trial_list=>[$project_id],
 	data_level=>'plot',
 	);
@@ -1688,7 +1665,9 @@ sub structure_phenotype_data {
     my $round = Math::Round::Var->new(0.001);
 
     my $formatted_data;
-
+    
+    no warnings 'uninitialized';
+    
     for (my $i =0; $i < @$data; $i++) 
     {
 	my $row = $data->[$i];
@@ -1698,6 +1677,18 @@ sub structure_phenotype_data {
     
     return $formatted_data;
 }
+
+
+sub trial_metadata  {
+    my ($self) = @_;
+       
+    my @headers =   ('studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate',    'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber' ,  'colNumber',  'entryType', 'plantNumber', 'plantedSeedlotStockDbId',  'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames', 'notes');
+
+     	
+    return \@headers;
+
+}
+
 
 
 sub structure_plots_list_phenotype_data {

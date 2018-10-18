@@ -8,14 +8,14 @@ layout: doc_page
 {:toc}
 <!-- TOC-END -->
 
-CassavaBase provides several tools for phenotype data analysis, marker-assisted selection, sequence and expression analyses, as well as ontology browser. These tools can be found in the “Analyze” menu.
+SGN databases provides several tools for phenotype data analysis, marker-assisted selection, sequence and expression analyses, as well as ontology browser. These tools can be found in the “Analyze” menu.
 
 ![]({{"assets/images/image114.png" | relative_url }})
 
 4.1 Selection Index
 -------------------
 
-To determine rankings of accessions based on more than one desirable trait, CassavaBase provides “Selection Index” tool that allows you to specify a weighting on each trait. To access the tool, clicking on “Selection Index” in the “Analyze” menu.
+To determine rankings of accessions based on more than one desirable trait, SGN databases provide a “Selection Index” tool that allows you to specify a weighting on each trait. To access the tool, clicking on “Selection Index” in the “Analyze” menu.
 
 ![]({{"assets/images/image251.png" | relative_url }})
 
@@ -56,7 +56,7 @@ Selection Index tool also allows you to save top ranked accessions directly to �
 
 The prediction of breeding values for a trait is a one step or two steps process, depending on what stage in your breeding cycle you are. The first step is to build a prediction model for a trait using a training population of clones with phenotype and genotype data. If you have yet to select parents for crossing for your first cycle of selection you can use the breeding values of the training population. If you are at later stages of your selection program, you need to do the second step which is applying the prediction model on your selection population. All clones in your training and selection populations must exist in the database.
 
-To use the genomic selection tool, on [*cassavabase.org,*](http://cassavabase.org/) from the 'analyze' pull-down menu, select 'Genomic Selection'.
+To use the genomic selection tool, on [*cassavabase.org*](http://cassavabase.org/), select 'Genomic Selection' from the 'analyze' pull-down menu.
 
 ![]({{"assets/images/image247.png" | relative_url }})
 
@@ -151,7 +151,7 @@ You can apply the models to simultaneously predict GEBVs for respective traits i
 
 To compare clones based on their performance on multiple traits, you can calculate selection indices using the form below. Choose from the pulldown menu the population with predicted GEBVs for the traits and assign relative weights for each trait. The relative weight of each trait must be between 0 - 1. 0 being of least weight and importance, not wanting to consider that particular trait in selecting a genotype and 1 being a trait that you give highest importance.
 
-In this example we will be using the "Cassava Ibadan 2002/03" population and assigning values to each of the traits. Remember that there is a list of acronyms and trait names at the bottom of the page for reference. After entering whatever values you would like for each trait click on the "Calculate" button to generate results. This will create a list of the top 10 genotypes that most closely match the criteria that you entered. The list will be displayed right below the "Cassava selection index" tab. This information can also be downloaded onto your computer by clicking on the "Download selection indices" link underneath the listed genotypes and selection indices.
+In this example we will be using the "Cassava Ibadan 2002/03" population and assigning values to each of the traits. Remember that there is a list of acronyms and trait names at the bottom of the page for reference. After entering whatever values you would like for each trait click on the "Calculate" button to generate results. This will create a list of the top 10 genotypes that most closely match the criteria that you entered. The list will be displayed right below the "selection index" tab. This information can also be downloaded onto your computer by clicking on the "Download selection indices" link underneath the listed genotypes and selection indices.
 
 <img src='{{"assets/images/image81.png" | relative_url }}' width="463" />
 
@@ -186,7 +186,7 @@ If you are interested in browsing genotype information for a single accession, f
 
 Near the bottom of the detail page is a collapsible section called “Accession Jbrowse”.<img src='{{"assets/images/image20.png" | relative_url }}' width="465" />
 
-This section will contain a link to the accession jbrowse page if the necessary genotype data is available. Clicking the link should take you to a page that looks like this, a which point you can browsre the genotype data in the form of a vcf track aligned to the latest build of the cassava genome.
+This section will contain a link to the accession jbrowse page if the necessary genotype data is available. Clicking the link should take you to a page that looks like this, a which point you can browsre the genotype data in the form of a vcf track aligned to the latest build of the genome.
 
 ![]({{"assets/images/image318.png" | relative_url }})
 
@@ -198,19 +198,45 @@ Halfway down the page is a collapsible section called “Trial Jbrowse”. This 
 
 <img src='{{"assets/images/image268.png" | relative_url }}' width="435" />
 
-Clicking the link should take you to a page that looks like this, a which point you can browse the genotype data in the form of vcf tracks aligned to the latest build of the cassava genome.![]({{"assets/images/image327.png" | relative_url }})
+Clicking the link should take you to a page that looks like this, a which point you can browse the genotype data in the form of vcf tracks aligned to the latest build of the genome.![]({{"assets/images/image327.png" | relative_url }})
 
-4.4 Principal Component Analysis
+4.4 Principal Component Analysis (PCA)
 --------------------------------
 
-There are three ways to evaluate the population structure of a set of individuals with genotype data in the database.
+Principal component analysis helps estimate and visualize if there is sub-grouping of individuals within a dataset based on a number of variables. Currently, you can use marker data to run PCA on datasets.
 
-(1) If the entire set of the individuals are members of an experimental trial, then search for the trial, on the trial page, go to the ‘Principal Component Analysis’ section, click the ‘Run PCA’ button and wait for the output.
+You can run PCA from multiple places on the website. To do PCA on
 
-(2) If the entire set of individuals are members of a training population you used to create a genomic selection model for a trait, on the model output page, go the ‘Principal Component Analysis’ section and click the ‘Run PCA’ button.
+(1) individuals from a trial, go to the trial detail page and find the PCA tool under the 'Analysis tools' section.
 
-(3) If the set of individuals are members of a custom list you created, then go to the ‘analyze’ menu, select the ‘Principal Component Analysis’, log in to the site, select your list and then click ‘Run PCA’ button.
+(2) individuals from a training population you used in a GS modeling, do your modeling and find the PCA tool in the model output page.
+
+(3) individuals in a training population and selection population you applied the training model, do your modeling, apply the model on the selection population and find the PCA tool on the selection population prediction output page.
+
+(4) individuals in a list of accessions you created, for example using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of individuals and run PCA.
+
+(5) individuals from multiple trials, create a list of the trials using the search wizard, go to the 'Analyze' menu and select the 'Population Structure', select your list of trials and run PCA.
+
+<img src='{{"assets/images/pca_iita_naccri_trials.png" | relative_url }}' width="522" />
 
 With all the options, you will get a interactive plot of the two PCs (shown below) that explain the largest variance. Point the cursor at any data point and you will see the individual name with its corresponding PCs scores. By clicking the ‘Download all PCs’, you can also download the 10 PCs scores in the text format.
 
-<img src='{{"assets/images/image155.png" | relative_url }}' width="522" />
+
+4.5 ANOVA
+--------------
+
+Currently, ANOVA is implemented for a single trial (single year and single location). You can do ANOVA for RCBD, CRD, Alpha and Augmented trial designs. ANOVA is done using linear mixed effects model, where the genotypes is fixed effect and the replications and blocks are random effects. Fixed effect significance level is computed using 'lmer' from 'lmeTest' R package.
+
+You can do ANOVA from two places: trial detail and training population detail. In both cases, if the phenotype data was from the supported trial designs,
+
+-- Go to the ANOVA section down in the trial or training population page
+
+-- Select the trait of you want to perform ANOVA
+
+-- Click the 'Run ANOVA' and wait for the result
+
+<img src='{{"assets/images/anova-dm.png" | relative_url }}' width="522" />
+
+
+
+

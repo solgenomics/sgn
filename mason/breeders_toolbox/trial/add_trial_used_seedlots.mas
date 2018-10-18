@@ -33,6 +33,7 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button id="trial_upload_used_seedlot_submit" type="button" class="btn btn-default" >Submit</button>
             </div>
         </div>
@@ -66,22 +67,26 @@ $trial_id
                                 <td>seedlot_name</td>
                                 <td>plot_name</td>
                                 <td>num_seed_per_plot</td>
+                                <td>weight_gram_seed_per_plot</td>
                                 <td>description</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <b>Required fields:</b>
-                    <br/>
-                    seedlot_name (must exist in the database)
-                    <br />
-                    plot_name (must exist in the database)
-                    <br />
+                    <ul>
+                    <li>seedlot_name (must exist in the database. the seedlot that was planted in the plot)</li>
+                    <li>plot_name (must exist in the database. the plot that the seedlot was planted in)</li>
+                    <li>
+                        num_seed_per_plot (number of seeds transferred from seedlot to the plot)
+                        <br/><b>AND/OR</b></br>
+                        weight_gram_seed_per_plot (weight in grams of seed transferred from seedlot to the plot)
+                    </li>
+                    </ul>
                     <b>Optional fields:</b>
-                    <br />
-                    num_seed_per_plot (number of seeds used in this plot. if not given will default to 0)
-                    <br />
-                    description
+                    <ul>
+                    <li>description (any additional information)</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">

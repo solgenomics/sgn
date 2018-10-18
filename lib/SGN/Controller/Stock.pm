@@ -16,11 +16,14 @@ use List::Compare;
 use File::Temp qw / tempfile /;
 use File::Slurp;
 use JSON::Any;
+use JSON;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
+use Data::Dumper;
+use CXGN::Chado::Publication;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -224,12 +227,14 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     ####################
     my $is_owner;
     my $owner_ids = $c->stash->{owner_ids} || [] ;
+    my $editor_info = $self->_stock_editor_info($stock);
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
     my $image_ids = $self->_stock_images($stock, $type);
+    my $related_image_ids = $self->_related_stock_images($stock, $type);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
@@ -253,6 +258,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             dbh       => $dbh,
             is_owner  => $is_owner,
             owners    => $owner_ids,
+            editor_info => $editor_info,
             props     => $props,
             dbxrefs   => $dbxrefs,
             pubs      => $pubs,
@@ -263,6 +269,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
+            related_image_ids => $related_image_ids,
             allele_count   => $c->stash->{allele_count},
             ontology_count => $c->stash->{ontology_count},
 	    has_pedigree => $c->stash->{has_pedigree},
@@ -327,60 +334,54 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock = $c->stash->{stock_row};
     my $stock_id = $stock->stock_id;
     my $stock_name = $stock->uniquename;
+    my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
+
+    my @lines = ();
+    my @sorted_lines = ();
     if ($stock_id) {
+        print STDERR "Exporting genotype file...\n";
+        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
 
-	print STDERR "Exporting genotype file...\n";
-        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
-        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
-        $file_cache->purge();
-        my $key = "stock_" . $stock_id . "_genotype_data";
-        my $gen_file = $file_cache->get($key);
-        my $filename = $tmp_dir . "/stock_" . $stock_id . "_genotypes.csv";
-        unless ( $gen_file && -e $gen_file) {
-            my $gen_hashref; #hashref of hashes for the phenotype data
-            my %cvterms ; #hash for unique cvterms
-            ##############
-            my $genotypes =  $self->_stock_project_genotypes( $stock );
-            write_file($filename, ("project\tmarker\t$stock_name\n") );
-            foreach my $project (keys %$genotypes ) {
-		foreach my $geno (@ { $genotypes->{$project} } ) {
-		    my $genotypeprop_rs = $geno->search_related('genotypeprops' ); # , {
-		    #just check if the value type is JSON
-		    #this is the current genotype we have , add more here as necessary
-			#'type.name' => 'infinium array' } , {
-			#    join => 'type' } );
-		    while (my $prop = $genotypeprop_rs->next) {
-			my $json_text = $prop->value ;
-			my $genotype_values = JSON::Any->decode($json_text);
-			my $count = 0;
-			my @lines = ();
-			foreach my $marker_name (keys %$genotype_values) {
-			    $count++;
-			    #if ($count % 1000 == 0) { print STDERR "Processing $count     \r"; }
-			    my $read = $genotype_values->{$marker_name};
-			    push @lines, (join "\t", ($project, $marker_name, $read))."\n";
-			}
-			my @sorted_lines = sort chr_sort @lines;
-			write_file($filename, { append=> 1 }, @sorted_lines);
-		    }
-		}
-	    }
-            $file_cache->set( $key, $filename, '30 days' );
-            $gen_file = $file_cache->get($key);
-        }
-        my @data;
+        my $genotypes_search = CXGN::Genotype::Search->new({
+            bcs_schema=>$self->schema,
+            accession_list=>[$stock_id],
+            markerprofile_id_list=>$genotypeprop_id
+        });
+        my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
-        foreach ( read_file($filename) ) {
-	    chomp;
-            push @data, [ split(/\t/) ];
+        foreach my $g (@$genotypes ) {
+            my $genotype_full = $g->{selected_genotype_hash};
+            my $protocol_full = $g->{selected_protocol_hash};
+            my $project_name = $g->{genotypingDataProjectName};
+            my $marker_info = $protocol_full->{markers};
+            my $stock_name = $g->{stock_name};
+            my $stock_type_name = $g->{stock_type_name};
+            my $synonym_string = join ',', @{$g->{synonyms}};
+            my $protocol_name = $g->{analysisMethod};
+
+            foreach my $marker_name (keys %$genotype_full) {
+                my $read;
+                if ($genotype_full->{$marker_name}->{GT}){
+                    $read = $genotype_full->{$marker_name}->{GT};
+                }
+                if (defined($genotype_full->{$marker_name}->{DS})) {
+                    $read = $genotype_full->{$marker_name}->{DS};
+                }
+                my $marker = $marker_info->{$marker_name};
+                my $marker_print = $marker ? encode_json $marker : '';
+                my $genotype_print = encode_json $genotype_full->{$marker_name};
+                push @lines, [$project_name, $protocol_name, $stock_name, $stock_type_name, $synonym_string, $marker_name, $read, $marker_print, $genotype_print];
+            }
         }
-        #$c->stash->{'csv'}={ data => \@data};
-	$c->stash->{'csv'} = \@data;
-        $c->forward("View::Download::CSV");
+        @sorted_lines = sort chr_sort @lines;
     }
+
+    $c->stash->{'csv'} = \@sorted_lines;
+    $c->forward("View::Download::CSV");
 }
 
 sub chr_sort {
+    no warnings 'uninitialized';
     my @a = split "\t", $a;
     my @b = split "\t", $b;
 
@@ -497,8 +498,12 @@ sub get_stock_extended_info : Private {
     my ($members_phenotypes, $has_members_genotypes)  = (undef, undef); #$stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
-    my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;
-    $c->stash->{direct_genotypes} = $direct_genotypes;
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$self->schema,
+        accession_list=>[$c->stash->{stock_row}->stock_id],
+    });
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+    $c->stash->{direct_genotypes} = $genotypes;
 
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
@@ -841,33 +846,41 @@ sub _stock_cvterms {
 sub _stock_pubs {
     my ($self, $stock) = @_;
     my $bcs_stock = $stock->get_object_row;
-    my $pubs ;
+    my @pubs ;
     if ($bcs_stock) {
         my $stock_pubs = $bcs_stock->search_related("stock_pubs");
         while (my $spub = $stock_pubs->next ) {
-            my $pub = $spub->pub;
-            my $pub_dbxrefs = $pub->pub_dbxrefs;
-            while (my $pub_dbxref = $pub_dbxrefs->next ) {
-                $pubs->{$pub_dbxref->dbxref->db->name . ":" .  $pub_dbxref->dbxref->accession } = $pub ;
-            }
-        }
+            my $pub_id = $spub->pub_id;
+	    my $cxgn_pub = CXGN::Chado::Publication->new( $self->schema->storage->dbh(), $pub_id);
+	    push @pubs, $cxgn_pub;
+	}
     }
-    return $pubs;
+    return \@pubs;
 }
 
-# get all images. Includes those of subject stocks
 sub _stock_images {
     my ($self, $stock) = @_;
-    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ? OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )";
-    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
-        ( $query,
-          undef,
-          $stock->get_stock_id,
-          $stock->get_stock_id,
-        );
-    return $ids;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
 }
 
+sub _related_stock_images {
+    my ($self, $stock) = @_;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? ) OR stock_id IN (SELECT object_id FROM stock_relationship WHERE subject_id = ? )";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id, $stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
+}
 
 sub _stock_allele_ids {
     my ($self, $stock) = @_;
@@ -887,6 +900,18 @@ sub _stock_owner_ids {
          $stock->get_stock_id
         );
     return $ids;
+}
+
+sub _stock_editor_info {
+    my ($self,$stock) = @_;
+    my @owner_info;
+    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $h = $stock->get_schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($sp_person_id, $timestamp, $modification_note) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp, $modification_note];
+    }
+    return \@owner_info;
 }
 
 sub _stock_has_pedigree {

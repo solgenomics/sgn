@@ -13,6 +13,9 @@ use Getopt::Long;
 use File::Slurp;
 use Config::Any;
 
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+
 use Catalyst::ScriptRunner;
 
 use lib 'lib';
@@ -21,30 +24,39 @@ use SGN::Devel::MyDevLibs;
 my $verbose = 0;
 my $nocleanup;
 my $noserver;
+my $dumpupdatedfixture;
 my $noparallel = 0;
-my $fixture_path = '../fixture/cxgn_fixture.sql';
-my $use_brapi_fixture;
-my $brapi_fixture = '../fixture/brapi_fixture.sql';
+# relative to `sgn/ (or parent of wherever this script is located)
+my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
     "verbose" => \$verbose ,
     "nocleanup" => \$nocleanup,
+    "dumpupdatedfixture" => \$dumpupdatedfixture,
     "noserver" => \$noserver,
     "noparallel" => \$noparallel,
     "fixture_path" => \$fixture_path,
-    "brapi_fixture" => \$use_brapi_fixture,
     );
 
 require Carp::Always if $carpalways;
 
 my @prove_args = @ARGV;
+if(@prove_args){
+    @prove_args = map {abs_path($_)} @prove_args;
+}
+
+#Change cwd to `sgn/` (or parent of wherever this script is located)
+my $sgn_dir = abs_path(dirname(abs_path($0))."/../");
+print STDERR "####### ".$sgn_dir." #######";
+chdir($sgn_dir);
 @prove_args = ( 't' ) unless @prove_args;
 
 #my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 #my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
+# relative to `sgn/`
 my $conf_file_base = 'sgn_local.conf';
 my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
@@ -54,10 +66,12 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-#print STDERR Dumper($cfg);
+print STDERR Dumper($cfg);
 my $db_user_password = $config->{dbpass};
-my $dbhost = $config->{db_host} || 'localhost';
+my $dbhost = $config->{dbhost} || 'localhost';
+my $dbport = $config->{dbport} || '5432';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
+print STDERR "Using $dbhost:$dbport\n";
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
 
@@ -78,14 +92,13 @@ $dbname .= $$;
 print STDERR "# Writing a .pgpass file... ";
 # format = hostname:port:database:username:password
 open(my $PGPASS, ">", "$ENV{HOME}/.pgpass") || die "Can't open .pgpass for writing.";
-print $PGPASS "$dbhost:5432:$dbname:web_usr:$db_user_password\n";
-print $PGPASS "$dbhost:5432:*:postgres:$db_postgres_password\n";
+print $PGPASS "$dbhost:$dbport:$dbname:web_usr:$db_user_password\n";
+print $PGPASS "$dbhost:$dbport:*:postgres:$db_postgres_password\n";
 close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
 print STDERR "Done.\n";
 
-my $dump_path = $use_brapi_fixture ? $brapi_fixture : $fixture_path;
-my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $dump_path;
+my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
 print STDERR "# Loading database fixture... $database_fixture_dump ... ";
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
@@ -105,11 +118,18 @@ open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf f
 print $NEWCONF $new_conf;
 close($NEWCONF);
 
+#run fixture and db patches.
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe");
+
 # run the materialized views creation script
 #
-print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password\n";
-system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password");
+print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview\n";
+system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password -m fullview");
 
+if ($dumpupdatedfixture){
+    print STDERR "Dumping new updated fixture with all patches run on it to t/data/fixture/cxgn_fixture.sql\n";
+    system("pg_dump -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
+}
 
 print STDERR "Done.\n";
 
@@ -290,7 +310,7 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
   --noparallel   Do not run the server in parallel mode.
 
   --fixture_path specify a path to the fixture different from the default
-                 (../fixture/cxgn_fixture.pl). Note: You can also set the env
+                 (t/data/fixture/cxgn_fixture.pl). Note: You can also set the env
                  variable DATABASE_FIXTURE_PATH, which will overrule this
                  option.
 

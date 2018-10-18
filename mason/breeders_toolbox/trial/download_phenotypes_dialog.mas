@@ -30,10 +30,10 @@ $dialog_name => undef
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_level_option">
+                        <option value="all">All</option>
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
                         <option value="subplot">Subplots</option>
-                        <option value="all">All</option>
                     </select>
                 </div>
             </div>
@@ -58,6 +58,16 @@ $dialog_name => undef
                 <label class="col-sm-3 control-label">Include Timestamps: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_timestamp_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Suppress User Defined Phenotype Outliers: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_trial_phenotypes_exclude_outliers">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -90,16 +100,6 @@ $dialog_name => undef
                 </div>
             </div>
 </&>
-<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Download Type: </label>
-                <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="trial_search_type" id="trial_search_type" value="complete" checked>Complete</label>
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="trial_search_type" id="trial_search_type" value="fast" >Fast (plots only)</label>
-                </div>
-            </div>
-</&>
-
         </form><br/>
 
         </div>
@@ -137,9 +137,9 @@ jQuery(document).ready(function() {
     var data_level = jQuery("#download_trial_phenotypes_level_option").val();
     var phenotype_min_value = jQuery("#download_trial_phenotype_phenotype_min").val();
     var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
-    var search_type = jQuery('input[name=trial_search_type]:checked').val()
+    var exclude_phenotype_outlier = jQuery("#download_trial_phenotypes_exclude_outliers").val();
 
-    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&search_type="+search_type);
+    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
 
   });
 

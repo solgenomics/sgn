@@ -40,63 +40,12 @@ Lukas Mueller <lam87@cornell.edu>
 $image => undef
 $person_id => undef
 $size => 'medium'
+$display_order => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.Image', 'Prototype' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.Image', 'jquery', 'jqueryui' ] &>
 
 
-<div id="image_size_toolbar">
-</div>
-<br />
-<div id="image_div">
-</div>
-
-<script language="javascript">
-
-
-  function renderContent(image_id, size) { 
-     showTabsMenu(image_id, size);
-  //alert('Im there');
-     getImage(image_id, size);
-  
-  }
-
-  function getImage(image_id, size) { 
-
-     var image = new CXGN.Image;
-  
-     image.set_image_id(image_id);
-     image.image_html('image_div', size);
-  }
-
-  function showTabsMenu(image_id, size) { 
-//          alert('size = '+size);
-    var html = "<center>";
-    var mydiv = document.getElementById('image_size_toolbar');
-    var tabList = new Array('thumbnail', 'small', 'medium', 'large', 'original');
-	  
-    var item = '';
-
-    for (var i=0; i<tabList.length; i++ ) { 
-				 item=tabList[i];
-  //alert('I = '+i);
-      if (size == item) { 
-
-        html = html + item + " ";
-      }
-      else { 
-        html = html + '<a href=\"javascript:renderContent('+image_id+', \''+item+'\'); ">'+item+'</a>'+ ' ';
-      }
-    }
-    html = html + "</center>";
-    mydiv.innerHTML = html;
-
-  }
-  
-    
-
-  
-</script>
 
 <%perl>
 
@@ -104,34 +53,120 @@ $size => 'medium'
 use SGN::Image;
 use CXGN::Phenome::Individual;
 
-my $image_full_size_url = $image->get_image_url("large");
+my $thumbnail_img = $image->get_img_src_tag("thumbnail");
+my $small_img = $image->get_img_src_tag("small");
+my $medium_img = $image->get_img_src_tag("medium");
+my $large_img = $image->get_img_src_tag("large");
+my $original_img = $image->get_img_src_tag("original");
+
 my $object_id = $image->get_image_id();
 
-if ($size!~/thumbnail|small|medium|large|original/ ) { $size="medium"; }
+if ($size!~/thumbnail|small|medium|large|original/i ) { $size="medium"; }
+
+my $active = 0;
+if ($size eq "small") { $active = 1;}
+if ($size eq "medium") { $active = 2;}
+if ($size eq "large") { $active = 3; }
+if ($size eq "original") { $active = 4; }
 
 </%perl>
 
-<br />
 
-<script language="javascript">
-//  alert('im here');
-  renderContent(<% $object_id %>, '<% $size %>' ); 
-</script>
+<style>
+.ui-tabs .ui-tabs-nav
+{
+background: white;
+}
+.ui-tabs { 
+  border: none;
+}
 
-<!-- <br /><a href="<% $image_full_size_url %>"> -->
-<!-- <center><% $image->get_img_src_tag($size) %></center> -->
-<!-- </a><br /><br /> -->
+</style>
 
+<div id="image_tabs">
+<ul>
+    <li><a href="#tabs-1">thumbnail</a></li>
+    <li><a href="#tabs-2">small</a></li>
+    <li><a href="#tabs-3">medium</a></li>
+    <li><a href="#tabs-4">large</a></li>
+    <li><a href="#tabs-5">original</a></li>
+  </ul>
+  <div id="tabs-1">
+    <p><center><% $thumbnail_img %></center></p>
+  </div>
+  <div id="tabs-2">
+    <p><center><% $small_img %></center></p>
+  </div>
+  <div id="tabs-3">
+    <p><center><% $medium_img %></center></p>
+  </div>
+  <div id="tabs-4">
+    <p><center><% $large_img %></center></p>
+  </div>
+  <div id="tabs-5">
+    <p><center><% $original_img %></center></p>
+  </div>
+</div>
+
+
+
+
+<br /><br />
 <center><table><tr><td class="boxbgcolor5"><b>Note:</b> The above image may be subject to copyright. Please contact the submitter about permissions to use the image.</td></tr></table></center><br />
 
+
 % my $tag_count = scalar($image->get_tags());
+
+<&| /page/info_section.mas, title=>"Associated tags" &>
 <br><b>Associated tags</b> [<a href="/tag/index.pl?image_id=<% $object_id %>&amp;action=new">add/remove</a>]: <% $tag_count %>
+
 
 % foreach my $tag ($image->get_tags()) { 
 %    print $tag->get_name()."  ";
 % }
 
-<br /><br /><b>Associated objects</b>: <br />
+</&>
+
+
+<&| /page/info_section.mas, title=>"Associated objects" &>
 
 % print $image->get_associated_object_links();
 
+</&>
+
+<&| /page/info_section.mas, title=>"Display properties",  collapsible => 1, collapsed => 1 &>
+  
+  <div id="display_properties_div">
+    
+          
+  </div>
+  
+  
+</&>
+
+
+
+<script>
+  
+  jQuery(window).ready( function() { 
+    jQuery('#image_tabs').tabs({ active: <% $active %> }); 
+
+    // fetch display order data
+    jQuery.ajax( { 
+       url: '/ajax/image/<% $object_id %>',
+       error: function(r,x,error) { alert('An error occurred retrieving the image display order data.'+r.status+' '+error); },
+       success: function(r)  { 
+          if (r.error) { alert('Error: '+r.error); return; }
+          var html = "";
+          for (var i=0; i<r.display_order.length; i++) { 
+	    html += r.display_order[i]['name']+'&nbsp;<b>'+r.display_order[i]['display_order']+'</b>&nbsp;<a href="/image/display_order?image_id='+r.display_order[i].image_id+'&amp;type='+r.display_order[i].type+'&amp;id='+r.display_order[i].id+'&amp;display_order='+r.display_order[i].display_order+'">change</button></a><br />';
+	    
+          }
+          jQuery('#display_properties_div').html(html);
+	  
+       }
+    });
+
+  });
+
+</script>

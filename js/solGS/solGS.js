@@ -26,18 +26,86 @@ solGS.waitPage = function (page, args) {
   		    
     if (page.match(matchItems)) {
 
-    	askUser(page, args);
+	checkCachedResult(page, args);
+
     }
     else {
 
     	blockPage(page, args);
     }
-   
+
+    function checkCachedResult(page, args) {
+
+	args = getArgsFromUrl(page, args);
+	args = JSON.stringify(args);
+	
+	jQuery.ajax({
+	    type    : 'POST',
+	    dataType: 'json',
+	    data    : {'page': page, 'args': args },
+	    url     : '/solgs/check/cached/result/',
+	    success : function(response) {
+		if (response.cached) {
+		    args = JSON.parse(args);
+		    displayAnalysisNow(page, args);
+		} else {
+		    if (window.location.href.match(/solgs\/search\//)) {
+			args = JSON.parse(args);
+			askUser(page, args);
+			
+		    } else {
+
+			if (page.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
+			    args = JSON.parse(args);
+			    askUser(page, args);
+
+			} else {
+			    checkTrainingPopRequirement(page, args);
+			}
+		    }
+		}
+		
+	    },
+	    error: function() {
+		alert('Error occured checking for cached output.')		
+	    }
+	   	    
+	})
+    }
+
+
+    function checkTrainingPopRequirement (page, args) {
+	args = JSON.parse(args);
+	var popId = args.training_pop_id[0];
+	var dataSetType = args.data_set_type;
+
+	if (popId) {	
+	    jQuery.ajax({
+		dataType: 'json',
+		type    : 'POST',
+		data    : {'training_pop_id': popId, 'data_set_type': dataSetType},
+		url     : '/solgs/check/training/pop/size/',
+		success : function (res) {
+		    var trainingPopSize = res.member_count;
+		    if (trainingPopSize >= 20) {	   
+			askUser(page, args);		
+		    } else {
+			var msg = 'The training population size ('
+			    + trainingPopSize + ') is too small. Minimum required is 20.';
+			
+			solGS.alertMessage(msg);
+			
+		    }	
+		},	    
+	    });
+	}
+    }
+
 
     function  askUser(page, args) {
 	
-	var t = '<p>This analysis may take longer than 20 min. ' 
-	    + 'Would you like to be emailed when it is done?</p>';
+	var t = '<p>This analysis takes long time. ' 
+	    + 'You can request the analysis and you will be emailed when it completes.</p>';
 	
 	jQuery('<div />')
 	    .html(t)
@@ -47,8 +115,8 @@ solGS.waitPage = function (page, args) {
 		modal  : true,
 		title  : "Analysis job submission",
  		buttons: {	
-		    Yes: {
-			text: 'Yes',
+		    OK: {
+			text: 'OK',
 			class: 'btn btn-success',
                         id   : 'queue_job',
 			click: function() {
@@ -58,16 +126,16 @@ solGS.waitPage = function (page, args) {
 			},
 		    }, 
 		    
-		    No: { 
-			text: 'No, I will wait...',
-			class: 'btn btn-primary',
-                        id   : 'no_queue',
-			click: function() { 
-			    jQuery(this).dialog("close");
+		    // No: { 
+		    // 	text: 'No, I will wait...',
+		    // 	class: 'btn btn-primary',
+                    //     id   : 'no_queue',
+		    // 	click: function() { 
+		    // 	    jQuery(this).dialog("close");
 			    
-			    displayAnalysisNow(page, args);
-			},
-		    },
+		    // 	    displayAnalysisNow(page, args);
+		    // 	},
+		    // },
 		    
 		    Cancel: { 
 			text: 'Cancel',
@@ -145,7 +213,7 @@ solGS.waitPage = function (page, args) {
 
     function loginUser () {
 
-	window.location = '/solpeople/login.pl?goto_url=' + window.location.pathname;
+	window.location = '/user/login?goto_url=' + window.location.pathname;
 	
     }
 
@@ -163,10 +231,6 @@ solGS.waitPage = function (page, args) {
 		
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
 	jQuery.blockUI({message: 'Please wait..'});
-        
-	// jQuery(window).unload(function()  {
-	//     jQuery.unblockUI();            
-	// }); 
 
     }
 
@@ -229,7 +293,7 @@ solGS.waitPage = function (page, args) {
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    retrievePopsData(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
-	    if (page.match(/solgs\/population\/uploaded_/)) {
+	    if (page.match(/solgs\/population\/list_/)) {
 		var listId = args.list_id;
 		loadPlotListTypeTrainingPop(listId);  
 	    } else {
@@ -525,38 +589,14 @@ solGS.waitPage = function (page, args) {
 		    runAnalysis(profile);
 		    ////confirmRequest();
 		    
-		} else { 
-		    jQuery('<div />', {id: 'error-message'})
-			.html('Failed saving your analysis profile.')
-			.dialog({
-			    height : 200,
-			    width  : 250,
-			    modal  : true,
-			    title  : 'Error message',
-			    buttons: {
-				OK: function () {
-				    jQuery(this).dialog('close');
-				    window.location = window.location.href;
-				}
-			    }			
-			});
+		} else {
+		    var message = 'Failed saving your analysis profile.';
+		    solGS.alertMessage(message);
 		}
 	    },
 	    error: function () {
-		jQuery('<div />')
-		    .html('Error occured calling the function to save your analysis profile.')
-		    .dialog({
-			height : 200,
-			width  : 250,
-			modal  : true,
-			title  : 'Error message',
-			buttons: {
-			    OK: function () {
-				jQuery(this).dialog('close');
-				window.location = window.location.href;
-			    }
-			}			
-		    });	    
+		var message = 'Error occured calling the function to save your analysis profile.';
+		solGS.alertMessage(message);
 	    }
 	});
 
@@ -574,37 +614,15 @@ solGS.waitPage = function (page, args) {
 		if (response.result.match(/Submitted/)) {
 		    confirmRequest();
 		} else {
-		    jQuery('<div />')
-			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
-			.dialog({
-			    height : 200,
-			    width  : 250,
-			    modal  : true,
-			    title  : 'Error message',
-			    buttons: {
-				OK: function () {
-				    jQuery(this).dialog('close');
-				    window.location = window.location.href;
-				}
-			    }			
-			});	     
+		    var message = 'Error occured submitting the job. Please contact the developers.'
+			+ "\n\nHint: " + response.result;
+		    solGS.alertMessage(message);
 		}
 	    },
 	    error: function (response) {
-		 jQuery('<div />')
-			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
-			.dialog({
-			    height : 200,
-			    width  : 250,
-			    modal  : true,
-			    title  : 'Error message',
-			    buttons: {
-				OK: function () {
-				    jQuery(this).dialog('close');
-				    window.location = window.location.href;
-				}
-			    }			
-			});	     
+		var message = 'Error occured submitting the job. Please contact the developers.'
+		    + "\n\nHint: " + response.result;
+		solGS.alertMessage(message);		
 	    }
 	});
 	
@@ -637,8 +655,7 @@ function selectTraitMessage () {
 			class: 'btn btn-success',
                         id   : 'select_trait_message',
 			click: function() {
-			    jQuery(this).dialog("close");			  
-			    
+			    jQuery(this).dialog("close");			  			    
 			},
 		    }, 
 		}
@@ -716,7 +733,7 @@ jQuery(document).ready(function (){
 			 + popId;
 		 }	    
 	     }
-	 
+	    
 	     var args = {'trait_id'        : traitIds, 
 			 'training_pop_id' : [ popId ], 
 			 'analysis_type'   : analysisType,
@@ -724,6 +741,7 @@ jQuery(document).ready(function (){
 			};
 
 	     solGS.waitPage(page, args);
+	     
 	 } else {
 	     selectTraitMessage();
 	 }
@@ -731,6 +749,33 @@ jQuery(document).ready(function (){
      });
     
 });
+
+
+solGS.alertMessage = function (msg, msgTitle, divId) {
+
+    if (!msgTitle) { 
+	msgTitle = 'Message';
+    }
+
+    if (!divId) { 
+	divId = 'error_message';
+    }
+    
+    jQuery('<div />', {id: divId})
+	.html(msg)
+	.dialog({
+	    height : 200,
+	    width  : 250,
+	    modal  : true,
+	    title  : msgTitle,
+	    buttons: {
+		OK: function () {
+		    jQuery(this).dialog('close');
+		    //window.location = window.location.href;
+		}
+	    }			
+	});	    	    
+}
 
 
 solGS.getTraitDetails = function (traitId) {
@@ -761,28 +806,32 @@ solGS.getTraitDetails = function (traitId) {
 
 solGS.getPopulationDetails = function () {
 
-    var populationId   = jQuery("#population_id").val();
-    var populationName = jQuery("#population_name").val();
+    var trainingPopId   = jQuery("#population_id").val();
+    var trainingPopName = jQuery("#population_name").val();
+
+    if (!trainingPopId) {
+	trainingPopId   = jQuery("#training_pop_id").val();
+	trainingPopName = jQuery("#training_pop_name").val();
+    }
    
     var selectionPopId   = jQuery("#selection_pop_id").val();
     var selectionPopName = jQuery("#selection_pop_name").val();
 
-    if (populationId == 'undefined') {       
-        populationId   = jQuery("#model_id").val();
-        populationName = jQuery("#model_name").val();
+    if (!trainingPopId) {       
+        trainingPopId  = jQuery("#model_id").val();
+        traininPopName = jQuery("#model_name").val();
     }
-
-    if (!populationId) {       
-        populationId = jQuery("#combo_pops_id").val();
-    }
-   
+     
+    var  comboPopsId = jQuery("#combo_pops_id").val();
+       
     return {
-	    'training_pop_id'   : populationId,
-            'population_name'   : populationName,
-	    'training_pop_name' : populationName,
-	    'selection_pop_id'  : selectionPopId,
-	    'selection_pop_name': selectionPopName,
-           };        
+	'training_pop_id'   : trainingPopId,
+        'population_name'   : trainingPopName,
+	'training_pop_name' : trainingPopName,
+	'selection_pop_id'  : selectionPopId,
+	'selection_pop_name': selectionPopName,
+	'combo_pops_id'     : comboPopsId,
+    };        
 }
 
 //executes two functions alternately

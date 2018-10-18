@@ -45,6 +45,7 @@ Naama Menda <nm249@cornell.edu>
   $cvterm_add_uri => ''
   $cvterm_autocomplete_uri => undef
   $trait_db_name => 'SP'
+  $blast_url => '/tools/blast/'
 </%args>
 
 <%once>
@@ -66,10 +67,11 @@ my $owners     = $locusref->{owners};
 my $dbh       = $locusref->{dbh};
 my $xrefs     = $locusref->{xrefs};
 my $feature   =  $locusref->{feature};
-my $src_feature = $locusref->{src_feature}; 
+my $src_feature = $locusref->{src_feature};
+my $dbxrefs     = $locusref->{dbxrefs};
+my $pubs        = $locusref->{pubs};
 
 ###check these params
-my $pubs      = $locusref->{pubs};
 # dbxrefs, unigenes , ontology
 
 my $this_page = "/locus/$locus_id/view/";
@@ -143,13 +145,6 @@ foreach ( @{ $dbxrefs{'TAIR locus'} } ) {
   }
 }
 
-my @sorted_pubs =  $dbxrefs{PMID} ? sort { $a->[0]->get_accession() <=> $b->[0]->get_accession() } @{ $dbxrefs{PMID} } : () ;
-
-my @sgn_ref =  $dbxrefs{SGN_ref} ? @{ $dbxrefs{SGN_ref} } : () ;
-
-@sorted_pubs = ( @sorted_pubs, @sgn_ref );
-my $pub_count = scalar (@sorted_pubs) ;
-
 my $pub_subtitle = $curator || $submitter || $sequencer  ?
   qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| :
   qq|<span class=\"ghosted\">[Associate publication]</span>|;
@@ -211,7 +206,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
     form_div_name        => 'locus_details',
     js_object_name       => 'locusForm',
     page_url             => "/locus/$locus_id/view/",
-    alternate_new_button => '<a href ="/locus/0/new">[New]</a>'
+    alternate_new_button => '<button class="btn btn-sm btn-default" href ="/locus/0/new">New</button>'
     &>
 
 <table><tr><td>
@@ -341,6 +336,18 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 
 <&| /page/info_section.mas, title=>"Sequence annotations" , collapsible=>1, collapsed=>0 &>
+   <&| /page/info_section.mas, title => "Genome features",
+        collapsible   => 1,
+        collapsed     => 0,
+        is_subsection => 1,
+    &>
+%if ($feature) {
+      <& /locus/print_mrna_features.mas,
+	feature   => $feature,
+	blast_url => $blast_url,
+    &>
+%}    
+   </&>
 
     <&| /page/info_section.mas, title => "Gene model matches",
         collapsible   => 1,
@@ -354,7 +361,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
         id => 'locus_unigenes',
         subtitle => $new_unigene_link,
         collapsible => 1,
-        collapsed =>  0 ,
+        collapsed =>  1 ,
         is_subsection => 1,
    &>
       <& /locus/associate_unigene.mas,
@@ -368,7 +375,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   <&| /page/info_section.mas, title => "GenBank accessions",
               subtitle => $new_genbank_link,
               collapsible => 1,
-              collapsed =>  0 ,
+              collapsed =>  1 ,
               is_subsection => 1,
   &>
          <% $genbank %>
@@ -387,22 +394,11 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 </&>
 
-<&| /page/info_section.mas, title=>"Literature annotations ($pub_count)" , subtitle=>$pub_subtitle, id=>"publications" , collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Literature annotations [" . scalar(@$pubs) ."]" , subtitle=>$pub_subtitle, id=>"publications" , collapsible=>1, collapsed=>1 &>
 
-%  my $pub_count = 0;
-%  foreach my $d ( @sorted_pubs ) {
-%  	   if ( $d->[1] eq '0') { #if the dbxref is not obsolete
-%  	   my $pub = CXGN::Chado::Publication->new($dbh, $d->[0]->get_publication()->get_pub_id() );
-%	   my $doi_dbxref_id = $pub->get_dbxref_id_by_db("DOI");
-%	   my $doi;
-%	   if ( $doi_dbxref_id) {
-%	      my $dbxref = CXGN::Chado::Dbxref->new($dbh, $doi_dbxref_id);
-%	      my $doi_accession =  $dbxref->get_accession;
-% 	      $doi = "<a href= \"http://doi.org/$doi_accession\">DOI:$doi_accession </a> ";	
-%	  }	    
-  <& /chado/publication.mas, pub=>$pub, doi=>$doi, db=>$d->[0]->get_db_name(), accession=>$d->[0]->get_accession() &>
+% foreach my $pub ( @$pubs ) {
+  <& /chado/publication.mas, pub=>$pub &>
   <br >
-%	    }
 % }
 
 </&>

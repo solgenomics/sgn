@@ -15,7 +15,7 @@ layout: doc_page
 
 Before creating an account, please verify first that you don’t already have an account. You can use “Search” menu to check if you already registered as a user.
 
-In the "Search" menu, selecting the "People" tab and search your name. If nothing is found, proceed with the instructions below. Otherwise, clicking the “Login” button. If you have forgotten your password, you can retrieve it [*here*](http://www.cassavabase.org/solpeople/send-password.pl).
+In the "Search" menu, selecting the "People" tab and search your name. If nothing is found, proceed with the instructions below. Otherwise, clicking the “Login” button. If you have forgotten your password, you can retrieve it by clicking the "Forgot your password?" link on the login page.
 
 ### Creating a user account
 
@@ -34,7 +34,7 @@ After you submit the information, an email will be sent to the provided email ad
 
 To login, clicking the "Login" link in the toolbar on any page and enter your username and password.
 
-If you have forgotten your password, you can retrieve it [*here*](http://www.cassavabase.org/solpeople/send-password.pl).
+If you have forgotten your password, you can retrieve it by clicking the "Forgot your password?" link on the login page.
 
 <img src='{{"assets/images/image166.png" | relative_url }}' alt="login.png" width="624" height="133" />
 
@@ -60,16 +60,16 @@ Accounts with “user” status are able to:
 -   Post comments on pages
 -   Post to the forum
 
-To upgrade your account status to "submitter,” contact Cassavabase using the "contact" link provided at the footer of each page. Submitter accounts can add data, such as new plots, accessions, phenotype data and images. Click here to [*Contact Cassavabase*](http://www.cassavabase.org/contact/form).
+To upgrade your account status to "submitter,” contact the database curators using the "contact" link provided at the footer of each page. Submitter accounts can add data, such as new plots, accessions, phenotype data and images.
 
-### Submitting Feedback on the Cassavabase Website and Wiki
+### Submitting Feedback on an SGN Database
 
 We appreciate your feedback! Feel free to submit any questions or suggestions by using the "Feedback" link provided at the footer of each page.
 
 1.3. Menu Layout
 ----------------
 
-The Cassavabase website has a toolbar on the top of each page with a number of menus for convenient access of major functions. The menus, as pictured below, are “search,” “manage,” “analyze,” and “maps.” The toolbar also provides a quick search, a “log in” button, and a “new user” button.
+SGN Database websites have a toolbar on the top of each page with a number of menus for convenient access of major functions. The menus, as pictured below, are “search,” “manage,” “analyze,” and “maps.” The toolbar also provides a quick search, a “log in” button, and a “new user” button.
 
 <img src='{{"assets/images/image270.png" | relative_url }}' width="624" height="33" />
 
@@ -86,7 +86,7 @@ In the Search menu, the options are:
 | Trials                | Search trials by name, description, breeding program, year, location, and trial type.                                                  |
 | Markers               | Search different markers                                                                                                               |
 | Images                | Search images contained in the SGN database                                                                                            |
-| People                | Search Cassavabase users                                                                                                               |
+| People                | Search database users                                                                                                               |
 
 #### Manage
 
@@ -97,9 +97,10 @@ In the Manage menu, the options are:
 | Breeding Programs   | View, add and delete breeding programs                                                             |
 | Locations           | View, add and delete locations                                                                     |
 | Accessions          | Manage and search different accessions                                                             |
+| Seedlots            | Manage and search different seedlots                                                               |
 | Crosses             | Create new crosses in the database                                                                 |
 | Field Trials        | Manage field trials. Create trials using different field layouts.                                  |
-| Genotyping Trials   | Manage genotyping trials. Create trials using different breeding programs, locations, and years.   |
+| Genotyping Plates   | Manage genotyping plates. Create 96 or 384 well plates.                                            |
 | Phenotyping         | Upload phenotyping files from the Tablet Field Book application                                    |
 | Field Book App      | Manage the field book app data (download files to tablet)                                          |
 | Barcodes            | Refers to the old barcode system, mainly historical                                                |
@@ -110,74 +111,49 @@ In the Manage menu, the options are:
 **Clicking on the "Analyze" link will give a full menu of all analysis functions**  
 In the Analyze menu, the options are:
 
-| Tab                     | Description                                                            |
-|-------------------------|------------------------------------------------------------------------|
-| **Breeder Tools**       |                                                                        |
-| Breeder Home            | Access breeding functionalities. Lists important and helpful links.    |
-| Barcode Tools           | Manage, create, and download barcodes. Also access barcode tools.      |
-| Genomic Selection       | Can search for traits, start building a GS model, and predict values based on genotypes |
-| **Sequence Analysis**   |                                                                        |
-| BLAST                   | Sequence homology search for the cassava genome                        |
-| **Other**               |                                                                        |
-| Ontology Browser        | Browse all recorded ontologies                                         |
-
-
-#### Maps
-
-| Tab                                    | Description                                                     |
-|----------------------------------------|-----------------------------------------------------------------|
-| Cassava 2011, 2013 and 2014 GBS Maps   | Map of cassava genomes, has markers listed per chromosome       |
-| **Genome**                             |                                                                 |
-| *Cassava Genome Browser at JGI*        | Comprehensive genome browser provided by Joint Genome Browser   |
-
-#### About
-
-| Tab   | Description   |
-|-----------------------|-----------------------------------------------------------------|
-| About NextGen Cassava | Access home page of NextGen Cassava Project                     |
-| Contact               | CassavaBase contact form                                        |
-| Cite CassavaBase      | cite CassavaBase in your publications                           |
-| Manual                | CassavaBase manual                                              |
-| Wiki                  | Access to NextGen Cassava wiki                                  |
-| FAQ                   | Cassavabase users frequently asked questions and useful answers |
-| Forum                 | CassavaBase forum                                               |
-| Twitter               | Sol Genomics twitter page                                       |
-| Facebook              | Sol Genomics facebook page                                      |
+| Tab                   | Description                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| **Breeder Tools**     |                                                                                         |
+| Breeder Home          | Access breeding functionalities. Lists important and helpful links.                     |
+| Barcode Tools         | Manage, create, and download barcodes. Also access barcode tools.                       |
+| Genomic Selection     | Can search for traits, start building a GS model, and predict values based on genotypes |
+| **Sequence Analysis** |                                                                                         |
+| BLAST                 | Sequence homology search                                                                |
+| **Other**             |                                                                                         |
+| Ontology Browser      | Browse all recorded ontologies                                                          |
 
 1.4. Working with Lists {#working-with-lists}
 -----------------------
 
-Lists are collections of identifiers that are stored in the database. Lists can be composed of accessions, plots, traits, locations, and trials. Lists are attached to the individual user's account, and can only be created and seen by the user while logged in. CassavaBase makes heavy use of lists in a number of tools on the website. For example, trials are created using lists of accessions.
+Lists are collections of identifiers that are stored in the database. Lists can be composed of accessions, plots, traits, locations, and trials. Lists are attached to the individual user's account, and can only be created and seen by the user while logged in. SGN databases make heavy use of lists in a number of tools on the website. For example, trials are created using lists of accessions.
 
-### Generating lists
-
-**IMPORTANT: You can add only items that are stored in the database into your lists.**
+### Creating lists
 
 Lists can be generated in various ways:
 
 One way to create a list is by clicking on the "Lists" link located on the toolbar.
 
-<img src='{{"assets/images/image180.png" | relative_url }}' alt="list1.png" width="624" height="102" />
+<img src='{{"assets/images/list_manager_start.png" | relative_url }}' />
 
-To create a new list, entering the name of your new list, then clicking on “New List” button.
+To create a new list, enter the name of your new list and then clicking on the “New List” button. The name of the list can be anything, but should be unique and should be something to help you easily identify.
 
-<img src='{{"assets/images/image176.png" | relative_url }}' alt="list2.png" width="624" height="153" />
+<img src='{{"assets/images/list_manager_new_list.png" | relative_url }}' />
 
-You can find the list that you entered on the “Your Lists” page. To add items on your list, clicking on the view icon to open “List Contents” page.
+You can find the list that you entered on the “Your Lists” page. To add items to your list, click on the "View" icon to open “List Contents” page.
 
-<img src='{{"assets/images/image323.png" | relative_url }}' alt="list3.png" width="624" height="158" />
+<img src='{{"assets/images/list_manager_view_list.png" | relative_url }}' />
 
-On the “List Contents” page, entering items that you want to add to the list, then clicking on “Add” button.
+On the “List Contents” page, enter items that you want to add to the list, then click on “Add” button.
 
-<img src='{{"assets/images/image13.png" | relative_url }}' alt="list4.png" width="624" height="258" />
+<img src='{{"assets/images/list_manager_add_items.png" | relative_url }}' />
 
-The page will be updated and will display your items in a table at the bottom of the page.
+The page will be updated and will display your items in a table at the bottom of the page. It is possible to sort the list if you need.
 
-<img src='{{"assets/images/image80.png" | relative_url }}' alt="list6.png" width="624" height="228" />
+<img src='{{"assets/images/list_manager_added_items.png" | relative_url }}' />
 
-Selecting the type of items in your list. To verify that the items that you added to your list are already stored in the database and that you selected a correct type for the items, clicking on the “Validate” button.
+Select the type of items in your list. To verify that the items that you added to your list are already stored in the database and that you selected a correct type for the items, click on the “Validate” button.
 
-<img src='{{"assets/images/image145.png" | relative_url }}' alt="list5.png" width="624" height="224" />
+<img src='{{"assets/images/list_manager_list_types.png" | relative_url }}' />
 
 If those items are already in the database, a message will indicate that “This list passed validation”
 
@@ -204,3 +180,11 @@ This page shows all lists that have been created, including those created by usi
 4. Clicking on the “make public” icon will make your list available for other users to view and use your list.
 
 <img src='{{"assets/images/image297.png" | relative_url }}' alt="list10.png" width="624" height="97" />
+
+
+1.5. User Permissions
+---
+
+Users are assigned into four different groups to determine the level of access they have on the database. This is to prevent data from being altered of deleted in error.
+Users are also assigned under Breeding Programs to restrict data access between different breeding programs.
+Curators can go to Manage User Roles to see user permissions and change a user's permission level.

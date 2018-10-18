@@ -1,0 +1,591 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+<div class="modal fade" id="genotyping_trial_dialog" name="genotyping_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="addGenoTrialDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addGenoTrialDialog">Add Genotyping Plate</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form" action="/ajax/breeders/genotypetrial">
+
+                    <div class="container-fluid">
+
+                        <&| /util/workflow.mas, id=> "genotyping_trial_create_workflow" &>
+                            <&| /util/workflow.mas:step, title=> "Intro" &>
+                                <& /page/page_title.mas, title=>"This workflow will guide you through adding a genotyping plate in the database" &>
+                                <p>Genotyping plates represent 96 or 384 well plates.</p>
+                                <p>Each plate has a globally unique Plate ID.</p>
+                                <p>Each well in the plate has a globally unique tissue sample ID.</p>
+                                <p>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
+                                <p>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+
+                            <&| /util/workflow.mas:step, title=> "Basic Plate Info" &>
+                                <& /page/page_title.mas, title=>"Provide info about your plate" &>
+
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Facility: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="genotyping_trial_facility_select">
+                                            <option value="none">None</option>
+                                            <option value="igd">Cornell IGD</option>
+                                            <option value="intertek">Intertek</option>
+                                            <option value="bgi">BGI</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Project Name: <br/><small>-In Coordinate App this is called "Plate ID"<br/>-Should match Vendor Project if you have one<br/>-Name does not need to exist in database previously</small></label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="genotyping_project_name" name="genotyping_project_name" type="text" placeholder="e.g. NextGenCassava"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Plate ID: <br/><small>-In Coordinate App this is called "Plate Name"<br/>-This is the globally unique name of the plate</small></label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="genotyping_trial_name" name="genotyping_trial_name" type="text" placeholder=" e.g. 18DNA00001"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Plate Format: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="genotyping_trial_plate_format">
+                                            <option value="96">96 Well</option>
+                                            <option value="384">384 Well</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sample Type: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="genotyping_trial_plate_sample_type">
+                                            <option value="DNA">DNA</option>
+                                            <option value="RNA">RNA</option>
+                                            <option value="Tissue">Tissue</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Plate's Breeding Program: </label>
+                                    <div class="col-sm-7">
+                                        <span id="breeding_program_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Plate's Location: </label>
+                                    <div class="col-sm-7">
+                                        <span id="location_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Plate's Year: </label>
+                                    <div class="col-sm-7">
+                                        <span id="year_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Genotyping Plate's Description: </label>
+                                    <div class="col-sm-7">
+                                        <textarea class="form-control" id="genotyping_trial_description" name="genotyping_trial_description" maxlength="250"></textarea>
+                                    </div>
+                                </div>
+
+                                <br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Well Info" &>
+                                <& /page/page_title.mas, title=>"Provide information about the wells in your plate" &>
+                                <br/><br/>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Select One: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="genotyping_trial_well_input_option">
+                                            <option value="xls">I am uploading a plate design I made in Excel</option>
+                                            <option value="coordinate">I am uploading a Default Coordinate Android Application plate design</option>
+                                            <option value="coordinate_template">I am uploading a Custom Coordinate Android Application plate design</option>
+                                            <option value="design">I need to design a completely new plate</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="genotyping_trial_well_upload_section">
+                                    <h3>You want to upload an existing plate layout</h3>
+
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="genotyping_trial_layout_upload_spreadsheet_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select Plate Layout XLS File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="genotyping_trial_layout_upload" id="genotyping_trial_layout_upload" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="genotyping_trial_well_coordinate_upload_section" style="display:none">
+                                    <h3>You want to upload a Coordinate Android Application file.</h3>
+
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="genotyping_trial_layout_upload_coordinate_spreadsheet_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select Coordinate CSV File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="genotyping_trial_layout_upload_coordinate" id="genotyping_trial_layout_upload_coordinate" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="genotyping_trial_well_coordinate_template_upload_section" style="display:none">
+                                    <h3>You want to upload a Custom Android Application file.</h3>
+
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="genotyping_trial_layout_upload_coordinate_custom_spreadsheet_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select Coordinate CSV File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="genotyping_trial_layout_upload_coordinate_template" id="genotyping_trial_layout_upload_coordinate_template" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="genotyping_trial_well_design_section" style="display:none">
+                                    <h3>You want to design a completely new plate.</h3>
+
+                                    <div class="well well-sm">
+                                        <ul>
+                                            <li>Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill 95 wells you should supply a list of 95 elements.</li>
+                                            <li>Note: From the most desirable to least desirable list type you can choose: tissue samples, plants, plots, or accessions</li>
+                                        </ul>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-7 control-label">Source Observation Unit List: </label>
+                                        <div class="col-sm-5">
+                                            <span id="accession_select_box_span">[loading...]</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Blank Well: <small>(Cornell IGD requires a specific well to be blank.)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_blank_well" name="genotyping_blank_well" type="text" placeholder="e.g. A01"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Well Concentration (ng/ul): <small>(If you used the same conc for all wells)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_concentration" name="genotyping_well_concentration" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Well Volume (ul): <small>(If you used the same vol for all wells)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_volume" name="genotyping_well_volume" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all wells)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_tissue" name="genotyping_well_tissue" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> NCBI Taxonomy ID: <small>(Official NCBI ID.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_ncbi_taxonomy_id" name="genotyping_well_ncbi_taxonomy_id" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Extraction: <small>(If used the same extraction for all wells)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_extraction" name="genotyping_well_extraction" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Person: <small>(If same person prepared all wells.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_dna_person" name="genotyping_well_dna_person" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Date: <small>(If plated on same date. YYYY/MM/DD)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_date" name="genotyping_well_date" type="text" placeholder="YYYY/MM/DD"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Notes: <small>(Additional notes for these wells.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="genotyping_well_notes" name="genotyping_well_notes" type="text" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
+                                <& /page/page_title.mas, title=>"Is your genotyping plate linked with field trials in the database? This information can also be added from the genotyping plate detail page once the trial is saved in the database." &>
+
+                                <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
+
+                                <br/>
+                                <center>
+                                <button class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                <center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Confirm" &>
+                                <& /page/page_title.mas, title=>"Finalize and submit your genotyping plate" &>
+
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <small>Automatic submission currently not working. You can submit it from the Genotyping Plate's detail page or download the information from the Genotyping Plate's detail page and submit it yourself after clicking Submit</small></label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="genotyping_trial_facility_submit_select" disabled>
+                                            <option value="no">No</option>
+                                            <option value="yes">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <hr>
+                                <center>
+                                <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:complete, title=> "Complete" &>
+                                <& /page/page_title.mas, title=>"Complete! Your genotyping plate was saved in the database." &>
+
+                                <p>
+                                    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                    The trial was saved successfully
+                                </p>
+
+                                <ul>
+                                    <li>You may want to proceed to the genotyping plate detail page for the trial you just created.</li>
+                                    <li>You can print barcodes for the plate and tissue samplesl.</li>
+                                </ul>
+                                <br/>
+                            </&>
+                        </&>
+
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="genotyping_trial_layout_upload_spreadsheet_info_format_dialog" name="genotyping_trial_layout_upload_spreadsheet_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypingTrialInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading a pre-existing genotyping plate layout.</b>
+                    <br/>
+                    <b>File must be Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>date</td>
+                                <td>sample_id</td>
+                                <td>well_A01</td>
+                                <td>row</td>
+                                <td>column</td>
+                                <td>source_observation_unit_name</td>
+                                <td>ncbi_taxonomy_id</td>
+                                <td>dna_person</td>
+                                <td>notes</td>
+                                <td>tissue_type</td>
+                                <td>extraction</td>
+                                <td>concentration</td>
+                                <td>volume</td>
+                                <td>is_blank</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>date (should be YYYY-MM-DD)</li>
+                    <li>sample_id (the unique identifier for the sample in the well)</li>
+                    <li>well_A01 (the position of the sample in the plate)</li>
+                    <li>row (the row position of the sample in the plate e.g. A)</li>
+                    <li>column (the column position of the sample in the plate e.g. 10)</li>
+                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
+                    </ul>
+                    
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>ncbi_taxonomy_id (NCBI taxonomy identifier)</li>
+                    <li>dna_person (the name of the person who prepared the well)</li>
+                    <li>notes (any additional notes on the well)</li>
+                    <li>tissue_type (free-text for what type of tissue is present in the well)</li>
+                    <li>extraction (free-text for the extraction method e.g. CTAB)</li>
+                    <li>concentration (concentration in ng/ul)</li>
+                    <li>volume (volume in ul)</li>
+                    <li>is_blank (indicates if well is blank. write 1 if blank, otherwise leave empty.)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="genotyping_trial_layout_upload_coordinate_info_format_dialog" name="genotyping_trial_layout_upload_coordinate_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypingTrialCoordinateInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialCoordinateInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading a Default Coordinate Android Application exported plate layout.</b>
+                    <br/>
+                    <b>File must be a CSV file (.csv)</b>
+                    <br />
+                    (Excel format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>date</td>
+                                <td>plate_id</td>
+                                <td>plate_name</td>
+                                <td>sample_id</td>
+                                <td>well_A01</td>
+                                <td>well_01A</td>
+                                <td>tissue_id</td>
+                                <td>dna_person</td>
+                                <td>notes</td>
+                                <td>tissue_type</td>
+                                <td>extraction</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>date (should be YYYY-MM-DD)</li>
+                    <li>plate_id (an identifier for a grouping of plates. called "Genotyping Project Name" in genotyping plate submission form. e.g. NextGenCassava)</li>
+                    <li>plate_name (the unique name for the individual plate. called "Plate ID" in genotyping plate submission form. e.g. 18DNA00001)</li>
+                    <li>sample_id (the unique identifier for the sample in the well. e.g. 18DNA00001_A01)</li>
+                    <li>well_A01 (the position of the sample in the plate in this format A01)</li>
+                    <li>well_01A (the position of the sample in the plate in this format 01A)</li>
+                    <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
+                    <li>dna_person (the name of the person who plated the individual sample. can be any name.)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>notes (any additional notes on the well)</li>
+                    <li>tissue_type (free-text for what type of tissue is present in the well)</li>
+                    <li>extraction (free-text for the extraction method e.g. CTAB)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_coordinate_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="genotyping_trial_layout_upload_coordinate_custom_info_format_dialog" name="genotyping_trial_layout_upload_coordinate_custom_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypingTrialCoordinateCustomInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypingTrialCoordinateCustomInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading a Custom Coordinate Android Application exported plate layout.</b>
+                    <br/>
+                    <b>File must be a CSV file (.csv)</b>
+                    <br />
+                    (Excel format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>Value</td>
+                                <td>Column</td>
+                                <td>Row</td>
+                                <td>Identification</td>
+                                <td>Person</td>
+                                <td>Date</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>Value (the identifier of the origin material. e.g. 2018MyPlant0001. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. This can also say 'exclude' to indicate a BLANK)</li>
+                        <li>Column (the column position of the sample e.g. 10)</li>
+                        <li>Row (the row position of the sample e.g. A)</li>
+                        <li>Identification (free text)</li>
+                        <li>Person (the name of the person who plated the individual sample. can be any name.)</li>
+                        <li>Date (should be YYYY-MM-DD)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_coordinate_custom_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#genotyping_trial_layout_upload_spreadsheet_info_format').click(function(){
+        jQuery('#genotyping_trial_layout_upload_spreadsheet_info_format_dialog').modal('show');
+    });
+
+    jQuery('#genotyping_trial_layout_upload_coordinate_spreadsheet_info_format').click(function(){
+        jQuery('#genotyping_trial_layout_upload_coordinate_info_format_dialog').modal('show');
+    });
+
+    jQuery('#genotyping_trial_layout_upload_coordinate_custom_spreadsheet_info_format').click(function(){
+        jQuery('#genotyping_trial_layout_upload_coordinate_custom_info_format_dialog').modal('show');
+    });
+
+    jQuery('#genotyping_trial_well_input_option').change(function(){
+        if (jQuery(this).val() == 'xls'){
+            jQuery("#genotyping_trial_well_upload_section").show();
+            jQuery("#genotyping_trial_well_design_section").hide();
+            jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
+            jQuery('#genotyping_trial_layout_upload_coordinate').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate_template').val('');
+        }
+        if(jQuery(this).val() == 'coordinate'){
+            jQuery('#genotyping_trial_well_coordinate_upload_section').show();
+            jQuery("#genotyping_trial_well_design_section").hide();
+            jQuery("#genotyping_trial_well_upload_section").hide();
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
+            jQuery('#genotyping_trial_layout_upload').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate_template').val('');
+        }
+        if(jQuery(this).val() == 'coordinate_template'){
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').show();
+            jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
+            jQuery("#genotyping_trial_well_design_section").hide();
+            jQuery("#genotyping_trial_well_upload_section").hide();
+            jQuery('#genotyping_trial_layout_upload').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate').val('');
+        }
+        if (jQuery(this).val() == 'design' ){
+            jQuery("#genotyping_trial_well_design_section").show();
+            jQuery("#genotyping_trial_well_upload_section").hide();
+            jQuery('#genotyping_trial_well_coordinate_upload_section').hide();
+            jQuery('#genotyping_trial_well_coordinate_template_upload_section').hide();
+            jQuery('#genotyping_trial_layout_upload_coordinate').val('');
+            jQuery('#genotyping_trial_layout_upload').val('');
+            jQuery('#genotyping_trial_layout_upload_coordinate_template').val('');
+        }
+    });
+
+});
+</script>

@@ -29,27 +29,42 @@ sub folder_page :Path("/folder") Args(1) {
     my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->schema, folder_id => $folder_id });
 
     my $children = $folder->children();
-    my @crosses;
-    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'cross', 'stock_type')->cvterm_id();
+    my @trials;
+    my @cross_trials;
+    my @genotyping_trials;
+    my @child_folders;
+    my $has_child_folders;
     foreach (@$children) {
+        #print STDERR $_->folder_type." : ".$_->name."\n";
+        if ($_->folder_type eq 'trial') {
+            push @trials, $_;
+        }
         if ($_->folder_type eq 'cross') {
-            my $cross_stock = $self->schema->resultset("Project::Project")->search({ 'me.project_id' => $_->folder_id() })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
-            if ($cross_stock) {
-                push @crosses, [$cross_stock->stock_id(), $cross_stock->uniquename()];
-            }
+            push @cross_trials, $_;
+        }
+        if ($_->folder_type eq 'genotyping_trial') {
+            push @genotyping_trials, $_;
+        }
+        if ($_->folder_type eq 'folder') {
+            $has_child_folders = 1;
+            push @child_folders, $_;
         }
     }
     #print STDERR Dumper \@crosses;
 
-    $c->stash->{children} = $children;
-    $c->stash->{crosses} = \@crosses;
+    $c->stash->{trials} = \@trials;
+    $c->stash->{crossing_trials} = \@cross_trials;
+    $c->stash->{genotyping_trials} = \@genotyping_trials;
+    $c->stash->{child_folders} = \@child_folders;
     $c->stash->{project_parent} = $folder->project_parent();
     $c->stash->{breeding_program} = $folder->breeding_program();
     $c->stash->{folder_id} = $folder_id;
     $c->stash->{folder_name} = $folder_project->name();
     $c->stash->{folder_for_trials} = $folder->folder_for_trials();
     $c->stash->{folder_for_crosses} = $folder->folder_for_crosses();
+    $c->stash->{folder_for_genotyping_trials} = $folder->folder_for_genotyping_trials();
     $c->stash->{folder_description} = $folder_project->description();
+    $c->stash->{has_child_folders} = $has_child_folders;
     if (!$folder->breeding_program) {
         $c->stash->{message} = "The requested folder does not exist or has been deleted.";
         $c->stash->{template} = 'generic_message.mas';

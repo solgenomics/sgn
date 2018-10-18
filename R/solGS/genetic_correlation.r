@@ -13,30 +13,24 @@ library(gplots)
 library(ltm)
 library(plyr)
 library(rjson)
+library(methods)
 
+allArgs <- commandArgs()
 
-allargs<-commandArgs()
+outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
+                    what = "character")
 
-geneticDataFile <- grep("combined_gebvs",
-                        allargs,
-                        ignore.case=TRUE,
-                        perl=TRUE,
-                        value=TRUE
-                      )
+inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
+                    what = "character")
 
-correTableFile <- grep("genetic_corre_table",
-                       allargs,
-                       ignore.case=TRUE,
-                       perl=TRUE,
-                       value=TRUE
-                       )
+correTableFile <- grep("genetic_corre_table", outputFiles, value=TRUE)
+correJsonFile  <- grep("genetic_corre_json", outputFiles, value=TRUE)
 
-correJsonFile <- grep("genetic_corre_json",
-                      allargs,
-                      ignore.case=TRUE,
-                      perl=TRUE,
-                      value=TRUE
-                      )
+message('corre table file: ', correTableFile)
+message('corre json file: ', correJsonFile)
+
+geneticDataFile <- grep("combined_gebvs", inputFiles, value=TRUE)
+message('genetic data file: ', geneticDataFile)
 
 geneticData <- read.table(geneticDataFile,
                           header = TRUE,
@@ -50,7 +44,6 @@ coefpvalues <- rcor.test(geneticData,
                          method="pearson",
                          use="pairwise"
                          )
-
 
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat
@@ -121,6 +114,7 @@ write.table(coefficients,
       quote=FALSE,
       dec="."
       )
+
 
 write.table(correlationJson,
       file=correJsonFile,

@@ -1,0 +1,32 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
+    <thead>
+        <tr>
+            <th>Cross Name</th>
+            <th>Number of Progenies</th>
+            <th>Family Name</th>
+        </tr>
+    </thead>
+</table>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#progenies_in_crossingtrial_section_onswitch').click(function(){
+        jQuery('#progenies_in_crossingtrial_table').DataTable({
+            'destroy': true,
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
+        });
+    });
+
+});
+
+</script>

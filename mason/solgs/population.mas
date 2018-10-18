@@ -10,7 +10,7 @@ $project_desc
 $stocks_no
 $markers_no
 $traits_no
-$uploaded_reference=>''
+$list_reference=>''
 $owner=>''
 $protocol
 $acronym
@@ -48,7 +48,7 @@ $acronym
     traits_no    => $traits_no,
     owner        => $owner,
     protocol     => $protocol,
-    uploaded_reference => $uploaded_reference
+    list_reference => $list_reference
  &>
 
 </&>
@@ -62,7 +62,7 @@ $acronym
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 
-      title       => "Traits"
+      title       => "Train model"
 &>
        
 <& population/select_traits.mas, 
@@ -70,12 +70,20 @@ $acronym
      traits_form        => $traits_form,
      all_traits_file    => $all_traits_file,
      no_traits_selected => $no_traits_selected,
-     uploaded_reference => $uploaded_reference
+     list_reference => $list_reference
 &>
 
 </&>
 
-       
+% if ($pop_id !~ /list/)
+% {
+
+<& /anova.mas,
+   pop_id => $pop_id,
+&>
+
+% }
+     
 <& population/correlation.mas, 
      pop_id  => $pop_id,
 &>
@@ -116,4 +124,5 @@ $acronym
 %}
 
 
- <input type="hidden" id="population_id" value="<% $pop_id %>" />
+<input type="hidden" id="population_id" value="<% $pop_id %>" />
+

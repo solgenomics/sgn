@@ -180,7 +180,7 @@ sub patch {
 		my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
 		$sl->uniquename($seedlot_uniquename);
 		$sl->location_code("NA");
-		$sl->accession_stock_ids([$accession_stock_id]);
+		$sl->accession_stock_id($accession_stock_id);
 		#$sl->organization_name();
 		#$sl->population_name($population_name);
 		$sl->breeding_program_id($seedlot_bp_id);

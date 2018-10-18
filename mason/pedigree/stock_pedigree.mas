@@ -7,9 +7,10 @@ stock_pedigree.mas
 
 This component displays a pedigree
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Jeremy Edwards <jde22@cornell.edu>
+David Lyon      <dal333@cornell.edu>
+Jeremy Edwards  <jde22@cornell.edu>
 
 =head1 ARGUMENTS
 
@@ -19,8 +20,6 @@ Jeremy Edwards <jde22@cornell.edu>
 
 $stock_id - the id of the stock for which pedigree information will be displayed
 
-$has_pedigree - whether the stock has pedigree information.
-
 =back
 =cut
 
@@ -28,12 +27,17 @@ $has_pedigree - whether the stock has pedigree information.
 
 <%args>
 $stock_id
-$has_pedigree
 </%args>
 
 <style>
 .ui-autocomplete {
     z-index: 2147483647;
+}
+#pdgv-wrap{
+    position: relative;
+}
+#pdgv-wrap>svg{
+    width: 100%;
 }
 </style>
 
@@ -155,30 +159,477 @@ $has_pedigree
 </script>
 
 
-
-
-% if (!$has_pedigree) { return; }
-
 <& /util/import_javascript.mas, classes => [ 'jqueryui' ] &>
 
 
-<center>
-<div name="stock_pedigree" style="max-width:700px;max-height:400px;overflow:auto">
-
-
-<object target="_top" 
-   xmlns="http://www.w3.org/2000/svg"
-	xmlns:xlink="http://www.w3.org/1999/xlink"
-	pluginspage="http://www.adobe.com/svg/viewer/install/"
-	width="700px"
-	max-height="400px"
-	min-height="200px"
-	height="400px"
-	overflow="auto"
-	data="/pedigree/svg/<% $stock_id %>?<% rand() %>" type="image/svg+xml">
-</object>
-
+<div>
+    <span style="white-space:nowrap;">
+        <span class="glyphicon glyphicon-move" aria-hidden="true">
+        </span> Drag to Pan
+    </span>&nbsp;&nbsp;
+    <span style="white-space:nowrap;">
+        <span class="glyphicon glyphicon-zoom-in" aria-hidden="true">
+        </span> Scroll to Zoom
+    </span>&nbsp;&nbsp;
+    <span style="white-space:nowrap;">
+        <span class="glyphicon glyphicon-minus" style="color:red;" aria-hidden="true">
+        </span> Female Parent
+    </span>&nbsp;&nbsp;
+    <span style="white-space:nowrap;">
+        <span class="glyphicon glyphicon-minus" style="color:blue;" aria-hidden="true">
+        </span> Male Parent
+    </span>&nbsp;&nbsp;
+    <span style="white-space:nowrap;">
+        <span class="glyphicon glyphicon-circle-arrow-right" style="color:purple;" aria-hidden="true">
+        </span> Expand Pedigree
+    </span>
+    
 </div>
+<center>
+<div id="pdgv-loading-indicator">
+    <br>
+    Loading... <img src="/documents/img/spinner.gif" />
+    <br>
+    <br>
+</div>
+<div id="pdgv-wrap" style="border:solid thin #ddd;width:100%;"></div>
 </center>
-  
+<!-- <div style="border:solid thin black; padding:1em; margin-top:0.25em;">
+    <label class="checkbox-inline" style="display:inline-block;">
+        <input type="checkbox" id="inlineCheckbox1" value="option1"> Enable Overlay
+    </label>
+    <select class="form-control" style="max-width:12em; display:inline-block;">
+        <option selected disabled>Select Trait Type</option>
+        <option>Nominal/Catagorical</option>
+        <option>Scale/Numeric</option>
+    </select>
+    <select class="form-control" style="max-width:10em; display:inline-block;">
+        <option selected disabled>Select Trait</option>
+    </select>
+</div> -->
 
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min', 'd3.d3-pedigree-tree', 'brapi.BrAPI', 'brapi.PedigreeViewer' ] &>
+<script type="text/javascript">
+(function() {
+    'use strict';
+    var STOCK_ID = "<% $stock_id %>";
+    var base_url="/brapi/v1";
+    var pdg = PedigreeViewer(base_url,undefined,function(dbId){
+        return "/stock/"+dbId+"/view";
+    });
+    pdg.newTree(STOCK_ID,function(){
+        pdg.drawViewer("#pdgv-wrap",600,600);
+        jQuery("#pdgv-loading-indicator").hide();
+    });
+}());
+// ;
+// (function(){
+//     var STOCK_ID = "<% $stock_id %>";
+//     var loaded_nodes = {};
+//     d3.json('/ajax/pedigrees/get_full?stock_id='+STOCK_ID,function(nodes){
+//         nodes.forEach(function(node){
+//             loaded_nodes[node.id] = node;
+//         })
+//         jQuery(document).ready(function(){
+//             main(nodes);
+//         });
+//     });
+//     function load_nodes(to_load,callback){
+//         if (to_load.length<1) return;
+//         var req_url = "/ajax/pedigrees/get_relationships";
+//         var body = "stock_id="+to_load.join("&stock_id=");
+//         d3.request(req_url)
+//             .mimeType("application/json")
+//             .header("X-Requested-With", "XMLHttpRequest")
+//             .header("Content-Type", "application/x-www-form-urlencoded")
+//             .response(function(xhr){return JSON.parse(xhr.responseText);})
+//             .post(body,function(loaded){
+//                 var nodes = loaded.filter(function(node){
+//                     if (!loaded_nodes.hasOwnProperty(node.id)){
+//                         loaded_nodes[node.id] = node;
+//                         return true;
+//                     }
+//                     return false;
+//                 });
+//                 callback(nodes);
+//             });
+//     };
+// 
+//     function main(start_nodes) {  
+//         var tree = d3.pedigreeTree()
+//           .levelWidth(200)
+//           .levelMidpoint(50)
+//           .nodePadding(220)
+//           .nodeWidth(10)
+//           .linkPadding(25)
+//           .vertical(true)
+//           .parentsOrdered(true)
+//           .parents(function(node){
+//             return [loaded_nodes[node.parents.mother],loaded_nodes[node.parents.father]].filter(Boolean);
+//           })
+//           .id(function(node){
+//             return node.id;
+//           })
+//           .groupChildless(true)
+//           .iterations(10)
+//           .data(start_nodes)
+//           .excludeFromGrouping([STOCK_ID]);
+//         drawTree(tree(),".pdgtree-canv");
+//     }
+// 
+//     function drawTree(layout,svg_selector,trans){
+// 
+//         //set default change-transtion to no duration
+//         trans = trans || d3.transition().duration(0);
+// 
+//         //make wrapper(pdg)
+//         var canv = d3.select(svg_selector);
+//         var cbbox = canv.node().getBoundingClientRect();
+//         var canvw = cbbox.width, 
+//             canvh = cbbox.height;
+//         var pdg = canv.select('.pedigreeTree');
+//         if (pdg.empty()){
+//           pdg = canv.append('g').classed('pedigreeTree',true);
+//         }
+// 
+//         //make background
+//         var bg = pdg.select('.pdg-bg');
+//         if (bg.empty()){
+//           bg = pdg.append('rect')
+//             .classed('pdg-bg',true)
+//             .attr("x",-canvw*500)
+//             .attr("y",-canvh*500)
+//             .attr('width',canvw*1000)
+//             .attr('height',canvh*1000)
+//             .attr('fill',"white")
+//             .attr('stroke','none');
+//         }
+// 
+//         //make scaled content/zoom groups
+//         var padding = 50;
+//         var pdgtree_width = d3.max([500,layout.x[1]-layout.x[0]]);
+//         var pdgtree_height = d3.max([500,layout.y[1]-layout.y[0]]);
+//         var centeringx = d3.max([0,(500 - (layout.x[1]-layout.x[0]))/2]);
+//         var centeringy = d3.max([0,(500 - (layout.y[1]-layout.y[0]))/2]);
+//         var scale = get_fit_scale(canvw,canvh,pdgtree_width,pdgtree_height,padding);
+//         var offsetx = (canvw-(pdgtree_width)*scale)/2 + centeringx*scale;
+//         var offsety = (canvh-(pdgtree_height)*scale)/2 + centeringy*scale;
+// 
+//         var content = pdg.select('.pdg-content');
+//         if (content.empty()){
+//           var zoom = d3.zoom();
+//           var zoom_group = pdg.append('g').classed('pdg-zoom',true).data([zoom]);
+// 
+//           content = zoom_group.append('g').classed('pdg-content',true);
+//           content.datum({'zoom':zoom})
+//           zoom.on("zoom",function(){
+//             zoom_group.attr('transform',d3.event.transform);
+//           });
+//           bg.style("cursor", "all-scroll").call(zoom).call(zoom.transform, d3.zoomIdentity);
+//           bg.on("dblclick.zoom",function(){
+//             zoom.transform(bg.transition(),d3.zoomIdentity);
+//             return false;
+//           });
+// 
+//           content.attr('transform',
+//               d3.zoomIdentity
+//                 .translate(offsetx,offsety)
+//                 .scale(scale)
+//             );
+//         }
+//         content.datum().zoom.scaleExtent([0.5,d3.max([pdgtree_height,pdgtree_width])/200])
+//         content.transition(trans)
+//           .attr('transform',
+//             d3.zoomIdentity
+//               .translate(offsetx,offsety)
+//               .scale(scale)
+//           );
+// 
+// 
+//         //set up draw layers
+//         var linkLayer = content.select('.link-layer');
+//         if(linkLayer.empty()){
+//             linkLayer = content.append('g').classed('link-layer',true);
+//         }
+//         var nodeLayer = content.select('.node-layer');
+//         if(nodeLayer.empty()){
+//             nodeLayer = content.append('g').classed('node-layer',true);
+//         }
+// 
+//         //link curve generators
+//         var stepline = d3.line().curve(d3.curveStepAfter);
+//         var curveline = d3.line().curve(d3.curveBasis);
+//         var build_curve = function(d){
+//           if (d.type=="parent->mid") return curveline(d.path);
+//           if (d.type=="mid->child") return stepline(d.path);
+//         };
+// 
+//         //draw nodes
+//         var nodes = nodeLayer.selectAll('.node')
+//           .data(layout.nodes,function(d){return d.id;});
+//         var newNodes = nodes.enter().append('g')
+//           .classed('node',true)
+//           .attr('transform',function(d){
+//             var begin = d;
+//             if(d3.event && d3.event.type=="click"){
+//               begin = d3.select(d3.event.target).datum();
+//             }
+//             return 'translate('+begin.x+','+begin.y+')'
+//           });
+//         var nodeNodes = newNodes.filter(function(d){
+//             return d.type=="node";
+//         });
+//         var groupNodes = newNodes.filter(function(d){
+//             return d.type=="node-group";
+//         });
+//         //draw node group expanders
+//         groupNodes.append("circle")
+//           .style("cursor","pointer")
+//           .attr("fill","purple")
+//           .attr("stroke","purple")
+//           .attr("cy",0)
+//           .attr("r",10);
+//         groupNodes.append('text')
+//           .style("cursor","pointer")
+//           .attr('y',6.5)
+//           .attr("font-size","14px")
+//           .attr("font-weight","bold")
+//           .attr('text-anchor',"middle")
+//           .attr('class', 'glyphicon')
+//           .html("&#xe092;")
+//           .attr('fill',"white");
+//         //create expander handles on nodes
+//         var expanders = nodeNodes.append('g').classed("expanders",true);
+//         var child_expander = expanders.append("g").classed("child-expander",true)
+//         child_expander.append("path")
+//           .attr("fill","none")
+//           .attr("stroke","purple")
+//           .attr("stroke-width",4)
+//           .attr("d",curveline([[0,20],[0,40]]));
+//         child_expander.append("circle")
+//           .style("cursor","pointer")
+//           .attr("fill","purple")
+//           .attr("stroke","purple")
+//           .attr("cy",45)
+//           .attr("r",10);
+//         child_expander.append('text')
+//           .style("cursor","pointer")
+//           .attr('y',52)
+//           .attr('x',-0.5)
+//           .attr("font-size","14px")
+//           .attr("font-weight","bold")
+//           .attr('text-anchor',"middle")
+//           .attr('class', 'glyphicon')
+//           .html("&#xe094;")
+//           .attr('fill',"white");
+//         child_expander.on("click",function(d){
+//           d3.select(this).on('click',null);
+//           var end_blink = load_blink(d3.select(this).select("circle").node());
+//           var to_load = d.value.children.mother_of.concat(d.value.children.father_of).filter(Boolean).map(String);
+//           load_nodes(to_load,function(nodes){
+//               end_blink();
+//               layout.pdgtree.add(nodes);
+//               drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700));
+//           });
+//         });
+//         var parent_expander = expanders.append("g").classed("parent-expander",true)
+//         parent_expander.append("path")
+//           .attr("fill","none")
+//           .attr("stroke","purple")
+//           .attr("stroke-width",4)
+//           .attr("d",curveline([[0,0],[0,-40]]));
+//         parent_expander.append("circle")
+//           .style("cursor","pointer")
+//           .attr("fill","purple")
+//           .attr("stroke","purple")
+//           .attr("cy",-45)
+//           .attr("r",10);
+//         parent_expander.append('text')
+//           .style("cursor","pointer")
+//           .attr('y',-39)
+//           .attr('x',-0.5)
+//           .attr("font-size","14px")
+//           .attr("font-weight","bold")
+//           .attr('text-anchor',"middle")
+//           .attr('class', 'glyphicon')
+//           .html("&#xe093;")
+//           .attr('fill',"white");
+//         parent_expander.on("click",function(d){
+//           d3.select(this).on('click',null);
+//           var end_blink = load_blink(d3.select(this).select("circle").node());
+//           var to_load = [d.value.parents.mother,d.value.parents.father].filter(Boolean).map(String);
+//           load_nodes(to_load,function(nodes){
+//               end_blink();
+//               layout.pdgtree.add(nodes);
+//               drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700));
+//           });
+//         });
+//         nodeNodes.append('rect').classed("node-name-highlight",true)
+//           .attr('fill',function(d){
+//               return d.id==STOCK_ID?"pink":"none";
+//           })
+//           .attr('stroke-width',0)
+//           .attr("width",220)
+//           .attr("height",40)
+//           .attr("y",-10)
+//           .attr("rx",20)
+//           .attr("ry",20)
+//           .attr("x",-110);
+//         nodeNodes.append('rect').classed("node-name-wrapper",true)
+//           .attr('fill',"white")
+//           .attr('stroke',"grey")
+//           .attr('stroke-width',2)
+//           .attr("width",200)
+//           .attr("height",20)
+//           .attr("y",0)
+//           .attr("rx",10)
+//           .attr("ry",10)
+//           .attr("x",-100);
+//         nodeNodes.filter(function(d){
+//             return d.id!=STOCK_ID;
+//           })
+//           .append("a").attr("target","_blank")
+//           .attr("href",function(d){
+//             if(d.id==STOCK_ID) return null;
+//             return "/stock/"+d.value.id+"/view";
+//           })
+//           .append('text').classed('node-name-text',true)
+//           .attr('y',15)
+//           .attr('text-anchor',"middle")
+//           .html(function(d){
+//             return d.value.name;
+//           })
+//           .attr('fill',"black");
+//         nodeNodes.filter(function(d){
+//             return d.id==STOCK_ID;
+//           })
+//           .append('text').classed('node-name-text',true)
+//           .attr('y',15)
+//           .attr('text-anchor',"middle")
+//           .html(function(d){
+//             return d.value.name;
+//           })
+//           .attr('fill',"black");
+//         //set node width to text width
+//         nodeNodes.each(function(d){
+//             var nn = d3.select(this);
+//             var ctl = nn.select('.node-name-text').node().getComputedTextLength();
+//             var w = ctl+20;
+//             nn.select('.node-name-wrapper')
+//                 .attr("width",w)
+//                 .attr("x",-w/2);
+//             nn.select('.node-name-highlight')
+//                 .attr("width",w+20)
+//                 .attr("x",-(w+20)/2);
+//         });
+//         var allNodes = newNodes.merge(nodes);
+//         //remove expander handles for nodes without unloaded relatives.
+//         allNodes.each(function(d){
+//             if (d.type=="node"){
+//                 var parents_unloaded = [d.value.parents.mother,d.value.parents.father]
+//                     .filter(function(node_id){
+//                         return !!node_id && !loaded_nodes.hasOwnProperty(node_id);
+//                     });
+//                 var children_unloaded = d.value.children.mother_of.concat(d.value.children.father_of)
+//                     .filter(function(node_id){
+//                         return !!node_id && !loaded_nodes.hasOwnProperty(node_id);
+//                     });
+//                 if (parents_unloaded.length<1){
+//                     d3.select(this).selectAll(".parent-expander").remove();
+//                 }
+//                 if (children_unloaded.length<1){
+//                     d3.select(this).selectAll(".child-expander").remove();
+//                 }
+//             }
+//         });
+//         allNodes.transition(trans).attr('transform',function(d){
+//           return 'translate('+d.x+','+d.y+')'
+//         });
+//         allNodes.filter(function(d){return d.type=="node-group"})
+//           .style("cursor", "pointer")
+//           .on("click",function(d){
+//             layout.pdgtree.excludeFromGrouping(d.value.slice(0,10).map(function(d){return d.id;}));
+//             drawTree(layout.pdgtree(),".pdgtree-canv",d3.transition().duration(700).ease(d3.easeLinear));
+//         });
+//         var oldNodes = nodes.exit().remove();
+// 
+// 
+//         //link colors
+//         var link_color = function(d){
+//           if (d.type=="mid->child") return 'purple';
+//           if (d.type=="parent->mid"){
+//             //if its the first parent, red. Otherwise, blue.
+//             var representative = d.sinks[0].type=="node-group"?
+//                     d.sinks[0].value[0].value 
+//                     : d.sinks[0].value;
+//             if (representative.parents.mother == d.source.id){
+//                 return "red";
+//             } 
+//             else {
+//                 return "blue";
+//             }
+//           }
+//           return 'gray';
+//         }
+// 
+//         //make links
+//         var links = linkLayer.selectAll('.link')
+//           .data(layout.links,function(d){return d.id;});
+//         var newLinks = links.enter().append('g')
+//           .classed('link',true);
+//         newLinks.append('path')
+//           .attr('d',function(d){
+//             var begin = (d.sink || d.source);
+//             if(d3.event && d3.event.type=="click"){
+//               begin = d3.select(d3.event.target).datum();
+//             }
+//             return curveline([[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y],[begin.x,begin.y]]);
+//           })
+//           .attr('fill','none')
+//           .attr('stroke',link_color)
+//           .attr('opacity',function(d){
+//             if (d.type=="parent->mid") return 0.7;
+//             return 0.999;
+//           })
+//           .attr('stroke-width',4);
+//         var allLinks = newLinks.merge(links);
+//         allLinks.transition(trans).select('path').attr('d',build_curve);
+//         var oldNodes = links.exit().remove();
+//     }
+// 
+//     function load_blink(node){
+//         var stop = false;
+//         var original_fill = d3.select(node).style("fill");
+//         var original_sw = d3.select(node).style("stroke-width");
+//         function blink(){
+//             if (!stop) d3.select(node)
+//                 .transition()
+//                 .duration(300)
+//                 .style("fill", "white")
+//                 .style("stroke-width", "5")
+//                 .transition()
+//                 .duration(300)
+//                 .style("fill", original_fill)
+//                 .style("stroke-width", original_sw)
+//                 .on("end", blink);
+//         }
+//         blink();
+//         return function(){
+//             stop = true;
+//         }
+//     }
+// 
+// 
+// 
+//     function get_fit_scale(w1,h1,w2,h2,pad){
+//         w1 -= pad*2;
+//         h1 -= pad*2;  
+//         if (w1/w2<h1/h2){
+//             return w1/w2;
+//         } else {
+//             return h1/h2;
+//         }
+//     }
+// })();
+</script>
+  

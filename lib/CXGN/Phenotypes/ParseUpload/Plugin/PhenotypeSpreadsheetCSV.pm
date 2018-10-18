@@ -1,5 +1,20 @@
 package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetCSV;
 
+# Validate Returns %validate_result = (
+#   error => 'error message'
+#)
+
+# Parse Returns %parsed_result = (
+#   data => {
+#       plotname1 => {
+#           varname1 => [12, '2015-06-16T00:53:26Z']
+#           varname2 => [120, '']
+#       }
+#   },
+#   units => [plotname1],
+#   variables => [varname1, varname2]
+#)
+
 use Moose;
 use JSON;
 use Data::Dumper;
@@ -86,25 +101,12 @@ sub validate {
         for my $col_num ($num_col_before_traits .. $num_cols-1) {
             my $value_string = $columns[$col_num];
             #print STDERR $value_string."\n";
-            my ($value, $timestamp) = split /,/, $value_string;
-            if (!$timestamp_included) {
-                if ($timestamp) {
-                    $parse_result{'error'} = "Timestamp found in value, but 'Timestamps Included' is not selected.";
-                    print STDERR "Timestamp wrongly found in value.\n";
-                    return \%parse_result;
-                }
-            }
             if ($timestamp_included) {
-                if (!$timestamp) {
-                    $parse_result{'error'} = "No timestamp found in value, but 'Timestamps Included' is selected.";
-                    print STDERR "Timestamp not found in value.\n";
+                my ($value, $timestamp) = split /,/, $value_string;
+                if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                    $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                    print STDERR "value: $timestamp\n";
                     return \%parse_result;
-                } else {
-                    if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                        $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-                        print STDERR "value: $timestamp\n";
-                        return \%parse_result;
-                    }
                 }
             }
         }
@@ -177,19 +179,21 @@ sub parse {
                     $value_string = $columns[$col_num];
                 }
                 #print STDERR $value_string."\n";
-                my ($value, $timestamp) = split /,/, $value_string;
-                if (!$timestamp) {
-                    $timestamp = '';
+                my $timestamp = '';
+                my $value = '';
+                if ($timestamp_included){
+                    ($value, $timestamp) = split /,/, $value_string;
+                } else {
+                    $value = $value_string;
                 }
-                if (!defined($value)) {
-                    $value = '';
+                if (!defined($timestamp)){
+                    $timestamp = '';
                 }
                 #print STDERR $trait_value." : ".$timestamp."\n";
 
-                my @treatments;
                 if ( defined($value) && defined($timestamp) ) {
                     if ($value ne '.'){
-                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp, \@treatments];
+                        $data{$observation_unit_name}->{$trait_name} = [$value, $timestamp];
                     }
                 } else {
                     $parse_result{'error'} = "Value or timestamp missing.";
@@ -208,8 +212,8 @@ sub parse {
     }
 
     $parse_result{'data'} = \%data;
-    $parse_result{'plots'} = \@observation_units;
-    $parse_result{'traits'} = \@traits;
+    $parse_result{'units'} = \@observation_units;
+    $parse_result{'variables'} = \@traits;
     #print STDERR Dumper \%parse_result;
 
     return \%parse_result;

@@ -40,10 +40,11 @@ my $download = CXGN::Trial::Download->new({
     format => $plugin,
     data_level => $data_level,
     include_timestamp => $timestamp_option,
+    include_row_and_column_numbers => $include_row_and_column_numbers,
+    exclude_phenotype_outlier => $exclude_phenotype_outlier,
     trait_contains => \@trait_contains_list,
     phenotype_min_value => $phenotype_min_value,
     phenotype_max_value => $phenotype_max_value,
-    search_type=>$search_type,
     has_header=>$has_header
 });
 my $error = $download->download();
@@ -63,6 +64,7 @@ use Moose::Role;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::MetaDataMatrix;
 use Data::Dumper;
 
 sub verify {
@@ -89,34 +91,40 @@ sub download {
     my $year_list = $self->year_list;
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
-    my $search_type = $self->search_type();
+    my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
-    my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
+    my @data;
+    if ($self->data_level() eq 'metadata'){
+        my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
+    		bcs_schema=>$schema,
+    		search_type=>'MetaData',
+    		data_level=>$data_level,
+    		trial_list=>$trial_list,    		
+    	);
+    	@data = $metadata_search->get_metadata_matrix();
     }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
+    else {
+    	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+    		bcs_schema=>$schema,
+    		search_type=>'MaterializedViewTable',
+    		data_level=>$data_level,
+    		trait_list=>$trait_list,
+    		trial_list=>$trial_list,
+    		year_list=>$year_list,
+    		location_list=>$location_list,
+    		accession_list=>$accession_list,
+    		plot_list=>$plot_list,
+    		plant_list=>$plant_list,
+    		include_timestamp=>$include_timestamp,
+            exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+    		trait_contains=>$trait_contains,
+    		phenotype_min_value=>$phenotype_min_value,
+    		phenotype_max_value=>$phenotype_max_value,
+    	);
+    	@data = $phenotypes_search->get_phenotype_matrix();
     }
-	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-		bcs_schema=>$schema,
-		search_type=>$factory_type,
-		data_level=>$data_level,
-		trait_list=>$trait_list,
-		trial_list=>$trial_list,
-		year_list=>$year_list,
-		location_list=>$location_list,
-		accession_list=>$accession_list,
-		plot_list=>$plot_list,
-		plant_list=>$plant_list,
-		include_timestamp=>$include_timestamp,
-		trait_contains=>$trait_contains,
-		phenotype_min_value=>$phenotype_min_value,
-		phenotype_max_value=>$phenotype_max_value,
-	);
-	my @data = $phenotypes_search->get_phenotype_matrix();
     #print STDERR Dumper \@data;
 
     print STDERR "Print Excel Start:".localtime."\n";
@@ -141,8 +149,11 @@ sub download {
 		my $max_value_text = $phenotype_max_value ? $phenotype_max_value : '';
 		my $location_list_text = $location_list ? join(",", @$location_list) : '';
 		my $year_list_text = $year_list ? join(",", @$year_list) : '';
-		$ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text");
-	}
+        if ($data_level eq 'metadata'){ $ws->write(1, 1, "metadata"); }
+        else{
+    		    $ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outliers: $exclude_phenotype_outlier");
+            }
+        }
 
     for (my $line=0; $line< scalar(@data); $line++) {
         my $columns = $data[$line];

@@ -1,0 +1,18 @@
+
+
+<%args>
+$error => undef
+$file => ''
+$filetype => ''
+</%args>
+
+<& /page/page_title.mas, title=>'Download Trial Barcodes' &>
+
+% if (!$error) {
+  Success! Please click the link below to download the barcode label file.<br />
+  <br /><br />
+  <a target="_blank" href="<% $file %>" >Download <% $filetype %> file</a>
+% }
+% elsif ($error){
+    <b>Download Barcode Error:</b> <%$error%>
+% }

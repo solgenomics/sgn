@@ -16,18 +16,12 @@ sub _validate_with_plugin {
   my %errors;
   my @error_messages;
   my %missing_accessions;
-  my %supported_trial_types;
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
   my %seen_plot_names;
   my %seen_accession_names;
   my %seen_seedlot_names;
-
-  #currently supported trial types
-  $supported_trial_types{'biparental'} = 1; #both parents required
-  $supported_trial_types{'self'} = 1; #only female parent required
-  $supported_trial_types{'open'} = 1; #only female parent required
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -61,6 +55,7 @@ sub _validate_with_plugin {
   my $accession_name_head;
   my $seedlot_name_head;
   my $num_seed_per_plot_head;
+  my $weight_gram_seed_per_plot_head;
   my $plot_number_head;
   my $block_number_head;
   my $is_a_control_head;
@@ -102,9 +97,12 @@ sub _validate_with_plugin {
   if ($worksheet->get_cell(0,10)) {
     $num_seed_per_plot_head = $worksheet->get_cell(0,10)->value();
   }
+  if ($worksheet->get_cell(0,11)) {
+    $weight_gram_seed_per_plot_head = $worksheet->get_cell(0,11)->value();
+  }
 
   my @treatment_names;
-  for (11 .. $col_max){
+  for (12 .. $col_max){
       if ($worksheet->get_cell(0,$_)){
           push @treatment_names, $worksheet->get_cell(0,$_)->value();
       }
@@ -143,8 +141,12 @@ sub _validate_with_plugin {
   if (!$num_seed_per_plot_head || $num_seed_per_plot_head ne 'num_seed_per_plot') {
     push @error_messages, "Cell K1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
+  if (!$weight_gram_seed_per_plot_head || $weight_gram_seed_per_plot_head ne 'weight_gram_seed_per_plot') {
+    push @error_messages, "Cell L1: weight_gram_seed_per_plot is missing from the header. (Header is required, but values are optional)";
+  }
 
   my @pairs;
+  my %seen_plot_numbers;
   for my $row ( 1 .. $row_max ) {
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
@@ -152,6 +154,7 @@ sub _validate_with_plugin {
     my $accession_name;
     my $seedlot_name;
     my $num_seed_per_plot = 0;
+    my $weight_gram_seed_per_plot = 0;
     my $plot_number;
     my $block_number;
     my $is_a_control;
@@ -193,6 +196,9 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,10)) {
       $num_seed_per_plot = $worksheet->get_cell($row,10)->value();
     }
+    if ($worksheet->get_cell($row,11)) {
+      $weight_gram_seed_per_plot = $worksheet->get_cell($row,11)->value();
+    }
 
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
@@ -209,6 +215,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
     }
     else {
+        $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         #file must not contain duplicate plot names
         if ($seen_plot_names{$plot_name}) {
             push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
@@ -223,6 +230,7 @@ sub _validate_with_plugin {
       push @error_messages, "Cell B$row_name: accession name missing";
     } else {
       #accession name must exist in the database
+      $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_accession_names{$accession_name}++;
     }
 
@@ -236,6 +244,13 @@ sub _validate_with_plugin {
     if (!($plot_number =~ /^\d+?$/)) {
         push @error_messages, "Cell C$row_name: plot number is not a positive integer: $plot_number";
     }
+    #plot number must be unique in file
+    if (exists($seen_plot_numbers{$plot_number})){
+        push @error_messages, "Cell C$row_name: plot number must be unique in your file. You already used this plot number in C".$seen_plot_numbers{$plot_number};
+    } else {
+        $seen_plot_numbers{$plot_number} = $row_name;
+    }
+
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
         push @error_messages, "Cell D$row_name: block number missing";
@@ -264,14 +279,18 @@ sub _validate_with_plugin {
     }
 
     if ($seedlot_name){
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_seedlot_names{$seedlot_name}++;
         push @pairs, [$seedlot_name, $accession_name];
     }
-    if (defined($num_seed_per_plot) && !($num_seed_per_plot =~ /^\d+?$/)){
+    if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
     }
+    if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
+        push @error_messages, "Cell L$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
+    }
 
-    my $treatment_col = 11;
+    my $treatment_col = 12;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
@@ -309,8 +328,10 @@ sub _validate_with_plugin {
         }
     }
 
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my @plots = keys %seen_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
+        'type_id' => $plot_type_id,
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@plots }
     });
@@ -351,10 +372,34 @@ sub _parse_with_plugin {
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
   my @treatment_names;
-  for (11 .. $col_max){
+  for (12 .. $col_max){
       if ($worksheet->get_cell(0,$_)){
           push @treatment_names, $worksheet->get_cell(0,$_)->value();
       }
+  }
+
+  my %seen_accession_names;
+  for my $row ( 1 .. $row_max ) {
+      my $accession_name;
+      if ($worksheet->get_cell($row,1)) {
+          $accession_name = $worksheet->get_cell($row,1)->value();
+          $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+          $seen_accession_names{$accession_name}++;
+      }
+  }
+  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+  my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
+  my @accessions = keys %seen_accession_names;
+  my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+      'me.is_obsolete' => { '!=' => 't' },
+      'stockprops.value' => { -in => \@accessions},
+      'me.type_id' => $accession_cvterm_id,
+      'stockprops.type_id' => $synonym_cvterm_id
+  },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+  my %acc_synonyms_lookup;
+  while (my $r=$acc_synonym_rs->next){
+      $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
   }
 
   for my $row ( 1 .. $row_max ) {
@@ -369,13 +414,16 @@ sub _parse_with_plugin {
     my $col_number;
     my $seedlot_name;
     my $num_seed_per_plot = 0;
+    my $weight_gram_seed_per_plot = 0;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
     }
+    $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,1)) {
       $accession_name = $worksheet->get_cell($row,1)->value();
     }
+    $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
     }
@@ -400,8 +448,14 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,9)) {
         $seedlot_name = $worksheet->get_cell($row, 9)->value();
     }
+    if ($seedlot_name){
+        $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    }
     if ($worksheet->get_cell($row,10)) {
         $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
+    }
+    if ($worksheet->get_cell($row,11)) {
+        $weight_gram_seed_per_plot = $worksheet->get_cell($row, 11)->value();
     }
 
     #skip blank lines
@@ -409,7 +463,7 @@ sub _parse_with_plugin {
       next;
     }
 
-    my $treatment_col = 11;
+    my $treatment_col = 12;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
@@ -417,6 +471,14 @@ sub _parse_with_plugin {
             }
         }
         $treatment_col++;
+    }
+
+    if ($acc_synonyms_lookup{$accession_name}){
+        my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+        if (scalar(@accession_names)>1){
+            print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+        }
+        $accession_name = $accession_names[0];
     }
 
     my $key = $row;
@@ -444,6 +506,7 @@ sub _parse_with_plugin {
     if ($seedlot_name){
         $design{$key}->{seedlot_name} = $seedlot_name;
         $design{$key}->{num_seed_per_plot} = $num_seed_per_plot;
+        $design{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
     }
   
   }

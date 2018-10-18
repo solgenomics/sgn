@@ -47,7 +47,7 @@ sub download {
     my $trial_id = $self->trial_id();
 
     my $t = CXGN::Trial->new( { bcs_schema => $self->bcs_schema(), trial_id => $trial_id });
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $trial_id });
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema(), trial_id => $trial_id, experiment_type=>'genotyping_layout' });
 
     my $layout = $layout->get_design();
     print STDERR "FILENAME: ".$self->filename()."\n";
@@ -117,8 +117,8 @@ sub download {
 	$ws->write(2 + $line, 2, $t->get_name());
 	$ws->write(2 + $line, 3, $k);
 	$ws->write(2 + $line, 4, $layout->{$k}->{igd_synonym});
-	$ws->write(2 + $line, 16, "Manihot");
-	$ws->write(2 + $line, 17, "esculenta");
+	$ws->write(2 + $line, 16, $layout->{$k}->{genus});
+	$ws->write(2 + $line, 17, $layout->{$k}->{species});
 	$ws->write(2 + $line, 20, $t->get_location());
 	$line++;
     }

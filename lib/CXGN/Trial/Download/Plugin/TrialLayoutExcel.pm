@@ -14,7 +14,7 @@ This plugin module is loaded from CXGN::Trial::Download
 For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
 
 A trial's layout can optionally include treatment and phenotype summary
-information, mapping to treatment_project_ids and trait_list, selected_trait_names.
+information, mapping to treatment_project_ids and trait_list.
 These keys can be ignored if you don't need them in the layout.
 
 As a XLS:
@@ -32,7 +32,6 @@ my $download = CXGN::Trial::Download->new({
     data_level => $data_level,
     treatment_project_ids => \@treatment_project_ids,
     selected_columns => $selected_cols,
-    selected_trait_names => \@selected_trait_names,
 });
 my $error = $download->download();
 my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -49,13 +48,14 @@ $c->res->body($output);
 use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
-use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
+use CXGN::Trial::TrialLayout;
+use List::MoreUtils ':all';
 
 sub verify { 
     return 1;
-}
+} 
 
 sub download { 
     my $self = shift;
@@ -71,23 +71,63 @@ sub download {
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
         selected_trait_ids => $self->trait_list,
-        selected_trait_names => $self->selected_trait_names
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){
         return $output;
     }
-    my @output_array = @{$output->{output}};
-    my $row_num = 0;
-    foreach my $l (@output_array){
-        my $col_num = 0;
-        foreach my $c (@$l){
-            $ws->write($row_num, $col_num, $c);
-            $col_num++;
+    
+    if ($self->data_level eq 'plot_fieldMap'){
+        my (@unique_col,@unique_row);
+        my %hash = %{$output->{output}};
+        my @all_col = @{$output->{cols}};
+        my @all_rows = @{$output->{rows}};
+        my ($min_col, $max_col) = minmax @all_col;
+    	my ($min_row, $max_row) = minmax @all_rows;
+    	for my $x (1..$max_col){
+    		push @unique_col, $x;
+    	}
+    	for my $y (1..$max_row){
+    		push @unique_row, $y;
+    	}
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $self->trial_id, experiment_type => 'field_layout'});
+        my $trial_name =  $trial_layout->get_trial_name();
+        my $info = $trial_name."\nColumns\nRows";
+        $ws->write( "A1", $info );
+        my $row_num_label = 1;        
+        foreach my $l (@unique_row){
+            my $col_num_label = 0;
+            $ws->write( $row_num_label, $col_num_label, $l);
+            $col_num_label++;
+            $row_num_label++;
+        }        
+        my $row_num_label_col = 1;
+        foreach my $l (@unique_col){
+            my $col_num_label_col = 0;
+            $ws->write($col_num_label_col, $row_num_label_col, $l);
+            $col_num_label_col++;
+            $row_num_label_col++;
+        }        
+        foreach my $row (keys %hash){
+            my $cols = $hash{$row};
+            foreach my $col (keys %$cols){
+                my $accession = $hash{$row}->{$col};
+                $ws->write($row, $col, $accession);
+            }
         }
-        $row_num++;
+    } else {
+        my @output_array = @{$output->{output}};
+        my $row_num = 0;
+        foreach my $l (@output_array){
+            my $col_num = 0;
+            foreach my $c (@$l){
+                $ws->write($row_num, $col_num, $c);
+                $col_num++;
+            }
+            $row_num++;
+        }
     }
-
+        
 }
 
 1;

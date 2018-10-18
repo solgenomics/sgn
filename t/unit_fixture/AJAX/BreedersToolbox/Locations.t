@@ -20,13 +20,13 @@ my $mech = Test::WWW::Mechanize->new;
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
 #print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 
 #test location retrieval
 $mech->post_ok('http://localhost:3010/ajax/location/all');
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
-my $expected_response = {'data' => '[{"geometry":{"coordinates":["-76.4735","42.4534"],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":"274","Code":"USA","Country":"United States","Id":24,"Latitude":"42.4534","Longitude":"-76.4735","Name":"Cornell Biotech","Program":null,"Trials":"<a href=\"/search/trials?nd_geolocation=Cornell Biotech\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":25,"Latitude":null,"Longitude":null,"Name":"NA","Program":null,"Trials":"<a href=\"/search/trials?nd_geolocation=NA\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":["-115.864","32.6136"],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":"109","Code":"USA","Country":"United States","Id":23,"Latitude":"32.6136","Longitude":"-115.864","Name":"test_location","Program":"test","Trials":"<a href=\"/search/trials?nd_geolocation=test_location\">5 trials</a>","Type":null},"type":"Feature"}]'};
+my $expected_response = {'data' => '[{"geometry":{"coordinates":[-76.4735,42.4534],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":274,"Code":"USA","Country":"United States","Id":24,"Latitude":42.4534,"Longitude":-76.4735,"Name":"Cornell Biotech","Program":null,"Trials":"<a href=\"/search/trials?nd_geolocation=Cornell Biotech\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":25,"Latitude":null,"Longitude":null,"Name":"NA","Program":null,"Trials":"<a href=\"/search/trials?nd_geolocation=NA\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[-115.864,32.6136],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":109,"Code":"USA","Country":"United States","Id":23,"Latitude":32.6136,"Longitude":-115.864,"Name":"test_location","Program":"test","Trials":"<a href=\"/search/trials?nd_geolocation=test_location\">5 trials</a>","Type":null},"type":"Feature"}]'};
 is_deeply($response, $expected_response, 'retrieve all locations');
 
 #test location store

@@ -1,0 +1,110 @@
+<%args>
+</%args>
+
+<& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
+
+<&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1&>
+
+<div class="well well-sm">
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div id="stock_search_graphical_filter_div" style="margin:1em">
+        [LOADING...]
+        </div>
+    </div>
+</div>
+
+<br/>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div style="overflow:scroll">
+            <table id="stock_search_graphical_filter_results_div" >
+            </table>
+        </div>
+    </div>
+</div>
+
+<br/>
+
+<&| /page/info_section.mas, title => 'Copy Filtered Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names in table to a new or exisiting list</i>'&>
+<div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
+<div id="graphical_filter_result_names" style="display: none;"></div>
+</&>
+
+
+</div>
+
+</&>
+
+<script>
+
+jQuery(document).ready(function () {
+
+});
+
+var currentGFilter = null;
+function loadBrAPIData(server,parameters,success){
+    var data = {
+        "pageSize" : 10000000,
+    };
+    d3.entries(parameters).forEach(function(entry){
+        data[entry.key] = data[entry.key]||entry.value;
+    });
+    
+    var brapi_Data = BrAPI(server+"/brapi/v1").phenotypes_search(data);
+    
+    if (currentGFilter!=null){
+        $("#stock_search_graphical_filter_results_div").DataTable().destroy();
+        $("#stock_search_graphical_filter_results_div").html("");
+      }
+
+    currentGFilter = GraphicalFilter(
+        brapi_Data,
+        function(d) { // traits/values
+          var traits = {}
+          d.observations.forEach(function(obs){
+            traits[obs.observationVariableName] = obs.value;
+          });
+          return traits;
+        },
+        function(d) {
+          return {
+            'Accession':d.germplasmName
+          }
+        },
+        ["Accession"],
+        function(d) {
+          return d.germplasmDbId
+        }
+      );
+    currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
+    brapi_Data.all(function(){
+      _make_graphical_filtering_list_select();
+      jQuery('#stock_search_graphical_filter_results_div').on( 'draw.dt', function () {
+          _make_graphical_filtering_list_select();
+      });
+    });
+    
+
+    function _make_graphical_filtering_list_select(){
+        var data = currentGFilter.results_table.context[0].aoData;
+        var displayed_rows = currentGFilter.results_table.context[0].aiDisplay;
+        var names = [];
+        for (var i =0; i< displayed_rows.length; i++){
+            var displayed_index = displayed_rows[i];
+            names.push(data[displayed_index].nTr.firstChild.innerText+'\n');
+        }
+        //console.log(names);
+        jQuery('#graphical_filter_result_names').html(names);
+    }
+
+    addToListMenu('graphical_filter_results_to_list_menu', 'graphical_filter_result_names', {
+        listType: 'accessions'
+    });
+}
+
+</script>

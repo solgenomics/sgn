@@ -1,0 +1,79 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ "CXGN.List", "CXGN.BreederSearch" ] &>
+
+
+<div id="trial_tissue_samples_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_tissue_samples_onswitch').one("click", function() {
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/tissue_samples',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="trial_tissue_samples_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+
+                html += '<tr><td><button class="btn btn-default btn-sm" id="trial_tissue_sample_select_all" name="1">Select All</button><br><br>'
+                html += '<div class="well well-sm"><div id="trial_tissue_samples_data_count" name="1">No Selection</div></div>'
+                html += '<div id="trial_tissue_samples_to_list_menu"></div><td><tr></table>'
+
+                jQuery('#trial_tissue_samples_html').html(html);
+
+                var trial_tissue_samples = response.trial_tissue_samples || [];
+
+                trial_tissue_samples_html = format_options_list(trial_tissue_samples);
+                jQuery('#trial_tissue_samples_data').html(trial_tissue_samples_html);
+ 
+                var data = jQuery('#trial_tissue_samples_data').val() || [];
+                show_list_counts('trial_tissue_samples_data_count', response.trial_tissue_samples.length, data.length);
+ 
+                if (jQuery('#trial_tissue_samples_data').length) {
+                      addToListMenu('trial_tissue_samples_to_list_menu', 'trial_tissue_samples_data', {
+                      selectText: true,
+                    });
+                }
+
+                jQuery('#trial_tissue_samples_select_all').click( function() { // select al
+                    var data_id = "trial_tissue_samples_data";
+                    selectAllOptions(document.getElementById(data_id));
+
+                    var data = jQuery("#"+data_id).val() || [];
+                    var count_id = "trial_tissue_samples_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('#trial_tissue_samples_data').change( function() { // update count when data selections change
+                    var data_id = jQuery(this).attr('id');
+                    var data = jQuery('#'+data_id).val() || [];
+                    var count_id = "trial_tissue_samples_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('select').dblclick( function() { // open detail page in new window or tab on double-click
+                    window.open("../../stock/"+this.value+"/view");
+                });
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving tissue samples.");
+            }
+        });
+    });
+});
+
+</script>

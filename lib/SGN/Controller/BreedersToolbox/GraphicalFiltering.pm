@@ -13,7 +13,7 @@ sub graphical_filtering :Path('/tools/graphicalfiltering') {
   my $self =shift;
   my $c = shift;
   if (! $c->user) {
-  	$c->res->redirect(uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+  	$c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
   	return;
   }
   my $trial_list_id = $c->request->param('trial_list_id');
@@ -36,7 +36,6 @@ sub graphical_filtering :Path('/tools/graphicalfiltering') {
   print STDERR $ajaxRequestString;
   $c->stash->{ajaxRequestString} = $ajaxRequestString;
 
-  $c->assets->include('/static/css/tools/GraphicalFiltering.css');
   $c->stash->{template} = '/tools/graphicalfiltering/index.mas';
 }
 1;

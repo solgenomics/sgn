@@ -1,0 +1,36 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+<& /page/page_title.mas, title=>"Manage Tissue Samples" &>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <& /page/page_title.mas, title=>"Not sure how to plan tissue sampling?" &>
+
+        <center>
+        <button class="btn btn-primary btn-block" name="tissue_sample_guided_help">Let us help!<br/>Click this button to begin our guided help.</button>
+        </center>
+    </div>
+</div>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Field Trial Tissue Samples</h4>", info_section_subtitle => 'View and create tissue samples for field trials. Tissue samples come from a plant in a plot.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" name="manage_tissue_samples_create_field_trial_samples">Create tissue samples for field trial</button>', icon_class => "glyphicon glyphicon-leaf", info_section_id => "manage_tissue_samples_field_trials" &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Genotyping Plate Tissue Samples</h4>", info_section_subtitle => 'View and create tissue samples for genotyping plates. Genotyping plates represent tissue samples in a 96 or 384 well plate layout.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Create or upload a genotyping plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="export_genotyping_trial_link">Export to Genotyping Vendor</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "manage_tissue_samples_genotyping_trials" &>
+
+<& /help/workflow_guided/tissue_sample_help.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+<& /breeders_toolbox/create_tissue_samples_dialogs.mas &>
+
+<script>
+
+jQuery(document).ready(function(){
+    jQuery('button[name="export_genotyping_trial_link"]').click(function(){
+        alert('Automatic export to genotyping vendors is currently not avaiable; however, you can download the layout and submit to vendor manually.');
+    });
+});
+
+</script>
+

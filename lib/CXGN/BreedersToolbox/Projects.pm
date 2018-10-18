@@ -47,8 +47,12 @@ sub get_breeding_programs_by_trial {
     my $trial_id = shift;
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
+    my $breeding_program_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
-    my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search( { 'subject_project_id' => $trial_id } );
+    my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search({
+        'subject_project_id' => $trial_id,
+        'type_id' => $breeding_program_rel_cvterm_id
+    });
 
     my $trial_row = $trial_rs -> first();
     my $rs;
@@ -71,7 +75,8 @@ sub get_breeding_program_by_name {
   my $program_name = shift;
   my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-  my $rs = $self->schema->resultset('Project::Project')->find( { 'name'=>$program_name, 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+  my $prs = $self->schema->resultset('Project::Project')->search( { 'name'=>$program_name, 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+  my $rs = $prs->first;
 
   if (!$rs) {
     return;
@@ -117,7 +122,7 @@ sub get_trials_by_breeding_program {
     my $cross_trials;
     my $genotyping_trials;
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
-    my $cross_cvterm_id = $self->get_cross_cvterm_id();
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
 
     my %projects_that_are_crosses;
@@ -136,7 +141,7 @@ sub get_trials_by_breeding_program {
 	$project_description{$id} = $desc;
       }
       if ($prop) {
-	if ($prop == $cross_cvterm_id) {
+	if ($prop == $crossing_trial_cvterm_id) {
 	  $projects_that_are_crosses{$id} = 1;
 	  $project_year{$id} = '';
 	  #print STDERR Dumper "Cross Trial: ".$name;
@@ -146,9 +151,9 @@ sub get_trials_by_breeding_program {
 	}
 	if ($propvalue) {
 	if ($propvalue eq "genotyping_plate") {
-	    #print STDERR "$id IS GENOTYPING TRIAL\n";
+	    #print STDERR "$id IS GENOTYPING PLATE\n";
 	    $projects_that_are_genotyping_trials{$id} =1;
-		#print STDERR Dumper "Genotyping Trial: ".$name;
+		#print STDERR Dumper "Genotyping Plate: ".$name;
 	}
 	}
       }
@@ -224,16 +229,16 @@ sub get_genotyping_trials_by_breeding_program {
 sub get_all_locations {
      my $self = shift;
      my $c = shift;
- 		 
+
      my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
      my @locations = ();
-     
+
      foreach my $loc ($rs->all()) {
          push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
      }
-     
+
      return \@locations;
- 		 
+
  }
 
 
@@ -269,6 +274,9 @@ ORDER BY 2";
 	$h->execute($project_location_type_id);
     my @locations;
     while (my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+        my $lat = $latitude ? $latitude + 0 : undef;
+        my $long = $longitude ? $longitude + 0 : undef;
+        my $alt = $altitude ? $altitude + 0 : undef;
         push(@locations, {
             type => "Feature",
             properties => {
@@ -279,14 +287,14 @@ ORDER BY 2";
                 Code => $country_code,
                 Program => $prog,
                 Type => $type,
-                Latitude => $latitude,
-                Longitude => $longitude,
-                Altitude => $altitude,
+                Latitude => $lat,
+                Longitude => $long,
+                Altitude => $alt,
                 Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
             },
             geometry => {
                 type => "Point",
-                coordinates => [$longitude, $latitude]
+                coordinates => [$long, $lat]
             }
         });
     }
@@ -446,6 +454,21 @@ sub get_breeding_program_with_trial {
     return $breeding_projects;
 }
 
+sub get_crossing_trials {
+    my $self = shift;
+
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
+
+    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$crossing_trial_cvterm_id }, { join => 'projectprops' }  );
+
+    my @crossing_trials;
+    while (my $row = $rs->next()) {
+	push @crossing_trials, [ $row->project_id, $row->name, $row->description ];
+    }
+
+    return \@crossing_trials;
+}
+
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
@@ -480,6 +503,14 @@ sub get_cross_cvterm_id {
     return $cross_cvterm->cvterm_id();
 }
 
+sub get_crossing_trial_cvterm_id {
+  my $self = shift;
+
+  my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'crossing_trial',  'project_type');
+  return $crossing_trial_cvterm_id->cvterm_id();
+}
+
+
 sub _get_design_trial_cvterm_id {
     my $self = shift;
      my $cvterm = $self->schema->resultset("Cv::Cvterm")
@@ -509,5 +540,6 @@ sub get_gt_protocols {
     }
     return \@protocols;
 }
+
 
 1;

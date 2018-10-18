@@ -14,7 +14,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$gs_traits_index
+$gs_traits_index => undef
 
 </%args>
 
@@ -25,15 +25,14 @@ $gs_traits_index
   title => "Or search for a trait ",
 &>
 
-<div id="gs_traits_index" class="row" style="margin: 20px 2px 60px;">
-  <p style="text-align:center">Traits index: <% $gs_traits_index %></p>
-</div>
+<!-- <div id="gs_traits_index" class="row" style="margin: 20px 2px 60px;"> -->
+<!--   <p style="text-align:center">Traits index: <% $gs_traits_index %></p> -->
+<!-- </div> -->
 
 <div id="search_trait_form" class="row">
-  <div class="col-md-5 col-md-offset-3">
+  <div style="padding-top: 40px;" align="center" class="form-inline">
     <input type="text" id="search_trait_entry" class="form-control" size="35px" placeholder="enter trait name"/>
-  </div>
-  <div>
+  
     <button id="search_trait" type="submit" class="btn btn-success"> 
       <span class="glyphicon glyphicon-search"></span>
     </button>

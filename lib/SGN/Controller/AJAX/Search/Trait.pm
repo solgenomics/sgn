@@ -18,33 +18,73 @@ __PACKAGE__->config(
 sub search : Path('/ajax/search/traits') Args(0) {
     my $self = shift;
     my $c    = shift;
-    my $trait_cv_name = $c->req->param('trait_cv_name') || $c->config->{trait_cv_name};
-    my $limit = $c->req->param('limit');
-    my $offset = $c->req->param('offset');
-
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $params = $c->req->params() || {};
+    #print STDERR Dumper $params;
 
-    my $trait_search = CXGN::Trait::Search->new
-	({
-	    bcs_schema=>$schema,
-	    trait_cv_name => $trait_cv_name,
+    my $trait_cv_name = $params->{trait_cv_name} || $c->config->{trait_cv_name};
+    my $ontology_db_ids;
+    if ($params->{'ontology_db_id[]'}){
+        $trait_cv_name = undef;
+        $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
+    }
+
+    my $rows = $params->{length};
+    my $offset = $params->{start};
+    my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
+
+    my $trait_search_list_id = $params->{trait_search_list_id};
+
+    my $subset_traits = [];
+    if ($trait_search_list_id){
+        my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $trait_search_list_id });
+        foreach (@{$list->elements()}){
+            my @trait = split '\|', $_;
+            pop @trait;
+            my $trait_name = join '\|', @trait;
+            push @$subset_traits, $trait_name;
+        }
+    }
+
+    if ($params->{trait_any_name}){
+        push @$subset_traits, $params->{trait_any_name};
+    }
+
+    my $definitions;
+    if ($params->{trait_definition}){
+        push @$definitions, $params->{trait_definition};
+    }
+
+    my $trait_search = CXGN::Trait::Search->new({
+        bcs_schema=>$schema,
+        trait_cv_name => $trait_cv_name,
+        ontology_db_id_list => $ontology_db_ids,
         limit => $limit,
-        offset => $offset
-	 });
-    my $data = $trait_search->search();
+        offset => $offset,
+        trait_name_list => $subset_traits,
+        trait_definition_list => $definitions
+    });
+    my ($data, $records_total) = $trait_search->search();
     my @result;
+
     foreach (@$data){
-	my $db_name = $_->{db_name};
-	my $accession = $_->{accession};
-	my $trait_accession = $db_name .":". $accession ;
-	push @result,
-	[
-     '',
-	 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
-	 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
-	 $_->{trait_definition},
-	];
+        my $db_name = $_->{db_name};
+        my $accession = $_->{accession};
+        my $trait_accession = $db_name .":". $accession ;
+        push @result,
+            [
+                '',
+                "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
+                "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
+                $_->{trait_definition},
+            ];
     }
     #print STDERR Dumper \@result;
-    $c->stash->{rest} = { data => \@result };
+
+    my $draw = $params->{draw};
+    if ($draw){
+        $draw =~ s/\D//g; # cast to int
+    }
+
+    $c->stash->{rest} = { data => [ @result ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }

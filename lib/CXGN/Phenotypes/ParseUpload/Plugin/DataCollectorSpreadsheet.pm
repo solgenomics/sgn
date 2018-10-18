@@ -1,5 +1,20 @@
 package CXGN::Phenotypes::ParseUpload::Plugin::DataCollectorSpreadsheet;
 
+# Validate Returns %validate_result = (
+#   error => 'error message'
+#)
+
+# Parse Returns %parsed_result = (
+#   data => {
+#       plotname1 => {
+#           varname1 => [12, '2015-06-16T00:53:26Z']
+#           varname2 => [120, '']
+#       }
+#   },
+#   units => [plotname1],
+#   variables => [varname1, varname2]
+#)
+
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
@@ -201,10 +216,9 @@ sub parse {
                 }
             }
 
-            my @treatments;
             if ( defined($trait_value) && defined($timestamp) ) {
                 if ($trait_value ne '.'){
-                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp, \@treatments];
+                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
                 }
             } else {
                 $parse_result{'error'} = "Value or timestamp missing.";
@@ -221,8 +235,8 @@ sub parse {
     }
 
     $parse_result{'data'} = \%data;
-    $parse_result{'plots'} = \@plots;
-    $parse_result{'traits'} = \@traits;
+    $parse_result{'units'} = \@plots;
+    $parse_result{'variables'} = \@traits;
 
     return \%parse_result;
 }

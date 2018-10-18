@@ -7,7 +7,7 @@ CXGN::Phenotypes::SearchFactory - an object factory to handle searching phenotyp
 =head1 USAGE
 
 my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-    'Native',    #can be either 'MaterializedView', or 'Native'
+    'MaterializedViewTable',    #can be either 'MaterializedViewTable' or 'Native'
     {
         bcs_schema=>$schema,
         data_level=>$data_level,
@@ -22,6 +22,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         subplot_list=>$subplot_list,
         include_timestamp=>$include_timestamp,
         trait_contains=>$trait_contains,
+        exclude_phenotype_outlier=>0,
         phenotype_min_value=>$phenotype_min_value,
         phenotype_max_value=>$phenotype_max_value,
         limit=>$limit,

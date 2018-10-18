@@ -14,9 +14,26 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
+$pop_id => undef
+$data_set_type => undef
+
 </%args>
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<%perl>
+
+my $list_id = $pop_id if $pop_id =~ /list/;
+
+my $combo_pops_id;
+
+if ($c->req->referer =~ /solgs\/selection\// || $data_set_type =~ /combined_populations/) {
+$combo_pops_id =  $pop_id
+}
+
+$pop_id = undef if $list_id || $combo_pops_id;
+
+</%perl>
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.pca"] &>
 
 <style>
@@ -34,7 +51,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
-    title       => "Select a dataset and analyze its population structure -- principal component analysis (PCA)",
+    title       => "Select a list of accessions or trials and analyze population structure -- principal component analysis (PCA)",
   &>
 
  
@@ -51,14 +68,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
     
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/solgs/breeder_search" style="color:#ffffff">Create a new dataset</a>  
+      <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list</a>  
     </div>
 
     <br>
     <br>
    
-    <!-- The container for the uploaded list pca populations -->
-    <div class="sub_infosectioncontent" id="uploaded_pca_populations" style="display:none"></div>
+    <!-- The container for the list list pca populations -->
+    <div class="sub_infosectioncontent" id="list_pca_populations" style="display:none"></div>
     <br>
 
 </div>
@@ -69,5 +86,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <div id="pca_canvas"></div>
 <div id="pca_plot"></div>
   <div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942">
-    
+    <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
+    <input type="hidden"  id="list_id" value="<% $list_id %>" />
+    <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
   </div>

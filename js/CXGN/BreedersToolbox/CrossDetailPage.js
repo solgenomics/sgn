@@ -1,8 +1,13 @@
 jQuery(document).ready(function() {
 
+    display_parents(get_cross_id());
+
     display_progeny(get_cross_id());
 
-    get_properties(get_cross_id(), display_properties);
+//    get_properties(get_cross_id(), display_properties);
+    get_properties(get_cross_id());
+
+//    display_properties(get_cross_id());
 
     function get_cross_id() {
 	var cross_id = jQuery('#cross_id').html();
@@ -39,7 +44,7 @@ jQuery(document).ready(function() {
       jQuery('#progeny_information_div').html(html);
 
       var progeny = response.progeny.sort() || [];
-      
+
       progeny.forEach(function(accession_info_array) { // swap position of id and uniquename for each progeny array
         accession_info_array.reverse();
       });
@@ -93,49 +98,59 @@ jQuery(document).ready(function() {
 	});
 }
 
-    function display_parents(cross_id) {
-	jQuery.ajax( {
-	    type: 'POST',
-	    url: '/cross/ajax/parents/'+cross_id,
-	    success: function(response) {
-		if (response.error) {
-		    alert(response.error);
-		    return;
-		}
-		var html = "<table>";
-		if (response.parents) {
-		    for (var i=0; i<response.parents.length; i++) {
-			html += '<td><a href="/stock/'+response.parents[i][1]+'/view">'+response.parents[i][0]+'</a></td></tr>';
-		    }
-		}
-		html += "</table>";
-		jQuery('#parents_information_div').html(html);
-	    },
-	    error: function(response, a, b) {
-	  jQuery('#parents_information_div').html('An error occurred. '+a +' '+ b);
+    function display_parents(cross_id){
+        var property_table = jQuery('#parent_information').DataTable({
+            'ajax': '/ajax/cross/accession_plot_plant_parents/'+cross_id,
+            'paging' : false,
+            'searching' : false,
+            'bInfo' : false,
+        });
+    return;
       }
-	});
-    }
 
-    function display_properties(result) {
-	var props = result.props;
-	var html = "";
-	if (props) {
-	    html = "<table>";
-	    for (var k in props) {
-		html += '<tr><td>'+k+'</td><td>&nbsp;</td>';
-		var edit_link = "";
-		for (var n=0; n<props[k].length; n++) {
-		    html += '<td><b>'+props[k][n][0]+'</b></td><td>&nbsp;</td></tr>';
-		}
-	    }
-    	    html += '</table>';
-	    jQuery('#cross_properties_div').html(html);
-	}
-	else {
+//    function display_parents(cross_id) {
+//	jQuery.ajax( {
+//	    type: 'POST',
+//	    url: '/cross/ajax/parents/'+cross_id,
+//	    success: function(response) {
+//		if (response.error) {
+//		    alert(response.error);
+//		    return;
+//		}
+//		var html = "<table>";
+//		if (response.parents) {
+//		    for (var i=0; i<response.parents.length; i++) {
+//			html += '<td><a href="/stock/'+response.parents[i][1]+'/view">'+response.parents[i][0]+'</a></td></tr>';
+//		    }
+//		}
+//		html += "</table>";
+//		jQuery('#parents_information_div').html(html);
+//	    },
+//	    error: function(response, a, b) {
+//	  jQuery('#parents_information_div').html('An error occurred. '+a +' '+ b);
+//      }
+//	});
+//    }
 
-	}
-    }
+//    function display_properties(result) {
+//	var props = result.props;
+//	var html = "";
+//if (props) {
+//	    html = "<table>";
+//	    for (var k in props) {
+//		html += '<tr><td>'+k+'</td><td>&nbsp;</td>';
+//		var edit_link = "";
+//		for (var n=0; n<props[k].length; n++) {
+//		    html += '<td><b>'+props[k][n][0]+'</b></td><td>&nbsp;</td></tr>';
+//		}
+//	    }
+//    	    html += '</table>';
+//	    jQuery('#cross_properties_div').html(html);
+//	}
+//	else {
+
+//	}
+//    }
 
     jQuery('#add_more_progeny_link').click( function() {
 	jQuery('#add_more_progeny_dialog').dialog("open");
@@ -182,6 +197,9 @@ jQuery(document).ready(function() {
 	});
     }
 
+
+
+
     jQuery('#edit_properties_dialog').dialog( {
 	height: 250,
 	width: 500,
@@ -192,7 +210,7 @@ jQuery(document).ready(function() {
 		       text: "Done" }
 	},
 	autoOpen: false,
-	title: 'Edit cross properties'
+	title: 'Edit Cross Information'
     });
 
     jQuery('#edit_properties_link').click( function() {
@@ -206,7 +224,7 @@ jQuery(document).ready(function() {
 	jQuery('#working').dialog("open");
 	check_property(get_cross_id(), jQuery('#properties_select').val(), jQuery('#property_value').val());
 	jQuery('#working').dialog("close");
-    });
+  });
 
 
     function draw_properties_dialog(response) {
@@ -235,19 +253,30 @@ jQuery(document).ready(function() {
 	jQuery('#property_value').val(value);
     }
 
-    function get_properties(cross_id, callback) {
+//    function get_properties(cross_id, callback) {
 
-	return jQuery.ajax( {
-	    type: 'GET',
-	    url: '/cross/ajax/properties/'+cross_id,
-	    success: callback,
-	    error : error_callback
-	});
+//	return jQuery.ajax( {
+//	    type: 'GET',
+//	    url: '/cross/ajax/properties/'+cross_id,
+//	    success: callback,
+//	    error : error_callback
+//	});
+//    }
+    var property_table;
+    function get_properties(cross_id){
+        property_table = jQuery('#cross_properties').DataTable({
+            'ajax': '/ajax/cross/properties/'+cross_id,
+            'paging' : false,
+            'searching' : false,
+            'bInfo' : false,
+            'destroy' : true,
+        });
+        return;
     }
 
-    function error_callback(a, b, c) {
-	alert("an error occurred "+c);
-    }
+//    function error_callback(a, b, c) {
+//	alert("an error occurred "+c);
+//    }
 
     function check_property(cross_id, type, value) {
 	return jQuery.ajax( {
@@ -268,6 +297,7 @@ jQuery(document).ready(function() {
 	    }
 	    if (response.success) {
 		save_property(cross_id, type, value);
+    property_table.ajax.relaod();
 	    }
 	}).fail( function() {
 	    alert("The request for checking the parameters failed. Please try again.");
@@ -280,7 +310,7 @@ jQuery(document).ready(function() {
 	    data: { 'cross_id' : cross_id, 'type': type, 'value': value }
 
 	}).done( function(response) {
-	    get_properties(get_cross_id(), display_properties);
+	    get_properties(get_cross_id());
 	    save_confirm(response);
 
 

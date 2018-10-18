@@ -7,10 +7,11 @@
 
 options(echo = FALSE)
 
+library(methods)
 library(rrBLUP)
 library(plyr)
 library(stringr)
-library(lme4)
+#library(lme4)
 library(randomForest)
 library(data.table)
 library(parallel)
@@ -52,13 +53,13 @@ if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("kinship", trait, sep = "_")
+kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
 blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
-markerTrait <- paste("marker", trait, sep = "_")
+markerTrait <- paste("marker_effects", trait, sep = "_")
 markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
@@ -72,8 +73,8 @@ formattedPhenoData <- c()
 phenoData          <- c()
 
 genoFile <- grep("genotype_data_", inputFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
-
 message('geno file ', genoFile)
+
 if (is.null(genoFile)) {
   stop("genotype data file is missing.")
 }
@@ -93,6 +94,7 @@ if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
 genoData <- c()
 if (is.null(filteredGenoData)) {
   genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  genoData <- unique(genoData, by='V1')
   message('read in unfiltered geno data')
 }
 
@@ -111,8 +113,8 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
   if (file.info(phenoFile)$size == 0) {
     stop("phenotype data file is empty.")
   }
-  
-  phenoData <- fread(phenoFile, na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
+
+  phenoData <- fread(phenoFile, sep="\t", na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
 }
 
 phenoData  <- as.data.frame(phenoData)
@@ -140,15 +142,21 @@ if (datasetInfo == 'combined populations') {
     
     colnames(phenoTrait)[1] <- 'genotypes'
    
-  } else {
+} else if (length(grep('list', phenoFile)) != 0) {
+
+    phenoTrait <- averageTrait(phenoData, trait)
+    
+} else {
+
     phenoTrait <- getAdjMeans(phenoData, trait)
+
   }
 }
 
 if (is.null(filteredGenoData)) {
-  
+ 
   #genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData, maf=0)
+  genoData <- filterGenoData(genoData, maf=0.01)
   genoData <- roundAlleleDosage(genoData)
 
   genoData <- as.data.frame(genoData)
@@ -164,7 +172,7 @@ if (is.null(filteredGenoData)) {
 
 genoData <- genoData[order(row.names(genoData)), ]
 
-predictionTempFile <- grep("prediction_population", inputFiles, ignore.case = TRUE, value = TRUE)
+predictionTempFile <- grep("selection_population", inputFiles, ignore.case = TRUE, value = TRUE)
 
 predictionFile       <- c()
 filteredPredGenoFile <- c()
@@ -182,7 +190,7 @@ if (length(predictionTempFile) !=0 ) {
   message('prediction filtered genotype file: ', predictionFile)
 }
 
-predictionPopGEBVsFile <- grep("prediction_pop_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
+predictionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
 
 message("filtered pred geno file: ", filteredPredGenoFile)
 message("prediction gebv file: ",  predictionPopGEBVsFile)
@@ -203,8 +211,9 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
 } else if (length(predictionFile) != 0) {
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
- 
-  predictionData <- filterGenoData(predictionData, maf=0)
+  predictionData <- unique(predictionData, by='V1')
+  
+  predictionData <- filterGenoData(predictionData, maf=0.01)
   predictionData <- roundAlleleDosage(predictionData)
   
   predictionData  <- as.data.frame(predictionData)
@@ -432,7 +441,8 @@ if (length(predictionData) == 0) {
         valBlups   <- data.frame(valBlups)
 
         slG <- slG[which(slG <= nrow(phenoTrait))]   
-        slGDf <- phenoTrait[slG,]
+ 
+        slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
         rownames(slGDf) <- slGDf[, 1]     
         slGDf[, 1] <- NULL
       
@@ -524,6 +534,7 @@ if(!is.null(validationAll)) {
            )
 }
 
+
 if (!is.null(ordered.markerEffects)) {
     fwrite(ordered.markerEffects,
            file  = markerFile,
@@ -531,7 +542,8 @@ if (!is.null(ordered.markerEffects)) {
            sep   = "\t",
            quote = FALSE,
            )
-  }
+}
+
 
 if (!is.null(ordered.trGEBV)) {
     fwrite(ordered.trGEBV,
@@ -541,6 +553,7 @@ if (!is.null(ordered.trGEBV)) {
            quote = FALSE,
            )
 }
+
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
@@ -560,6 +573,7 @@ if (length(combinedGebvsFile) != 0 ) {
     }
 }
 
+
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
     fwrite(traitPhenoData,
            file  = traitPhenoFile,
@@ -568,6 +582,7 @@ if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
            quote = FALSE,
            )
 }
+
 
 if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
   fwrite(filteredGenoData,
@@ -615,6 +630,7 @@ if (file.info(relationshipMatrixFile)$size == 0) {
          quote = FALSE,
          )
 }
+
 
 if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
   fwrite(formattedPhenoData,

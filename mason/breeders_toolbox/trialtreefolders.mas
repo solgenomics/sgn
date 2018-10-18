@@ -2,22 +2,29 @@
 <%args>
 @locations => ()
 $breeding_programs
+$preferred_species
+$editable_stock_props
+$timestamp
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.TrialTreeFolders','CXGN.BreedersToolbox.AddMultipleTrial' ] &>
+<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
-<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+<& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
-<& /breeders_toolbox/folder/folder_set.mas &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type => 'Trial' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
 <& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
 
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 <& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 
 <& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
+
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
 <table class="table table-bordered">
   <thead>
@@ -41,7 +48,7 @@ $breeding_programs
       <hr>
       <h4>Folders</h4>
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
-      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial to folder</button><br/><br/>
+      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial(s) to folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
       
       <div id="folder_edit_options" style="display:none">
@@ -69,7 +76,7 @@ $breeding_programs
   jQuery(document).ready(function($) {
 
     jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached',
+      url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
       success: function(response) {
         var html = '<ul>'+response.html+'</ul>';
 

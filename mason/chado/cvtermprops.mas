@@ -1,0 +1,191 @@
+<%doc>
+=head1 NAME
+
+cvtermprops.mas
+
+=head1 DESCRIPTION
+
+This component can print cvterm properties
+
+
+=head1 ARGUMENTS
+
+=over 1
+
+=item props
+hashref of cvtermprops . keys = prop name (cvterm.name) values = list of prop values
+
+=back
+
+=head1 AUTHOR
+Naama Menda <nm249@cornell.edu>
+
+
+=cut
+
+</%doc>
+
+<%args>
+  $cvterm_id
+  $subset => []
+  $props
+  $editable => []
+  $div_name => ''
+  $edit_privs => 0
+  $cv_name  => 'trait_property'
+</%args>
+
+<%perl>
+use JSON::Any;
+
+my $subset_json = JSON::Any->objToJson($subset);
+
+$div_name ||= join("_", @$subset);
+$div_name =~ s/ +/\_/g;
+
+my $prop_select = prop_select($editable, $div_name);
+
+$edit_privs ||= 0;
+
+sub prop_select {
+  my $editable = shift;
+  my $div_name = shift;
+  my $html = "<select id=\"$div_name"."_select"."\">";
+  foreach my $item (@$editable) { 
+      $html .= qq{ <option>$item</option> };
+  }
+  $html .= qq{ </select> };
+  return $html;
+}
+
+
+</%perl>
+
+<div id="<% $div_name %>_content">
+</div>
+
+<div id="<% $div_name %>_add_dialog" >
+Add <% $prop_select %>
+<input id="<% $div_name %>_prop" />
+</div>
+
+<script defer="defer" >
+
+jQuery(document).ready(function() { 
+
+  jQuery('#<% $div_name %>_add_dialog').dialog( {
+     title: 'Add property',
+     buttons: { 'Cancel': function() { jQuery('#<% $div_name %>_add_dialog').dialog("close"); }, 'Add': {text: 'Add', id: '<% $div_name %>_addProp_submit', click: function() { <% $div_name %>_addProp() } } },
+     autoOpen: false,
+     modal: true
+  });
+
+  <% $div_name %>_getProps();
+  
+});
+
+// note: the $div_name prefix is needed when several instances are created on a page
+
+function <% $div_name %>_getProps() { 
+  jQuery.ajax( { 
+    type: 'GET',
+    url: '/cvterm/prop/get',
+    data: { cvterm_id: <% $cvterm_id %> },
+    success: function(response) { <% $div_name %>_renderProps(response);  },
+    error: function(response) { alert('an error occurred'); }
+  });
+}
+
+
+function <% $div_name %>_renderProps(props) { 
+   var subset = eval(<% $subset_json %>);
+
+   // eliminate types without values
+   var filteredSet = {};
+   for (var n=0; n<subset.length; n++) {				   
+     for (var i=0; i<props.length; i++) {
+       if (subset[n] ==  props[i]['type_name']) { 
+         filteredSet[subset[n]]=1;
+           }
+       }
+   }
+    
+   
+   var html = '';
+   var prop_string;
+   var edit_privs = <% $edit_privs %>;
+   for (var n in filteredSet) {
+      var lines = new Array();
+      for(var i=0; i<props.length; i++) {
+        if (n ===  props[i]['type_name']) { 
+          var lineStr = props[i]['value'];
+          if (jQuery.cookie("sgn_session_id") && edit_privs === 1) { 
+            lineStr = lineStr + '[<a href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['cvtermprop_id']+')">X</a>]';		
+          }
+	  lines.push(lineStr);
+        }
+          
+      }
+      html = html + '<b>'+n+'</b>&nbsp;&nbsp;'; 
+      //html  = html + lineStr;
+      html = html + lines.join(", ");
+      html = html + '<br />\n';
+      
+   }
+   jQuery('#<% $div_name %>_content').html(html);
+		
+}		 
+
+function <% $div_name %>_addPropDialog(prop, typeId) { 
+  jQuery('#<% $div_name %>_add_dialog').dialog("open");
+
+}
+
+
+
+function <% $div_name %>_addProp() { 
+  var prop_type = jQuery('#<% $div_name %>_select').val();
+  var prop = jQuery('#<% $div_name %>_prop').val();
+
+  if (prop === '') { alert("Please fill in the field."); return; }
+				 
+  jQuery.ajax( { 
+    type: 'POST',
+    url: '/cvterm/prop/add',
+    beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+    },
+    data: { 'cvterm_id' : <% $cvterm_id %>, 'prop' : prop, 'prop_type': prop_type, 'cv_name' : "<% $cv_name %>" },
+    success: function(response) {
+        jQuery('#working_modal').modal('hide');
+        if ("error" in response) { alert ('ERROR '+response.error); }
+        if ("message" in response) { alert('Successfully added property: ' + prop + '. ('+response.message+')'); }
+    },
+    error: function(response) {
+        jQuery('#working_modal').modal('hide');
+        alert('an error occurred while storing the prop ' + response.error);
+    }
+  });
+
+  <% $div_name %>_getProps();
+  jQuery('#<% $div_name %>_add_dialog').dialog("close");
+}
+
+
+function <% $div_name %>_deleteProp(cvtermprop_value, cvtermprop_id) { 
+  confirm('Delete cvtermprop '+cvtermprop_value+'?');
+  jQuery.ajax( { 
+    method: 'GET',
+    url: '/cvterm/prop/delete',
+    data: { 'cvtermprop_id' : cvtermprop_id },
+    success: function(response) {  
+      if ('message' in response) {  alert(response.message); } 
+      if ('error'   in response) {  alert(response.error);   }
+    },
+    error: function(response) { alert('An error occurred. Please try again later.'); }
+  });
+
+  <% $div_name %>_getProps();
+}
+
+</script>
