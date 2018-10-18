@@ -44,7 +44,7 @@ colnames(pheno_mod)
 ### only the data for the trait selected....
 png(figure1_file_name)
 study_trait_read <- gsub(".", " ", study_trait, fixed=TRUE)
-hist(pheno_mod$pheno_vector, col="black",xlab=study_trait_read,ylab="Frequency",
+hist(pheno_mod$pheno_vector, col="cyan4",xlab=study_trait_read,ylab="Frequency",
      border="white",breaks=10,main="Phenotype Histogram (Unfiltered)")
 dev.off()
 # write.table(pheno_mod, "pheno_mod_temp_file.csv", sep = ",", col.names = TRUE)
