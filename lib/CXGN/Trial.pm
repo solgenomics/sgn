@@ -618,11 +618,11 @@ sub set_crossing_trials_from_field_trial {
 sub get_crossing_trials_from_field_trial {
     my $self = shift;
     my $schema = $self->bcs_schema;
-    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+    my $crossing_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
 
     my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
         'me.subject_project_id' => $self->get_trial_id(),
-        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+        'me.type_id' => $crossing_trial_from_field_trial_cvterm_id
     }, {
         join => 'object_project', '+select' => ['object_project.name'], '+as' => ['source_trial_name']
     });
@@ -637,7 +637,7 @@ sub get_crossing_trials_from_field_trial {
 =head2 function get_field_trials_source_of_crossing_trial()
 
  Usage:
- Desc:         return associated crossing trials for athe current field trial
+ Desc:         return associated field trials for the current crossing trial
  Ret:          returns an arrayref [ id, name ] of arrayrefs
  Args:
  Side Effects:
@@ -648,11 +648,11 @@ sub get_crossing_trials_from_field_trial {
 sub get_field_trials_source_of_crossing_trial {
     my $self = shift;
     my $schema = $self->bcs_schema;
-    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
+    my $crossing_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial_from_field_trial', 'project_relationship')->cvterm_id();
 
     my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
         'me.object_project_id' => $self->get_trial_id(),
-        'me.type_id' => $genotyping_trial_from_field_trial_cvterm_id
+        'me.type_id' => $crossing_trial_from_field_trial_cvterm_id
     }, {
         join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['source_trial_name']
     });
@@ -1388,6 +1388,19 @@ sub delete_field_layout {
 
     my $trial_id = $self->get_trial_id();
 
+    if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
+        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
+        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
+        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
+        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
+    }
+
     # Note: metadata entries need to be deleted separately using delete_metadata()
     #
     my $error = '';
@@ -1516,6 +1529,19 @@ sub delete_metadata {
 
     my $trial_id = $self->get_trial_id();
 
+    if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
+        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
+        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
+        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
+        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
+    }
+
     #print STDERR "Deleting metadata for trial $trial_id...\n";
 
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
@@ -1626,7 +1652,9 @@ sub _delete_field_layout_experiment {
 
     #print STDERR Dumper \@all_stock_ids;
     my $stock_delete_rs = $self->bcs_schema->resultset('Stock::Stock')->search({stock_id=>{'-in'=>\@all_stock_ids}});
-    $stock_delete_rs->delete();
+    while (my $r = $stock_delete_rs->next){
+        $r->delete();
+    }
 
     my $has_plants = $self->has_plant_entries();
     my $has_subplots = $self->has_subplot_entries();
@@ -1710,6 +1738,19 @@ sub delete_project_entry {
     if (my $count = $self->get_experiment_count() > 0) {
 	print STDERR "Cannot delete trial with associated experiments ($count)\n";
 	return "Cannot delete entry because of associated experiments";
+    }
+
+    if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
+        return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_field_trials_source_of_genotyping_trial}) > 0) {
+        return 'This genotyping trial has been linked to field trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_crossing_trials_from_field_trial}) >0) {
+        return 'This field trial has been linked to crossing trials already, and cannot be easily deleted.';
+    }
+    if (scalar(@{$self->get_field_trials_source_of_crossing_trial}) >0) {
+        return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
     eval {

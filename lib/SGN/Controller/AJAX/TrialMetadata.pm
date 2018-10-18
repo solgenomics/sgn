@@ -96,35 +96,36 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $datatype = shift;
 
     if ($self->privileges_denied($c)) {
-	$c->stash->{rest} = { error => "You have insufficient access privileges to delete trial data." };
-	return;
+        $c->stash->{rest} = { error => "You have insufficient access privileges to delete trial data." };
+        return;
     }
 
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
-	$error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-	$error .= $c->stash->{trial}->delete_phenotype_data();
+        $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
+        $error .= $c->stash->{trial}->delete_phenotype_data();
     }
 
     elsif ($datatype eq 'layout') {
         $error = $c->stash->{trial}->delete_metadata();
-        $error = $c->stash->{trial}->delete_field_layout();
+        $error .= $c->stash->{trial}->delete_field_layout();
+        $error .= $c->stash->{trial}->delete_project_entry();
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
     }
     elsif ($datatype eq 'entry') {
-	$error = $c->stash->{trial}->delete_project_entry();
+        $error = $c->stash->{trial}->delete_project_entry();
     }
     else {
-	$c->stash->{rest} = { error => "unknown delete action for $datatype" };
-	return;
+        $c->stash->{rest} = { error => "unknown delete action for $datatype" };
+        return;
     }
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }

@@ -116,11 +116,9 @@ project_relationship	field_trial_from_field_trial	For linking field trials prece
 project_relationship	genotyping_trial_from_field_trial	For linking genotyping plates to the source field trials 	4/6/18	nm529	00093
 project_relationship	crossing_trial_from_field_trial	For linking crossing trials to the source field trials 	4/6/18	nm529	00093
 project_relationship	drone_run_on_field_trial	For linking drone image runs to field trials 	9/18/18	nm529	00103
-project_type	Advanced Yeld Trials				00052
 project_type	Advanced Yield Trial
 project_type	Clonal Evaluation
 project_type	Preliminary Yield Trial
-project_type	Preliminary Yield Trials				00052
 project_type	Regional Trials
 project_type	Seed Multiplication
 project_type	Seedling Nursery
