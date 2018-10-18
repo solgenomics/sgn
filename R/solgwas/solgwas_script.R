@@ -215,7 +215,7 @@ marker_indicator <- match(unique(gwasresults$chr), gwasresults$chr)
 png(figure3_file_name)
 plot(gwasresults$PHENO,col=chromosome_ids,ylab="-log10(pvalue)",
      main="Manhattan Plot",xaxt="n",xlab="Position",ylim=c(0,14))
-axis(1,at=marker_indicator,labels=gwasresults$chr[marker_indicator])
+axis(1,at=marker_indicator,labels=gwasresults$chr[marker_indicator], cex.axis=0.8, las=2)
 #axis(1,at=c(1:length(unique(gwasresults$chr))),labels=unique(gwasresults$chr))
 abline(a=NULL,b=NULL,h=alpha_bonferroni,col="red",lwd=2)
 #abline(a=NULL,b=NULL,h=alpha_FDR_Yield,col="red",lwd=2,lty=2)
