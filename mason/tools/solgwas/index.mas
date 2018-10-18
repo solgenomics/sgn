@@ -51,7 +51,7 @@
   <br>
   <div class="form-group form-inline">
     <input type="checkbox" id="princomp" />
-    <label>Include principal components as covariates in model &nbsp; </label>
+    <label>Include principal components in model &nbsp; </label>
     <br>
     <input type="checkbox" id="kinshipmat" />
     <label>Include kinship matrix in model &nbsp; </label>
