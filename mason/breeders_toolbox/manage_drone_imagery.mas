@@ -474,9 +474,10 @@ jQuery(document).ready(function() {
                 ]);
                 x_pos = x_pos + col_width;
             }
+            x_pos = section_left_offset;
             y_pos = y_pos + row_width;
         }
-        //console.log(generated_polygons);
+        console.log(generated_polygons);
 
         for (var i=0; i<generated_polygons.length; i++) {
             plot_polygons_ind_4_points = generated_polygons[i];
@@ -578,9 +579,9 @@ jQuery(document).ready(function() {
     });
 
     function droneImageryRectangleLayoutTable(generated_polygons) {
-        var html = '<hr><div class="well well-sm"><table class="table table-borders table-hover" id="drone_imagery_generated_polygons_table"><thead><tr><th>Generated Number</th><th>Polygon Position</th><th>Field Trial Observation Unit</th></tr></thead><tbody>';
+        var html = '<hr><div class="well well-sm"><table class="table table-borders table-hover" id="drone_imagery_generated_polygons_table"><thead><tr><th>Generated Number</th><th>Field Trial Observation Unit</th></tr></thead><tbody>';
         for (key in generated_polygons) {
-            html = html + '<tr><td>' + key + '</td><td>' + JSON.stringify(generated_polygons[key]) + '</td><td><input class="form-control" type="text" /></td></tr>';
+            html = html + '<tr><td>' + key + '</td><td><input class="form-control" type="text" /></td></tr>';
         }
         html = html + '</tbody></table></div>';
         jQuery('#drone_imagery_generated_polygons_div').html(html);
