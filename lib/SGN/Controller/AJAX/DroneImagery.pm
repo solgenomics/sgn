@@ -23,6 +23,7 @@ use SGN::Image;
 use CXGN::DroneImagery::ImagesSearch;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
+use Image::Size;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -377,8 +378,10 @@ sub drone_imagery_get_contours_GET : Args(0) {
     $archive_contours_temp_image .= '.png';
     print STDERR $archive_contours_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageContours/GetContours.py --image_url '.$main_production_site.$image_url.' --outfile_path '.$archive_contours_temp_image);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/GetContours.py --image_url '.$main_production_site.$image_url.' --outfile_path '.$archive_contours_temp_image);
     print STDERR Dumper $status;
+
+    my @size = imgsize($archive_contours_temp_image);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -387,7 +390,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $contours_image_fullpath = $image->get_filename('original_converted', 'full');
     my $contours_image_url = $image->get_image_url('original');
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath };
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath, image_width => $size[0], image_height => $size[1] };
 }
 
 sub drone_imagery_fourier_transform : Path('/ajax/drone_imagery/fourier_transform') : ActionClass('REST') { }
@@ -559,7 +562,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
         $c->stash->{rest} = {error=>'Polygon should be 4 long!'};
         $c->detach();
     }
-    $polygon = encode_json $polygon_obj;
+    my $polygons = encode_json [$polygon_obj];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $main_production_site = $c->config->{main_production_site_url};
@@ -575,7 +578,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
     $archive_temp_image .= '.png';
     print STDERR $archive_temp_image."\n";
 
-    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/ImageCropping/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_temp_image --polygon '$polygon'";
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_temp_image --polygon '$polygons'";
     print STDERR Dumper $cmd;
     my $status = system($cmd);
     print STDERR Dumper $status;

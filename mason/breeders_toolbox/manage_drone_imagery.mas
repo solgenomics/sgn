@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery', 'CXGN.BreedersToolbox.DroneImagery.DragAndDrop' ] &>
 
 <div id="manage_drone_imagery_top_div">
 
@@ -37,10 +37,12 @@
             <li>Here you can cut and assign the observation units (plots, plants, etc) that you want to phenotype</li>
             <li>Click on five points in the image to make a four-sided polygon.</li>
         </ul>
-        <button class="btn btn-primary" id="drone_imagery_plot_polygons_submit">Assign Plots To Selected Polygons</button>
     </div>
 
+    <div id="drone_imagery_plot_polygons_top_section"></div>
     <canvas id="drone_imagery_plot_polygons_original_stitched_div"></canvas>
+    <hr>
+    <button class="btn btn-primary" id="drone_imagery_plot_polygons_submit">Save Selected Polygons To Plots</button>
     <hr>
     <div class="well well-sm">
         <div id="drone_imagery_trial_layout_div"></div>
@@ -84,8 +86,6 @@ jQuery(document).ready(function() {
     //
     // Image Cropping JS
     //
-
-    var rectangleOverlayData = new Array();
 
     var ctx;
     var trial_id;
@@ -263,11 +263,14 @@ jQuery(document).ready(function() {
     //Define Plot Polygons JS
     //
 
+    var canvas;
+    var background_image_url;
     var plot_polygons_display_points = [];
     var plot_polygons_ind_points = [];
     var plot_polygons_ind_4_points = [];
     var drone_imagery_plot_polygons = {};
     var field_trial_layout_response = {};
+    var plotpolygonsImg;
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function(){
         var trial_id = jQuery(this).data('field_trial_id');
@@ -293,17 +296,27 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-                var canvas = document.getElementById('drone_imagery_plot_polygons_original_stitched_div');
-                ctx = canvas.getContext('2d');
-                var image = new Image();
-                image.onload = drawImageActualSize;
-                image.src = response.contours_image_url;
+                background_image_url = response.contours_image_url;
 
-                function drawImageActualSize() {
-                    canvas.width = this.naturalWidth;
-                    canvas.height = this.naturalHeight;
-                    ctx.drawImage(this, 0, 0);
-                }
+                var top_section_html = '<h4>Image width: '+response.image_width+'px. Image height: '+response.image_height+'px.</h4>';
+                top_section_html = top_section_html + '<button id="drone_imagery_plot_polygons_clear" class="btn btn-danger">Clear All Selected Polygons</button><br/><br/>';
+                jQuery('#drone_imagery_plot_polygons_top_section').html(top_section_html);
+
+                canvas = document.getElementById('drone_imagery_plot_polygons_original_stitched_div');
+                ctx = canvas.getContext('2d');
+                draw_canvas_image(background_image_url);
+
+                plotpolygonsImg = document.getElementById("drone_imagery_plot_polygons_original_stitched_div");
+                plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
+
+                //var html = '<canvas id="drone_imagery_plot_polygons_original_stitched_div" style="background:url('+response.contours_image_url+'); //background-repeat:no-repeat; width:'+response.image_width+'; height:'+response.image_height+';" ></canvas>';
+                //jQuery('#drone_imagery_plot_polygons_original_stitched_outer_div').html(html);
+
+                //var s = new CanvasState(document.getElementById('drone_imagery_plot_polygons_original_stitched_div'));
+                //s.addShape(new Shape(40,40,50,50)); // The default is gray
+                //s.addShape(new Shape(60,140,40,60, 'lightskyblue'));
+                //s.addShape(new Shape(80,150,60,30, 'rgba(127, 255, 212, .5)'));
+                //s.addShape(new Shape(125,80,30,80, 'rgba(245, 222, 179, .7)'));
 
             },
             error: function(response){
@@ -330,6 +343,26 @@ jQuery(document).ready(function() {
         });
 
     });
+
+    jQuery(document).on('click', '#drone_imagery_plot_polygons_clear', function(){
+        plot_polygons_display_points = [];
+        plot_polygons_ind_points = [];
+        plot_polygons_ind_4_points = [];
+        drone_imagery_plot_polygons = {};
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        draw_canvas_image(background_image_url);
+    });
+
+    function draw_canvas_image(image_url) {
+        var image = new Image();
+        image.onload = drawImageActualSize;
+        image.src = image_url;
+        function drawImageActualSize() {
+            canvas.width = this.naturalWidth;
+            canvas.height = this.naturalHeight;
+            ctx.drawImage(this, 0, 0);
+        }
+    }
 
     function GetCoordinatesPlotPolygons(e) {
         var PosX = 0;
@@ -366,9 +399,6 @@ jQuery(document).ready(function() {
         drawPolyline(plot_polygons_display_points);
         drawWaypoints(plot_polygons_display_points);
     }
-
-    var plotpolygonsImg = document.getElementById("drone_imagery_plot_polygons_original_stitched_div");
-    plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
 
     jQuery('#drone_imagery_assign_plot_dialog').on('shown.bs.modal', function (e) {
         jQuery("#drone_imagery_plot_polygon_assign_plot_name").focus();
