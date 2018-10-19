@@ -40,9 +40,71 @@
     </div>
 
     <div id="drone_imagery_plot_polygons_top_section"></div>
+
+    <div class="well well-sm">
+        <form class="form-horizontal">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Number of Rows: </label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="drone_imagery_plot_polygons_num_rows" name="drone_imagery_plot_polygons_num_rows" type="number" placeholder="Number of rows in image section" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Number of Columns: </label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="drone_imagery_plot_polygons_num_cols" name="drone_imagery_plot_polygons_num_cols" type="number" placeholder="Number of columns in image section"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Section Width: </label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="drone_imagery_plot_polygons_section_width" name="drone_imagery_plot_polygons_section_width" type="number" placeholder="Width of image section"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Section Height: </label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="drone_imagery_plot_polygons_section_height" name="drone_imagery_plot_polygons_section_height" type="number" placeholder="Height of image section" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Section Left Offset: </label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="drone_imagery_plot_polygons_left_offset" name="drone_imagery_plot_polygons_left_offset" type="number" placeholder="Left offset of image section"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Section Top Offset: </label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="drone_imagery_plot_polygons_top_offset" name="drone_imagery_plot_polygons_top_offset" type="number" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply">Draw Rectangles</button>
+    </div>
+
     <canvas id="drone_imagery_plot_polygons_original_stitched_div"></canvas>
-    <hr>
-    <button class="btn btn-primary" id="drone_imagery_plot_polygons_submit">Save Selected Polygons To Plots</button>
+
+    <div id="drone_imagery_generated_polygons_div"></div>
+
     <hr>
     <div class="well well-sm">
         <div id="drone_imagery_trial_layout_div"></div>
@@ -176,7 +238,7 @@ jQuery(document).ready(function() {
             crop_display_points = [];
         }
         drawPolyline(crop_display_points);
-        drawWaypoints(crop_display_points);
+        drawWaypoints(crop_display_points, undefined);
     }
 
     var dronecroppingImg = document.getElementById("drone_imagery_crop_original_stitched_div");
@@ -195,7 +257,12 @@ jQuery(document).ready(function() {
         }
     }
 
-    function drawWaypoints(points){
+    function drawWaypoints(points, label){
+        if (points.length > 0 && label != undefined) {
+            ctx.font = "bold 18px Arial";
+            ctx.fillStyle = 'red';
+            ctx.fillText(label, points[0].x + 3, points[0].y + 14 );
+        }
         for(var i=0;i<points.length;i++){
             ctx.beginPath();
             ctx.arc(points[i].x,points[i].y,4,0,Math.PI*2);
@@ -269,7 +336,9 @@ jQuery(document).ready(function() {
     var plot_polygons_ind_points = [];
     var plot_polygons_ind_4_points = [];
     var drone_imagery_plot_polygons = {};
+    var drone_imagery_plot_generated_polygons = {};
     var field_trial_layout_response = {};
+    var plot_polygon_name;
     var plotpolygonsImg;
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function(){
@@ -282,6 +351,7 @@ jQuery(document).ready(function() {
         plot_polygons_ind_points = [];
         plot_polygons_ind_4_points = [];
         drone_imagery_plot_polygons = {};
+        drone_imagery_plot_generated_polygons = {};
         field_trial_layout_response = {};
 
         jQuery('#manage_drone_imagery_crop_div').hide();
@@ -298,8 +368,8 @@ jQuery(document).ready(function() {
                 jQuery("#working_modal").modal("hide");
                 background_image_url = response.contours_image_url;
 
-                var top_section_html = '<h4>Image width: '+response.image_width+'px. Image height: '+response.image_height+'px.</h4>';
-                top_section_html = top_section_html + '<button id="drone_imagery_plot_polygons_clear" class="btn btn-danger">Clear All Selected Polygons</button><br/><br/>';
+                var top_section_html = '<h4>Total Image Width: '+response.image_width+'px. Total Image Height: '+response.image_height+'px.</h4>';
+                top_section_html = top_section_html + '<hr><button id="drone_imagery_plot_polygons_clear" class="btn btn-danger">Clear All Selected Polygons</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" id="drone_imagery_plot_polygons_submit">Save Selected Polygons To Plots</button><hr>';
                 jQuery('#drone_imagery_plot_polygons_top_section').html(top_section_html);
 
                 canvas = document.getElementById('drone_imagery_plot_polygons_original_stitched_div');
@@ -344,13 +414,92 @@ jQuery(document).ready(function() {
 
     });
 
+    jQuery('#drone_imagery_plot_polygons_rectangles_apply').click(function() {
+        plot_polygons_display_points = [];
+        plot_polygons_ind_points = [];
+        plot_polygons_ind_4_points = [];
+
+        var num_rows_val = jQuery('#drone_imagery_plot_polygons_num_rows').val();
+        var num_cols_val = jQuery('#drone_imagery_plot_polygons_num_cols').val();
+        var section_width_val = jQuery('#drone_imagery_plot_polygons_section_width').val();
+        var section_height_val = jQuery('#drone_imagery_plot_polygons_section_height').val();
+        var section_left_offset_val = jQuery('#drone_imagery_plot_polygons_left_offset').val();
+        var section_top_offset_val = jQuery('#drone_imagery_plot_polygons_top_offset').val();
+
+        if (num_rows_val == ''){
+            alert('Please give the number of rows!');
+            return;
+        }
+        if (num_cols_val == ''){
+            alert('Please give the number of columns!');
+            return;
+        }
+        if (section_width_val == ''){
+            alert('Please give the section width! This can just be the total width of your image.');
+            return;
+        }
+        if (section_height_val == ''){
+            alert('Please give the section height! This can just be the total height of your image.');
+            return;
+        }
+        if (section_left_offset_val == ''){
+            alert('Please give the section left offset! This can be 0 if there is no offset.');
+            return;
+        }
+        if (section_top_offset_val == ''){
+            alert('Please give the section top offset! This can be 0 if there is no offset.');
+            return;
+        }
+
+        var num_rows = parseInt(num_rows_val);
+        var num_cols = parseInt(num_cols_val);
+        var section_width = parseInt(section_width_val);
+        var section_height = parseInt(section_height_val);
+        var section_left_offset = parseInt(section_left_offset_val);
+        var section_top_offset = parseInt(section_top_offset_val);
+
+        var col_width = section_width / num_cols;
+        var row_width = section_height / num_rows;
+
+        var x_pos = section_left_offset;
+        var y_pos = section_top_offset;
+        var generated_polygons = [];
+        for (var i=0; i<num_rows; i++) {
+            for (var j=0; j<num_cols; j++) {
+                generated_polygons.push([
+                    {x:x_pos, y:y_pos},
+                    {x:x_pos + col_width, y:y_pos},
+                    {x:x_pos + col_width, y:y_pos + row_width},
+                    {x:x_pos, y:y_pos + row_width}
+                ]);
+                x_pos = x_pos + col_width;
+            }
+            y_pos = y_pos + row_width;
+        }
+        //console.log(generated_polygons);
+
+        for (var i=0; i<generated_polygons.length; i++) {
+            plot_polygons_ind_4_points = generated_polygons[i];
+            plot_polygons_display_points = plot_polygons_ind_4_points;
+            plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+            drawPolyline(plot_polygons_display_points);
+            drawWaypoints(plot_polygons_display_points, i);
+            drone_imagery_plot_generated_polygons[i] = plot_polygons_ind_4_points;
+        }
+
+        droneImageryRectangleLayoutTable(drone_imagery_plot_generated_polygons);
+    });
+
     jQuery(document).on('click', '#drone_imagery_plot_polygons_clear', function(){
         plot_polygons_display_points = [];
         plot_polygons_ind_points = [];
         plot_polygons_ind_4_points = [];
         drone_imagery_plot_polygons = {};
+        drone_imagery_plot_generated_polygons = {};
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         draw_canvas_image(background_image_url);
+        jQuery('#drone_imagery_generated_polygons_div').html('');
+        droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
     });
 
     function draw_canvas_image(image_url) {
@@ -390,26 +539,30 @@ jQuery(document).ready(function() {
             }
         } else if (plot_polygons_ind_points.length > 4) {
             if (plot_polygons_display_points.length == 5) {
-                plot_polygons_display_points = [];
-
                 jQuery('#drone_imagery_assign_plot_dialog').modal('show');
             }
             plot_polygons_ind_points = [];
         }
         drawPolyline(plot_polygons_display_points);
-        drawWaypoints(plot_polygons_display_points);
+        drawWaypoints(plot_polygons_display_points, undefined);
     }
 
     jQuery('#drone_imagery_assign_plot_dialog').on('shown.bs.modal', function (e) {
         jQuery("#drone_imagery_plot_polygon_assign_plot_name").focus();
     });
 
+    jQuery('#drone_imagery_assign_plot_dialog').on('hide.bs.modal', function (e) {
+        drawPolyline(plot_polygons_display_points);
+        drawWaypoints(plot_polygons_display_points, plot_polygon_name);
+        plot_polygons_display_points = [];
+    });
+
     jQuery('#drone_imagery_plot_polygon_assign_add').click(function(){
-        var plot_name = jQuery('#drone_imagery_plot_polygon_assign_plot_name').val();
-        if (plot_name == ''){
-            alert('Please give a plot name');
+        plot_polygon_name = jQuery('#drone_imagery_plot_polygon_assign_plot_name').val();
+        if (plot_polygon_name == ''){
+            alert('Please give a name name (plot name, plant name, etc)');
         }
-        drone_imagery_plot_polygons[plot_name] = plot_polygons_ind_4_points;
+        drone_imagery_plot_polygons[plot_polygon_name] = plot_polygons_ind_4_points;
         jQuery('#drone_imagery_assign_plot_dialog').modal('hide');
         console.log(drone_imagery_plot_polygons);
         droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
@@ -423,6 +576,16 @@ jQuery(document).ready(function() {
             return false;
         }
     });
+
+    function droneImageryRectangleLayoutTable(generated_polygons) {
+        var html = '<hr><div class="well well-sm"><table class="table table-borders table-hover" id="drone_imagery_generated_polygons_table"><thead><tr><th>Generated Number</th><th>Polygon Position</th><th>Field Trial Observation Unit</th></tr></thead><tbody>';
+        for (key in generated_polygons) {
+            html = html + '<tr><td>' + key + '</td><td>' + JSON.stringify(generated_polygons[key]) + '</td><td><input class="form-control" type="text" /></td></tr>';
+        }
+        html = html + '</tbody></table></div>';
+        jQuery('#drone_imagery_generated_polygons_div').html(html);
+        jQuery('#drone_imagery_generated_polygons_table').DataTable();
+    }
 
     function droneImageryDrawLayoutTable(response, plot_polygons) {
         var output = response.output;
