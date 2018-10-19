@@ -1,0 +1,61 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/pca/analysis.mas - PCA analysis template
+
+To add the PCA analysis interface any where on the website
+add the template '/solgs/pca/analysis.mas' in your mason template
+and pass any of the arguments listed below.
+Adding the 'data_structure_type' argument is also recommended.
+A data structure can any of this: 'list', if of list type; 'dataset',if of dataset type;
+'trial', if of just a trial.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trial_id => undef
+$list_id => undef
+$dataset_id => undef
+$data_structure_type => undef
+
+</%args>
+
+<%perl>
+
+my $pop_id = $trial_id if $trial_id;
+
+if (!$data_structure_type) {
+   if ($dataset_id) {
+      $data_structure_type = 'dataset';
+   } elsif ($list_id) {
+     $data_structure_type = 'list';
+   }
+}
+
+</%perl>
+
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "Population Structure, PCA (Using Marker Data)" 
+&> 
+
+  <input id="run_pca" class="button" type="button" value="Run PCA" />
+  
+  <& /solgs/pca/plot.mas,
+     pop_id => $pop_id,
+    list_id => $list_id,
+    dataset_id => $dataset_id,
+    data_structure_type => $data_structure_type,
+    &>
+
+</&>

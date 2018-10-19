@@ -130,12 +130,17 @@ $sample_observation_unit_type_name => undef
                                     trial_id => $trial_id
                                 &>
 
-                                <& /anova.mas,
+                                <& /solgs/anova/analysis.mas,
                                     trial_id => $trial_id
                                 &>
 
                                 <!-- Population structure analysis PCA -->
-                                <& /solgs/model/pca.mas,
+                                <& /solgs/pca/analysis.mas,
+                                    trial_id => $trial_id
+                                  &>
+
+				<!-- Clustering -->
+                                <& /solgs/cluster/analysis.mas,
                                     trial_id => $trial_id
                                 &>
 

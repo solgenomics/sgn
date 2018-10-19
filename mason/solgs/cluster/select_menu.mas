@@ -1,0 +1,44 @@
+<%doc>
+
+=head1 NAME
+ 
+/solgs/cluster/select_menu.mas - cluster analysis select menu of datasets or lists of trials or genotypes with genotype or phenotype 
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+
+<div class="fileupload-buttonbar">
+   
+  <div class="list_upload" id="list_label">
+    <label for="cluster_genotypes_list">Select</label>
+  </div> 
+  <div class="list_upload" id="cluster_genotypes_list">      
+  </div>
+  <div class="list_upload" id="cluster_go_btn">
+    <input type="button" value="Go" />
+  </div>
+    
+  <div class="list_upload" style="margin-left:5px">     
+    <i class="glyphicon-plus"></i>
+    <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list or dataset</a>  
+  </div>
+
+  <br>
+  <br>
+   
+    <!-- The container for the list of kcluster populations -->
+    <div class="sub_infosectioncontent" id="list_cluster_populations" style="display:none"></div>
+    <br> 
+
+</div>
+

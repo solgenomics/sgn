@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/pca/analysis.mas - pca analysis using a list of trials or genotypes 
+/cluster/analysis.mas - K-means cluster analysis using a list of trials or genotypes with genotype or phenotype 
 
 =AUTHOR
 
@@ -34,7 +34,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
 </%perl>
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.pca"] &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.kCluster"] &>
 
 <style>
 
@@ -51,18 +51,18 @@ $pop_id = undef if $list_id || $combo_pops_id;
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,
-    title       => "Select a list of accessions or trials and analyze population structure -- principal component analysis (PCA)",
+    title       => "Select a list of accessions or trials and run cluster analysis using k-means method",
   &>
 
  
  <div class="fileupload-buttonbar">
    
     <div class="list_upload" id="list_label">
-      <label for="pca_genotypes_list">Select</label>
+      <label for="cluster_genotypes_list">Select</label>
     </div> 
-    <div class="list_upload" id="pca_genotypes_list">      
+    <div class="list_upload" id="cluster_genotypes_list">      
     </div>
-    <div class="list_upload" id="pca_genotypes_list_upload">
+    <div class="list_upload go_btn">
       <input type="button" value="Go" />
     </div>
     
@@ -74,8 +74,8 @@ $pop_id = undef if $list_id || $combo_pops_id;
     <br>
     <br>
    
-    <!-- The container for the list list pca populations -->
-    <div class="sub_infosectioncontent" id="list_pca_populations" style="display:none"></div>
+    <!-- The container for the list of kcluster populations -->
+    <div class="sub_infosectioncontent" id="list_cluster_populations" style="display:none"></div>
     <br>
 
 </div>
@@ -83,9 +83,9 @@ $pop_id = undef if $list_id || $combo_pops_id;
 </&>
 
 
-<div id="pca_canvas"></div>
-<div id="pca_plot"></div>
-  <div id="pca_message" style="font-weight:bold;text-align:center;color:#A7C942">
+<div id="kcluster_canvas"></div>
+<div id="kcluster_plot"></div>
+  <div id="kcluster_message" style="font-weight:bold;text-align:center;color:#A7C942">
     <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
     <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
