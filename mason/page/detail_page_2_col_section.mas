@@ -314,6 +314,10 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
 % } #End manage_drone_imagery_main
 
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_section.mas &>
+% }
+
                             </div>
                         </div>
                     </&>

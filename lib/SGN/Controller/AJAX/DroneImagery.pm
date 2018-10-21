@@ -459,7 +459,7 @@ sub drone_imagery_denoise_GET : Args(0) {
     my $denoised_image_fullpath = $image->get_filename('original_converted', 'full');
     my $denoised_image_url = $image->get_image_url('original');
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_url => $denoised_image_url, denoised_image_dullpath => $denoised_image_fullpath };
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_url => $denoised_image_url, denoised_image_fullpath => $denoised_image_fullpath };
 }
 
 sub get_drone_run_projects : Path('/ajax/drone_imagery/drone_runs') : ActionClass('REST') { }
