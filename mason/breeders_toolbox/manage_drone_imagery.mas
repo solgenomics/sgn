@@ -596,6 +596,7 @@ jQuery(document).ready(function() {
                 }
 
                 jQuery("#working_modal").modal("hide");
+                location.reload();
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");

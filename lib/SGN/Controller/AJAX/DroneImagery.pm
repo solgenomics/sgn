@@ -195,6 +195,14 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my ($ft_stitched_result, $ft_stitched_total_count) = $ft_stitched_images_search->search();
     #print STDERR Dumper $result;
 
+    my $plot_polygon_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygons_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$plot_polygon_stitched_drone_images_cvterm_id
+    });
+    my ($plot_polygons_result, $plot_polygons_total_count) = $plot_polygons_images_search->search();
+    #print STDERR Dumper $result;
+
     my @return;
     my %unique_drone_runs;
     foreach (@$result) {
@@ -256,6 +264,13 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{ft_stitched_image_original} = $image_original;
         $unique_drone_runs{$_->{drone_run_project_id}}->{ft_stitched_image_id} = $image_id;
     }
+    foreach (@$plot_polygons_result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
+        my $image_original = $image->get_image_url("original");
+        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{plot_polygon_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+    }
 
     my $calendar_funcs = CXGN::Calendar->new({});
     foreach my $k (sort keys %unique_drone_runs) {
@@ -284,6 +299,17 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                     $cell_html .= '<center><h5>Denoised&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$v->{denoised_stitched_image_id}.'"></span></h5></center>'.$v->{denoised_stitched_image}.'<br/><br/>';
 
                     $cell_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$v->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$v->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$v->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($v->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'">Create/View Plot Polygons</button>';
+
+                    $cell_html .= '<hr>';
+                    my $plot_polygon_images = '';
+                    if ($v->{plot_polygon_images}) {
+                        $plot_polygon_images = scalar(@{$v->{plot_polygon_images}})." Plot Polygons<br/><span>";
+                        $plot_polygon_images .= join '', @{$v->{plot_polygon_images}};
+                        $plot_polygon_images .= "</span>";
+                    } else {
+                        $plot_polygon_images = 'None';
+                    }
+                    $cell_html .= $plot_polygon_images;
 
                     # if ($v->{ft_stitched_image}) {
                     #     $cell_html .= '<center><h5>FT High Pass</h5></center>'.$v->{ft_stitched_image}.'<br/><br/>';
