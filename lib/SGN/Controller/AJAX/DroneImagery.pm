@@ -395,7 +395,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
 
 sub drone_imagery_assign_plot_polygons : Path('/ajax/drone_imagery/assign_plot_polygons') : ActionClass('REST') { }
 
-sub drone_imagery_assign_plot_polygons_GET : Args(0) {
+sub drone_imagery_assign_plot_polygons_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -411,11 +411,13 @@ sub drone_imagery_assign_plot_polygons_GET : Args(0) {
     my %stock_ids;
     foreach my $stock_name (keys %$polygon_objs) {
         my $polygon = $polygon_objs->{$stock_name};
-        if (scalar(@$polygon) != 4){
-            $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.'should be 4 long!'};
+        if (scalar(@$polygon) != 5){
+            $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.'should be 5 long!'};
             $c->detach();
         }
-        
+        my $last_point = pop @$polygon;
+        $polygon_objs->{$stock_name} = $polygon;
+
         my $stock = $schema->resultset("Stock::Stock")->find({uniquename => $stock_name});
         if (!$stock) {
             $c->stash->{rest} = {error=>'Error: Stock name '.$stock_name.' does not exist in the database!'};
@@ -442,7 +444,8 @@ sub drone_imagery_assign_plot_polygons_GET : Args(0) {
         $archive_plot_polygons_temp_image .= '.png';
         print STDERR $archive_plot_polygons_temp_image."\n";
 
-        my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_plot_polygons_temp_image --polygon '$polygons'";
+        my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_plot_polygons_temp_image --polygon_json '$polygons'";
+        print STDERR Dumper $cmd;
         my $status = system($cmd);
 
         $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
@@ -455,6 +458,8 @@ sub drone_imagery_assign_plot_polygons_GET : Args(0) {
         push @plot_polygon_image_fullpaths, $plot_polygon_image_fullpath;
         push @plot_polygon_image_urls, $plot_polygon_image_url;
     }
+    print STDERR Dumper \@plot_polygon_image_fullpaths;
+    print STDERR Dumper \@plot_polygon_image_urls;
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
 }
@@ -644,7 +649,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
     $archive_temp_image .= '.png';
     print STDERR $archive_temp_image."\n";
 
-    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_temp_image --polygon '$polygons'";
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_temp_image --polygon_json '$polygons'";
     my $status = system($cmd);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
