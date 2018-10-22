@@ -393,6 +393,72 @@ sub drone_imagery_get_contours_GET : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath, image_width => $size[0], image_height => $size[1] };
 }
 
+sub drone_imagery_assign_plot_polygons : Path('/ajax/drone_imagery/assign_plot_polygons') : ActionClass('REST') { }
+
+sub drone_imagery_assign_plot_polygons_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $stock_polygons = $c->req->param('stock_polygons');
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $polygon_objs = decode_json $stock_polygons;
+    my %stock_ids;
+    foreach my $stock_name (keys %$polygon_objs) {
+        my $polygon = $polygon_objs->{$stock_name};
+        if (scalar(@$polygon) != 4){
+            $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.'should be 4 long!'};
+            $c->detach();
+        }
+        
+        my $stock = $schema->resultset("Stock::Stock")->find({uniquename => $stock_name});
+        if (!$stock) {
+            $c->stash->{rest} = {error=>'Error: Stock name '.$stock_name.' does not exist in the database!'};
+            $c->detach();
+        }
+        $stock_ids{$stock_name} = $stock->stock_id;
+    }
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my @plot_polygon_image_fullpaths;
+    my @plot_polygon_image_urls;
+    foreach my $stock_name (keys %$polygon_objs) {
+        my $polygon = $polygon_objs->{$stock_name};
+        my $polygons = encode_json [$polygon];
+        my $stock_id = $stock_ids{$stock_name};
+
+        my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');
+        my $archive_plot_polygons_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/imageXXXX');
+        $archive_plot_polygons_temp_image .= '.png';
+        print STDERR $archive_plot_polygons_temp_image."\n";
+
+        my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_plot_polygons_temp_image --polygon '$polygons'";
+        my $status = system($cmd);
+
+        $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        $image->set_sp_person_id($user_id);
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
+        my $ret = $image->process_image($archive_plot_polygons_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
+        my $stock_associate = $image->associate_stock($stock_id);
+        my $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
+        my $plot_polygon_image_url = $image->get_image_url('original');
+        push @plot_polygon_image_fullpaths, $plot_polygon_image_fullpath;
+        push @plot_polygon_image_urls, $plot_polygon_image_url;
+    }
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+}
+
 sub drone_imagery_fourier_transform : Path('/ajax/drone_imagery/fourier_transform') : ActionClass('REST') { }
 
 sub drone_imagery_fourier_transform_GET : Args(0) {
@@ -579,9 +645,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
     print STDERR $archive_temp_image."\n";
 
     my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_temp_image --polygon '$polygons'";
-    print STDERR Dumper $cmd;
     my $status = system($cmd);
-    print STDERR Dumper $status;
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
