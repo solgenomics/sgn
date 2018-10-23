@@ -306,8 +306,9 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                         $plot_polygon_images = scalar(@{$v->{plot_polygon_images}})." Plot Polygons<br/><span>";
                         $plot_polygon_images .= join '', @{$v->{plot_polygon_images}};
                         $plot_polygon_images .= "</span>";
+                        $plot_polygon_images .= '<br/><br/><button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" >Calculate Phenotypes</button>';
                     } else {
-                        $plot_polygon_images = 'None';
+                        $plot_polygon_images = 'No Plot Polygons Assigned';
                     }
                     $cell_html .= $plot_polygon_images;
 
@@ -405,7 +406,6 @@ sub drone_imagery_get_contours_GET : Args(0) {
     print STDERR $archive_contours_temp_image."\n";
 
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/GetContours.py --image_url '.$main_production_site.$image_url.' --outfile_path '.$archive_contours_temp_image);
-    print STDERR Dumper $status;
 
     my @size = imgsize($archive_contours_temp_image);
 
@@ -547,7 +547,6 @@ sub drone_imagery_denoise_GET : Args(0) {
     print STDERR $archive_denoise_temp_image."\n";
 
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/Denoise.py --image_path '.$image_fullpath.' --outfile_path '.$archive_denoise_temp_image);
-    print STDERR Dumper $status;
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -557,6 +556,41 @@ sub drone_imagery_denoise_GET : Args(0) {
     my $denoised_image_url = $image->get_image_url('original');
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_url => $denoised_image_url, denoised_image_fullpath => $denoised_image_fullpath };
+}
+
+sub drone_imagery_remove_background : Path('/ajax/drone_imagery/remove_background') : ActionClass('REST') { }
+
+sub drone_imagery_remove_background_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
+    my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
+    $archive_remove_background_temp_image .= '.png';
+    print STDERR $archive_remove_background_temp_image."\n";
+
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path '.$image_fullpath.' --outfile_path '.$archive_remove_background_temp_image);
+
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archive_remove_background_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
+    my $removed_background_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $removed_background_image_url = $image->get_image_url('original');
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath };
 }
 
 sub get_drone_run_projects : Path('/ajax/drone_imagery/drone_runs') : ActionClass('REST') { }

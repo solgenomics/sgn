@@ -67,7 +67,8 @@ sub patch {
             'cropped_stitched_drone_imagery',
             'fourier_transform_stitched_drone_imagery',
             'contours_stitched_drone_imagery',
-            'observation_unit_polygon_imagery'
+            'observation_unit_polygon_imagery',
+            'background_removed_stitched_drone_imagery'
         ],
         'project_property' => [
             'project_start_date'

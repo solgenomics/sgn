@@ -18,7 +18,7 @@
 
 <div id="manage_drone_imagery_crop_div" style="display:none">
 
-    <& /page/page_title.mas, title=>"Manage Drone Imagery : Crop Stitched Image To Field Experiment" &>
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Crop Stitched Image To Field Experiment" &>
     
     <div class="well well-sm">
         <ul>
@@ -34,7 +34,7 @@
 
 <div id="manage_drone_imagery_plot_polygons_div" style="display:none">
 
-    <& /page/page_title.mas, title=>"Manage Drone Imagery : Define Plot Polygons" &>
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Define Plot Polygons" &>
     
     <div class="well well-sm">
         <ul>
@@ -62,6 +62,18 @@
     <div class="well well-sm">
         <div id="drone_imagery_trial_layout_div"></div>
     </div>
+</div>
+
+<div id="manage_drone_imagery_calculate_phenotypes_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Calculate Phenotypes" &>
+    
+    <div class="well well-sm">
+        <ul>
+            <li>Here you can calculate phenotypes for all plot polygons at once.</li>
+        </ul>
+    </div>
+
 </div>
 
 <div class="modal fade" id="drone_imagery_assign_plot_dialog" name="drone_imagery_assign_plot_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAssignPlotDialog" data-backdrop="static">
@@ -150,6 +162,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_crop_div').show();
         jQuery('#manage_drone_imagery_top_div').hide();
         jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
     });
 
     function FindPosition(oElement) {
@@ -319,6 +332,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_crop_div').hide();
         jQuery('#manage_drone_imagery_top_div').hide();
         jQuery('#manage_drone_imagery_plot_polygons_div').show();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
     
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_contours?image_id='+denoised_stitched_image_id+'&drone_run_project_id='+drone_run_project_id,
@@ -614,6 +628,7 @@ jQuery(document).ready(function() {
             }
         });
         console.log(drone_imagery_plot_polygons);
+        droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
     });
 
     function droneImageryRectangleLayoutTable(generated_polygons) {
@@ -655,6 +670,19 @@ jQuery(document).ready(function() {
         jQuery('#drone_imagery_trial_layout_div').html(html);
         jQuery('#drone_imagery_layout_table').DataTable();
     }
+
+    //
+    //Calculate Phenotypes JS
+    //
+
+    jQuery(document).on('click', 'button[name=project_drone_imagery_get_phenotypes]', function(){
+        jQuery('#manage_drone_imagery_crop_div').hide();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').show();
+
+        
+    });
 
 });
 
