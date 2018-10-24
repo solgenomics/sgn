@@ -4,27 +4,28 @@ $data => 'Default'
 </%args>
 
 
-<& /page/page_title.mas, title=>"Quality Control Genotyping" &>
+<& /page/page_title.mas, title=>"Carry out quality control genotyping" &>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
 <div class="container-fluid">
 
-    <&| /page/info_section.mas, title=>"About Quality Control Genotyping",  collapsible => 1, collapsed=>1 &>
+    <&| /page/info_section.mas, title=>"QC assay upload",  collapsible => 1, collapsed=>0 &>
         <div class="well well-sm">
             <div class="panel panel-default">
-                    <b><p>What is quality control genotyping?</p></b>
+                    <b><p>Upload KASP assays for quality control genotyping</p></b>
                     <ul>
-                    <li>Quality control genotyping is a procedure targeted towards identifying mismatch or errors in our breeding materials or germplasm</li>
-                    
+                    <li>Upload new KASP assay to validate genotypes true to type or Upload a new Fingerprint to store in the database</li>
+                    <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotype QC</button>
                     </ul>
                 </div>
             </div>
+            
         </div>
     </&>
 
 
-<button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotype QC</button>
+
 
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
 
