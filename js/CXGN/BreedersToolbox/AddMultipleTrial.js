@@ -81,6 +81,7 @@ jQuery(document).ready(function ($) {
     }
 
   function generate_multi_experimental_design() {
+      console.log("generating multi experimental design");
       var name = $('#new_multi_trial_name').val();
       var year = $('#add_multi_project_year').val();
       var desc = $('#add_multi_project_description').val();
@@ -105,6 +106,8 @@ jQuery(document).ready(function ($) {
         location_list = JSON.stringify(trial_location);
       }
 
+      console.log("Location list is "+location_list);
+
       var stock_list;
       if (stock_list_id != "") {
           stock_list = JSON.stringify(list.getList(stock_list_id));
@@ -123,7 +126,7 @@ jQuery(document).ready(function ($) {
       else {
          use_same_layout = "";
       }
-      
+
       var westcott_check_1 = $('#westcott_check_1m').val();
       var westcott_check_2 = $('#westcott_check_2m').val();
       var westcott_col = $('#westcott_colm').val();
@@ -132,6 +135,7 @@ jQuery(document).ready(function ($) {
       var block_size = $('#block_size_multi').val();
       var max_block_size = $('#max_block_size_multi').val();
       var plot_prefix = $('#plot_prefix_multi').val();
+      console.log("Plot prefix is "+plot_prefix);
       var start_number = $('#start_number_multi').val();
       var increment = $('#increment_multi').val();
 
@@ -402,7 +406,7 @@ jQuery(document).ready(function ($) {
 
       else if (design_method == 'greenhouse') {
           $("#trial_multi-design_more_info").show();
-          $("#show_list_of_checks_section_multi").hide(); 
+          $("#show_list_of_checks_section_multi").hide();
           $("#rep_count_section_multi").hide();
           $("#block_number_section_multi").hide();
           $("#block_size_section_multi").hide();
@@ -475,12 +479,12 @@ jQuery(document).ready(function ($) {
   jQuery("#westcott_check_1m").autocomplete({
       appendTo: "#add_multilocation_project_dialog",
       source: '/ajax/stock/accession_autocomplete',
-  }); 
-  
+  });
+
   jQuery("#westcott_check_2m").autocomplete({
       appendTo: "#add_multilocation_project_dialog",
       source: '/ajax/stock/accession_autocomplete',
-  }); 
+  });
 
   jQuery(document).on('change', '#select_list_multi_list_select', function() {
       if (jQuery("#select_multi-design_method").val() == 'greenhouse') {
@@ -672,9 +676,9 @@ jQuery(document).ready(function ($) {
           }
       });
   }
-  
+
   jQuery('#trial_saved_dialog_message_ok_button').click(function (){
-     location.reload(); 
+     location.reload();
   });
 
   jQuery('#new_multi_trial_confirm_submit').click(function () {

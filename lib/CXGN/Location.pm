@@ -137,7 +137,7 @@ sub store_location {
     if ($country_name && $country_name =~ m/[0-9]/) {
        return { error => "Country name $country_name is not a valid ISO standard country name." };
     }
-    
+
     if ($country_code && (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 ))) {
        return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
     }
@@ -259,10 +259,13 @@ sub delete_location {
 	}
 }
 
-sub _get_ndgeolocationprop {
+sub get_prop {
     my $self = shift;
     my $type = shift;
-    my $cv = shift;
+    #my $cv = shift;
+    # determine cv based on type,then retrieve value
+    my $cv = 'geolocation_property';
+    if ($type eq 'breeding_program') { $cv = 'project_property';}
 
     my $ndgeolocationprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, $cv)->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->search({ nd_geolocation_id=> $self->nd_geolocation_id(), type_id => $ndgeolocationprop_type_id }, { order_by => {-asc => 'nd_geolocationprop_id'} });
@@ -280,7 +283,7 @@ sub _update_ndgeolocationprop {
     my $type = shift;
     my $cv = shift;
     my $value = shift;
-    my $existing_prop = $self->_get_ndgeolocationprop($type, $cv);
+    my $existing_prop = $self->get_prop($type, $cv);
 
     if ($value) {
         $self->_store_ndgeolocationprop($type, $cv, $value);

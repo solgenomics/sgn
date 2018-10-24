@@ -65,6 +65,9 @@ has 'schema' => (
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
 sub generate_experimental_design_POST : Args(0) {
+
+    print STDERR " \n\n\n\n LOOOK HERE WE ARE GENERATING EXPERIMENTAL DESIGN RIGHT NOW \n\n\n\n";
+
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_design = CXGN::Trial::TrialDesign->new();
@@ -237,13 +240,23 @@ sub generate_experimental_design_POST : Args(0) {
 
         $geolocation_lookup->set_location_name($trial_locations);
         #print STDERR Dumper(\$geolocation_lookup);
+
+        my $location_id = $geolocation_lookup->get_geolocation()->nd_geolocation_id();
+        my $location_object = CXGN::Location->new( {
+            bcs_schema => $schema,
+            nd_geolocation_id => $id,
+        });
+        my $abbreviation = $location_object->get_prop('abbreviation');
+
         if (!$geolocation_lookup->get_geolocation()){
             $c->stash->{rest} = { error => "Trial location not found" };
             return;
         }
 
         if (scalar(@locations) > 1) {
-            $trial_name = $trial_name."_".$trial_locations;
+            print STDERR "Trial name before change is $trial_name\n";
+            $trial_name = $trial_name."_".$abbreviation;
+            print STDERR "Trial name after change is $trial_name\n";
         }
 
         $trial_design->set_trial_name($trial_name);
@@ -397,7 +410,7 @@ sub generate_experimental_design_POST : Args(0) {
             return;
         }
         if ($trial_design->get_design()) {
-            %design = %{$trial_design->get_design()}; 
+            %design = %{$trial_design->get_design()};
             #print STDERR "DESIGN: ". Dumper(%design);
         } else {
             $c->stash->{rest} = {error => "Could not generate design" };
@@ -408,7 +421,7 @@ sub generate_experimental_design_POST : Args(0) {
         # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
         # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
         $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
-        $design_map_view = design_layout_map_view(\%design, $design_type); 
+        $design_map_view = design_layout_map_view(\%design, $design_type);
         $design_info_view_html = design_info_view(\%design, \%design_info);
         my $design_json = encode_json(\%design);
         push @design_array,  $design_json;
@@ -606,7 +619,7 @@ sub save_experimental_design_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => "1",}; 
+    $c->stash->{rest} = {success => "1",};
     return;
 }
 
