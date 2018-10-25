@@ -262,16 +262,18 @@ sub delete_location {
 sub get_prop {
     my $self = shift;
     my $type = shift;
-    #my $cv = shift;
+
     # determine cv based on type,then retrieve value
     my $cv = 'geolocation_property';
     if ($type eq 'breeding_program') { $cv = 'project_property';}
+
+    #print STDERR "Cv is $cv and type is $type and id is".$self->nd_geolocation_id()."\n";
 
     my $ndgeolocationprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, $cv)->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->search({ nd_geolocation_id=> $self->nd_geolocation_id(), type_id => $ndgeolocationprop_type_id }, { order_by => {-asc => 'nd_geolocationprop_id'} });
 
     my @results;
-    while (my $r = $rs->next()){
+    while (my $r = $rs->next()) {
         push @results, $r->value;
     }
     my $res = join ',', @results;
@@ -283,7 +285,7 @@ sub _update_ndgeolocationprop {
     my $type = shift;
     my $cv = shift;
     my $value = shift;
-    my $existing_prop = $self->get_prop($type, $cv);
+    my $existing_prop = $self->get_prop($type);
 
     if ($value) {
         $self->_store_ndgeolocationprop($type, $cv, $value);
