@@ -51,7 +51,7 @@
     <div class="well well-sm">
         <div id="drone_imagery_plot_polygons_top_section"></div>
 
-        <button id="drone_imagery_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" id="drone_imagery_plot_polygons_submit">Finish and Save Polygons To Plots</button>
+        <button id="drone_imagery_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="drone_imagery_plot_polygons_submit_top">Finish and Save Polygons To Plots</button>
     </div>
 
     <canvas id="drone_imagery_plot_polygons_original_stitched_div"></canvas>
@@ -595,7 +595,24 @@ jQuery(document).ready(function() {
         }
     });
 
-    jQuery('#drone_imagery_plot_polygons_submit').click(function(){
+    jQuery(document).on('click', 'button[name=drone_imagery_plot_polygons_submit_top]', function(){
+        submit_assignment_plot_polygons();
+    });
+
+    jQuery(document).on('click', 'button[name=drone_imagery_plot_polygons_submit_bottom]', function(){
+
+        jQuery('input[name="drone_imagery_plot_polygons_autocomplete"]').each(function() {
+            var stock_name = this.value;
+            if (stock_name != '') {
+                var polygon = drone_imagery_plot_generated_polygons[jQuery(this).data('generated_polygon_key')];
+                drone_imagery_plot_polygons[stock_name] = polygon;
+            }
+        });
+        
+        submit_assignment_plot_polygons();
+    });
+
+    function submit_assignment_plot_polygons() {
         jQuery.ajax({
             type: 'POST',
             url: '/ajax/drone_imagery/assign_plot_polygons',
@@ -622,7 +639,7 @@ jQuery(document).ready(function() {
                 alert('Error saving assigned plot polygons!')
             }
         });
-    });
+    }
 
     jQuery(document).on('click', '#drone_imagery_plot_polygons_generated_assign', function() {
         jQuery('input[name="drone_imagery_plot_polygons_autocomplete"]').each(function() {
@@ -641,9 +658,9 @@ jQuery(document).ready(function() {
         for (key in generated_polygons) {
             html = html + '<tr><td>' + key + '</td><td><input class="form-control" type="text" name="drone_imagery_plot_polygons_autocomplete" data-generated_polygon_key="'+key+'"/></td></tr>';
         }
-        html = html + '</tbody></table><button class="btn btn-primary" id="drone_imagery_plot_polygons_generated_assign">Save Assignments</button></div>';
+        html = html + '</tbody></table><button class="btn btn-primary" id="drone_imagery_plot_polygons_generated_assign">Save Assignments</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="drone_imagery_plot_polygons_submit_bottom">Finish and Save Polygons To Plots</button></div>';
         jQuery('#drone_imagery_generated_polygons_div').html(html);
-        jQuery('#drone_imagery_generated_polygons_table').DataTable();
+        jQuery('#drone_imagery_generated_polygons_table').DataTable({'paging':false});
 
         jQuery('input[name=drone_imagery_plot_polygons_autocomplete]').autocomplete({
             source: drone_imagery_plot_polygons_available_stock_names
