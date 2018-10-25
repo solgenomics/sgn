@@ -71,10 +71,12 @@ sub patch {
             'background_removed_stitched_drone_imagery'
         ],
         'project_property' => [
-            'project_start_date'
+            'project_start_date',
+            'drone_run_band_project_type'
         ],
         'project_relationship' => [
-            'drone_run_on_field_trial'
+            'drone_run_on_field_trial',
+            'drone_run_band_on_drone_run'
         ]
     };
 

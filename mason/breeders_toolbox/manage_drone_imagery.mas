@@ -119,6 +119,7 @@ jQuery(document).ready(function() {
     var stitched_image_id;
     var stitched_image;
     var drone_run_project_id;
+    var drone_run_band_project_id;
     var crop_points = [];
     var crop_display_points = [];
 
@@ -127,6 +128,7 @@ jQuery(document).ready(function() {
         stitched_image_id = jQuery(this).data('stitched_image_id');
         stitched_image = jQuery(this).data('stitched_image');
         drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
 
         crop_points = [];
         crop_display_points = [];
@@ -244,7 +246,7 @@ jQuery(document).ready(function() {
     jQuery(document).on('click', '#drone_imagery_crop_stitched_submit', function(){
 
         jQuery.ajax({
-            url : '/ajax/drone_imagery/crop_image?image_id='+stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_project_id='+drone_run_project_id,
+            url : '/ajax/drone_imagery/crop_image?image_id='+stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_band_project_id='+drone_run_band_project_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -270,12 +272,13 @@ jQuery(document).ready(function() {
     jQuery(document).on('click', 'button[name="project_drone_imagery_denoise"]', function() {
         var trial_id = jQuery(this).data('field_trial_id');
         var drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        var drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
         var cropped_stitched_image_id = jQuery(this).data('cropped_stitched_image_id');
         var stitched_image = jQuery(this).data('stitched_image');
         var cropped_stitched_image = jQuery(this).data('cropped_stitched_image');
 
         jQuery.ajax({
-            url : '/ajax/drone_imagery/denoise?image_id='+cropped_stitched_image_id+'&drone_run_project_id='+drone_run_project_id,
+            url : '/ajax/drone_imagery/denoise?image_id='+cropped_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -314,12 +317,14 @@ jQuery(document).ready(function() {
     var cropped_stitched_image_id;
     var denoised_stitched_image_id;
     var drone_run_project_id;
+    var drone_run_band_project_id;
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_plot_polygons"]', function(){
         trial_id = jQuery(this).data('field_trial_id');
         cropped_stitched_image_id = jQuery(this).data('cropped_stitched_image_id');
         denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
 
         plot_polygons_display_points = [];
         plot_polygons_ind_points = [];
@@ -335,7 +340,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
     
         jQuery.ajax({
-            url : '/ajax/drone_imagery/get_contours?image_id='+denoised_stitched_image_id+'&drone_run_project_id='+drone_run_project_id,
+            url : '/ajax/drone_imagery/get_contours?image_id='+denoised_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -597,7 +602,7 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'image_id': denoised_stitched_image_id,
-                'drone_run_project_id': drone_run_project_id,
+                'drone_run_band_project_id': drone_run_band_project_id,
                 'stock_polygons': JSON.stringify(drone_imagery_plot_polygons),
             },
             beforeSend: function() {

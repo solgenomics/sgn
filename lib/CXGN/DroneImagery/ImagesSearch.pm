@@ -10,6 +10,7 @@ my $images_search = CXGN::DroneImagery::ImagesSearch->new({
     bcs_schema=>$schema,
     project_image_type_id=>$project_image_type_id,
     drone_run_project_id_list=>\@drone_run_project_ids,
+    drone_run_band_project_id_list=>\@drone_run_band_project_ids,
     location_list=>\@locations,
     program_list=>\@breeding_program_names,
     program_id_list=>\@breeding_programs_ids,
@@ -47,6 +48,11 @@ has 'project_image_type_id' => (
 );
 
 has 'drone_run_project_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'drone_run_band_project_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -164,6 +170,7 @@ sub search {
     my $schema = $self->bcs_schema();
     my $project_image_type_id = $self->project_image_type_id();
     my $drone_run_project_id_list = $self->drone_run_project_id_list;
+    my $drone_run_band_project_id_list = $self->drone_run_band_project_id_list;
     my $program_list = $self->program_list;
     my $program_id_list = $self->program_id_list;
     my $location_list = $self->location_list;
@@ -190,6 +197,7 @@ sub search {
     my $breeding_program_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program', 'project_property')->cvterm_id();
     my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
     my $drone_run_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $trial_folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_folder', 'project_property')->cvterm_id();
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
@@ -198,6 +206,7 @@ sub search {
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
     my $harvest_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_harvest_date', 'project_property')->cvterm_id();
     my $planting_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_planting_date', 'project_property')->cvterm_id();
+    my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $project_has_tissue_sample_entries = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id();
     my $genotyping_facility_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property')->cvterm_id();
     my $genotyping_facility_submitted_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility_submitted', 'project_property')->cvterm_id();
@@ -318,15 +327,18 @@ sub search {
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
-    my $q = "SELECT drone_run.project_id, drone_run.name, drone_run.description, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name, count(study.project_id) OVER() AS full_count
-        FROM project AS drone_run
+    my $q = "SELECT drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.modified_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name, count(study.project_id) OVER() AS full_count
+        FROM project AS drone_run_band
+        JOIN projectprop AS drone_run_band_type ON(drone_run_band.project_id=drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_type_cvterm_id)
+        JOIN project_relationship AS drone_run_band_rel ON(drone_run_band.project_id=drone_run_band_rel.subject_project_id AND drone_run_band_rel.type_id=$drone_run_band_drone_run_relationship_id)
+        JOIN project AS drone_run ON(drone_run.project_id=drone_run_band_rel.object_project_id)
         JOIN projectprop AS drone_run_date ON(drone_run.project_id=drone_run_date.project_id AND drone_run_date.type_id=$project_start_date_type_id)
         JOIN projectprop AS drone_run_design ON(drone_run.project_id=drone_run_design.project_id AND drone_run_design.type_id=$design_cvterm_id AND drone_run_design.value='drone_run')
         JOIN project_relationship AS drone_run_rel ON(drone_run.project_id=drone_run_rel.subject_project_id AND drone_run_rel.type_id=$drone_run_trial_relationship_id)
         JOIN project AS study ON(study.project_id=drone_run_rel.object_project_id)
         JOIN project_relationship AS bp_rel ON(study.project_id=bp_rel.subject_project_id AND bp_rel.type_id=$breeding_program_trial_relationship_id)
         JOIN project AS breeding_program ON(bp_rel.object_project_id=breeding_program.project_id)
-        JOIN phenome.project_md_image AS project_image ON(drone_run.project_id=project_image.project_id)
+        JOIN phenome.project_md_image AS project_image ON(drone_run_band.project_id=project_image.project_id)
         JOIN cvterm AS project_image_type ON(project_image_type.cvterm_id=project_image.type_id)
         JOIN metadata.md_image AS md_image ON(project_image.image_id=md_image.image_id)
         JOIN sgn_people.sp_person AS image_person ON(md_image.sp_person_id=image_person.sp_person_id)
@@ -343,7 +355,7 @@ sub search {
         $accession_join
         $trait_join
         $where_clause
-        GROUP BY(drone_run.project_id, drone_run.name, drone_run.description, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name)
+        GROUP BY(drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.modified_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name)
         ORDER BY study.name, md_image.image_id;";
 
     print STDERR Dumper $q;
@@ -353,12 +365,16 @@ sub search {
     my @result;
     my $total_count = 0;
     my $subtract_count = 0;
-    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $study_name, $study_id, $study_description, $folder_name, $folder_id, $folder_description, $trial_type_id, $trial_type_name, $year, $location_id, $breeding_program_name, $breeding_program_id, $breeding_program_description, $harvest_date, $planting_date, $design, $project_image_type_id, $project_image_type_name, $image_id, $image_description, $image_original_filename, $image_person_id, $image_create_date, $image_md5sum, $username, $first_name, $last_name, $full_count) = $h->fetchrow_array()) {
+    while (my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $study_name, $study_id, $study_description, $folder_name, $folder_id, $folder_description, $trial_type_id, $trial_type_name, $year, $location_id, $breeding_program_name, $breeding_program_id, $breeding_program_description, $harvest_date, $planting_date, $design, $project_image_type_id, $project_image_type_name, $image_id, $image_description, $image_original_filename, $image_person_id, $image_create_date, $image_modified_date, $image_md5sum, $username, $first_name, $last_name, $full_count) = $h->fetchrow_array()) {
         my $location_name = $location_id ? $locations{$location_id} : '';
         my $project_harvest_date = $harvest_date ? $calendar_funcs->display_start_date($harvest_date) : '';
         my $project_planting_date = $planting_date ? $calendar_funcs->display_start_date($planting_date) : '';
 
         push @result, {
+            drone_run_band_project_id => $drone_run_band_project_id,
+            drone_run_band_project_name => $drone_run_band_project_name,
+            drone_run_band_project_description => $drone_run_band_description,
+            drone_run_band_project_type => $drone_run_band_type,
             drone_run_project_id => $drone_run_project_id,
             drone_run_project_name => $drone_run_project_name,
             drone_run_project_description => $drone_run_project_description,
@@ -385,6 +401,7 @@ sub search {
             image_description => $image_description,
             image_original_filename => $image_original_filename,
             image_create_date => $image_create_date,
+            image_modified_date => $image_modified_date,
             image_md5sum => $image_md5sum,
             sp_person_id => $image_person_id,
             username => $username,

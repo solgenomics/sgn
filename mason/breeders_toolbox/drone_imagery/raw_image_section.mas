@@ -6,10 +6,7 @@
         <tr>
             <th>Field Trial</th>
             <th>Drone Run</th>
-            <th>Drone Run Description</th>
-            <th>Drone Run Date</th>
-            <th>Uploaded Drone Images</th>
-            <th>Field Image(s)</th>
+            <th>Drone Run Bands</th>
         </tr>
     </thead>
 </table>
@@ -23,14 +20,16 @@ jQuery(document).ready(function(){
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_stitch"]', function(){
         var drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        var drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
         jQuery.ajax({
-            url : '/ajax/drone_imagery/raw_drone_imagery_stitch?drone_run_project_id='+drone_run_project_id,
+            url : '/ajax/drone_imagery/raw_drone_imagery_stitch?drone_run_band_project_id='+drone_run_band_project_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
+                location.reload();
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
