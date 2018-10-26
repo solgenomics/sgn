@@ -16,7 +16,11 @@ $data => 'Default'
                     <b><p>Upload KASP assays for quality control genotyping</p></b>
                     <ul>
                     <li>Upload new KASP assay to validate genotypes true to type or Upload a new Fingerprint to store in the database</li>
-                    <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotype QC</button>
+                    
+                    <br><br>
+                    
+                    <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotype Data</button>
+                    <button class="btn btn-primary" name="upload_genotyping_data_qc_link">Run Genotype QC</button>
                     </ul>
                 </div>
             </div>
@@ -24,10 +28,22 @@ $data => 'Default'
         </div>
     </&>
 
-
-
+    <div class="well well-sm">
+    <&| /page/info_section.mas, title=>"Perform QC on your assay",  collapsible => 1, collapsed=>1 &>
+        
+            <div class="panel panel-default">
+                    <b><p>Evaluate your assay with existing fingerprint in the database</p></b>
+                    <div class="list_upload" id="qc_assay_list">
+                      <label for="qc_genotypes_list">Select</label>
+                    </div> 
+                    <div class="list_upload" id="cluster_genotypes_list">      
+                    </div>
+                </div>
+            </div>
+        </&>
 
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_qc_dialogs.mas &>
 
 <script>
 jQuery(document).ready(function(){

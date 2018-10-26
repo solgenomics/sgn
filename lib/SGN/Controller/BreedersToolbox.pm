@@ -704,7 +704,7 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
         # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
     });
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    print STDERR Dumper $genotypes;
+    #print STDERR Dumper $genotypes;
 
     $c->stash->{data} = 'my data';
     $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';

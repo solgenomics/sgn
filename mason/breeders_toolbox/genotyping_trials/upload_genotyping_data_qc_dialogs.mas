@@ -1,0 +1,156 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+<div class="modal fade" id="upload_genotypes_qc_dialog" name="upload_genotypes_qc_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypesQCDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypesQCDialog">Upload Genotypes QC</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotypes_qc_form" name="upload_genotypes_qc_form" action="/ajax/genotype_qc/upload">
+
+                    <div class="container-fluid">
+
+                        <&| /util/workflow.mas, id=> "upload_genotypes_qc_workflow" &>
+                            <&| /util/workflow.mas:step, title=> "Intro" &>
+                                <& /page/page_title.mas, title=>"This workflow will guide you through genotype QC" &>
+
+                                <ul>
+                                    <li>Genotype QC does not save your genotypes in the database, it only scans them against genotyping protocols already saved in the database.</li>
+                                    <li>The marker names should be exactly the marker names that you want to compare against and not any other ID</li>
+                                </ul>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+
+                            <&| /util/workflow.mas:step, title=> "Genotype Info" &>
+                                <& /page/page_title.mas, title=>"Provide genotype information" &>
+                                <br/><br/>
+
+
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <&| /page/explanation.mas, title=>'Template information' &>
+                                            <p>
+                                                <b>File format information</b>
+                                                <br>
+                                                <a id="upload_genotype_qc_spreadsheet_info_format">File format</a>
+                                            </p>
+                                        </&>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <br/>
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label">Select File: </label>
+                                                    <div class="col-sm-6">
+                                                        <input type="file" name="upload_genotype_qc_file_input" id="upload_genotype_qc_file_input" encoding="multipart/form-data" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" id="genotype_qc_upload_submit_button">Submit</button>
+                                </center>
+                            </&>
+                        </&>
+
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_genotype_qc_spreadsheet_info_format_dialog" name="upload_genotype_qc_spreadsheet_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadGenotypeQCInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadGenotypeQCInfoDialog">Upload Genotype QC Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading genotype QC data.</b>
+                    <br/>
+                    <b>Please use CSV formatted files</b>
+                    <p>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>COLUMN1</td>
+                                <td>COLUMN2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_genotyping_qc_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+.ui-autocomplete { z-index:2147483647; }
+
+</style>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('button[name=upload_genotyping_data_qc_link]').click(function(){
+        jQuery('#upload_genotypes_qc_dialog').modal('show');
+    });
+
+    jQuery('#upload_genotype_qc_spreadsheet_info_format').click(function(){
+        jQuery('#upload_genotype_qc_spreadsheet_info_format_dialog').modal('show');
+    });
+
+    jQuery('#genotype_qc_upload_submit_button').click(function () {
+        submit_genotype_data_qc_upload()
+    });
+
+    function submit_genotype_data_qc_upload() {
+        jQuery('#working_modal').modal('show');
+        jQuery("#upload_genotypes_qc_form").submit();
+    }
+
+    jQuery('#upload_genotypes_qc_form').iframePostForm({
+        json: true,
+        post: function () {
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal('hide');
+            if (response.success) {
+            }
+        }
+    });
+
+});
+</script>
