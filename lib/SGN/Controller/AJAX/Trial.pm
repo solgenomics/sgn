@@ -107,6 +107,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $start_number =  $c->req->param('start_number');
     my $increment =  $c->req->param('increment');
     my $trial_location = $c->req->param('trial_location');
+    print STDERR "Location is $trial_location\n";
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
     my $plot_layout_format = $c->req->param('plot_layout_format');
@@ -195,16 +196,16 @@ sub generate_experimental_design_POST : Args(0) {
     my $calculated_total_plot = $replicated_plots + $unreplicated_plots;
 
     my @locations;
-    my $trial_locations;
-    my $multi_location;
 
     try {
-        $multi_location = decode_json($trial_location);
+        my $multi_location = decode_json($trial_location);
         foreach my $loc (@$multi_location) {
+            print STDERR "One location is $loc\n";
             push @locations, $loc;
         }
     }
     catch {
+        print STDERR "Something went wrong with the decoding, just pushing the whole variable\n";
         push @locations, $trial_location;
     };
 
@@ -232,6 +233,8 @@ sub generate_experimental_design_POST : Args(0) {
 
     foreach my $location (@locations) {
 
+        print STDERR "Working on location $location\n";
+
         my $trial_name = $c->req->param('project_name');
         my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
 
@@ -242,7 +245,7 @@ sub generate_experimental_design_POST : Args(0) {
         }
         #print STDERR Dumper(\$geolocation_lookup);
 
-        if (scalar @locations > 1) {
+        if ($location_number > 1) {
 
             # Add location abbreviation or name to trial name
             my $location_id = $geolocation_lookup->get_geolocation()->nd_geolocation_id();
@@ -544,9 +547,32 @@ sub save_experimental_design_POST : Args(0) {
 
     foreach my $trial_location (@locations) {
         my $trial_name = $c->req->param('project_name');
+
         if (scalar(@locations) > 1) {
-            $trial_name = $trial_name."_".$trial_location;
+            my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
+
+            $geolocation_lookup->set_location_name($trial_location);
+            my $location_id = $geolocation_lookup->get_geolocation()->nd_geolocation_id();
+            my $location_object = CXGN::Location->new( {
+                bcs_schema => $schema,
+                nd_geolocation_id => $location_id,
+            });
+            my $abbreviation = $location_object->get_prop('abbreviation');
+            #print STDERR "Abbreviation is $abbreviation\n";
+
+            #print STDERR "Trial name before change is $trial_name\n";
+
+            if ($abbreviation) {
+                $trial_name = $trial_name.$abbreviation;
+            } else {
+                $trial_name = $trial_name.$trial_location;
+            }
+            #print STDERR "Trial name after addition is $trial_name\n";
         }
+
+        #strip name of any invalid filename characters
+        $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
+        #print STDERR "Trial name after strip is $trial_name\n";
 
         my $trial_location_design = decode_json($design->[$design_index]);
         #print STDERR Dumper $trial_location_design;

@@ -315,7 +315,10 @@ jQuery(document).ready(function ($) {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('#add_project_description').val();
-        var trial_location = $('#add_project_location').val();
+        // var trial_location = $('#add_project_location').val();
+        var locations = jQuery('#add_project_location').val();
+        var trial_location =  JSON.stringify(locations);
+        console.log("Trial location is "+trial_location);
         var block_number = $('#block_number').val();
         //alert(block_number);
         var row_number= $('#row_number').val();
@@ -424,7 +427,7 @@ jQuery(document).ready(function ($) {
             }
             //console.log(greenhouse_num_plants);
         }
-        
+
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -478,7 +481,7 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
-                if (response.error) { 
+                if (response.error) {
                     alert(response.error);
                 } else {
 
@@ -502,8 +505,8 @@ jQuery(document).ready(function ($) {
 
                     $('#working_modal').modal("hide");
                     design_json = response.design_json;
-                    
-                    var col_length = response.design_map_view.coord_col[0]; 
+
+                    var col_length = response.design_map_view.coord_col[0];
                     var row_length = response.design_map_view.coord_row[0];
                     var block_max = response.design_map_view.max_block;
                     var rep_max = response.design_map_view.max_rep;
@@ -511,7 +514,7 @@ jQuery(document).ready(function ($) {
                     var row_max =  response.design_map_view.max_row;
                     var controls = response.design_map_view.controls;
                     var false_coord = response.design_map_view.false_coord;
-                    
+
                     var dataset = [];
                     if (design_type == 'splitplot'){
                         row_length = response.design_map_view.coord_row[1];
@@ -540,7 +543,7 @@ jQuery(document).ready(function ($) {
                           .attr("height", height + margin.top + margin.bottom)
                           .append("g")
                           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-                                            
+
                       var rowLabels = svg.selectAll(".rowLabel")
                           .data(rows)
                           .enter().append("text")
@@ -559,22 +562,22 @@ jQuery(document).ready(function ($) {
                             .attr("y", 0 )
                             .style("text-anchor", "middle")
                             .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-                            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
-                      
+                            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });
+
                       var heatmapChart = function(datasets) {
-                        
-                        datasets.forEach(function(d) { 
+
+                        datasets.forEach(function(d) {
 
                             d.row = +d.row;
                             d.col = +d.col;
-                            d.blkn = +d.blkn;   
+                            d.blkn = +d.blkn;
                         });
-                                                    
+
                           var cards = svg.selectAll(".col")
                               .data(datasets, function(d) {return d.row+':'+d.col;});
 
-                          cards.append("title");                  
-                          
+                          cards.append("title");
+
                           var colors = function (d, i){
                               if (block_max == 1){
                                 color = '#41b6c4';
@@ -599,7 +602,7 @@ jQuery(document).ready(function ($) {
                               }
                               return color;
                             }
-                            
+
                             var strokes = function (d, i){
                                 var stroke;
                                 if (rep_max == 1){
@@ -618,7 +621,7 @@ jQuery(document).ready(function ($) {
                                 }
                                 return stroke;
                               }
-                          
+
                           cards.enter().append("rect")
                               .attr("x", function(d) { return (d.col - 1) * gridSize; })
                               .attr("y", function(d) { return (d.row - 1) * gridSize; })
@@ -631,12 +634,12 @@ jQuery(document).ready(function ($) {
                               .style("stroke", strokes)
                               .style("fill", colors)
                               .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); })
-                              .on("mouseout", function(d) { 
+                              .on("mouseout", function(d) {
                                                               var cards = svg.selectAll(".col")
                                                                   .data(datasets, function(d) {return d.row+':'+d.col;});
 
                                                               cards.append("title");
-                                                              
+
                                                               cards.enter().append("rect")
                                                                 .attr("x", function(d) { return (d.col - 1) * gridSize; })
                                                                 .attr("y", function(d) { return (d.row - 1) * gridSize; })
@@ -647,34 +650,34 @@ jQuery(document).ready(function ($) {
                                                                 .attr("height", gridSize)
                                                                 .style("stroke-width", 2)
                                                                 .style("stroke", strokes)
-                                                                .style("fill", colors); 
-                                                                
-                                                                cards.style("fill", colors) ;                          
+                                                                .style("fill", colors);
+
+                                                                cards.style("fill", colors) ;
 
                                                                 cards.select("title").text(function(d) { return d.plot_msg; }) ;
-                                                                
+
                                                                 cards.exit().remove();
                                                                 //console.log('out');
-                                                            });                                
-                                                              
-                          
-                          cards.style("fill", colors) ;  
+                                                            });
 
-                          cards.select("title").text(function(d) { return d.plot_msg; }) ; 
-                          
+
+                          cards.style("fill", colors) ;
+
+                          cards.select("title").text(function(d) { return d.plot_msg; }) ;
+
                           cards.append("text");
                           cards.enter().append("text")
                             .attr("x", function(d) { return (d.col - 1) * gridSize + 10; })
                             .attr("y", function(d) { return (d.row - 1) * gridSize + 20 ; })
                             .text(function(d) { return d.plotn; });
-                          
+
                           cards.select("text").text(function(d) { return d.plotn; }) ;
-                          
+
                           cards.exit().remove();
-                        
-                        // });  
-                        } ; 
-                      
+
+                        // });
+                        } ;
+
                       heatmapChart(datasets);
                       if (false_coord){
                           alert("Row and column numbers were generated on the fly for displaying the physical layout or map. The plots are displayed in zigzag format. These row and column numbers will not be saved in the database. Click 'ok' to continue...");
@@ -1123,21 +1126,21 @@ jQuery(document).ready(function ($) {
             $("#FieldMap_westcott").show();
             $("#field_map_options").hide();
         }
-        
+
         else {
             alert("Unsupported design method");
         }
     });
-    
+
     jQuery("#westcott_check_1").autocomplete({
         appendTo: "#add_project_dialog",
         source: '/ajax/stock/accession_autocomplete',
-    }); 
-    
+    });
+
     jQuery("#westcott_check_2").autocomplete({
         appendTo: "#add_project_dialog",
         source: '/ajax/stock/accession_autocomplete',
-    }); 
+    });
 
     jQuery(document).on('change', '#select_list_list_select', function() {
         if (jQuery("#select_design_method").val() == 'greenhouse') {
@@ -1179,7 +1182,9 @@ jQuery(document).ready(function ($) {
         var name = jQuery('#new_trial_name').val();
         var year = jQuery('#add_project_year').val();
         var desc = jQuery('#add_project_description').val();
-        var trial_location = jQuery('#add_project_location').val();
+        var locations = jQuery('#add_project_location').val();
+        var trial_location =  JSON.stringify(locations);
+
         var block_number = jQuery('#block_number').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
         var control_list_id = jQuery('#list_of_checks_section_list_select').val();

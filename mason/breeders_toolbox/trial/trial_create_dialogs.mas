@@ -110,9 +110,9 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Location: </label>
+                                    <label class="col-sm-3 control-label">Locations: (One or More)</label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="add_project_location" name="add_project_location">
+                                        <select multiple class="form-control" id="add_project_location" name="add_project_location">
                                         <%perl>foreach my $location (@$locations) { print "
                                             <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
                                         </%perl>
