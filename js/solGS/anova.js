@@ -60,7 +60,7 @@ jQuery(document).ready(function () {
 	    queryPhenoData(traitId);
    
 	    jQuery("#run_anova").hide();
-	    jQuery(".multi-spinner-container").show();
+	    jQuery("#anova_canvas .multi-spinner-container").show();
 	    showMessage("Running anova analysis...");
 	} else {
 	    var msg = 'You need to select a trait first.'
@@ -105,7 +105,7 @@ function queryPhenoData(traitId) {
 	    if (response.Error) {
 		showMessage(response.Error);
 		jQuery("#run_anova").show();
-		jQuery(".multi-spinner-container").hide();
+		jQuery("#anova_canvas .multi-spinner-container").hide();
 	    } else {
 		var traitsAbbrs = response.traits_abbrs;
 		runAnovaAnalysis(traitsAbbrs);
@@ -148,7 +148,7 @@ function runAnovaAnalysis(traits) {
 		success: function(response) {
 		   
 		    if(response.Error) {
-			jQuery(".multi-spinner-container").hide();
+			jQuery("#anova_canvas .multi-spinner-container").hide();
 			jQuery("#anova_message").empty();
 			showMessage(response.Error);
 			jQuery("#run_anova").show();
@@ -182,12 +182,12 @@ function runAnovaAnalysis(traits) {
 					+ meansFile)
 				.show();
 
-			    jQuery(".multi-spinner-container").hide();
+			    jQuery("#anova_canvas .multi-spinner-container").hide();
 			    jQuery("#anova_message").empty();
 			    
 			    jQuery("#run_anova").show();
 			}  else {
-			    jQuery(".multi-spinner-container").hide();
+			    jQuery("#anova_canvas .multi-spinner-container").hide();
 			    showMessage("There is no anova output for this dataset."); 		
 			    jQuery("#run_anova").show();
 			    
@@ -196,7 +196,7 @@ function runAnovaAnalysis(traits) {
 		    clearTraitSelection();		    
 		},
 		error: function(response) {
-                    jQuery(".multi-spinner-container").hide();
+                    jQuery("#anova_canvas .multi-spinner-container").hide();
 		    showMessage("Error occured running the anova analysis.");	    	
 		    jQuery("#run_anova").show();
 		    clearTraitSelection();
