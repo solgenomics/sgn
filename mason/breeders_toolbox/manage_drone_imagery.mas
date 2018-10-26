@@ -2,10 +2,16 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery', 'CXGN.BreedersToolbox.DroneImagery.DragAndDrop' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery', 'CXGN.BreedersToolbox.DroneImagery.DragAndDrop', "opencv.opencv" ] &>
 
 <style>
 .ui-autocomplete { z-index:2147483647; }
+
+.straightLine, .hrLine{
+  position: absolute;
+  background-color: red;
+  transition: transform .05s ease-in-out;
+}
 </style>
 
 <div id="manage_drone_imagery_top_div">
@@ -22,7 +28,7 @@
     
     <div class="well well-sm">
         <ul>
-            <li>Here you can do a rough cropping of the stitched ortho image to focus only of the actual field experiment.</li>
+            <li>Here you can do a rough cropping of the stitched ortho image to focus only on the actual field experiment.</li>
             <li>Click on five points in the image to make a four-sided polygon.</li>
             <li>Only the last polygon that you draw will be used for the cropping.</li>
         </ul>
@@ -30,6 +36,22 @@
     </div>
 
     <canvas id="drone_imagery_crop_original_stitched_div"></canvas>
+</div>
+
+<div id="manage_drone_imagery_remove_background_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Remove Background" &>
+    
+    <div class="well well-sm">
+        <ul>
+            <li>The background can be removed by placing a threshold on pixel values.</li>
+        </ul>
+        <button class="btn btn-primary" id="drone_imagery_remove_background_submit">Remove Background</button>
+    </div>
+
+    <canvas id="drone_imagery_remove_background_original"></canvas>
+    <hr>
+    <canvas id="drone_imagery_remove_background_histogram_div"></canvas>
 </div>
 
 <div id="manage_drone_imagery_plot_polygons_div" style="display:none">
@@ -165,6 +187,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_top_div').hide();
         jQuery('#manage_drone_imagery_plot_polygons_div').hide();
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
     });
 
     function FindPosition(oElement) {
@@ -338,6 +361,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_top_div').hide();
         jQuery('#manage_drone_imagery_plot_polygons_div').show();
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
     
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_contours?image_id='+denoised_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
@@ -702,9 +726,134 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_top_div').hide();
         jQuery('#manage_drone_imagery_plot_polygons_div').hide();
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').show();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
 
         
     });
+
+    //
+    //Remove Background Histogram
+    //
+
+    var removeBackgroundHistogramImg;
+
+    jQuery(document).on('click', 'button[name=project_drone_imagery_remove_background]', function(){
+        jQuery('#manage_drone_imagery_crop_div').hide();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+        jQuery('#manage_drone_imagery_remove_background_div').show();
+
+        var denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
+
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/get_image?image_id='+denoised_stitched_image_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var canvas = document.getElementById('drone_imagery_remove_background_original');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = drawImageActualSize;
+                image.src = response.image_url;
+
+                function drawImageActualSize() {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+
+                    var src = cv.imread('drone_imagery_remove_background_original');
+                    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                    var srcVec = new cv.MatVector();
+                    srcVec.push_back(src);
+                    var accumulate = false;
+                    var channels = [0];
+                    var histSize = [256];
+                    var ranges = [0, 255];
+                    var hist = new cv.Mat();
+                    var mask = new cv.Mat();
+                    var color = new cv.Scalar(255, 255, 255);
+                    var scale = 2;
+
+                    cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+                    var result = cv.minMaxLoc(hist, mask);
+                    var max = result.maxVal;
+                    var dst = new cv.Mat.zeros(src.rows, histSize[0] * scale, cv.CV_8UC3);
+                    // draw histogram
+                    for (let i = 0; i < histSize[0]; i++) {
+                        var binVal = hist.data32F[i] * src.rows / max;
+                        var point1 = new cv.Point(i * scale, src.rows - 1);
+                        var point2 = new cv.Point((i + 1) * scale - 1, src.rows - binVal);
+                        cv.rectangle(dst, point1, point2, color, cv.FILLED);
+                    }
+                    cv.imshow('drone_imagery_remove_background_histogram_div', dst);
+                    src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+
+                    removeBackgroundHistogramImg = document.getElementById("drone_imagery_remove_background_histogram_div");
+                    removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
+                    removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
+
+                }
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving image!')
+            }
+        });
+
+    });
+
+    function GetCoordinatesRemoveBackgrounHistogram(e) {
+        var PosX = 0;
+        var PosY = 0;
+        var ImgPos;
+        ImgPos = FindPosition(removeBackgroundHistogramImg);
+        if (!e) var e = window.event;
+        if (e.pageX || e.pageY) {
+            PosX = e.pageX;
+            PosY = e.pageY;
+        }
+        else if (e.clientX || e.clientY) {
+            PosX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            PosY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        PosX = PosX - ImgPos[0];
+        PosY = PosY - ImgPos[1];
+    }
+
+    function GetCoordinatesRemoveBackgrounHistogramDrawLine(e) {
+        var PosX = 0;
+        var PosY = 0;
+        var image_width = removeBackgroundHistogramImg.width;
+        var image_height = removeBackgroundHistogramImg.height;
+
+        var ImgPos;
+        ImgPos = FindPosition(removeBackgroundHistogramImg);
+        if (!e) var e = window.event;
+        if (e.pageX || e.pageY) {
+            PosX = e.pageX;
+            PosY = e.pageY;
+        }
+        else if (e.clientX || e.clientY) {
+            PosX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            PosY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        PosX = PosX - ImgPos[0];
+        PosY = PosY - ImgPos[1];
+
+        var ctx = removeBackgroundHistogramImg.getContext("2d");
+        ctx.beginPath();
+        ctx.moveTo(PosX,0);
+        ctx.lineTo(PosX, image_height);
+        ctx.strokeStyle = '#ff0000';
+        ctx.stroke();
+    }
+
 
 });
 
