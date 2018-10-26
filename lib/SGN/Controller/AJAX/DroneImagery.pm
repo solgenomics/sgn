@@ -42,27 +42,6 @@ sub upload_drone_imagery_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $images_zip = $c->req->upload('upload_drone_images_zipfile');
-    my $stitched_image = $c->req->upload('upload_drone_images_stitched_ortho');
-
-    my $upload_file;
-    my $is_stitched_image;
-    if (!$images_zip && !$stitched_image) {
-        $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
-        $c->detach();
-    }
-    if ($images_zip && $stitched_image) {
-        $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image! Not both" };
-        $c->detach();
-    }
-    if ($images_zip) {
-        $upload_file = $images_zip;
-    }
-    if ($stitched_image) {
-        $upload_file = $stitched_image;
-        $is_stitched_image = 1;
-    }
-
     my $selected_trial_id = $c->req->param('upload_drone_images_field_trial_id');
     if (!$selected_trial_id) {
         $c->stash->{rest} = { error => "Please select a field trial!" };
@@ -93,25 +72,89 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->detach();
     }
 
-    my $selected_drone_run_band_id = $c->req->param('drone_image_upload_drone_run_band_id');
-    my $new_drone_run_band_name = $c->req->param('drone_image_upload_drone_run_band_name');
-    my $new_drone_run_band_desc = $c->req->param('drone_image_upload_drone_run_band_desc');
-    my $new_drone_run_band_type = $c->req->param('drone_image_upload_drone_run_band_type');
-    if (!$selected_drone_run_band_id && !$new_drone_run_band_name) {
-        $c->stash->{rest} = { error => "Please select a drone run band or create a new drone run band!" };
+    my $new_drone_run_band_numbers = $c->req->param('drone_image_upload_drone_run_band_number');
+    my $new_drone_run_band_stitching = $c->req->param('drone_image_upload_drone_run_band_stitching');
+
+    if (!$new_drone_run_band_numbers) {
+        $c->stash->{rest} = { error => "Please give the number of new drone run bands!" };
         $c->detach();
     }
-    if ($selected_drone_run_band_id && $new_drone_run_band_name){
-        $c->stash->{rest} = { error => "Please select a drone run band OR create a new drone run band, not both!" };
+    if (!$new_drone_run_band_stitching) {
+        $c->stash->{rest} = { error => "Please indicate if the images are stitched!" };
         $c->detach();
     }
-    if ($new_drone_run_band_name && !$new_drone_run_band_desc){
-        $c->stash->{rest} = { error => "Please give a new drone run band description!" };
-        $c->detach();
-    }
-    if ($new_drone_run_band_name && !$new_drone_run_band_type){
-        $c->stash->{rest} = { error => "Please give a new drone run band type!" };
-        $c->detach();
+
+    my @new_drone_run_bands;
+    if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
+        my $new_drone_run_band_name = $c->req->param('drone_image_upload_drone_run_band_name');
+        my $new_drone_run_band_desc = $c->req->param('drone_image_upload_drone_run_band_desc');
+        my $new_drone_run_band_type = $c->req->param('drone_image_upload_drone_run_band_type');
+        if (!$new_drone_run_band_name) {
+            $c->stash->{rest} = { error => "Please give a new drone run band name!" };
+            $c->detach();
+        }
+        if (!$new_drone_run_band_desc){
+            $c->stash->{rest} = { error => "Please give a new drone run band description!" };
+            $c->detach();
+        }
+        if (!$new_drone_run_band_type){
+            $c->stash->{rest} = { error => "Please give a new drone run band type!" };
+            $c->detach();
+        }
+        
+        my $upload_file;
+        if ($new_drone_run_band_stitching eq 'yes') {
+            $upload_file = $c->req->upload('upload_drone_images_zipfile');
+        } elsif ($new_drone_run_band_stitching eq 'no') {
+            $upload_file = $c->req->upload('upload_drone_images_stitched_ortho');
+        }
+        if (!$upload_file) {
+            $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
+            $c->detach();
+        }
+
+        push @new_drone_run_bands, {
+            name => $new_drone_run_band_name,
+            description => $new_drone_run_band_desc,
+            type => $new_drone_run_band_type,
+            upload_file => $upload_file
+        };
+    } else {
+        foreach (0..$new_drone_run_band_numbers-1) {
+            my $new_drone_run_band_name = $c->req->param('drone_image_upload_drone_run_band_name_'.$_);
+            my $new_drone_run_band_desc = $c->req->param('drone_image_upload_drone_run_band_desc_'.$_);
+            my $new_drone_run_band_type = $c->req->param('drone_image_upload_drone_run_band_type_'.$_);
+            if (!$new_drone_run_band_name) {
+                $c->stash->{rest} = { error => "Please give a new drone run band name!".$_ };
+                $c->detach();
+            }
+            if (!$new_drone_run_band_desc){
+                $c->stash->{rest} = { error => "Please give a new drone run band description!" };
+                $c->detach();
+            }
+            if (!$new_drone_run_band_type){
+                $c->stash->{rest} = { error => "Please give a new drone run band type!" };
+                $c->detach();
+            }
+
+            my $upload_file;
+            if ($new_drone_run_band_stitching eq 'yes') {
+                $upload_file = $c->req->upload('upload_drone_images_zipfile_'.$_);
+            } elsif ($new_drone_run_band_stitching eq 'no') {
+                $upload_file = $c->req->upload('upload_drone_images_stitched_ortho_'.$_);
+            }
+            if (!$upload_file) {
+                $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
+                $c->detach();
+            }
+
+            push @new_drone_run_bands, {
+                name => $new_drone_run_band_name,
+                description => $new_drone_run_band_desc,
+                type => $new_drone_run_band_type,
+                upload_file => $upload_file
+            };
+        }
     }
 
     if (!$selected_drone_run_id) {
@@ -129,53 +172,55 @@ sub upload_drone_imagery_POST : Args(0) {
         $selected_drone_run_id = $project_rs->project_id();
     }
 
-    if (!$selected_drone_run_band_id) {
-        my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
-        my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
-        my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
+    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+
+    foreach (@new_drone_run_bands) {
         my $project_rs = $schema->resultset("Project::Project")->create({
-            name => $new_drone_run_band_name,
-            description => $new_drone_run_band_desc,
-            projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $new_drone_run_band_type}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
+            name => $_->{name},
+            description => $_->{description},
+            projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $_->{type}}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
             project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
         });
-        $selected_drone_run_band_id = $project_rs->project_id();
-    }
+        my $selected_drone_run_band_id = $project_rs->project_id();
 
-    my $upload_original_name = $upload_file->filename();
-    my $upload_tempfile = $upload_file->tempname;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
+        my $upload_file = $_->{upload_file};
+        my $upload_original_name = $upload_file->filename();
+        my $upload_tempfile = $upload_file->tempname;
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => "drone_imagery_upload",
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
-        $c->detach();
-    }
-    unlink $upload_tempfile;
-    print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
-
-    if ($is_stitched_image) {
-        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        $image->set_sp_person_id($user_id);
-        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-    } else {
-        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-        my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_band_id);
-        if ($image_error) {
-            $c->stash->{rest} = { error => "Problem saving images!".$image_error };
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => "drone_imagery_upload",
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
             $c->detach();
+        }
+        unlink $upload_tempfile;
+        print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
+
+        if ($new_drone_run_band_stitching eq 'no') {
+            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            $image->set_sp_person_id($user_id);
+            my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+            my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+        } elsif ($new_drone_run_band_stitching eq 'yes') {
+            my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+            my $image_error = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_band_id);
+            if ($image_error) {
+                $c->stash->{rest} = { error => "Problem saving images!".$image_error };
+                $c->detach();
+            }
         }
     }
 
@@ -704,6 +749,11 @@ sub get_drone_run_projects_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
+
+# jQuery('#drone_image_upload_drone_bands_table').DataTable({
+#     destroy : true,
+#     ajax : '/ajax/drone_imagery/drone_run_bands?select_checkbox_name=upload_drone_imagery_drone_run_band_select&drone_run_project_id='+drone_run_project_id
+# });
 sub get_drone_run_band_projects : Path('/ajax/drone_imagery/drone_run_bands') : ActionClass('REST') { }
 
 sub get_drone_run_band_projects_GET : Args(0) {
