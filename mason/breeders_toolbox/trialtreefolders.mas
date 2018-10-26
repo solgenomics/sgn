@@ -1,5 +1,6 @@
 
 <%args>
+@user_roles => ()
 @locations => ()
 $breeding_programs
 $preferred_species
@@ -16,12 +17,12 @@ $timestamp
 <& /breeders_toolbox/folder/folder_move.mas &>
 <& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
 
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, user_roles => \@user_roles, locations => \@locations, breeding_programs => $breeding_programs &>
 <& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 
 <& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
 
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, user_roles => \@user_roles, locations => \@locations, breeding_programs => $breeding_programs &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
@@ -50,7 +51,7 @@ $timestamp
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial(s) to folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
-      
+
       <div id="folder_edit_options" style="display:none">
           <hr>
           <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>

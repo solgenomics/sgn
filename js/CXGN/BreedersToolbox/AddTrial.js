@@ -1378,6 +1378,9 @@ jQuery(document).ready(function ($) {
         get_select_box('years', 'add_project_year', {'auto_generate': 1 });
         get_select_box('trial_types', 'add_project_type', {'empty':1} );
         populate_trial_linkage_selects();
+
+        // preselect user's program and filter locations
+
         open_project_dialog();
     });
 

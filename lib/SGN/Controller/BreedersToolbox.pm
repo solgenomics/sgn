@@ -68,6 +68,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
+    $c->stash->{user_roles} = $c->user->roles();
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
