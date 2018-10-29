@@ -5,6 +5,7 @@ use Moose;
 
 use Data::Dumper;
 use File::Slurp;
+use File::Basename qw | basename |;
 use CXGN::Dataset::File;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -76,6 +77,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     print $F "dependent_variable = \"$dependent_variable\"\n";
     #my @fixed_factors = split ",", $fixed_factors;
     my $formatted_fixed_factors = "\"$fixed_factors\"";
+
     print $F "fixed_factors <- c($formatted_fixed_factors)\n";
     my @random_factors = split ",", $random_factors;
     my $formatted_random_factors = join(",", map { "\"(1|$_)\"" } @random_factors);
@@ -114,6 +116,55 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
         figure4 => $figure4file_response,
         html =>  $lines,
     };
+}
+
+sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    print STDERR "Grab data...\n";
+
+    my $file = $c->req->param("file");
+    my $trait = $c->req->param("trait");
+    
+    $file = basename($file);
+
+    my $temppath = $c->config->{basepath}."/static/documents/tempfiles/mixedmodels/".$file;
+    
+    my $F;
+    if (! open($F, "<", $temppath)) { 
+	$c->stash->{rest} = { error => "Can't find data." };
+	return;
+    }
+
+    my $header = <$F>;
+    chomp($header);
+    
+    my @keys = split("\t", $header);
+    
+    print STDERR "keys = ( ".(join ",", @keys).")\n";
+
+    my @data = ();
+
+    while (<$F>) { 
+	chomp;
+	if (//) { next; }
+	my @fields = split "\t";
+	my %line = {};
+	for(my $n=0; $n <@keys; $n++) { 
+	    if (exists($fields[$n]) && 
+		!($fields[$n] eq "" ||
+		$fields[$n] eq "null")) { 
+		$line{$keys[$n]}=$fields[$n];   
+	    }
+	}
+	
+	push @data, \%line;
+    }
+
+    print STDERR Dumper(\@data);
+
+    $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
 

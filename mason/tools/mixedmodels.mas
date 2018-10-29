@@ -3,7 +3,12 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
 
 <& /page/page_title.mas, title=>"Mixed Model Analysis" &>
 
@@ -18,6 +23,10 @@ Choose a dataset:
 <br />
 Choose dependent variable:<br />
 <div id="dependent_variable">
+</div>
+
+<div id="trait_histogram">
+[Histogram]
 </div>
 
 <br />
@@ -39,6 +48,7 @@ Choose random factors
 <div id="mixed_models_results_div">
 </div>
 
+
 <script>
 
   jQuery(document).ready(function() { 
@@ -55,7 +65,6 @@ Choose random factors
              alert(r.error);
            }
            else { 
-             alert(JSON.stringify(r));
              jQuery('#dependent_variable').html(r.dependent_variable);
              jQuery('#fixed_factors').html(r.fixed_factors);
              jQuery('#random_factors').html(r.random_factors);
@@ -65,6 +74,42 @@ Choose random factors
         error: function(r) { 
           alert("ERROR!!!!!");
         }
+     });
+   });
+
+   jQuery('#dependent_variable').on('change', '#dependent_variable_select', function() { 
+      alert("click!");
+      var tempfile = jQuery('#tempfile').html();
+      var trait = jQuery('#dependent_variable_select').val();
+      jQuery.ajax( {
+         url: '/ajax/mixedmodels/grabdata',
+         data: { 'file' : tempfile },
+         success: function(r)  { 
+           alert(JSON.stringify(r.data));
+           var v = {
+             "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+             "data": r.data,
+             "mark": "bar",
+             "encoding": {
+             "x": {
+               "bin": true,
+               "field": trait,
+               "type": "quantitative"
+             },
+             "y": {
+               "aggregate": "count",
+               "type": "quantitative"
+             }
+            }
+           }; 
+           
+           alert("embedding"+ JSON.stringify(v));
+           vegaEmbed("#trait_histogram", v);
+           alert("done");
+         },
+       
+       
+       error: function(e) { alert('error!'); }
      });
    });
 
