@@ -64,19 +64,35 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
-    my $breeding_programs = $projects->get_breeding_programs();
-
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
-    $c->stash->{user_roles} = $c->user->roles();
+    my $breeding_programs = $projects->get_breeding_programs();
+    my @breeding_programs = @$breeding_programs;
+    my $roles = $c->user->roles();
+    my @roles = @$roles;
+
+
+
+    print STDERR "My roles are @roles\n";
+    my @own_programs = map { my $match = $_; grep { $_[1] eq $match } @roles } @$breeding_programs;
+    print STDERR "Own programs are @own_programs\n";
+
+    if (scalar @own_programs < 1) {
+        push @own_programs, "Select your breeding program";
+        push @breeding_programs, "<option>Select your breeding program</option>";
+    }
+
+    $c->stash->{own_programs} = \@own_programs;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    $c->stash->{locations} = $projects->get_all_locations();
+    my $locations = $projects->get_location_geojson();
+    #print STDERR "Locations are ".Dumper($locations)."\n";
+    $c->stash->{locations} = $locations;
 
-    $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{breeding_programs} = \@breeding_programs;
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
 }

@@ -1,11 +1,11 @@
 
 <%args>
+$own_programs
 $locations
 $breeding_programs
 $preferred_species
 $editable_stock_props
 $timestamp
-$user_roles
 </%args>
 
 
