@@ -89,10 +89,20 @@ sub germplasm_search {
 
     my %stockprops_values;
     if (scalar(@accession_numbers)>0){
-        $stockprops_values{'accession number'} = \@accession_numbers;
+        foreach (@accession_numbers) {
+            $stockprops_values{'accession number'} = {
+                matchtype => 'exactly',
+                value => $_
+            };
+        }
     }
     if (scalar(@germplasm_puis)>0){
-        $stockprops_values{'PUI'} = \@germplasm_puis;
+        foreach (@germplasm_puis) {
+            $stockprops_values{'PUI'} = {
+                matchtype => 'exactly',
+                value => $_
+            };
+        }
     }
 
     my $stock_search = CXGN::Stock::Search->new({
