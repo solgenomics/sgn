@@ -133,7 +133,7 @@ sub retrieve {
                 if ($c eq 'location_name'){
                     push @$line, $location_name;
                 } elsif ($c eq 'plot_geo_json'){
-                    push @$line, $design_info->{"plot_geo_json"} ? decode_json $design_info->{"plot_geo_json"} : '';
+                    push @$line, $design_info->{"plot_geo_json"} ? encode_json $design_info->{"plot_geo_json"} : '';
                 } elsif ($c eq 'trial_name'){
                     push @$line, $trial_name;
                 } elsif ($c eq 'year'){
