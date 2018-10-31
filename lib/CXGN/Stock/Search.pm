@@ -438,7 +438,7 @@ sub search {
                     my $search_vals_sql = "'".join ("','" , @values)."'";
                     push @stockprop_wheres, "'".$term_name."'::text \\?| array[$search_vals_sql]";
                 } else {
-                    push @stockprop_wheres, "'".$term_name."'::text ilike $search";
+                    push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
                 }
 
             } else {
@@ -448,6 +448,7 @@ sub search {
         my $stockprop_where = 'WHERE ' . join ' AND ', @stockprop_wheres;
 
         my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
+        print STDERR Dumper $stockprop_query;
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
