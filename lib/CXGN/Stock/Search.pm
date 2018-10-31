@@ -448,7 +448,6 @@ sub search {
         my $stockprop_where = 'WHERE ' . join ' AND ', @stockprop_wheres;
 
         my $stockprop_query = "SELECT stock_id FROM materialized_stockprop $stockprop_where;";
-        print STDERR Dumper $stockprop_query;
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
         while (my $stock_id = $h->fetchrow_array()) {
