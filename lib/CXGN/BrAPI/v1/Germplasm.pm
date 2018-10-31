@@ -91,7 +91,7 @@ sub germplasm_search {
     if (scalar(@accession_numbers)>0){
         foreach (@accession_numbers) {
             $stockprops_values{'accession number'} = {
-                matchtype => 'exactly',
+                matchtype => 'contains',
                 value => $_
             };
         }
@@ -99,7 +99,7 @@ sub germplasm_search {
     if (scalar(@germplasm_puis)>0){
         foreach (@germplasm_puis) {
             $stockprops_values{'PUI'} = {
-                matchtype => 'exactly',
+                matchtype => 'contains',
                 value => $_
             };
         }
