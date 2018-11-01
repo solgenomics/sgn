@@ -2,11 +2,11 @@
 
 =head1
 
-rename_cvterms.pl - for renaming cvterms in bulk
+rename_stocks.pl - a script for renaming stocks
 
 =head1 SYNOPSIS
 
-    rename_cvterms.pl -H [dbhost] -D [dbname] -i [infile]
+    rename_stocks.pl -H [dbhost] -D [dbname] -i [infile]
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
@@ -16,11 +16,13 @@ rename_cvterms.pl - for renaming cvterms in bulk
 
 =head1 DESCRIPTION
 
-This script rename cvterms in bulk. The infile provided has two columns, in the first column is the cvterm name as it is in the database, and in the second column is the new cvterm name. There is no header on hte infile and the infile is .xls
-
+This script rename stocks in bulk. The infile provided has two columns, in the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header on the infile and the infile is .xls. The stock.name field is untouched.
 
 =head1 AUTHOR
 
+ Guillaume Bauchet (gjb99@cornell.edu)
+
+ Adapted from a cvterm renaming script by:
  Nicolas Morales (nm529@cornell.edu)
 
 =cut
@@ -64,15 +66,14 @@ my ( $row_min, $row_max ) = $worksheet->row_range();
 my ( $col_min, $col_max ) = $worksheet->col_range();
 
 my $coderef = sub {
-    my $cv = $schema->resultset('Cv::Cv')->find({ name => $opt_c });
     for my $row ( 0 .. $row_max ) {
 
-    	my $db_cvterm_name = $worksheet->get_cell($row,0)->value();
-    	my $new_cvterm_name = $worksheet->get_cell($row,1)->value();
-        print STDERR $db_cvterm_name."\n";
+    	my $db_uniquename = $worksheet->get_cell($row,0)->value();
+    	my $new_uniquename = $worksheet->get_cell($row,1)->value();
+        print STDERR $db_uniquename."\n";
 
-    	my $old_cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $db_cvterm_name, cv_id => $cv->cv_id() });
-        my $new_cvterm = $old_cvterm->update({ name => $new_cvterm_name});
+    	my $old_cvterm = $schema->resultset('Stock::Stock')->find({ name => $db_uniquename });
+        my $new_cvterm = $old_cvterm->update({ name => $new_uniquename});
 
     }
 };
