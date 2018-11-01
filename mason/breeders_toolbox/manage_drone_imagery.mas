@@ -43,10 +43,12 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Remove Background" &>
     
     <div class="well well-sm">
+        <h5>The background can be removed by placing a threshold on pixel values</h5>
         <ul>
-            <li>The background can be removed by placing a threshold on pixel values.</li>
+            <li><b>1.</b> Click on the two right-most, highest peaks in the histogram. The right most peak represents the pixels we are interested in, while the peak immediately to the left of that peak represents the soil background.</li>
+            <li><b>2.</b> Click on the "Find Minimum" button.</li>
+            <li><b>3.</b> If the image looks good with the applied threshold, click Save. Otherwise, you can start over.</li>
         </ul>
-        <button class="btn btn-primary" id="drone_imagery_remove_background_submit">Remove Background</button>
     </div>
 
     <div class="well well-sm">
@@ -55,6 +57,10 @@
     </div>
 
     <canvas id="drone_imagery_remove_background_histogram_div"></canvas>
+    <hr>
+    <button class="btn btn-primary" id="drone_imagery_remove_background_find_minimum">Find Minimum</button>
+    <button class="btn btn-default" id="drone_imagery_remove_background_start_over">Start Over</button>
+    <button class="btn btn-primary" id="drone_imagery_remove_background_submit">Save</button>
     <hr>
     <canvas id="drone_imagery_remove_background_original"></canvas>
 </div>
@@ -743,6 +749,10 @@ jQuery(document).ready(function() {
     //
 
     var removeBackgroundHistogramImg;
+    var removeBackgroundThresholdPeak1;
+    var removeBackgroundThresholdPeak1pixels;
+    var removeBackgroundThresholdPeak2;
+    var removeBackgroundThresholdPeak2pixels;
     var removeBackgroundThresholdValue;
     var remove_background_denoised_stitched_image_id;
     var remove_background_drone_run_band_project_id;
@@ -820,6 +830,140 @@ jQuery(document).ready(function() {
 
     });
 
+    jQuery('#drone_imagery_remove_background_find_minimum').click(function(){
+        if (!removeBackgroundThresholdPeak1 || !removeBackgroundThresholdPeak2) {
+            alert('Please click on the two right-most peaks in the histogram first!');
+        } else {
+        
+            jQuery.ajax({
+                url : '/ajax/drone_imagery/get_image?image_id='+remove_background_denoised_stitched_image_id,
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
+                    var canvas = document.getElementById('drone_imagery_remove_background_original');
+                    ctx = canvas.getContext('2d');
+                    var image = new Image();
+                    image.onload = drawImageActualSize;
+                    image.src = response.image_url;
+
+                    function drawImageActualSize() {
+                        canvas.width = this.naturalWidth;
+                        canvas.height = this.naturalHeight;
+                        ctx.drawImage(this, 0, 0);
+
+                        var src = cv.imread('drone_imagery_remove_background_original');
+                        cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                        var srcVec = new cv.MatVector();
+                        srcVec.push_back(src);
+                        var accumulate = false;
+                        var channels = [0];
+                        var histSize = [256];
+                        var ranges = [0, 255];
+                        var hist = new cv.Mat();
+                        var mask = new cv.Mat();
+                        var color = new cv.Scalar(255, 255, 255);
+                        var scale = 3;
+                        var hist_height = src.rows/2;
+
+                        cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+                        var result = cv.minMaxLoc(hist, mask);
+                        var max = result.maxVal;
+                        var dst = new cv.Mat.zeros(hist_height, histSize[0] * scale, cv.CV_8UC3);
+                        // draw histogram
+                        var minimum_x_val = 0;
+                        var minimum_x_val_pix = 0;
+                        var minimum_y_val = 1000000000000000000000000000;
+                        for (let i = 0; i < histSize[0]; i++) {
+                            var binVal = hist.data32F[i] * hist_height / max;
+                            
+                            var x_start = i * scale;
+                            if (x_start >= removeBackgroundThresholdPeak1pixels && x_start <= removeBackgroundThresholdPeak2pixels){
+                                //console.log('x: '+i.toString()+' y: '+binVal.toString());
+                                if (binVal < minimum_y_val) {
+                                    minimum_y_val = binVal;
+                                    minimum_x_val = i;
+                                    minimum_x_val_pix = x_start;
+                                }
+                            }
+                            
+                            var point1 = new cv.Point(x_start, hist_height - 1);
+                            var point2 = new cv.Point((i + 1) * scale - 1, hist_height - binVal);
+                            cv.rectangle(dst, point1, point2, color, cv.FILLED);
+                        }
+                        cv.imshow('drone_imagery_remove_background_histogram_div', dst);
+                        src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+
+                        removeBackgroundHistogramImg = document.getElementById("drone_imagery_remove_background_histogram_div");
+                        removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
+                        removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
+
+                        jQuery('#drone_imagery_remove_background_threshold').html('<h5>Selected Threshold Value: '+ minimum_x_val );
+
+                        removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, removeBackgroundThresholdPeak1pixels, removeBackgroundHistogramImg.height, '#ff0000');
+                        removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, removeBackgroundThresholdPeak2pixels, removeBackgroundHistogramImg.height, '#ff0000');
+                        removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, minimum_x_val_pix, removeBackgroundHistogramImg.height, '#0000ff');
+
+                        removeBackgroundThresholdValue = minimum_x_val;
+
+                        removeBackgroundHistogramImgReDraw();
+                    }
+
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error retrieving image!')
+                }
+            });
+        }
+    });
+
+    function removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, position, image_height, color) {
+        var ctx = removeBackgroundHistogramImg.getContext("2d");
+        ctx.beginPath();
+        ctx.moveTo(position,0);
+        ctx.lineTo(position, image_height);
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    }
+
+    function removeBackgroundHistogramImgReDraw() {
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/remove_background_display',
+            dataType: "json",
+            data: {
+                'image_id': remove_background_denoised_stitched_image_id,
+                'drone_run_band_project_id': remove_background_drone_run_band_project_id,
+                'threshold': removeBackgroundThresholdValue,
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                }
+
+                var canvas = document.getElementById('drone_imagery_remove_background_original');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = drawImageActualSize;
+                image.src = response.removed_background_image_url;
+
+                function drawImageActualSize() {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                }
+            },
+            error: function(response){
+                alert('Error saving removed background image!')
+            }
+        });
+    }
+
     function GetCoordinatesRemoveBackgrounHistogram(e) {
         var PosX = 0;
         var PosY = 0;
@@ -860,21 +1004,24 @@ jQuery(document).ready(function() {
         PosX = PosX - ImgPos[0];
         PosY = PosY - ImgPos[1];
 
-        var ctx = removeBackgroundHistogramImg.getContext("2d");
-        ctx.beginPath();
-        ctx.moveTo(PosX,0);
-        ctx.lineTo(PosX, image_height);
-        ctx.strokeStyle = '#ff0000';
-        ctx.stroke();
-        
-        removeBackgroundThresholdValue = (((PosX+1)/3)-1);
-        jQuery('#drone_imagery_remove_background_threshold').html('<h5>Selected Threshold Value: '+ removeBackgroundThresholdValue );
+        if (!removeBackgroundThresholdPeak1 || !removeBackgroundThresholdPeak2) {
+            removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, PosX, image_height, '#ff0000');
+            
+            var threshold_value = Math.round( (((PosX+1)/3)-1) );
+            if (removeBackgroundThresholdPeak1) {
+                removeBackgroundThresholdPeak2 = threshold_value;
+                removeBackgroundThresholdPeak2pixels = PosX;
+            } else {
+                removeBackgroundThresholdPeak1 = threshold_value;
+                removeBackgroundThresholdPeak1pixels = PosX;
+            }
+        }
     }
 
     jQuery('#drone_imagery_remove_background_submit').click(function(){
         jQuery.ajax({
             type: 'POST',
-            url: '/ajax/drone_imagery/remove_background',
+            url: '/ajax/drone_imagery/remove_background_save',
             dataType: "json",
             data: {
                 'image_id': remove_background_denoised_stitched_image_id,

@@ -691,9 +691,50 @@ sub drone_imagery_denoise_GET : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_url => $denoised_image_url, denoised_image_fullpath => $denoised_image_fullpath };
 }
 
-sub drone_imagery_remove_background : Path('/ajax/drone_imagery/remove_background') : ActionClass('REST') { }
+sub drone_imagery_remove_background_display : Path('/ajax/drone_imagery/remove_background_display') : ActionClass('REST') { }
 
-sub drone_imagery_remove_background_POST : Args(0) {
+sub drone_imagery_remove_background_display_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $threshold = $c->req->param('threshold');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    if (!$threshold) {
+        $c->stash->{rest} = {error => 'Please give a threshold'};
+        $c->detach();
+    }
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
+    my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
+    $archive_remove_background_temp_image .= '.png';
+    print STDERR $archive_remove_background_temp_image."\n";
+
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path '.$image_fullpath.' --outfile_path '.$archive_remove_background_temp_image.' --threshold '.$threshold);
+
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_temporary_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archive_remove_background_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+    my $removed_background_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $removed_background_image_url = $image->get_image_url('original');
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath };
+}
+
+sub drone_imagery_remove_background_save : Path('/ajax/drone_imagery/remove_background_save') : ActionClass('REST') { }
+
+sub drone_imagery_remove_background_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
