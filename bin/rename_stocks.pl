@@ -38,12 +38,12 @@ use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
 
-our ($opt_H, $opt_D, $opt_i, $opt_c);
+our ($opt_H, $opt_D, $opt_i);
 
-getopts('H:D:i:c:');
+getopts('H:D:i:');
 
-if (!$opt_H || !$opt_D || !$opt_i || !$opt_c) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file), -c CVNAME \n");
+if (!$opt_H || !$opt_D || !$opt_i) {
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file)\n");
 }
 
 my $dbhost = $opt_H;
