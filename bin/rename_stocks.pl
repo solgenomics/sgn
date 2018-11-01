@@ -72,8 +72,12 @@ my $coderef = sub {
     	my $new_uniquename = $worksheet->get_cell($row,1)->value();
         print STDERR $db_uniquename."\n";
 
-    	my $old_cvterm = $schema->resultset('Stock::Stock')->find({ name => $db_uniquename });
-        my $new_cvterm = $old_cvterm->update({ name => $new_uniquename});
+    	my $old_stock = $schema->resultset('Stock::Stock')->find({ name => $db_uniquename });
+
+	if (!$old_stock) { 
+	    print STDERR "Warning! Stock with uniquename $db_uniquename was not found in the database.\n";
+	}
+        my $new_stock = $old_stock->update({ name => $new_uniquename});
 
     }
 };
