@@ -172,7 +172,7 @@ solGS.cluster = {
 	
 	if (listId || datasetId || popDetails.training_pop_id || popDetails.selection_pop_id || popDetails.combo_pops_id) {
 	 
-	    jQuery(".multi-spinner-container").show();
+	    jQuery("#cluster_canvas .multi-spinner-container").show();
 	    jQuery("#cluster_message").html("Running K-means clustering... please wait...");
 	 
 	    jQuery("#run_cluster").hide();
@@ -196,7 +196,7 @@ solGS.cluster = {
             success: function(res) {
 		if (res.result === 'success') {
 		    
-		    jQuery(".multi-spinner-container").hide();
+		    jQuery("#cluster_canvas .multi-spinner-container").hide();
 		    var resultName = listName || datasetName;
 		    solGS.cluster.plotClusterOutput(res, resultName);
 				    
@@ -205,14 +205,14 @@ solGS.cluster = {
 
 		} else {                
 		    jQuery("#cluster_message").html(res.result);
-		    jQuery(".multi-spinner-container").hide();
+		    jQuery("#cluster_canvas .multi-spinner-container").hide();
 		    jQuery("#run_cluster").show();
 		    
 		}
 	    },
             error: function(res) {                    
 		jQuery("#cluster_message").html('Error occured running the clustering.');
-		jQuery(".multi-spinner-container").hide();
+		jQuery("#cluster_canvas .multi-spinner-container").hide();
 		jQuery("#run_cluser").show();
             }  
 	});
