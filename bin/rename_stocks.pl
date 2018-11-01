@@ -76,6 +76,7 @@ my $coderef = sub {
 
 	if (!$old_stock) { 
 	    print STDERR "Warning! Stock with uniquename $db_uniquename was not found in the database.\n";
+	    next();
 	}
         my $new_stock = $old_stock->update({ name => $new_uniquename});
 
