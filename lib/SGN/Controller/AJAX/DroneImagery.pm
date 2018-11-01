@@ -966,6 +966,96 @@ sub drone_imagery_crop_image_GET : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath };
 }
 
+sub drone_imagery_get_plot_polygon_images : Path('/ajax/drone_imagery/get_plot_polygon_images') : ActionClass('REST') { }
+
+sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id],
+        project_image_type_id=>$plot_polygons_images_cvterm_id
+    });
+    my ($result, $total_count) = $images_search->search();
+    #print STDERR Dumper $result;
+
+    my @image_paths;
+    my @image_urls;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        push @image_urls, $image_url;
+        push @image_paths, $image_fullpath;
+    }
+
+    $c->stash->{rest} = { image_urls => \@image_urls };
+}
+
+sub drone_imagery_calculate_phenotypes_surf : Path('/ajax/drone_imagery/calculate_phenotypes_surf') : ActionClass('REST') { }
+
+sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id],
+        project_image_type_id=>$plot_polygons_images_cvterm_id
+    });
+    my ($result, $total_count) = $images_search->search();
+    #print STDERR Dumper $result;
+
+    my @image_paths;
+    my @out_paths;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        push @image_paths, $image_fullpath;
+
+        my $dir = $c->tempfiles_subdir('/drone_imagery_calc_phenotypes_surf');
+        my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_calc_phenotypes_surf/imageXXXX');
+        $archive_temp_image .= '.png';
+        push @out_paths, $archive_temp_image;
+    }
+    print STDERR Dumper \@image_paths;
+    my $image_paths_string = join ',', @image_paths;
+    my $out_paths_string = join ',', @out_paths;
+
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/CalculatePhenotypeSurf.py --image_paths '.$image_paths_string.' --outfile_paths '.$out_paths_string);
+
+    my @surf_urls;
+    my @surf_filepaths;
+    foreach (@out_paths) {
+        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        $image->set_sp_person_id($user_id);
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_surf_drone_imagery', 'project_md_image')->cvterm_id();
+        my $ret = $image->process_image($_, 'project', $drone_run_band_project_id, $linking_table_type_id);
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        my $image_url = $image->get_image_url('original');
+        push @surf_filepaths, $image_fullpath;
+        push @surf_urls, $image_url;
+    }
+
+    $c->stash->{rest} = { image_urls => \@surf_urls };
+}
+
 sub _check_user_login {
     my $c = shift;
     my $user_id;

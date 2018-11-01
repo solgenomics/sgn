@@ -107,6 +107,12 @@
         </ul>
     </div>
 
+    <hr>
+    <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_surf">Calculate Deep Features</button>
+    <hr>
+
+    <div id="manage_drone_imagery_calculate_phenotypes_show_surf"></div>
+
 </div>
 
 <div class="modal fade" id="drone_imagery_assign_plot_dialog" name="drone_imagery_assign_plot_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAssignPlotDialog" data-backdrop="static">
@@ -178,14 +184,12 @@ jQuery(document).ready(function() {
                 var canvas = document.getElementById('drone_imagery_crop_original_stitched_div');
                 ctx = canvas.getContext('2d');
                 var image = new Image();
-                image.onload = drawImageActualSize;
-                image.src = response.image_url;
-
-                function drawImageActualSize() {
+                image.onload = function () {
                     canvas.width = this.naturalWidth;
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
-                }
+                };
+                image.src = response.image_url;
 
             },
             error: function(response){
@@ -731,20 +735,6 @@ jQuery(document).ready(function() {
     }
 
     //
-    //Calculate Phenotypes JS
-    //
-
-    jQuery(document).on('click', 'button[name=project_drone_imagery_get_phenotypes]', function(){
-        jQuery('#manage_drone_imagery_crop_div').hide();
-        jQuery('#manage_drone_imagery_top_div').hide();
-        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
-        jQuery('#manage_drone_imagery_calculate_phenotypes_div').show();
-        jQuery('#manage_drone_imagery_remove_background_div').hide();
-
-        
-    });
-
-    //
     //Remove Background Histogram
     //
 
@@ -1044,6 +1034,90 @@ jQuery(document).ready(function() {
                 jQuery("#working_modal").modal("hide");
                 alert('Error saving removed background image!')
             }
+        });
+    });
+
+    //
+    //Calculate Phenotypes JS
+    //
+
+    var manage_drone_imagery_calculate_phenotypes_drone_run_band_id;
+
+    jQuery(document).on('click', 'button[name=project_drone_imagery_get_phenotypes]', function() {
+        jQuery('#manage_drone_imagery_crop_div').hide();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').show();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
+
+        manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
+
+        jQuery('#drone_imagery_calculate_phenotypes_surf').click(function(){
+            jQuery.ajax({
+                type: 'GET',
+                url: '/ajax/drone_imagery/get_plot_polygon_images',
+                dataType: "json",
+                data: {
+                    'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+                },
+                success: function(response){
+                    console.log(response);
+                    if(response.error) {
+                        alert(response.error);
+                        return;
+                    }
+
+                    var html = '';
+                    for (var i=0; i<response.image_urls.length; i++) {
+                        html = html + '<canvas class="drone_image_calculate_phenotypes_surf" data-src="'+response.image_urls[i]+'" id="drone_imagery_calculate_phenotypes_surf_image_'+i+'" ></canvas>';
+                    }
+                    jQuery('#manage_drone_imagery_calculate_phenotypes_show_surf').html(html);
+
+                    jQuery.ajax({
+                        type: 'POST',
+                        url: '/ajax/drone_imagery/calculate_phenotypes_surf',
+                        dataType: "json",
+                        data: {
+                            'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+                        },
+                        beforeSend: function() {
+                            jQuery("#working_modal").modal("show");
+                        },
+                        success: function(response){
+                            console.log(response);
+                            if(response.error) {
+                                alert(response.error);
+                                return;
+                            }
+
+                            var count = 0;
+                            var container = document.querySelectorAll('drone_image_calculate_phenotypes_surf');
+                            [].forEach.call(container, function(temp) {
+                                ctx = temp.getContext('2d');
+                                var image = new Image();
+                                image.onload = function() {
+                                    canvas.width = this.naturalWidth;
+                                    canvas.height = this.naturalHeight;
+                                    ctx.drawImage(this, 0, 0);
+                                };
+                                image.src = temp.dataset.src;
+                                count = count + 1;
+                            });
+
+                            jQuery("#working_modal").modal("hide");
+                        },
+                        error: function(response){
+                            jQuery("#working_modal").modal("hide");
+                            alert('Error calculating deep features!')
+                        }
+                    });
+
+                },
+                error: function(response){
+                    alert('Error calculating deep features!')
+                }
+            });
+        
         });
     });
 

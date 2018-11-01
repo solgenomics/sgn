@@ -256,3 +256,4 @@ project_md_image	contours_stitched_drone_imagery	Contours of stitched image	10/5
 project_md_image	background_removed_stitched_drone_imagery	Stitched image without background (soil, etc)	10/5/2018	nm529	00103
 project_md_image	background_removed_temporary_stitched_drone_imagery	Stitched image without background (soil, etc) that is temporarily saved	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_imagery	Cropped image for an observation unit polygon	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_surf_drone_imagery	Calculate surf phenotypes on observation unit	10/5/2018	nm529	00103
