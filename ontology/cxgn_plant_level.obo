@@ -567,3 +567,16 @@ synonym: "C3_tall_sckr" EXACT []
 def: "Third cycle (ratoon three-tallest sucker)." []
 is_a: PLANT_LEVEL:0000001
 
+[Term]
+id: PLANT_LEVEL:0000078
+name: cycle 4 main plant
+synonym: "C4_main_plt" EXACT []
+def: "Fourth cycle (ratoon four-main plant)." []
+is_a: PLANT_LEVEL:0000001
+
+[Term]
+id: PLANT_LEVEL:0000079
+name: cycle 4 tallest sucker
+synonym: "C4_tall_sckr" EXACT []
+def: "Fourth cycle (ratoon four-tallest sucker)." []
+is_a: PLANT_LEVEL:0000001
