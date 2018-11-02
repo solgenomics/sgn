@@ -20,6 +20,7 @@ use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
+use JSON;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -69,8 +70,9 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $breeding_programs = $projects->get_breeding_programs();
     my @breeding_programs = @$breeding_programs;
-    my $roles = $c->user->roles();
-    my @roles = @$roles;
+    my @roles = $c->user->roles();
+    # print STDERR "Role is $roles\n";
+    # my @roles = @$roles;
     print STDERR "My roles are @roles\n";
 
     foreach my $role (@roles) {
@@ -83,7 +85,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
         }
     }
 
-    print STDERR "Breeding programs are @breeding_programs\n";
+    print STDERR "Breeding programs are ".Dumper(@breeding_programs);
     # my @user_program = map { my $match = $_; grep { $_[1] eq $match } @roles } @$breeding_programs;
     #
     # print STDERR "User program is @user_program\n";
@@ -98,7 +100,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    my $locations = $projects->get_location_geojson();
+    my $locations = decode_json $projects->get_location_geojson();
+
     #print STDERR "Locations are ".Dumper($locations)."\n";
     $c->stash->{locations} = $locations;
 

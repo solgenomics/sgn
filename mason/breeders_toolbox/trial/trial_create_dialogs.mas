@@ -119,9 +119,11 @@ rect.bordered {
                                     <label class="col-sm-3 control-label">Locations: (One or More)</label>
                                     <div class="col-sm-9">
                                         <select multiple class="form-control" id="add_project_location" name="add_project_location">
-                                        <%perl>foreach my $location (@$locations) {
-                                            #filter by selected program
-                                            print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+                                        <%perl>
+                                        foreach my $location_hash (@$locations) {
+                                            my $location = $location_hash->{'properties'};
+                                            my $name = $location->{'Name'};
+                                            print "<option value=".'"'.$name.'"'.">".$name."</option>";
                                         }
                                         </%perl>
                                         </select>

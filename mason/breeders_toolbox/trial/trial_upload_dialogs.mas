@@ -73,9 +73,13 @@ $locations
                                     <label class="col-sm-3 control-label">Location: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_upload_location" name="trial_upload_location">
-                                            <%perl>foreach my $location (@$locations) { print "
-                                                <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-                                            </%perl>
+                                        <%perl>
+                                        foreach my $location_hash (@$locations) {
+                                            my $location = $location_hash->{'properties'};
+                                            my $name = $location->{'Name'};
+                                            print "<option value=".'"'.$name.'"'.">".$name."</option>";
+                                        }
+                                        </%perl>
                                         </select>
                                     </div>
                                 </div>
