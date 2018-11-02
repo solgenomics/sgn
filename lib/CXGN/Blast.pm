@@ -152,6 +152,13 @@ has 'description' => (isa => 'Maybe[Str]',
 		      is => 'rw',
     );
 
+has 'jbrowse_src' => (isa => 'Maybe[Str]',
+		      is => 'rw',
+    );
+
+
+
+
 ###our @column_names =
   # ('blast_db_id',  #-database serial number
   #  'file_base',    #-basename of the database files, with a path prepended,
