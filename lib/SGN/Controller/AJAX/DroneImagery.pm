@@ -1022,6 +1022,7 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
 
     my @image_paths;
     my @out_paths;
+    my @stocks;
     foreach (@$result) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -1033,6 +1034,12 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
         my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_calc_phenotypes_surf/imageXXXX');
         $archive_temp_image .= '.png';
         push @out_paths, $archive_temp_image;
+
+        push @stocks, {
+            stock_id => $_->{stock_id},
+            stock_uniquename => $_->{stock_uniquename},
+            stock_type_id => $_->{stock_type_id},
+        };
     }
     print STDERR Dumper \@image_paths;
     my $image_paths_string = join ',', @image_paths;
@@ -1040,20 +1047,32 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
 
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/CalculatePhenotypeSurf.py --image_paths '.$image_paths_string.' --outfile_paths '.$out_paths_string);
 
-    my @surf_urls;
-    my @surf_filepaths;
+    my @surf_image_info;
+    my $count = 0;
     foreach (@out_paths) {
+        my $stock = $stocks[$count];
+
         my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
         $image->set_sp_person_id($user_id);
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_surf_drone_imagery', 'project_md_image')->cvterm_id();
         my $ret = $image->process_image($_, 'project', $drone_run_band_project_id, $linking_table_type_id);
+        my $ret = $image->associate_stock($stock->{stock_id});
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $image_url = $image->get_image_url('original');
-        push @surf_filepaths, $image_fullpath;
-        push @surf_urls, $image_url;
+
+        my $image_source_tag_small = $image->get_img_src_tag("tiny");
+        $count++;
+        
+        push @surf_image_info, {
+            stock_id => $stock->{stock_id},
+            stock_uniquename => $stock->{stock_uniquename},
+            image => '<a href="/image/view/'.$image->get_image_id.'" target="_blank">'.$image_source_tag_small.'</a>',
+            image_path => $image_fullpath,
+            image_url => $image_url
+        };
     }
 
-    $c->stash->{rest} = { image_urls => \@surf_urls };
+    $c->stash->{rest} = { images => \@surf_image_info };
 }
 
 sub _check_user_login {
