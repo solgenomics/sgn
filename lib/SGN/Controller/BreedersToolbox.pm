@@ -71,19 +71,29 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     my @breeding_programs = @$breeding_programs;
     my $roles = $c->user->roles();
     my @roles = @$roles;
-
-
-
     print STDERR "My roles are @roles\n";
-    my @own_programs = map { my $match = $_; grep { $_[1] eq $match } @roles } @$breeding_programs;
-    print STDERR "Own programs are @own_programs\n";
 
-    if (scalar @own_programs < 1) {
-        push @own_programs, "Select your breeding program";
-        push @breeding_programs, "<option>Select your breeding program</option>";
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
     }
 
-    $c->stash->{own_programs} = \@own_programs;
+    print STDERR "Breeding programs are @breeding_programs\n";
+    # my @user_program = map { my $match = $_; grep { $_[1] eq $match } @roles } @$breeding_programs;
+    #
+    # print STDERR "User program is @user_program\n";
+    #
+    # if (scalar @user_program < 1) {
+    #     push @user_program, "Select your breeding program";
+    #     push @breeding_programs, [0,"Select your breeding program"];
+    # }
+
+    # $c->stash->{user_program} = \@user_program;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;

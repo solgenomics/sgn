@@ -1,6 +1,5 @@
 
 <%args>
-$own_programs
 $locations
 $breeding_programs
 $crd_description => "generates completely a randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database."
@@ -106,11 +105,11 @@ rect.bordered {
                                         <select class="form-control" id="select_breeding_program" name="select_breeding_program">
                                         <%perl>
                                         foreach my $program (@$breeding_programs) {
-                                            if (@$program[1] eq @$own_programs[0]) {
-                                                print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
-                                            } else {
+                                            # if (@$program[1] eq @$own_programs[0]) {
+                                            #     print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
+                                            # } else {
                                                 print "<option value='".@$program[1]."'>".@$program[1]."</option>";
-                                            }
+                                            # }
                                         }
                                         </%perl>
                                         </select>
