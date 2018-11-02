@@ -504,66 +504,79 @@ synonym: "DistHDRK02" EXACT []
 def: "Record the second most distal hand rand " []
 is_a: PLANT_LEVEL:0000036
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000069
 name: cycle 4
 synonym: "C4" EXACT []
 def: "Fourth cycle (or ratoon four)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000070
 name: cycle 5
 synonym: "C5" EXACT []
 def: "Fifth cycle (or ratoon five)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000071
 name: cycle 6
 synonym: "C6" EXACT []
 def: "Sixth cycle (or ratoon six)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000072
 name: cycle 1 main plant
 synonym: "C1_main_plt" EXACT []
 def: "First cycle (ratoon one-main plant)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000073
 name: cycle 1 tallest sucker
 synonym: "C1_tall_sckr" EXACT []
 def: "First cycle (ratoon one-tallest sucker)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000074
 name: cycle 2 main plant
 synonym: "C2_main_plt" EXACT []
 def: "Second cycle (ratoon two-main plant)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000075
 name: cycle 2 tallest sucker
 synonym: "C2_tall_sckr" EXACT []
 def: "Second cycle (ratoon two-tallest sucker)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000076
 name: cycle 3 main plant
 synonym: "C3_main_plt" EXACT []
 def: "Third cycle (ratoon three-main plant)." []
 is_a: PLANT_LEVEL:0000001
 
-Term]
+[Term]
 id: PLANT_LEVEL:0000077
 name: cycle 3 tallest sucker
 synonym: "C3_tall_sckr" EXACT []
 def: "Third cycle (ratoon three-tallest sucker)." []
 is_a: PLANT_LEVEL:0000001
 
+[Term]
+id: PLANT_LEVEL:0000078
+name: cycle 4 main plant
+synonym: "C4_main_plt" EXACT []
+def: "Fourth cycle (ratoon four-main plant)." []
+is_a: PLANT_LEVEL:0000001
+
+[Term]
+id: PLANT_LEVEL:0000079
+name: cycle 4 tallest sucker
+synonym: "C4_tall_sckr" EXACT []
+def: "Fourth cycle (ratoon four-tallest sucker)." []
+is_a: PLANT_LEVEL:0000001
