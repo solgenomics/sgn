@@ -1000,13 +1000,14 @@ sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
     $c->stash->{rest} = { image_urls => \@image_urls };
 }
 
-sub drone_imagery_calculate_phenotypes_surf : Path('/ajax/drone_imagery/calculate_phenotypes_surf') : ActionClass('REST') { }
+sub drone_imagery_calculate_phenotypes : Path('/ajax/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
 
-sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
+sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $phenotype_method = $c->req->param('method');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $main_production_site = $c->config->{main_production_site_url};
@@ -1020,6 +1021,27 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
 
+    my $temp_images_subdir = '';
+    my $temp_results_subdir = '';
+    my $calculate_phenotypes_script = '';
+    my $linking_table_type_id;
+    if ($phenotype_method eq 'sift') {
+        $temp_images_subdir = 'drone_imagery_calc_phenotypes_sift';
+        $temp_results_subdir = 'drone_imagery_calc_phenotypes_sift_results';
+        $calculate_phenotypes_script = 'CalculatePhenotypeSift.py';
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_sift_drone_imagery', 'project_md_image')->cvterm_id();
+    } elsif ($phenotype_method eq 'orb') {
+        $temp_images_subdir = 'drone_imagery_calc_phenotypes_orb';
+        $temp_results_subdir = 'drone_imagery_calc_phenotypes_orb_results';
+        $calculate_phenotypes_script = 'CalculatePhenotypeOrb.py';
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_orb_drone_imagery', 'project_md_image')->cvterm_id();
+    } elsif ($phenotype_method eq 'surf') {
+        $temp_images_subdir = 'drone_imagery_calc_phenotypes_surf';
+        $temp_results_subdir = 'drone_imagery_calc_phenotypes_surf_results';
+        $calculate_phenotypes_script = 'CalculatePhenotypeSurf.py';
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_surf_drone_imagery', 'project_md_image')->cvterm_id();
+    }
+
     my @image_paths;
     my @out_paths;
     my @stocks;
@@ -1030,8 +1052,8 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         push @image_paths, $image_fullpath;
 
-        my $dir = $c->tempfiles_subdir('/drone_imagery_calc_phenotypes_surf');
-        my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_calc_phenotypes_surf/imageXXXX');
+        my $dir = $c->tempfiles_subdir('/'.$temp_images_subdir);
+        my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_images_subdir.'/imageXXXX');
         $archive_temp_image .= '.png';
         push @out_paths, $archive_temp_image;
 
@@ -1045,16 +1067,18 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
     my $image_paths_string = join ',', @image_paths;
     my $out_paths_string = join ',', @out_paths;
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/CalculatePhenotypeSurf.py --image_paths '.$image_paths_string.' --outfile_paths '.$out_paths_string);
+    my $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
+    my $archive_temp_sift_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
-    my @surf_image_info;
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' --outfile_paths '.$out_paths_string);
+
+    my @pheno_image_info;
     my $count = 0;
     foreach (@out_paths) {
         my $stock = $stocks[$count];
 
         my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
         $image->set_sp_person_id($user_id);
-        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_surf_drone_imagery', 'project_md_image')->cvterm_id();
         my $ret = $image->process_image($_, 'project', $drone_run_band_project_id, $linking_table_type_id);
         my $ret = $image->associate_stock($stock->{stock_id});
         my $image_fullpath = $image->get_filename('original_converted', 'full');
@@ -1063,7 +1087,7 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
         my $image_source_tag_small = $image->get_img_src_tag("tiny");
         $count++;
         
-        push @surf_image_info, {
+        push @pheno_image_info, {
             stock_id => $stock->{stock_id},
             stock_uniquename => $stock->{stock_uniquename},
             image => '<a href="/image/view/'.$image->get_image_id.'" target="_blank">'.$image_source_tag_small.'</a>',
@@ -1072,7 +1096,7 @@ sub drone_imagery_calculate_phenotypes_surf_POST : Args(0) {
         };
     }
 
-    $c->stash->{rest} = { images => \@surf_image_info };
+    $c->stash->{rest} = { images => \@pheno_image_info };
 }
 
 sub _check_user_login {

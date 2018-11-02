@@ -70,6 +70,8 @@ sub patch {
             'observation_unit_polygon_imagery',
             'background_removed_stitched_drone_imagery',
             'background_removed_temporary_stitched_drone_imagery',
+            'calculate_phenotypes_sift_drone_imagery',
+            'calculate_phenotypes_orb_drone_imagery',
             'calculate_phenotypes_surf_drone_imagery'
         ],
         'project_property' => [

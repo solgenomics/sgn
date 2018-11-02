@@ -108,10 +108,14 @@
     </div>
 
     <hr>
-    <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_surf">Calculate Deep Features</button>
+    <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_sift">Calculate SIFT Features</button>
+    <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_surf">Calculate SURF Features</button>
+    <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_orb">Calculate ORB Features</button>
     <hr>
 
+    <div id="manage_drone_imagery_calculate_phenotypes_show_sift"></div>
     <div id="manage_drone_imagery_calculate_phenotypes_show_surf"></div>
+    <div id="manage_drone_imagery_calculate_phenotypes_show_orb"></div>
 
 </div>
 
@@ -1053,11 +1057,11 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
     });
 
-    jQuery('#drone_imagery_calculate_phenotypes_surf').click(function(){
+    jQuery('#drone_imagery_calculate_phenotypes_sift').click(function(){
 
         jQuery.ajax({
             type: 'POST',
-            url: '/ajax/drone_imagery/calculate_phenotypes_surf',
+            url: '/ajax/drone_imagery/calculate_phenotypes?method=sift',
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
@@ -1072,9 +1076,79 @@ jQuery(document).ready(function() {
                     return;
                 }
 
-                var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Unit</th><th>Deep Features Image</th></tr></thead><tbody>';
+                var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Unit</th><th>SIFT Features Image</th></tr></thead><tbody>';
                 for (var i=0; i<response.images.length; i++) {
-                    html = html + '<tr><td><a href="/stock/' + response.images[i].stock_id + '/view" >' + response.images[i].stock_uniquename + '</a></td><td>' + response.images[i].image + '</td></tr>';
+                    html = html + '<tr><td><a target="_blank" href="/stock/' + response.images[i].stock_id + '/view" >' + response.images[i].stock_uniquename + '</a></td><td>' + response.images[i].image + '</td></tr>';
+                }
+                jQuery('#manage_drone_imagery_calculate_phenotypes_show_sift').html(html);
+
+                jQuery("#working_modal").modal("hide");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error calculating sift features!')
+            }
+        });
+    
+    });
+
+    jQuery('#drone_imagery_calculate_phenotypes_orb').click(function(){
+
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/calculate_phenotypes?method=orb',
+            dataType: "json",
+            data: {
+                'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                    return;
+                }
+
+                var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Unit</th><th>ORB Features Image</th></tr></thead><tbody>';
+                for (var i=0; i<response.images.length; i++) {
+                    html = html + '<tr><td><a target="_blank" href="/stock/' + response.images[i].stock_id + '/view" >' + response.images[i].stock_uniquename + '</a></td><td>' + response.images[i].image + '</td></tr>';
+                }
+                jQuery('#manage_drone_imagery_calculate_phenotypes_show_orb').html(html);
+
+                jQuery("#working_modal").modal("hide");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error calculating ORB features!')
+            }
+        });
+    
+    });
+
+    jQuery('#drone_imagery_calculate_phenotypes_surf').click(function(){
+
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/calculate_phenotypes?method=surf',
+            dataType: "json",
+            data: {
+                'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                    return;
+                }
+
+                var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Unit</th><th>SURF Features Image</th></tr></thead><tbody>';
+                for (var i=0; i<response.images.length; i++) {
+                    html = html + '<tr><td><a target="_blank" href="/stock/' + response.images[i].stock_id + '/view" >' + response.images[i].stock_uniquename + '</a></td><td>' + response.images[i].image + '</td></tr>';
                 }
                 jQuery('#manage_drone_imagery_calculate_phenotypes_show_surf').html(html);
 
@@ -1082,7 +1156,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert('Error calculating deep features!')
+                alert('Error calculating surf features!')
             }
         });
     
