@@ -1068,9 +1068,9 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $out_paths_string = join ',', @out_paths;
 
     my $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
-    my $archive_temp_sift_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
+    my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' --outfile_paths '.$out_paths_string);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' --outfile_paths '.$out_paths_string.' --results_outfile_path '.$archive_temp_results);
 
     my @pheno_image_info;
     my $count = 0;
