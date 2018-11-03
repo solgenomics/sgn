@@ -525,7 +525,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
           my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
           ($sstart,$send) = _check_coordinates($sstart,$send);
 
-          push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+          push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
           if (length($desc) > 150) {
             $desc = substr($desc,0,150)." ...";
@@ -567,7 +567,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
         ($sstart,$send) = _check_coordinates($sstart,$send);
 
-        push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+        push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
         if (length($desc) > 150) {
           $desc = substr($desc,0,150)." ...";
@@ -636,7 +636,8 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
     ($sstart,$send) = _check_coordinates($sstart,$send);
 
-    push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+    push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+
     push(@res_html, "</table>");
 
 
