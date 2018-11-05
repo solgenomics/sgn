@@ -65,6 +65,7 @@ sub patch {
             'stitched_drone_imagery',
             'denoised_stitched_drone_imagery',
             'cropped_stitched_drone_imagery',
+            'rotated_stitched_drone_imagery',
             'fourier_transform_stitched_drone_imagery',
             'contours_stitched_drone_imagery',
             'observation_unit_polygon_imagery',

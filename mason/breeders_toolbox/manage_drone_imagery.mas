@@ -22,6 +22,43 @@
 
 </div>
 
+<div id="manage_drone_imagery_rotate_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Rotate Stitched Image" &>
+    
+    <div class="well well-sm">
+        <ul>
+            <li>Here you can rotate the stitched image so that the rows and columns align exactly vertically and horizontally.</li>
+            <li>The rotation can be done on decimals of degrees.</li>
+            <li>Negative values mean clock-wise and positive values mean counter-clockwise.</li>
+            <li>Crosshairs are only for assisting in alignment and they will not be saved.</li>
+        </ul>
+    </div>
+    <div class="well well-sm">
+
+        <form class="form-horizontal">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-6 control-label">Rotate Counter-Clockwise Degrees: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" id="drone_imagery_rotate_degrees_input" name="drone_imagery_rotate_degrees_input" type="text" placeholder="Number of degrees to rotate" value="45.05"/>
+                </div>
+            </div>
+        </form>
+
+        <button class="btn btn-primary" id="drone_imagery_rotate_stitched_view">Rotate Image</button>
+        <button class="btn btn-default" id="drone_imagery_rotate_stitched_crosshairs">Draw Crosshairs Assist</button>
+        <button class="btn btn-default" id="drone_imagery_rotate_stitched_restart">Restart</button>
+        <button class="btn btn-primary" id="drone_imagery_rotate_stitched_submit">Save Rotated Image</button>
+    </div>
+
+    <div id="manage_drone_imagery_rotate_load_div">
+        <img src="/img/wheel.gif" />
+    </div>
+
+    <canvas id="drone_imagery_rotate_original_stitched_div">
+    </canvas>
+</div>
+
 <div id="manage_drone_imagery_crop_div" style="display:none">
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Crop Stitched Image To Field Experiment" &>
@@ -33,6 +70,10 @@
             <li>Only the last polygon that you draw will be used for the cropping.</li>
         </ul>
         <button class="btn btn-primary" id="drone_imagery_crop_stitched_submit">Crop Image To Selected Polygon</button>
+    </div>
+
+    <div id="manage_drone_imagery_crop_load_div">
+        <img src="/img/wheel.gif" />
     </div>
 
     <canvas id="drone_imagery_crop_original_stitched_div"></canvas>
@@ -62,6 +103,11 @@
     <button class="btn btn-default" id="drone_imagery_remove_background_start_over">Start Over</button>
     <button class="btn btn-primary" id="drone_imagery_remove_background_submit">Save</button>
     <hr>
+
+    <div id="manage_drone_imagery_remove_background_load_div">
+        <img src="/img/wheel.gif" />
+    </div>
+
     <canvas id="drone_imagery_remove_background_original"></canvas>
 </div>
 
@@ -85,6 +131,10 @@
         <div id="drone_imagery_plot_polygons_top_section"></div>
 
         <button id="drone_imagery_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="drone_imagery_plot_polygons_submit_top">Finish and Save Polygons To Plots</button>
+    </div>
+
+    <div id="manage_drone_imagery_plot_polygons_load_div">
+        <img src="/img/wheel.gif" />
     </div>
 
     <canvas id="drone_imagery_plot_polygons_original_stitched_div"></canvas>
@@ -154,6 +204,163 @@
 jQuery(document).ready(function() {
 
     //
+    // Image Rotating JS
+    //
+
+    var rotate_stitched_image_id;
+    var rotate_drone_run_band_project_id;
+    var rotate_stitched_image_degrees;
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_rotate_image"]', function() {
+        jQuery('#manage_drone_imagery_crop_div').hide();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
+        jQuery('#manage_drone_imagery_rotate_div').show();
+
+        rotate_stitched_image_id = jQuery(this).data('stitched_image_id');
+        rotate_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
+        rotate_stitched_image_degrees;
+
+        showRotateImage();
+    });
+
+    jQuery('#drone_imagery_rotate_stitched_view').click(function(){
+        rotate_stitched_image_degrees = parseFloat(jQuery('#drone_imagery_rotate_degrees_input').val());
+
+        let src = cv.imread('drone_imagery_rotate_original_stitched_div');
+        let dst = new cv.Mat();
+        let dsize = new cv.Size(src.rows, src.cols);
+        let center = new cv.Point(src.cols / 2, src.rows / 2);
+
+        let M = cv.getRotationMatrix2D(center, rotate_stitched_image_degrees, 1);
+        cv.warpAffine(src, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+        cv.imshow('drone_imagery_rotate_original_stitched_div', dst);
+        src.delete(); dst.delete(); M.delete();
+    });
+
+    jQuery('#drone_imagery_rotate_stitched_restart').click(function(){
+        showRotateImage();
+        rotate_stitched_image_degrees;
+    });
+
+    function showRotateImage() {
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/get_image?image_id='+rotate_stitched_image_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = function () {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                    jQuery('#manage_drone_imagery_rotate_load_div').hide();
+                };
+                image.src = response.image_url;
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving image!')
+            }
+        });
+    }
+
+    function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    jQuery('#drone_imagery_rotate_stitched_crosshairs').click(function(){
+        var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
+        var rotate_image_width = canvas.width;
+        var rotate_image_height = canvas.height;
+        var ctx = canvas.getContext("2d");
+        drawRotateCrosshairs(getRandomColor());
+    });
+
+    function drawRotateCrosshairs(color) {
+        var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
+        var rotate_image_width = canvas.width;
+        var rotate_image_height = canvas.height;
+        var ctx = canvas.getContext("2d");
+
+        ctx.beginPath();
+        ctx.moveTo(rotate_image_width/2,0);
+        ctx.lineTo(rotate_image_width/2, rotate_image_height);
+        ctx.strokeStyle = color;
+        ctx.lineWidth=5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(rotate_image_width*1/4,0);
+        ctx.lineTo(rotate_image_width*1/4, rotate_image_height);
+        ctx.strokeStyle = color;
+        ctx.lineWidth=5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(rotate_image_width*3/4,0);
+        ctx.lineTo(rotate_image_width*3/4, rotate_image_height);
+        ctx.strokeStyle = color;
+        ctx.lineWidth=5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0,rotate_image_height/2);
+        ctx.lineTo(rotate_image_width, rotate_image_height/2);
+        ctx.strokeStyle = color;
+        ctx.lineWidth=5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0,rotate_image_height*1/4);
+        ctx.lineTo(rotate_image_width, rotate_image_height*1/4);
+        ctx.strokeStyle = color;
+        ctx.lineWidth=5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0,rotate_image_height*3/4);
+        ctx.lineTo(rotate_image_width, rotate_image_height*3/4);
+        ctx.strokeStyle = color;
+        ctx.lineWidth=5;
+        ctx.stroke();
+
+        
+    }
+
+    jQuery('#drone_imagery_rotate_stitched_submit').click(function() {
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/rotate_image?image_id='+rotate_stitched_image_id+'&drone_run_band_project_id='+rotate_drone_run_band_project_id+'&angle='+rotate_stitched_image_degrees,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error saving rotated image image!')
+            }
+        });
+    });
+
+    //
     // Image Cropping JS
     //
 
@@ -192,6 +399,7 @@ jQuery(document).ready(function() {
                     canvas.width = this.naturalWidth;
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
+                    jQuery('#manage_drone_imagery_crop_load_div').hide();
                 };
                 image.src = response.image_url;
 
@@ -207,6 +415,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_plot_polygons_div').hide();
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
         jQuery('#manage_drone_imagery_remove_background_div').hide();
+        jQuery('#manage_drone_imagery_rotate_div').hide();
     });
 
     function FindPosition(oElement) {
@@ -383,6 +592,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_plot_polygons_div').show();
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
         jQuery('#manage_drone_imagery_remove_background_div').hide();
+        jQuery('#manage_drone_imagery_rotate_div').hide();
     
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_contours?image_id='+background_removed_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
@@ -561,9 +771,7 @@ jQuery(document).ready(function() {
 
     function draw_canvas_image(image_url) {
         var image = new Image();
-        image.onload = drawImageActualSize;
-        image.src = image_url;
-        function drawImageActualSize() {
+        image.onload = function () {
             canvas.width = this.naturalWidth;
             canvas.height = this.naturalHeight;
             ctx.drawImage(this, 0, 0);
@@ -573,7 +781,9 @@ jQuery(document).ready(function() {
                 drawPolyline(plot_polygons_display_points_again);
                 drawWaypoints(plot_polygons_display_points_again, key);
             }
-        }
+            jQuery('#manage_drone_imagery_plot_polygons_load_div').hide();
+        };
+        image.src = image_url;
     }
 
     function GetCoordinatesPlotPolygons(e) {
@@ -757,6 +967,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_plot_polygons_div').hide();
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
         jQuery('#manage_drone_imagery_remove_background_div').show();
+        jQuery('#manage_drone_imagery_rotate_div').hide();
 
         remove_background_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         remove_background_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
@@ -773,10 +984,7 @@ jQuery(document).ready(function() {
                 var canvas = document.getElementById('drone_imagery_remove_background_original');
                 ctx = canvas.getContext('2d');
                 var image = new Image();
-                image.onload = drawImageActualSize;
-                image.src = response.image_url;
-
-                function drawImageActualSize() {
+                image.onload = function () {
                     canvas.width = this.naturalWidth;
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
@@ -813,7 +1021,10 @@ jQuery(document).ready(function() {
                     removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
                     removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
 
-                }
+                    jQuery('#manage_drone_imagery_remove_background_load_div').show();
+
+                };
+                image.src = response.image_url;
 
             },
             error: function(response){
@@ -841,10 +1052,7 @@ jQuery(document).ready(function() {
                     var canvas = document.getElementById('drone_imagery_remove_background_original');
                     ctx = canvas.getContext('2d');
                     var image = new Image();
-                    image.onload = drawImageActualSize;
-                    image.src = response.image_url;
-
-                    function drawImageActualSize() {
+                    image.onload = function () {
                         canvas.width = this.naturalWidth;
                         canvas.height = this.naturalHeight;
                         ctx.drawImage(this, 0, 0);
@@ -904,8 +1112,8 @@ jQuery(document).ready(function() {
                         removeBackgroundThresholdValue = minimum_x_val;
 
                         removeBackgroundHistogramImgReDraw();
-                    }
-
+                    };
+                    image.src = response.image_url;
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
@@ -943,14 +1151,12 @@ jQuery(document).ready(function() {
                 var canvas = document.getElementById('drone_imagery_remove_background_original');
                 ctx = canvas.getContext('2d');
                 var image = new Image();
-                image.onload = drawImageActualSize;
-                image.src = response.removed_background_image_url;
-
-                function drawImageActualSize() {
+                image.onload = function () {
                     canvas.width = this.naturalWidth;
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
-                }
+                };
+                image.src = response.removed_background_image_url;
             },
             error: function(response){
                 alert('Error saving removed background image!')
@@ -1053,6 +1259,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_plot_polygons_div').hide();
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').show();
         jQuery('#manage_drone_imagery_remove_background_div').hide();
+        jQuery('#manage_drone_imagery_rotate_div').hide();
 
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
     });
