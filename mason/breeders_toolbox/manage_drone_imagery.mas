@@ -367,6 +367,7 @@ jQuery(document).ready(function() {
     var ctx;
     var trial_id;
     var stitched_image_id;
+    var rotated_stitched_image_id;
     var stitched_image;
     var drone_run_project_id;
     var drone_run_band_project_id;
@@ -379,6 +380,7 @@ jQuery(document).ready(function() {
         stitched_image = jQuery(this).data('stitched_image');
         drone_run_project_id = jQuery(this).data('drone_run_project_id');
         drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
+        rotated_stitched_image_id = jQuery(this).data('rotated_stitched_image_id');
 
         crop_points = [];
         crop_display_points = [];
@@ -497,7 +499,7 @@ jQuery(document).ready(function() {
     jQuery(document).on('click', '#drone_imagery_crop_stitched_submit', function(){
 
         jQuery.ajax({
-            url : '/ajax/drone_imagery/crop_image?image_id='+stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_band_project_id='+drone_run_band_project_id,
+            url : '/ajax/drone_imagery/crop_image?image_id='+rotated_stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_band_project_id='+drone_run_band_project_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -1021,7 +1023,7 @@ jQuery(document).ready(function() {
                     removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
                     removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
 
-                    jQuery('#manage_drone_imagery_remove_background_load_div').show();
+                    jQuery('#manage_drone_imagery_remove_background_load_div').hide();
 
                 };
                 image.src = response.image_url;
