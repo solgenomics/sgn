@@ -952,12 +952,13 @@ sub drone_imagery_get_image_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
+    my $size = $c->req->param('size') || 'original';
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $main_production_site = $c->config->{main_production_site_url};
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-    my $image_url = $image->get_image_url("original");
+    my $image_url = $image->get_image_url($size);
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;

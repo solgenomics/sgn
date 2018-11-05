@@ -210,9 +210,9 @@ sub get_img_src_tag {
         return
             "<a href=\""
           . ($url)
-          . "\"><img src=\"$static/images/download_icon.png\" border=\"0\" alt=\""
+          . "\"><span class=\"glyphicon glyphicon-floppy-save\" alt=\""
           . $name
-          . "\" /></a>";
+          . "\" ></a>";
     }
     elsif ( $size && $size eq "tiny" ) {
         return
