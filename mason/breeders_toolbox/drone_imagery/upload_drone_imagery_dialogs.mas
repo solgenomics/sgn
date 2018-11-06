@@ -24,6 +24,7 @@
                         <p>If you only have raw drone images that have not been stitched into an ortho mosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip) into a field trial and under a drone run in the database. You can have several drone runs for a single field trial. For an individual drone run, once you have uploaded all photos, you can stitch an ortho-image together. Afterwards, you will have options to cut the ortho image into plot polygons and extract phenotypes for those plots into the database.</p>
                         <p>If you already have an ortho mosaic image of your entire field, you can upload that image under a field trial and a drone run. Afterwards,  you will have options to cut the ortho-image into plot polygons and extract phenotypes for those plots into the database.</p>
                         <p>Optionally, multi-spectral images, where the camera captures duplicates of the same image under different spectra, can be divided into separate bands under a drone run.</p>
+                        <p>Limit your images to less than 20MB</p>
                         <br/><br/>
                         <center>
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>

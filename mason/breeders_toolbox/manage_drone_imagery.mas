@@ -79,6 +79,35 @@
     <canvas id="drone_imagery_crop_original_stitched_div"></canvas>
 </div>
 
+<div id="manage_drone_imagery_vegetative_index_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Convert to Vegetative Index" &>
+    
+    <div class="well well-sm">
+        <ul>
+            <li>Here you can convert to a vegetative index.</li>
+            <li>If you have a NIR band, you can calculate "Normalized difference vegetative index", NDVI.</li>
+            <li>If you have an RGB image, you can calculate "Visible atmospheric resistant index", VARI, or "Triangular greenness index", TGI.</li>
+            <li>If you have red or blue or green, or images from any spectral band, you can calculate ratios to use as your vegetative index.</li>
+        </ul>
+    </div>
+
+    <hr>
+    <div id="manage_drone_imagery_vegetative_index_tgi_div" style="display:none">
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_TGI">Calculate TGI</button>
+    </div>
+    <div id="manage_drone_imagery_vegetative_index_vari_div" style="display:none">
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_VARI">Calculate VARI</button>
+    </div>
+    <div id="manage_drone_imagery_vegetative_index_ndvi_div" style="display:none">
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDVI">Calculate NDVI</button>
+    </div>
+    <button class="btn btn-success" id="drone_imagery_vegetative_index_submit">Finish and Save Vegetative Index</button>
+    <hr>
+
+    <canvas id="drone_imagery_vegetative_index_original_stitched_div"></canvas>
+</div>
+
 <div id="manage_drone_imagery_remove_background_div" style="display:none">
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Remove Background" &>
@@ -218,6 +247,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').show();
+        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
 
         rotate_stitched_image_id = jQuery(this).data('stitched_image_id');
         rotate_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
@@ -228,6 +258,31 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_rotate_stitched_view').click(function(){
         rotate_stitched_image_degrees = parseFloat(jQuery('#drone_imagery_rotate_degrees_input').val());
+
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/rotate_image?image_id='+rotate_stitched_image_id+'&drone_run_band_project_id='+rotate_drone_run_band_project_id+'&angle='+rotate_stitched_image_degrees+'&view_only=1',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = function () {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                };
+                image.src = response.rotated_image_url;
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error getting rotated image!')
+            }
+        });
 
         let src = cv.imread('drone_imagery_rotate_original_stitched_div');
         let dst = new cv.Mat();
@@ -386,7 +441,7 @@ jQuery(document).ready(function() {
         crop_display_points = [];
 
         jQuery.ajax({
-            url : '/ajax/drone_imagery/get_image?image_id='+stitched_image_id,
+            url : '/ajax/drone_imagery/get_image?image_id='+rotated_stitched_image_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -418,6 +473,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
     });
 
     function FindPosition(oElement) {
@@ -595,6 +651,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
     
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_contours?image_id='+background_removed_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
@@ -970,6 +1027,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
         jQuery('#manage_drone_imagery_remove_background_div').show();
         jQuery('#manage_drone_imagery_rotate_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
 
         remove_background_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         remove_background_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
@@ -1262,6 +1320,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_calculate_phenotypes_div').show();
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
 
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
     });
@@ -1369,6 +1428,65 @@ jQuery(document).ready(function() {
             }
         });
     
+    });
+
+    //
+    //RGB Image Vegetative Index
+    //
+
+    var manage_drone_imagery_vi_rgb_drone_run_band_project_id;
+    var manage_drone_imagery_vi_rgb_denoised_stitched_image_id;
+    var manage_drone_imagery_vi_drone_run_band_type;
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_rgb_vegetative"]', function(){
+        manage_drone_imagery_vi_rgb_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
+        manage_drone_imagery_vi_rgb_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
+        manage_drone_imagery_vi_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
+
+        jQuery('#manage_drone_imagery_crop_div').hide();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
+        jQuery('#manage_drone_imagery_rotate_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_div').show();
+
+        jQuery('#manage_drone_imagery_vegetative_index_tgi_div').show();
+        jQuery('#manage_drone_imagery_vegetative_index_vari_div').show();
+        jQuery('#manage_drone_imagery_vegetative_index_ndvi_div').hide();
+    });
+
+    jQuery('#drone_imagery_vegetative_index_TGI').click(function(){
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/calculate_rgb_vegetative_index',
+            dataType: "json",
+            data: {
+                'image_id': manage_drone_imagery_vi_rgb_denoised_stitched_image_id,
+                'drone_run_band_project_id': manage_drone_imagery_vi_rgb_drone_run_band_project_id,
+                'vegetative_index': 'TGI',
+                'drone_run_band_project_type': manage_drone_imagery_vi_drone_run_band_type
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                }
+
+                var canvas = document.getElementById('drone_imagery_vegetative_index_original_stitched_div');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = function () {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                };
+                image.src = response.vegetative_index_image_url;
+            },
+            error: function(response){
+                alert('Error getting TGI vegetative index!')
+            }
+        });
     });
 
 });

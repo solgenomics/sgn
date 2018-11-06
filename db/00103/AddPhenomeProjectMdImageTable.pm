@@ -66,6 +66,7 @@ sub patch {
             'denoised_stitched_drone_imagery',
             'cropped_stitched_drone_imagery',
             'rotated_stitched_drone_imagery',
+            'rotated_stitched_temporary_drone_imagery',
             'fourier_transform_stitched_drone_imagery',
             'contours_stitched_drone_imagery',
             'observation_unit_polygon_imagery',
@@ -73,7 +74,13 @@ sub patch {
             'background_removed_temporary_stitched_drone_imagery',
             'calculate_phenotypes_sift_drone_imagery',
             'calculate_phenotypes_orb_drone_imagery',
-            'calculate_phenotypes_surf_drone_imagery'
+            'calculate_phenotypes_surf_drone_imagery',
+            'calculate_tgi_drone_imagery',
+            'calculate_tgi_temporary_drone_imagery',
+            'calculate_vari_drone_imagery',
+            'calculate_vari_temporary_drone_imagery',
+            'calculate_ndvi_drone_imagery',
+            'calculate_ndvi_temporary_drone_imagery',
         ],
         'project_property' => [
             'project_start_date',

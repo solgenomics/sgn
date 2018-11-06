@@ -465,6 +465,10 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                 # }
 
                             } else {
+                                if ($d->{drone_run_band_project_type} eq 'RGB Color Image') {
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_rgb_vegetative" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'">Convert to Vegetative Index</button><br/><br/>';
+                                }
+
                                 $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Remove Background</button><br/><br/>';
                             }
 
@@ -549,6 +553,7 @@ sub drone_imagery_rotate_image_GET : Args(0) {
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $angle_rotation = $c->req->param('angle');
+    my $view_only = $c->req->param('view_only');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -566,7 +571,22 @@ sub drone_imagery_rotate_image_GET : Args(0) {
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+    my $linking_table_type_id;
+    if ($view_only) {
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+    } else {
+        my $rotated_stitched_temporary_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+        my $rotated_stitched_temporary_images_search = CXGN::DroneImagery::ImagesSearch->new({
+            bcs_schema=>$schema,
+            project_image_type_id=>$rotated_stitched_temporary_drone_images_cvterm_id,
+            drone_run_band_project_id_list=>[$drone_run_band_project_id]
+        });
+        my ($rotated_stitched_temporary_result, $rotated_stitched_temporary_total_count) = $rotated_stitched_temporary_images_search->search();
+        print STDERR Dumper $rotated_stitched_temporary_total_count;
+        
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    }
     my $ret = $image->process_image($archive_rotate_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
     my $rotated_image_url = $image->get_image_url('original');
@@ -1026,6 +1046,63 @@ sub drone_imagery_crop_image_GET : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath };
 }
 
+sub drone_imagery_calculate_rgb_vegetative_index : Path('/ajax/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }
+
+sub drone_imagery_calculate_rgb_vegetative_index_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $vegetative_index = $c->req->param('vegetative_index');
+    my $drone_run_band_project_type = $c->req->param('drone_run_band_project_type');
+    my $view_only = $c->req->param('view_only');
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $index_script = '';
+    my $linking_table_type_id;
+    if ($vegetative_index eq 'TGI') {
+        $index_script = 'TGI';
+        if ($view_only == 1){
+            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+        } else {
+            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_drone_imagery', 'project_md_image')->cvterm_id();
+        }
+    }
+    if ($vegetative_index eq 'VARI') {
+        $index_script = 'VARI';
+        if ($view_only == 1){
+            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+        } else {
+            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_drone_imagery', 'project_md_image')->cvterm_id();
+        }
+    }
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_vegetative_index_image');
+    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_vegetative_index_image/imageXXXX');
+    $archive_temp_image .= '.png';
+    print STDERR $archive_temp_image."\n";
+
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/VegetativeIndex/$index_script.py --image_path $image_fullpath --outfile_path $archive_temp_image";
+    my $status = system($cmd);
+
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+
+    my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+    my $index_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $index_image_url = $image->get_image_url('original');
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, index_image_url => $index_image_url, index_image_fullpath => $index_image_fullpath };
+}
+
 sub drone_imagery_get_plot_polygon_images : Path('/ajax/drone_imagery/get_plot_polygon_images') : ActionClass('REST') { }
 
 sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
@@ -1140,7 +1217,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
         my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
         $image->set_sp_person_id($user_id);
         my $ret = $image->process_image($_, 'project', $drone_run_band_project_id, $linking_table_type_id);
-        my $ret = $image->associate_stock($stock->{stock_id});
+        $ret = $image->associate_stock($stock->{stock_id});
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $image_url = $image->get_image_url('original');
 
