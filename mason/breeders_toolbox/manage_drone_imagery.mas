@@ -95,12 +95,15 @@
     <hr>
     <div id="manage_drone_imagery_vegetative_index_tgi_div" style="display:none">
         <button class="btn btn-primary" id="drone_imagery_vegetative_index_TGI">Calculate TGI</button>
+        <hr>
     </div>
     <div id="manage_drone_imagery_vegetative_index_vari_div" style="display:none">
         <button class="btn btn-primary" id="drone_imagery_vegetative_index_VARI">Calculate VARI</button>
+        <hr>
     </div>
     <div id="manage_drone_imagery_vegetative_index_ndvi_div" style="display:none">
         <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDVI">Calculate NDVI</button>
+        <hr>
     </div>
     <button class="btn btn-success" id="drone_imagery_vegetative_index_submit">Finish and Save Vegetative Index</button>
     <hr>
@@ -1467,8 +1470,13 @@ jQuery(document).ready(function() {
                 'vegetative_index': 'TGI',
                 'drone_run_band_project_type': manage_drone_imagery_vi_drone_run_band_type
             },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
             success: function(response){
                 console.log(response);
+                jQuery("#working_modal").modal("hide");
+
                 if(response.error) {
                     alert(response.error);
                 }
@@ -1481,7 +1489,7 @@ jQuery(document).ready(function() {
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
                 };
-                image.src = response.vegetative_index_image_url;
+                image.src = response.index_image_url;
             },
             error: function(response){
                 alert('Error getting TGI vegetative index!')

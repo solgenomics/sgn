@@ -1048,7 +1048,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
 
 sub drone_imagery_calculate_rgb_vegetative_index : Path('/ajax/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }
 
-sub drone_imagery_calculate_rgb_vegetative_index_GET : Args(0) {
+sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -1064,7 +1064,7 @@ sub drone_imagery_calculate_rgb_vegetative_index_GET : Args(0) {
     my $linking_table_type_id;
     if ($vegetative_index eq 'TGI') {
         $index_script = 'TGI';
-        if ($view_only == 1){
+        if ($view_only){
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_temporary_drone_imagery', 'project_md_image')->cvterm_id();
         } else {
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_drone_imagery', 'project_md_image')->cvterm_id();
@@ -1072,7 +1072,7 @@ sub drone_imagery_calculate_rgb_vegetative_index_GET : Args(0) {
     }
     if ($vegetative_index eq 'VARI') {
         $index_script = 'VARI';
-        if ($view_only == 1){
+        if ($view_only){
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_temporary_drone_imagery', 'project_md_image')->cvterm_id();
         } else {
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_drone_imagery', 'project_md_image')->cvterm_id();
