@@ -256,11 +256,26 @@ project_md_image	cropped_stitched_drone_imagery	Cropped stitched image	10/5/2018
 project_md_image	fourier_transform_stitched_drone_imagery	Stitched image with fourier transform applied	10/5/2018	nm529	00103
 project_md_image	contours_stitched_drone_imagery	Contours of stitched image	10/5/2018	nm529	00103
 project_md_image	background_removed_stitched_drone_imagery	Stitched image without background (soil, etc)	10/5/2018	nm529	00103
+project_md_image	background_removed_tgi_stitched_drone_imagery	Vegetative index TGI stitched image without background (soil, etc)	10/5/2018	nm529	00103
+project_md_image	background_removed_vari_stitched_drone_imagery	Vegetative index VARI stitched image without background (soil, etc)	10/5/2018	nm529	00103
+project_md_image	background_removed_ndvi_stitched_drone_imagery	Vegetative index NDVI stitched image without background (soil, etc)	10/5/2018	nm529	00103
 project_md_image	background_removed_temporary_stitched_drone_imagery	Stitched image without background (soil, etc) that is temporarily saved	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_imagery	Cropped image for an observation unit polygon	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_tgi_imagery	Cropped image for an observation unit polygon from TGI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_vari_imagery	Cropped image for an observation unit polygon from VARI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_ndvi_imagery	Cropped image for an observation unit polygon from NDVI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_surf_drone_imagery	Calculate surf phenotypes on observation unit	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_surf_drone_imagery_tgi	Calculate surf phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_surf_drone_imagery_vari	Calculate surf phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_surf_drone_imagery_ndvi	Calculate surf phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_sift_drone_imagery	Calculate sift phenotypes on observation unit	10/5/2018	nm529	00103
-project_md_image	calculate_phenotypes_surf_drone_imagery	Calculate orb phenotypes on observation unit	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_sift_drone_imagery_tgi	Calculate sift phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_sift_drone_imagery_vari	Calculate sift phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_sift_drone_imagery_ndvi	Calculate sift phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_orb_drone_imagery	Calculate orb phenotypes on observation unit	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_orb_drone_imagery_tgi	Calculate orb phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_orb_drone_imagery_vari	Calculate orb phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_orb_drone_imagery_ndvi	Calculate orb phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_tgi_drone_imagery	Calculate TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_tgi_temporary_drone_imagery	Calculate TGI vegetative index to view temporarily	10/5/2018	nm529	00103
 project_md_image	calculate_vari_drone_imagery	Calculate VARI vegetative index	10/5/2018	nm529	00103

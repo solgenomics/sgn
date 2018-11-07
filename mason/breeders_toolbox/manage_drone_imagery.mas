@@ -94,15 +94,15 @@
 
     <hr>
     <div id="manage_drone_imagery_vegetative_index_tgi_div" style="display:none">
-        <button class="btn btn-primary" id="drone_imagery_vegetative_index_TGI">Calculate TGI</button>
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_TGI">Calculate "Triangular Greenness Index" TGI</button>
         <hr>
     </div>
     <div id="manage_drone_imagery_vegetative_index_vari_div" style="display:none">
-        <button class="btn btn-primary" id="drone_imagery_vegetative_index_VARI">Calculate VARI</button>
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_VARI">Calculate "Visible Atmospheric Resistant Index" VARI</button>
         <hr>
     </div>
     <div id="manage_drone_imagery_vegetative_index_ndvi_div" style="display:none">
-        <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDVI">Calculate NDVI</button>
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDVI">Calculate "Normalized Difference Vegetative Index" NDVI</button>
         <hr>
     </div>
     <button class="btn btn-success" id="drone_imagery_vegetative_index_submit">Finish and Save Vegetative Index</button>
@@ -1021,6 +1021,8 @@ jQuery(document).ready(function() {
     var removeBackgroundThresholdPeak2pixels;
     var removeBackgroundThresholdValue;
     var remove_background_denoised_stitched_image_id;
+    var remove_background_current_image_id;
+    var remove_background_current_image_type;
     var remove_background_drone_run_band_project_id;
 
     jQuery(document).on('click', 'button[name=project_drone_imagery_remove_background]', function(){
@@ -1034,9 +1036,11 @@ jQuery(document).ready(function() {
 
         remove_background_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         remove_background_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
+        remove_background_current_image_id = jQuery(this).data('remove_background_current_image_id');
+        remove_background_current_image_type = jQuery(this).data('remove_background_current_image_type');
 
         jQuery.ajax({
-            url : '/ajax/drone_imagery/get_image?image_id='+remove_background_denoised_stitched_image_id,
+            url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -1104,7 +1108,7 @@ jQuery(document).ready(function() {
         } else {
         
             jQuery.ajax({
-                url : '/ajax/drone_imagery/get_image?image_id='+remove_background_denoised_stitched_image_id,
+                url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -1201,7 +1205,7 @@ jQuery(document).ready(function() {
             url: '/ajax/drone_imagery/remove_background_display',
             dataType: "json",
             data: {
-                'image_id': remove_background_denoised_stitched_image_id,
+                'image_id': remove_background_current_image_id,
                 'drone_run_band_project_id': remove_background_drone_run_band_project_id,
                 'threshold': removeBackgroundThresholdValue,
             },
@@ -1287,7 +1291,8 @@ jQuery(document).ready(function() {
             url: '/ajax/drone_imagery/remove_background_save',
             dataType: "json",
             data: {
-                'image_id': remove_background_denoised_stitched_image_id,
+                'image_id': remove_background_current_image_id,
+                'image_type': remove_background_current_image_type,
                 'drone_run_band_project_id': remove_background_drone_run_band_project_id,
                 'threshold': removeBackgroundThresholdValue,
             },
@@ -1440,6 +1445,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_vi_rgb_drone_run_band_project_id;
     var manage_drone_imagery_vi_rgb_denoised_stitched_image_id;
     var manage_drone_imagery_vi_drone_run_band_type;
+    var manage_drone_imagery_vi_selected_index;
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_rgb_vegetative"]', function(){
         manage_drone_imagery_vi_rgb_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
@@ -1460,6 +1466,15 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_vegetative_index_TGI').click(function(){
+        manage_drone_imagery_vi_selected_index = 'TGI';
+        getVegetativeIndex(manage_drone_imagery_vi_selected_index, 1);
+    });
+
+    jQuery('#drone_imagery_vegetative_index_submit').click(function(){
+        getVegetativeIndex(manage_drone_imagery_vi_selected_index, 0);
+    });
+
+    function getVegetativeIndex(index, view_only) {
         jQuery.ajax({
             type: 'POST',
             url: '/ajax/drone_imagery/calculate_rgb_vegetative_index',
@@ -1467,8 +1482,9 @@ jQuery(document).ready(function() {
             data: {
                 'image_id': manage_drone_imagery_vi_rgb_denoised_stitched_image_id,
                 'drone_run_band_project_id': manage_drone_imagery_vi_rgb_drone_run_band_project_id,
-                'vegetative_index': 'TGI',
-                'drone_run_band_project_type': manage_drone_imagery_vi_drone_run_band_type
+                'vegetative_index': index,
+                'drone_run_band_project_type': manage_drone_imagery_vi_drone_run_band_type,
+                'view_only': view_only
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -1481,18 +1497,59 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
 
-                var canvas = document.getElementById('drone_imagery_vegetative_index_original_stitched_div');
-                ctx = canvas.getContext('2d');
-                var image = new Image();
-                image.onload = function () {
-                    canvas.width = this.naturalWidth;
-                    canvas.height = this.naturalHeight;
-                    ctx.drawImage(this, 0, 0);
-                };
-                image.src = response.index_image_url;
+                if (view_only == 1) {
+                    var canvas = document.getElementById('drone_imagery_vegetative_index_original_stitched_div');
+                    ctx = canvas.getContext('2d');
+                    var image = new Image();
+                    image.onload = function () {
+                        canvas.width = this.naturalWidth;
+                        canvas.height = this.naturalHeight;
+                        ctx.drawImage(this, 0, 0);
+                    };
+                    image.src = response.index_image_url;
+                } else {
+                    location.reload();
+                }
             },
             error: function(response){
                 alert('Error getting TGI vegetative index!')
+            }
+        });
+    }
+
+    //
+    // Apply Mask From Background Removed TGI Vegetative Index to Denoised Image
+    //
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_apply_tgi_removed_background_mask_to_denoised_image"]', function(){
+        var mask_remove_background_denoised_image_id = jQuery(this).data('denoised_stitched_image_id');
+        var mask_remove_background_tgi_image_id = jQuery(this).data('background_removed_tgi_stitched_image_id');
+        var mask_remove_background_drone_run_project_id = jQuery(this).data('drone_run_band_project_id');
+
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/mask_remove_background',
+            dataType: "json",
+            data: {
+                'image_id': mask_remove_background_denoised_image_id,
+                'mask_image_id': mask_remove_background_tgi_image_id,
+                'drone_run_band_project_id': mask_remove_background_drone_run_project_id,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if(response.error) {
+                    alert(response.error);
+                }
+
+                location.reload();
+            },
+            error: function(response){
+                alert('Error removing background using mask of TGI vegetative index!')
             }
         });
     });
