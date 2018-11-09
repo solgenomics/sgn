@@ -152,7 +152,7 @@
             <li>There are two options for defining plot polygons:</li>
             <ul>
                 <li>Using the automated "Generate Polygon Template Tool"</li>
-                <li>Or clicking on five points in the image to make a four-sided polygon.</li>
+                <li>Or clicking on five points in the image to make a four-sided polygon, and then clicking one more time.</li>
             </ul>
         </ul>
     </div>
@@ -1467,23 +1467,23 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_vegetative_index_TGI').click(function(){
         manage_drone_imagery_vi_selected_index = 'TGI';
-        getVegetativeIndex(manage_drone_imagery_vi_selected_index, 1);
+        getVegetativeIndex('calculate_rgb_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 1);
     });
 
     jQuery('#drone_imagery_vegetative_index_submit').click(function(){
-        getVegetativeIndex(manage_drone_imagery_vi_selected_index, 0);
+        getVegetativeIndex('calculate_rgb_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 0);
     });
 
-    function getVegetativeIndex(index, view_only) {
+    function getVegetativeIndex(url_part, image_id, drone_run_band_project_id, drone_run_band_project_type, index, view_only) {
         jQuery.ajax({
             type: 'POST',
-            url: '/ajax/drone_imagery/calculate_rgb_vegetative_index',
+            url: '/ajax/drone_imagery/'+url_part,
             dataType: "json",
             data: {
-                'image_id': manage_drone_imagery_vi_rgb_denoised_stitched_image_id,
-                'drone_run_band_project_id': manage_drone_imagery_vi_rgb_drone_run_band_project_id,
+                'image_id': image_id,
+                'drone_run_band_project_id': drone_run_band_project_id,
                 'vegetative_index': index,
-                'drone_run_band_project_type': manage_drone_imagery_vi_drone_run_band_type,
+                'drone_run_band_project_type': drone_run_band_project_type,
                 'view_only': view_only
             },
             beforeSend: function() {
@@ -1512,10 +1512,18 @@ jQuery(document).ready(function() {
                 }
             },
             error: function(response){
-                alert('Error getting TGI vegetative index!')
+                alert('Error getting vegetative index!')
             }
         });
     }
+
+    //
+    //Ratio vegetative index
+    //
+
+    jQuery(document).on('click', 'button[name=project_drone_imagery_ratio_vegetative]', function() {
+        
+    });
 
     //
     // Apply Mask From Background Removed TGI Vegetative Index to Denoised Image
