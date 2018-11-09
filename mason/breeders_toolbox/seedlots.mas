@@ -94,6 +94,12 @@ $crossing_trials
                 <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
             </div>
         </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Minimum Weight (g): </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_minimum_weight" type="number" />
+            </div>
+        </div>
     </form>
     <center>
     <button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
@@ -140,6 +146,7 @@ jQuery(document).ready(function(){
                      d.seedlot_name  = jQuery('#search_seedlot_form_seedlot_name').val();
                      d.breeding_program = jQuery('#search_seedlot_form_breeding_program').val();
                      d.minimum_count   = jQuery('#search_seedlot_form_minimum_count').val();
+                     d.minimum_weight   = jQuery('#search_seedlot_form_minimum_weight').val();
                      d.location     = jQuery('#search_seedlot_form_location').val();
                      d.contents_accession = jQuery('#search_seedlot_form_contents_accession').val();
                      d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();

@@ -31,6 +31,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $breeding_program = $params->{breeding_program} || '';
     my $location = $params->{location} || '';
     my $minimum_count = $params->{minimum_count} || '';
+    my $minimum_weight = $params->{minimum_weight} || '';
     my $contents_accession = $params->{contents_accession} || '';
     my $contents_cross = $params->{contents_cross} || '';
     my $rows = $params->{length} || 10;
@@ -53,7 +54,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $minimum_count,
         \@accessions,
         \@crosses,
-        0
+        0,
+        $minimum_weight
     );
     my @seedlots;
     foreach my $sl (@$list) {
