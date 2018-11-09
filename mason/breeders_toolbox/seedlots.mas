@@ -135,6 +135,10 @@ $crossing_trials
 <script>
 jQuery(document).ready(function(){
 
+    jQuery("#search_seedlot_form_seedlot_name").autocomplete({
+       source: '/ajax/stock/seedlot_name_autocomplete',
+    });
+
     var seedlots_table = jQuery('#available_seedlots_table').DataTable({
         'searching' : false,
         'ordering'  : false,
