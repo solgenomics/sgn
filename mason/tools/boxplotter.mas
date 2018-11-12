@@ -1,0 +1,91 @@
+
+<%doc>
+
+
+</%doc>
+
+<%args> 
+$datasets
+</%args>
+
+<& '/page/page_title.mas', title => "Create Boxplots" &>
+
+<& '/util/import_javascript.mas', classes => ['jquery','d3.d3v4Min','brapi.BrAPI'] &>
+
+<style media="screen">
+  .groupBy-div:only-child .groupBy-remove{
+    display: none;
+  }
+  .boxplot .infotext{
+    opacity: 0;
+  }
+  .boxplot:hover .infotext{
+    opacity: 1;
+  }
+</style>
+
+<div class="row">
+  <div class="groupBy-div form-inline col-sm-12 form-group">
+    <label for="sort" class="control-label">Dataset</label>
+    <select id="datasetSelect" class="form-control">
+      <option value="" disabled selected>Select a Dataset</option>
+% foreach my $dataset (@{$datasets}) {
+    <option value="<% @{$dataset}[0] %>"><% @{$dataset}[1] %><% (defined @{$dataset}[2])&&@{$dataset}[2]!="undefined"?" - ".@{$dataset}[2]:"" %></option>
+% }
+    </select>
+    <select id="obsunitSelect" class="form-control">
+      <option selected value="plots">Plots</option>
+      <option value="plants">Plants</option>
+    </select>
+  </div>
+</div>
+
+<div class="row">
+  <div class="form-inline col-sm-12 form-group">
+    <label for="sort" class="control-label">Variable</label>
+    <select id="variableSelect" class="form-control"></select>
+  </div>
+</div>
+
+<div class="row">
+  <div class="groupBy-div hidden form-inline col-sm-12 form-group">
+    <label for="sort" class="control-label"> Display By </label>
+    <select class="form-control groupBy">
+      <option value="" selected></option>
+    </select>
+    <a class="btn btn-default groupBy-add">+</a>
+    <a class="btn btn-default groupBy-remove">-</a>
+  </div>
+</div>
+
+<div class="row">
+  <div id="bxplt_result" style="max-width: 100%; overflow-x:auto;"></div>
+</div>
+
+<script>
+(function(){
+  function loadDatasetObsUnits(ds,ou){
+    var d = {
+      'dataset':ds,
+      'unit' : ou
+    };
+    console.log(d);
+    $.ajax({
+      url : '/ajax/tools/boxplotter/get_obs_unit_ids',
+      type : 'GET',
+      data : d,
+      dataType:'json',
+      success : function(data) {              
+        console.log(data);
+      }
+  });
+  }
+  $("#datasetSelect").change(function(){
+    loadDatasetObsUnits(
+      $("#datasetSelect option:selected").val(),
+      $("#obsunitSelect option:selected").val(),
+    )
+  });
+  
+})();
+</script>
