@@ -25,7 +25,7 @@ $datasets
 </style>
 
 <div class="row">
-  <div class="groupBy-div form-inline col-sm-12 form-group">
+  <div class="form-inline col-sm-12 form-group">
     <label for="sort" class="control-label">Dataset</label>
     <select id="datasetSelect" class="form-control">
       <option value="" disabled selected>Select a Dataset</option>
@@ -49,14 +49,16 @@ $datasets
 </div>
 
 <div class="row">
-  <div class="groupBy-div hidden form-inline col-sm-12 form-group">
-    <label for="sort" class="control-label"> Display By </label>
+  <div id="groupByList" class="row">
+  <div class="groupBy-div form-inline col-sm-12 form-group">
+    <label for="sort" class="control-label"> Group By </label>
     <select class="form-control groupBy">
       <option value="" selected></option>
     </select>
     <a class="btn btn-default groupBy-add">+</a>
     <a class="btn btn-default groupBy-remove">-</a>
   </div>
+</div>
 </div>
 
 <div class="row">
@@ -91,6 +93,8 @@ $datasets
         obsUnits.all(function(d){
           console.log(d);
         });
+        drawVariableSelect();
+        drawGroupBys();
       }
     });
   }
@@ -107,6 +111,37 @@ $datasets
     d3.select("#variableSelect").on("change",function(){
       boxplot.setVariable(this.value);
     })
+  }
+  function drawGroupBys(){
+    boxplot.getGroupings().then(grps=>{
+      console.log("grps",grps);
+      var optSelects = d3.select("#groupByList")
+        .selectAll(".groupBy")
+        .on("change",function(){
+          readGrouping();
+        })
+        .selectAll('option:not([value=""])')
+        .data(d=>grps);
+      optSelects.enter().append("option")
+        .merge(optSelects)
+        .attr("value",d=>d.key)
+        .text(d=>d.value.name);
+      d3.selectAll(".groupBy-add").on("click",function(){
+        $(this.parentNode).clone(true).appendTo(this.parentNode.parentNode);
+        drawGroupBys();
+        readGrouping();
+      });
+      d3.selectAll(".groupBy-remove").on("click",function(){
+        d3.select(this.parentNode).remove();
+        readGrouping();
+      });
+    });
+  }
+  function readGrouping(){
+    var grouping = [];
+    d3.selectAll(".groupBy")
+      .each(function(){grouping.push(this.value)})
+    boxplot.setGroupings(grouping)
   }
   $("#datasetSelect, #obsunitSelect").change(function(){
     var ds = $("#datasetSelect option:selected").val();
