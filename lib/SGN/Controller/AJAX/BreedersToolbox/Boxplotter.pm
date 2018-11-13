@@ -12,7 +12,7 @@ __PACKAGE__->config(
   map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
  );
 
-sub get_obs_unit_ids :Path('/ajax/tools/boxplotter/get_obs_unit_ids') {
+sub get_constraints :Path('/ajax/tools/boxplotter/get_constraints') {
   my $self = shift;
   my $c = shift;
   my $sp_dataset_id = $c->req->param('dataset');
@@ -29,13 +29,6 @@ sub get_obs_unit_ids :Path('/ajax/tools/boxplotter/get_obs_unit_ids') {
     return;
   }
   else {
-    if ($unit eq "plots"){
-      $c->stash->{rest} = $ds->retrieve_plots();
-      print STDERR Dumper $ds->retrieve_plots();
-    } 
-    elsif ($unit eq "plants"){
-      $c->stash->{rest} = $ds->retrieve_plants();
-    }
-    print STDERR Dumper "EITHER";
+    $c->stash->{rest} = $ds->get_dataset_data();
   }
 }

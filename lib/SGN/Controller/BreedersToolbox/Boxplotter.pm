@@ -4,6 +4,7 @@ package SGN::Controller::BreedersToolbox::Boxplotter;
 
 use Moose;
 use CXGN::Dataset;
+use URI::FromHash 'uri';
 use Data::Dumper;
 BEGIN { extends 'Catalyst::Controller'; }
 

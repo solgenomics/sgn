@@ -10,7 +10,7 @@ $datasets
 
 <& '/page/page_title.mas', title => "Create Boxplots" &>
 
-<& '/util/import_javascript.mas', classes => ['jquery','d3.d3v4Min','brapi.BrAPI'] &>
+<& '/util/import_javascript.mas', classes => ['jquery','d3.d3v4Min','brapi.BrAPI','brapi.BoxPlotter'] &>
 
 <style media="screen">
   .groupBy-div:only-child .groupBy-remove{
@@ -34,9 +34,10 @@ $datasets
 % }
     </select>
     <select id="obsunitSelect" class="form-control">
-      <option selected value="plots">Plots</option>
-      <option value="plants">Plants</option>
+      <option selected value="plot">Plots</option>
+      <option value="plant">Plants</option>
     </select>
+    <div class="well well-sm"> Note: Constraints other than accessions, traits, trials, locations, and program will be ignored </div>
   </div>
 </div>
 
@@ -64,27 +65,54 @@ $datasets
 
 <script>
 (function(){
+  var boxplot = BrAPIBoxPlotter("#bxplt_result");
   function loadDatasetObsUnits(ds,ou){
     var d = {
-      'dataset':ds,
-      'unit' : ou
+      'dataset':ds    
     };
     console.log(d);
     $.ajax({
-      url : '/ajax/tools/boxplotter/get_obs_unit_ids',
+      url : '/ajax/tools/boxplotter/get_constraints',
       type : 'GET',
       data : d,
       dataType:'json',
-      success : function(data) {              
+      success : function(data) {    
         console.log(data);
+        var obsUnits = BrAPI("/brapi/v1").phenotypes_search({
+          "germplasmDbIds" : data["categories"]["accessions"],
+          "observationVariableDbIds" : data["categories"]["traits"],
+          "studyDbIds" : data["categories"]["trials"],
+          "locationDbIds" : data["categories"]["locations"],
+          "programDbIds" : data["categories"]["breeding_programs"],
+          "observationLevel" : ou, 
+          "pageSize" : 1000
+        })
+        boxplot.setData(obsUnits);
+        obsUnits.all(function(d){
+          console.log(d);
+        });
       }
-  });
+    });
   }
-  $("#datasetSelect").change(function(){
-    loadDatasetObsUnits(
-      $("#datasetSelect option:selected").val(),
-      $("#obsunitSelect option:selected").val(),
-    )
+  function drawVariableSelect(){
+    boxplot.getVariables().then(vs=>{
+      var vars = d3.select("#variableSelect").selectAll("option").data(vs);
+      vars.exit().remove();
+      var allVars = vars.enter().append("option")
+        .merge(vars)
+        .attr("value",d=>d.key)
+        .attr("selected",d=>d.key==boxplot.variable?"":null)
+        .text(d=>d.value);
+    });
+    d3.select("#variableSelect").on("change",function(){
+      boxplot.setVariable(this.value);
+    })
+  }
+  $("#datasetSelect, #obsunitSelect").change(function(){
+    var ds = $("#datasetSelect option:selected").val();
+    var ou = $("#obsunitSelect option:selected").val();
+    if(ds=="") return;
+    loadDatasetObsUnits(ds,ou);
   });
   
 })();
