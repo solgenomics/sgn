@@ -60,8 +60,8 @@ $genotyping_plate_sample_type => undef
                 </div>
             </div>
 
-            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-primary">Download Intertek Formatted File</a>
-            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqxls&dataLevel=plate" class="btn btn-primary">Download DartSeq Formatted File</a>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default">Download Intertek Formatted File</a>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqxls&dataLevel=plate" class="btn btn-default">Download DartSeq Formatted File</a>
 
         </div>
         <div class="col-sm-3">
@@ -97,7 +97,9 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                 </div>
             </div>
         </div>
-    </div>    
+    </div>
+
+    <!--
     <div class="row">
         <div class="col-sm-12">
             <div class="well">
@@ -108,7 +110,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                     <div class="col-sm-11">
                         <h4>Plate Design Info</h4>
 
-                        <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout <a class='btn btn-sm btn-primary' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">xls</a> <a class='btn btn-sm btn-primary' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">csv</a>"  &>
+                        <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a>"  &>
 
                             <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
                                 <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
@@ -127,6 +129,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
             </div>
         </div>
     </div>
+    -->
 
     <div class="row">
         <div class="col-sm-12">
@@ -139,7 +142,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                         <h4>Plate Layout</h4>
 
 % my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
-                        <&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ <a class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</a> } &>
+                        <&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a><a class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</a> } &>
 
                             <div class="well well-sm">
                                 <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>

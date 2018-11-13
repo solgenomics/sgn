@@ -478,7 +478,7 @@ CXGN.List.prototype = {
         });
 
         if (list_type == 'accessions' || list_type == 'crosses'){
-            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Availible Seedlots</button>');
+            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
         }
         if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(list_type) >= 0){
             jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')" title="Will display whether the items in your list are synonyms or actual uniquenames.">Find Synonyms</button>');
@@ -486,7 +486,7 @@ CXGN.List.prototype = {
         }
         jQuery(document).on("change", "#type_select", function(){
             if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
-                jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Availible Seedlots</button>');
+                jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
             } else {
                 jQuery('#availableSeedlotButtonDiv').html('')
             }

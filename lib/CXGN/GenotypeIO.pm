@@ -28,9 +28,6 @@ sub BUILD {
     if ($args->{format} eq "vcf") { 
         $plugin->load_plugin("VCF");
     }
-    if ($args->{format} eq "vcf_new") { 
-        $plugin->load_plugin("VCFNew");
-    }
     elsif ($args->{format} eq "dosage") { 
 	$plugin->load_plugin("Dosage");
     }
@@ -67,11 +64,6 @@ sub next {
 #    print STDERR join ", ", keys %$rawscores;
 
     return $gt;
-}
-
-sub next_vcf_row {
-	my $self = shift;
-	return $self->plugin()->next();
 }
 
 sub accessions { 

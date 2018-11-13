@@ -536,7 +536,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
-                alert('All accessions in your list are now saved in the database. 3');
+                alert('All accessions in your list already exist in the database. 3');
             }
         }
     });
@@ -656,7 +656,7 @@ function process_fuzzy_options(accession_list_id) {
                 populate_review_absent_dialog(accessionList, infoToAdd);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
-                alert('All accessions in your list are now saved in the database. 2');
+                alert('All accessions in your list now exist in the database. 2');
             }
         },
         error: function () {
