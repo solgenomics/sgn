@@ -232,6 +232,11 @@ sub search {
 
     my @where_clause;
 
+    if ($drone_run_band_project_id_list && scalar(@$drone_run_band_project_id_list)>0) {
+        my $sql = join ("," , @$drone_run_band_project_id_list);
+        push @where_clause, "drone_run_band.project_id in ($sql)";
+    }
+
     if ($drone_run_project_id_list && scalar(@$drone_run_project_id_list)>0) {
         my $sql = join ("," , @$drone_run_project_id_list);
         push @where_clause, "drone_run.project_id in ($sql)";

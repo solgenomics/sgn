@@ -40,7 +40,7 @@
             <div class="form-group form-group-sm">
                 <label class="col-sm-6 control-label">Rotate Counter-Clockwise Degrees: </label>
                 <div class="col-sm-6">
-                    <input class="form-control" id="drone_imagery_rotate_degrees_input" name="drone_imagery_rotate_degrees_input" type="text" placeholder="Number of degrees to rotate" value="45.05"/>
+                    <input class="form-control" id="drone_imagery_rotate_degrees_input" name="drone_imagery_rotate_degrees_input" type="text" placeholder="Number of degrees to rotate" value="0.00"/>
                 </div>
             </div>
         </form>
@@ -254,7 +254,7 @@ jQuery(document).ready(function() {
 
         rotate_stitched_image_id = jQuery(this).data('stitched_image_id');
         rotate_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
-        rotate_stitched_image_degrees;
+        rotate_stitched_image_degrees = 0.00;
 
         showRotateImage();
     });
@@ -300,7 +300,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_rotate_stitched_restart').click(function(){
         showRotateImage();
-        rotate_stitched_image_degrees;
+        rotate_stitched_image_degrees = 0.00;
     });
 
     function showRotateImage() {
@@ -401,6 +401,16 @@ jQuery(document).ready(function() {
     }
 
     jQuery('#drone_imagery_rotate_stitched_submit').click(function() {
+    var rotate_stitched_image_degrees_text = jQuery('#drone_imagery_rotate_degrees_input').val();
+    if (rotate_stitched_image_degrees_text == '') {
+        alert('Please give a number of degrees first!');
+        return;
+    }
+    if (isNaN(rotate_stitched_image_degrees_text)) {
+        alert('Please give a number of degrees first! Can be a decimal amount.');
+        return;
+    }
+    rotate_stitched_image_degrees = parseFloat(rotate_stitched_image_degrees_text);
         jQuery.ajax({
             url : '/ajax/drone_imagery/rotate_image?image_id='+rotate_stitched_image_id+'&drone_run_band_project_id='+rotate_drone_run_band_project_id+'&angle='+rotate_stitched_image_degrees,
             beforeSend: function() {
@@ -1520,10 +1530,6 @@ jQuery(document).ready(function() {
     //
     //Ratio vegetative index
     //
-
-    jQuery(document).on('click', 'button[name=project_drone_imagery_ratio_vegetative]', function() {
-        
-    });
 
     //
     // Apply Mask From Background Removed TGI Vegetative Index to Denoised Image
