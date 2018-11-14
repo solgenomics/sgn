@@ -1275,7 +1275,12 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $temp_results_subdir = '';
     my $calculate_phenotypes_script = '';
     my $linking_table_type_id;
-    if ($phenotype_method eq 'sift') {
+    if ($phenotype_method eq 'zonal') {
+        $temp_images_subdir = 'drone_imagery_calc_phenotypes_zonal_stats';
+        $temp_results_subdir = 'drone_imagery_calc_phenotypes_zonal_stats_results';
+        $calculate_phenotypes_script = 'CalculatePhenotypeZonalStats.py';
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_zonal_stats_drone_imagery', 'project_md_image')->cvterm_id();
+    } elsif ($phenotype_method eq 'sift') {
         $temp_images_subdir = 'drone_imagery_calc_phenotypes_sift';
         $temp_results_subdir = 'drone_imagery_calc_phenotypes_sift_results';
         $calculate_phenotypes_script = 'CalculatePhenotypeSift.py';
@@ -1302,10 +1307,12 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         push @image_paths, $image_fullpath;
 
-        my $dir = $c->tempfiles_subdir('/'.$temp_images_subdir);
-        my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_images_subdir.'/imageXXXX');
-        $archive_temp_image .= '.png';
-        push @out_paths, $archive_temp_image;
+        if ($phenotype_method ne 'zonal') {
+            my $dir = $c->tempfiles_subdir('/'.$temp_images_subdir);
+            my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_images_subdir.'/imageXXXX');
+            $archive_temp_image .= '.png';
+            push @out_paths, $archive_temp_image;
+        }
 
         push @stocks, {
             stock_id => $_->{stock_id},
@@ -1317,10 +1324,14 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $image_paths_string = join ',', @image_paths;
     my $out_paths_string = join ',', @out_paths;
 
+    if ($out_paths_string) {
+        $out_paths_string = ' --outfile_paths '.$out_paths_string;
+    }
+
     my $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
     my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' --outfile_paths '.$out_paths_string.' --results_outfile_path '.$archive_temp_results);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' '.$out_paths_string.' --results_outfile_path '.$archive_temp_results);
 
     my @pheno_image_info;
     my $count = 0;
