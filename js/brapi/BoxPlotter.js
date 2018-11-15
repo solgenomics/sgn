@@ -56,6 +56,7 @@ var BoxPlotter = function () {
         return d;
       });
       this.getVariables().then(function (vs) {
+        if (!vs) return;
         if (!_this.variable || !vs.some(function (v) {
           return v.key == _this.variable;
         })) _this.setVariable(vs[0].key);
@@ -289,7 +290,7 @@ var BoxPlotter = function () {
 
         var svgbbox = svg.select("g.groups").node().getBBox();
         svg.select("g.axis").attr("transform", "translate(0," + (plt.vm - 5) + ")").call(plt.axis);
-        svg.attr("width", svgbbox.width + svgbbox.x);
+        svg.attr("width", svgbbox.width + svgbbox.x + 20);
         svg.attr("height", svgbbox.height + svgbbox.y + plt.vm * 2);
       });
     }
