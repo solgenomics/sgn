@@ -24,6 +24,7 @@ use CXGN::DroneImagery::ImagesSearch;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
+use Text::CSV;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -1305,6 +1306,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
+        my $image_source_tag_small = $image->get_img_src_tag("tiny");
         push @image_paths, $image_fullpath;
 
         if ($phenotype_method ne 'zonal') {
@@ -1318,6 +1320,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
             stock_id => $_->{stock_id},
             stock_uniquename => $_->{stock_uniquename},
             stock_type_id => $_->{stock_type_id},
+            image => '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>'
         };
     }
     print STDERR Dumper \@image_paths;
@@ -1333,7 +1336,50 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
 
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' '.$out_paths_string.' --results_outfile_path '.$archive_temp_results);
 
-    my @pheno_image_info;
+    my @header_cols;
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    open(my $fh, '<', $archive_temp_results)
+        or die "Could not open file '$archive_temp_results' $!";
+    
+        my $header = <$fh>;
+        if ($csv->parse($header)) {
+            @header_cols = $csv->fields();
+        }
+
+        if ($phenotype_method eq 'zonal') {
+            if ($header_cols[0] ne 'nonzero_pixel_count' ||
+                $header_cols[1] ne 'total_pixel_sum' ||
+                $header_cols[2] ne 'mean_pixel_value' ||
+                $header_cols[3] ne 'harmonic_mean_value' ||
+                $header_cols[4] ne 'median_pixel_value' ||
+                $header_cols[5] ne 'variance_pixel_value' ||
+                $header_cols[6] ne 'stdev_pixel_value' ||
+                $header_cols[7] ne 'pstdev_pixel_value' ||
+                $header_cols[8] ne 'min_pixel_value' ||
+                $header_cols[9] ne 'max_pixel_value' ||
+                $header_cols[10] ne 'minority_pixel_value' ||
+                $header_cols[11] ne 'minority_pixel_count' ||
+                $header_cols[12] ne 'majority_pixel_value' ||
+                $header_cols[13] ne 'majority_pixel_count' ||
+                $header_cols[14] ne 'pixel_variety_count'
+            ) {
+                $c->stash->{rest} = { error => "Pheno results must have header: 'nonzero_pixel_count', 'total_pixel_sum', 'mean_pixel_value', 'harmonic_mean_value', 'median_pixel_value', 'variance_pixel_value', 'stdev_pixel_value', 'pstdev_pixel_value', 'min_pixel_value', 'max_pixel_value', 'minority_pixel_value', 'minority_pixel_count', 'majority_pixel_value', 'majority_pixel_count', 'pixel_variety_count'" };
+                return;
+            }
+        }
+        my $line = 0;
+        while ( my $row = <$fh> ){
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            #print STDERR Dumper \@columns;
+            $stocks[$line]->{result} = \@columns;
+            $line++;
+        }
+    
+    close $fh;
+
     my $count = 0;
     foreach (@out_paths) {
         my $stock = $stocks[$count];
@@ -1346,18 +1392,14 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
         my $image_url = $image->get_image_url('original');
 
         my $image_source_tag_small = $image->get_img_src_tag("tiny");
-        $count++;
         
-        push @pheno_image_info, {
-            stock_id => $stock->{stock_id},
-            stock_uniquename => $stock->{stock_uniquename},
-            image => '<a href="/image/view/'.$image->get_image_id.'" target="_blank">'.$image_source_tag_small.'</a>',
-            image_path => $image_fullpath,
-            image_url => $image_url
-        };
+        $stocks[$count]->{image} = '<a href="/image/view/'.$image->get_image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+        $stocks[$count]->{image_path} = $image_fullpath;
+        $stocks[$count]->{image_url} = $image_url;
+        $count++;
     }
 
-    $c->stash->{rest} = { images => \@pheno_image_info };
+    $c->stash->{rest} = { result_header => \@header_cols, results => \@stocks };
 }
 
 sub _check_user_login {
