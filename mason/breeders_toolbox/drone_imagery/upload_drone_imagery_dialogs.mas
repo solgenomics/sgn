@@ -52,6 +52,7 @@
                                 <tr>
                                     <th>Select</th>
                                     <th>Drone Run Name</th>
+                                    <th>Drone Run Type</th>
                                     <th>Drone Run Description</th>
                                     <th>Drone Run Date</th>
                                     <th>Field Trial Name</th>
@@ -73,6 +74,16 @@
                                 <label class="col-sm-3 control-label">Drone Run Name: </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="drone_image_upload_drone_run_name" name="drone_image_upload_drone_run_name" type="text" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Drone Run Type:</label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_image_upload_drone_run_type" name="drone_image_upload_drone_run_type">
+                                        <option value="">Select One</option>
+                                        <option value="Aerial Medium to High Res">Medium to High Resolution Aerial Drone Image(s)</option>
+                                        <option value="Aerial Low Res">Low Resolution Aerial Drone Image(s)</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -288,6 +299,8 @@ jQuery(document).ready(function() {
                     alert('Please give a drone run description.');
                 } else if (jQuery('#drone_image_upload_drone_run_date').val() == ''){
                     alert('Please give a drone run date.');
+                } else if (jQuery('#drone_image_upload_drone_run_type') == ''){
+                    alert('Please select a drone run type');
                 } else {
                     jQuery('#drone_image_upload_drone_run_id').val(undefined);
                     Workflow.complete('#drone_image_upload_drone_run_continue');

@@ -50,6 +50,7 @@ sub upload_drone_imagery_POST : Args(0) {
     }
     my $selected_drone_run_id = $c->req->param('drone_image_upload_drone_run_id');
     my $new_drone_run_name = $c->req->param('drone_image_upload_drone_run_name');
+    my $new_drone_run_type = $c->req->param('drone_image_upload_drone_run_type');
     my $new_drone_run_date = $c->req->param('drone_image_upload_drone_run_date');
     my $new_drone_run_desc = $c->req->param('drone_image_upload_drone_run_desc');
     if (!$selected_drone_run_id && !$new_drone_run_name) {
@@ -58,6 +59,10 @@ sub upload_drone_imagery_POST : Args(0) {
     }
     if ($selected_drone_run_id && $new_drone_run_name){
         $c->stash->{rest} = { error => "Please select a drone run OR create a new drone run, not both!" };
+        $c->detach();
+    }
+    if ($new_drone_run_name && !$new_drone_run_type){
+        $c->stash->{rest} = { error => "Please give a new drone run type!" };
         $c->detach();
     }
     if ($new_drone_run_name && !$new_drone_run_date){
@@ -163,11 +168,12 @@ sub upload_drone_imagery_POST : Args(0) {
         my $drone_run_event = $calendar_funcs->check_value_format($new_drone_run_date);
         my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
         my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
+        my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
         my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
         my $project_rs = $schema->resultset("Project::Project")->create({
             name => $new_drone_run_name,
             description => $new_drone_run_desc,
-            projectprops => [{type_id => $project_start_date_type_id, value => $drone_run_event}, {type_id => $design_cvterm_id, value => 'drone_run'}],
+            projectprops => [{type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},{type_id => $project_start_date_type_id, value => $drone_run_event}, {type_id => $design_cvterm_id, value => 'drone_run'}],
             project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_trial_id}]
         });
         $selected_drone_run_id = $project_rs->project_id();
@@ -330,6 +336,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
         $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
         $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
         $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
     }
     foreach (@$stitched_result) {
@@ -350,6 +357,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
         $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
         $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
         $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
     }
     foreach (@$rotated_stitched_result) {
@@ -552,7 +560,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $drone_run_band_table_html .= '</tbody></table>';
 
         my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
-        my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
+        my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Drone Run Type</b>: '.$v->{drone_run_type}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
         $drone_run_html .= "<br/><b>Field Trial</b>: <a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a></div>";
         $drone_run_html .= $drone_run_band_table_html;
 
@@ -933,6 +941,7 @@ sub get_drone_run_projects_GET : Args(0) {
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
+    my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
 
     my $where_clause = '';
@@ -940,8 +949,9 @@ sub get_drone_run_projects_GET : Args(0) {
         $where_clause = ' WHERE field_trial.project_id = ? ';
     }
 
-    my $q = "SELECT project.project_id, project.name, project.description, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description FROM project
+    my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description FROM project
         JOIN projectprop AS project_start_date ON (project.project_id=project_start_date.project_id AND project_start_date.type_id=$project_start_date_type_id)
+        LEFT JOIN projectprop AS drone_run_type ON (project.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_cvterm_id)
         JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$project_relationship_type_id)
         JOIN project AS field_trial ON (field_trial.project_id=project_relationship.object_project_id)
         $where_clause
@@ -952,7 +962,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute($field_trial_id);
     my @result;
-    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
+    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
         my @res;
         if ($checkbox_select_name){
             push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_project_id'>";
@@ -960,6 +970,7 @@ sub get_drone_run_projects_GET : Args(0) {
         my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
         push @res, (
             "<a href=\"/breeders_toolbox/trial/$drone_run_project_id\">$drone_run_project_name</a>",
+            $drone_run_type,
             $drone_run_project_description,
             $drone_run_date_display,
             "<a href=\"/breeders_toolbox/trial/$field_trial_project_id\">$field_trial_project_name</a>",

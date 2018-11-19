@@ -110,6 +110,7 @@ project_property	genotyping_facility_status	For genotyping plate to indicate the
 project_property	genotyping_plate_format	For genotyping plate to indicate if 96 well or other	2/16/2017	nm529	00091
 project_property	genotyping_plate_sample_type	For genotyping plate to indicate the type of sample in plate e.g. DNA	2/16/2017	nm529	00091
 project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
+project_property	drone_run_project_type	To distinguish the type of drone run being stored (Aerial Medium to High Res, Aerial Low Res)	10/5/2018	nm529	00103
 project_property	drone_run_band_project_type	To distinguish the type of band being stored under a drone run (red, blue, nir, etc)	10/5/2018	nm529	00103
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081

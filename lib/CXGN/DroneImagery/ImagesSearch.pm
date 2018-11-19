@@ -200,6 +200,7 @@ sub search {
     my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $trial_folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_folder', 'project_property')->cvterm_id();
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
+    my $drone_run_project_type_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
     my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
@@ -332,11 +333,12 @@ sub search {
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
-    my $q = "SELECT drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.modified_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name, stock.stock_id, stock.uniquename, stock.type_id, count(study.project_id) OVER() AS full_count
+    my $q = "SELECT drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_type.value, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.modified_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name, stock.stock_id, stock.uniquename, stock.type_id, count(study.project_id) OVER() AS full_count
         FROM project AS drone_run_band
         JOIN projectprop AS drone_run_band_type ON(drone_run_band.project_id=drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_type_cvterm_id)
         JOIN project_relationship AS drone_run_band_rel ON(drone_run_band.project_id=drone_run_band_rel.subject_project_id AND drone_run_band_rel.type_id=$drone_run_band_drone_run_relationship_id)
         JOIN project AS drone_run ON(drone_run.project_id=drone_run_band_rel.object_project_id)
+        LEFT JOIN projectprop AS drone_run_type ON(drone_run.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_type_id)
         JOIN projectprop AS drone_run_date ON(drone_run.project_id=drone_run_date.project_id AND drone_run_date.type_id=$project_start_date_type_id)
         JOIN projectprop AS drone_run_design ON(drone_run.project_id=drone_run_design.project_id AND drone_run_design.type_id=$design_cvterm_id AND drone_run_design.value='drone_run')
         JOIN project_relationship AS drone_run_rel ON(drone_run.project_id=drone_run_rel.subject_project_id AND drone_run_rel.type_id=$drone_run_trial_relationship_id)
@@ -362,7 +364,7 @@ sub search {
         $accession_join
         $trait_join
         $where_clause
-        GROUP BY(drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.modified_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name, stock.stock_id, stock.uniquename, stock.type_id)
+        GROUP BY(drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_type.value, drone_run_date.value, study.name, study.project_id, study.description, folder.name, folder.project_id, folder.description, trial_type_name.cvterm_id, trial_type_name.name, year.value, location.value, breeding_program.name, breeding_program.project_id, breeding_program.description, harvest_date.value, planting_date.value, design.value, project_image_type.cvterm_id, project_image_type.name, md_image.image_id, md_image.description, md_image.original_filename, md_image.sp_person_id, md_image.create_date, md_image.modified_date, md_image.md5sum, image_person.username, image_person.first_name, image_person.last_name, stock.stock_id, stock.uniquename, stock.type_id)
         ORDER BY study.name, md_image.image_id;";
 
     #print STDERR Dumper $q;
@@ -372,7 +374,7 @@ sub search {
     my @result;
     my $total_count = 0;
     my $subtract_count = 0;
-    while (my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $study_name, $study_id, $study_description, $folder_name, $folder_id, $folder_description, $trial_type_id, $trial_type_name, $year, $location_id, $breeding_program_name, $breeding_program_id, $breeding_program_description, $harvest_date, $planting_date, $design, $project_image_type_id, $project_image_type_name, $image_id, $image_description, $image_original_filename, $image_person_id, $image_create_date, $image_modified_date, $image_md5sum, $username, $first_name, $last_name, $stock_id, $stock_uniquename, $stock_type_id, $full_count) = $h->fetchrow_array()) {
+    while (my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $study_name, $study_id, $study_description, $folder_name, $folder_id, $folder_description, $trial_type_id, $trial_type_name, $year, $location_id, $breeding_program_name, $breeding_program_id, $breeding_program_description, $harvest_date, $planting_date, $design, $project_image_type_id, $project_image_type_name, $image_id, $image_description, $image_original_filename, $image_person_id, $image_create_date, $image_modified_date, $image_md5sum, $username, $first_name, $last_name, $stock_id, $stock_uniquename, $stock_type_id, $full_count) = $h->fetchrow_array()) {
         my $location_name = $location_id ? $locations{$location_id} : '';
         my $project_harvest_date = $harvest_date ? $calendar_funcs->display_start_date($harvest_date) : '';
         my $project_planting_date = $planting_date ? $calendar_funcs->display_start_date($planting_date) : '';
@@ -386,6 +388,7 @@ sub search {
             drone_run_project_name => $drone_run_project_name,
             drone_run_project_description => $drone_run_project_description,
             drone_run_date => $drone_run_date,
+            drone_run_type => $drone_run_type,
             trial_id => $study_id,
             trial_name => $study_name,
             description => $study_description,
