@@ -456,8 +456,8 @@ sub temp_pheno_corre_input_file {
     $c->controller("solGS::Files")->formatted_phenotype_file($c);
     my $formatted_pheno_file = $c->stash->{formatted_phenotype_file};
 
-    $c->controller("solGS::Files")->trial_metadata_file($c);
-    my $metadata_file = $c->stash->{trial_metadata_file};
+    $c->controller("solGS::Files")->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
    
     my $files = join ("\t",
 		      $pheno_file,

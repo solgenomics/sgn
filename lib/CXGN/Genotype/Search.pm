@@ -338,31 +338,31 @@ sub get_genotype_info {
     my @found_protocolprop_ids = keys %protocolprop_hash;
     my @protocolprop_marker_hash_select_arr;
     foreach (@$protocolprop_marker_hash_select){
-        push @protocolprop_marker_hash_select_arr, "s.value->'$_'";
+        push @protocolprop_marker_hash_select_arr, "s.value->>'$_'";
     }
     my @protocolprop_top_key_select_arr;
     foreach (@$protocolprop_top_key_select){
-        push @protocolprop_top_key_select_arr, "value->'$_'";
+        push @protocolprop_top_key_select_arr, "value->>'$_'";
     }
     my %selected_protocol_marker_info;
     my %selected_protocol_top_key_info;
     if (scalar(@found_protocolprop_ids)>0){
         my $protocolprop_id_sql = join ("," , @found_protocolprop_ids);
-        my $protocolprop_where_sql = "nd_protocolprop_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_cvterm_id";
+        my $protocolprop_where_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_cvterm_id";
         my $protocolprop_hash_select_sql = scalar(@protocolprop_marker_hash_select_arr) > 0 ? ', '.join ',', @protocolprop_marker_hash_select_arr : '';
-        my $protocolprop_q = "SELECT nd_protocolprop_id, s.key $protocolprop_hash_select_sql from nd_protocolprop, jsonb_each(nd_protocolprop.value->'markers') as s WHERE $protocolprop_where_sql;";
+        my $protocolprop_q = "SELECT nd_protocol_id, s.key $protocolprop_hash_select_sql from nd_protocolprop, jsonb_each(nd_protocolprop.value->'markers') as s WHERE $protocolprop_where_sql;";
         my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
         $protocolprop_h->execute();
-        while (my ($protocolprop_id, $marker_name, @protocolprop_info_return) = $protocolprop_h->fetchrow_array()) {
+        while (my ($protocol_id, $marker_name, @protocolprop_info_return) = $protocolprop_h->fetchrow_array()) {
             for my $s (0 .. scalar(@protocolprop_marker_hash_select_arr)-1){
-                $selected_protocol_marker_info{$protocolprop_id}->{$marker_name}->{$protocolprop_marker_hash_select->[$s]} = $protocolprop_info_return[$s];
+                $selected_protocol_marker_info{$protocol_id}->{$marker_name}->{$protocolprop_marker_hash_select->[$s]} = $protocolprop_info_return[$s];
             }
         }
         my $protocolprop_top_key_select_sql = scalar(@protocolprop_top_key_select_arr) > 0 ? ', '.join ',', @protocolprop_top_key_select_arr : '';
-        my $protocolprop_top_key_q = "SELECT nd_protocolprop_id $protocolprop_top_key_select_sql from nd_protocolprop WHERE $protocolprop_where_sql;";
+        my $protocolprop_top_key_q = "SELECT nd_protocol_id $protocolprop_top_key_select_sql from nd_protocolprop WHERE $protocolprop_where_sql;";
         my $protocolprop_top_key_h = $schema->storage->dbh()->prepare($protocolprop_top_key_q);
         $protocolprop_top_key_h->execute();
-        while (my ($protocolprop_id, @protocolprop_top_key_return) = $protocolprop_top_key_h->fetchrow_array()) {
+        while (my ($protocol_id, @protocolprop_top_key_return) = $protocolprop_top_key_h->fetchrow_array()) {
             for my $s (0 .. scalar(@protocolprop_top_key_select_arr)-1){
                 my $protocolprop_i = $protocolprop_top_key_select->[$s];
                 my $val;
@@ -371,7 +371,7 @@ sub get_genotype_info {
                 } else {
                     $val = $protocolprop_top_key_return[$s];
                 }
-                $selected_protocol_top_key_info{$protocolprop_id}->{$protocolprop_i} = $val;
+                $selected_protocol_top_key_info{$protocol_id}->{$protocolprop_i} = $val;
             }
         }
     }

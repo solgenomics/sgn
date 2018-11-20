@@ -2,7 +2,6 @@
 <%args>
 $odk_crossing_data_service_name => undef
 $odk_crossing_data_service_url => undef
-$odk_crossing_data_form_name => undef
 $odk_crossing_data_test_form_name => undef
 $odk_phenotyping_data_service_name => undef
 $odk_phenotyping_data_service_url => undef
@@ -167,6 +166,8 @@ $odk_phenotyping_data_service_url => undef
 
 </div>
 
+<!--
+SMAP ODK NOT IMPLEMENTED 
 <div class="well">
 
 <&| /page/info_section.mas, title=>'Phenotype Data: SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
@@ -176,6 +177,7 @@ $odk_phenotyping_data_service_url => undef
 </&>
 
 </div>
+-->
 
 </div>
 
@@ -196,17 +198,33 @@ jQuery(document).ready(function () {
                 alert(response.error);
             }
             if (response.success){
-                var form_dropdown_select_html = '<select class="form-control" id="availabe_odk_crossing_forms">';
-                var allowed_forms_string = '<% $odk_crossing_data_form_name %>';
-                var allowed_forms = allowed_forms_string.split(',');
-                allowed_forms.push('<% $odk_crossing_data_test_form_name %>');
-                for(var i=0; i<response.forms.length; i++){
-                    if (jQuery.inArray(response.forms[i].id_string, allowed_forms) != -1){
-                        form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+": "+response.forms[i].title+": "+response.forms[i].description+'</option>';
+            
+                jQuery.ajax ({
+                    url : '/ajax/odk/get_crossing_saved_ona_forms',
+                    success: function(response_forms){
+                        console.log(response_forms);
+
+                        if (response_forms.error){
+                            alert(response.error);
+                        }
+                        if (response_forms.success){
+                            var form_dropdown_select_html = '<select class="form-control" id="availabe_odk_crossing_forms">';
+                            var allowed_forms = response_forms.odk_ona_forms;
+                            allowed_forms.push('<% $c->config->{odk_crossing_data_test_form_name} %>');
+                            for(var i=0; i<response.forms.length; i++){
+                                if (jQuery.inArray(response.forms[i].id_string, allowed_forms) != -1){
+                                    form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+'</option>';
+                                }
+                            }
+                            form_dropdown_select_html = form_dropdown_select_html + '</select>';
+                            jQuery('#import_odk_cross_data_available_forms').html(form_dropdown_select_html);
+                        }
+                    },
+                    error: function(response_forms){
+                        alert("Error retrieving saved ODK ONA forms");
                     }
-                }
-                form_dropdown_select_html = form_dropdown_select_html + '</select>';
-                jQuery('#import_odk_cross_data_available_forms').html(form_dropdown_select_html);
+                });
+            
             }
         },
         error: function(response){
@@ -236,7 +254,6 @@ jQuery(document).ready(function () {
                     url : '/ajax/odk/get_odk_cross_summary_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
                     success: function(response){
                         console.log(response);
-                        jQuery("#working_modal").modal("hide");
                         summary = response.summary;
                         plot_data_fill = [];
                         html = '<table id="odk_cross_info_status_table" class="table table-hover table-bordered"><thead><tr><th>Cross Information</th><th>Seeds Produced Graphs</th></tr></thead><tbody>';
@@ -363,8 +380,7 @@ jQuery(document).ready(function () {
                         });
                     },
                     error: function(response){
-                        jQuery("#working_modal").modal("hide");
-                        alert("Error retrieving available ODK crossing forms");
+                        alert("Error retrieving available ODK cross summary");
                     }
                 });
 
@@ -393,7 +409,7 @@ jQuery(document).ready(function () {
             }
         },
         error: function(response){
-            alert("Error retrieving available ODK crossing forms");
+            alert("Error retrieving available ODK wishlists");
         }
     });
 
@@ -428,7 +444,6 @@ jQuery(document).ready(function () {
         },
         error: function(response){
             jQuery("#working_modal").modal("hide");
-            alert("Error retrieving available scheduled ODK cross import cronjobs");
         }
     });
 

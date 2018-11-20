@@ -38,11 +38,13 @@ function refreshCrossJsTree(refreshpage){
     jQuery.ajax( {
         url: '/ajax/breeders/get_trials_with_folders?type=cross',
         beforeSend: function() {
-            jQuery("#working_modal").modal("show");
+            if (refreshpage == 1){
+                jQuery("#working_modal").modal("show");
+            }
         },
         success: function(response) {
-            jQuery("#working_modal").modal("hide");
             if (refreshpage == 1){
+                jQuery("#working_modal").modal("hide");
                 location.reload();
             }
         },

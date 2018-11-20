@@ -36,6 +36,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock;
 use CXGN::Stock::Accession;
+use JSON;
 
 extends 'CXGN::Trial::TrialLayoutDownload';
 

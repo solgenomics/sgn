@@ -436,9 +436,9 @@ sub search {
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, $term_name."::text \\?| array[$search_vals_sql]";
+                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
                 } else {
-                    push @stockprop_wheres, $term_name."::text ilike $search";
+                    push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
                 }
 
             } else {

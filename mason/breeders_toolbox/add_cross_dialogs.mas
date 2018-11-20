@@ -55,7 +55,7 @@
                             <hr>
 
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Crossing Experiment: </label>
+                                <label class="col-sm-2 control-label">You can check your crossing experiment here: </label>
                                 <div class="col-sm-10">
                                     <div id="upload_crosses_select_crossingtrial_3" name="upload_crosses_select_crossingtrial_3" >
                                     </div>
