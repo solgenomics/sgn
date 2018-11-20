@@ -151,7 +151,8 @@ sub get_possible_seedlots {
         undef,
         $accessions,
         $crosses,
-        1
+        1,
+        undef
     );
 
     my %seedlot_hash;

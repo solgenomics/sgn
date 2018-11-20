@@ -166,6 +166,8 @@ $odk_phenotyping_data_service_url => undef
 
 </div>
 
+<!--
+SMAP ODK NOT IMPLEMENTED 
 <div class="well">
 
 <&| /page/info_section.mas, title=>'Phenotype Data: SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
@@ -175,6 +177,7 @@ $odk_phenotyping_data_service_url => undef
 </&>
 
 </div>
+-->
 
 </div>
 

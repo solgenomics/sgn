@@ -265,6 +265,8 @@ sub add_cross_POST :Args(0) {
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
     my $female_plot_id = $c->req->param('female_plot');
     my $male_plot_id = $c->req->param('male_plot');
+    $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
+
     #print STDERR "Female Plot=".Dumper($female_plot)."\n";
 
     if (!$c->user()) {

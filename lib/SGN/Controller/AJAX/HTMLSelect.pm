@@ -580,6 +580,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $search_breeding_program_name = $c->req->param('seedlot_breeding_program_name') ? $c->req->param('seedlot_breeding_program_name') : '';
     my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
     my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
+    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
@@ -592,7 +593,8 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
         $search_amount,
         $accessions,
         $crosses,
-        1
+        1,
+        $search_weight
     );
     my @seedlots;
     foreach my $sl (@$list) {

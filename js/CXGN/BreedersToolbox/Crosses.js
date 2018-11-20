@@ -434,7 +434,6 @@ jQuery(document).ready(function($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery("#working_modal").modal("hide");
                     refreshCrossJsTree(0);
                     get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
                     get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
@@ -442,6 +441,7 @@ jQuery(document).ready(function($) {
                     get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
                     Workflow.focus("#add_crossing_trial_workflow", -1); //Go to success page
                     Workflow.check_complete("#add_crossing_trial_workflow");
+                    jQuery("#working_modal").modal("hide");
                 }
             },
         });
