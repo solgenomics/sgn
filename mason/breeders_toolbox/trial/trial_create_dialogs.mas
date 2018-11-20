@@ -105,11 +105,12 @@ rect.bordered {
                                         <select class="form-control" id="select_breeding_program" name="select_breeding_program">
                                         <%perl>
                                         foreach my $program (@$breeding_programs) {
-                                            # if (@$program[1] eq @$own_programs[0]) {
-                                            #     print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
-                                            # } else {
+                                            if (@$program[3]) {
+                                                print STDERR "Selected Program is ".@$program[1]."\n";
+                                                print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
+                                            } else {
                                                 print "<option value='".@$program[1]."'>".@$program[1]."</option>";
-                                            # }
+                                            }
                                         }
                                         </%perl>
                                         </select>
@@ -120,9 +121,9 @@ rect.bordered {
                                     <div class="col-sm-9">
                                         <select multiple class="form-control" id="add_project_location" name="add_project_location">
                                         <%perl>
-                                        foreach my $location_hash (@$locations) {
-                                            my $location = $location_hash->{'properties'};
-                                            my $name = $location->{'Name'};
+                                        foreach my $location_hashref (@$locations) {
+                                            my $properties = $location_hashref->{'properties'};
+                                            my $name = $properties->{'Name'};
                                             print "<option value=".'"'.$name.'"'.">".$name."</option>";
                                         }
                                         </%perl>

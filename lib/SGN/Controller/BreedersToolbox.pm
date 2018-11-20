@@ -102,7 +102,16 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $locations = decode_json $projects->get_location_geojson();
 
-    #print STDERR "Locations are ".Dumper($locations)."\n";
+    print STDERR "Locations are ".Dumper($locations)."\n";
+
+    print STDERR "type of locations: " . ref($locations) . "\n";
+
+
+    foreach my $location_hash (@$locations) {
+        print STDERR "type of location hash: " . ref($location_hash) . "\n";
+        print STDERR "location hash dumper ".Dumper($location_hash)."\n";
+    }
+
     $c->stash->{locations} = $locations;
 
     $c->stash->{breeding_programs} = \@breeding_programs;

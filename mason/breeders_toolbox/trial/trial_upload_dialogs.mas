@@ -63,7 +63,12 @@ $locations
                                         <select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
                                             <%perl>
                                             foreach my $program (@$breeding_programs) {
-                                                print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                                if (@$program[3]) {
+                                                    print STDERR "Selected Program is ".@$program[1]."\n";
+                                                    print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
+                                                } else {
+                                                    print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                                }
                                             }
                                             </%perl>
                                         </select>
@@ -74,10 +79,11 @@ $locations
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_upload_location" name="trial_upload_location">
                                         <%perl>
-                                        foreach my $location_hash (@$locations) {
-                                            my $location = $location_hash->{'properties'};
-                                            my $name = $location->{'Name'};
-                                            print "<option value=".'"'.$name.'"'.">".$name."</option>";
+                                        foreach my $location_hashref (@$locations) {
+                                            my $properties = $location_hashref->{'properties'};
+                                            my $program = $properties->{'Program'};
+                                            my $name = $properties->{'Name'};
+                                            print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
                                         }
                                         </%perl>
                                         </select>
@@ -494,9 +500,53 @@ $locations
 
 <script>
 jQuery(document).ready(function(){
+
+    filterLocations();
+
     jQuery('#guided_help_trial_upload_format_button').click(function(){
         jQuery('#trial_upload_spreadsheet_info_dialog').modal('show');
         return false;
     });
+
+    jQuery('#trial_upload_breeding_program').change(function() {
+        filterLocations();
+    });
+
+    function filterLocations() {
+
+        // Retrieve selected program.
+        var selectedProgram = jQuery('#trial_upload_breeding_program').val()
+
+        console.log("Begin filtering");
+
+        if (selectedProgram) { // If a program is selected show only locations that are associated with it
+            jQuery('#trial_upload_location option').each(function(){
+                console.log("filtering for program "+selectedProgram);
+                if(this.getAttribute('data-program') == selectedProgram) {
+                    console.log("this is a "+selectedProgram+" location!");
+                    this.style.visibility = 'visible';
+                }
+                else {
+                    console.log("Not a "+selectedProgram+" location, hiding this one");
+                    this.style.visibility = 'hidden';
+                }
+            });
+        }
+        else { // Otherwise display all locations
+            jQuery('#trial_upload_location option').each(function(){
+                this.style.visibility = 'visible';
+            });
+
+        }
+
+    //     for ( var i = 0; i < fastInternet.options.length; i++) {
+    //     var value = fastInternet.options[i].value;
+    //
+    //     if(value == 'IDTV' || value == 'P3TR'){
+    //        fastInternet.options[i].style.visibility = 'hidden';
+    //     }
+    // }
+
+    }
 })
 </script>
