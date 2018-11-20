@@ -6,13 +6,14 @@ const {
 	common_js_regex,
 	import_regex,
 	src_path_to_JSAN,
-	isChildOf } = require("./jsan-utils.js");
+	isChildOf } = require("./utils.js");
 	
 module.exports = function() {
 	this.cacheable();
 	const callback = this.async();	
 	const options = loaderUtils.getOptions(this);
-	fs.readFile(this.resourcePath, function read(err, data) {
+	var rpath = this.resourcePath;
+	fs.readFile(rpath, function read(err, data) {
 	    if (err) {
 	        callback(err);
 	    }
@@ -20,8 +21,9 @@ module.exports = function() {
 		var head = "";
 		var replac_func = function(match,group1,group2){
 			head = head || JSAN_adapt;
-			var path = group1||group2;
-			return isChildOf(path,options.legacyPath) ? src_path_to_JSAN(options.legacyPath,path) : match;
+			var relpath = group1||group2;
+			var src_path = path.resolve(path.dirname(rpath),relpath);
+			return isChildOf(src_path,options.legacyPath) ? src_path_to_JSAN(options.legacyPath,src_path) : match;
 		};
 		var out = String(data).replace(import_regex,replac_func)
 							  .replace(common_js_regex,replac_func);
