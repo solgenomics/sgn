@@ -501,52 +501,18 @@ $locations
 <script>
 jQuery(document).ready(function(){
 
-    filterLocations();
+    var selectedProgram = jQuery('#trial_upload_breeding_program').val()
+
+    filter_options(selectedProgram, 'program', 'trial_upload_location');
+
+    jQuery('#trial_upload_breeding_program').change(function() {
+        filter_options(jQuery(this).val(), 'program', 'trial_upload_location');
+    });
 
     jQuery('#guided_help_trial_upload_format_button').click(function(){
         jQuery('#trial_upload_spreadsheet_info_dialog').modal('show');
         return false;
     });
 
-    jQuery('#trial_upload_breeding_program').change(function() {
-        filterLocations();
-    });
-
-    function filterLocations() {
-
-        // Retrieve selected program.
-        var selectedProgram = jQuery('#trial_upload_breeding_program').val()
-
-        console.log("Begin filtering");
-
-        if (selectedProgram) { // If a program is selected show only locations that are associated with it
-            jQuery('#trial_upload_location option').each(function(){
-                console.log("filtering for program "+selectedProgram);
-                if(this.getAttribute('data-program') == selectedProgram) {
-                    console.log("this is a "+selectedProgram+" location!");
-                    this.style.visibility = 'visible';
-                }
-                else {
-                    console.log("Not a "+selectedProgram+" location, hiding this one");
-                    this.style.visibility = 'hidden';
-                }
-            });
-        }
-        else { // Otherwise display all locations
-            jQuery('#trial_upload_location option').each(function(){
-                this.style.visibility = 'visible';
-            });
-
-        }
-
-    //     for ( var i = 0; i < fastInternet.options.length; i++) {
-    //     var value = fastInternet.options[i].value;
-    //
-    //     if(value == 'IDTV' || value == 'P3TR'){
-    //        fastInternet.options[i].style.visibility = 'hidden';
-    //     }
-    // }
-
-    }
 })
 </script>

@@ -1,6 +1,6 @@
 <%args>
 @programs => ()
-@locations => ()
+$locations
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses', 'CXGN.TrialTreeFolders'] &>
@@ -55,8 +55,14 @@
                                         <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
                                             <option value="">Select Location</option>
 <%perl>
-    foreach my $location (@locations) {
-        print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+    # foreach my $location (@locations) {
+    #     print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+    # }
+    foreach my $location_hashref (@$locations) {
+        my $properties = $location_hashref->{'properties'};
+        my $program = $properties->{'Program'};
+        my $name = $properties->{'Name'};
+        print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
     }
 </%perl>
                                         </select>

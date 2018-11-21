@@ -123,8 +123,9 @@ rect.bordered {
                                         <%perl>
                                         foreach my $location_hashref (@$locations) {
                                             my $properties = $location_hashref->{'properties'};
+                                            my $program = $properties->{'Program'};
                                             my $name = $properties->{'Name'};
-                                            print "<option value=".'"'.$name.'"'.">".$name."</option>";
+                                            print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
                                         }
                                         </%perl>
                                         </select>
@@ -859,3 +860,17 @@ Development Core Team, 2009).</p></center>
         </div>
     </div>
 </div>
+
+<script>
+jQuery(document).ready(function(){
+
+    var selectedProgram = jQuery('#select_breeding_program').val()
+
+    filter_options(selectedProgram, 'program', 'add_project_location');
+
+    jQuery('#select_breeding_program').change(function() {
+        filter_options(jQuery(this).val(), 'program', 'add_project_location');
+    });
+
+})
+</script>
