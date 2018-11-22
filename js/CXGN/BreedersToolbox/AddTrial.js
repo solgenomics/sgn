@@ -428,6 +428,14 @@ jQuery(document).ready(function ($) {
             //console.log(greenhouse_num_plants);
         }
 
+        var use_same_layout;
+        if ($('#use_same_layout').is(':checked')) {
+           use_same_layout = $('#use_same_layout').val();
+        }
+        else {
+           use_same_layout = "";
+        }
+
         $.ajax({
             type: 'POST',
             timeout: 3000000,
@@ -477,7 +485,8 @@ jQuery(document).ready(function ($) {
                 'westcott_col_between_check': westcott_col_between_check,
                 'field_size': field_size,
                 'plot_width': plot_width,
-                'plot_length': plot_length
+                'plot_length': plot_length,
+                'use_same_layout' : use_same_layout
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -1241,6 +1250,14 @@ jQuery(document).ready(function ($) {
             selectedTrials.push(jQuery(selectedElement).val());
         });
 
+        var use_same_layout;
+        if ($('#use_same_layout').is(':checked')) {
+           use_same_layout = $('#use_same_layout').val();
+        }
+        else {
+           use_same_layout = "";
+        }
+
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,
@@ -1284,6 +1301,7 @@ jQuery(document).ready(function ($) {
                 'field_trial_is_planned_to_be_genotyped': field_trial_is_planned_to_be_genotyped,
                 'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross,
                 'add_project_trial_source': selectedTrials,
+                'use_same_layout' : use_same_layout
             },
             success: function (response) {
                 jQuery('#working_modal').modal("hide");

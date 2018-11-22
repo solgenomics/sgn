@@ -94,12 +94,6 @@ rect.bordered {
                                 <& /page/page_title.mas, title=>"Enter basic information about the trial" &>
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name: </label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
-                                    </div>
-                                </div>
-                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="select_breeding_program" name="select_breeding_program">
@@ -129,6 +123,14 @@ rect.bordered {
                                         }
                                         </%perl>
                                         </select>
+                                        <div class="well well-sm"><div id="locations_count" >No Locations Selected</div></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trial Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
+                                        <p><i>Location abbreviation will automatically be added as a prefix if multiple locations are selected.</i></p>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -280,6 +282,12 @@ rect.bordered {
                                         <div id="prephelp" style="display: none">
                                             <button type="button" class="btn btn-link" data-toggle="modal" data-target="#partial_rep_help_dialog">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="randomization_div" style="display:none;">
+                                    <label class="col-sm-4 control-label">Use same randomization for all locations: </label>
+                                    <div class="col-sm-8" >
+                                        <input type="checkbox" id="use_same_layout" value="same_design" />
                                     </div>
                                 </div>
                                 <hr>
@@ -870,6 +878,20 @@ jQuery(document).ready(function(){
 
     jQuery('#select_breeding_program').change(function() {
         filter_options(jQuery(this).val(), 'program', 'add_project_location');
+    });
+
+    jQuery('#add_project_location').change(function() {
+        var number_selected = jQuery(this).val().length;
+        if (number_selected > 1) {
+            jQuery('#locations_count').html('Locations Selected: '+number_selected);
+            jQuery('#randomization_div').show();
+        } else if (number_selected > 0) {
+            jQuery('#locations_count').html('Locations Selected: '+number_selected);
+            jQuery('#randomization_div').hide();
+        } else {
+            jQuery('#locations_count').html('No Locations Selected');
+            jQuery('#randomization_div').hide();
+        }
     });
 
 })

@@ -250,9 +250,29 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
-    $c->stash->{locations} = $bp->get_all_locations($c);
 
-    $c->stash->{programs} = $breeding_programs;
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = decode_json $crossingtrial->get_location_geojson();
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    #$c->stash->{locations} = $bp->get_all_locations($c);
+
+    #$c->stash->{programs} = $breeding_programs;
 
     $c->stash->{crossing_trials} = $crossing_trials;
 
