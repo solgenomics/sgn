@@ -104,7 +104,9 @@ sub patch {
         'project_property' => [
             'project_start_date',
             'drone_run_project_type',
-            'drone_run_band_project_type'
+            'drone_run_band_project_type',
+            'drone_run_band_rotate_angle',
+            'drone_run_band_cropped_polygon'
         ],
         'project_relationship' => [
             'drone_run_on_field_trial',

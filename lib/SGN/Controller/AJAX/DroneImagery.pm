@@ -370,6 +370,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_modified_date} = $_->{image_modified_date};
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_original} = $image_original;
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_id} = $image_id;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_angle} = $_->{drone_run_band_rotate_angle};
     }
     foreach (@$cropped_stitched_result) {
         my $image_id = $_->{image_id};
@@ -381,6 +382,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_modified_date} = $_->{image_modified_date};
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_original} = $image_original;
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_id} = $image_id;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_polygon} = $_->{drone_run_band_cropped_polygon};
     }
     foreach (@$denoised_stitched_result) {
         my $image_id = $_->{image_id};
@@ -479,10 +481,10 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Stitched Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{stitched_image_username}.'<br/><b>Date</b>: '.$d->{stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{stitched_image}.'</div></div></div>';
 
                 if ($d->{rotated_stitched_image}) {
-                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Rotated Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{rotated_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{rotated_stitched_image_username}.'<br/><b>Date</b>: '.$d->{rotated_stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{rotated_stitched_image}.'</div></div></div>';
+                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Rotated Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{rotated_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{rotated_stitched_image_username}.'<br/><b>Date</b>: '.$d->{rotated_stitched_image_modified_date}.'<br/><b>Rotated Angle</b>: '.$d->{rotated_stitched_image_angle}.'</div><div class="col-sm-6">'.$d->{rotated_stitched_image}.'</div></div></div>';
 
                     if ($d->{cropped_stitched_image}) {
-                        $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Cropped Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{cropped_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{cropped_stitched_image_username}.'<br/><b>Date</b>: '.$d->{cropped_stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{cropped_stitched_image}.'</div></div></div>';
+                        $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Cropped Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{cropped_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{cropped_stitched_image_username}.'<br/><b>Date</b>: '.$d->{cropped_stitched_image_modified_date}.'<br/><b>Cropped Polygon</b>: '.$d->{cropped_stitched_image_polygon}.'</div><div class="col-sm-6">'.$d->{cropped_stitched_image}.'</div></div></div>';
 
                         if ($d->{denoised_stitched_image}) {
                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{denoised_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{denoised_stitched_image_username}.'</br><b>Date</b>: '.$d->{denoised_stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{denoised_stitched_image}.'</div></div></div>';
@@ -657,6 +659,17 @@ sub drone_imagery_rotate_image_GET : Args(0) {
         print STDERR Dumper $rotated_stitched_temporary_total_count;
         
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+        my $drone_run_band_rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
+        my $drone_run_band_rotate_angle = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$drone_run_band_rotate_angle_type_id,
+            project_id=>$drone_run_band_project_id,
+            rank=>0,
+            value=>$angle_rotation
+        },
+        {
+            key=>'projectprop_c1'
+        });
     }
     my $ret = $image->process_image($archive_rotate_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
@@ -1123,6 +1136,17 @@ sub drone_imagery_crop_image_GET : Args(0) {
     my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $cropped_image_fullpath = $image->get_filename('original_converted', 'full');
     my $cropped_image_url = $image->get_image_url('original');
+
+    my $drone_run_band_cropped_polygon_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_cropped_polygon', 'project_property')->cvterm_id();
+    my $drone_run_band_cropped_polygon = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$drone_run_band_cropped_polygon_type_id,
+        project_id=>$drone_run_band_project_id,
+        rank=>0,
+        value=>$polygons
+    },
+    {
+        key=>'projectprop_c1'
+    });
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath };
 }
