@@ -379,28 +379,10 @@ jQuery(document).ready(function ($) {
                         alert(response.error);
                     }
                     else {
-                        jQuery.ajax({
-                            url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-                            beforeSend: function(){
-                                jQuery('#working_msg').html("Removing the project entry...");
-                            },
-                            success: function(response) {
-                                jQuery('#working_modal').modal("hide");
-                                jQuery('#working_msg').html('');
-                                if (response.error) {
-                                    alert(response.error);
-                                }
-                                else {
-                                    alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-                                    window.location.href="/breeders/trial/"+trial_id;
-                                }
-                            },
-                            error: function(response) {
-                                jQuery('#working_modal').modal("hide");
-                                jQuery('#working_msg').html('');
-                                alert("An error occurred.");
-                            }
-                        });
+                        jQuery('#working_modal').modal("hide");
+                        jQuery('#working_msg').html('');
+                        alert('The genotyping plate has been deleted.'); // to do: give some idea how many items were deleted.
+                        window.location.href="/breeders/trial/"+trial_id;
                     }
                 },
                 error: function(response) {

@@ -83,6 +83,7 @@ use CXGN::Stock;
 use CXGN::Chado::Stock;
 use CXGN::Chado::Organism;
 use JSON;
+use utf8;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -196,7 +197,7 @@ has 'year_list' => (
 );
 
 has 'stockprops_values' => (
-    isa => 'HashRef[ArrayRef[Str]]|Undef',
+    isa => 'HashRef|Undef',
     is => 'rw',
 );
 
@@ -278,7 +279,6 @@ sub search {
             { 'me.name'          => {'ilike' => $start.$any_name.$end} },
             { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
             { 'me.description'   => {'ilike' => $start.$any_name.$end} },
-            { 'stockprops.value'   => {'ilike' => $start.$any_name.$end} }
         ];
     } else {
         $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
@@ -410,15 +410,37 @@ sub search {
     my $using_stockprop_filter;
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
         $using_stockprop_filter = 1;
-        print STDERR Dumper $self->stockprops_values;
+        #print STDERR Dumper $self->stockprops_values;
         my @stockprop_wheres;
         foreach my $term_name (keys %{$self->stockprops_values}){
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
             if ($property_term){
-                my $search_vals = $self->stockprops_values->{$term_name};
-                #jsonb obj has any keys in $search_vals
-                my $search_vals_sql = "'".join ("','" , @$search_vals)."'";
-                push @stockprop_wheres, "\"$term_name\" \\?| array[$search_vals_sql]";
+                my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
+                my $value = $self->stockprops_values->{$term_name}->{'value'};
+
+                my $start = '%';
+                my $end = '%';
+                if ( $matchtype eq 'exactly' ) {
+                    $start = '';
+                    $end = '';
+                } elsif ( $matchtype eq 'starts_with' ) {
+                    $start = '';
+                } elsif ( $matchtype eq 'ends_with' ) {
+                    $end = '';
+                }
+                my $search = "'$start$value$end'";
+                if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
+                    $search =~ tr/*?/%_/;
+                }
+
+                if ( $matchtype eq 'one of' ) {
+                    my @values = split ',', $value;
+                    my $search_vals_sql = "'".join ("','" , @values)."'";
+                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
+                } else {
+                    push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
+                }
+
             } else {
                 print STDERR "Stockprop $term_name is not in this database! Only use stock_property in system_cvterms.txt!\n";
             }
@@ -531,7 +553,8 @@ sub search {
         $h->execute();
         while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
             for my $s (0 .. scalar(@stockprop_view)-1){
-                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
+                # my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
+                my $stockprop_vals = $stockprop_select_return[$s] ? JSON->new->utf8(0)->decode($stockprop_select_return[$s]) : {};
                 my @stockprop_vals_string;
                 foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
                     push @stockprop_vals_string, $_;
