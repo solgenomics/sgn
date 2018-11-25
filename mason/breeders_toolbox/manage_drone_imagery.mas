@@ -94,15 +94,15 @@
 
     <hr>
     <div id="manage_drone_imagery_vegetative_index_tgi_div" style="display:none">
-        <button class="btn btn-primary" id="drone_imagery_vegetative_index_TGI">Calculate "Triangular Greenness Index" TGI</button>
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_TGI">Calculate "Triangular Greenness Index" TGI. TGI = Green - 0.39*Red - 0.61*Blue</button>
         <hr>
     </div>
     <div id="manage_drone_imagery_vegetative_index_vari_div" style="display:none">
-        <button class="btn btn-primary" id="drone_imagery_vegetative_index_VARI">Calculate "Visible Atmospheric Resistant Index" VARI</button>
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_VARI">Calculate "Visible Atmospheric Resistant Index" VARI. VARI = (Green - Red) / (Green + Red - Blue)</button>
         <hr>
     </div>
     <div id="manage_drone_imagery_vegetative_index_ndvi_div" style="display:none">
-        <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDVI">Calculate "Normalized Difference Vegetative Index" NDVI</button>
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDVI">Calculate "Normalized Difference Vegetative Index" NDVI. NDVI = (NIR - Red) / (NIR + Red)</button>
         <hr>
     </div>
     <button class="btn btn-success" id="drone_imagery_vegetative_index_submit">Finish and Save Vegetative Index</button>
@@ -157,7 +157,7 @@
         </ul>
     </div>
 
-    <& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Generate Polygon Template Tool</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_generate_plot_polygons_section" &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsible=>1, info_section_collapsed=>0, info_section_title => "<h4 style='display:inline'>Generate Polygon Template Tool</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_generate_plot_polygons_section" &>
 
     <div class="well well-sm">
         <div id="drone_imagery_plot_polygons_top_section"></div>
@@ -253,6 +253,8 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+
+        window.scrollTo(0,0);
 
         rotate_stitched_image_id = jQuery(this).data('stitched_image_id');
         rotate_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
@@ -489,6 +491,8 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+
+        window.scrollTo(0,0);
     });
 
     function FindPosition(oElement) {
@@ -667,6 +671,8 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+
+        window.scrollTo(0,0);
     
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_contours?image_id='+background_removed_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
@@ -1046,6 +1052,8 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
 
+        window.scrollTo(0,0);
+
         remove_background_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         remove_background_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
         remove_background_current_image_id = jQuery(this).data('remove_background_current_image_id');
@@ -1342,6 +1350,8 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
 
+        window.scrollTo(0,0);
+
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
     });
 
@@ -1519,6 +1529,8 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_vegetative_index_tgi_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_vari_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_ndvi_div').hide();
+
+        window.scrollTo(0,0);
     });
 
     jQuery('#drone_imagery_vegetative_index_TGI').click(function(){

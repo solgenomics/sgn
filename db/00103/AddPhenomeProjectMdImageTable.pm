@@ -106,7 +106,11 @@ sub patch {
             'drone_run_project_type',
             'drone_run_band_project_type',
             'drone_run_band_rotate_angle',
-            'drone_run_band_cropped_polygon'
+            'drone_run_band_cropped_polygon',
+            'drone_run_band_background_removed_tgi_threshold',
+            'drone_run_band_background_removed_vari_threshold',
+            'drone_run_band_background_removed_ndvi_threshold',
+            'drone_run_band_background_removed_threshold'
         ],
         'project_relationship' => [
             'drone_run_on_field_trial',
