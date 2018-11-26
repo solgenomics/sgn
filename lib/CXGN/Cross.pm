@@ -10,12 +10,17 @@ use JSON;
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1,
-);
+    );
 
 has 'cross_stock_id' => (isa => "Int",
     is => 'rw',
     required => 0,
 );
+
+has 'cross_name' => (isa => 'Str',
+		     is => 'rw',
+		     required => 0,
+    );
 
 has 'female_parent' => (isa => 'Str',
     is => 'rw',
@@ -37,6 +42,7 @@ has 'trial_id' => (isa => "Int",
 sub BUILD {
     my $self = shift;
     my $args = shift;
+
 }
 
 sub get_cross_relationships {
@@ -379,6 +385,7 @@ sub get_cross_progenies_trial {
 sub delete {
     my $self = shift;
 
+    print STDERR "Delete cross ".$self->cross_name()."\n";
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $schema = $self->bcs_schema();
 
@@ -422,14 +429,18 @@ sub delete {
 	my $h4 = $dbh->prepare($q4);
 	$h4->execute($self->cross_stock_id(), $cross_type_id);
 
+	print STDERR Dumper($properties);
 	# delete the progeny...
 	#
 	print STDERR "Deleting the progeny...\n";
 	my $q5 = "delete from stock where stock_id =?";
-	my $h5 = $dbh->prepare();
+	my $h5 = $dbh->prepare($q5);
 	foreach my $progeny (@{$properties->{subjects}}) { 
-	    print STDERR "...Deleting progeny with stock_id $progeny->[0], name $progeny->[1], type $progeny->[2]...\n";
-	    $h5->execute($progeny->[0]);
+
+	    if ($progeny->[2] eq "member_of") { 
+		my $s = CXGN::Stock->new( { schema => $schema, stock_id => $progeny->[0]});
+		$s->hard_delete();
+	    }
 	}
     };
 
@@ -482,17 +493,20 @@ sub cross_properties {
 	    }
 	    if (my @image_ids = $s->get_image_ids()) { 
 		print STDERR "Associated images: ".Dumper(\@image_ids);
-		$has_images += scalar(\@image_ids);
+		$has_images += scalar(@image_ids);
 	    }
 	}
     }
-    return { 
+    my $data = { 
 	traits => $has_traits,
 	trials => $has_trials,
 	genotypes => $has_genotypes,
 	images => $has_images,
-	subjects => @subjects,
+	subjects => \@subjects,
     };
+    
+    print STDERR Dumper($data);
+    return $data;
 }
 
 1;
