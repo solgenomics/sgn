@@ -27,10 +27,18 @@ has 'female_parent' => (isa => 'Str',
     required => 0,
 );
 
+has 'female_parent_id' => (isa => 'Int',
+    is => 'rw',
+    );	   
+
 has 'male_parent' => (isa => 'Str',
     is => 'rw',
     required => 0,
 );
+
+has 'male_parent_id' => (isa => 'Int',
+    is => 'rw',
+    );
 
 has 'trial_id' => (isa => "Int",
     is => 'rw',
@@ -42,7 +50,22 @@ has 'trial_id' => (isa => "Int",
 sub BUILD {
     my $self = shift;
     my $args = shift;
+    
+    my $bcs_schema = $args->{bcs_schema};
+    my $cross_id = $args->{cross_id};
+    
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
+    my $name = $bcs_schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
+
+    $self->cross_name($name);
+    $self->cross_id($cross_id);
+
+    my $female_parent
+    
+    
+    
 }
 
 sub get_cross_relationships {

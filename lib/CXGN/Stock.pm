@@ -541,7 +541,7 @@ sub get_image_ids {
 sub get_genotypeprop_ids { 
     my $self = shift;
     
-    my $q = "SELECT genotypeprop_id FROM stock JOIN nd_experiment_stock using(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN nd_experimentprop USING(genotype_id) WHERE stock.stock_id=?";
+    my $q = "SELECT genotypeprop_id FROM stock JOIN nd_experiment_stock using(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN genotypeprop USING(genotype_id) WHERE stock.stock_id=?";
     my $h = $self->schema->storage->dbh()->prepare($q);
     $h->execute($self->stock_id());
     my @genotypeprop_ids;
@@ -1356,6 +1356,40 @@ sub merge {
 COUNTS
 
 }
+
+=head2 delete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub hard_delete { 
+    my $self = shift;
+    
+    # delete sgn.stock_owner entry
+    #
+    my $q = "DELETE FROM sgn.stock_owner WHERE stock_id=?";
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+    
+    # delete sgn.stock_image entry
+    #
+    $q = "DELETE FROM sgn.stock_image WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+    
+    # delete stock entry
+    #
+    my $q = "DELETE FROM stock WHERE stock_id=?";
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+}
+
 
 __PACKAGE__->meta->make_immutable;
 
