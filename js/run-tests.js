@@ -7,6 +7,7 @@ var fs = require('fs');
 const del = require('del');
 const path = require('path');
 const glob = require("glob");
+const nock = require('nock');
 
 const { JSAN_to_src_path } = require("./webpack_util/utils.js");
 
@@ -66,6 +67,7 @@ function runTests(mapping){
   }).forEach(scrptList=>{
     // Run a JSDOM Virtual instance with all scripts and deps for each test file
     const dom = new JSDOM(empty_html, {
+      url:"https://cassavabase.org/index.html",
       contentType: "text/html",
       includeNodeLocations: true,
       runScripts: "dangerously"
@@ -73,6 +75,10 @@ function runTests(mapping){
     // Add window.test function to JSDOM window which hooks to the instance of
     // tape that is running in Node.js
     dom.window.test = test;
+    // Add window.nock function to JSDOM window which allows for us to spoof AJAX calls
+    // also clean up current mocked responses from previous tests
+    dom.window.nock = nock;
+    nock.cleanAll();
     // Add script tags to JSDOM, these excute upon insertion (thereby running
     // the contained tests).
     scrptList.forEach(file=>{
